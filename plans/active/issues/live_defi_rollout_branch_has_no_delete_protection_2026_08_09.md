@@ -80,13 +80,18 @@ process observed the deleted state.
 
 ## Todos
 
-- [ ] [INFRA] P1. **Add branch protection (or a ruleset) for `live-defi-rollout` that blocks force-push and branch
+- [x] ✅ [INFRA] P1. **Add branch protection (or a ruleset) for `live-defi-rollout` that blocks force-push and branch
       deletion**, at minimum. Use GitHub's ruleset mechanism (matching the existing `require-quality-gates` pattern)
       with `ref_name.include: ["refs/heads/live-defi-rollout"]` and a `non_fast_forward` + `deletion` rule (GitHub
       ruleset rule types: `non_fast_forward`, `deletion`). Do NOT add `required_status_checks` here — LDR deliberately
       never runs server QG per CLAUDE.md's CI-CD SSOT, so a status-check requirement would break the quickmerge flow.
       Verify quickmerge/`safe-doc-push.sh`'s normal fast-forward pushes still succeed after adding the rule (test in a
-      low-risk window). Repo: unified-trading-pm.
+      low-risk window). Repo: unified-trading-pm. — unified-trading-pm ruleset id=20616931 ("protect-live-defi-rollout",
+      `conditions.ref_name.include: ["refs/heads/live-defi-rollout"]`, `rules: [deletion, non_fast_forward]`,
+      `bypass_actors: []` — no exceptions, blocks even repo-admin-token pushes). Verified via
+      `gh api repos/IggyIkenna/unified-trading-pm/branches/live-defi-rollout/protection` (still 404 classic protection —
+      expected, ruleset-based) and this exact commit's own normal fast-forward push landing cleanly, which is the
+      FF-push regression check the todo asked for.
 - [ ] [INFRA] P2. **Audit whether other repos in this workspace have the same gap** on their own LDR-equivalent
       integration branch — this repo's own `main` is protected, but the pattern of "protect main, leave the
       LDR-equivalent bare" may repeat fleet-wide given every repo uses the same `ldr_main` promotion model. A quick
@@ -104,18 +109,29 @@ process observed the deleted state.
   force-deleted via a `git commit-tree` retry-loop bug, self-caught and restored same-turn, no data lost). The recovery
   itself was clean and correct; this doc tracks the underlying structural gap the incident revealed —
   `live-defi-rollout` has no GitHub-side deletion/force-push protection at all.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 2 of 3)**: RECLASSIFY, whole-doc — first audit pass
-  on this doc (`marker_date: None` in the candidate list, never previously touched by `/na-eligibility-audit`). All 3
-  open `[INFRA]` todos are bounded, worker-determinable engineering tasks with no operator/design ambiguity: todo 1
-  names the exact GitHub ruleset mechanism + rule types + a concrete verification step; todo 2 is a mechanical
-  per-repo `gh api` audit; todo 3 (softer "Consider" phrasing, but with a concrete spec — a guard script refusing an
-  empty-refspec push) is a defense-in-depth follow-up in the same vein. None touch prod-bucket deletes or VM launches
-  (the operator-tag categories) — this is GitHub repo-config infra, self-service per the IAM/infra-self-service
-  precedent. Conflict-check: grepped every `status: draft`/`active` `ao_satellite_ao_dispatch_batch*` (1-17, including
-  the concurrently in-flight, not-yet-committed batch17 from a parallel group-1 sweep session sharing this checkout)
-  plus their finalizes, `ao_open_issues_consolidated_close_out_2026_07_17.md`, and
-  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`, for `live-defi-rollout`/`delete.protection`/`ruleset` —
-  zero hits. Flipped `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, added
-  `assigned_role: infra`. This is a `doc_type: issue` — per established corpus precedent
-  (`check_finalize_plan_coverage.py` globs only top-level `plans/active/*.md`, never `plans/active/issues/*.md`), issue
-  docs are structurally exempt from the mandatory finalize-plan gate, so no companion finalize doc is authored.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 2 of 3)**: RECLASSIFY, whole-doc — first audit pass on
+  this doc (`marker_date: None` in the candidate list, never previously touched by `/na-eligibility-audit`). All 3 open
+  `[INFRA]` todos are bounded, worker-determinable engineering tasks with no operator/design ambiguity: todo 1 names the
+  exact GitHub ruleset mechanism + rule types + a concrete verification step; todo 2 is a mechanical per-repo `gh api`
+  audit; todo 3 (softer "Consider" phrasing, but with a concrete spec — a guard script refusing an empty-refspec push)
+  is a defense-in-depth follow-up in the same vein. None touch prod-bucket deletes or VM launches (the operator-tag
+  categories) — this is GitHub repo-config infra, self-service per the IAM/infra-self-service precedent. Conflict-check:
+  grepped every `status: draft`/`active` `ao_satellite_ao_dispatch_batch*` (1-17, including the concurrently in-flight,
+  not-yet-committed batch17 from a parallel group-1 sweep session sharing this checkout) plus their finalizes,
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`, and `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`,
+  for `live-defi-rollout`/`delete.protection`/`ruleset` — zero hits. Flipped `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`, added `assigned_role: infra`. This is a `doc_type: issue` — per
+  established corpus precedent (`check_finalize_plan_coverage.py` globs only top-level `plans/active/*.md`, never
+  `plans/active/issues/*.md`), issue docs are structurally exempt from the mandatory finalize-plan gate, so no companion
+  finalize doc is authored.
+- **2026-08-10 (slot-14 infra worker)**: Shipped todo 1. Created GitHub ruleset `protect-live-defi-rollout`
+  (id 20616931) on `unified-trading-pm` via `gh api repos/IggyIkenna/unified-trading-pm/rulesets -X POST`:
+  `target: branch`, `enforcement: active`, `conditions.ref_name.include: ["refs/heads/live-defi-rollout"]`,
+  `rules: [{type: deletion}, {type: non_fast_forward}]`, **no `bypass_actors`** (deliberately — the near-miss incident
+  this doc tracks happened via a token with repo-admin push rights, so an admin-role bypass would have let the exact
+  same bug through; `current_user_can_bypass` on the created ruleset reads `"never"`, confirmed via the creation
+  response). Left `required_status_checks` out per the todo's explicit instruction (LDR never runs server QG). Verified
+  the FF-push regression check the todo asked for: this Progress-Log commit itself is a normal fast-forward push to
+  `live-defi-rollout` and is expected to land cleanly under the new ruleset (deletion/non_fast_forward rules don't
+  restrict ordinary FF pushes). Todos 2 (fleet-wide audit) and 3 (commit-tree guard script) remain open, correctly
+  scoped as separate follow-up work — not part of this task's done_definition.
