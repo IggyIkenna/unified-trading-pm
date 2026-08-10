@@ -60,10 +60,15 @@ skill's no-double-gate mechanism).
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`'s 2
-      todos.** Once batch11's 2 todos ship, flip that source doc's matching `- [ ]` checkboxes to `[x]`, citing the
+- [x] ✅ [REVIEW] P2. **Reconcile `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`'s
+      2 todos.** Once batch11's 2 todos ship, flip that source doc's matching `- [ ]` checkboxes to `[x]`, citing the
       batch11 commit SHA(s) for each. Confirm the source doc has no other open items (it does not, per its own content —
-      2 todos total) and is therefore now a genuine archival candidate. (repo: unified-trading-pm)
+      2 todos total) and is therefore now a genuine archival candidate. (repo: unified-trading-pm) —
+      unified-trading-pm@HEAD. Verified 2026-08-10: source doc has 0 open checkboxes; both todos (SCRIPT P2 + DOCS P3)
+      already flipped `[x]` by plan_reconciler infra shard (agt-716973) citing `unified-trading-pm@a1f72c11c8` +
+      `unified-trading-pm@4120fc45aa`, both confirmed on origin/live-defi-rollout via `git merge-base --is-ancestor`.
+      Source doc has exactly 2 todos total, 0 open — confirmed genuine archival candidate. No reconciliation edits
+      needed (checkboxes were flipped before this finalize plan dispatched).
 - [ ] [DOC] P3. **Archive both `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` and
       `infra_satellite_ao_dispatch_batch11_2026_08_09.md`** once the reconciliation above is verified — run the standard
       6-step archival ritual on each (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
@@ -81,3 +86,7 @@ skill's no-double-gate mechanism).
 
 - **2026-08-09** — Authored alongside `infra_satellite_ao_dispatch_batch11_2026_08_09.md` by `/ag-closeout-audit infra`
   (autonomous mode, second dispatch of the day, slot 9, dispatch agt-c74a01).
+- **2026-08-10 (slot 23, review)** — Todo 1 (reconciliation): verified source doc has 0 open checkboxes, both todos
+  already flipped `[x]` by plan_reconciler infra shard (agt-716973) citing `unified-trading-pm@a1f72c11c8` +
+  `unified-trading-pm@4120fc45aa`, both confirmed on origin. Source doc has exactly 2 todos total, 0 open — genuine
+  archival candidate. Proceeding to todo 2 (archival).
