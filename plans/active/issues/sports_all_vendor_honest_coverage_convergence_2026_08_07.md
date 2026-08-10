@@ -700,3 +700,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   fleet's own recovery mechanism (`unified-trading-sa@...`) within ~2min at 04:46:30Z, confirmed genuinely resuming
   (chunk 2/415, zero OOMs, correctly skip-fasting). Still 11x hang occurrences (no 12th) — this preemption is unrelated
   to that tracked pattern. No intervention needed.
+- **05:22Z — Odds fleet healthy, no new hang (still 11x); AF sanity-check clean (no new af-backfill instance, as
+  expected now the AF campaign is closed).** `smallchunk17`: chunk 5/415, zero OOMs/CHUNK_FAILED, fresh (~8s log lag) —
+  13 chunks from chunk 18. **Noted for future ticks**: unlike the 4 AF entities, there is no dedicated odds_api-wide
+  census script in this repo tree — the reliable ground-truth completion signal for this fleet is the VM's own chunk
+  total (currently 415, recalculated fresh at each boot as remaining real-work chunks shrink — was 452 several
+  relaunches ago, then 425, now 415) reaching its own final chunk N/N followed by a clean `exit_code=0` +
+  `VM_SHUTDOWN_ON_COMPLETION` self-delete, mirroring exactly how the INJURIES AF-entity VM completed last tick. Watching
+  for that same signature on this fleet as the terminal completion event, alongside the shrinking chunk-total trend as a
+  proxy for how close the campaign is to done. No intervention needed this tick.
