@@ -1191,3 +1191,72 @@ auth-fail boot prompts inline the same ff-only-when-behind + divergence-STOP blo
 - Bootstrap script: [`scripts/dev/setup-tab-worktrees.sh`](../../scripts/dev/setup-tab-worktrees.sh)
 - Teardown script: [`scripts/dev/teardown-tab-worktrees.sh`](../../scripts/dev/teardown-tab-worktrees.sh)
 - Drift invariant: `scripts/cicd/slot_drift_check.py`
+
+---
+
+## Committing from a contended checkout — isolated-worktree mode (2026-08-10)
+
+**Authoritative for**: how `safe-doc-push.sh` and `quickmerge.sh` behave under concurrency, what their exit codes mean,
+and when isolation is on. Root-cause evidence:
+[`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`](/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md).
+
+### The hazard, stated once
+
+Two processes committing out of **one checkout** interleave prek's patch save/restore and git's autostash push/pop. The
+loser's uncommitted edits are reverted to HEAD with **no error and nothing in `git status` to explain it**. This is not
+rare: measured 2026-08-10, six concurrent doc pushes from one shared checkout, with a peer session dirtying unrelated
+tracked files, landed **0 of 6** (every worker `rc=7`, prek stash/restore race). The same six from isolated worktrees
+landed **6 of 6** with every caller's working tree intact.
+
+It needs concurrent writers **in one checkout** — which is a laptop condition, not a fleet one. Two interactive Claude
+sessions routinely share one `.tabs/N` checkout (this doc's own multi-agent section documents that as accepted). The
+orchestrator's planning VM dispatches one task at a time per slot, and each slot is already its own clone, so there is
+no second writer to race.
+
+### What each script does for you now — you do not hand-roll any of this
+
+| Behaviour                               | `safe-doc-push.sh` | `quickmerge.sh`                         |
+| --------------------------------------- | ------------------ | --------------------------------------- |
+| Isolated worktree for stage+commit      | ✅ always          | ✅ laptop only (see gating below)       |
+| Retry loop w/ backoff (6 attempts)      | ✅                 | ✅                                      |
+| Per-repo push mutex + host governor     | ✅                 | ✅                                      |
+| Per-checkout `flock` around commit      | ✅                 | ✅                                      |
+| Drift gate made advisory for its commit | ✅                 | ✅                                      |
+| Detects your content being reverted     | ✅ exit 10         | ✅ loud warning + recovery instructions |
+| Recursion backstop                      | ✅ exit 11         | ✅ exit 11                              |
+
+**Do not** re-improvise fetch/reconcile/stage-by-name/retry logic in-context. Call the script.
+
+### quickmerge isolation gating
+
+`--isolated` forces it on, `--no-isolated` forces it off, `QUICKMERGE_ISOLATED=force|off` sets it non-interactively.
+Default is `auto`, which resolves by host label (`ORCHESTRATOR_VM_ID` / `VM_NAME` /
+`git config --global slotIdentity.host`, falling back to `laptop` — the same signal `slot-identity-lib.sh` already
+uses):
+
+- **Laptop (Ikenna / Harsh) → isolation ON.** Concurrent interactive sessions share a checkout; this is the hazard.
+- **agent-orchestrator planning VM → isolation OFF.** One task per slot, each slot already its own clone. Isolation
+  would add a full worktree checkout per commit for zero safety gain.
+
+Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller's checkout into the worktree, because
+`quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
+isolation would silently turn every quickmerge into a QG failure.
+
+### Exit codes worth recognising
+
+- **`safe-doc-push` exit 10** — retries exhausted **and** your named files no longer match what you handed the script.
+  Do NOT re-run: that would push whatever is on disk now. The script prints the recovering `git stash` ref. Prefer
+  `git show 'stash@{0}:<path>' > <path>` over `git stash pop` — these autostashes often also hold a peer session's WIP.
+- **`safe-doc-push` / `quickmerge` exit 11** — isolation recursion backstop. A defect in the script, not your
+  invocation; report it rather than retrying.
+- **`safe-doc-push` exit 5** — genuinely transient, and the script has verified your content is intact. Re-running is
+  safe.
+- **`safe-doc-push` exit 6** — deterministic content rejection. Fix the content; re-running cannot help. Note a hook
+  merely AUTOFIXING files is no longer classified here — that is retried automatically.
+
+### Verifying a change to any of this
+
+`scripts/dev/test-safe-doc-push-concurrency.sh <repo> <n-workers> <branch> [isolated 0|1]` is the regression harness.
+Acceptance is three-part per worker: content landed byte-identical, no exit-0-without-content, and the **caller's**
+working-tree copy unchanged. Its peer-noise writer is load-bearing — against a CLEAN checkout legacy mode scores 5/6 and
+proves nothing, because prek only does its patch save/restore when unstaged changes exist.

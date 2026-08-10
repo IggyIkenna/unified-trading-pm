@@ -121,6 +121,11 @@ ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
 # ── PARSE ARGUMENTS ───────────────────────────────────────────────────────────
 COMMIT_MSG="chore: automated update"
 FILES_ARG=""
+# --isolated / --no-isolated (2026-08-10, operator ruling). "auto" resolves by HOST below.
+ISOLATED_MODE="${QUICKMERGE_ISOLATED:-auto}"
+# Original argv, captured BEFORE the parse loop shifts it away -- isolation re-execs this
+# script verbatim and would otherwise pass an empty "$@".
+_QM_ORIG_ARGS=("$@")
 DEP_BRANCH=""
 TO_STAGING=true
 HOTFIX=false
@@ -261,6 +266,14 @@ QM_USAGE
       FILES_ARG="$2"
       shift 2
       ;;
+    --isolated)
+      ISOLATED_MODE=force
+      shift
+      ;;
+    --no-isolated)
+      ISOLATED_MODE=off
+      shift
+      ;;
     --dep-branch)
       DEP_BRANCH="$2"
       shift 2
@@ -398,6 +411,49 @@ if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
   exit 1
 fi
 
+# ── ISOLATED-WORKTREE MODE (2026-08-10, operator ruling) ─────────────────────────────────
+# WHY GATED, unlike safe-doc-push.sh where isolation is unconditional: the hazard is a SHARED
+# INDEX -- two processes committing out of one checkout interleave prek's patch save/restore
+# and git's autostash push/pop, and the loser's uncommitted edits are reverted with no error.
+# Measured 2026-08-10 in this repo: 6 concurrent doc pushes from one shared checkout landed
+# 0/6 (every worker rc=7, prek stash/restore race); the same 6 from isolated worktrees landed
+# 6/6 with every caller's tree intact.
+#
+# That hazard requires CONCURRENT WRITERS IN ONE CHECKOUT, which is a laptop condition, not a
+# fleet one:
+#   * Laptop (Ikenna / Harsh): interactive sessions have no allocation mechanism -- two
+#     Claude sessions routinely share one .tabs/N checkout (CLAUDE.md documents this as an
+#     accepted operating mode). Isolation ON.
+#   * agent-orchestrator planning VM: the dispatcher assigns ONE task at a time per slot, and
+#     each slot is already its own clone. There is no second writer to race, so isolation
+#     would add a full worktree checkout per commit for zero safety gain. Isolation OFF.
+# Host detection reuses slot-identity-lib.sh's existing signal rather than inventing one:
+# ORCHESTRATOR_VM_ID / VM_NAME / `git config --global slotIdentity.host`, falling back to
+# "laptop". Explicit --isolated / --no-isolated always win; QUICKMERGE_ISOLATED sets the
+# default non-interactively.
+_qm_host_label() {
+  local h="${ORCHESTRATOR_VM_ID:-${VM_NAME:-$(git config --global slotIdentity.host 2>/dev/null || true)}}"
+  echo "${h:-laptop}"
+}
+
+_qm_should_isolate() {
+  case "$ISOLATED_MODE" in
+    force) return 0 ;;
+    off) return 1 ;;
+  esac
+  # auto: isolate on a laptop, not on a named VM (planning et al).
+  [ "$(_qm_host_label)" = "laptop" ]
+}
+
+# Depth backstop -- learned the hard way on 2026-08-10: safe-doc-push's env handshake broke
+# and its isolation recursed to 116 nested invocations / 722 stray worktrees before anything
+# stopped it. A counter that survives an env-propagation bug is the only real bound.
+_QM_ISO_DEPTH="${QM_ISO_DEPTH:-0}"
+if [ "$_QM_ISO_DEPTH" -ge 1 ] && [ -z "${QM_IN_ISOLATION:-}" ]; then
+  echo "❌ quickmerge isolation recursion detected (depth=$_QM_ISO_DEPTH) — handshake broken; refusing to nest." >&2
+  exit 11
+fi
+
 # ── CONTENT FINGERPRINT (2026-08-10, pm_repo_commit_rate_exceeds_precommit_hook_duration) ──
 # quickmerge destroyed a caller's uncommitted edits on 2026-08-10 the same way safe-doc-push
 # did: STAGE 0.4's reconcile / prek's patch save-restore reverted the named files to HEAD
@@ -455,6 +511,65 @@ _qm_content_vanished() {
   } >&2
   return 1
 }
+
+# ── isolation execution ──────────────────────────────────────────────────────────────────
+# Re-exec THIS script inside a throwaway worktree at the CURRENT HEAD, with the caller's named
+# files copied in. Only the working directory changes; the script, its stages and its gates are
+# identical. Two details that are load-bearing:
+#   * `.venv` is symlinked from the caller's checkout. quality-gates.sh resolves the repo's own
+#     `.venv`, and a fresh worktree has none (it is gitignored) -- without this, isolation would
+#     silently turn every quickmerge into a QG failure. This is exactly why safe-doc-push's
+#     unconditional isolation is NOT simply copied here.
+#   * We re-exec "$_QM_SELF" (resolved before any cd), never the worktree's own copy, or a
+#     caller running a locally-fixed script would silently get the committed version instead.
+_QM_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
+_QM_ISO_ROOT=""
+_qm_cleanup_isolation() {
+  [ -n "$_QM_ISO_ROOT" ] || return 0
+  git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  git worktree prune 2>/dev/null || true
+}
+
+if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; then
+  _qm_repo_name="$(basename "$(pwd)")"
+  _qm_iso_parent="${TMPDIR:-/tmp}/qm-iso-$$"
+  _qm_iso_wt="$_qm_iso_parent/$_qm_repo_name"
+  _qm_caller_repo="$(pwd)"
+  if git worktree add --detach -q "$_qm_iso_wt" HEAD 2>/dev/null; then
+    _QM_ISO_ROOT="$_qm_iso_parent"
+    trap _qm_cleanup_isolation EXIT
+    # gitignored build state quality-gates.sh needs
+    for _qm_link in .venv .venv-workspace node_modules; do
+      [ -e "$_qm_caller_repo/$_qm_link" ] && [ ! -e "$_qm_iso_wt/$_qm_link" ] \
+        && ln -s "$_qm_caller_repo/$_qm_link" "$_qm_iso_wt/$_qm_link" 2>/dev/null
+    done
+    _qm_copy_ok=true
+    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+    for _qm_f in $FILES_ARG; do
+      if [ ! -f "$_qm_f" ]; then
+        echo "  isolation: named file absent in caller tree, skipping copy: $_qm_f" >&2
+        continue
+      fi
+      mkdir -p "$_qm_iso_wt/$(dirname "$_qm_f")" 2>/dev/null || true
+      cp "$_qm_f" "$_qm_iso_wt/$_qm_f" || _qm_copy_ok=false
+    done
+    if [ "$_qm_copy_ok" = true ]; then
+      echo "🔒 quickmerge isolated-worktree mode (host=$(_qm_host_label)) — your working tree is NOT touched"
+      echo "   disable with --no-isolated; see codex/05-infrastructure/per-tab-worktrees.md"
+      cd "$_qm_iso_wt" || exit 2
+      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
+      _qm_rc=$?
+      cd "$_qm_caller_repo" || true
+      exit "$_qm_rc"
+    fi
+    echo "  isolation: could not stage caller files into the worktree — continuing in the shared checkout" >&2
+    _qm_cleanup_isolation
+    _QM_ISO_ROOT=""
+  else
+    echo "  isolation: worktree setup unavailable — continuing in the shared checkout" >&2
+  fi
+fi
+
 
 # B (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix is an auditable break-glass. Require an
 # explicit [hotfix] marker in the commit message so a queue-jumping immediate staging promote is

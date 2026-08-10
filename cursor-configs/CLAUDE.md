@@ -69,16 +69,21 @@ UAC-internal.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
-  ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index).
-  Shared-host ≤2 full QGs at once, auto-enforced by `quality-gates.sh`'s own `qg-host-governor.sh`
-  (`max(2, floor(cores/4))`, queues rather than fails — just invoke normally); never bulk-kill another slot's
-  `pytest`/QG. **Per-repo + safe-docs concurrency caps (2026-08-09)**: QG's total-instance gate now composes a per-repo
-  sub-cap (PM≤4, every other repo≤1) with the host-wide cap (≤6) — never two concurrent QG runs on the SAME service
-  repo; `safe-doc-push.sh` gets its own separate host-wide 8-cap (`push-host-governor.sh`), not competing with QG's
-  budget. Both scripts reconcile against origin before every commit attempt and hard-fail (never silently proceed) on a
-  genuine unresolvable conflict. A `check-quickmerge-provenance` commit-msg hook now ALSO catches a raw source commit
-  missing the `Quickmerge:` trailer at commit time, not just push (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`).
-  SSOT: `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
+  ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index). **Ship
+  scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your checkout can't revert your edits (measured
+  0/6→6/6): always-on in safe-doc-push, laptop-only in quickmerge (`--isolated`/`--no-isolated`, auto-OFF on the AO VM).
+  They bake in retry/mutex/flock/drift — never re-improvise reconcile-retry. **Exit 10 = edits reverted, RECOVER from
+  the printed stash ref, never plain re-run**; 11=script defect; 5=safe. SSOT:
+  `/codex/05-infrastructure/per-tab-worktrees.md`. Shared-host ≤2 full QGs at once, auto-enforced by
+  `quality-gates.sh`'s own `qg-host-governor.sh` (`max(2, floor(cores/4))`, queues rather than fails — just invoke
+  normally); never bulk-kill another slot's `pytest`/QG. **Per-repo + safe-docs concurrency caps (2026-08-09)**: QG's
+  total-instance gate now composes a per-repo sub-cap (PM≤4, every other repo≤1) with the host-wide cap (≤6) — never two
+  concurrent QG runs on the SAME service repo; `safe-doc-push.sh` gets its own separate host-wide 8-cap
+  (`push-host-governor.sh`), not competing with QG's budget. Both scripts reconcile against origin before every commit
+  attempt and hard-fail (never silently proceed) on a genuine unresolvable conflict. A `check-quickmerge-provenance`
+  commit-msg hook now ALSO catches a raw source commit missing the `Quickmerge:` trailer at commit time, not just push
+  (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT:
+  `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a
