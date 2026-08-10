@@ -46,6 +46,7 @@ source: >-
   Operator observation 2026-08-10 ("with deepseek we got this context bloating issue reappearing, is deepseek pro and
   flash set to 1m or 500k?"), measured live via read-only SSM in the same session.
 depends_on: []
+archive_exempt: true
 context_scope:
   [
     agent-orchestrator/server/context_probe.py,
@@ -140,11 +141,36 @@ over-compaction for under-compaction, and neither is correct until the real numb
       counter would inflate every DeepSeek reading without bound). **DONE 2026-08-10 (slot-28)** — finding recorded in
       Progress Log below. token_total() is resident context, not cumulative.
 
-- [ ] [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves by
-      more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed — that
-      oscillation is itself the signal a denominator is wrong.
+- [x] ✅ [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves
+      by more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed —
+      that oscillation is itself the signal a denominator is wrong. — agent-orchestrator@c730f46: `observe()` now
+      compares each model's `calibrated_window` against the value seen at the previous poll and logs a
+      `calibrated_window_abrupt_move` activity event when the movement exceeds `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION`
+      (0.4) — below the smallest measured DeepSeek oscillation (1.42x) and above the 0.15 revalidation tolerance. The
+      `last_seen_calibrated_window` baseline is tracked in the learned sidecar so it survives restart. Tests:
+      `test_abrupt_calibrated_window_move_emits_an_activity_event` (acceptance),
+      `test_the_measured_deepseek_oscillation_would_alert` (exact live 82,715→180,191 shape),
+      `test_small_calibrated_window_move_does_not_alert`, `test_first_calibration_establishes_a_baseline_without_alert`.
+      Verified QG-green on the merged LDR tree (slot-14).
 
 ## Progress Log
+
+- **slot-14 2026-08-10 (`archive_exempt: true` bridge)**: this doc's own LAST open todo (item 5) made it
+  archive-eligible, so the flip commit carries `archive_exempt: true` per the `check_archive_candidates --only`
+  sanctioned flip-then-mv bridge — combining the checkbox flip with the `git mv` in one commit would defeat the AO
+  `/done` M3 cross-repo flip verification, and flipping alone trips this check. The immediately-following commit
+  `git mv`'s this doc to `plans/archive/issues/`, drops the field, flips `status: resolved` + adds the archive banner.
+- **slot-14 2026-08-10 (todo 5 — standing `calibrated_window` move invariant)**: implemented in
+  `server/context_probe.py` (agent-orchestrator@c730f46). New `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION = 0.4` +
+  `_check_calibrated_window_move()`, wired into `observe()` after every calibration write. It compares the model's final
+  `calibrated_window` against `last_seen_calibrated_window` recorded at the previous poll (persisted in the learned
+  sidecar, so the baseline survives restart) and logs a `calibrated_window_abrupt_move` activity event + warning when
+  the movement exceeds 40%. Threshold choice: below the smallest measured DeepSeek oscillation (flash 1.42x, pro 2.18x)
+  and above the 0.15 revalidation tolerance, so an honest within-tolerance correction stays quiet. The check is
+  direction-agnostic (max/min ratio) — it catches under-reporting AND over-reporting oscillations. Regression tests
+  cover the acceptance event, the exact live deepseek-v4-pro 82,715→180,191 shape (simulated via a sidecar change
+  between polls, since DeepSeek no longer calibrates from pane pct), a quiet 1.1x re-calibration, and baseline-seeding
+  on first calibration. QG green (3128 passed / 2 skipped).
 
 - **slot-28 2026-08-10 (todo 4 — verify `token_total()` is resident, not cumulative, for DeepSeek)**: Cross-validated
   `token_total()` against the CLI's independent `compactMetadata.preTokens` across 3 compaction boundaries in session
