@@ -1595,8 +1595,43 @@ MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 # Governor queue-wait excluded from billable time — mirror of base-service.sh
 # (qg_host_governor_severe_contention_2026_07_13.md). 0 when ungoverned/uncontended.
-DUR_BILLABLE=$(( DUR - ${QG_GOVERNOR_WAIT_SECONDS:-0} ))
-[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR_BILLABLE -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR_BILLABLE}s work + ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait = ${DUR}s wall)"; exit 1; }
+DUR_WALL_BILLABLE=$(( DUR - ${QG_GOVERNOR_WAIT_SECONDS:-0} ))
+
+# ── BILLABLE TIME IS CPU-SECONDS, NOT WALL (2026-08-10) ──────────────────────
+# Wall clock measures how busy the HOST was, not how much work this gate did. Subtracting the
+# governor's explicit queue-wait does not fix that: time spent DESCHEDULED while peers saturate
+# the CPU is still counted as work. Measured on a dev laptop the same PM gate reported 602s
+# "work" under 11 concurrent quickmerges against a 600s cap -- a 0.3% overshoot that was pure
+# contention, surfaced to the agent as a content failure, and whose retry cost another full
+# gate and made the next run likelier to trip. That is the livelock shape this whole gate
+# family exists to avoid.
+#
+# CPU-seconds are invariant under contention: a gate that burns 370 CPU-seconds burns 370
+# whether it runs alone or against eleven peers -- only the wall time moves. This also makes
+# the codex's "organically outgrows the budget ON A QUIET HOST" test (quality-gates.md
+# "Bump MAX_DURATION ...") MEASURABLE rather than a human judgement about how busy the box was:
+# real growth still trips the cap, load no longer does.
+#
+# `times`'s second line is cumulative user+sys for children this shell has waited for. It MUST
+# be captured by REDIRECTION -- inside `$(...)` the builtin runs in a SUBSHELL with its own
+# accounting and reports 0m0.000s, i.e. a zero-second budget that can never trip. Verified both
+# ways before adopting (0.787s via redirect vs 0.000s via command substitution).
+_qg_cpu_file="${TMPDIR:-/tmp}/qg-cpu-$$"
+times > "$_qg_cpu_file" 2>/dev/null || true
+DUR_CPU=$(awk 'NR==2 { t=0; for (i=1;i<=NF;i++) { split($i,p,"m"); sub(/s$/,"",p[2]); t += p[1]*60 + p[2] } printf "%d", t }' "$_qg_cpu_file" 2>/dev/null)
+rm -f "$_qg_cpu_file"
+# Fall back to the wall figure if CPU accounting is unavailable or implausible: a silent 0 would
+# disable the cap entirely, which is worse than the contention false-positive it replaces.
+if [ -n "${DUR_CPU:-}" ] && [ "${DUR_CPU:-0}" -gt 0 ] 2>/dev/null; then
+  DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU"
+else
+  DUR_BILLABLE=$DUR_WALL_BILLABLE; _qg_dur_basis="wall(CPU unavailable)"
+fi
+# The wall clock is kept ONLY as a hang detector, deliberately loose -- a gate stuck on a lock
+# or a dead network call burns no CPU and would otherwise never trip anything.
+MAX_WALL=${MAX_WALL:-$(( MAX_DURATION * 4 ))}
+[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR_BILLABLE -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (${DUR_BILLABLE}s ${_qg_dur_basis} work; ${DUR}s wall incl. ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait)"; exit 1; }
+[ "${IGNORE_TIMEOUT:-false}" != "true" ] && [ $DUR -gt $MAX_WALL ] && { log_fail "Quality gates wall-clock ceiling ${MAX_WALL}s exceeded (${DUR}s wall, only ${DUR_BILLABLE}s ${_qg_dur_basis} work) -- suspected HANG, not load"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) — mirror of
