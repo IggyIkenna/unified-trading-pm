@@ -371,11 +371,19 @@ depends_on: []
           denser 2022+ seasons. Run now ~5h+ old.
         - No code shipped — pure monitoring. `/pre-compact` executed.
 
-## Deferred work after 2026-08-10 ~21:30Z
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued monitoring:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-30` (prior session) → `2021-08-05`. Monotonic, forward progress. ~414/2258 days done (~18.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~6 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
+          denser 2022+ seasons. Run now ~5h+ old.
+        - No code shipped — pure monitoring. `/pre-compact` executing.
+
+## Deferred work after 2026-08-10 ~21:25Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-30`, ~409/2258 days (~18.1%)       | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-08-05`, ~414/2258 days (~18.3%)       | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
