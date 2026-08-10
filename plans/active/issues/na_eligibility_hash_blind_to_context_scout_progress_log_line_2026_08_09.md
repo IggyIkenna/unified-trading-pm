@@ -64,6 +64,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrers) -- see Progress Log
 context_scope:
   [/cursor-configs/skills/na-eligibility-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
 ---
@@ -126,14 +127,21 @@ other sibling-marker) line must compute `incremental_skip: true`.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. In `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`, extend `body_content_hash()`'s
+- [x] ✅ [SCRIPT] P2. In `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`, extend `body_content_hash()`'s
       marker-line stripping to also exclude `**context-scout YYYY-MM-DD**...` body lines (and any other confirmed
       sibling-skill dated marker convention found via the corpus grep above), so a context-scout-only touch no longer
-      changes the hash. Add a unit fixture proving a context-scout-only diff yields `incremental_skip: true`.
-- [ ] [DOCS] P3. Add a one-line cross-reference in `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s Phase 0
+      changes the hash. Add a unit fixture proving a context-scout-only diff yields `incremental_skip: true`. —
+      `unified-trading-pm@a1f72c11c8`: `_BOOKKEEPING_MARKER_SKILL_NAMES = ("na-eligibility-audit", "context-scout")`
+      shipped, regression test `test_body_content_hash_stable_across_context_scout_marker_line` added. Verified by
+      plan_reconciler infra shard (agt-716973, 2026-08-10): both the code and the test exist live at HEAD.
+- [x] ✅ [DOCS] P3. Add a one-line cross-reference in `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s Phase 0
       "Interim mitigation for date-fallback false-positives" section naming this context-scout-specific sub-case
       explicitly, so the next tranche run that hits it can cite this issue instead of independently re-deriving the same
-      by-hand verification this run just performed across 11 docs.
+      by-hand verification this run just performed across 11 docs. — shipped alongside the script fix: SKILL.md's Phase
+      0 now reads "**`/context-scout`-only sub-case**: a body-level `/context-scout` Progress Log line... fixed by
+      generalizing `body_content_hash()`'s marker-stripping to a sibling-marker family; see
+      `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`." Verified live at HEAD by
+      plan_reconciler infra shard (agt-716973, 2026-08-10).
 
 ## Progress Log
 
@@ -145,3 +153,11 @@ other sibling-marker) line must compute `incremental_skip: true`.
   self-reclassified in the same breath as filing; left for an independent future pass (or operator) to conflict-check
   and flip. Checked for an existing conflicting claim before filing (grep for `_VERDICT_MARKER_LINE_RE` and
   `context-scout.*hash` across `plans/active/` — none found).
+- **2026-08-10 (plan_reconciler infra shard, agt-716973)** — both todos verified HARD-shipped (code + test + SKILL.md
+  cross-reference all confirmed live at HEAD, independently corroborated by
+  `infra_satellite_ao_dispatch_batch11_2026_08_09.md:115-145` showing the same items `[x]` with matching evidence) and
+  flipped. Doc is now fully done, unlocked — normally archive-ready, but **archival DEFERRED this run**: 5 leading-slash
+  referrers to this doc live in 3 docs (`infra_satellite_ao_dispatch_batch11_2026_08_09.md` + its `_finalize` twin +
+  `ag_closeout_audit_infra_parked_2026_08_09.md`) that are all inside today's 12h grace window (actively being worked,
+  read-only this run) — archiving now would leave those referrers dangling. Leave this doc active; a future run (once
+  those 3 docs clear grace) should complete the 6-step ritual.

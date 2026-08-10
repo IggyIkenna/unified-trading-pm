@@ -53,6 +53,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrer) -- see Progress Log
 source: >-
   `/ag-closeout-audit infra` run 2026-08-01 (ag_closeout_auditor scheduled worker, slot 5). Phase 0 re-derived the
   covering set via `generate_ag_closeout_audit_candidates.py --tranche infra` (39 members, 1 never-cited) and ran the
@@ -191,11 +192,14 @@ no drift:
       commit (dfdb0887f) — batch3 now carries an "ACTIVE + DISPATCHABLE (2026-08-02)" banner, verified live. text
       (finding 4). Done when: the banner matches the frontmatter `status: active` state (or is removed entirely now that
       the doc has real shipped work under it).
-- [ ] [SCRIPT] P3. Harden `generate_ag_closeout_audit_candidates.py`'s `CITE_RE` matching so a Progress Log narrative
-      mention of a filename does not count as a dispatch citation (finding 5). Done when: a doc named only in a covering
-      doc's prose/Progress Log (not in a `Source:` line or todo) still reports as never-cited, verified by a regression
-      case using `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s exact current situation as the test
-      fixture.
+- [x] ✅ [SCRIPT] P3. **CLOSED 2026-08-10 (plan_reconciler infra shard, agt-716973) — superseded, not shipped.** This
+      item (finding 5, `CITE_RE` hardening) is the SAME item this doc's own 2026-08-08 Progress Log entry (below)
+      already confirmed is "the SAME item" as `ag_closeout_audit_infra_parked_2026_08_03.md`'s finding 13 — which has
+      itself been carried forward daily since and is now tracked live as finding 13 in
+      `ag_closeout_audit_infra_parked_2026_08_09.md:180-181` ("carried, 7th day"), still genuinely open THERE. Closing
+      the duplicate copy here per this same doc's own established precedent (see the 2026-08-06 Progress Log entry
+      below: "superseded — the findings now live in the 08-02/08-03/08-04 parked registers"). Not double-counted as done
+      — the underlying work is still open, just tracked in one place instead of two.
 - [x] ✅ [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`'s
       `asset_group` **CLOSED 2026-08-06 (na-eligibility-audit)**: done 2026-08-02 by operator ruling
       (`/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 19,
@@ -278,3 +282,8 @@ no drift:
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (4 entries) -- the sole open todo (CITE_RE hardening
   in generate_ag_closeout_audit_candidates.py) is still fully covered.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **2026-08-10 (plan_reconciler infra shard, agt-716973)**: closed the sole remaining open item (finding 5) as a
+  superseded duplicate — see the todo above for evidence. Doc is now fully done, unlocked — normally archive-ready, but
+  **archival DEFERRED this run**: referrer `ag_closeout_audit_infra_parked_2026_08_03.md` is inside today's 12h grace
+  window (actively worked, read-only this run); archiving now would leave that referrer's leading-slash reference
+  dangling. A future run (once that doc clears grace) should complete the 6-step archival ritual.

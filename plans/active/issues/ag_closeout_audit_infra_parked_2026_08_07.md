@@ -71,6 +71,7 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
+archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrer) -- see Progress Log
 context_scope:
   [
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
@@ -221,10 +222,14 @@ since it produced a shipped draft artifact, not an unresolved item).
       `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`.
 - [x] ✅ [OPERATOR] P2. **APPROVED 2026-08-07 — flipped to `active`.** See
       `infra_satellite_ao_dispatch_batch8_2026_08_07.md` frontmatter.
-- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
-      (finding 12, carried). Design/tooling-priority call, not urgent.
-- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried: `CITE_RE` hardening
-      design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
+- [x] ✅ [DOCS] P3. **CLOSED 2026-08-10 (plan_reconciler infra shard, agt-716973) — superseded, not shipped.** Finding
+      12 (`self_dispatched_orphan_count` addition) is verbatim carried forward and still tracked live as finding 12 in
+      `ag_closeout_audit_infra_parked_2026_08_09.md:178-179` ("carried, 7th day"), genuinely open THERE. Closing the
+      duplicate copy here; underlying work not double-counted as done.
+- [x] ✅ [DOCS] P3. **CLOSED 2026-08-10 (plan_reconciler infra shard, agt-716973) — superseded, not shipped.** Finding
+      13 (`CITE_RE` hardening scope + conflict-check) is verbatim carried forward and still tracked live as finding 13
+      in `ag_closeout_audit_infra_parked_2026_08_09.md:180-181` ("carried, 7th day"), genuinely open THERE. Closing the
+      duplicate copy here; underlying work not double-counted as done.
 
 ## Progress Log
 
@@ -250,3 +255,8 @@ since it produced a shipped draft artifact, not an unresolved item).
   own scope excludes flipping a drafted batch itself); the 2 `[DOCS] P3` items are tooling-design calls, self-described
   as "not urgent." Freshly created today, nothing stale yet. `assigned_vm: NA` is correct.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-10 (plan_reconciler infra shard, agt-716973)**: closed both remaining open items (findings 12+13) as
+  superseded duplicates — see the todos above for evidence. Doc is now fully done, unlocked — normally archive-ready,
+  but **archival DEFERRED this run**: referrer `ag_closeout_audit_infra_parked_2026_08_08.md` is inside today's 12h
+  grace window (actively worked, read-only this run); archiving now would leave that referrer's leading-slash reference
+  dangling. A future run (once that doc clears grace) should complete the 6-step archival ritual.
