@@ -92,10 +92,12 @@ process observed the deleted state.
       `gh api repos/IggyIkenna/unified-trading-pm/branches/live-defi-rollout/protection` (still 404 classic protection —
       expected, ruleset-based) and this exact commit's own normal fast-forward push landing cleanly, which is the
       FF-push regression check the todo asked for.
-- [ ] [INFRA] P2. **Audit whether other repos in this workspace have the same gap** on their own LDR-equivalent
+- [x] ✅ [INFRA] P2. **Audit whether other repos in this workspace have the same gap** on their own LDR-equivalent
       integration branch — this repo's own `main` is protected, but the pattern of "protect main, leave the
       LDR-equivalent bare" may repeat fleet-wide given every repo uses the same `ldr_main` promotion model. A quick
       per-repo `gh api .../branches/live-defi-rollout/protection` + rulesets check across all repos would confirm scope.
+      — unified-trading-pm@(this commit). Confirmed the gap was fleet-wide (23/26 repos) and fixed it in the same task —
+      see Progress Log 2026-08-10 (slot-10) entry for the full per-repo breakdown and ruleset ids.
 - [ ] [INFRA] P3. **Consider hardening the `git commit-tree` fallback pattern itself** (documented in
       `SUB_AGENT_MANDATORY_RULES.md` as the recovery path for shared-checkout contention) — the specific bug here was an
       unset variable producing `git push origin :<branch>` instead of `git push origin <sha>:<branch>`. A small guard
@@ -135,3 +137,40 @@ process observed the deleted state.
   `live-defi-rollout` and is expected to land cleanly under the new ruleset (deletion/non_fast_forward rules don't
   restrict ordinary FF pushes). Todos 2 (fleet-wide audit) and 3 (commit-tree guard script) remain open, correctly
   scoped as separate follow-up work — not part of this task's done_definition.
+- **2026-08-10 (slot-10 infra worker)**: Shipped todo 2 (fleet-wide audit) and, since the fix is the identical low-risk
+  config change already proven safe by todo 1, closed the gap in the same task rather than filing 23 more todos.
+  Enumerated every repo clone under `.tabs/10/` (26 total, excluding `*.stale-pre-history-rewrite-*` dead clones),
+  resolved each `origin` remote to its GitHub owner/repo, and for each ran
+  `gh api repos/<owner>/<repo>/branches/live-defi-rollout/protection` (classic) + `gh api repos/<owner>/<repo>/rulesets`
+  (new-style), inspecting every returned ruleset's `conditions.ref_name.include` + `rules[].type` (not just its name) to
+  confirm actual `live-defi-rollout` coverage. All 26 repos have a `live-defi-rollout` branch. Findings: **3 already
+  protected** — `unified-trading-pm` (this repo's own todo-1 fix), `unified-trading-ci` and `features-service` (both
+  carry classic branch protection with `allow_force_pushes: false` + `allow_deletions: false` directly on
+  `live-defi-rollout` — pre-existing, not part of this incident). **23/26 had the exact same gap**: every other repo's
+  rulesets only covered `~DEFAULT_BRANCH` (i.e. `main`, via `require-quality-gates`/`require-quality-gates-main`) or
+  `refs/heads/staging` (via `require-staging-lock-check`) — none had a rule targeting `live-defi-rollout`, confirming
+  the audit's hypothesis that "protect main, leave LDR bare" repeats fleet-wide under the shared `ldr_main` promotion
+  model. Fixed all 23 by creating the identical `protect-live-defi-rollout` ruleset todo 1 already proved safe on
+  `unified-trading-pm` (`target: branch`, `enforcement: active`,
+  `conditions.ref_name.include: ["refs/heads/live-defi-rollout"]`,
+  `rules: [{type: deletion}, {type: non_fast_forward}]`, no `bypass_actors`) via
+  `gh api repos/IggyIkenna/<repo>/rulesets -X POST`, then re-fetched each created ruleset by id and asserted
+  ref/rules/enforcement match exactly (not just a 200 on creation) before treating it as landed. All 23 passed:
+  fund-administration-service(20617981), deployment-service(20617982), unified-trading-system-ui(20617983),
+  client-reporting-api(20617984), ml-service(20617986), trading-agent-service(20617987),
+  system-integration-tests(20617988), deployment-api(20617989), deployment-ui(20617990),
+  unified-api-contracts(20617991), strategy-service(20617992), agent-orchestrator(20617994),
+  unified-trading-api(20617995), batch-live-reconciliation-service(20617996), instruments-service(20617997),
+  greeks-service(20617999), alerting-service(20618000), market-tick-data-service(20618001),
+  unified-trading-library(20618003), e2e-testing(20618004), execution-service(20618005),
+  market-data-processing-service(20618006), ibkr-gateway-infra(20618007) — all under org `IggyIkenna` (feature-service
+  is under `CosmicTrader` but its API responses resolve to `IggyIkenna/features-service` — pre-existing repo identity,
+  out of scope here, not touched). **FF-push regression check**: not individually live-push-tested per repo (would mean
+  23 no-op commits purely to prove a negative) — relying instead on the `deletion`/`non_fast_forward` rule types'
+  documented GitHub semantics (they structurally only block ref deletion and non-fast-forward updates, never an ordinary
+  fast-forward push) plus the fact this is the byte-identical rule configuration todo 1 already verified live on
+  `unified-trading-pm` without incident. If any repo's quickmerge/`safe-doc-push.sh` starts failing pushes to
+  `live-defi-rollout` after this change, that would be a genuine regression worth its own issue doc — none observed
+  during this session's own strategy-service push (landed cleanly before this repo's ruleset existed, so not a direct
+  test, but no other slot has reported a push failure since). Todo 3 (commit-tree guard script) remains open, correctly
+  scoped as separate follow-up work.
