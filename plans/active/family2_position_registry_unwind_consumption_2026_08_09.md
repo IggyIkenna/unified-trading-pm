@@ -47,13 +47,14 @@ source: >-
 assigned_role: backend_engineer
 effort: medium
 drift_direction: advance-code
+archive_exempt: true
 ---
 
 # Family2PositionRegistry — unwind/close consumption
 
 ## Todos
 
-- [ ] [BACKEND] P3. Add unwind/close consumption to `Family2PositionRegistry`
+- [x] ✅ [BACKEND] P3. Add unwind/close consumption to `Family2PositionRegistry`
       (`execution-service/execution_service/defi_execution/monitors/family2_position_registry.py`) once
       `strategy_service_family2_close_unwind_emission_2026_08_09.md` ships strategy-service's real Family-2 close/unwind
       emission path (this plan is `gate_on_depends`-blocked until then — do not attempt this before the prerequisite's
@@ -67,10 +68,26 @@ drift_direction: advance-code
       the 6-step ritual into this same todo per task_template.md §4's "genuinely single-todo plan" carve-out): once
       shipped + green, `git mv` this file to `plans/archive/2026_08/`, flip `status: complete`, fix any corpus referrers
       (`grep -rl 'family2_position_registry_unwind_consumption_2026_08_09'`), and confirm `run_hygiene_sweep.sh` stays
-      green — as a commit SEPARATE from the checkbox-flip commit.
+      green — as a commit SEPARATE from the checkbox-flip commit. — execution-service@1adbd2cd. Implemented by reading
+      the prerequisite's shipped close shape (strategy-service@e72cf66c, `_build_family2_close_instruction`): close
+      events carry `attestations["instrument_type"] == "RECURSIVE_LENDING_LOOP_PERP_HEDGED_CLOSE"` and both
+      `correlation_id` and `attestations["closed_instruction_id"]` set to the open's `instruction_id`.
+      `enumerate_open_positions()` now collects close targets in the read window and retires matching opens in a second
+      pass (order-independent). 5 new unit tests: retire-on-close, retire-only-matching-open, close-before-open order
+      independence, correlation_id fallback (no explicit attestation), unknown-target close ignored. QG green (207s) on
+      `1adbd2cd`.
 
 ## Progress Log
 
+- **2026-08-10 (slot 25, backend_engineer)**: Shipped — read the prerequisite's shipped emission code
+  (`recursive_staked.py::_maybe_close_family2_position`/`_build_family2_close_instruction`, strategy-service@e72cf66c)
+  rather than guessing a schema. Added close consumption to `Family2PositionRegistry.enumerate_open_positions()` (close
+  = `RECURSIVE_LENDING_LOOP_PERP_HEDGED_CLOSE` instrument_type; target id read from `closed_instruction_id` attestation
+  with `correlation_id` fallback), retiring matching opens in a second pass so stream order doesn't matter.
+  execution-service@1adbd2cd; 5 retire-path unit tests; `quality-gates.sh` full green (207s, sentinel=1adbd2cd).
+  Archival follows in a separate commit. `archive_exempt: true` set in this same flip commit per the sanctioned
+  flip-then-mv bridge (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`) — the
+  immediately-following `git mv` commit drops the flag.
 - **2026-08-09 (slot 33, backend_engineer)**: Authored per BLK-0fb75f8f (main ruling, option A) — split out of
   `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`'s unwind-consumption todo. Gated via `depends_on` +
   `gate_on_depends: true` on `strategy_service_family2_close_unwind_emission_2026_08_09` so the dispatcher holds it
