@@ -575,3 +575,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (`af-backfill-20260809-222924`): `[[VM_PROGRESS]]` marker confirms real monotonic advance to 2022-06-19 (from
   2021-11-04 last tick). Census: INJURIES needed **52,494 → 47,294** (-5,200 in ~33min, ~9,455/hr — steady, similar
   order to last tick; ETA holding around ~5h). Both fleets healthy overall, no further intervention needed.
+- **00:26Z — Both fleets healthy, INJURIES accelerating further.** `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance 2022-06-19→2023-09-04 (over a year of dates in under an hour). `smallchunk15`: chunk 12/452, **zero
+  OOMs across the entire run so far**, fresh (~19s heartbeat lag) — 6 chunks from chunk 18. Census: INJURIES needed
+  **47,294 → 35,732** (-11,562 in ~59min, ~11,764/hr — accelerating further; ETA now ~3h, down from ~5h). Minor
+  non-issue: PLAYER_STATS shows `needed=3` (was 0) — its `expected` denominator grew by exactly 3 as "today" advances
+  and new fixture-days enter scope; not a regression, those 3 shards are brand-new and simply not yet captured.
+  STANDINGS/TEAMS unchanged. No intervention needed.
