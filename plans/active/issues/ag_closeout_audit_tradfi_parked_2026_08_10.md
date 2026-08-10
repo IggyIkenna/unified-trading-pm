@@ -1,41 +1,58 @@
 ---
 doc_type: issue
 title:
-  "First /ag-closeout-audit tradfi run (2026-08-10) — 2 orphans classified: 1 stale-locked run-report needing an
-  operator unlock decision, 1 credential-gated draft plan"
+  "tradfi /ag-closeout-audit 2026-08-10 — 2 dispatch shapes ran the same day: all-mode's 2-orphan linkage-only sweep
+  (slot 26) + sharded $TRANCHE=tradfi's full 52-doc Phase 1 sweep (slot 25, 31 orphans) — 4 findings total needing
+  operator/main-agent attention"
 summary: >-
-  Tradfi's first-ever `/ag-closeout-audit` pass (no prior `ag_closeout_audit_tradfi_parked_*.md` exists in the corpus).
-  `check_ag_closeout_linkage.py` confirmed 2 orphans: `issues/plan_reconciler_findings_2026_08_06.md` is a fully-closed
-  daily plan_reconciler run-report (0 real open work, a real-content-read correctly overrides the linkage script's flag)
-  but carries a stale `locked_by: plan_reconciler — run in progress` field that blocks archival without an explicit
-  operator `[unlock-plan]` per CLAUDE.md's HARD RULE — NOT archived autonomously this run, flagged instead.
-  `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` has 4 open items in a strict dependency chain
-  rooted in an operator credential/subscription signup (a residential-proxy account, ~$7 PAYG) — genuinely uncovered by
-  any active tradfi plan (2 covering docs explicitly note-but-don't-execute it), not AO-eligible.
+  Tradfi's first-ever `/ag-closeout-audit` pass, filed twice the same day by two different dispatch shapes (a real
+  operational gap, see Finding 3 below). **Slot 26** (`all`-mode, no `$TRANCHE`) ran Phase 0 via
+  `check_ag_closeout_linkage.py`'s corpus-wide orphan list only and found 2 orphans: `issues/plan_reconciler_findings_
+  2026_08_06.md` is a fully-closed daily plan_reconciler run-report (0 real open work) but carries a stale `locked_by:
+  plan_reconciler — run in progress` field blocking archival without an explicit operator `[unlock-plan]`;
+  `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` has 4 open items in a credential-gated dependency
+  chain, genuinely uncovered, not AO-eligible. **Slot 25** (sharded `$TRANCHE=tradfi`) ran the skill's full documented
+  Phase 0.3 candidate discovery (`generate_ag_closeout_audit_candidates.py`, 52 tradfi-primary docs) + Phase 1 (52-agent
+  Workflow, every candidate read in full) and found 31 orphaned docs — the two verdicts don't conflict (slot 26's 2 are
+  correctly a SUBSET, both independently re-confirmed by slot 25's own Phase 1: see Finding 3 for why the
+  linkage-check-only sweep structurally misses most of them) — drafted
+  `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (14 conflict-clear AO-eligible items, `status: draft`) for the
+  batchable subset, and parks 2 additional non-batchable findings here (Finding 1: a second, DIFFERENT stalled
+  plan_reconciler run at `plan_reconciler_findings_tradfi_2026_08_09.md`, locked + abandoned since 2026-08-09T16:52Z,
+  not the same doc slot 26 found; Finding 2: a 2026-08-07 operator ruling sitting 2/8 and 0/1 unexecuted across 4+ audit
+  cycles).
 status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [tradfi, ag-closeout-audit, parked-findings, locked-plan, credential-ask, first-run]
+tags: [tradfi, ag-closeout-audit, parked-findings, locked-plan, credential-ask, first-run, plan-reconciler, escalation]
 related:
   [
     /plans/active/issues/plan_reconciler_findings_2026_08_06.md,
+    /plans/active/issues/plan_reconciler_findings_tradfi_2026_08_09.md,
+    /plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-10"
-author: "slot-26 (ag_closeout_auditor, all-tranche mode)"
+author:
+  "slot-26 (ag_closeout_auditor, all-tranche mode) + slot-25 (ag_closeout_auditor, sharded tradfi, dispatch agt-022d39,
+  appended)"
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P3
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.08
@@ -51,14 +68,18 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 source: >-
   `/ag-closeout-audit all` run 2026-08-10 (ag_closeout_auditor scheduled worker, slot 26, one-shot, no $TRANCHE set).
   Phase 1 ran a Workflow (one agent per doc, medium effort) over both tradfi orphan candidates confirmed by
-  `check_ag_closeout_linkage.py`.
+  `check_ag_closeout_linkage.py`. **Appended same day** by the sharded `$TRANCHE=tradfi` dispatch (slot 25, dispatch
+  agt-022d39) per this skill's "APPEND to a same-day doc if one already exists" rule — found this doc already landed on
+  origin mid-ship (a genuine same-day filename collision between the two dispatch shapes, not a conflict to discard),
+  pulled latest, appended Findings 1/2/3 below without altering slot-26's original content.
 ---
 
-# Parked findings — 2026-08-10 `/ag-closeout-audit tradfi` (part of the `all`-mode run, first tradfi run on record)
+# Parked findings — 2026-08-10 `/ag-closeout-audit tradfi` (2 dispatch shapes ran the same day — see Finding 3)
 
 ## Carried forward, still OPEN
 
@@ -83,6 +104,59 @@ source: >-
    explicitly FLAG this doc as "a complete, already well-scoped standalone draft PLAN... needs operator
    review/promotion" — noted for the operator's attention, never actually executed or folded into any active batch todo.
 
+## Appended 2026-08-10 (slot 25, sharded `$TRANCHE=tradfi` dispatch agt-022d39) — Findings 3-5
+
+**Ran the skill's full documented Phase 0.3 candidate discovery** (`generate_ag_closeout_audit_candidates.py`, fixed
+live this pass — see Finding 3 — 52 tradfi-primary docs) + Phase 1 (52-agent Workflow, every candidate read in full
+against all 15 active tradfi covering docs), not just the linkage-check shortcut above. Result: 4 archivable_now, 3
+archivable_after_planned_work, 14 orphaned_partial_coverage, 17 orphaned_never_touched, 14 exclude_cross_cutting.
+Drafted `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (+ gated finalize) for 14 conflict-clear AO-eligible items;
+full per-doc reasoning + the Deferred/Flagged taxonomy for the remaining 17 orphans lives in that plan. The 2 findings
+below don't fit that plan's Deferred taxonomy (process/meta gaps, not tradfi content work), so they're parked here
+instead, alongside a methodology note explaining the 2-vs-31 orphan-count gap between this run and slot-26's above.
+
+3. **Methodology gap between the two dispatch shapes, found live this pass —
+   `generate_ag_closeout_audit_ candidates.py`'s hub-doc exclusion regex was ALSO silently swallowing at least 1 real
+   tradfi candidate doc.** Fixed in this pass (`unified-trading-pm@e7ac1ed4e1`): the exclusion used an unanchored
+   `re.search(r"_consolidated_ closeout", basename)`, which matched any issue doc whose own longer title merely CONTAINS
+   that substring — e.g. `tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md` (real, open,
+   tradfi-scoped work) read as if it WERE the hub doc itself and was excluded from every tranche's candidate list.
+   Anchored via `re.fullmatch`; verified zero regression across all 10 tranches. Separately (not a bug, a structural
+   gap): `check_ ag_closeout_linkage.py`'s orphan detection (what slot-26's `all`-mode pass used) only flags docs with
+   ZERO citation-graph path to the closeout family — it does NOT catch a doc that IS cited (e.g. in a
+   stale/non-actionable digest listing) but isn't genuinely COVERED by any real todo, which is exactly Phase 1's per-doc
+   judgment call and the dominant orphan class this pass found (most of the 31 orphans here ARE reachable via the
+   linkage graph, just not by real coverage). This is why the two same-day tradfi passes report 2 vs 31 orphans without
+   contradicting each other — `all`-mode's linkage-only shortcut is a strict subset check, not a replacement for the
+   skill's own documented Phase 0.3+1 procedure. **Recommendation**: `all`-mode should either budget for the full
+   candidates-generator + Phase-1 sweep per tranche (expensive across 10 tranches in one worker) or explicitly document
+   that its orphan counts are a lower bound, not the real figure — as currently written this is a silent gap an operator
+   reading only the `all`-mode output would not know exists.
+4. **Stalled `plan_reconciler` run against tradfi — a DIFFERENT doc than Finding 1 above, also locked and abandoned.**
+   `plans/active/issues/plan_reconciler_findings_tradfi_2026_08_09.md` (`locked_by: plan_reconciler (agt-642862)` since
+   `2026-08-09T16:00:00Z`) launched a 9-hunter STEP-3 fan-out at 16:22 UTC and was never resumed — every downstream
+   section (`## Flips verified`, `## Hygiene fixes`, `## Codex corrections applied`, `## Filed`,
+   `## Archive candidates`, `## Refuted`, `## Coverage`, `## Plans not reached`) still reads its STEP-4/5/5g/6/7
+   placeholder text. 5 named P0/P1 hunter-surfaced candidates (billing-suspension self-contradiction,
+   batch5-archived-vs-cited-active, massive.py stale plan claim, PAYG-billing-stale operator-decision-cost, batch6 P0
+   todo line-1-completeness failure) were promised routed to `## Filed` and never landed there. `git log` shows only 2
+   same-day commits, file mtime `2026-08-09 16:52`, no continuation doc exists anywhere in the corpus. Out of
+   `/ag-closeout-audit`'s own scope to fix (it trusts frontmatter `status` as-is, per `ag_closeout_auditor.md`'s
+   `does_not` section) — needs either a fresh `/plan-reconcile tradfi` dispatch to actually complete STEP 4 onward, or
+   an explicit operator decision to abandon the run and unlock the doc. The longer it sits, the more likely the STEP-3
+   hunter transcripts are gone and the 5 findings need re-discovering from scratch.
+5. **2026-08-07 operator ruling sitting 2/8 and 0/1 unexecuted, 4+ consecutive audit cycles.**
+   `issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md` items 5 and 8 both trace to one 2026-08-07 ruling
+   not fully carried out: item 5 ("flip all 8 draft tradfi AO plans," Option A) — 6/8 done, but
+   `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` + its `_finalize.md` (14 of the original 49 todos) are
+   STILL `status: draft` today, independently re-verified this pass; batch7/8/9 each flagged this as a future-pass check
+   and none picked it up. Item 8 ("fold + archive `tradfi_consolidated_closeout_2026_07_18.md`," Option C) — zero
+   progress; the closeout doc is still active/unarchived and every current tradfi covering doc (including batch11
+   drafted this pass) still depends on it existing at its current path, so this needs deliberate sequencing (likely
+   gated on batch6-9/11 clearing first), not an ad hoc mid-batch action. Both are already flagged inline in
+   `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s `## Deferred — operator-gated` section; surfaced here too
+   since a note buried in a `status: draft` batch plan is easy to miss.
+
 ## Todos
 
 - [ ] [OPERATOR] P3. **Confirm `issues/plan_reconciler_findings_2026_08_06.md`'s
@@ -92,6 +166,17 @@ source: >-
 - [ ] [OPERATOR] P2. **Review `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` for promotion**
       (finding 2) — `status: draft` → `active`, OR provision the IPRoyal residential-proxy credential (~$7 PAYG) to
       unblock items 4/5/7, OR decline and let it stay parked.
+- [ ] [DOC] P2. **Decide whether `/ag-closeout-audit all` mode should budget for the full candidates-generator + Phase-1
+      sweep per tranche, or explicitly document its orphan counts as a lower bound** (finding 3) — the 2-vs-31 orphan
+      gap between this doc's two same-day passes is a real methodology difference, not noise; an operator relying only
+      on an `all`-mode report would not currently know the count is a floor. Repo: unified-trading-pm,
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md`.
+- [ ] [OPERATOR] P1. **Resume or explicitly abandon+unlock the stalled `plan_reconciler_findings_tradfi_2026_08_09.md`
+      run** (finding 4) — dispatch a fresh `/plan-reconcile tradfi` pass to complete STEP 4 onward and file the 5 named
+      P0/P1 candidates, or decide to abandon it and clear `locked_by`.
+- [ ] [OPERATOR] P1. **Complete or explicitly re-park the 2026-08-07 ruling's remaining 2/8 + 0/1 items** (finding 5) —
+      flip `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (+finalize) to `active`, and schedule item 8's
+      fold/archive of `tradfi_consolidated_closeout_2026_07_18.md` once the currently-active tradfi batches clear.
 
 ## Progress Log
 
@@ -102,3 +187,13 @@ source: >-
   `operator_gated_credential_ask`. Did NOT autonomously archive or unlock the locked doc, per CLAUDE.md's HARD RULE.
   Ledger: 2 findings (1 new — the locked-doc discovery; 1 carried/re-verified from the covering docs' own flag notes)
   - 0 new batch todos — **balanced**.
+- **2026-08-10 (appended, slot 25, sharded `$TRANCHE=tradfi` dispatch agt-022d39)**: ran the skill's full documented
+  Phase 0.3 (`generate_ag_closeout_audit_candidates.py`, 52 candidates) + Phase 1 (52-agent Workflow) sweep. Found this
+  doc already landed on origin mid-ship (same-day filename collision with slot-26's `all`-mode pass above) — pulled
+  latest, appended without altering slot-26's original content, per this skill's same-day-append rule. Ledger: 31
+  orphans found this pass (17 never-touched + 14 partial-coverage), 14 extracted into
+  `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (+finalize, both `status: draft`/`active` per convention), 3 new
+  findings parked here (findings 3-5) — **balanced** (31 orphans = 14 batched + 17 accounted for across batch11's
+  Deferred/Flagged sections + this doc's findings 4-5, which are process gaps not content orphans). Also fixed a live
+  tooling gap found this pass: `generate_ag_closeout_audit_candidates.py`'s hub-doc exclusion regex
+  (`unified-trading-pm@e7ac1ed4e1`) — see finding 3.
