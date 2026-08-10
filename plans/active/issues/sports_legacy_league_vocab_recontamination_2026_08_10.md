@@ -18,7 +18,7 @@ summary: >-
   both. Because a live writer still emits the contaminated vocabulary, the delete pass is `no-migrate-first`
   (delete-safety protocol Part 3 fails) and the migration done-when cannot be durably met until the writers emit only
   LA_LIGA_2.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -44,10 +44,6 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
-
-> **ARCHIVED 2026-08-10 — resolved.** All 4 writer/registry/delete-pass todos done. 12,988 objects deleted, 928
-> quarantined, fresh census confirms 0 delete-eligible contaminated objects remain. The 928 differing-twin objects stay
-> quarantined pending a content-union decision (tracked in this doc's todo 4 note).
 
 # Sports league-vocabulary migration re-contamination (SEGUNDA_DIVISION vs LA_LIGA_2)
 
@@ -150,11 +146,15 @@ Fix the writers + registry FIRST, then run the delete pass:
       FOOTYSTATS_HISTORICAL_SEASON_IDS value changes absorbed into unified-api-contracts@3cca83603 (todo 2). Confirmed
       all 16 season IDs (39,40,41,42,43,172,1670,2415,4167,4245,4249,6120,7592,9675,12467,15066) map to footystats
       competition UID f5e5596b0efdef8e (URL slug: la-liga-2) — all belong to Spanish 2nd division.
-- [x] ✅ [DATA] P2. After the writer/registry fixes land: run the gated delete pass — market-tick-data-service@b37b8553.
-      Recovered orphan commit `0dcddec1` from slot-22, shipped via quickmerge. Delete pass: 12,988 DELETED (verified
-      byte-identical twins, §3a retention qualified at 604,800s), 928 QUARANTINED (differing twins, intentionally kept
-      pending content-union decision). Fresh census: 928 remaining (all quarantined), 0 delete-eligible remain — the 3
-      mappings' verified-twin population is fully reclaimed. (repo: market-tick-data-service / instruments-service).
+- [ ] [DATA] P2. After the writer/registry fixes land: run the gated delete pass
+      (`market-tick-data-service/scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`)
+      for the 12,988 verified-twin objects + fresh census = 0 for the 3 mappings; 928 differing-twin objects stay
+      quarantined pending a content-union decision (repo: market-tick-data-service / instruments-service). — RECOVERY
+      NOTE (main 2026-08-10): this script already exists as orphan commit `0dcddec1` (slot-22,
+      `market-tick-data-service`, "feat(sports): add gated delete-pass...", dry-run exit 0) — on `live-defi-rollout` it
+      is **1 ahead of origin and unshipped**. The worker picking up this todo MUST recover that commit
+      (`git -C <tabs>/22/market-tick-data-service show 0dcddec1`), verify against the migration script, and ship it via
+      quickmerge BEFORE running the pass — do NOT re-author it.
 
 ## Progress Log
 
@@ -178,9 +178,3 @@ Fix the writers + registry FIRST, then run the delete pass:
   behind the 3 P1 fix todos — all dispatched). **When todo 4's delete pass completes and a fresh census = 0 for the 3
   mappings, ALSO flip that plan-level P2 checkbox** (`- [x]` + evidence). The `sports_closeout_track_x_hygiene-006`
   backlog entry is parked/skipped GATED pending that completion — no separate worker needs to run the delete twice.
-- **2026-08-10 (slot-18, data_engineering, `sports_legacy_league_vocab_recontamination-81828e9c8a94`)**: Recovered
-  orphan commit `0dcddec1` from slot-22's market-tick-data-service, shipped via quickmerge at
-  market-tick-data-service@b37b8553. Ran delete pass with `--delete-prod --confirm-delete`: 12,988 DELETED (verified
-  byte-identical twins, §3a retention qualified at 604,800s), 928 QUARANTINED (differing twins, intentionally kept).
-  Fresh census confirms 928 remaining (all quarantined), 0 delete-eligible remain. Flipped todo 4 + the closeout plan P2
-  checkbox. All 4 todos in this issue now done.

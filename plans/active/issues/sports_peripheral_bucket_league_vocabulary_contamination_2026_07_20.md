@@ -337,9 +337,8 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   registry (`league_data.py:668-669`) registers BOTH `SEGUNDA_DIVISION` and `LA_LIGA_2` so the write-universe gate
   accepts both. Because a live writer still emits the contaminated vocabulary, delete-safety protocol Part 3 (no live
   writer) FAILS → the delete is `no-migrate-first` (fix first), and the migration done-when cannot be durably met until
-  the writers emit only LA_LIGA_2. Filed
-  `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` with the full evidence + P1 fix todos
-  (reference-data league key, registry dedup, footystats mapping) + a gated delete-pass todo once the writers are fixed.
-  Delete-pass tool shipped (`market-tick-data-service`,
+  the writers emit only LA_LIGA_2. Filed `/plans/active/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`
+  with the full evidence + P1 fix todos (reference-data league key, registry dedup, footystats mapping) + a gated
+  delete-pass todo once the writers are fixed. Delete-pass tool shipped (`market-tick-data-service`,
   `scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`, dry-run exit 0,
   fresh §3a retention check = 604,800s). Plan-level P2 checkbox stays OPEN (done-when not met).

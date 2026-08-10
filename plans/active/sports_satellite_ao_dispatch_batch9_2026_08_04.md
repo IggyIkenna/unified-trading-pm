@@ -221,7 +221,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)` over all 50
       `ticks_migrated` files → `failed=0`. No code change needed — fix already shipped. The `[SCRIPT]` no-relaunch STOP
       in the source doc is now cleared. See source doc Progress Log 2026-08-06.
-- [x] ✅ [CODE] P2. Investigate-then-fix finding 5 of
+- [ ] [CODE] P2. Investigate-then-fix finding 5 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` in `market-data-processing-service`:
       first grep findings-3/4's VM `run.log`s (e.g. `mdps-backfill-sports-pcskip-20260801-130846-2bf067` /
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`) for `[partition_mismatch]` to check whether any of
@@ -233,15 +233,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       shared-root-cause check result is recorded, the code fix lands, and a from-scratch
       `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket` force run against day=2026-04-14
       produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL (`US_CATANZARO_1929-MODENA`) and
-      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells. — **DONE 2026-08-10 (slot-16, batch9-005).** Full chain: grep+code-fix
-      legs (slot-2): `market-data-processing-service@551ca82` (venue-correction gate, unit-tested); staleness-guard
-      blocker resolved (slot-29): `@d653a42` (pinned `deployment_env="prod"`); deeper multi-venue-batch root cause fixed
-      (slot-5): `@53344df` (per-venue split in `_write_or_record_empty_timeframe`); sibling streaming-path fix:
-      `@e4fc0fd`; e2e re-verification (slot-31): VM `mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755`,
-      EXIT_STATUS=0, 0 `[partition_mismatch]` hits, 0 errors, 90/90 succeeded, 14,790 candles, real per-bookmaker venue
-      partitions confirmed. Source doc's Finding 5 todo + chain-bundle doc
-      (`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`) both archived resolved. All three
-      blocker layers cleared.
+      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells. **2026-08-09 (slot-2): grep+code-fix legs DONE
+      (`market-data-processing-service@551ca82`, unit-tested); e2e leg BLOCKED — see
+      [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md) +
+      the source doc's Progress Log for the full run evidence. **2026-08-09: that doc's own todos are now both done
+      (staleness guard fixed) but re-verification surfaced a DISTINCT, deeper partition_mismatch root cause — see
+      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+      Checkbox stays unflipped pending THAT fix.**
 - [ ] [DATA] P3. Root-cause the 216 residual poll-key-duplicate canonical sports MDT odds objects (1,266 duplicate-key
       groups where both home AND away team-id legs vary simultaneously, left untouched by the
       single-team-resolution-split rule shipped in `scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`) and
@@ -322,17 +320,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `sports_curated_universe_domestic_selection_remaining_2026_07_25.md`. Done when: root cause is identified, or the
       jump is ruled out as a one-time campaign artifact — and if a real consolidator gap is confirmed, a follow-up todo
       is filed against it.
-- [x] ✅ [DATA] P2. Verify the 2026-08-04 sports honest-coverage rollup (VM `measure-honest-coverage-20260804-110554`)
+- [ ] [DATA] P2. Verify the 2026-08-04 sports honest-coverage rollup (VM `measure-honest-coverage-20260804-110554`)
       completed by confirming `gs://central-element-323112-honest-coverage/2026-08-04/coverage.json`'s `generated_at`
       advanced past `09:38:21Z`, then re-read `GET /api/data-status/distinct-values/sports` and compare against the
       expected result (venues 3/13 non-canonical, or fewer if FOOTBALL already cleared; instrument_types 0/37;
       data_types 0/10). Source: `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: the
       coverage.json timestamp and the live endpoint response are both captured in the doc's Progress Log with any
-      deviation from the expected counts explicitly noted. — **DONE 2026-08-10 (slot-7)**: coverage.json
-      `generated_at 2026-08-04T13:16:32Z` (past 09:38:21Z, rollup completed; sports coverage_pct 98.38%) + live endpoint
-      `non_canonical_count {venues: 2, instrument_types: 1, data_types: 2, chains: 1}` (source_date 2026-08-10) captured
-      in `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`'s Progress Log, with deviations noted
-      (FOOTBALL cleared ✓; residual = badge-not-hide-surfaced set, taxonomy chain P2/P3/P4 owns it).
+      deviation from the expected counts explicitly noted.
 - [ ] [DIAG] P3. Query the sports manifest for `venue=FOOTBALL capture_status=attempted_failed` rows (baseline 194)
       after the `market-data-processing-service@595a1ff` `live_workers.py` fix. If the count has dropped to 0 on natural
       retry, record it cleared; if rows persist, diagnose whether the remaining failure is a distinct root cause before
@@ -354,27 +348,13 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       (`tests/unit/test_sports_trigger_odds_coverage_filter.py`, 8 unit tests). Source doc's own checkbox already `[x]`
       citing `f78531e`. No action needed. Original text preserved below for record. **Add a league odds-coverage filter
       to deployment-service's `evaluate_pre_match_triggers`.**
-- [x] ✅ [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
+- [ ] [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
       whether PREDICTION and/or DEFI dispatches through the same shared Cloud Run Job carry the same OOM risk class as
       the confirmed SPORTS-specific unscoped-multi-league-fetch bug, using the same method as
       `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s prior DeFi/Prediction check. Source:
       `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`. Done when: a written verdict states, for each of
       PREDICTION and DEFI, whether the same OOM risk class is present (with cited log/code evidence) or confirmed
-      absent, and if present, a new issue doc is filed for the affected asset_group(s). — **DONE-ELSEWHERE (2026-08-05,
-      slot 13, in the source doc).** The identical blast-radius todo in
-      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (lines 555-559) was completed
-      there with a three-part verdict — **neither PREDICTION nor DEFI shares the SPORTS OOM class** — recorded in that
-      doc's Progress Log (2026-08-05, slot 13); this batch9 todo was extracted from that doc's pre-2026-08-05 state.
-      Re-verified at LDR HEAD this session (2026-08-10, slot 26): (1) DEFI not in scope —
-      `deployment-service/terraform/gcp/audit03_cron_provisioning.tf:76` fast-t1-recon job args are
-      `--asset-group SPORTS PREDICTION` only; DEFI runs separate jobs in `defi_collection_scheduler.tf`; (2) PREDICTION
-      uses separate adapters — `umi_tick_provider.py:109-112` `_SPORTS_VENUES={ODDS_API,BETFAIR}` vs
-      `_PREDICTION_VENUES={POLYMARKET,KALSHI}`, and the prediction adapters (`kalshi_adapter.py:605-606`,
-      `_polymarket_helpers.py:270-271,402-403`) stream per-chunk via `writer.write_chunk(df)` (no whole-day in-memory
-      accumulation); (3) the SPORTS OOM mechanism is exclusive to `OddsApiAdapter._fetch_all_leagues`
-      (`odds_api_adapter.py:579` `all_rows.extend(rows)` across all candidate leagues → single in-memory `pd.DataFrame`
-      at `download_batch`), unreachable from DEFI/PREDICTION paths. Verdict confirmed: OOM risk class **ABSENT** for
-      both PREDICTION and DEFI — no new issue doc required per the done-when.
+      absent, and if present, a new issue doc is filed for the affected asset_group(s).
 - [ ] [CODE] P2. Soften the manifest-consolidator staleness error text in
       `unified_trading_library/manifest_writer/_read_index.py` (~lines 289-297) to distinguish a genuinely-DOWN
       consolidator (no recent successful Cloud Run Job execution) from a too-tight staleness budget (consolidator

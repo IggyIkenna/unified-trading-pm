@@ -135,16 +135,18 @@ context_scope:
       Closes the leak at its TRUE shared source for every consumer of `normalize_api_football_fixture`, not just the one
       write path that happened to lack a gate — 5 new regression tests lock in the fix; full existing api_football suite
       (95 tests) re-run clean.
-- [x] ✅ [DATA] P2. **Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the correct
-      league vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. —
-      market-tick-data-service@b37b8553. Delete pass complete: 12,988 verified-twin objects DELETED (§3a
-      reversibility-qualified at 604,800s), 928 differing-twin objects QUARANTINED (intentionally kept, pending
-      content-union decision). Fresh census: 0 delete-eligible contaminated objects remain for the 3 mappings
-      (SEGUNDA_DIVISION→LA_LIGA_2, BRAZIL_SERIE_A→BRASILEIRAO, ENGLAND_PREMIER_LEAGUE→EPL). Full evidence at
-      `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` todo 4. (repo:
-      instruments-service / market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd`
-      returns 0 objects carrying the country-prefixed contaminated vocabulary (excluding any quarantine population,
-      tracked separately if non-empty).
+- [ ] [DATA] P2. **Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the correct league
+      vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. **UPDATE 2026-08-04
+      (slot 5)**: the delete-safety gate is CLEARED (fresh `gcs_bucket_soft_delete_retention_seconds()` check on this
+      bucket returns 2,592,000s / 30 days, well above the 604800s/7-day bar — §3a reversibility-qualified
+      agent-autonomous path, no `[OPERATOR]` step needed) — the `[OPERATOR]` tag is REMOVED. Split further into 3
+      tracked sub-todos in the issue doc after a dry-run inspection surfaced real beyond-the-sibling-pattern complexity
+      (a corpus-scale census + a cross-entity resolution dependency; the feared content-column rewrite did NOT
+      materialize — confirmed path-only). Full detail + the current census/build/apply sub-todos:
+      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: instruments-service /
+      market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
+      carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
+      non-empty).
 - [x] ✅ [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** —
       `market-tick-data-service@03b9ffd6` + `deployment-service` (no-op: clean). **Finding (2026-08-04, slot-4)**: both
       worktrees (`deployment-service-sports-wt`, `market-tick-data-service-sports-wt`) no longer exist — no git
@@ -193,13 +195,12 @@ review-blocking.
   (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches available_at=2026-08-07), root
   causes = `api_football_reference.py:165` raw `build_league_id`, `FOOTYSTATS_HISTORICAL_SEASON_IDS`→SEGUNDA_DIVISION,
   and the SEGUNDA_DIVISION/LA_LIGA_2 registry duplicate. Delete pass = no-migrate-first (Part 3 fails). Filed
-  `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass
-  todo) + shipped the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first,
-  then the delete.
+  `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass todo) + shipped
+  the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first, then the delete.
 - **2026-08-10 (slot 25, data_engineering, `sports_closeout_track_x_hygiene-006`)**: Dispatched to complete the
   plan-level P2 migration checkbox. Verified the live state before re-running anything: the migration apply (delete
   pass) is NOT autonomously executable and the done-when is not yet met. Per slot-22's same-day finding
-  (`/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`), a live writer still emits
+  (`issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`), a live writer still emits
   `league=SEGUNDA_DIVISION` (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches
   `available_at=2026-08-07`), so delete-safety protocol Part 3 (no live writer) FAILS → `no-migrate-first`: nobody
   deletes until the writers are fixed. Confirmed via `GET /api/backlog` that all 3 P1 writer/registry fixes from that

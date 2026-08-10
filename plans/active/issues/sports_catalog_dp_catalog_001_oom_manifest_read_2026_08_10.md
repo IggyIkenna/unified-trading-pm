@@ -110,17 +110,13 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
 
 - Manual run `lifecycle-catalogue-regen-sports-gg4kh` (16Gi) started 10:37 UTC: cleared the `[BISECT-C]` manifest read
   (the exact 4Gi OOM point) and entered the FTP rollup —
-  `Found 146421 sports fixture/team/player-source by_date parquet(s) to roll up (workers=16)`.
-- **✅ COMPLETED 10:52:49 UTC, exit 0 (15m37.77s)** — `CATALOGUE_PROMOTED` rows=532868, `guard_reason=monotonic_ok`
-  (new=532868 vs current=531497), and `prod/catalog.parquet` mtime advanced to **2026-08-10T10:52:49Z**, past the frozen
-  2026-08-09T01:15:36Z snapshot. **DP-CATALOG-001 clears.**
+  `Found 146421 sports fixture/team/player-source by_date parquet(s) to roll up (workers=16)`. Expected to complete
+  ~10:52-10:57 UTC (sibling runs take ~15m36s) and promote a fresh `prod/catalog.parquet`, clearing DP-CATALOG-001.
 
 ## Todos
 
-- [x] ✅ [DATA] P1. Confirm the manual run `gg4kh` completes exit 0 and `prod/catalog.parquet` mtime advances past
-      2026-08-09T01:15:36Z, clearing DP-CATALOG-001. **RESOLVED 2026-08-10** — run `gg4kh` completed exit 0 in
-      15m37.77s, `CATALOGUE_PROMOTED` rows=532868 `guard_reason=monotonic_ok`, `prod/catalog.parquet` mtime
-      2026-08-10T10:52:49Z (verified live via `gsutil stat` + `gcloud logging read`). (repo: instruments-service)
+- [ ] [DATA] P1. Confirm the manual run `gg4kh` completes exit 0 and `prod/catalog.parquet` mtime advances past
+      2026-08-09T01:15:36Z, clearing DP-CATALOG-001. (repo: instruments-service) — in flight.
 - [ ] [DATA] P3. Consider streaming the sports manifest read (pyarrow column projection + current-data_type filter
       before to_pandas) so the rollup's peak memory stops tracking manifest growth linearly; the 16Gi bump gives
       headroom, but the manifest will keep growing ~20MB/day. (repo: instruments-service)
