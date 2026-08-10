@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [safe-doc-push, isolated-worktree, archival-ritual, rename-deletion, create-only-commit, ship-discipline]
 related:
   [
-    /plans/active/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
+    /plans/archive/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
     /plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
@@ -54,7 +54,7 @@ context_scope:
   [
     /scripts/dev/safe-doc-push.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
+    /plans/archive/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
   ]
 source: >-
   Found during the 2026-08-10 autonomous ag-closeout close-out (slot 1) while verifying commit `8ac88720e6` against
@@ -108,11 +108,10 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Make isolated mode propagate deletions.** In the isolation sync, for each `--files` entry absent
-      from the caller tree but present in the private worktree's `HEAD`, stage a removal (`git rm --cached` / index
-      delete) instead of skipping the copy. **Done when**: a regression test performs a `git mv` and commits it through
-      `safe-doc-push.sh` in isolated mode, and asserts `git show --name-status` contains BOTH the `A` and the `D` (or a
-      single `R`). Add it next to the existing `tests/test_safe_doc_push_isolated_untracked_duplicate.bats`.
+- [x] ✅ [SCRIPT] P1. **Make isolated mode propagate deletions.** — unified-trading-pm@18ae9a4312. Fix in
+      `safe-doc-push.sh` lines 321-342: when a named file is absent from the caller tree but present at
+      `origin/$BRANCH`, rm it from the isolated worktree so `git add` stages the deletion. Regression test:
+      `tests/test_safe_doc_push_isolated_deletion_propagates.bats` (4 tests, all passing via `npx bats`).
 - [ ] [SCRIPT] P1. **Fail loudly instead of skipping silently.** The `skipping copy` branch currently logs at info level
       and proceeds. A named file that is absent from the caller tree AND absent from HEAD is a caller error; absent from
       the caller tree but PRESENT in HEAD is a deletion. Distinguish the two and never silently no-op a named path.
