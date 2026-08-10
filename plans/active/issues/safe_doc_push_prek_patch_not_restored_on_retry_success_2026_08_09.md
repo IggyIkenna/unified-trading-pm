@@ -237,3 +237,16 @@ mitigations, cheapest first:
   (whether that archival is even still current) belongs to whichever session owns it. Left the patch file in place for
   that owner to recover; noting here per this doc's own established practice of logging live recurrences of this failure
   signature.
+
+- **2026-08-10T08:39Z (slot 3, data_pipeline_failure escalation agt-d2322e) — RECURRENCE, same signature: two orphaned
+  patches after a successful `safe-doc-push.sh` of an issue-doc append.** `ef90088765` pushed cleanly (ahead=0, tree
+  clean) but `check_orphaned_prek_patches()` reported `1786351143914-999198.patch` + `1786351171135-1021672.patch`
+  (both created during THIS run). Their combined `git apply --stat` = a batch-archival: `plans/active/INDEX.md` +3,
+  `infra_satellite_ao_dispatch_batch11_2026_08_09.md` −177, `…_batch11_finalize_…` −8,
+  `issues/ag_closeout_audit_infra_parked_2026_08_09.md` −4, `issues/context_scout_progress_log_line_2026_08_09.md`
+  −163, `issues/cross_section_lines_never_stripped_from_hash_2026_08_10.md` −2. NOT my files — a different concurrent
+  process's in-flight archival (origin still has `infra_satellite_ao_dispatch_batch11_2026_08_09.md` active, so that
+  archival was never committed). Same collision class as the batch4_finalize occurrence above (shared
+  `~/.cache/prek/patches/` cache across sessions on this host). Did NOT apply either patch — foreign, deletion-shaped,
+  wrong-scope; left both in place for the owning session. Logging per this doc's established practice; no action taken on
+  the archival itself.
