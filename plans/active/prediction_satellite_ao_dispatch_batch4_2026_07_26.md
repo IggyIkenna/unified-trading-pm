@@ -703,16 +703,28 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-          (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-          #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-          walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-          pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-          content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-          then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-          re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-          273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-          build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-          verification.
+              (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+              #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+              walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+              pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+              content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+              then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+              re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+              273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+              build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+              verification.
+
+- [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
+      (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
+      have a canonical twin carrying FEWER trades than the shape #4 object (2 vs 12 — metadata VALUES identical, row set
+      divergent). The migration correctly keeps + flags these (delete would lose real trades), but the canonical
+      `trades` objects for these cells have a **data-completeness gap** that warrants characterization: (a) quantify the
+      population (bounded read of the migration report's anomaly lines once the VM run completes — expected ~10%), (b)
+      determine if it is market_type/underlying-specific (range_bracket hypothesis), (c) decide disposition: backfill
+      the missing trades from shape #4 into the canonical (row-set union — a SEPARATE operation from 4b-iii's
+      enrichment, with manifest implications) OR accept the canonical as the manifest-SSOT subset and keep the shape #4
+      objects in place as honest non-canonical. (repo: market-tick-data-service). Done when: the population is counted +
+      a disposition decision is recorded in this plan's Progress Log.
 
 - **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
   blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
@@ -833,3 +845,32 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   at `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`. **Checkbox flipped —
   `market-tick-data-service` (no new code commit; the shipped migration script `@e4acf0c4` drove the work, the delete
   pass used a scratchpad driver that's already durably uploaded to the GCS scratchpad).**
+
+- **2026-08-10T19:45Z (slot 25, data_engineering, dispatched on 4b-iii — "merge shape #4 + delete legacy")**: **TOOLING
+  GAP CLOSED + a real finding.** Built, validated, and shipped the shape-#4 merge+delete script
+  `market-tick-data-service/scripts/migrate_prediction_trades_shape4_2026_08_10.py` + 22 unit tests
+  (`market-tick-data-service@5c0c7f3f`, committed; QG was still running at this write) and the launcher category
+  `prediction-shape4-merge` in `deployment-service@e25dcfb3` (committed; QG pending). Script mirrors 4b-i's alias-aware
+  additive-only pattern: per (day, cid) cell, content-verifies the canonical twin (Part 1 `gcs_describe_object` + Part 2
+  `_metadata_matches` — every shape-#4 row's (transactionHash, ts) key must resolve in the canonical with identical
+  title/slug/event_slug), enriches if genuinely missing, and only deletes the cell's shape #4 objects (both bare +
+  `POLYMARKET:PREDICTION_MARKET:`-prefixed variants, cross-checked identical) once verified — gated on a FRESH
+  `gcs_bucket_soft_delete_retention_seconds()` >= 604800s check (codex delete-safety §3a, reversibility-qualified, no
+  `[OPERATOR]` gate). Shape #4 is NOT manifest-tracked and delete targets are not manifest-tracked, so NO consolidator
+  drain is needed. Dry-runs validated (2-day + 1-day; two bugs caught + fixed live: (a) `_metadata_matches` KeyError'd
+  on canonical twins carrying the legacy camelCase `eventSlug` alias — made alias-aware; (b) a single uncaught per-cid
+  exception aborted the whole day's report — added per-cid exception isolation).
+
+  **KEY FINDING (data-completeness, affects the delete half)**: on the day-1 dry-run (2025-03-14), all 170 shape-#4
+  objects were already-enriched, but **9/85 cells (≈10%) flagged
+  `canonical already enriched but metadata MISMATCHES shape #4 source`** — investigated one
+  (`market_type=range_bracket`): the canonical twin carries **2 trades while the shape #4 object carries 12** (metadata
+  VALUES identical; the canonical is a strict SUBSET). The script correctly REFUSES to delete those cells (delete-safety
+  Part 2 — those shape #4 objects hold real trades the canonical lacks; deleting them would lose data). So the "delete
+  legacy" half can only fully complete for cells where shape #4 ⊆ canonical (content-verified); the subset-divergent
+  cells (expected ~10%) stay as honest non-canonical objects and are flagged per-cell as anomalies. This is ALSO a
+  canonical data-completeness gap worth characterizing — see the new follow-up todo below. **Next steps (once this
+  write + both QGs are green)**: quickmerge `5c0c7f3f` (MTDS) + `e25dcfb3` (deployment-service), republish the MTDS code
+  tarball, then launch `bash launch-canonical-migration-vm.sh prediction-shape4-merge 2025-03-14 2026-04-14 full` (the
+  VM runs ~many-hours; deletes only verified cells, keeps + flags the subset-divergent cells). 4b-iii checkbox stays
+  OPEN until the VM run is verified (same multi-session pattern as 4b-i).
