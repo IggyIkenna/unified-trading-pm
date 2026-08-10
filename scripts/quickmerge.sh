@@ -547,19 +547,57 @@ _qm_content_vanished() {
 #     caller running a locally-fixed script would silently get the committed version instead.
 _QM_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 _QM_ISO_ROOT=""
+_QM_ISO_WT=""
 _qm_cleanup_isolation() {
   [ -n "$_QM_ISO_ROOT" ] || return 0
-  git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  # Remove the RECORDED path, not a re-derived one -- the re-derivation stopped matching the
+  # moment the worktree gained a "/.tabs/<N>/" segment (see below).
+  if [ -n "$_QM_ISO_WT" ]; then
+    git worktree remove --force "$_QM_ISO_WT" 2>/dev/null || true
+  else
+    git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  fi
   git worktree prune 2>/dev/null || true
 }
 
 if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; then
   _qm_repo_name="$(basename "$(pwd)")"
   _qm_iso_parent="${TMPDIR:-/tmp}/qm-iso-$$"
-  _qm_iso_wt="$_qm_iso_parent/$_qm_repo_name"
   _qm_caller_repo="$(pwd)"
+  # Preserve the CALLER's slot identity (2026-08-10). Attribution is
+  # `ikennaigboaka [slot-<N>·<host>]`, derived from the PATH; a TMPDIR worktree has no
+  # `.tabs/<N>/` segment, so every isolated commit resolved to `[main·<host>]`. Mirrors
+  # safe-doc-push.sh: shape the path so derivation is right by construction (git resolves the
+  # author BEFORE hooks run, so a hook-only fix always costs a retry), plus a config pre-stamp.
+  _qm_slot_seg=""
+  _qm_identity_lib="$WORKSPACE_ROOT/unified-trading-pm/scripts/hooks/slot-identity-lib.sh"
+  [ -f "$_qm_identity_lib" ] || _qm_identity_lib="$(dirname "$_QM_SELF")/hooks/slot-identity-lib.sh"
+  if [ -f "$_qm_identity_lib" ]; then
+    # shellcheck disable=SC1090
+    . "$_qm_identity_lib"
+    slot_identity_resolve "$_qm_caller_repo" 2>/dev/null || true
+    if [[ "${SLOT_ID_LABEL:-main}" =~ ^slot-([0-9]+)$ ]]; then
+      _qm_slot_seg="/.tabs/${BASH_REMATCH[1]}"
+    fi
+  fi
+  _qm_iso_wt="$_qm_iso_parent${_qm_slot_seg}/$_qm_repo_name"
+  # Siblings must sit next to the WORKTREE, not at $_qm_iso_parent. quality-gates.sh derives
+  # WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/..", so adding the slot segment moved
+  # the worktree a level deeper and stranded the sibling symlinks one level up -- the re-gate
+  # then died with `ModuleNotFoundError: No module named 'unified_api_contracts'`. Caught by
+  # the gate on the very first ship attempt; it is the same drift this whole change is about.
+  _qm_iso_sibdir="$(dirname "$_qm_iso_wt")"
+  mkdir -p "$_qm_iso_sibdir" 2>/dev/null || true
   if git worktree add --detach -q "$_qm_iso_wt" HEAD 2>/dev/null; then
     _QM_ISO_ROOT="$_qm_iso_parent"
+    _QM_ISO_WT="$_qm_iso_wt"
+    if [ -n "${SLOT_ID_EXPECTED_NAME:-}" ] && [ -n "${SLOT_ID_CANON_EMAIL:-}" ]; then
+      git -C "$_qm_iso_wt" config extensions.worktreeConfig true 2>/dev/null || true
+      git -C "$_qm_iso_wt" config --worktree user.name "$SLOT_ID_EXPECTED_NAME" 2>/dev/null \
+        || git -C "$_qm_iso_wt" config user.name "$SLOT_ID_EXPECTED_NAME"
+      git -C "$_qm_iso_wt" config --worktree user.email "$SLOT_ID_CANON_EMAIL" 2>/dev/null \
+        || git -C "$_qm_iso_wt" config user.email "$SLOT_ID_CANON_EMAIL"
+    fi
     trap _qm_cleanup_isolation EXIT
     # ---- make the worktree a COMPLETE MINIATURE WORKSPACE -------------------------------
     # quality-gates.sh computes WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/.." and is
@@ -573,7 +611,7 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       [ -e "$_qm_sib/.git" ] || continue
       _qm_sib_name="$(basename "$_qm_sib")"
       [ "$_qm_sib_name" = "$_qm_repo_name" ] && continue   # the worktree IS this repo
-      [ -e "$_qm_iso_parent/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_parent/$_qm_sib_name" 2>/dev/null
+      [ -e "$_qm_iso_sibdir/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_sibdir/$_qm_sib_name" 2>/dev/null
     done
 
     # ---- private, CACHED venv -- never the caller's -------------------------------------
@@ -1063,11 +1101,9 @@ else
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
       # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The
-      # caller's --files are passed as protected so the extreme-pile self-arrest never
-      # quarantines the very work this run is shipping.
+      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
       if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-        autostash_guard_bound_backlog "${FILES_ARG:-}" "${_QM_REMOTE_REF}" || true
+        autostash_guard_bound_backlog "${_QM_REMOTE_REF}" || true
       fi
       # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
       # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
@@ -2120,25 +2156,24 @@ git fetch origin main --quiet
 # copied into this worktree as uncommitted modifications, and moving HEAD underneath them risks
 # a checkout conflict against files we are about to commit. Being behind origin is handled
 # downstream anyway, by the existing push-retry rebase.
-# True when $BRANCH is checked out by SOME OTHER worktree of this clone, which is exactly when
-# `git checkout $BRANCH` will die with "already used by worktree at ...".
+# True when $BRANCH is checked out by SOME OTHER worktree of this clone -- exactly when
+# `git checkout $BRANCH` dies with "already used by worktree at ...".
 _qm_branch_held_elsewhere() {
   local here
   here="$(git rev-parse --show-toplevel 2>/dev/null)"
   git worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/$BRANCH" -v here="$here" '
-    /^worktree /   { wt = substr($0, 10) }
-    /^branch /     { if (substr($0, 8) == b && wt != here) { found = 1 } }
-    END            { exit(found ? 0 : 1) }
+    /^worktree / { wt = substr($0, 10) }
+    /^branch /   { if (substr($0, 8) == b && wt != here) { found = 1 } }
+    END          { exit(found ? 0 : 1) }
   '
 }
 
 _qm_checkout_ship_branch() {
   # Stay detached in quickmerge's OWN isolation, and equally whenever the branch is simply held
-  # by another worktree. The first condition alone was too narrow (2026-08-10): running
+  # by another worktree. The isolation-only condition was too narrow (2026-08-10): running
   # --no-isolated from a private worktree of the same clone -- the sane way to work when a
-  # shared slot checkout keeps reverting you -- took the normal path and died on the very
-  # collision this function exists to prevent. The predicate that matters is "is the branch
-  # available to check out here", not "which mode am I in".
+  # shared slot checkout keeps reverting you -- died on the very collision this prevents. The
+  # predicate that matters is "can the branch be checked out here", not "which mode am I in".
   if [ -n "${QM_IN_ISOLATION:-}" ] || _qm_branch_held_elsewhere; then
     echo "[$REPO_NAME] staying on detached HEAD ($BRANCH is held by another worktree); will push HEAD:$BRANCH"
     return 0

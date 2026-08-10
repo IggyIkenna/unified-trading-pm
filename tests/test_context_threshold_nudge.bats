@@ -29,9 +29,14 @@ _make_transcript() {
     if [ "$seed_boundary" -eq 1 ]; then
         printf '{"subtype":"compact_boundary"}\n' >"$path"
     fi
-    for _ in $(seq 1 "$n"); do
-        printf '{"type":"assistant","content":"%080d"}\n' 0 >>"$path"
-    done
+    # Emit the n identical lines in ONE pipeline, not a 50,000-iteration shell loop that
+    # re-opens the file on every append. Byte-for-byte the same transcript; measured 2026-08-10
+    # at ~36s -> well under 1s per call, and these three tests were 108s of the bats suite's
+    # ~484s on their own. The suite's CPU cost is what the quality gate budgets against
+    # (DUR_BILLABLE is CPU, not wall), so this is real budget, not just latency.
+    local line
+    line="$(printf '{"type":"assistant","content":"%080d"}' 0)"
+    yes "$line" | head -n "$n" >>"$path"
     echo "$path"
 }
 
