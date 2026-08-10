@@ -220,13 +220,21 @@ collapsing them into one number the way the archived doc did.
       from `runtime-topology.yaml` via UTL `topology_reader.get_isolation_policy()`. So the execution plan WIRES INTO
       existing enforcement (updates the stale archetype frontmatter the boot gate already reads — todo-8's finding), NOT
       building a new family-doc parser.
-- [ ] [DOC] P2. **Write the final decision artifact**: a single new section in
+- [x] ✅ [DOC] P2. **Write the final decision artifact**: a single new section in
       `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (or a new dedicated doc if that one is a poor fit — check
       first) mapping every archetype family → latency category → required deployment_profile → whether the current
       `premium` SLA tier's latency budget actually covers it. This is the artifact the paired execution plan
       (`strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`, `depends_on` + `gate_on_depends` this
       plan) implements against — it must be unambiguous enough that the execution plan's todos don't require further
-      judgment calls, only implementation.
+      judgment calls, only implementation. **Done**: `unified-trading-pm@8b27db5cc4` — single BINDING section appended
+      to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` mapping every family → latency category → required
+      deployment_profile → min_sla_tier → whether premium's 40ms `latency_budget_ms` covers the real requirement
+      (verdict: NO for all six Low families — MM <100ms / arb <200-300ms / basis+ML+rules+stat-arb ms-realm inter-leg
+      gap all exceed 40ms; YES for Medium/High vol-trading/event-driven/portfolio). The section's binding contract
+      enumerates the exact §6 row fixes (7 inconsistent → premium/co-located, `EVENT_SETTLED_SPORTS` label resolution,
+      ~37 missing rows), the stale `archetypes/*.md` runtime-frontmatter corrections (5 values + 5 invalid
+      `min_sla_tier` enums), the decision-segment-vs-total-E2E interpretation ruling for `latency_budget_ms`, and the
+      explicitly out-of-scope items (premium-budget recalibration, infra auto-apply, VOL edge-case override deferral).
 
 ## Progress Log
 
@@ -331,3 +339,19 @@ collapsing them into one number the way the archived doc did.
   WIRE INTO the existing archetype-frontmatter enforcement (fix the stale `topology_requirements` blocks todo 8 found —
   the boot gate already reads them), NOT build a new family-doc→runtime parser. UAC `archetypes/<kebab>.md` citations +
   `openapi/prospectus/*.md` `[CODEX-DERIVED]` docs are build-time/doc-gen, not runtime family-doc reads.
+- **quant_dev (slot 8) 2026-08-10T20:53Z**: Todo 10 done. Wrote the final decision artifact as a single BINDING section
+  appended to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (`unified-trading-pm@8b27db5cc4`): the family →
+  latency category → required deployment_profile → min_sla_tier → premium-coverage mapping the paired execution plan
+  implements against. Every Low family (market-making / arbitrage-structural / carry-and-yield basis / ml-directional /
+  rules-directional / stat-arb-pairs) → `co_located_vm` → `min_sla_tier: premium`, and premium's 40ms
+  `latency_budget_ms` does NOT cover any of their real requirements (MM <100ms / arb <200-300ms /
+  basis+ML+rules+stat-arb ms-realm inter-leg gap) — a real, unresolved framework gap the execution plan's derivation
+  must surface as a warning/exception (execution plan todo 6). The binding contract also fixes the
+  `client-isolation-sla-and-runtime-profiles.md` §6 row set (7 inconsistent rows → premium/co-located,
+  `EVENT_SETTLED_SPORTS` label resolution, ~37 missing rows), the stale `archetypes/*.md` runtime frontmatter (5
+  values + 5 invalid `min_sla_tier` enums that raise on the `SLATier()` cast), and the interpretation ruling that
+  `latency_budget_ms` is a decision-segment budget, not a total-E2E promise (order-to-fill is venue-controlled, 20-70ms
+  floor). Medium/High families (vol-trading / event-driven / portfolio) → `distributed` / standard, covered by premium.
+  The 2 single-sided carry exceptions (`YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`) → `Medium`/`distributed`. VOL
+  edge-case override (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) deferred with a stated default (`distributed`) so
+  it cannot block the rollout.
