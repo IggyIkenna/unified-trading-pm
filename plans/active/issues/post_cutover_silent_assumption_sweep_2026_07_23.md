@@ -423,14 +423,13 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 ## Docs (P2)
 
-`/codex/08-workflows/ci-cd-flow.md` carries a correct dormancy banner but the branch-model narrative below it is stale:
-**L75-109** still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron and labels direct-to-main
-as "PM only"; **L763**, **L777-786**, **L1183** still describe `quickmerge → staging → main` as canonical.
-
-**Gap that bites on re-entry:** nothing in `codex/` documents that the staging triggers were commented out 2026-07-23
-and must be **uncommented** as part of re-entry — that fact lives only in inline YAML comments and
-`staging_workflow_shutdown_2026_07_23.md` (a plan, which archives). Per CLAUDE.md's SSOT-direction rule this belongs in
-codex, or a future staging re-entry gets a dead pipeline.
+**RESOLVED — DONE 2026-07-26 (`unified-trading-pm@97970974e`), this section is stale, corrected 2026-08-10
+(plan_reconciler, ci tranche).** This prose was never struck after the matching `[DOC] P2` resolution-checklist item
+below shipped — it described already-fixed content as still open. Both gaps this section named are independently
+re-verified fixed as of this correction: `/codex/08-workflows/ci-cd-flow.md`'s branch-model narrative now correctly
+describes the LDR→main model ("Exactly three things gate a repo's LDR→main promotion", not the old 15-min staging-cron
+narrative), and a "Staging re-entry procedure" section (with explicit uncomment-the-disabled-triggers guidance) now
+exists in codex. See the `[DOC] P2` item under Resolution checklist for the full citation.
 
 ---
 

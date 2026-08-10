@@ -76,21 +76,21 @@ context_scope:
 
 ## Part 0 — Verification verdict at a glance
 
-| 08-05 claim                                   | Verdict      | Reality (measured 2026-08-06)                                 |
-| --------------------------------------------- | ------------ | ------------------------------------------------------------- |
-| Migration complete, 25 pools on dedicated VM  | ✅ CONFIRMED | 25 pool templates; 17 live runners                            |
-| Shared-VM resource caps removed               | ✅ CONFIRMED | `CPUQuota/MemoryHigh/MemoryMax=infinity`, `CPUWeight=100`     |
-| Volume was at "6,000 IOPS / 500 MB/s default" | ❌ FALSIFIED | Pre-fix was **3,000 / 125** (the real gp3 default)            |
-| Volume bumped to 16,000 IOPS / 1,000 MB/s     | ❌ FALSIFIED | **Never happened.** Live: 6,000 / 500                         |
-| Root cause = IOPS starvation                  | ⚠️ CORRECTED | **Throughput** pinned at 124.x MB/s vs 125 ceiling, 9 h       |
-| "VolumeReadOps 67k → 156k avg/s"              | ❌ FALSIFIED | Units error — these are per-60s samples (÷60)                 |
-| `uv sync` writes ~1 GB per run                | ❌ FALSIFIED | 86.5% of venv files are hardlinks; near-zero data written     |
-| `cp -al` is safe via "copy-on-write"          | ❌ FALSIFIED | Root fs is **ext4** — no COW; writes go through shared inodes |
-| "No fleet-wide concurrency limit exists"      | ⚠️ CORRECTED | Reservation-mode governor IS a live cross-repo admission gate |
-| Token governor `K = floor(16/4) = 4`          | ⚠️ CORRECTED | Code uses **physical** cores → `floor(8/4)` = **2**           |
-| "0 MB swap — no safety valve"                 | ✅ CLOSED    | True on 08-05; 16 GB `/swapfile` shipped 08-06 by slot-4      |
-| QG-v2 failures caused by I/O                  | ❌ FALSIFIED | Content failures — 6 plan-hygiene ratchets, run takes 2m44s   |
-| "9 of 25 repos runners offline"               | ⚠️ CORRECTED | Explained by the 08-05 public-repo migration, not I/O         |
+| 08-05 claim                                   | Verdict       | Reality (measured 2026-08-06)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migration complete, 25 pools on dedicated VM  | ✅ CONFIRMED  | 25 pool templates; 17 live runners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Shared-VM resource caps removed               | ✅ CONFIRMED  | `CPUQuota/MemoryHigh/MemoryMax=infinity`, `CPUWeight=100`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Volume was at "6,000 IOPS / 500 MB/s default" | ❌ FALSIFIED  | Pre-fix was **3,000 / 125** (the real gp3 default)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Volume bumped to 16,000 IOPS / 1,000 MB/s     | ❌ FALSIFIED  | **Never happened.** Live: 6,000 / 500                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Root cause = IOPS starvation                  | ⚠️ CORRECTED  | **Throughput** pinned at 124.x MB/s vs 125 ceiling, 9 h                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| "VolumeReadOps 67k → 156k avg/s"              | ❌ FALSIFIED  | Units error — these are per-60s samples (÷60)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `uv sync` writes ~1 GB per run                | ❌ FALSIFIED  | 86.5% of venv files are hardlinks; near-zero data written                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `cp -al` is safe via "copy-on-write"          | ❌ FALSIFIED  | Root fs is **ext4** — no COW; writes go through shared inodes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| "No fleet-wide concurrency limit exists"      | ⚠️ CORRECTED  | Reservation-mode governor IS a live cross-repo admission gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Token governor `K = floor(16/4) = 4`          | ⚠️ SUPERSEDED | Was believed physical-core-based (`floor(8/4)=2`); **corrected again 2026-08-10**: code actually counts LOGICAL cpus (`lscpu -p=core` emits one row per hyperthread sibling, no dedup) — empirically reconfirmed on this exact host (`lscpu -p=core \| grep -vc '^#'` = 16, unique core ids = 8), so live `K` is **4**, not 2. See `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` open todo (NEW FINDING 2026-08-09) for the tracked code fix (`_qg_physical_cores()` already exists and dedups correctly; the governor's inline `lscpu` call should use it instead). |
+| "0 MB swap — no safety valve"                 | ✅ CLOSED     | True on 08-05; 16 GB `/swapfile` shipped 08-06 by slot-4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| QG-v2 failures caused by I/O                  | ❌ FALSIFIED  | Content failures — 6 plan-hygiene ratchets, run takes 2m44s                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| "9 of 25 repos runners offline"               | ⚠️ CORRECTED  | Explained by the 08-05 public-repo migration, not I/O                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -194,10 +194,12 @@ This is exactly why slot-4's recommended `ACTIONS_RUNNER_HOOK_JOB_STARTED` wrapp
 **reservation** mode, not token mode — reservation carries the per-repo RAM baselines, which is what the OOM evidence in
 Part 5 says actually binds.
 
-Two supporting corrections: `K = max(2, floor(cores/4))` uses **physical** cores — `lscpu` reports 16 CPUs / 2
-threads-per-core / **8 cores**, so `K = 2`, not 4. And **`TasksMax` (option B) is the wrong tool** — independently
-confirmed by slot-4 with measured numbers (`TasksCurrent` 274–326 idle, ~46 tasks per active run) and rejected. It
-counts every task/thread in the cgroup (currently 8192), so hitting it makes `fork()` fail mid-job rather than queueing.
+Two supporting corrections: `K = max(2, floor(cores/4))` was believed to use **physical** cores (`lscpu` reports 16 CPUs
+/ 2 threads-per-core / 8 cores, so `K = 2`) — **corrected again 2026-08-10**: the code's `lscpu -p=core | grep -vc '^#'`
+actually counts logical CPUs (no HT dedup), so live `K = 4`; see the Part 0 table above for the full citation. And
+**`TasksMax` (option B) is the wrong tool** — independently confirmed by slot-4 with measured numbers (`TasksCurrent`
+274–326 idle, ~46 tasks per active run) and rejected. It counts every task/thread in the cgroup (currently 8192), so
+hitting it makes `fork()` fail mid-job rather than queueing.
 
 ---
 
@@ -546,50 +548,50 @@ traffic to count until the migration is finished. What is certain is that their 
       recheck (mentioned in the original finding) also still needs doing.
 
       **operator ruling 2026-08-08**: will do it later — leave BOTH sub-parts blocked for now, do not execute either
-                                                                              autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
-                                                                              operator is available; nothing below was applied this session.
+                                                                                                                              autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
+                                                                                                                              operator is available; nothing below was applied this session.
 
-                                                                              **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
-                                                                              `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
-                                                                              workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
-                                                                              this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
-                                                                              → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
-                                                                              2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
+                                                                                                                              **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
+                                                                                                                              `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
+                                                                                                                              workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
+                                                                                                                              this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
+                                                                                                                              → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
+                                                                                                                              2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
 
-                                                                              **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
-                                                                              not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
-                                                                              `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
-                                                                              allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
-                                                                              `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
-                                                                              `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
-                                                                              `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
-                                                                              the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
-                                                                              calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
-                                                                              deferred both sub-parts):
+                                                                                                                              **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
+                                                                                                                              not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
+                                                                                                                              `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
+                                                                                                                              allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
+                                                                                                                              `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
+                                                                                                                              `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
+                                                                                                                              `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
+                                                                                                                              the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
+                                                                                                                              calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
+                                                                                                                              deferred both sub-parts):
 
-                                                                              ```bash
-                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
-                                                                                -f allowed_actions=selected
+                                                                                                                              ```bash
+                                                                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
+                                                                                                                                -f allowed_actions=selected
 
-                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
-                                                                                -f github_owned_allowed=true \
-                                                                                -f verified_allowed=true \
-                                                                                -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
-                                                                                -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
-                                                                                -f 'patterns_allowed[]=google-github-actions/auth@*' \
-                                                                                -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
-                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
-                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
-                                                                              ```
+                                                                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
+                                                                                                                                -f github_owned_allowed=true \
+                                                                                                                                -f verified_allowed=true \
+                                                                                                                                -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
+                                                                                                                                -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
+                                                                                                                                -f 'patterns_allowed[]=google-github-actions/auth@*' \
+                                                                                                                                -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
+                                                                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
+                                                                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
+                                                                                                                              ```
 
-                                                                              `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
-                                                                              /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
-                                                                              `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
-                                                                              would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
-                                                                              actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
-                                                                              since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
-                                                                              scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
-                                                                              applying, so a newly-added action isn't silently locked out mid-CI-run.
+                                                                                                                              `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
+                                                                                                                              /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
+                                                                                                                              `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
+                                                                                                                              would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
+                                                                                                                              actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
+                                                                                                                              since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
+                                                                                                                              scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
+                                                                                                                              applying, so a newly-added action isn't silently locked out mid-CI-run.
 
 - [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
       ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
@@ -692,20 +694,22 @@ traffic to count until the migration is finished. What is certain is that their 
 
 ## Deferred work after 2026-08-06
 
-| Item                                              | State               | Blocked on                                                       |
-| ------------------------------------------------- | ------------------- | ---------------------------------------------------------------- |
-| Re-measure job-minutes post-cache-fix             | **DONE 2026-08-09** | — 3,972 min/24h, -32.4% vs baseline. See Progress Log.           |
-| Re-baseline `qg_resource_baseline.json`           | **Not done**        | Nobody — real work, and the governor over-admits until it lands  |
-| Complete public-repo → `ubuntu-latest` migration  | **DONE 2026-08-07** | —                                                                |
-| Harden/remove self-hosted runners on public repos | **DONE 2026-08-07** | PM's own revert closed the last public-repo self-hosted exposure |
-| Downsize CI VM / planning VM                      | **Operator-owned**  | 24h tracking window open, target check 2026-08-08 11:00 UTC      |
-| Could any of the 7 private repos go public?       | **Operator-owned**  | Business call on repo contents; would zero their CI cost         |
-| Fix the 6 plan-hygiene ratchets                   | **Not done**        | Nobody — PM's LDR→main promotion stays blocked until fixed       |
-| Sibling-clone I/O (bare repos + worktree)         | **Not done**        | Low priority — 8–11s/job, dwarfed by what was just removed       |
+| Item                                              | State               | Blocked on                                                                                          |
+| ------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- |
+| Re-measure job-minutes post-cache-fix             | **DONE 2026-08-09** | — 3,972 min/24h, -32.4% vs baseline. See Progress Log.                                              |
+| Re-baseline `qg_resource_baseline.json`           | **Not done**        | Nobody — real work, and the governor over-admits until it lands                                     |
+| Complete public-repo → `ubuntu-latest` migration  | **DONE 2026-08-07** | —                                                                                                   |
+| Harden/remove self-hosted runners on public repos | **DONE 2026-08-07** | PM's own revert closed the last public-repo self-hosted exposure                                    |
+| Downsize CI VM / planning VM                      | **DONE 2026-08-08** | CI VM 08:24 UTC + planning VM 08-07 (both `[x]` above) — table not resynced                         |
+| Could any of the 7 private repos go public?       | **Operator-owned**  | Business call on repo contents; would zero their CI cost                                            |
+| Fix the 6 plan-hygiene ratchets                   | **DONE 2026-08-07** | closed twice — `unified-trading-pm@b30fb5267` + `@50b8643dc` (see `[x]` above) — table not resynced |
+| Sibling-clone I/O (bare repos + worktree)         | **Not done**        | Low priority — 8–11s/job, dwarfed by what was just removed                                          |
 
-**Recommended NEXT item: fix the 6 plan-hygiene ratchets.** It is the only P0 that is neither operator-gated nor waiting
-on elapsed time, and PM's promotion pipeline re-fails every ~15 min until it is done. The re-measure runs itself in the
-background of that work.
+**Table corrected 2026-08-10 (plan_reconciler, ci tranche)** — the "Downsize CI VM / planning VM" and "Fix the 6
+plan-hygiene ratchets" rows above had gone stale (both items shipped and are independently `[x]`-verified with commit
+shas in the Resolution checklist above; this table was never resynced after). **Recommended NEXT item: re-baseline
+`qg_resource_baseline.json`** — the only P1 that is neither operator-gated nor already done; the governor over-admits
+until it lands.
 
 ---
 

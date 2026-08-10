@@ -23,7 +23,7 @@ created: 2026-06-10
 authoritative_for: [monitoring control plane read surfaces, CI dashboard + fleet git-health]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-08-10
 code_refs:
 ---
 
@@ -103,11 +103,14 @@ with a fleet surface (`fleet_git_health_orchestrator_2026_06_10.md`, agent-orche
   it.
 - **Orchestrator dashboard** `/fleet-git` page (`dashboard/src/FleetGit.tsx`) — summary chips, per-host slot rows with
   worst-first badges (reporter-dead / ff-pull-dead / N drift / N dirty / N behind), expandable per-repo detail.
-- **Single-pane (operator decision v2)**: deployment-api `GET /api/repo-ci/fleet-git-health` (`_repo_ci_fleet.py`,
-  deployment-api@2b6b424) proxies the orchestrator endpoint server-side (SM token `ORCHESTRATOR_API_TOKEN`; honest
-  degradation `available=False`+reason+`orchestrator_url` deep-link when unreachable/untokened) → deployment-ui `/fleet`
-  Fleet Git landing tab (deployment-ui@8a9d1bd). The orchestrator dashboard keeps its own `/fleet-git` page for
-  worker-ops use.
+- **Single-pane (operator decision v2, PARTIALLY SUPERSEDED 2026-07-27)**: the original v2 design routed this through
+  deployment-api `GET /api/repo-ci/fleet-git-health` (`_repo_ci_fleet.py`, deployment-api@2b6b424) proxying to a
+  deployment-ui `/fleet` Fleet Git landing tab (deployment-ui@8a9d1bd) — **that tab is DELETED**
+  (`/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`: predated the single-VM architecture
+  (2026-06-27); with ~11 VMs down to 1, the cross-VM landing page this decision's click-through relied on stopped being
+  daily-use). Fleet git-health's only home now is the **orchestrator dashboard's own `/fleet-git` page**
+  (`dashboard/src/FleetGit.tsx`, worker-ops use — see line above). The CI/CD half of the v2 decision (Repos CI page,
+  per-service CI tab staying in deployment-ui) is UNCHANGED — this reversal is fleet-git-health-scoped only.
 
 ## Click-through to the existing UIs (operator add 2026-06-10)
 

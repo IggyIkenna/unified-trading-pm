@@ -186,6 +186,28 @@ regions as a side effect, adding deletions to an otherwise marker-only diff and 
 happens the exception correctly refuses (a reformatting diff is not a marker-only append) — the actual fix is to land a
 standalone formatting commit on the file first, bringing it to prettier-clean, before adding the marker.
 
+### The line-cap does NOT block a bounded same-line link-repoint on a live over-cap doc (RULED 2026-08-09)
+
+**A commit whose diff to an already-over-cap `plans/active/*.md` is confined to repointing a dangling reference (e.g. a
+`/plans/active/...` path that moved to `/plans/archive/<YYYY_MM>/...`) passes through SCOPED mode**, alongside the
+marker-append carve-out above — same motivating problem (an over-cap doc gets permanently frozen against even a trivial,
+necessary fix), different shape of edit. Bounded the same way, via `check_line_caps.sh`'s SCOPED-mode diff inspection:
+
+- The file must **already** be over the hard cap before this commit (a doc newly crossing the cap is NOT covered).
+- **`ADDED <= DELETED`** in `git diff --numstat` — a link-repoint replaces text, it does not grow the doc.
+- **Every changed (+/-) content line is textually identical between the removed and added sides, after normalizing an
+  `/plans/active/...` or `/plans/archive/<YYYY_MM>/...` path segment to a common token** — this is what distinguishes a
+  pure path-token substitution from a sneaky content edit riding along with it (verified against 2 negative cases: a
+  same-line prose addition alongside the path fix, and a file newly crossing the cap in the same commit — both still
+  correctly fail HARD).
+
+**The failure this closes**: `cross_cutting_consolidated_closeout_2026_07_25.md` (then 1007L, over cap) needed a single
+dangling-link repoint to unblock a downstream archival — SCOPED mode refused it, deadlocking against the archival
+discipline's own referrer-fixup requirement (a stale ref must be fixed before the target can safely archive). Full
+incident + the shipped fix (`unified-trading-pm@d765b4cfb1`, `scripts/plan-hygiene/check_line_caps.sh`):
+`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Regression coverage:
+verified via an isolated scratch repo, not the live corpus.
+
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 
 A "next steps" paragraph, a Progress Log aside that only describes future work in prose, or a chat-summary bullet that

@@ -383,12 +383,12 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `unified-api-contracts` (needed 3 attempts total), `unified-trading-library` (needed 3 attempts total), and
       `unified-trading-system-ui` — every one recovered via `git log --all --oneline --grep=...` + `git cherry-pick`,
       re-verified independently after each retry. Deleted the now-redundant
-      `scripts/workflow-templates/     staging-lock-check.yml` template source and updated
-      `rollout-workflow-templates.sh`'s header comment + stale usage examples (dry-run verified: only
-      `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` still process). Shipped:
-      `unified-trading-ci@686bca7` (hosted reusable workflow, final content after the debug session),
-      `unified-trading-pm@79223bec17` (make_stub.py fix), `unified-trading-pm@b7e41849d6` (template deletion + script
-      update, landed as a rebased sha on origin), plus one commit per fleet repo (24 total).
+      `scripts/workflow-templates/staging-lock-check.yml` template source and updated `rollout-workflow-templates.sh`'s
+      header comment + stale usage examples (dry-run verified: only `image-build-gate.yml`, `notify-slack.yml`,
+      `quality-gates-v2.yml.tmpl` still process). Shipped: `unified-trading-ci@686bca7` (hosted reusable workflow, final
+      content after the debug session), `unified-trading-pm@79223bec17` (make_stub.py fix),
+      `unified-trading-pm@b7e41849d6` (template deletion + script update, landed as a rebased sha on origin), plus one
+      commit per fleet repo (24 total).
 
 ## Todo 1 findings (2026-08-06)
 

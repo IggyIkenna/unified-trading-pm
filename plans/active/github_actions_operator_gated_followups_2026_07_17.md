@@ -816,8 +816,8 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       canary to the remaining 23 repos.** Per-repo: register a `POOL_TAG=<repo-slug>` runner pool (capacity-plan against
       the 16 vCPU box — agent-orchestrator's canary used 2 glue + 1 writer; 23× that is NOT a straight multiply, size
       down for low-traffic repos), roll out the 7 already-edited templates via
-      `rollout-workflow-templates.sh --repo     <name>`, add its own `quality-gates-v2.yml` override (ideally replacing
-      the hand-set canary pattern with a real per-repo templated substitution — a new `rollout-workflow-templates.sh`
+      `rollout-workflow-templates.sh --repo <name>`, add its own `quality-gates-v2.yml` override (ideally replacing the
+      hand-set canary pattern with a real per-repo templated substitution — a new `rollout-workflow-templates.sh`
       placeholder + allowlist, not 23 more hand-edits), verify a live trigger, ratchet the drift baseline down as each
       repo lands. — **✅ DONE 2026-07-27/28; closed 2026-07-30 by `/na-eligibility-audit ci` as STALE.** This doc's own
       dated "Final report" below supersedes the original "NOT started / paused for an operator scope-pacing" wording:

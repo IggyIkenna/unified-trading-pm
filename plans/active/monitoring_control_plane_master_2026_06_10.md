@@ -17,7 +17,7 @@ related:
     /plans/archive/2026_06/fleet_git_health_orchestrator_2026_06_10.md,
     /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md,
     /plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md,
-    plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
+    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
@@ -55,7 +55,7 @@ context_scope:
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-BY-HEADROOM` annotation next to its `- [x]` item for the specific successor / blocker — that item
-now lives in `plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` (split out 2026-07-24; see the split banner
+now lives in `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` (split out 2026-07-24; see the split banner
 further below in this doc).
 
 # Monitoring control-plane master
@@ -453,7 +453,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       history (`8134134 feat(cockpit): health rollup + consolidator drill-down...`), and re-confirmed live in the doc
       (§91 `assert_consolidator_healthy(bucket)` + `CONSOLIDATOR_DOWN` watchdog, §419/446 the consolidated `_index`
       heartbeat reused as `health_consolidator.consolidator_posture`).
-      `active/consolidator_throughput_backlog_monitor_     2026_07_09.md` (status: active) then built a further
+      `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` (status: active) then built a further
       "Consolidators tab" per-AG backlog/throughput view directly on top of that same cockpit endpoint, as a
       pre-existing SSOT, with no cross-reference back to this G3 item.)** **CLOSING THIS PASS (2026-07-31)**: both the
       "standing element on a monitoring surface" (the cockpit's health-rollup + consolidator drill-down,

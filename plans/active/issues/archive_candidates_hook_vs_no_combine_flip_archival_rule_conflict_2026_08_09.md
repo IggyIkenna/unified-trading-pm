@@ -115,14 +115,26 @@ One of:
       `verify.py` directly) against a same-commit flip+`git mv`, not a code read. If it resolves it, narrow
       `plan-completion-and-archival-discipline.md`'s "never combine" rule to mode-2 (cross-repo PM flip) only. (repo:
       agent-orchestrator + unified-trading-pm)
-- [ ] [DOC] P2. Whichever of options (a)/(b)/(c) above the todo-1 finding points to, implement it: either narrow the
-      codex rule (if (a) confirmed), add the carve-out to `scripts/plan-hygiene/check_archive_candidates.sh --only` (if
-      (a) not confirmed), or at minimum document the `archive_exempt` one-commit-bridge workaround in
-      `plan-completion-and-archival-discipline.md` so future self-archiving finalize plans have a citable sanctioned
-      path. (repo: unified-trading-pm)
+- [x] [DOC] P2. ✅ **DONE — already shipped via a different, independently-filed duplicate issue, discovered and
+      confirmed by plan_reconciler (ci tranche) 2026-08-10.** This exact conflict was independently rediscovered the
+      same day (2026-08-09) by a different worker (via `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize`)
+      and filed/resolved as
+      `/plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`
+      (`status: resolved`, archived same day) — satisfies option (c)'s "at minimum" bar in full. Independently
+      re-verified live: `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "`archive_exempt: true`
+      is the sanctioned bridge... (RULED 2026-08-09)" section is present;
+      `scripts/plan-hygiene/check_archive_candidates.sh` has the `archive_exempt: true` skip logic (4 call sites);
+      `tests/test_check_archive_candidates_flip_then_mv.bats` exists on disk. Shipped `unified-trading-pm@a231c2a80`.
+      Options (a)/(b) (narrowing the codex rule, or a same-commit auto-detect carve-out) remain unimplemented —
+      genuinely deferred to todo 1's outcome, not silently dropped.
 
 ## Progress Log
 
 - **2026-08-09** — Filed while executing `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`'s sole todo (slot 16).
   Worked around for that one doc via a documented one-commit `archive_exempt: true` bridge; this issue tracks the
   underlying conflict for a durable fix.
+- **2026-08-10 (plan_reconciler, ci tranche)** — flipped todo 2 (already independently shipped by a duplicate issue
+  filed/resolved the same day this doc was created — see todo 2 for the citation trail). Doc stays `status: open`: todo
+  1 (does the M3 fallback actually close the mode-1 combined-commit gap, which would let options (a)/(b) narrow or
+  remove the `archive_exempt` bridge entirely) is a genuine, still-open investigation, not addressed by the duplicate's
+  fix.
