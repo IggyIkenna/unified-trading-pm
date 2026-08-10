@@ -139,13 +139,15 @@ green one).
 
 ## Todos
 
-- [ ] [INFRA] P2. **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the `qg-host-governor`
+- [x] [INFRA] P2. **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the `qg-host-governor`
       reservation ledger with interactive agent-orchestrator slots.** Trace whether the glue-runner's QG invocation
       calls `qg_governor_acquire()` (`scripts/quality-gates-base/qg-host-governor.sh`) the same way an interactive slot
       does, or bypasses the ledger entirely — this doc's finding 4 above observed `0s     governor queue-wait` on a CI
       leg despite the host being severely loaded (`uptime` 26-32 on 8 cores), suggesting a bypass. Done-when: a stated
       YES/NO on whether the glue-runner participates in the same reservation ledger, with the code path cited
-      (function + file); if NO, file a follow-up todo to wire it in.
+      (function + file); if NO, file a follow-up todo to wire it in. — 2026-08-10: **done, see Progress Log** (verdict:
+      calls the SAME function, but NOT the same ledger as interactive slots — a pre-existing tracked follow-up already
+      covers the gap).
 - [ ] [INFRA] P2. **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and the
       per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** Measure physical
       core count + typical interactive-slot heavy-QG-phase concurrency + glue-runner concurrency during a representative
@@ -281,3 +283,49 @@ and just burn more contended compute.
   for a DIFFERENT source doc (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`, already
   archived) — no overlap. `sequential: true` added (all 3 todos record findings into this same doc). Finalize twin:
   `/plans/active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md`.
+
+- **infra 2026-08-10 (slot-5): todo 1 resolved — code-traced answer.** **YES, the glue-runner's `quality-gates.sh`
+  invocation calls the SAME `qg_governor_acquire()` function as an interactive slot** — but **NO, it does not share the
+  SAME ledger** as interactive agent-orchestrator slots. Both facts are true simultaneously; the finding-4 "0s governor
+  queue-wait" symptom is explained by the ledger split, not a bypass of the acquire call itself.
+  - **Call path (code cited)**: every `quality-gates.sh` invocation — CI or interactive — sources
+    `scripts/quality-gates-base/base-service.sh`, which calls `qg_governor_acquire()` around the heavy TESTS/TYPECHECK
+    phase (`base-service.sh:826`) and `qg_governor_acquire_total_instance()` right after sourcing
+    `qg-host-governor.sh` (`base-service.sh:79`). `qg_governor_acquire()` itself
+    (`scripts/quality-gates-base/qg-host-governor.sh:593-595`) branches on `QG_GOVERNOR_MODE`: `reservation` →
+    delegates to `_qg_governor_acquire_reservation()` (same file, line 460); default `token` → the legacy flock-bucket
+    path. The CI reusable workflow (`unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`, `qg-slices` job
+    env block) sets `QG_GOVERNOR_MODE: ${{ inputs.self_hosted_runner_labels != '' && 'reservation' || 'token' }}` — so
+    any repo whose caller `quality-gates-v2.yml` passes `self_hosted_runner_labels` (self-hosted "glue" runner) runs the
+    identical reservation-mode acquire function interactive slots use. (A repo on `ubuntu-latest`, i.e.
+    `self_hosted_runner_labels: ""`, runs `token` mode instead — irrelevant to host contention since a GH-hosted runner
+    is a single-tenant ephemeral VM, not sharing the host at all.)
+  - **The actual gap — two DISJOINT ledgers, not a bypass**: `_qg_governor_acquire_reservation()` reserves against
+    whatever path `_qg_shared_root()` resolves (`qg-host-governor.sh:269-277`). That function branches on
+    `WORKSPACE_ROOT`: a `/.tabs/<N>` path (interactive slot) strips to the host's shared workspace root (e.g.
+    `/home/ubuntu/unified-trading-system-repos`); a `/opt/github-glue-runners*` path (CI glue-runner job) resolves to
+    the HARDCODED constant `_QG_GLUE_RUNNER_SHARED_ROOT="/opt/.qg-governor-glue-shared"` (line 266). These are two
+    **different literal filesystem paths on the same physical host** → two separate `reservations` ledger files → an
+    interactive slot's `qg-host-governor.sh --status` can genuinely read "reserved: 0MB, live reservations: none" (its
+    own ledger) while a CI glue-runner job holds real reservations on the OTHER ledger, and vice versa — exactly
+    reproducing this doc's finding 4 without either side "bypassing" anything.
+  - **This gap is not new — it's a previously-identified, already-tracked follow-up, not something requiring a fresh
+    todo.** `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` (status: complete,
+    archived 2026-08-03) shipped the fix that unifies CI glue-runner jobs **across different repos** onto the ONE
+    `/opt/.qg-governor-glue-shared` ledger (live-validated: 73min soak, 11 distinct repos correctly sharing one ledger,
+    0 OOM) — but that plan's own closing Progress Log entry explicitly scoped out (not fixed) the cross-**population**
+    case: "AO slot-worker QG runs and the glue-runner pools' ledger are still two SEPARATE populations on the same
+    host, not yet unified." That exact gap was migrated to a still-OPEN todo in the parent plan,
+    `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md:399-408` ("NEW FINDING (2026-08-03)... AO's own
+    slot-worker QG runs... are still NOT unified with the glue-runner pools' ledger... Possible direction: extend
+    `_qg_shared_root()` further so BOTH the `.tabs` strip and the `/opt/github-glue-runners*` collapse resolve to the
+    SAME final path when running on this one host"). Re-verified still `- [ ]` unchecked as of this session (2026-08-10)
+    — no duplicate follow-up filed here per this todo's own done-when instruction, since one already exists and is
+    correctly homed in the governor's own parent plan (not this CI-specific issue doc).
+  - **Answering the doc's Open Question #1 directly**: participates in "a" reservation ledger via the identical
+    code path, but NOT the SAME ledger as interactive slots — the concrete integration gap the question asked about is
+    real, root-caused to `_qg_shared_root()`'s two disjoint constants, and already has an owning open todo (cited
+    above) rather than being newly discovered here.
+  - Did not touch `qg-host-governor.sh`, run any CI retrigger, or mutate host state — read-only code trace + doc
+    cross-reference only, per this doc's own repeated caution and the na-eligibility-audit's conflict-check scoping
+    this todo to code grep / doc reads.
