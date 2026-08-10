@@ -98,26 +98,50 @@ create-only hazard and must be fixed (amend, or a corrective follow-up commit) b
 backstop that catches this shape if it slips through — but don't rely on the sweep catching it later; verify at commit
 time.
 
-### Never combine the checkbox flip with the `git mv` archival in ONE commit (2026-07-30 incident; migrated here 2026-08-09 — this doc is the self-declared SSOT for the archival ritual, but the rule itself had only ever been written into `agents/RULES.md`)
+### Never combine the checkbox flip with the `git mv` archival in ONE commit — CROSS-REPO (mode 2) only (2026-07-30 incident; migrated here 2026-08-09; narrowed 2026-08-10)
 
-If a todo's own completion also makes its doc archival-eligible (all todos done, no lock), a single commit that both
-edits the checkbox AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL `plan_ref` PATH show
-only a file deletion — no `[ ] → [x]` transition is visible there (git's rename pairing isn't applied when a path-scoped
-`git show`/`git log` query is run against just the old path), so `/done`'s M3 check (`cross_repo_pm_flip_verified`)
-rejects it with `cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened. **Fix: commit the
-flip FIRST as a plain edit at the still-active path, THEN `git mv` to the archive location as a separate follow-up
-commit.** This is a distinct, earlier failure mode from the `git commit --only` rename-deletion hazard above (that
-section's guidance governs the SHAPE of the archival commit once you're doing steps 5-6 as a combined move; this rule
-governs whether the flip and the move should even be in the same commit at all — they should not be).
+**This rule applies ONLY to the cross-repo (mode-2) case** — the plan-of-record lives in the sibling PM worktree
+(`.tabs/<N>/unified-trading-pm/`) while the worker commits code in a service-repo worktree, so the flip lands as a
+cross-repo PM commit. If a todo's own completion there also makes its doc archival-eligible (all todos done, no lock), a
+single commit that both edits the checkbox AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL
+`plan_ref` PATH show only a file deletion — no `[ ] → [x]` transition is visible there (git's rename pairing isn't
+applied when a path-scoped `git show`/`git log` query is run against just the old path), so `/done`'s M3 check
+(`cross_repo_pm_flip_verified`) rejects it with `cross_repo_pm_file_touched_no_checkbox_flip` even though the flip
+genuinely happened. **Fix: commit the flip FIRST as a plain edit at the still-active path, THEN `git mv` to the archive
+location as a separate follow-up commit.** This is a distinct, earlier failure mode from the `git commit --only`
+rename-deletion hazard above (that section's guidance governs the SHAPE of the archival commit once you're doing steps
+5-6 as a combined move; this rule governs whether the flip and the move should even be in the same commit at all — they
+should not be, in the cross-repo case).
 
-### `archive_exempt: true` is the sanctioned bridge when a doc's own last todo IS its archival trigger (RULED 2026-08-09)
+**Single-repo (mode-1) finalize plans: same-commit flip+archival is the SANCTIONED path (narrowed 2026-08-10).** When
+the plan-of-record lives directly inside the worker's own worktree (e.g. a worker whose worktree IS
+`unified-trading-pm/`), a single commit that flips the last todo AND `git mv`s the doc to `plans/archive/<YYYY_MM>/` is
+now the compliant, hook-satisfying shape:
+
+- `check_archive_candidates.sh --only` DEMANDS it: a flip-only commit that leaves the doc 0-open/some-done/unlocked/
+  not-exempt is rejected, while the combined commit passes (the old-path deletion is skipped, the archive-path add is
+  out of scope).
+- The AO `/done` M3 check resolves it: `_flips_at_path_or_rename`/`_resolve_current_plan_text`, and for the
+  annotated-line shape `_archival_rename_disposition`, accept the bundled flip+mv with
+  `reason="plan_ref_self_archived_with_marker"` — the 2026-07-30 combined-commit M3 gap is closed for this case.
+  Verified live 2026-08-10 via a direct `verify.check_plan_flip` trial + regression test
+  (`agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py::test_check_plan_flip_single_repo_combined_flip_mv_detected`).
+
+So: do NOT reach for the `archive_exempt: true` bridge (next section) on a single-repo finalize plan — the combined
+commit is the correct shape. The bridge remains the sanctioned path for the mode-2 (cross-repo) two-commit split.
+
+### `archive_exempt: true` is the sanctioned bridge when a doc's own last todo IS its archival trigger (RULED 2026-08-09; scoped to the cross-repo two-commit case 2026-08-10)
+
+> **Scope note (2026-08-10):** this bridge serves the **cross-repo (mode-2)** two-commit split above. For a
+> **single-repo (mode-1) finalize plan** — plan-of-record in the worker's own worktree — the combined same-commit
+> flip+archival (previous section) is now the sanctioned shape and the bridge is NOT needed there.
 
 The two-commit split above conflicts with `check_archive_candidates.sh`'s `--only` precommit mode (added 2026-08-09):
 that mode unconditionally flags ANY staged `plans/active/*.md` doc that reaches 0 open todos + some done + unlocked +
-not `archive_exempt`, regardless of whether THIS commit is what brought it there. For a doc whose own LAST open todo is
-its own archival trigger, that leaves no legal single commit — the flip-only commit (correct per the rule above) trips
-`--only`'s immediate-archival demand, but doing the `git mv` in that same commit is exactly the banned combination.
-Found live 2026-08-09 archiving `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md` — see
+not `archive_exempt`, regardless of whether THIS commit is what brought it there. For a cross-repo doc whose own LAST
+open todo is its own archival trigger, that leaves no legal single commit — the flip-only commit (correct per the rule
+above) trips `--only`'s immediate-archival demand, but doing the `git mv` in that same commit is exactly the banned
+combination. Found live 2026-08-09 archiving `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md` — see
 `/plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`.
 
 **Fix: set `archive_exempt: true` in frontmatter on the flip-only commit, then drop it as part of the immediately
