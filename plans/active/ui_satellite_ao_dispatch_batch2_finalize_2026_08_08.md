@@ -87,12 +87,15 @@ source: >-
       launchers now route through the shared choke point? If so, re-scope the business-context-enrichment item's
       READ-SIDE half (AWS cost-allocation-tag support in `cost_observability/models.py`, a `strategy` key in
       `BUSINESS_LABEL_KEYS`, a backfill script reconciling the `asset_group=`/`asset-group=` key-name drift already
-      found in launchers that HAVE labels) as a possible batch-3 candidate — this half is genuinely
+      found in launchers that HAVE labels) as a possible future-satellite-batch candidate — this half is genuinely
       ui/cost-observability scoped and doesn't depend on the launcher-migration completing 100%, only on there being
       enough labeled resources to make the read-side work meaningful. Do NOT re-scope or draft the launcher-migration
       half itself — that stays infra-tranche's own surface regardless of progress. **Done when**: a dated
       CLEARED-or-STILL-BLOCKED verdict is recorded with evidence (the infra doc's own current todo/progress state), and
-      if cleared, the read-side half is written up as an explicit batch-3 candidate line. Repo: unified-trading-pm.
+      if cleared, the read-side half is written up as an explicit future-satellite-batch candidate line (name corrected
+      2026-08-10, plan_reconciler: "batch-3" is now taken by `ui_satellite_ao_dispatch_batch3_2026_08_09.md`, an
+      unrelated artifact_pipeline_observability meta-items batch — use the next free number at execution time). Repo:
+      unified-trading-pm.
 
 - [ ] [REVIEW] P2. **Re-measure the ui tranche's orphan count.** Re-run the `/ag-closeout-audit ui` classification over
       the tranche's now-updated docs and report the new orphan count against this run's 9-of-13 baseline. Expect
