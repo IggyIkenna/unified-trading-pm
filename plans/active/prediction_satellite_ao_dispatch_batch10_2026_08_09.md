@@ -107,7 +107,8 @@ assumed from the Phase-1 agents' own grep alone).
       re-enumerated date, and `prediction_live_clob_depth_capture_2026_07_24.md`'s "DEFERRED-CROSS-DEP" checkbox is
       flipped `[x]` citing the evidence.
 
-- [ ] [BACKEND] P3. **Audit + fix the SAME CQG-bundling path-resolution gap in `base_prediction_adapter.py`'s
+- [x] ✅ [BACKEND] P3. **Audit + fix the SAME CQG-bundling path-resolution gap in `base_prediction_adapter.py`'s
+      `_load_market_lifecycle_for_date` FALLBACK path — market-tick-data-service@5738858d.**
       `_load_market_lifecycle_for_date` FALLBACK path (adjacent finding from todo 1's investigation, 2026-08-10).**
       While executing todo 1, discovered `instrument_availability_paths.py::match_instruments_blob`'s single-file
       `.../venue={V}/instruments.parquet` tail never matches instruments-service's CQG-bundled write shape (live since
@@ -262,6 +263,13 @@ non-batchable taxonomy:
   independently verifiable via manifest. Flipped both checkboxes: this todo [x] ✅ +
   `prediction_live_clob_depth_capture_2026_07_24.md`'s DEFERRED-CROSS-DEP [x] ✅. Evidence: live manifest rows > 0 (4
   dates, 648K rows) + shipped code fixes (mtds@82ba5399/0a6ad2de) + batch VM launched + live=batch architecture.
+
+  - 2026-08-10 (slot 5, backend_engineer, todo 2): Shipped fix. Fallback confirmed exercised (162 ia-not-ml dates). Two
+    gaps: (a) single-file resolver never matched CQG-bundled shape, switched to `resolve_prediction_instruments_blobs`;
+    (b) column mapping — CQG files carry `instrument_key` / `available_from_datetime` / `available_to_datetime`, not
+    condition_id/start_date/end_date_iso. Fixed both, shipped mtds@5738858d. Live-verified: 2026-06-27 resolves 1,138
+    bounds (was {}), no regression on flat 2026-06-28 (36 bounds). Regression test added with real CQG schema rows. QG
+    green (10,452 passed, 0 failures).
 
 ## Deferred work — migrated to:
 
