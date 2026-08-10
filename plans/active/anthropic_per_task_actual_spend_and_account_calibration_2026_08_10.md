@@ -255,15 +255,22 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       about throughput; if they differ, that ratio is itself a purchasing decision. **Done when**: a post-reset Pro
       window is measured the same way the max20 one was, both multipliers are recorded here with their valuation dates,
       and any divergence is stated rather than averaged.
-- [ ] [BACKEND] P2. **Add an `account_id` filter axis to `window_task_usage_totals` and
-      `GET /api/backlog/usage/windows`, composing AND-wise with the existing provider/model/role_group filters.**
-      Per-account totals must sum to the provider total exactly as DeepSeek Pro+Flash already sum to DeepSeek. **Done
-      when**: a test asserts the per-account sums equal the provider-scoped total for the same window, and the endpoint
-      returns per-account rows.
-- [ ] [UI] P2. **Add per-account filter buttons to `TaskUsageWindows.tsx` as a third independent filter row, alongside
-      the existing provider and role-group rows.** Labels come from the accounts registry (`label`/`account_id`), not
-      hardcoded. **Done when**: `[UI]` + `pw:L2 ✓` with a cited regression spec under `dashboard/tests/e2e/`, per
-      `/codex/06-coding-standards/ui-testing-layers.md`.
+- [x] ✅ [BACKEND] P2. **`account_id` filter axis landed on `window_task_usage_totals` +
+      `GET /api/backlog/usage/windows` — agent-orchestrator@12fad94355.** Composes AND-wise with
+      provider/model/role_group. `test_per_account_totals_sum_to_the_provider_total` is the operator's own acceptance
+      test — per-account slices must sum to the provider total exactly as DeepSeek pro+flash already do. A third test
+      pins the honest edge: rows with a NULL `account_id` (written before capture began ~2026-08-06) match NO account
+      filter, so per-account sums legitimately fall SHORT of the unfiltered total on historical data — that shortfall is
+      the signal those rows are unattributed, not an aggregation bug.
+- [x] ✅ [UI] P2. **Per-account filter row added to `TaskUsageWindows.tsx` — agent-orchestrator@12fad94355. pw:L2 ✓**,
+      regression spec `dashboard/tests/e2e/task-usage-account-filter.spec.ts` (6/6 chromium). Buttons are built from the
+      LIVE accounts registry, not hardcoded — accounts are paused/rotated often enough that a literal list would be
+      stale within days — and sorted by `account_id` so they cannot reshuffle under the cursor between polls. The last
+      spec deliberately asserts the SHORTFALL: tasks on an unregistered account are unreachable by any filter, so the
+      per-account slices sum to 12,000 of 17,000 rather than the whole. **Trap worth keeping**: the first version of
+      that spec read the cell with `textContent` straight after clicking a filter and raced the refetch, silently
+      summing the PREVIOUS slice (29,000 instead of 12,000). Use auto-retrying `toHaveText`; the sibling
+      provider/role-group specs never hit this because they only ever assert one slice.
 - [ ] [UI] P2. **Surface the spend basis in the task-usage panel so a DeepSeek dollar (metered) and an Anthropic dollar
       (subscription-attributed at a measured multiplier) are distinguishable, and keep Anthropic's
       percent-of-weekly-limit visible alongside it.** Operator intent 2026-08-10: Anthropic becomes actual spend, the

@@ -100,11 +100,23 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
       a write convention: MTDS emits per-fixture rows (`fixture_id` populated) alongside league-grain rollup rows
       (`fixture_id=""`). `build_sports_catalogue_from_manifest()` must filter `fixture_id == ""` for back-compat. Full
       design covers schema shape, back-compat, and honest-coverage denominator math.
-- [ ] [CODE] P2. **Write `build_sports_fixture_catalogue_from_manifest()` in
-      `instruments-service/scripts/build_instrument_catalogue.py`.** Gated on the manifest schema extension above (todo
-      2). Model it on the existing `build_sports_catalogue_from_manifest()` — same "catalogue superset ⊇ manifest
-      present-set" invariant, same `expected_unattempted` seeding logic, same honest-absence handling. The fixture-grain
-      catalogue rows carry `instrument_type="fixture"` (or the P1-contracts name if different — check UAC
+- [x] ✅ [CODE] P2. **Write `build_sports_fixture_catalogue_from_manifest()` in
+      `instruments-service/scripts/build_instrument_catalogue.py`.** — instruments-service@8c08ccacba (QG green,
+      sentinel matches, ancestry verified on origin/live-defi-rollout). Implemented per the todo-2 design: rolls up
+      per-fixture manifest rows (`fixture_id != ""`) into one catalogue row per (fixture_id, venue, league_id) with
+      `instrument_type="fixture"` (SPORTS_FIXTURE_INSTRUMENT_TYPE), real `venue` (bookmaker), `available_from` = first
+      captured date; same sentinel/registration guards as the league builder. League-grain builder gains the reciprocal
+      `fixture_id == ""` back-compat filter (tolerant of pre-fixture-grain manifests without the column);
+      `_read_sports_manifest_index` now reads `venue` + `fixture_id`; wired into the sports path alongside the
+      league-grain call (incremental is a no-op for sports, so the manifest single-read path covers every run). Unit
+      tests (a) fixture-grain rows → fixture-grain catalogue rows, (b) league-only → empty fixture catalogue (honest
+      absence), (c) the fixture catalogue's fields are enumerator-ready for per-fixture `expected_unattempted` seeding
+      (instrument_type="fixture"/league_id/venue/available_from — the actual enumerator routing of
+      `instrument_type="fixture"` rows to fixture-grain seeding is the planned follow-up; the builder's contract is the
+      catalogue it emits), + unregistered-league exclusion. Gated on the manifest schema extension above (todo 2). Model
+      it on the existing `build_sports_catalogue_from_manifest()` — same "catalogue superset ⊇ manifest present-set"
+      invariant, same `expected_unattempted` seeding logic, same honest-absence handling. The fixture-grain catalogue
+      rows carry `instrument_type="fixture"` (or the P1-contracts name if different — check UAC
       `market_data_categories.py`), real `venue` values (no longer blank — the fixture-grain atom IS per-venue), and the
       `fixture_id` from the extended manifest. Unit tests must cover: (a) a manifest with fixture-grain rows produces
       fixture-grain catalogue rows, (b) a manifest with only legacy league-grain rows produces an empty fixture
