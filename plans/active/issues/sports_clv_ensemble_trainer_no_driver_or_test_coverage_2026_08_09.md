@@ -311,6 +311,19 @@ the VM-scale run:
     rmse/mae/r2-per-outcome-per-horizon performance delta will be reported into this doc's todo 2 +
     `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` +
     `sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` once the runs land.
+- 2026-08-10 (slot-20, re-dispatch on todo 2 — NEW FAILURE FINDING, run NOT complete): checked the 5th-attempt VMs
+  ~21:40Z. **4 of 5 (2a/2b/2c/2d) TERMINAL-FAILED `exit_code=1` at 20:46Z** —
+  `Service failed: Input X contains NaN. HuberRegressor does not accept missing values encoded as NaN natively`
+  (traceback through `sports_ensemble_train_handler.py:52` → `sports_ensemble_training_runner.py:250` →
+  `self.trainer.train(...)`). **This is a NEW code bug, distinct from the P3 CatBoost-target-NaN fix** (`9b68494b76`
+  handled NaN in the CLV _target_ before the CatBoost fit; this failure is NaN in the _feature matrix_ `X` reaching the
+  HuberRegressor — a different NaN path, plausibly the walk-forward/eval HuberRegressor seeing missing feature values
+  that CatBoost tolerated). 2e still RUNNING at check time (may also fail or be mid-train). The measured-delta
+  deliverable for todo 2 has NOT been produced — the runs crashed. Do NOT relaunch: per the doc's Deferred-work rule +
+  3×-confirmed history, the primary blocker remains the `odds_targets` 2019-2025 backfill
+  (`sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`), and now a new X-side NaN crash
+  needs root-causing (where in the feature pipeline do NaNs survive after selection?) before any 6th launch. GATED-skip
+  with park; todo 2 stays open (genuinely not done — no delta measured).
 
 ## Deferred work after 2026-08-10
 
