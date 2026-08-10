@@ -776,3 +776,17 @@ reliably on this shared host); re-arm on pickup if dead.
 - **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: check `kill -0 332080`; if dead, re-arm per
   the USAGE block in `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (now correctly defaults to 2025+2026, no
   manual re-narrowing needed) — same recipe as every prior checkpoint in this saga.
+
+### 2026-08-10T~10:01Z — slot 21, same session — watcher re-armed (3rd time), fleet 8→6, all VMs confirmed genuinely alive
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Watcher PID 783096 died ~5.5 min after launch (same pattern). Direct 8-min
+bounded poll (09:53-10:01Z, 60s intervals): fleet flat at 6 VMs, zero drain across full window. Staleness-checked the 3
+oldest VMs (FRED 25.9h, ETH 13.9h, ES 10.8h): all 3 confirmed GENUINELY ALIVE — heartbeat blobs ≤1 min old, run.logs
+actively writing, CPU 100%, real dates being processed. Not stuck. The 2 VMs that drained (MET 2024, NASDAQ 2023-d03)
+completed and self-deleted normally. 0 wave_launcher.py, 0 ES_OPT VMs.
+
+Re-armed watcher: PID **1434027** (isolated, PGID=SID=PID, setsid nohup). Poll 1: 6 VMs. Will die again (expected).
+
+- **NEXT ACTION (fresh session)**: check todo #2 checkbox. If `[ ]`: check `kill -0 1434027`; likely dead, re-arm from
+  `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`. Fleet is genuinely alive and draining slowly — the lock
+  WILL clear eventually, just not imminently.
