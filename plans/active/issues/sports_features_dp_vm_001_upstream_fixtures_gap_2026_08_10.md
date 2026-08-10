@@ -115,3 +115,16 @@ locked_since:
 - [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
       EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
       index.
+- [ ] [CODE] P3. AO re-dispatched already-resolved escalation agt-af22dd to a fresh slot (22:18Z) with a stale boot
+      context carrying no resolution — gate escalation dispatch on already-resolved (or carry the resolution summary in
+      the boot context) so a resolved wall cannot spawn a conflicting relaunch worker.
+
+## Late dispatch note (slot-23, 2026-08-10)
+
+- The AO re-dispatched this already-resolved escalation (`agt-af22dd`, resolved 22:16Z) to slot 23 at 22:18Z with a
+  STALE boot context ("Filed issue: (none — alert carries the details)" / "RELAUNCH") that did not carry the operator's
+  do-not-relaunch ruling (BLK-4fecb718). Slot 23 relaunched per the stale context
+  (`features-sports-sports-20260810-222639`, SPOT e2-standard-8, created 22:29Z) before discovering this issue. The VM
+  was deleted during setup (no run.log — no work started); no further relaunch performed. Direct launcher run (not the
+  actuator), so the ≤2/(prefix,day) bound was not consumed. Net effect: none — a stale-dispatch artifact, reverted; the
+  operator's do-not-relaunch decision stands.
