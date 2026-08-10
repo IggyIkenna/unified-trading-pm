@@ -7,7 +7,7 @@ summary: >-
   hook derives `main` instead of the caller's slot and actively REWRITES a slot worker's `[slot-N·planning]` author to
   `[main·planning]`. Confirmed live on slot 31 (2026-08-10). Every slot worker's pure-doc commits silently ship
   mis-attributed to main, corrupting the attribution audit trail (a HARD RULE).
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -27,7 +27,7 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm@015b869269
 locked_by:
 locked_since:
 supersedes:
@@ -35,8 +35,14 @@ superseded_by:
 source:
   - safe-doc-push.sh isolated-worktree mode (default since 2026-08-10)
 depends_on: []
-archive_exempt: true
 ---
+
+> **🟢 ARCHIVED 2026-08-10** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (unified-trading-pm@015b869269). Moved by
+> slot-29 per the flip-then-mv two-commit pattern: the checkbox flip + `archive_exempt: true` bridge landed in
+> `20b7784d1f` (file kept at the original path so the AO server's M3 flip verification saw the `- [x]`); this commit
+> performs the `git mv` to `plans/archive/issues/` and drops the now-moot exempt line. No content was rewritten.
 
 # safe-doc-push isolated-worktree mode silently mis-attributes slot commit identity to main
 
