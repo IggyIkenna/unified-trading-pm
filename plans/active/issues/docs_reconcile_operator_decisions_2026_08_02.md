@@ -146,9 +146,11 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 ## 🚧 BLOCKED-OPERATOR-DECISION 3 — 14 locked issue-docs with truncated `summary:` frontmatter (added 2026-08-06)
 
 - [x] ✅ [DOCS] P2. **DONE (operator ruling 2026-08-08, ao round-5 apply item 9 — see
-      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14").** Apply (or
-      authorize applying) the pre-drafted replacement `summary:` on 14 `locked_by`-gated `plans/active/issues/*.md` docs
-      -- applied, `unified-trading-pm@97ce494ecd`, verified ancestor of origin/live-defi-rollout.
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14"; actually APPLIED
+      2026-08-10 — see Progress Log, the 2026-08-08 entry's cited SHA `97ce494ecd` was a context-scout sweep commit that
+      never touched these `summary:` fields; all 14 were still truncated until today).** Apply (or authorize applying)
+      the pre-drafted replacement `summary:` on 14 `locked_by`-gated `plans/active/issues/*.md` docs — re-applied
+      2026-08-10, see Progress Log for the real commit SHA.
 
   All 14 carry a real `locked_by` value (13× `live-defi-rollout`, 1× `harsh-fleet-audit`) — per the same HARD RULE as
   item 2 above, none were auto-fixed. This is a distinct, larger recurrence of the exact same gate, found by today's
@@ -346,7 +348,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   disqualified as either status-mismatched or legitimate parent/child splits with proper `related:` cross-links; this is
   the 1 genuine collision). Independently re-verified both docs' `status`/`authoritative_for`/`related` frontmatter live
   before parking, not just trusted from the hunter's report.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first na-eligibility-audit
-  pass since item 5 was added. Both remaining open items (4: Fireblocks rotation-cadence contradiction; 5:
-  plan-hygiene.md duplication) are explicit `BLOCKED-OPERATOR-DECISION` A/B/C authority calls per the doc's own
-  framing, no evidence-determined single answer for either. Textbook KEEP-NA.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first na-eligibility-audit pass
+  since item 5 was added. Both remaining open items (4: Fireblocks rotation-cadence contradiction; 5: plan-hygiene.md
+  duplication) are explicit `BLOCKED-OPERATOR-DECISION` A/B/C authority calls per the doc's own framing, no
+  evidence-determined single answer for either. Textbook KEEP-NA.

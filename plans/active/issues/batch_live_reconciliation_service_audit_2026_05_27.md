@@ -1,9 +1,10 @@
 ---
 doc_type: issue
 title: Batch-Live Reconciliation Service (BLRS) — Repo Audit, Codex↔Code Drift, Cross-Repo Responsibility Map
-summary:
-  BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for
-  the prior trading day, compares the _batch replay_ of the pipeline against what a...
+summary: >-
+  Full repo audit of batch-live-reconciliation-service (BLRS), the T+1 nightly batch-vs-live reconciliation
+  orchestrator: documents its multi-stage DAG, data flow, and CLI/API surface, and catalogues codex↔code drift plus
+  misplaced cross-repo responsibilities as ✅-decided vs ❓-needs-operator items tracked in §7.
 status: open
 nature: process
 asset_group: [cross-cutting]

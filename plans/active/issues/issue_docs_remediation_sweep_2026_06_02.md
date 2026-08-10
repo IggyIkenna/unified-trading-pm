@@ -1,9 +1,11 @@
 ---
 doc_type: issue
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
-summary:
-  'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current
-  code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
+summary: >-
+  Consolidated dispatch tracker from a 2026-06-02 code-audit of every plans/active/issues/*.md doc verifying each open
+  claim against current code — a large fraction were already fixed after the docs were written; remaining real gaps are
+  re-tracked here per-repo as canonical dispatchable todos, each source doc archived once its items here are verified
+  complete.
 status: open
 nature: process
 asset_group: [infrastructure]

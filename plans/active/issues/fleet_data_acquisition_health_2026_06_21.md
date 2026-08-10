@@ -1,9 +1,11 @@
 ---
 doc_type: issue
 title: Fleet data-acquisition health sweep 2026-06-21 — fixable code errors (no rate-limiting)
-summary:
-  "Operator asked: are the VMs running / rate-limited / recovering, should we enforce rate-limit caps vs
-  exponential-backoff, and are they getting data or failing for fixable code reasons (all data_ty..."
+summary: >-
+  Operator-requested sweep of every data-acquisition VM lane's run.log (~75 VMs) on 2026-06-21: confirms all lanes
+  running with zero fleet-wide rate-limiting, most lanes actively capturing data, and catalogues fixable code errors
+  found per lane (cefi tick-schema validation, SOURCE_PRIORITY mismatches, mtds version-surface drift) with follow-up
+  todos.
 status: resolved
 nature: process
 asset_group: [cross-cutting]

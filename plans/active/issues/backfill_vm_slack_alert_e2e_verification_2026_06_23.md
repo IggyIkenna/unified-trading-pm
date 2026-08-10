@@ -1,9 +1,11 @@
 ---
 doc_type: issue
 title: Backfill-VM Slack-alert e2e verification — three gaps found 2026-06-23
-summary:
-  "**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each
-  independently download the full `run.log` blob per VM. With ~50 running VMs, that..."
+summary: >-
+  E2E verification of the backfill-VM Slack-alert path found four gaps: the heartbeat-stall watcher was OOM-killed every
+  tick before writing its sentinel (fixed in code, not yet deployed), Python stdout/stderr isn't captured in Cloud
+  Logging for fleet monitors/alerting, Slack delivery isn't end-to-end observable, and delivered alerts were generic
+  because the UTL envelope was never unwrapped.
 status: open
 nature: process
 asset_group: [cross-cutting]

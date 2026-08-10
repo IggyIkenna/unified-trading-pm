@@ -1,9 +1,10 @@
 ---
 doc_type: issue
 title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
-summary:
-  "**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability
-  wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m..."
+summary: >-
+  Running log of bugs, gaps-in-understanding, conflicting truths, and dual-but-different implementations found while
+  building the capability wizard/manifest — companion to the gap-discovery tracker (which covers missing
+  capabilities/registries instead); each finding tagged OPEN / FIXED / TRIAGED with evidence.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -714,8 +715,8 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
-- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
-      BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
+- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise
+      NotImplementedError). BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
 - [x] ✅ [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net
       delta; primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). **DONE 2026-06-15** —
       `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:

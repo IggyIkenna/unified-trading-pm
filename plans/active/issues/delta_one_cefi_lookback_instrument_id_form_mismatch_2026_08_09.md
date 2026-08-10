@@ -13,9 +13,11 @@ source:
     citadel_satellite_ao_dispatch_batch1_2026_08_08.md item "features-service:
       recompute the corpus for the intraday BTC mean-reversion cs-ML feature",
   ]
-summary:
-  "`features-service` delta_one's `--feature-group returns` / `--feature-group statistical_anomaly` batch compute for
-  CEFI/BTC cannot complete — it fails both the lookback pre-flight validation AND th..."
+summary: >-
+  `features-service` delta_one's `--feature-group returns` / `--feature-group statistical_anomaly` batch compute for
+  CEFI/BTC cannot complete — it fails both the lookback pre-flight validation AND the MVP-universe instrument filter,
+  depending which instrument-id FORM is passed, because the two subsystems expect DIFFERENT id forms for the same
+  instrument and nothing translates between them.
 nature: process
 asset_group: cefi
 stage: [meta]
