@@ -151,30 +151,57 @@ source: >-
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Click "unpark" for citadel task -004** in
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
+- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-10 — covered by `ao_satellite_ao_dispatch_batch19_2026_08_10.md`**, which the
+      operator approved the same day (`status: draft` → `active`). Batch19's item 1 is exactly this unpark: the design
+      was already ruled 2026-08-09, leaving only the mechanical API call plus verification. No separate operator action
+      outstanding. Original text preserved for record. Was: **Click "unpark" for citadel task -004** in
       `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` (finding 1) — a 2026-08-09 session's
       LEAN-UNPARK analysis is already in hand; the dashboard action itself needs an operator. > **Round 2 note**: this
       doc is retagged `[ao]` as of 2026-08-10 (was a bare `[cross-cutting]` mistag — its own > todo 1 depends on a
       same-day/same-repo/same-author sibling already tagged `[ao]`). The operator action itself > is still real and
       outstanding, but it is no longer cross-cutting-tranche's item to carry — the `ao` tranche's > own audit now owns
       tracking it. Left unchecked here for continuity/audit-trail only, not as an open > cross-cutting action.
-- [ ] [OPERATOR] P3. **Approve/decline the ICE/OPRA Databento subscription add** (finding 2,
+- [x] ✅ [OPERATOR] P3. **CARRIED 2026-08-10 →
+      `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A genuine spend decision (finding U
+      class (i)); now tracked on the single consolidated operator list. Original text preserved for record. Was:
+      **Approve/decline the ICE/OPRA Databento subscription add** (finding 2,
       `databento_ice_opra_subscription_ask_2026_08_09.md`) — billing decision. > **Round 2 note**: this doc is retagged
       `[tradfi]` as of 2026-08-10 (was a bare `[cross-cutting]` mistag — its > own `tags:` already included `tradfi` and
       it cites the tradfi-databento-sourcing-ssot). Now `tradfi` > tranche's item, not cross-cutting's.
 - [ ] [DOCS] P2. **Verify + flip 3 already-resolved checkboxes** in
       `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` (finding 3) — evidence already
       cited above, just needs a doc-only reconciliation pass.
-- [ ] [OPERATOR] P1. **Manually relaunch stalled backfill VM DP-VM-003** (finding 3's remaining item). > **Round 2
-      note**: this doc is retagged `[ao]` as of 2026-08-10 (was a bare `[cross-cutting]` mistag — content > is 100% an
-      agent-orchestrator server-code defect, `server/escalation.py:_poll_wall_resolution`, matching an >
-      already-established mistag pattern in this corpus). Both remaining action items above are now `ao` tranche's > to
-      carry, not cross-cutting's.
-- [ ] [OPERATOR] P3. **Provision `glassnode-api-key` + `kaiko-api-key` GSM secrets, or decline** (finding 4,
+- [x] ✅ [OPERATOR] P1. **RE-HOMED 2026-08-10 →
+      `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 11, and RETAGGED off `[OPERATOR]`
+      as `[DATA] P1`.** Per `task_template.md` finding U, a named-launcher relaunch is none of the three gated classes;
+      AO workers have driven DP-VM-003 on the record (`agt-5065b7`, `agt-71ccbf`, `agt-c14d58`) and both cloud
+      identities are IAM-self-service. Now AO-dispatched. Original text preserved for record. Was: **Manually relaunch
+      stalled backfill VM DP-VM-003** (finding 3's remaining item). > **Round 2 note**: this doc is retagged `[ao]` as
+      of 2026-08-10 (was a bare `[cross-cutting]` mistag — content > is 100% an agent-orchestrator server-code defect,
+      `server/escalation.py:_poll_wall_resolution`, matching an > already-established mistag pattern in this corpus).
+      Both remaining action items above are now `ao` tranche's > to carry, not cross-cutting's.
+- [x] ✅ [OPERATOR] P3. **SPLIT 2026-08-10 (operator ruling).** The **Kaiko** half is CLOSED — Kaiko is a removed
+      provider workspace-wide, not just in DeFi execution; do NOT provision `kaiko-api-key`. The scaffolded adapter is
+      being deleted under `/plans/active/kaiko_provider_removal_2026_08_10.md`. The **Glassnode** half remains genuinely
+      open and is carried to `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`. Original text
+      preserved for record. Was: **Provision `glassnode-api-key` + `kaiko-api-key` GSM secrets, or decline** (finding 4,
       `glassnode_kaiko_credential_ask_2026_08_09.md`). > **Round 2 note**: independently reconfirmed accurate —
       genuinely cross-cutting (external-data-vendor > credential ask, per CLAUDE.md's "external data is always
       available" rule), still open, still not AO-eligible. > Correctly stays a cross-cutting action item.
-- [ ] [OPERATOR] P2. **Supply the rate-limit-probe engineering spec** (finding 5,
+- [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-10 — NOT orphaned; real coverage exists.** This doc's own Round-2 note already
+      corrected the verdict: `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (`status: active`,
+      `assigned_vm: planning`) cites the source issue doc by path and keeps its own matching `[INFRA] P1` open checkbox
+      for the identical item. The spec ask is still real but is tracked there, so it must not be double-tracked here.
+      Original text preserved for record. Was: **Supply the rate-limit-probe engineering spec** (finding 5,
       `rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md`) — vendor/endpoint, request pattern, disposable-IP
       mechanism, stop criteria. > **Round 2 note — CORRECTED, not just retagged**: this doc IS actually covered by an
       active plan Round 1 didn't > check — `infra_capture_and_devops_leftovers_2026_07_06.md` (status: active,
@@ -185,7 +212,10 @@ source: >-
       exists, this is not actually an uncovered/operator-only gap > the way Round 1 framed it. The engineering-spec ask
       itself is still real and outstanding (an operator still > needs to supply it), but it is being tracked by
       `infra_capture_and_devops_leftovers_2026_07_06.md`, not > orphaned. Left unchecked here for continuity only.
-- [ ] [OPERATOR] P3. **Provision `sportradar-api-key` + decide Sportradar's scope, or decline** (finding 6,
+- [x] ✅ [OPERATOR] P3. **CARRIED 2026-08-10 →
+      `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A human-held credential (finding U
+      class (ii)); now tracked on the single consolidated operator list. Original text preserved for record. Was:
+      **Provision `sportradar-api-key` + decide Sportradar's scope, or decline** (finding 6,
       `sportradar_credential_ask_2026_08_09.md`). > **Round 2 note**: this doc is retagged `[sports]` as of 2026-08-10
       (was a bare `[cross-cutting]` mistag — > content is 100% sports: the sports-only SportradarAdapter, sports
       vendors/data types, forked from Step 4 of a > cross-AG coordinator but narrowed to single-AG scope while keeping

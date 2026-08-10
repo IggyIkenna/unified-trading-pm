@@ -320,6 +320,15 @@ run re-confirmed rather than newly escalated it).
 
 ## Todos
 
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
 > Added 2026-08-10 (prose-findings formalization sweep). Finding 1 and Finding 2 above are "informational" findings by
 > this doc's own framing, but their content is a genuine, repeatedly-re-confirmed, still-not-executed recommendation —
 > the workspace's "every follow-up is a `- [ ]` todo, never prose" hard rule applies regardless of a finding's own
@@ -334,7 +343,11 @@ run re-confirmed rather than newly escalated it).
       2026-08-08/10 corroboration — see `ag_closeout_audit_infra_parked_2026_08_10.md` item 12) but never actually
       retagged, out of stated caution about racing a concurrent tranche-classification worker. Needs one dedicated pass:
       conflict-check each of the 4 docs fresh, then drop the `infrastructure` co-tag (keep `ci`) on all 4 in one commit.
-- [ ] [OPERATOR] P3. **Resolve the ambiguous `[ci, cross-cutting]` dual-tag on
+- [x] ✅ [OPERATOR] P3. **RE-HOMED 2026-08-10 →
+      `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 6, and RETAGGED off `[OPERATOR]`.**
+      Per `task_template.md` finding U (operator ruling 2026-07-27), a named-doc/named-field content call is
+      worker-determinable — it is not a business judgment, a human-held credential, or an irreversible mutation. Now
+      AO-dispatched. Original text preserved for record. Was: **Resolve the ambiguous `[ci, cross-cutting]` dual-tag on
       `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** (from Finding 2). Content reads
       closer to `infra`/`meta` than `ci` — re-confirmed unchanged across multiple runs (2026-08-09 Finding 4, this run's
       Finding 2) that the `ci`-half of the tag may itself be wrong, not just the `cross-cutting`-half. Needs a human/

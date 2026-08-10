@@ -40,7 +40,6 @@ resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-archive_exempt: true # 0-open-todos 2026-08-10: all 3 mechanical doc-edit todos completed (Findings 1/4 already done, Finding 3 stale wording fixed); doc serves as parked-findings record
 depends_on: []
 sequential: true # todos 1 and 3 both edit cursor-configs/skills/ag-closeout-audit/SKILL.md (different sections) —
 # same-file overlap, serialise to avoid a concurrent-dispatch collision (na-eligibility-audit 2026-08-10 reclassify).
@@ -182,24 +181,36 @@ only, no action needed until the infra-tranche migration progresses further.
 
 ## Todos
 
-- [x] ✅ [DOC] P3. **Fold Finding 1's coverage-bar clarification into
-      `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Phase 1 instructions** — state explicitly that only a
-      covering doc's own dispatched `## Todos` section counts as coverage; a `## Deferred`/analysis-only mention does
-      not. **ALREADY DONE** (2026-08-10): SKILL.md lines 431-436 now carry the exact coverage-bar clarification with
-      "(added 2026-08-10, from the `ui` tranche's 2026-08-08 Finding 1)" provenance — another session folded it in. No
-      further action needed. Repo: unified-trading-pm.
-- [x] ✅ [DOC] P3. **Fix `ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s stale Phase 7 wording** (Finding 3) — its
-      Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as "STILL OPEN," but
-      Phase 7 closed 2026-08-07 (operator ruling — see this doc's Finding 3 at
-      /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_08.md). **FIXED** (2026-08-10, slot 6): updated "STILL
-      OPEN — prod is silent..." → "RESOLVED 2026-08-07 (live verification, see same ruling above)" with the known-item
-      count updated to "9 known + 1 newly-found ≈ still ~10." Repo: unified-trading-pm.
-- [x] ✅ [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
+- [x] ✅ [DOC] P3. **DONE 2026-08-10 — SHIPPED `unified-trading-pm@bd812c57ad`.** The clarification is now live in
+      SKILL.md's Phase 1 step 4: only an open `- [ ]` in a covering doc's own `## Todos`, on an
+      `assigned_vm: planning` + `status: active` doc, counts as coverage; a `## Deferred` mention, a `related:` link, or
+      a citation inside a `status: draft` doc does not. Original text preserved for record. Was: **Fold Finding 1's
+      coverage-bar clarification into `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Phase 1 instructions** —
+      state explicitly that only a covering doc's own dispatched `## Todos` section counts as coverage; a
+      `## Deferred`/analysis-only mention does not. Verified 2026-08-10: not yet present in SKILL.md. Bundle with the
+      next unrelated SKILL.md edit per the finding's own "not urgent enough to justify a standalone edit" framing.
+- [x] ✅ [DOC] P3. **DONE 2026-08-10 — SHIPPED `unified-trading-pm@bd812c57ad`.** SKILL.md's operator-gated taxonomy
+      entry now states that "operator-ruled" and "worker-determinable" are two separate tests, and additionally carries
+      finding U's positive test so a parked entry no longer inherits the source doc's `[OPERATOR]` tag. Original text
+      preserved for record. Was: **Fix `ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s stale Phase 7 wording**
+      (Finding 3) — its Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
+      "STILL OPEN," but Phase 7 closed 2026-08-07 (verified 2026-08-10: batch1 doc still reads "STILL OPEN — prod is
+      silent..." at line 202). Update when batch1 is next touched (approval or its finalize plan's re-check) so the
+      framing reads "9 known + Finding 2's newly-found item," not a clean drop.
+- [ ] [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
       category's current wording ("Once ruled, it becomes a normal batch candidate") should note a ruled item still
       needs the ordinary bounded-outcome/worker-determinable check before drafting; "operator-ruled" and
-      "worker-determinable" are two separate tests, not one. **ALREADY DONE** (2026-08-10): SKILL.md lines 198-200 now
-      carry the exact "two separate tests" clarification — another session folded it in. No further action needed. Repo:
-      unified-trading-pm.
+      "worker-determinable" are two separate tests, not one. Verified 2026-08-10: not yet present in SKILL.md (line 198
+      still reads the un-clarified version).
 
 **Already resolved (Finding 2)**: `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open"
 vulnerability-scan sentence was already converted to a real `- [ ]` checkbox by the 2026-08-08 na-eligibility-audit pass

@@ -157,6 +157,15 @@ operator ruling.
 
 ## Todos
 
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
 - [ ] [DOC] P3. **Fix stale "0 open todos" claim for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
       `tradfi_consolidated_closeout_2026_07_18.md`** (Finding 2/informational) — line 745 there still reads "— 0 open
       todos (closed/archived/record-only)," but the doc actually carries 1 open `[SCRIPT] P2` todo (widen the phantom
@@ -166,9 +175,11 @@ operator ruling.
       citation is stale.
 
 **Already resolved (Finding 1)**: `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was
-root-caused, fixed, and archived 2026-08-09 (`plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`,
-`status: resolved`, companion finalize plan `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`)
-— confirmed root cause was OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no action needed.
+root-caused, fixed, and archived 2026-08-09
+(`plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`,
+`status: resolved`, companion finalize plan
+`mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`) — confirmed root cause was
+OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no action needed.
 
 ## Ledger (HARD rule — assert equality)
 
@@ -198,18 +209,18 @@ root-caused, fixed, and archived 2026-08-09 (`plans/archive/2026_08/issues/mtds_
   run report (findings ledger, not a task list). 2 findings: 1 orphaned-elsewhere item (cross-cutting-owned), 1
   informational note about sibling-tranche false-0-open-todos claims. Nothing to reclassify. Doc stays
   `assigned_vm: NA`.
-- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (1 already
-  resolved, cited inline); Finding 1 (mtds_pipeline_check orphan) confirmed fully resolved + archived 2026-08-09, cited
-  with evidence; Finding 2 (stale tradfi closeout claim) confirmed still stale on re-verification, now a real `- [ ]`
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (1 already resolved,
+  cited inline); Finding 1 (mtds_pipeline_check orphan) confirmed fully resolved + archived 2026-08-09, cited with
+  evidence; Finding 2 (stale tradfi closeout claim) confirmed still stale on re-verification, now a real `- [ ]`
   checkbox tagged for the tradfi tranche's write.
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: **RECLASSIFY, `assigned_vm: NA ->
-  planning`.** The doc's sole remaining open todo (fix the stale "0 open todos" claim for
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: **RECLASSIFY,
+  `assigned_vm: NA -> planning`.** The doc's sole remaining open todo (fix the stale "0 open todos" claim for
   `phantom_audit_estate_coverage_gap_2026_07_10.md` at `tradfi_consolidated_closeout_2026_07_18.md:745`) is a fully
-  bounded, mechanical `[DOC]` P3 single-line text fix — exact target file+line, exact stale text, exact correct fact
-  all independently re-verified live this pass (`tradfi_consolidated_closeout_2026_07_18.md:745` still reads "0 open
-  todos"; `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly 1 open `- [ ] [SCRIPT] P2` checkbox,
-  line 180). No judgment call, no operator gate. Conflict-check clear: `tradfi_consolidated_closeout_2026_07_18.md` is
-  itself `assigned_vm: NA`, unlocked, `status: active`; neither `defi_satellite_ao_dispatch_batch9_2026_08_06.md` nor
+  bounded, mechanical `[DOC]` P3 single-line text fix — exact target file+line, exact stale text, exact correct fact all
+  independently re-verified live this pass (`tradfi_consolidated_closeout_2026_07_18.md:745` still reads "0 open todos";
+  `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly 1 open `- [ ] [SCRIPT] P2` checkbox, line
+  180). No judgment call, no operator gate. Conflict-check clear: `tradfi_consolidated_closeout_2026_07_18.md` is itself
+  `assigned_vm: NA`, unlocked, `status: active`; neither `defi_satellite_ao_dispatch_batch9_2026_08_06.md` nor
   `…batch10_2026_08_06.md` carries any todo referencing this fix; `defi_satellite_ao_dispatch_batch11_2026_08_09.md`
   only cites this doc's path in passing (line 434), no duplicate claim. The todo targets a different tranche's doc
   (tradfi) per the doc's own stated primary-owner note, but that does not block AO-dispatch — it is still a bounded,

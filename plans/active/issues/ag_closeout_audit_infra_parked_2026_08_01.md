@@ -176,7 +176,7 @@ All 3 findings in `issues/ag_closeout_audit_infra_parked_2026_07_31.md` were re-
 no drift:
 
 1. **`codex_violations_ratchet_to_five_2026_06_10.md`'s `delta_proxy_repricer.py` checkbox** — still `- [ ]` at
-   line 373. Still false-unchecked per the original finding (`execution-service@89fbf99d` already wires it in).
+   line 373. Still false-unchecked per the original finding (`execution-service@980a6ad0` already wires it in).
 2. **`issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` todo 3** — still `- [ ]`.
    Re-checked the filesystem again this run: `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` and
    `.tabs/3/stash-bundles/` are STILL absent from this sandbox, same as 2026-07-31's observation — no new information,
@@ -216,7 +216,7 @@ no drift:
       target needs updating to the live doc.
 - [x] ✅ [DOCS] P3. Re-carry forward the 3 still-open 2026-07-31 findings/todos (reconcile `delta_proxy_repricer.py`'s
       **CLOSED 2026-08-06 (na-eligibility-audit)**: superseded — the findings now live in the 08-02/08-03/08-04 parked
-      registers: delta_proxy_repricer.py checkbox shipped (execution-service@89fbf99d, closeout 08-03); stash-clone
+      registers: delta_proxy_repricer.py checkbox shipped (execution-service@980a6ad0, closeout 08-03); stash-clone
       real-host state + ao_self_pull retag carried as open findings in the newer registers. checkbox; positively confirm
       the stash-clone directory's real-host state; retag
       `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) — see
