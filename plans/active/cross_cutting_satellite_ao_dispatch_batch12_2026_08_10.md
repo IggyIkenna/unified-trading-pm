@@ -221,8 +221,19 @@ needs either: (a) a Monitor-based approach that stays in-harness, (b) a systemd 
 session resume. The current re-armed script (v3) is a best-effort nohup — the next session MUST verify it's alive or
 re-arm again.
 
-**Next (session 3)**: verify post_mdps_pipeline.sh is alive (`ps aux | grep post_mdps`). If dead, re-arm from
+**Session 3 resumed 2026-08-10 ~12:32 UTC** (third compaction). Post-pipeline script (PID 1488466) **alive and
+polling**. Git state: HEAD was at slot-26 commit `5808364b36`, 40 commits behind origin. `git pull --rebase --autostash`
+fast- forwarded to `be0acd39ed` (52 files changed). Autostash conflict on this file resolved (formatting-only diff —
+origin already had the Progress Log content from `94093fb441`).
+
+**Heartbeat ~12:34 UTC**: VM `mdps-backfill-cefi-20260810-114949` still RUNNING. Jul 31 subprocess completed (was 83% at
+12:34, finished ~12:36). New subprocess PID 16273 dispatched for Aug 01 (batch_tardis mode — FUTURES, benign
+NoSchemaContract errors on BINANCE-FUTURES/DERIBIT). 4298 instruments, 27%/s, ETA 110s (~12:38). Aug 02 (batch_tardis)
+
+- Aug 03 (all modes) still pending. Pipeline completion estimated ~12:45-12:50 UTC.
+
+**Next (session 4)**: verify post_mdps_pipeline.sh is alive (`ps aux | grep post_mdps`). If dead, re-arm from
 `/home/ubuntu/unified-trading-system-repos/.tabs/14/post_mdps_pipeline.sh`. Check VM status — if already TERMINATED, run
-the pipeline steps manually (manifest merge → funding_oi → returns → read-back verify in
-`gs://features-cefi-test-central-element-323112/delta_one/`). Flip both plan checkboxes (batch-12 todo 7 + source doc
-`features_service_e2e_pipeline_test_2026_05_26.md` line 711), commit with `docs(plans):`, POST `/done`.
+the pipeline steps manually. The monitor on the pipeline log (`bn9rrx7fh`) also times out at 10 min — re-arm if the
+pipeline still hasn't triggered. Flip both plan checkboxes (batch-12 todo 7 + source doc
+`/plans/active/features_service_e2e_pipeline_test_2026_05_26.md` line 711), commit with `docs(plans):`, POST `/done`.
