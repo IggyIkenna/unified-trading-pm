@@ -186,14 +186,21 @@ drift_direction: advance-code
       `umi_tick_provider._route_extended` (line 592) → `_fetch_extended_candles`, with current unit coverage
       (`test_extended_candles.py`, `test_umi_extended_book_gate.py`, `test_umi_tick_provider_coverage.py`). Repo:
       market-tick-data-service (verified, no change needed) @f6bda91b.
-- [ ] [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs `is_mvp()` canonical strings).**
-      Source: same doc. `prod/catalog.parquet`'s `league_id` holds NUMERIC provider IDs (`'10'`/`'100'`) while
-      `is_mvp()`'s sports MVP rule keys canonical strings — so no sports league ever tags `mvp=True` in the catalogue.
-      Map the provider `league_id` → canonical league_id (UAC `league_data`/`provider_league_ids`) before the `is_mvp()`
-      check in `build_instrument_catalogue.py`. **Check against the v10 94-football-league MVP set**
-      (`/codex/02-data/mvp-scope-canonical.md`, `_mvp_football_league_ids()`), NOT the doc's own stale 4-league pre-v10
-      reference. Low-risk display/classification fix (the MVP tag is unused downstream today). Done when: a fresh
-      catalogue build tags at least one MVP-qualifying league `mvp=True`. Repo: instruments-service
+- [x] ✅ [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs `is_mvp()` canonical strings) —
+      STALE PREMISE, ALREADY WORKING (verified 2026-08-10, slot 24).** No code change needed in
+      `build_instrument_catalogue.py` — the numeric→canonical mapping is moot because the catalogue `league_id` is
+      ALREADY canonical end-to-end. Measured evidence (read-only, against the LIVE prod catalogue
+      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt 2026-08-10 10:52Z):
+      (1) **0 numeric `league_id` rows** (532,868 rows, all canonical strings like `ALLSVENSKAN`/`EPL`); (2) all 96 v10
+      MVP football leagues (`_mvp_football_league_ids()`) present in the catalogue are tagged `mvp=True` — **0 false
+      negatives**; 272,006 rows `mvp=True` today, and recomputing with the CURRENT UAC `is_mvp` yields 267,893
+      `mvp=True` — the done-condition ("a fresh build tags ≥1 MVP-qualifying league `mvp=True`") is met by the live
+      catalogue. The ONLY anomaly is a STALE false positive: `SEGUNDA_DIVISION` (4,113 rows, a non-canonical alias of
+      the Spanish second tier) is tagged `mvp=True` — current `is_mvp` returns False for it, so a rebuild with current
+      code drops it (cosmetic; the MVP tag is unused downstream today). Original premise (numeric provider IDs →
+      no league ever tagged True) reflects the 2026-06-19 catalogue verify; superseded by the later canonicalization of
+      the sports by_date source (`sports_reference/by_date/.../league=<canonical>` paths + the MTDS odds adapter
+      `_canonical_league_id`). Repo: instruments-service
       (`build_instrument_catalogue.py`).
 - [x] ✅ [SCRIPT] P2. **Diagnose the SFI backfill mid-processing hang + add a request timeout + per-date isolation —
       STALE PREMISE, already shipped (verification via 3 real production runs).** Source: same doc. The described
@@ -335,3 +342,14 @@ drift_direction: advance-code
   the global `EXTENDED_DEPLOY_DATE` floor is gone (live path uses per-instrument/venue-aware handling aligned to UAC
   coverage_start), and exactly one candle-fetch path remains (`fetch_extended_candles` in `_umi_extended.py`). No code
   change needed.
+- **2026-08-10 (slot 24, data_engineering, task `cross_cutting_satellite_ao_dispatch_batch11-0d6336a233f8`)**: sports
+  catalogue `mvp` todo (P3, todo 7) flipped — **STALE PREMISE, already working**. Read-only verification against the
+  LIVE prod sports catalogue (`instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt
+  2026-08-10 10:52Z): 0 numeric `league_id` rows (all canonical), all 96 v10 MVP football leagues present tagged
+  `mvp=True` (0 false negatives), 272,006 rows `mvp=True`; recomputing with current UAC `is_mvp` yields 267,893
+  `mvp=True` — done-condition met. The numeric-ID premise reflects the 2026-06-19 catalogue verify; the sports by_date
+  source + MTDS odds adapter have since canonicalized league_id end-to-end. No code change needed. One stale false
+  positive observed (`SEGUNDA_DIVISION`, 4,113 rows — a non-canonical Spanish-second-tier alias tagged `mvp=True` by
+  the build's UAC version; current `is_mvp` returns False, so the next catalogue rebuild drops it; cosmetic, MVP tag
+  unused downstream). Source checkbox in `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` stays open for
+  the batch-11 finalize twin to reconcile.
