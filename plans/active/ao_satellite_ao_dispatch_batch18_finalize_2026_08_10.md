@@ -80,8 +80,14 @@ source: >-
       reproduces the cited pro 1/61 (1.6%) / flash 3/47 (6.4%) split exactly. Claim CONFIRMED real, not fabricated —
       figures, sample sizes, and the underlying methodology all check out. Local db copy deleted after verification
       (scratch only, never committed).
-- [ ] [DOC] P0. **Reconcile verified evidence into the source doc's own checkboxes** —
-      `deepseek_flash_ab_routing_test_2026_08_05.md`'s todos 9/10/11/13.
+- [x] ✅ [DOC] P0. **Reconcile verified evidence into the source doc's own checkboxes** —
+      `deepseek_flash_ab_routing_test_2026_08_05.md`'s todos 9/10/11/13. — Already done in
+      `unified-trading-pm@79e653a7a0` (the same batch18-todo-1 commit that wrote the Progress Log entries): despite
+      batch18's own "Rules for every worker" reserving the checkbox flip for this finalize plan, that commit's diff
+      shows it flipped todos 8/9/10/11/13 directly in the source doc alongside the Progress Log writeup. Verified each
+      of the 4 in-scope checkboxes (9/10/11/13) carries real, non-placeholder evidence citing batch18 todo 1's numbers
+      (not a bare `[x]`) — re-read the source doc directly, no further action needed. No separate commit required for
+      this todo since the reconciliation already landed.
 - [ ] [REVIEW] P1. **Archive `deepseek_flash_ab_routing_test_2026_08_05.md` ONLY if it is genuinely at zero open todos**
       (check todos 2/4/12a/17b/25's status in `ao_satellite_ao_dispatch_batch12_2026_08_09.md`'s own finalize first — if
       any are still open there, this doc stays `status: active`, not archived).
@@ -105,3 +111,9 @@ source: >-
   slot's AWS identity from this dev checkout — used the S3 `backups/sqlite/planning/` mirror instead, also read-only).
   Both reproduced exactly; see the todo's own evidence line for full numbers. Remaining todos (2/3/4) are separate
   `[DOC]`/`[INFRA]` work — not actioned by this `[REVIEW]` todo.
+- **2026-08-10 (slot 23) — todo 2 found already done**: dispatched todo 2 (reconcile evidence into the source doc's own
+  checkboxes) and found `unified-trading-pm@79e653a7a0` — the same commit batch18 todo 1 cites for the Progress Log
+  writeup — had already flipped the source doc's todos 8/9/10/11/13 checkboxes directly, despite batch18's own "Rules
+  for every worker" section reserving that flip for this finalize plan. Verified all 4 in-scope checkboxes carry real
+  evidence (not bare `[x]`s) before flipping this todo against the existing commit — no new commit needed for the
+  reconciliation itself.
