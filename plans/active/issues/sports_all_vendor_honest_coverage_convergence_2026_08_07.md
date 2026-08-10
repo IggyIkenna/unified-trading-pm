@@ -732,3 +732,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   tarball extraction, not a genuine problem.** Real log content now present: chunk 3/425, zero OOMs/CHUNK_FAILED,
   correctly skip-fasting through already-covered dates. Still 12x hang occurrences (no 13th). AF sanity check remains
   clean (no new `af-backfill-*` instance). No intervention needed.
+- **07:13Z — Odds fleet healthy, no new hang (still 12x); cleared chunk 8 (the new confirmed danger point) cleanly.**
+  `smallchunk18`: chunk 9/425, zero OOMs/CHUNK_FAILED, fresh (~1.3min log lag) — 9 chunks from chunk 18. AF sanity check
+  remains clean (no new `af-backfill-*` instance). No intervention needed.
