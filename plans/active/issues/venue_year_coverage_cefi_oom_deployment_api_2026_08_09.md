@@ -184,6 +184,12 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       (`>=0.77.0,<1.0.0` — confirmed compatible: LDR HEAD's own version is `v0.77.0`, so this ships as a patch within
       the existing floor, no major-version gate), or redeployed. Repos: unified-trading-library (the actual fix),
       deployment-api (the consumer needing a dependency bump once released).
+  - [x] ✅ [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
+        replaced the per-row `df.apply(_classify, axis=1)` (measured ~280 s for cefi's ~26M-row/215-row-group manifest,
+        causing worker-level SIGABRT under the 300 s gunicorn timeout after the row-group-streaming fix resolved the
+        container-level OOM) with vectorized pandas column operations (`str.lower()` + `str.contains()` + `.where()`) —
+        same semantics, ~100× faster. Repo: deployment-api. — **deployment-api@fb3df79** (Quickmerge, verified ancestor
+        of `origin/live-defi-rollout`): full `quality-gates.sh` green, sentinel=fb3df79.
 - [ ] [INFRA] P0. **Live-prod re-verification of the `unified-trading-library@609299ad` fix** — once (a) LDR→main
       promotion lands the fix on `main` (`ldr-to-main-promote-fleet.yml`, `*/15`), (b) semver-agent mints + publishes
       the new UTL patch release (`push:[main]`), (c) deployment-api's dependency-update automation
