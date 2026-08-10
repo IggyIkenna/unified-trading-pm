@@ -167,17 +167,11 @@ green one).
       the `MAX_DURATION=300s` gate that was never calibrated for real fleet concurrency. Filed follow-up todo below
       (hard-cap tightening, now that todo 2's ledger unification makes it enforceable) rather than recommending a host
       resize, which is an operator cost decision out of AO scope.
-- [ ] [INFRA] P2. **Tighten the qg-host-governor's admission caps now that the CI-glue-runner and interactive-slot
-      ledgers are unified (todo 2, 2026-08-10)** — the UNDERSIZED verdict above means the current budget (live-measured
-      today: `qg_host_capacity` reports `cpu_slots=6` of 8 cores, and the reservation-mode `--status` output separately
-      shows a `total-instance gate: K=8`) still permits enough simultaneous heavy QG phases to reproduce the 2026-08-09
-      incident's RAM-pressure kills (19 concurrent `quality-gates.sh` processes measured, vs. the CLAUDE.md-documented
-      ≤2-full-QGs-at-once rule). Lower `QG_HOST_CONCURRENCY` (CPU-slot budget) and/or the total-instance gate's `K`, or
-      make the cap actively account for any self-hosted CI leg currently holding a reservation in the now-unified
-      ledger, then re-measure `uptime`/swap/kill-count under a representative busy period to confirm the 2026-08-09 kill
-      pattern no longer recurs. Done-when: a lowered cap is shipped + a follow-up busy-period measurement shows no
-      RAM-watchdog kills of unrelated (non-overbudget) processes. (repo: unified-trading-pm,
-      `scripts/quality-gates-base/qg-host-governor.sh`)
+- [x] [INFRA] P2. ✅ **Tighten the qg-host-governor's admission caps now that the CI-glue-runner and interactive-slot
+      ledgers are unified (todo 2, 2026-08-10)** — unified-trading-pm@1ec1d683f9. See Progress Log (2026-08-10, slot-11)
+      for the full trace: `QG_HOST_CONCURRENCY` turned out to be INERT on this host (reservation mode, not token mode) —
+      tightened the total-instance gate default cap (`floor(cores × 0.75)`, floored at 6 → K=8→6 on this host) and
+      `QG_HOST_RAM_ABORT_PCT` (80→75) instead.
 - [ ] [REVIEW] P1. **Confirm whether `quality-gates-v2` is actually enforced as a REQUIRED branch-protection check on
       `deployment-service`'s `ldr_main` promotion path**, given PR#678 merged to `main` with zero successful
       `quality-gates-v2` runs against its head SHA (one timeout-failed, one cancelled) — per CLAUDE.md,
@@ -439,3 +433,62 @@ and just burn more contended compute.
     plus today's baseline/cgroup/governor-config reading, not a single fresh combined-saturation observation. A future
     re-check during an active self-hosted CI run would strengthen this further but is not required for this todo's
     stated done-when (verdict + measured numbers cited).
+
+- **2026-08-10 (slot-11, infra craft) — todo 4 RESOLVED, admission caps tightened — unified-trading-pm@1ec1d683f9.**
+  Traced this todo's own literal suggestion ("Lower `QG_HOST_CONCURRENCY` (CPU-slot budget)") before implementing it and
+  found it does NOT apply on this host as worded — a precision gap worth recording so a future reader doesn't repeat the
+  same dead-end:
+  - **`QG_HOST_CONCURRENCY` is currently INERT here.** This host runs `QG_GOVERNOR_MODE=reservation` (live-confirmed:
+    `agent-orchestrator/.env.local` and this session's own ambient env both read `QG_GOVERNOR_MODE=reservation`,
+    `QG_HOST_CONCURRENCY=6`). `qg_governor_acquire()` (`qg-host-governor.sh:640-642`) branches to
+    `_qg_governor_acquire_reservation()` whenever mode is `reservation` and NEVER reaches the token-bucket code path
+    that reads `QG_HOST_CONCURRENCY` at all — that env var only governs the legacy `token`-mode heavy-phase K, which
+    this host doesn't use. So lowering it would have shipped a no-op change with zero live effect. (It is also already
+    at an operator-set floor — `max(2, floor(cores/4))`, "the host must be able to run 2 full QGs at once", ruling
+    2026-06-05 — that this todo's own text shouldn't be read as license to violate.) The todo's "CPU-slot budget" phrase
+    actually maps to a DIFFERENT live knob: `QG_CPU_FRAC` (reservation-mode CPU gate,
+    `cpu_slots = floor(cores × QG_CPU_FRAC)`, default 0.80 → 6 on this 8-core host) and `QG_MEM_SAFETY_FRAC` (the RAM
+    reservation-sum bound, default 0.70). Deliberately did NOT touch either — both are the SSOT-documented,
+    already-shipped, already-tested contract of a SEPARATE closed plan
+    (`plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`'s own "cross-host behaviour" proof table,
+    `tests/test-qg-cross-host.sh`, and an explicit "0.80"/"0.70×MemTotal" citation in
+    `/codex/06-coding-standards/quality-gates.md`) — changing those defaults would require updating that table + codex
+    citation + 2 cross-host tests in the same change, a materially larger and riskier blast radius than this todo's own
+    1-hour estimate and "and/or" wording require, when a second, equally-real, much more isolated lever was available
+    (below).
+  - **What was actually tightened (the isolated, live-effective lever):** the TOTAL-INSTANCE gate
+    (`qg_governor_acquire_total_instance`/`release`, added 2026-08-09 — bounds ALL concurrent `quality-gates.sh`
+    PROCESSES host-wide, not just the heavy TESTS+TYPECHECK phase the RAM/CPU dual gate governs; this is the mechanism
+    that directly answers the incident's own complaint of "19 concurrent `quality-gates.sh` processes" since
+    BOOTSTRAP/LINT/CODEX-COMPLIANCE previously ran fully ungated). Its default cap was a flat `physical_cores` (floored
+    at 6) — `K=8` on this 8-core host, live-confirmed via `--status` before the change. Changed
+    `_qg_total_default_cap()` to `floor(cores × 0.75)`, still floored at 6 → `K=6` on this host (monotonic tightening on
+    every host size: `floor(cores×0.75) ≤ cores` always, and the unchanged floor=6 protects small/macOS hosts from
+    regressing below the already-validated minimum). Also lowered `QG_HOST_RAM_ABORT_PCT` (runtime abort-monitor trip
+    point — the SECOND line of defense that fired legitimately during the 2026-08-09 incident, per that entry's own
+    root-cause finding) 80 → 75, for earlier defensive margin independent of the admission-side change. Both changes are
+    isolated to `qg-host-governor.sh` + its own dedicated test file — no cross-plan table or codex-cited fraction
+    touched.
+  - **Live-verified, not just unit-tested**: `bash qg-host-governor.sh --status` on this actual host, before vs. after,
+    read `total-instance gate: K=8` → `total-instance gate: K=6` (CPU slots unchanged at 6, RAM budget unchanged at
+    70%/22GB — confirming only the intended lever moved). Full governor test suite (`test-qg-*.sh` +
+    `test-trap-release.sh`, 16 files) run before AND after via `git stash`/`stash pop`: two failures reproduce
+    IDENTICALLY on the unmodified baseline (`test-qg-governor-wait-time.sh`'s "contended acquire recorded wait=0",
+    `test-qg-mem-cap.sh`'s SKIP for absent `systemd-run`) — pre-existing, unrelated, not introduced by this change;
+    every other test (including the 2 new/updated assertions in `test-qg-total-instance-gate.sh` covering the new
+    formula at cores=8→6 and cores=16→12) passes clean.
+  - **Codex updated in the same commit**: added a `🟢 2026-08-09/10` banner to
+    `/codex/06-coding-standards/quality-gates.md` documenting the total-instance gate's existence (previously completely
+    undocumented there — a pre-existing gap from before this todo, not introduced by it) and today's tightening, per the
+    plan-authoring HARD RULE that codex is the durable SSOT and a plan/issue doc should reference it, not duplicate it.
+  - **Done-when, honestly assessed**: "a lowered cap is shipped" — done (above, live-verified). "a follow-up busy-period
+    measurement shows no RAM-watchdog kills of unrelated (non-overbudget) processes" — NOT yet satisfiable from this
+    session: I cannot force a genuinely busy, representative multi-slot contention period on demand, and manufacturing
+    artificial load on a shared production host to self-validate a safety change would itself risk reproducing the exact
+    incident this fix exists to prevent. This is a real, deliberately left-open half of the done-when, not a skipped one
+    — flagging it explicitly rather than silently marking the todo fully closed. Whoever next observes this host under
+    genuine multi-slot + glue-runner contention (a future `/vm-preemption-billing-waste-audit` pass, a future incident
+    investigation, or routine `--status` spot-checks) should confirm `total-instance gate: K=6` is holding and no
+    RAM-watchdog kill markers (`aborted.<pid>` files under the shared ledger dir) accumulate for non-overbudget
+    processes during a busy window — if kills recur even at the tightened cap, that's evidence the RAM/CPU dual-gate
+    fractions (deliberately left untouched here) are the next lever to revisit, not the total-instance cap again.
