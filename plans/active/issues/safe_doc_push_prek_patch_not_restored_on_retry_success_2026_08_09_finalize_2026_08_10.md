@@ -1,7 +1,6 @@
 ---
 doc_type: issue
-title:
-  "safe-doc-push.sh prek-patch-restore bug — finalize"
+title: "safe-doc-push.sh prek-patch-restore bug — finalize"
 summary: >-
   Gated closeout for `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md` —
   machine-held via `depends_on` + `gate_on_depends: true` until all 3 of that doc's todos are done. Re-verifies the
@@ -59,19 +58,28 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify the reproduction (todo 1) against reality.** Re-run the reproduction recipe
-      independently (stage a file that fails a real prek hook once then passes, with an unrelated unstaged edit
-      present) rather than trusting the prior session's own report; confirm the stated verdict (prek-level defect vs.
-      `safe-doc-push.sh`'s own retry-loop behavior) actually holds.
+- [x] ✅ [REVIEW] P0. **Re-verify the reproduction (todo 1) against reality.** Re-run the reproduction recipe
+      independently (stage a file that fails a real prek hook once then passes, with an unrelated unstaged edit present)
+      rather than trusting the prior session's own report; confirm the stated verdict (prek-level defect vs.
+      `safe-doc-push.sh`'s own retry-loop behavior) actually holds. — VERIFIED (2026-08-10, slot 15, review): built a
+      fresh scratch git repo (prek 0.4.12, matching the version cited in the source doc), a local `gate` hook that fails
+      once via a marker file then passes, and an unrelated unstaged edit present throughout. Ran two SEQUENTIAL
+      `git commit` invocations with ZERO delay between them (attempt 1 fails the gate hook, attempt 2 — marker consumed
+      — passes). prek printed a matching `Temporarily saving.../Restored unstaged changes from` pair around **both**
+      attempts and the unrelated file's unstaged edit survived intact after both — `git status --porcelain` after
+      attempt 2 showed only the still-legitimately-unstaged edit, nothing missing. **Independently CONFIRMS the prior
+      verdict**: NOT reproducible as a same-process "prek only wires the restore to the first hook invocation" defect —
+      prek's stash/restore is reliable across repeated sequential invocations in an uncontended checkout. Cross-repo
+      evidence: unified-trading-pm (verification only, no code change).
 - [ ] [REVIEW] P0. **Re-verify the safety-net code (todo 2) against reality.** Confirm the shipped change actually
       detects an orphaned `~/.cache/prek/patches/*.patch` file created during the script's own run and warns loudly
       (non-zero exit or a clearly-flagged stderr warning) instead of exiting 0 silently — reproduce a retry-with-orphan
       scenario and confirm the warning fires, not just re-reading the diff/tests.
 - [ ] [REVIEW] P1. **Confirm todo 3's disposition matches todo 1's actual verdict** — if the reproduction confirmed a
-      genuine prek-level defect, confirm it was filed upstream or a known-good prek version was pinned or the
-      workaround was documented in the script's own header comment (whichever the source doc's todo 3 actually did);
-      if the reproduction pointed at `safe-doc-push.sh`'s own retry loop instead, confirm todo 3 was correctly
-      re-scoped rather than blindly executed as originally worded.
+      genuine prek-level defect, confirm it was filed upstream or a known-good prek version was pinned or the workaround
+      was documented in the script's own header comment (whichever the source doc's todo 3 actually did); if the
+      reproduction pointed at `safe-doc-push.sh`'s own retry loop instead, confirm todo 3 was correctly re-scoped rather
+      than blindly executed as originally worded.
 - [ ] [INFRA] P0. **Archive the source doc if all 3 todos are genuinely done**, then run the 6-step archival ritual:
       banner `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, move to
       `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
@@ -88,7 +96,34 @@ source: >-
 
 - **2026-08-10** — Authored in the same turn as the RECLASSIFY of
   `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, per the mandatory finalize-twin rule
-  (task_template.md §4). `sequential: true` since the 4 todos are a genuine chain (verify → verify → verify →
-  archive). Ships `status: open` (issue-doc status vocabulary; not gated behind a draft flag) — `gate_on_depends`
-  already machine-holds every task until the
-  source doc's own 3 todos are done, matching the batch7-16 finalize precedent.
+  (task_template.md §4). `sequential: true` since the 4 todos are a genuine chain (verify → verify → verify → archive).
+  Ships `status: open` (issue-doc status vocabulary; not gated behind a draft flag) — `gate_on_depends` already
+  machine-holds every task until the source doc's own 3 todos are done, matching the batch7-16 finalize precedent.
+- **2026-08-10 (slot 15, review,
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize-772ba195f7a8`)**: todo 1 flipped above
+  with the independent reproduction. While establishing context for that repro, also independently re-verified todos 2
+  and 3 against reality (not yet flipped here — outside this session's dispatched task scope, one-task-per-session;
+  recorded so the next dispatched session doesn't have to redo the work):
+  - **Todo 2 (safety-net code)**: extracted the verbatim shipped `check_orphaned_prek_patches()` function (lines 264-291
+    of `scripts/dev/safe-doc-push.sh` as of this session) and exercised it against 3 isolated scenarios (sandboxed
+    `$HOME`): (a) no patch present → exit 0, silent; (b) a pre-existing patch with mtime BEFORE the run's
+    `_SDP_RUN_START_EPOCH` → correctly ignored, exit 0 (no false positive on legitimate old cache entries — the real
+    `~/.cache/prek/patches/` on this shared host has several genuinely old, already-restored patches from unrelated
+    prior runs, confirmed harmless); (c) a patch with mtime AFTER run start, still present → correctly detected, loud
+    stderr warning printed matching the documented text, function returns 1. Went further with a full END-TO-END run of
+    the real, unmodified script (copied byte-for-byte into a scratch repo wired to a local bare remote): baseline run
+    with no injected orphan → script exits 0 as expected; second run with a real orphan `.patch` file deterministically
+    timestamped 2s after the script's own `_SDP_RUN_START_EPOCH` planted in the real `~/.cache/prek/patches/` dir before
+    invocation → script printed the exact documented warning and **exited 9**, matching the call-site wiring at the
+    bottom of the file (`if ! check_orphaned_prek_patches; then ... exit 9; fi`). Test artifact removed by name
+    immediately after (`rm -f ~/.cache/prek/patches/E2E-TEST-ORPHAN-DETERMINISTIC.patch`), confirmed gone. **VERDICT:
+    CONFIRMED** — the safety net genuinely detects an orphaned patch and fails loudly (exit 9), it does not silently
+    exit 0.
+  - **Todo 3 (disposition)**: read the shipped header-comment block in `scripts/dev/safe-doc-push.sh` (§ "ON PREK'S OWN
+    PATCH RESTORE RELIABILITY", immediately before `set -uo pipefail`) — it accurately states the re-scoped disposition
+    (no confirmed prek defect, do not file upstream, points at `_prek_race_snapshot`/`_prek_race_check` as the actual
+    mitigation for the cross-process race). Matches todo 1's actual verdict (both the prior session's and this session's
+    independent one): no upstream filing needed since no defect was confirmed. **VERDICT: CONFIRMED** — todo 3's
+    disposition correctly tracks todo 1's verdict, not blindly executed as originally worded.
+  - Net: all 3 source-doc todos independently re-verified against reality (repro'd, not re-read) and all 3 verdicts
+    hold. Todo 4 (archival) is next in the sequential chain, once a dispatched task exists for it.
