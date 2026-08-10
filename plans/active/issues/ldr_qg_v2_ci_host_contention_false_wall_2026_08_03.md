@@ -172,13 +172,22 @@ green one).
       for the full trace: `QG_HOST_CONCURRENCY` turned out to be INERT on this host (reservation mode, not token mode) —
       tightened the total-instance gate default cap (`floor(cores × 0.75)`, floored at 6 → K=8→6 on this host) and
       `QG_HOST_RAM_ABORT_PCT` (80→75) instead.
-- [ ] [REVIEW] P1. **Confirm whether `quality-gates-v2` is actually enforced as a REQUIRED branch-protection check on
+- [x] [REVIEW] P1. ✅ **Confirm whether `quality-gates-v2` is actually enforced as a REQUIRED branch-protection check on
       `deployment-service`'s `ldr_main` promotion path**, given PR#678 merged to `main` with zero successful
       `quality-gates-v2` runs against its head SHA (one timeout-failed, one cancelled) — per CLAUDE.md,
       `quality-gates-v2` is supposed to be a required check on `ldr_main` repos. Check `deployment-service`'s branch
       protection (ruleset + classic settings, `gh api repos/IggyIkenna/deployment-service/branches/main/protection` or
       the ruleset equivalent) for whether `quality-gates-v2` is actually listed as required. Done-when: a stated YES/NO
-      on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it.
+      on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it. —
+      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.**
+- [ ] [INFRA] P3. Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
+      the required `Quality Gates (deployment-service) / quality-gates-v2` check never reporting success on its head SHA
+      (both runs against that SHA completed `failure`, and both completed AFTER `mergedAt`) — the required-status-check
+      config itself is correctly wired and active (see todo above), so this looks like a GitHub auto-merge evaluation
+      race (merge landing before the check's `in_progress`/failure state had propagated) rather than a config gap. Not
+      reproduced or root-caused further here; low urgency since the specific PR is moot and no repeat instance has
+      surfaced since. Done-when: either reproduced with a concrete mechanism, or downgraded to a documented known-quirk
+      if it doesn't recur after a few more promote cycles.
 
 — converted 2026-08-06 (/plan-reconcile ao): the 3 "Open questions for whoever picks this up" above were prose-only,
 invisible to every todo-counting gate in the corpus (`grep -cE '^- \[ \]'` was 0 across 211 lines). Converted to
@@ -492,3 +501,32 @@ and just burn more contended compute.
     RAM-watchdog kill markers (`aborted.<pid>` files under the shared ledger dir) accumulate for non-overbudget
     processes during a busy window — if kills recur even at the tightened cap, that's evidence the RAM/CPU dual-gate
     fractions (deliberately left untouched here) are the next lever to revisit, not the total-instance cap again.
+
+- **2026-08-10 (slot-29, review craft) — final todo RESOLVED, verdict: YES, correctly wired.** Checked
+  `deployment-service`'s branch protection directly against GitHub, not inferred from CLAUDE.md's stated policy:
+  - Classic branch protection (`gh api repos/IggyIkenna/deployment-service/branches/main/protection`) → 404 "Branch not
+    protected" — this repo uses rulesets, not classic protection (expected; rulesets are the modern mechanism).
+  - `gh api repos/IggyIkenna/deployment-service/rulesets` → 3 active rulesets, incl. `require-quality-gates` (id
+    13787653). Its full definition: `target: branch`, `conditions.ref_name.include: ["~DEFAULT_BRANCH"]` (repo's
+    `default_branch` confirmed `main`), `enforcement: active`, `bypass_actors: []`, `current_user_can_bypass: never`
+    (evaluated for `IggyIkenna`, the repo owner — even the owner cannot bypass this rule as configured), one rule of
+    `type: required_status_checks` listing exactly
+    `{"context": "Quality Gates (deployment-service) / quality-gates-v2"}` and `{"context": "sit-gate/fleet-green"}`.
+    Cross-checked the required context string against a REAL check-run name observed on PR#678's own head SHA
+    (`gh api .../commits/<sha>/check-runs`) — exact match, `"Quality Gates (deployment-service) / quality-gates-v2"`.
+    Ruleset `created_at: 2026-03-11`, `updated_at: 2026-07-12` — both predate PR#678's 2026-08-03 merge, so this config
+    was already live and unchanged at merge time, not a retroactive fix. **Answer: YES — `quality-gates-v2` is correctly
+    configured as a REQUIRED status check via an active ruleset on `main`.**
+  - This surfaces a real, separate puzzle this todo's done-when didn't require resolving: PR#678 still merged
+    (`mergedAt: 2026-08-03T18:20:44Z`, squash commit `c571a5b3`) despite BOTH `quality-gates-v2` runs against its head
+    SHA (`c0a3221f`) completing `conclusion: failure` — and both completed AFTER `mergedAt` (19:32:57Z and 20:07:00Z).
+    Traced the merge mechanism: `ldr-to-main-promote.yml` always arms via
+    `gh pr merge <PR> --auto --merge --delete-branch` (GitHub's native auto-merge, which is supposed to hold until
+    required checks report success) — never a plain/forced immediate merge, and no `--admin` bypass flag anywhere in the
+    workflow. `mergedBy: IggyIkenna` (the bot's PAT identity), not a distinct bypass actor. Filed a new low-urgency
+    follow-up todo above (not required by this todo's own done-when, which only asks for a YES/NO + a fix-todo if the
+    answer were NO) since the config is provably correct yet a real merge slipped through anyway — most consistent with
+    a GitHub auto-merge state-propagation race (the merge landing in the brief window before the check's failure had
+    propagated to the PR's mergeable-state evaluation) rather than any bypass or misconfiguration on this repo's side.
+    Not reproduced or root-caused further — out of scope for this todo's done-when and the doc's own prior "did not
+    force-retrigger/mutate host state" posture.
