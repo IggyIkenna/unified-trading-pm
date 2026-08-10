@@ -300,7 +300,9 @@ backfill off this item before then — cite that ruling doc, not this checkbox, 
       live-Databento-fetch dependency items 6/9 below already cite as BLOCKED-OPERATOR-DECISION — see
       `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` (status: blocked, filed today).
       This item was missing that citation despite sharing the identical gate; added here for consistency, not a new
-      blocker. **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):** read
+      blocker. **UNBLOCKED 2026-08-10** — the cited doc's account-level Databento suspension is confirmed resolved
+      (live `metadata.list_datasets()` verification, see that doc's Progress Log); gate-b's re-feed is now
+      genuinely runnable, not just theoretically so. **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):** read
       `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` — it respects
       available_from/available_to lifecycle (date<af → EXPECTED_INSTRUMENT_NOT_LISTED; date>at →
       EXPECTED_INSTRUMENT_DELISTED; alive + no manifest row → `expected_unattempted`) and builds the row_key from
@@ -356,7 +358,8 @@ backfill off this item before then — cite that ruling doc, not this checkbox, 
     reference-capture re-feed is now ALSO BLOCKED-OPERATOR-DECISION per
     `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` (status: blocked, filed today) —
     same citation items 6/9 below already carry; added here for consistency since this is the identical gate-b
-    dependency.
+    dependency. **UNBLOCKED 2026-08-10** — Databento account access confirmed live-restored (see that doc); this
+    re-feed is now dispatchable, just not yet run.
   - **(c) accurate UAC + v9 indices: ⏳ TOOL-READY (UPDATED slot-6 2026-06-07 session-2) — the G1-V8 migrator is now
     BUILT (is@febb899e) + tradfi dry-run GREEN (20,388 `_index` rows → v9 100%, all CF stamps; see Step-1 UPDATE).** The
     `instruments-store-tradfi` `_index` is still v8 ON DISK (the dry-run only PROJECTS v9) AND the
@@ -371,9 +374,14 @@ backfill off this item before then — cite that ruling doc, not this checkbox, 
     2026-07-19/21). parent_epic: mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
     2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [INFRA] P1. BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md — this todo is itself gated on the
-      Databento IS reference-capture restore below). **Wire the tradfi `build_instrument_catalogue.py` daily rollup
+- [ ] [INFRA] P1. **UNBLOCKED 2026-08-10** — the databento account-level billing-suspension gate is lifted (live
+      `metadata.list_datasets()` verification succeeded, no auth/suspended error; see
+      `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log). Prior gate
+      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09,
+      see /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~ — this todo is itself
+      still gated on the Databento IS reference-capture restore below (gate-b re-feed): that re-feed is now
+      dispatchable (Databento is reachable again) but has NOT yet been RUN, so this scheduler item stays open, not
+      newly unblocked in practice. **Wire the tradfi `build_instrument_catalogue.py` daily rollup
       scheduler (GATED on gate-b capture restore).** FINDING (slot-6 2026-06-07): the G1 lifecycle producer
       `build_instrument_catalogue.py` has **NO terraform scheduler for ANY asset group**
       (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` [INFRA] P1 "Trigger on every instruments update" is
@@ -473,9 +481,14 @@ per MTDS consolidation ruling.)**
       schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] ❌ [DATA] P1. BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md — the live "Replacement path" below
-      needs a real Databento fetch). ~~NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock
+- [ ] ❌ [DATA] P1. **UNBLOCKED 2026-08-10** — Databento account access confirmed live-restored
+      (`metadata.list_datasets()` succeeded, no auth/suspended error; see
+      `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log). Prior gate
+      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09,
+      see /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~ — the live "Replacement
+      path" below needs a real Databento fetch, now genuinely runnable (not yet run — see
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s citation below for where this is tracked live).
+      ~~NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock
       gate-b (VM, requires live `MASSIVE_API_KEY`). With the adapter shipped (above), run IS instrument capture with
       `--source massive` to refill `instrument_availability/by_date/` to today.~~ **SUPERSEDED 2026-07-21** — Massive
       removed as a tradfi source (operator ruling 2026-07-19, `uac@a2beed46`) and subscription terminated + data purged
@@ -936,3 +949,11 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   still-current by reading `tradfi_databento_account_billing_suspended_2026_08_09.md` directly, which explicitly names
   this doc's catalogue-scheduler and `--source databento` replacement-path todos as still genuinely gated. Doc stays NA
   (still a genuine, multi-part gated mix).
+- **2026-08-10 (live-verification session, same-day follow-up)**: the Databento gate-b citations this doc's own
+  prior entry just re-confirmed as "still genuinely gated" are now stale — independently live-verified Databento
+  account access is restored (`DatabentoBaseClient.warmup()` → `metadata.list_datasets()` succeeded, no
+  auth/suspended error; full evidence in
+  `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log). Lifted the
+  BLOCKED-OPERATOR-DECISION citations on items 4/5 (consistency notes) and 6/9 (the catalogue-scheduler + `--source
+  databento` replacement-path todos themselves) — see each item's own `UNBLOCKED 2026-08-10` note. None of these
+  are flipped `[x]` — the gate-b re-feed is now dispatchable, not yet actually run. Doc stays NA.

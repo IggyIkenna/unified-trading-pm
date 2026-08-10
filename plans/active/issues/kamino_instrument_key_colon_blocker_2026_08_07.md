@@ -77,14 +77,14 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Rule on the SOLANA_VAULT compound-symbol format for `kamino.py:199`** — needs a decision among
-      options (a) `-` separator, (b) `@` separator, or (c) leave the f-string as-is (kamino stays off the
-      `build_instrument_id` passthrough path). (a)/(b) change the instrument_key = GCS path segment and require a
-      manifest migration for existing rows; (c) needs no migration but leaves kamino permanently un-retrofitted.
-      Genuinely a judgment call, not worker-determinable — no options were dismissed as clearly wrong in the Finding
-      above. Not tracked as a todo anywhere else in the corpus (verified via grep); `defi_satellite_ao_dispatch_batch9_
-      2026_08_06.md` only cites this doc as the reason kamino.py:199 was retained unfixed, it does not itself carry a
-      resolution todo.
+- [x] ✅ [OPERATOR] P2. **Rule on the SOLANA_VAULT compound-symbol format for `kamino.py:199`** — **RULED 2026-08-10:
+      option (a), `-` separator.** Shipped `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb`: the
+      f-string now produces `f"{venue_tag}:SOLANA_VAULT:{sym_a}-{sym_b}-{address[:8]}"` (last `:` before the address
+      replaced with `-`, clearing UAC's colon-guard). Existing-row migration written in the same commit —
+      `scripts/fix_kamino_stale_colon_catalog_rows_2026_08_10.py` (113 stale KAMINO SOLANA_VAULT rows identified in a
+      fresh `prod/catalog.parquet` query, 0 collisions with an already-clean counterpart, mirrors the
+      `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` precedent) — **written but not yet confirmed executed
+      against prod** as of this edit; re-verify execution before treating existing rows as migrated.
 
 ## Progress Log
 
@@ -108,3 +108,8 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   GCS-path-changing instrument-key format ruling with manifest-migration implications, 3 undismissed options). Never
   re-litigating: the same disposition was independently reached by the 2026-08-07 and 2026-08-09 na-eligibility-audit
   passes on this exact doc. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (operator ruling + implementation session)**: operator ruled option (a) via a direct question. Shipped
+  `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb` — code fix + migration script for the 113 existing
+  stale-colon rows. Sole todo now `[x]`. **Not archiving yet**: the migration script's execution-against-prod status
+  is unconfirmed (no follow-up commit/log found) — re-verify the 113 rows actually got migrated before treating this
+  doc as fully closed.

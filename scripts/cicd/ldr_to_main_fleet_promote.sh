@@ -437,6 +437,24 @@ provenance_check_ok() {
   return 0
 }
 
+# ── Tier-A merge-arm gate (2026-08-10, tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md
+# todo 1) ─────────────────────────────────────────────────────────────────────────────────────
+# The veto on auto-merging a red promote PR is unchanged in EFFECT — only its SCOPE narrowed,
+# from "block minting/checking a PR at all" (the old deadlock-causing early-return) to "block the
+# act of (re-)arming auto-merge". Reads the process-global $TIER_A_CI_FAILING (+ $CI_STATUS /
+# $CI_STATUS_LIVE for the log line) computed once per repo by the Tier-A gate near the top of
+# process_repo — reused here rather than re-fetched, same as provenance_check_ok() is called
+# fresh immediately before EVERY arm/re-arm site rather than cached once. Returns 0 (clean — OK
+# to arm) or 1 (blocked — caller must NOT arm; PR is left open/unarmed for a later tick or a
+# human/operator to merge once a fresh main-branch signal clears ci_status).
+tier_a_merge_gate_ok() {
+  if [ "${TIER_A_CI_FAILING:-false}" = "true" ]; then
+    echo "  ⛔ TIER A MERGE-GATE BLOCK $REPO: ci_status=FAILING (cached='${CI_STATUS:-unset}', live='${CI_STATUS_LIVE:-unset}') — NOT (re-)arming auto-merge; LDR CI is red, fix before LDR→main. PR stays open (its own quality-gates-v2 keeps validating this content) for a later tick or a human/operator merge to produce the fresh main-branch signal that clears this."
+    return 1
+  fi
+  return 0
+}
+
 process_repo() {
   REPO="$1"
   _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
@@ -512,11 +530,30 @@ process_repo() {
   # error never masquerades as a healthy live status).
   CI_STATUS_LIVE=$(python3 "$GITHUB_WORKSPACE/scripts/cicd/ci_status_store.py" get-doc \
     --repo "$REPO" 2>/dev/null | jq -r '.status // empty' 2>/dev/null || echo "")
+  # Gate SCOPE NARROWED (2026-08-10, tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md
+  # todo 1). This used to `_done BLOCKED; return 0` right here, vetoing even OPENING a fresh
+  # promote PR — which produced a genuine unrecoverable deadlock: ci_status_store.py's
+  # resolve_status() symmetric guard says a main-originated FAILING can be cleared ONLY by
+  # another main-branch signal, but the ONLY code path that can ever produce a fresh
+  # main-branch signal (a new promotion) was itself preemptively vetoed by the very status a
+  # fresh promotion would fix. A fresh promote PR's own quality-gates-v2 check is strictly more
+  # authoritative than this cached Firestore doc, which may itself be exactly this kind of stale
+  # PR-time-vs-push-time content-race artifact (confirmed root cause, same doc). Fix: stop
+  # vetoing PR *creation*; keep vetoing PR *merging*. $TIER_A_CI_FAILING now only gates the ACT
+  # of (re-)arming auto-merge — every `gh pr merge --auto` call site below checks it via
+  # tier_a_merge_gate_ok() (defined above process_repo, mirrors provenance_check_ok()'s
+  # re-check-immediately-before-every-arm pattern). PR creation/content-gate/SIT-gate/
+  # label-check all proceed unconditionally past this point. This is a narrowing of the gate's
+  # blast radius, not a removal: a genuinely red repo still cannot reach main un-merged, and
+  # every prior merge-time protection (this same FAILING check) is preserved byte-for-byte,
+  # just re-homed to the arm sites.
+  TIER_A_CI_FAILING="false"
   if [ "$CI_STATUS" = "FAILING" ] || [ "$CI_STATUS_LIVE" = "FAILING" ]; then
-    echo "GATE BLOCK $REPO: ci_status=FAILING (cached='${CI_STATUS:-unset}', live='${CI_STATUS_LIVE:-unset}') — LDR CI is red; fix before LDR→main"
-    _done BLOCKED; return 0
+    TIER_A_CI_FAILING="true"
+    echo "TIER A WARN $REPO: ci_status=FAILING (cached='${CI_STATUS:-unset}', live='${CI_STATUS_LIVE:-unset}') — LDR CI marked red; PR creation/checking still proceeds (a fresh PR's own quality-gates-v2 is the true, current-content gate), but merge-(re-)arming stays BLOCKED below until a fresh main-branch signal clears this (see tier_a_merge_gate_ok())."
+  else
+    echo "TIER A PASS $REPO: ci_status cached='${CI_STATUS:-unset}' live='${CI_STATUS_LIVE:-unset}'"
   fi
-  echo "TIER A PASS $REPO: ci_status cached='${CI_STATUS:-unset}' live='${CI_STATUS_LIVE:-unset}'"
 
   # ── Content gate: LDR tree vs main tree ─────────────────────────────────────
   # Tree-SHA equality == byte-identical content regardless of squash history.
@@ -850,7 +887,11 @@ process_repo() {
   fi
 
   if [ "$DRY_RUN" = "true" ]; then
-    echo "  DRY-RUN: would open LDR→main PR for $REPO (ci_status=$CI_STATUS)"
+    if [ "$TIER_A_CI_FAILING" = "true" ]; then
+      echo "  DRY-RUN: would open LDR→main PR for $REPO (ci_status=$CI_STATUS) but NOT arm auto-merge (Tier-A ci_status=FAILING)"
+    else
+      echo "  DRY-RUN: would open LDR→main PR for $REPO (ci_status=$CI_STATUS) and arm auto-merge"
+    fi
     _done PROMOTED; return 0
   fi
 
@@ -962,7 +1003,11 @@ process_repo() {
   done
 
   # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
-  BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, immutable per-SHA ref \`$PROMOTE_HEAD\`). ci_status=${CI_STATUS}; Tier-A + content + SIT + combination gates passed; v2-gated auto-merge armed (delete-branch on merge). SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+  if [ "$TIER_A_CI_FAILING" = "true" ]; then
+    BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, immutable per-SHA ref \`$PROMOTE_HEAD\`). ci_status=${CI_STATUS} (Tier-A ci_status=FAILING, cached/live — see tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md); content + SIT + combination gates passed. Auto-merge NOT armed — this PR's OWN quality-gates-v2 is the true, current-content gate, but merging still needs a fresh main-branch ci_status clear (a later tick or a human/operator merge). SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+  else
+    BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, immutable per-SHA ref \`$PROMOTE_HEAD\`). ci_status=${CI_STATUS}; Tier-A + content + SIT + combination gates passed; v2-gated auto-merge armed (delete-branch on merge). SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+  fi
   # Create the PR with the PAT, NOT the App token (GH_TOKEN). A promote PR opened by the
   # uts-ci-poller App lands quality-gates-v2 in `action_required` → the required pull_request
   # check never auto-runs → the required context never reports → the PR deadlocks BLOCKED
@@ -1000,6 +1045,13 @@ process_repo() {
     # bare number just as well as a URL, so this is a pure fix with no other behavior change.
     _PR_NUM_FOR_PROVENANCE="${PR_URL##*/}"
     if ! provenance_check_ok "$_PR_NUM_FOR_PROVENANCE"; then
+      _done BLOCKED; return 0
+    fi
+
+    # Tier-A merge-arm gate (2026-08-10, tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md
+    # todo 1) — PR is already open past this point; only the ACT of arming auto-merge is gated on
+    # ci_status here, not the PR's existence.
+    if ! tier_a_merge_gate_ok; then
       _done BLOCKED; return 0
     fi
 
@@ -1076,6 +1128,11 @@ process_repo() {
           sleep 3
           gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null || true
           if provenance_check_ok "$PR_NUM"; then
+            # Tier-A merge-arm gate (2026-08-10, tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md
+            # todo 1) — same narrowed-scope gate as the primary arm site above.
+            if ! tier_a_merge_gate_ok; then
+              _done BLOCKED; return 0
+            fi
             # Promoted-From-LDR trailer — see the primary arm site above for the full rationale.
             # Hardening (2026-08-02, same ARM_FAILED finding as the primary arm site): this call
             # used to swallow its exit code entirely (`2>/dev/null || true`) and always tally
@@ -1110,6 +1167,11 @@ process_repo() {
       # without re-validating provenance, landing non-quickmerge commits on main.
       echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — checking provenance before (re)arming"
       if ! provenance_check_ok "$PR_NUM"; then
+        _done BLOCKED; return 0
+      fi
+      # Tier-A merge-arm gate (2026-08-10, tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md
+      # todo 1) — same narrowed-scope gate as the primary arm site above.
+      if ! tier_a_merge_gate_ok; then
         _done BLOCKED; return 0
       fi
       echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge (delete-branch)"
