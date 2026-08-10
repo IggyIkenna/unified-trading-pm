@@ -58,10 +58,25 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify batch16's done-claim against reality** — confirm the near-expiry warning actually fires
-      exactly once per state-transition against a real (or realistically mocked) near-expiry JWT, does not refire on a
-      subsequent unchanged-state tick, and clears/resolves after a re-mint. **Done when**: independently reproduced, not
-      just re-reading the shipped test.
+- [x] ✅ [REVIEW] P1. **Re-verify batch16's done-claim against reality** — confirm the near-expiry warning actually
+      fires exactly once per state-transition against a real (or realistically mocked) near-expiry JWT, does not refire
+      on a subsequent unchanged-state tick, and clears/resolves after a re-mint. **Done when**: independently
+      reproduced, not just re-reading the shipped test. **Evidence**: confirmed `unified-trading-pm@b427499b33` is a
+      real, on-branch commit (`git merge-base --is-ancestor` true against HEAD) matching its claimed diff (88 lines in
+      `scripts/dev/slot-git-status-report.sh` + the 192-line `tests/test_slot_git_status_token_expiry.bats`). `bats` was
+      not installed on this host (consistent with `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md` — the QG
+      pipeline never runs `.bats` files); installed bats-core 1.10.0 to a scratch prefix (no sudo, no host-wide change)
+      and ran the shipped suite for real: **7/7 pass**. Independently wrote a SEPARATE, freshly-authored repro harness
+      (own throwaway HTTP server, own JWTs with different offsets than the shipped test's) that sources the real
+      `decode_jwt_exp`/`check_token_expiry_for_slot` functions straight from the shipped script — **13/13 checks pass**:
+      fires exactly once on a 2.5-day-out JWT, does not refire across 3 unchanged ticks, clears the marker on re-mint
+      with no spurious fire, correctly re-fires on a fresh near-expiry episode after that, plus 2 scenarios the shipped
+      suite doesn't cover — exactly-at-the-3-day boundary still fires (confirms the `<=` comparison, not `<`), and an
+      ALREADY-EXPIRED token still fires rather than being silently skipped. Also traced `resolve_token_for_slot`
+      (line 423) / `post_starve_ping` (line 552) call sites to confirm the test harness's `TOKEN_FILE` env var actually
+      is what the shipped code reads (line 65/426) — no name mismatch between test and implementation. Repro harness
+      left at `token-expiry-repro/repro.sh` in this reviewer's scratchpad (not committed — throwaway verification
+      tooling, not project code).
 - [ ] [REVIEW] P0. **Reconcile verified evidence into the source doc's own checkbox** —
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`'s `[INFRA] P2` "Stop the 30-day treadmill" item,
       replacing the redirect-pointer with real completion evidence (commit sha, test name, live-fire confirmation if
@@ -84,3 +99,9 @@ source: >-
 - **2026-08-09** — Authored in the same turn as batch16, per the mandatory finalize-twin rule (task_template.md §4).
   `sequential: true` since the 4 todos are a genuine chain. Ships `status: active` (not `draft`) — `gate_on_depends`
   already machine-holds every task until batch16's own todo is done, matching the batch7-15 finalize precedent.
+- **2026-08-10 (review, slot-25)** — Todo 1 done: independently re-verified `b427499b33`'s done-claim rather than
+  trusting the shipped test read-only. Installed bats-core locally (not present on host) and ran the real shipped suite
+  (7/7 pass), then wrote and ran a second, separately-authored harness against the real shipped functions (13/13 pass,
+  incl. 2 boundary cases outside the shipped suite). No discrepancy found — the claim holds. See the checkbox evidence
+  above for the full detail. Todo 2 (reconcile evidence into the source doc's own checkbox) is next in this
+  `sequential: true` chain.
