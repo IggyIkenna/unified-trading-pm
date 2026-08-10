@@ -217,12 +217,12 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       backfilled — `one-off:agt-7e7e2c` (slot 9, conflict_resolver, 84 turns, $0.072119)
       and `one-off:agt-a0bd62` (slot 4, conflict_resolver, 31 turns, $0.029804), both `backfilled=1` — plus the 1
       pre-existing live-captured row `one-off:agt-53f733` correctly left alone by the idempotency check.
-- [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows in the AO backlog `state.db`.** Re-run
-      `audit_false_done.py`, re-measure the current count (it has moved since `agent-orchestrator@aaa2db8` shipped), and
-      confirm every remaining unhashed row's `status` is `done` (bounds the exposure — a row that is NOT `done` and
-      unauditable would be a real gap). Report the split; no bulk-mutation. **Done when**: the current count and the
-      done/not-done split are recorded with evidence in this todo. Source:
-      `/plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md:343`. Repo:
+- [x] ✅ [BACKEND] P3. **Bound the 11 `UNAUDITABLE` (`brief_hash IS NULL`) rows in the AO backlog `state.db`.** Re-ran
+      `audit_false_done.py` 2026-08-10 (slot 25): count = **11** (down from 12, progress since
+      `agent-orchestrator@aaa2db8` shipped). All 11 unauditable rows are `status=done` — zero non-done unauditable rows,
+      exposure bounded. Full audit: 13 false_done, 889 honest, 1500 unresolved (plan_ref at `origin/live-defi-rollout` @
+      `4fa74521bb`). Evidence: `audit_false_done.py --db .../state.db --pm ../unified-trading-pm` (live read-only, same
+      host). Source: `/plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md:343`. Repo:
       agent-orchestrator (read-only DB query).
 - [ ] [BACKEND] P3. **Confirm whether the standing false-done breach's silent breach→breach Slack-transition-only
       behavior in `audit_cron_notify.apply_transition` matches the actionable-only alerting contract** documented in
