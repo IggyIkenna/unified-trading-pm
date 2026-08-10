@@ -327,11 +327,11 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
 
 ## Deferred work after 2026-08-10
 
-| Item                                                           | State / why deferred                                                                                                                                                                                                                                                                                                  | Blocked on                                                                                                                                            |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | **DONE, independently verified (data-level fact).** `market-tick-data-service@56df68f7f`; 0 confirmed-missing remain post-write. The verifying process only survived via a resource-watchdog rate-limit fluke (see Progress Log) — the data outcome is trustworthy, the process-survival mechanism is not repeatable. | Nothing — complete.                                                                                                                                   |
-| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | **Dry-run now succeeds (fix 4, pyarrow-native, 2026-08-10)** — `confirmed missing (no GCS object): 1,210`, matches plan estimate, first clean run under any code version. `--apply-prod --confirm-prod-write` NOT yet executed.                                                                                       | `quality-gates.sh --no-fix` (task `bhb8g8bhf`, PID 793826) reaching green, then quickmerge ship, then the actual apply-prod run + independent verify. |
-| Flip todo 1's checkbox + final evidence citation               | Not done — the "done when" bar spans both populations; 2025 alone is insufficient to flip it.                                                                                                                                                                                                                         | Fix 4 shipping + 2018-2020 `--apply-prod` executing + independently verified 0-confirmed-missing.                                                     |
+| Item                                                           | State / why deferred                                                                                                                                                                                                                                                                                                  | Blocked on                                                                                                                                |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | **DONE, independently verified (data-level fact).** `market-tick-data-service@56df68f7f`; 0 confirmed-missing remain post-write. The verifying process only survived via a resource-watchdog rate-limit fluke (see Progress Log) — the data outcome is trustworthy, the process-survival mechanism is not repeatable. | Nothing — complete.                                                                                                                       |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Fix 4 shipped (`market-tick-data-service@22a305ff1`); apply-prod run crashed on a genuine one-line code bug (`.length` on a pyarrow Array) — NOT a resource-watchdog kill, no data mutated (crash preceded the live-index mutate/write block). Fix 5 (one-line) written, QG in flight (task `bpckt4cyd`).             | `quality-gates.sh --no-fix` (task `bpckt4cyd`) reaching green, then quickmerge ship, then re-run the apply-prod, then independent verify. |
+| Flip todo 1's checkbox + final evidence citation               | Not done — the "done when" bar spans both populations; 2025 alone is insufficient to flip it.                                                                                                                                                                                                                         | Fix 4 shipping + 2018-2020 `--apply-prod` executing + independently verified 0-confirmed-missing.                                         |
 
 **Recommended next action**: do NOT blindly retry the 2018-2020 dry-run with fix 3 as-is — the RSS evidence shows it
 reads the same oversized 17M-row, 5-column frame regardless of population filter, and fix 3 only shaved peak RSS from
@@ -382,3 +382,26 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
   the pattern this plan already established for the 2025 population). The 2025 population's write remains independently
   verified and unaffected by this entry (unchanged, see prior entries) -- only the 2018-2020 population's blocker is
   addressed here.
+
+- **2026-08-10 (slot-29, todo 1 -- fix 4 shipped; apply-prod for 2018-2020 crashed on a genuine code bug (NOT a
+  resource-watchdog kill) -- no data mutated; fix 5 (one-line) written, QG in flight)**: `quality-gates.sh --no-fix`
+  (task `bhb8g8bhf`) went green (249s, sentinel `fdac1d0425a277e7fff8bae01477dd672190f388`, no net-new DTZ/TID251/
+  fallback-import violations). Shipped as `market-tick-data-service@22a305ff1` via quickmerge; independently verified
+  (`git fetch` + `git rev-list --count` both directions = 0, `git status --porcelain` clean, `git log -1` confirms the
+  SHA). Launched `--population 2018_2020 --apply-prod --confirm-prod-write` (pid 1182479, watched by background task
+  `be233b01p`). **Result: crashed, but NOT a resource-watchdog kill** -- syslog watch found no KILL line for this pid;
+  the process exited on its own with `AttributeError: 'pyarrow.lib.UInt64Array' object has no attribute 'length'` at
+  `apply()` line 280 (`if candidate_indices.length == 0:` -- pyarrow Arrays use Python's `len()`, not a `.length`
+  attribute; this call site was never exercised by the dry-run path, which uses a different code branch, so QG's green
+  run and the successful dry-run both missed it). **No data-integrity risk**: the crash occurred immediately after the
+  per-population snapshot write
+  (`gs://.../snapshots/pre_player_stats_missing_reconcile_2018_2020_20260810T011724Z.parquet`, a backup, not a mutation)
+  and strictly BEFORE the CAS read/mutate/write block for the live index -- the live index was never touched, confirmed
+  by code inspection of `apply()`'s control flow (the crash is the loop's very first candidate- count check, three
+  statements before the mutate/write logic even begins). **Fix 5**: one-line change, `candidate_indices.length` to
+  `len(candidate_indices)` (`scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py` line 280);
+  grepped the whole file for `.length` first to confirm this was the only occurrence. `quality-gates.sh --no-fix`
+  launched in background (PID 1343160, watched by task `bpckt4cyd`), not yet complete as of this note -- script change
+  is uncommitted on disk. Next: once QG is green, ship via quickmerge, independently verify the push, re-run
+  `--population 2018_2020 --apply-prod --confirm-prod-write`, then independently re-verify via a fresh separate dry-run
+  process. The 2025 population's write and fix 4's dry-run-path correctness both remain unaffected by this entry.
