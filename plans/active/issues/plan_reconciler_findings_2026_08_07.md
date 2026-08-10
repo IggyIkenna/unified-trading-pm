@@ -125,6 +125,19 @@ confirm the lock is genuine (and flip these manually) or unlock the doc so the n
 - `plans/active/INDEX.md` DOES exist (7h old, grace-protected)
 - **Action**: Determine whether ACTIVE_INDEX.md should exist (and regenerate if so) or whether the SKILL.md reference is
   stale and should be removed. Low priority — the file has been absent for some time with no apparent breakage.
+- **Re-flagged, still unfixed, 2026-08-10** (plan_reconciler dispatch `agt-ec1688`, ui tranche re-run): re-confirmed the
+  file still doesn't exist and `cursor-configs/skills/plan-reconcile/SKILL.md` (lines 5, 59, 425) and
+  `agents/plan_reconciler.md` (line 114) still cite it. This item has now sat as prose-only for 3 days across 2 runs
+  without becoming a tracked todo — converting it below per this workspace's "every follow-up is a `- [ ]` todo, never
+  prose" rule. Both citing files are outside `plans/**` (plan_reconciler's own write-scope), so no worker running this
+  skill can fix them directly — an operator or a human session must.
+
+- [ ] [DOC] P3. Resolve the `ACTIVE_INDEX.md` dangling normative-ref: either regenerate the file (if a real artifact was
+      intended, distinct from the existing `INDEX.md`) or edit `cursor-configs/skills/plan-reconcile/SKILL.md` (lines 5,
+      59, 425) + `agents/plan_reconciler.md` (line 114) to drop the stale name and cite only `INDEX.md`. Requires a
+      human/operator session (both target files are outside every plan_reconciler dispatch's `plans/**` write-scope).
+      Done when: `grep -rn ACTIVE_INDEX cursor-configs/skills/plan-reconcile/SKILL.md     agents/plan_reconciler.md`
+      returns 0 hits, or the file exists and is wired into the regen tooling.
 
 ## Hygiene sweep (corpus-wide, not tranche-specific)
 

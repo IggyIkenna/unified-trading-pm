@@ -247,9 +247,9 @@ Most of the 2026-07-17 list resolved itself — see the issue doc for the full v
 1. `version` never sent → image tags SHA-only ~late June. **RESOLVED — root cause CONFIRMED 2026-07-24 (operator)**: the
    semver-agent that would compute + send `version` in the build dispatch payload is **dead, deliberately** — "we have
    kept it dead deliberately." SHA-only tagging is the expected, intentional consequence, not a defect. **Not a bug** —
-   the issue doc's #1 (`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`) still frames this as
-   open/unconfirmed and needs the same correction as a follow-up (out of this plan's direct scope; flagging here so it
-   isn't lost).
+   the issue doc's #1 (`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`) has since been corrected
+   to match: its `### #1` heading now reads "RESOLVED 2026-07-24, NOT A BUG" (verified by plan_reconciler, 2026-08-10) —
+   the cross-doc follow-up this line used to flag as outstanding has already landed.
 2. `REPO_NAME` vs `_REPO_NAME` build-history blind spot. **NOT A BUG** — never reproduced; code asserts `REPO_NAME`
    universal, manual path gained a `_SERVICE_NAME` fallback. Dropped.
 3. GCP build events never carry `build_id` into the GCS ledger. **LOW-confidence / minor** — issue doc #3.
@@ -678,11 +678,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       a 2026-06-01 incident where pinned fan-out tarballs were pruned seconds after upload, killing 20 VMs (exit 2).
       Currently dormant — `uts-prod-tarball-cleanup-cron` is PAUSED and there is no lifecycle rule on `code/` — but any
       revival of pruning must be reconciled with this first. Separate, larger change; do NOT bundle with (A).
-- [ ] [REVIEW] P3. _(stretch, optional)_ Issue doc — **the whole VM tarball path bypasses `resolve_bucket_name()`** and
-      hardcodes `deployment-scripts-central-element-323112` (`setup-data-pipeline-vm.sh:47`,
+- [x] ✅ [REVIEW] P3. _(stretch, optional)_ Issue doc — **the whole VM tarball path bypasses `resolve_bucket_name()`**
+      and hardcodes `deployment-scripts-central-element-323112` (`setup-data-pipeline-vm.sh:47`,
       `create-code-tarballs.sh:45`, ~48 launchers), contradicting both the workspace storage rule and the codex SSOT's
       own description of this path. Combine with the two-point AWS-lane breakage into one deployment-bucket-resolution
-      issue doc.
+      issue doc. — DONE via `ui_satellite_ao_dispatch_batch3_2026_08_09.md`'s own todo 1 (unified-trading-pm@commit
+      cited there): filed `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md` (confirmed on disk) —
+      verified by plan_reconciler 2026-08-10, checkbox was never flipped in this source doc.
 - [ ] [BACKEND] P3. _(stretch, optional)_ "Built but never deployed" + build→deploy latency (join build digest to the
       first revision that ran it).
 - [x] [INFRA] P3. _(stretch, optional)_ ~~orphaned-image GC candidates (no matching build AND not running)~~ —
