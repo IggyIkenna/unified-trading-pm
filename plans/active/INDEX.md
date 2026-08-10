@@ -674,9 +674,10 @@ by hand._
   — Exploratory analysis harness + journal for the CeFi funding leg of carry_staked_basis: scans ~30 perp coins across
   venues, ranks each day by net carry (annualised short-perp funding + staking APY where the short venue accepts the LST
   as…
-- [`carry_strategy_ensemble_productionization_2026_07_24`](./carry_strategy_ensemble_productionization_2026_07_24.md) —
-  Forked 2026-07-24 (line-cap remediation) from carry_staked_basis_funding_scan_experiment_2026_06_16.md: the 4-strategy
-  ensemble orchestrator engine (funding-dispersion / funding-rate arb / pure-basis / staked-basis) built on top of the…
+- [`carry_strategy_ensemble_productionization_2026_07_24`](../archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md)
+  — Forked 2026-07-24 (line-cap remediation) from carry_staked_basis_funding_scan_experiment_2026_06_16.md: the
+  4-strategy ensemble orchestrator engine (funding-dispersion / funding-rate arb / pure-basis / staked-basis) built on
+  top of the…
 - [`ci_consolidated_closeout_2026_07_25`](./ci_consolidated_closeout_2026_07_25.md) — New "topic tranche" umbrella
   (sibling to the 5 asset groups + cross-cutting + ao) for CI/CD-pipeline-internal work: quickmerge mechanics, Cloud
   Build/GitHub Actions workflows, the SIT/promotion gate, version-graduation/release-tag…
@@ -708,11 +709,11 @@ by hand._
 - [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 11 todos are done. Reconciles the source doc's checkboxes (incl. the flagged…
-- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10`](./cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md)
+- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md)
   — Twelfth AO-dispatch batch for the cross-cutting tranche, produced by the 2026-08-10 daily /ag-closeout-audit run's
   Phase 1 Workflow (36 agents classifying every uncited orphan candidate). Of 21 genuinely-orphaned docs found, exactly
   2…
-- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize`](./cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md)
+- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md)
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 7 todos are done (this also naturally holds while the batch itself sits
   `status: draft`,…

@@ -30,9 +30,9 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-12, satellite-docs, strategy-master, features-and-ml-master]
 related:
   [
-    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-10"
@@ -51,7 +51,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -68,6 +68,10 @@ effort: high
 sequential: false
 drift_direction: advance-code
 ---
+
+> **ARCHIVED 2026-08-10** — all 7 todos `[x] ✅` with evidence. Source docs reconciled
+> (`carry_strategy_ensemble_productionization` → 0 open, also archiving; `features_service_e2e_pipeline_test` locked,
+> both checkboxes already flipped). Finalized via `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`.
 
 # Cross-cutting satellite AO batch 12 — bounded-item extraction
 
@@ -152,7 +156,7 @@ drift_direction: advance-code
       data to capture, not a pipeline bug). LIQUIDATIONS 100% NaN schema failure across all dates (pre-existing).
       `book_snapshot_5` bottleneck consumed majority of per-date 1800s budget. Progress Log sessions 10-20 document the
       full monitoring chain (20 compactions, one of the longest-running Todo 5s on record).
-- [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
+- [x] ✅ [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
       `features-service` E2E run on test bucket completed 2026-08-10 ~13:03 UTC. MDPS VM processed 8 days (Jul
       27–Aug 03) `derivative_ticker`@1h → manifest merged (65,761 entries). `funding_oi`@1h: 1 instrument produced valid
       output (OKX-SWAP:PERPETUAL:ZBT-USDT@LIN, 64KB/134-column parquet, schema verified); remaining instruments
