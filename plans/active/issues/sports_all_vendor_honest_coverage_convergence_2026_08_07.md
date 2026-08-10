@@ -184,7 +184,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       This todo replaces reliance on an interactive session's own self-scheduled monitoring loop — handing it to normal
       AO dispatch (this doc is already `assigned_vm: planning`) so it survives across dispatches without needing a
       specific chat session kept alive. **Done-when**: re-run
-      `cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp     DEPLOYMENT_ENV=prod CLOUD_MOCK_MODE=false .venv/bin/python     scripts/sports/census_odds_api_gap_verify_2026_08_02.py 2>&1 | grep -E "DAY-LEVEL|VERDICT"`
+      `cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod CLOUD_MOCK_MODE=false .venv/bin/python scripts/sports/census_odds_api_gap_verify_2026_08_02.py 2>&1 | grep -E "DAY-LEVEL|VERDICT"`
       reads 0 missing days, OR 2+ consecutive dispatches (spaced hours apart) read an identical small residual — treat
       that as a genuine honest-absence floor the same way the AF entities' small non-zero floors were treated (see
       `sports_af_full_entity_completion_2026_08_03.md`), then flip this todo citing the stable reading. Full gap
@@ -199,14 +199,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       established playbook (chunk 18 and chunk 26 are the historically dominant silent-hang death sites, 7/12 and 4/12
       respectively; chunk 8 is also now a confirmed danger point per occurrence 12 — don't assume safety at any specific
       chunk); (2)
-      `gcloud compute instances list --account=1060025368044-compute@developer.gserviceaccount.com     --filter="name~'mtds-backfill-odds'"`
+      `gcloud compute instances list --account=1060025368044-compute@developer.gserviceaccount.com --filter="name~'mtds-backfill-odds'"`
       for the live instance; (3) if gone, distinguish CONFIRMED SILENT HANG (triple-signal ~15-21min silence across
       run.log/heartbeat-blob/WATCHDOG_TRACE.log, then a `delete` op from account
       `1060025368044-compute@developer.gserviceaccount.com` — add a Timeline row + Progress Log entry to the hang-doc,
       bump its occurrence count) from a ROUTINE SPOT PREEMPTION (`compute.instances.preempted` system event, not a
       `delete` op — NOT an occurrence, wait ~5min for the fleet's own auto-recovery via `unified-trading-sa@...` before
       relaunching manually); (4) relaunch via
-      `CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com bash     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-smallchunkN-20260810`
+      `CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-smallchunkN-20260810`
       (increment N; the launcher can background past a short foreground timeout on tarball republish — check its output
       when it completes rather than assuming failure), confirm genuine boot via `run.log` content, not
       exit_code/creation alone; (5) journal a Progress Log entry to this doc citing chunk position, OOM count,
@@ -233,8 +233,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `_record_weather_empty`, `_record_weather_failed`, end-of-function EXPECTED_NO_FIXTURE loop) writes ONLY for those
       33 leagues; non-Prediction league rows persist as `expected_unattempted` indefinitely. The -215 net reduction came
       from 215 Prediction-league rows resolved by this run. The 350 rows on 2026-07-28 are for non-Prediction leagues —
-      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` (already exists
-      for this exact pattern). See Progress Log 2026-08-07 (slot 7).
+      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py --apply` (already exists for
+      this exact pattern). See Progress Log 2026-08-07 (slot 7).
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).

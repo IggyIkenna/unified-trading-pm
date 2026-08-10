@@ -153,7 +153,7 @@ perfectly uniform in the docs this pass touched.
 - [ ] [SCRIPT] P2. Fix `_VERDICT_MARKER_LINE_RE` (or replace with a proper multi-line-block strip) in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` so a marker's full continuation-line span is excluded
       from `body_content_hash()`, not just its first line. Add a regression test asserting
-      `body_content_hash(body_before_marker) == body_content_hash(body_before_marker + <the marker written with that     exact hash>)`
+      `body_content_hash(body_before_marker) == body_content_hash(body_before_marker + <the marker written with that exact hash>)`
       for a multi-line marker — this is the invariant that is currently violated. Verify against a sample of real
       multi-line markers already in the corpus (this run alone added 19 examples across `plans/active/tradfi_*` and
       `plans/active/issues/tradfi_*`) to confirm the new regex's stop condition doesn't over-strip into the NEXT bullet

@@ -247,7 +247,7 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       `_blocked_row_suppression_reason` gate + `doc_drift_suppressed` activity; 5 new tests cover suppressed/raised
       paths incl. the live-instance shape; also fixed pre-existing live-state-coupled switch tests at 425a779).
 - [x] ✅ [DOCS] P1. **Tighten the `plan_health` agent finding contract** in `unified-trading-pm/agents/plan_health.md` —
-      unified-trading-pm@0f9b8a65ca make `contradicted_by` and `description` REQUIRED, add `doc_line` /
+      unified-trading-pm@034cb4e2ad make `contradicted_by` and `description` REQUIRED, add `doc_line` /
       `contradicted_by_line` anchors and a `resolution_required` boolean the worker sets itself, and restate that `doc`
       must be a governance doc (`CLAUDE.md` / `SUB_AGENT_MANDATORY_RULES.md`) since the live finding emitted a plan
       filename instead. **Done when**: the JSON schema block and its worked example carry all six fields and the

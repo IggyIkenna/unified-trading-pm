@@ -116,7 +116,7 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
 - [x] ✅ [DIAG] P2. Determine why no `processed_candles/.../timeframe=4h/` or `timeframe=24h/` (or `1d/`) objects exist
       for `odds_horizon_bucket` day=2026-04-14 despite the run.log reporting 90/90 succeeded — read the per-VM manifest
       shard
-      (`market-data-tick-sports-test-central-element-323112/_index/per_vm/     mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755.parquet`)
+      (`market-data-tick-sports-test-central-element-323112/_index/per_vm/ mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755.parquet`)
       for the 4h/24h capture_status rows and determine honest-absence vs genuine gap. **RESOLVED 2026-08-10 (slot 17):
       NEITHER — see Progress Log for full finding.** (repo: market-data-processing-service)
 - [x] ✅ [CODE] P2. Fix `scripts/pipeline_e2e_check.py` so `odds_horizon_bucket` (and any other sports candle-shaped
@@ -133,8 +133,8 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
       `SchemaContractNotFoundError` storm fix (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`). Testing a cell the
       writer can never produce will always read `failed`/`no_candle_under`, forever — this is a checker defect, not a
       backfill gap. Done-when: a from-scratch
-      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS     --data-types odds_horizon_bucket` force run
-      reports `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. **SHIPPED 2026-08-10
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket` force run reports
+      `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. **SHIPPED 2026-08-10
       (slot 32) — market-data-processing-service@f89112b, see Progress Log.** (repo: market-data-processing-service)
 - [x] ✅ [DIAG] P2. Run a from-scratch
       `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`

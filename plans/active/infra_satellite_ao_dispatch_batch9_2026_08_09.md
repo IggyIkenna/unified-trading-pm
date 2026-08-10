@@ -127,23 +127,23 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       unified-trading-pm itself. NOTE: `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` is a
       point-in-time snapshot (per `hosted-baseline.sh`'s own header) — the truly-live copy of this reusable workflow
       lives in the separate `unified-trading-ci` repo and still has the old literal; out of this plan's
-      `repos:     [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
+      `repos: [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
       single canonical `UV_VERSION` constant (natural home: `scripts/workspace/resolve-canonical-versions.py`, alongside
       its existing dependency-version resolution logic, or `canonical-dependency-manifest.json` if that's a better fit
       for how `resolve-canonical-versions.py` already reads its other pins — worker's call, consistent with how the
       existing `uv_sources` mechanism is structured) and update all 6 hardcoded `"0.10.8"` sites to read from it instead
       of a literal: `scripts/setup.sh` (2 call sites: the `pip install "uv==$UV_VERSION"` fallback path and the
       curl-install path), `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
-      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install     "uv==..."` step —
-      a GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared
-      env/step output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the
-      install-fallback, the drift-check comparison, the drift-warning message),
-      `scripts/quality-gates-base/base-library.sh` (same 3 sites, mirrored). Done when: exactly ONE file defines the
-      literal `0.10.8`, all 6 consumer sites derive from it (grep confirms zero remaining bare `"0.10.8"` string
-      literals outside the new canonical definition site and any test fixtures that intentionally assert against it),
-      and `quality-gates.sh` stays green on at least one repo touched by `base-service.sh` (confirms the drift-guard
-      still fires correctly post-refactor). Source: `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (G2) /
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred item 3. (repo: unified-trading-pm)
+      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install "uv==..."` step — a
+      GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared env/step
+      output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the install-fallback, the
+      drift-check comparison, the drift-warning message), `scripts/quality-gates-base/base-library.sh` (same 3 sites,
+      mirrored). Done when: exactly ONE file defines the literal `0.10.8`, all 6 consumer sites derive from it (grep
+      confirms zero remaining bare `"0.10.8"` string literals outside the new canonical definition site and any test
+      fixtures that intentionally assert against it), and `quality-gates.sh` stays green on at least one repo touched by
+      `base-service.sh` (confirms the drift-guard still fires correctly post-refactor). Source:
+      `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (G2) / `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
+      § Deferred item 3. (repo: unified-trading-pm)
 - [x] ✅ [INFRA] P3. **Fix the stale `_AR_REPO` default in the 2 dead/orphaned template sites.** —
       unified-trading-pm@809d6b8d22. (1) `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` substitution
       default reads `"unified-trading"` but the real Artifact Registry repo is `unified-trading-system` (verified live
@@ -157,24 +157,24 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` findings 1-2. (repo: unified-trading-pm)
 - [x] ✅ [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP
       Cloud Build triggers.** Both confirmed dead + deleted 2026-08-10 (GCP-only todo; no repo commit). Evidence:
-      `gcloud builds     triggers describe api-contracts-build` / `api-contracts-feature-build`
-      (`--project=central-element-323112     --region=asia-northeast1`) both bind to the stale
-      `repositories/api-contracts` in connection `iggyikenna-github` — the GitHub repo was renamed
-      `api-contracts`→`unified-api-contracts` (`IggyIkenna/unified-api-contracts`;
-      `gh api repos/IggyIkenna/api-contracts` redirects to the new name). `api-contracts-build` (`^main$`): last build
-      2026-06-19, and `main` is pushed daily (2026-08-10T08:42Z, 07:06Z) with zero trigger builds — stale binding
-      receives no webhook events — while the current `unified-api-contracts-live-defi-rollout` trigger fires SUCCESS
-      daily (2026-08-10 10:21, 10:16, 09:56…). `api-contracts-feature-build` (`^feat/.*`): **0 builds ever**. Deleted
-      both via `gcloud builds triggers delete <name> --project=central-element-323112 --region=asia-northeast1 --quiet`
-      → `Deleted     [.../triggers/api-contracts-build]` + `Deleted [.../triggers/api-contracts-feature-build]`;
-      verified both absent from `gcloud builds triggers list` and the current `unified-api-contracts-live-defi-rollout`
-      trigger intact. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo:
+      `gcloud builds triggers describe api-contracts-build` / `api-contracts-feature-build`
+      (`--project=central-element-323112 --region=asia-northeast1`) both bind to the stale `repositories/api-contracts`
+      in connection `iggyikenna-github` — the GitHub repo was renamed `api-contracts`→`unified-api-contracts`
+      (`IggyIkenna/unified-api-contracts`; `gh api repos/IggyIkenna/api-contracts` redirects to the new name).
+      `api-contracts-build` (`^main$`): last build 2026-06-19, and `main` is pushed daily (2026-08-10T08:42Z, 07:06Z)
+      with zero trigger builds — stale binding receives no webhook events — while the current
+      `unified-api-contracts-live-defi-rollout` trigger fires SUCCESS daily (2026-08-10 10:21, 10:16, 09:56…).
+      `api-contracts-feature-build` (`^feat/.*`): **0 builds ever**. Deleted both via
+      `gcloud builds triggers delete <name> --project=central-element-323112 --region=asia-northeast1 --quiet` →
+      `Deleted [.../triggers/api-contracts-build]` + `Deleted [.../triggers/api-contracts-feature-build]`; verified both
+      absent from `gcloud builds triggers list` and the current `unified-api-contracts-live-defi-rollout` trigger
+      intact. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo:
       unified-trading-pm / GCP project central-element-323112)
 - [x] ✅ [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
       `cloud-build-router.yml` and `cloud-build-router-aws.yml` write-intend these `workspace-manifest.json` fields on a
       successful build, but live state (verified 2026-08-08) shows `deployed_versions` present-but-empty
-      (`{"dev": {},     "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path
-      is broken or was never fully wired. Either (a) fix the write path so both fields actually populate on a successful
+      (`{"dev": {}, "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path is
+      broken or was never fully wired. Either (a) fix the write path so both fields actually populate on a successful
       build (the workflows already contain the intended `jq` write logic per the grep evidence in the source doc — trace
       why it isn't landing, e.g. a `[skip ci]`-triggered commit not actually pushing, a stale manifest read before the
       write, a race with a concurrent build), or (b) remove the dead write-intent code and stop presenting the manifest

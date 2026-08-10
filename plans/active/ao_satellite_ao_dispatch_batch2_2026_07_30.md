@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-2, satellite-docs]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
@@ -58,7 +58,7 @@ source: >-
   this batch).
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/work-philosophy.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
@@ -91,8 +91,8 @@ other orphaned candidate considered and why it was NOT drafted.
 - **Put each todo's new test cases in a test module named for that todo's own concern** — never add to a test module
   another todo on this plan also touches. The todos below are file-disjoint by construction; keep them that way.
 - **Do not edit the source issue doc's checkboxes** beyond appending your evidence line to the todo you executed. The
-  paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md`) reconciles evidence back
-  into every source doc and runs archival.
+  paired finalize plan (`/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md`) reconciles
+  evidence back into every source doc and runs archival.
 - Todo 6 (JWT secret pin) restarts the live `orchestrator.service` — per the 2026-07-28 CLAUDE.md ruling,
   maintenance-window restarts do not need operator scheduling pre-live-trading (brief downtime OK); group it with any
   OTHER pending shared-orchestrator restart/pause work if one is in flight when you pick this up, rather than restarting
@@ -118,34 +118,34 @@ other orphaned candidate considered and why it was NOT drafted.
       agent-orchestrator.
 
       **Verification (not a re-implementation)**: on picking this up, read `server/verify.py` directly before writing
-                                                                              any code and found all 3 sub-items already present on current HEAD:
-                                                                              - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
-                                                                              window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
-                                                                              `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
-                                                                              `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
-                                                                              `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
-                                                                              HEAD via `git merge-base --is-ancestor`.
-                                                                              - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
-                                                                              `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
-                                                                              `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
-                                                                              `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
-                                                                              git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
-                                                                              recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
-                                                                              not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
-                                                                              itself was already correct by the time those recurrences were reported.
-                                                                              - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
-                                                                              the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
-                                                                              `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
-                                                                              `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
-                                                                              `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
-                                                                              `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
-                                                                              `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
-                                                                              `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
-                                                                              `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
-                                                                              `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
-                                                                              - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
-                                                                              checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
-                                                                              left untouched here; the paired finalize plan reconciles this evidence back into it.
+                                                                                  any code and found all 3 sub-items already present on current HEAD:
+                                                                                  - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
+                                                                                  window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
+                                                                                  `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
+                                                                                  `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
+                                                                                  `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
+                                                                                  HEAD via `git merge-base --is-ancestor`.
+                                                                                  - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
+                                                                                  `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
+                                                                                  `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
+                                                                                  `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
+                                                                                  git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
+                                                                                  recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
+                                                                                  not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
+                                                                                  itself was already correct by the time those recurrences were reported.
+                                                                                  - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
+                                                                                  the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
+                                                                                  `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
+                                                                                  `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
+                                                                                  `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
+                                                                                  `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
+                                                                                  `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
+                                                                                  `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
+                                                                                  `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
+                                                                                  `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
+                                                                                  - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
+                                                                                  checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
+                                                                                  left untouched here; the paired finalize plan reconciles this evidence back into it.
 
 - [x] [WORKER] P1. ✅ **MOOT — already fully resolved before this batch was drafted; re-verified 2026-07-30, no action
       needed.** The source doc (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) was already

@@ -161,8 +161,8 @@ assumed from the Phase-1 agents' own grep alone).
       /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md market-tick-data-service
       finding: prediction markets get market/price data from the canonical manifest/GCS-objects batch path, not a
       live-polling REST interface. Delete
-      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,     _load_tickers_from_gcs}` +
-      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,     _build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds,     _load_condition_ids_from_gcs}`
+      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds, _load_tickers_from_gcs}` +
+      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market, _build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds, _load_condition_ids_from_gcs}`
       and their dedicated tests. Grepped the full 15-doc covering set for
       `_load_tickers_from_gcs`/`_load_condition_ids_from_gcs` immediately before drafting: zero hits anywhere. Repo:
       market-tick-data-service. Source: `issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` (its
