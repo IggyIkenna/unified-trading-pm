@@ -58,11 +58,28 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify batch13's done-claim against reality** — re-run
+- [x] ✅ [REVIEW] P1. **Re-verify batch13's done-claim against reality** — re-run
       `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py --only plans/active/*.md plans/active/issues/*.md`
       and confirm the reported `unsourced_ruling_baseline` matches the claimed value; spot-check a sample of the cited
       fixes against their sources. **Done when**: independently confirmed, any discrepancy re-opened as a new tracked
-      todo here.
+      todo here. **VERIFIED — no discrepancy.** `--only` is precommit-scoped (checks only staged files; nothing staged →
+      trivial 0), so the meaningful re-run is the corpus-wide default invocation:
+      `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py` →
+      `Unsourced operator-ruling citations: 2     (baseline 2)` — matches batch13's claimed final baseline (52→4→2,
+      Progress Log 2026-08-10 entry) exactly. Both remaining flagged lines are the 2 batch13 itself named as
+      deliberately-unrecoverable: `ao_open_issues_consolidated_close_out_2026_07_17.md:407` (AO state-home ruling) and
+      `data_completion_defi_2026_07_15.md:223` (DeFi-volatility removal) — confirmed present verbatim at those lines,
+      neither has a traceable source doc in the corpus (grep-confirmed), consistent with batch13's own reasoning for
+      leaving them unfixed. Spot-checked 4 of batch13's claimed fixes against their cited sources, all traceable and
+      accurate: (1) `ao_open_issues...:399` — reworded "Operator ruling needed"→"Decision needed", confirmed present;
+      (2) `pm_scripts_typecheck_debt_2026_06_11.md:101/112` cites
+      `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 row "87" — table row confirmed:
+      "Narrow 'can never red' claim + bump off P3" → "pm_scripts_typecheck_debt edit incl. zero-warning-policy caveat",
+      matches the citing text exactly; (3) `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md:89` cites the same
+      doc's §A2 row "46" — confirmed: "Phase-D gate checkbox REOPENED" → "revert to [ ] + dependent real-data re-run
+      todo", matches; (4) `sports_consolidated_closeout_2026_07_19.md:724-726` cites
+      `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` todo 17 — doc exists, citation traceable.
+      No discrepancies found — no new todo needed. Repo: unified-trading-pm.
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
       `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`'s own `[SCRIPT] P2` checkbox** — replace the
       redirect-pointer text batch13 left behind with the real completion evidence. **Done when**: the source checkbox
@@ -86,3 +103,5 @@ source: >-
 - **2026-08-09** — Authored in the same turn as batch13, per the mandatory finalize-twin rule (task_template.md §4).
   `sequential: true` since the 4 todos are a genuine chain. Ships `status: active` (not `draft`) — `gate_on_depends`
   already machine-holds every task until batch13's own todo is done, matching the batch7-12 finalize precedent.
+- **2026-08-10 (slot-18, review)** — Flipped todo 1: independently re-verified batch13's done-claim, no discrepancy. See
+  the todo's own checkmark text for full evidence.
