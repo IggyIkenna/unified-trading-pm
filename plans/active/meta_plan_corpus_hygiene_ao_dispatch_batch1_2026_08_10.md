@@ -249,11 +249,18 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
 
 ## Follow-ups
 
-- [ ] [DOCS] P2. **Fix `/na-eligibility-audit`'s whole-doc RECLASSIFY bar.** Its SKILL.md requires EVERY open todo in a
-      doc to clear before the doc can move off `assigned_vm: NA`, so a single operator-gated sibling pins bounded work
-      indefinitely — measured live on `ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 verdict quoted above). The
-      fix is a per-todo verdict with a split path (extract the bounded slice into a batch, keep the rest NA), the shape
-      this plan had to apply by hand. **Done when**: the skill emits per-todo verdicts and names the extraction path.
+- [x] ✅ [DOCS] P2. **Fix `/na-eligibility-audit`'s whole-doc RECLASSIFY bar.** — `unified-trading-pm@953db0e945`. Its
+      SKILL.md requires EVERY open todo in a doc to clear before the doc can move off `assigned_vm: NA`, so a single
+      operator-gated sibling pins bounded work indefinitely — measured live on
+      `ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 verdict quoted above). The fix is a per-todo verdict with
+      a split path (extract the bounded slice into a batch, keep the rest NA), the shape this plan had to apply by hand.
+      **Done when**: the skill emits per-todo verdicts and names the extraction path.
+
+      **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
+          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
