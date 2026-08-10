@@ -72,13 +72,16 @@ source: >-
       longer applies to this instance (parent plan now ingested + done), though the root-cause `[BACKEND] P1` item in
       `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` remains open. —
       unified-trading-pm@2022f4142f (verified, not authored — slot-24 shipped the fix)
-- [ ] [REVIEW] P0. **NEW — discrepancy from todo 1 above**: this finalize plan dispatched its todo 1 despite its
+- [x] ✅ [REVIEW] P0. **NEW — discrepancy from todo 1 above**: this finalize plan dispatched its todo 1 despite its
       `gate_on_depends: true` gate on `ao_satellite_ao_dispatch_batch11_2026_08_09.md` being genuinely unmet (that plan
       is `status: draft`, 0/1 todos done). Cross-referenced (not duplicated) in
       `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`'s Progress Log as a new
       recurrence — the "zero-derived-parent-row" mechanism its still-open `[BACKEND] P1` item tracks. **Done when**:
       batch11 is flipped to `status: active`, dispatched, and its sole todo actually ships — at which point todo 1 above
-      can be genuinely re-run against a real commit sha.
+      can be genuinely re-run against a real commit sha. — **RESOLVED 2026-08-10 (slot 27)**: all done-when conditions
+      now met — batch11 is `status: active`, its sole todo shipped (`unified-trading-pm@2022f4142f` by slot-24), and
+      todo 1 above was genuinely re-verified against that commit (6/6 tests pass). Root-cause `[BACKEND] P1` item in
+      `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` remains open; this instance is closed.
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into `docs_reconcile_remaining_broken_links_2026_08_02.md`'s
       own `[SCRIPT] P2` checkbox** (line ~202) — replace the redirect-pointer text batch11 left behind with the real
       commit sha and test evidence. **Done when**: the flip is committed with the `docs(plans):` prefix and cites the
