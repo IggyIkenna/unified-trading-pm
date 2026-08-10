@@ -18,7 +18,7 @@ related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
     /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
-    /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
+    /plans/archive/2026_08/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
@@ -71,13 +71,18 @@ context_scope:
       `tardis_concurrency_gate_hardening_2026_08_09.md` in this plan's `related:` + the archived
       `ag_closeout_audit_cefi_parked_2026_08_10.md` (incl. that doc's other pre-existing dangling
       batch16/batch16_finalize/deployment_ui refs). `run_hygiene_sweep.sh` clean on the staged set.
-- [ ] [DOC] P1. Once batch17's todo 3 (ASTER recurrence check) resolves EITHER way (confirmed non-recurring, or
+- [x] ✅ [DOC] P1. Once batch17's todo 3 (ASTER recurrence check) resolves EITHER way (confirmed non-recurring, or
       escalated as a fresh P0), reconcile
       `issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s todo 2 checkbox with
       the outcome. If confirmed non-recurring (0 open todos remain), archive it via the standard 6-step ritual. If
       escalated, leave it open (superseded reference to the new escalation doc is sufficient, no archival). Repo:
       unified-trading-pm. **Done when**: the doc's checkbox state matches the real outcome and, if applicable, it is
-      archived with a clean `run_hygiene_sweep.sh`.
+      archived with a clean `run_hygiene_sweep.sh`. **DONE (2026-08-10, slot 22)** — batch17's todo 3 resolved as
+      CONFIRMED NON-RECURRING (bounded cefi manifest query: 2,000 matching rows, **0 with `attempted_at` strictly newer
+      than `2026-08-09T01:24:28.273974Z`**). The ASTER doc's todo 2 checkbox was already reconciled (flipped in
+      `unified-trading-pm@7d72b97723`); 0 open todos remain → archived it via the 6-step ritual to
+      `plans/archive/2026_08/issues/` (`status: resolved`, ARCHIVED banner, `archive_exempt` bridge field dropped,
+      referrers swept). `run_hygiene_sweep.sh` clean on the staged set.
 - [ ] [DOC] P2. Archive `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` itself (all 3 todos done, unlocked) via the
       standard 6-step ritual — commit the checkbox-complete state first as a plain edit at its active path, THEN
       `git mv` to archive as a separate follow-up commit (never combine the two in one commit, per RULES.md §2's
@@ -102,3 +107,13 @@ context_scope:
   the archived `ag_closeout_audit_cefi_parked_2026_08_10.md`, and corrected that archived doc's other pre-existing
   dangling refs (batch16/batch16_finalize/deployment_ui → `/plans/archive/2026_08/...`). Checked `check_reference_paths`
   clean on the staged set. Todo 1 flipped.
+- **2026-08-10 (slot 22, data_engineering, todo 2)**: finalize todo 2 — reconcile + archive the ASTER issue doc.
+  batch17's todo 3 resolved as CONFIRMED NON-RECURRING (my earlier bounded cefi manifest query: 2,000 matching rows, 0
+  with `attempted_at` strictly newer than `2026-08-09T01:24:28.273974Z`), and the ASTER doc's todo 2 checkbox was
+  already flipped in `unified-trading-pm@7d72b97723` → 0 open todos remain. Archived it via the 6-step ritual: `git mv`
+  to `plans/archive/2026_08/issues/`, `status: open → resolved`, added the ARCHIVED banner + `archived: "2026-08-10"` +
+  `resolved_by` → batch17 plan, dropped the `archive_exempt: true` flip-then-mv bridge field (moot once archived).
+  Referrer sweep: repointed the `/plans/active/issues/cefi_aster_book_snapshot5...` refs in the batch17 plan
+  (`related:` + `context_scope:`), this plan's `related:`, and the archived
+  `ag_closeout_audit_cefi_parked_2026_08_10.md` to the new `/plans/archive/2026_08/issues/` path. Checked
+  `check_reference_paths` clean on the staged set. Todo 2 flipped.

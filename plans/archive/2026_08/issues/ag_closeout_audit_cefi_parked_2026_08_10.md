@@ -28,7 +28,7 @@ related:
     /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
     /plans/active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
     /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
-    /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
+    /plans/archive/2026_08/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 created: "2026-08-10"

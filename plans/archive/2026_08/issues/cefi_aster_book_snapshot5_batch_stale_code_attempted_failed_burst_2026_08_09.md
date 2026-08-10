@@ -28,7 +28,7 @@ summary: >-
   day-alignment failure). No code fix required (current code already correct); could not identify the specific offending
   VM within this one-shot's scope (no currently-running instance name-matches an onchain-perp/ASTER backfill launcher;
   nothing to kill or relaunch).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -62,12 +62,19 @@ estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
-resolved_by:
+resolved_by: /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
 locked_by:
-archive_exempt: true
+archived: "2026-08-10"
 depends_on: []
 source: [DP_RUN_MOSTLY_EMPTY escalation agt-e488d1, wall_type=data_pipeline_failure]
 ---
+
+> **ARCHIVED 2026-08-10** — both action items resolved: (1) root-cause confirmed current HEAD already excludes ASTER
+> book_snapshot_5 from the batch fetch universe (the burst was a non-reproducible stale-tarball artifact); (2) the
+> recurrence watch was confirmed non-recurring on 2026-08-10 (bounded cefi manifest query, slot 22 — 2,000 matching
+> rows, **0 with `attempted_at` strictly newer than `2026-08-09T01:24:28.273974Z`**). Closed via
+> `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` + its finalize plan. The `archive_exempt: true` flip-then-mv bridge
+> field is dropped as part of this archival commit.
 
 # DP-FETCH-009 cefi/book_snapshot_5 fresh-attempted_failed burst — ASTER stale-tarball, self-resolved
 
