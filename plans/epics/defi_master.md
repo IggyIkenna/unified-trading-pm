@@ -104,12 +104,12 @@ locked_since: 2026-05-07
 > pipeline_mode / reconciler threshold / mode-routing logic.
 
 > **🟡 IN-FLIGHT REFACTOR — paper-vs-live workflow maturity (folded into master Group F/G 2026-05-09)**: UAC additive
-> `ExecutionTarget` / `ExecutionTrigger` enums + `decompose()` helper + `paper_target_registry` SSOT + per-chain paper
+> `ExecutionTarget` / `ExecutionTrigger` enums + `decompose()` helper + `PAPER_EXECUTION_TARGETS` SSOT + per-chain paper
 > primitive (Tenderly fork EVM; Solana devnet for jitoSOL/mSOL/bSOL legs of `carry_staked_basis`) all compose with this
 > plan's DeFi work. **BE AWARE** when touching DeFi connectors / chain RPC config / Aave / Uniswap / flash-loan
-> receiver: paper-mode wiring goes through `paper_target_registry[chain]` — don't hardcode fork URLs or testnet
-> endpoints. SSOT: [`master_to_live_defi_2026_05_23.md`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) §
-> "Folded paper-vs-live workflow maturity" +
+> receiver: paper-mode wiring goes through `get_paper_target(chain)` — don't hardcode fork URLs or testnet endpoints.
+> SSOT: [`master_to_live_defi_2026_05_23.md`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) § "Folded
+> paper-vs-live workflow maturity" +
 > [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md). Question
 > doc (retired 2026-05-09 PM@5d2d74c1; folded into
 > [`master_to_live_defi_2026_05_23.md`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) § "Folded
@@ -624,10 +624,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                              gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                              ```
+                                                                                                                                                                                                                                  gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                                  ```
 
-                                                                                                                                                                                                                              [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                                  [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1171,16 +1171,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                              `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                              (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                              VM ran current code without a refresh.
+                                                                                                                                                                                                                                  `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                                  (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                                  VM ran current code without a refresh.
 
-                                                                                                                                                                                                                              Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                              (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                              `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                                  Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                                  (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                                  `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                              Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                              (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                                  Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                                  (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding

@@ -102,14 +102,22 @@ way).
 
 ## Todos
 
-- [ ] [DOCS] P3. **Rename the remaining `paper_target_registry` references corpus-wide.** Five PM docs still use the
+- [x] ✅ [DOCS] P3. **Rename the remaining `paper_target_registry` references corpus-wide.** Five PM docs still use the
       non-existent name: `/plans/epics/defi_master.md`,
       `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`, and three archived plans (leave
       archived ones alone — historical record). Replace with `PAPER_EXECUTION_TARGETS` / `get_paper_target()`, the real
       API in `unified_api_contracts/internal/paper_execution_targets.py`. **Done when**: no ACTIVE plan or codex doc
       references `paper_target_registry`; each points at the real symbol names. Source:
       `/plans/active/issues/operational_modes_antipatterns_not_actually_deleted_2026_08_09.md:147`. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@\<sha\> (both active docs fixed: `/plans/epics/defi_master.md:107,110` —
+      `paper_target_registry` SSOT/indexing renamed to `PAPER_EXECUTION_TARGETS` / `get_paper_target(chain)`;
+      `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md:84,261` — renamed to
+      `get_paper_target()` / `PAPER_EXECUTION_TARGETS`. The 3 archived plans left untouched per this todo's own
+      instruction. `/codex/04-architecture/operational-modes.md` and
+      `/codex/04-architecture/paper-vs-live-execution-seam.md` were NOT touched — both already carry an explicit prior
+      correction note self-referencing the old name to explain the naming issue, not a stale usage; re-grepped
+      corpus-wide post-edit and confirmed zero remaining ACTIVE-plan/codex stale-usage hits outside those two
+      intentional correction notes + this todo's own source/tracking docs).
 - [x] ✅ [DEVOPS] P2. **Resolve the CANCELLED/SUPERSEDED-format contradiction between `task_template.md` and
       `check_todo_regression.sh` — pick one, then fix the other.** Either (a) teach
       `scripts/plan-hygiene/check_todo_regression.sh`'s `_check_one()` to recognize the documented bold-bullet pattern
