@@ -23,7 +23,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-3, satellite-docs]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
-    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,

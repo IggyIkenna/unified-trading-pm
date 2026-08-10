@@ -29,7 +29,7 @@ tags: [ao, agent-orchestrator, close-out, consolidation, dispatch, slot-lifecycl
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
@@ -95,7 +95,7 @@ todos of its own**. The plans that actually work these docs' open items:
   **archived 2026-08-01, all 11 todos `[x]`** (was `status: draft`; operator-approved and shipped) + its gated pair
   [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md),
   also archived. Superseded by
-  [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
+  [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
   [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
   [batch4_2026_08_01](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md) (now archived, complete),
   and [batch5_2026_08_03](/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`, awaiting
@@ -109,13 +109,13 @@ todos of its own**. The plans that actually work these docs' open items:
 - **2026-08-04 (`/ag-closeout-audit ao`, autonomous) — Orthogonality HARD CHECK found + retagged 8 genuine `ao`
   mistags** (bare `[meta]`/`[cross-cutting]` with `orchestrator_master`/`agent_operating_framework_master`
   `parent_epic`, each verified by reading the doc's real content, not tag shape):
-  [ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02](/plans/active/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md),
+  [ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02](/plans/archive/2026_08/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md),
   [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
   [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
   [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
   [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
   [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),
-  [na_and_ag_closeout_audit_population_overlap_2026_07_31](/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md),
+  [na_and_ag_closeout_audit_population_overlap_2026_07_31](/plans/archive/2026_08/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md),
   [na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30](/plans/active/issues/na_audit_multi_tranche_shared_doc_ownership_and_draft_p0_park_2026_07_30.md).
   None yet covered by a dispatched batch — see this run's own report (`ag_closeout_audit_ao_parked_2026_08_04.md` / the
   next satellite batch) for disposition.

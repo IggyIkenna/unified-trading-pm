@@ -91,16 +91,17 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 - [x] [INFRA] ✅ **DONE 2026-08-06 (slot-2, interactive) — token re-minted + tooling shipped
       `unified-trading-pm@9ef9926e9`.** Re-mint `~/.orch_token` on the OPERATOR'S LOCAL host `hk` (distinct from the
-      `ip-172-31-5-118` instance already tracked in `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`).
-      Measured 2026-08-06: the token on `hk` expired **2026-08-05T06:08:07Z**, so `slot-git-status-report.sh`'s POST to
-      the public URL 401s and the AO Fleet tab had been showing STALE git state for that host's slots ever since — the
-      exact host-wide silent-blindness this doc was filed for, recurring on a second host. `hk` is a laptop-style
-      checkout, NOT the orchestrator VM, so the 2026-07-26 loopback fix above does not rescue it: there is no local
-      `:8765` backend to fall back to, which makes the public-URL token the only path and its expiry a hard outage for
-      that host. **Retagged `[OPERATOR]`→`[INFRA]`**: minting turned out NOT to need a human — the VM already holds the
-      signing secret and is reachable read/write via the same SSM channel the sanctioned `/check-agent-orchestrator`
-      path uses, so an agent can mint without ever seeing the secret. **Evidence:** new token `sub=harsh role=operator`
-      exp `2026-09-05T17:03:18Z`; `/api/state` 200 (was 401); full reporter sweep on `hk` = 16/16 slots `[ok]`, 0 fail;
+      `ip-172-31-5-118` instance already tracked in
+      `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md`). Measured 2026-08-06: the token on `hk`
+      expired **2026-08-05T06:08:07Z**, so `slot-git-status-report.sh`'s POST to the public URL 401s and the AO Fleet
+      tab had been showing STALE git state for that host's slots ever since — the exact host-wide silent-blindness this
+      doc was filed for, recurring on a second host. `hk` is a laptop-style checkout, NOT the orchestrator VM, so the
+      2026-07-26 loopback fix above does not rescue it: there is no local `:8765` backend to fall back to, which makes
+      the public-URL token the only path and its expiry a hard outage for that host. **Retagged
+      `[OPERATOR]`→`[INFRA]`**: minting turned out NOT to need a human — the VM already holds the signing secret and is
+      reachable read/write via the same SSM channel the sanctioned `/check-agent-orchestrator` path uses, so an agent
+      can mint without ever seeing the secret. **Evidence:** new token `sub=harsh role=operator` exp
+      `2026-09-05T17:03:18Z`; `/api/state` 200 (was 401); full reporter sweep on `hk` = 16/16 slots `[ok]`, 0 fail;
       server-side `/api/fleet/git-health` host `hk` `reporter_stale` count **15/16 → 0/16** (the 15 frozen slots all
       read `reported_at: 2026-08-05T06:07:04Z`, i.e. the token's own expiry minute — direct corroboration of the root
       cause). Procedure promoted to `scripts/dev/remint-orch-token.sh` so the next expiry is one command.

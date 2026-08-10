@@ -59,8 +59,8 @@ a third party cannot tell which from the outside). The confirmation todo below s
 ## The rulings, as cited
 
 - **Item 1 — dispatch `sequential` gate** — _"Approve, ship as drafted"_. Cited by
-  `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md` (~line 228), which labels it "interactive Q&A, item 1 of
-  the ao round-5 apply digest". Note the citing todo's own finding: on locating the real source doc
+  `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md` (~line 228), which labels it "interactive Q&A,
+  item 1 of the ao round-5 apply digest". Note the citing todo's own finding: on locating the real source doc
   (`/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md`) the same edit had **already** been
   operator-approved and shipped 2026-08-06 during `/plan-reconcile ao` — so item 1 duplicates an earlier ruling.
 - **Item 2 — persist review-agent findings** — _"Yes, build it."_ Cited by
@@ -116,9 +116,9 @@ cannot be audited for completeness.
   `/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, an agent inventing
   a plausible source for someone else's ruling is the exact failure the evidence gates exist to catch.
 - **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. Item 1 is an
-  operator-only authenticity confirmation (cannot be worker-determined by design). Item 2 (give future ruling
-  sessions a home) requires a genuine convention design decision among 3 named options — a judgment call, not a
-  mechanical fix. No new facts apply.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
-  round9. Item 1 remains operator-only-by-design (only the operator can confirm they personally issued a ruling);
-  item 2 remains an unresolved 3-way convention design choice with no stated preference in the doc itself.
+  operator-only authenticity confirmation (cannot be worker-determined by design). Item 2 (give future ruling sessions a
+  home) requires a genuine convention design decision among 3 named options — a judgment call, not a mechanical fix. No
+  new facts apply.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since round9.
+  Item 1 remains operator-only-by-design (only the operator can confirm they personally issued a ruling); item 2 remains
+  an unresolved 3-way convention design choice with no stated preference in the doc itself.
