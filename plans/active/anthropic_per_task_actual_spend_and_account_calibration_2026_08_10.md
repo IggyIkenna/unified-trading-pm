@@ -529,6 +529,52 @@ multiplier carry its valuation date and rate set.
 (`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
 sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
 
+### 2026-08-10 — Why the 190x DOES transfer to AO: identical cache profiles
+
+Operator question: if the quota meter is weighted by the cache discount, how would that change the calibrated 190x?
+
+- **If the meter is price-weighted** (cache reads counted at 0.1x, as they are billed), quota consumed is proportional
+  to list value and **the multiplier is workload-INDEPENDENT** — 190x transfers to any mix unchanged.
+- **If the meter counts raw tokens equally**, 190x is specific to a 99%-cache-read mix, and cache-light work measures
+  HIGHER (the same quota buys full-rate tokens instead of 0.1x ones). So 190x is a FLOOR, not a ceiling.
+
+**Either way it transfers to AO**, because AO's workload sits at the same point on the curve — measured cache-read share
+of total tokens: **laptop 98.90%** (1,267,416,118 / 1,281,547,098) vs **AO on `sub-c` 98.54%** (5,527,290,327 /
+5,609,037,297). The two are the same shape, so the metering hypothesis does not change the transfer. The meter
+experiment is therefore a REFINEMENT for pricing genuinely cache-light work (a short one-shot task), not a blocker on
+using ~190x for AO today.
+
+## Deferred work after 2026-08-10
+
+| item                                               | state / why deferred                                                                                                                              | blocked on                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Reserve one max20 account for AO exclusively       | **Operator-owned** — needs a human commitment never to use it interactively; unlocks exact, laptop-free calibration                               | operator                                     |
+| Meter-history + laptop-login samplers (todos 1, 3) | **Not done** — highest priority; every hour without them permanently destroys 5-hour windows and login attribution                                | nobody                                       |
+| Quota-meter weighting experiment                   | **Cannot be done yet** — needs a second window at a very different cache-read share; only refines pricing for cache-light work, does not block AO | elapsed time / a differently-shaped workload |
+| Pro-account multiplier                             | **Cannot be done yet** — needs a controlled Pro window measured the way the Max one was                                                           | elapsed time                                 |
+| Batching rule propagation (todos 24-26)            | **Not done** — cheap doc work, large payoff (~46% of bill), but recoverable later unlike the samplers                                             | nobody                                       |
+| Plan line-cap extraction                           | **Not done** — 575 lines on origin vs 500 soft / 1000 hard; extract oldest closed Progress Log sections before it hits the hard cap               | nobody                                       |
+
+**Recommended NEXT item**: the two samplers (todos 1 and 3). Everything else in this plan is recoverable work; those two
+are the only items whose input data is destroyed by the passage of time.
+
+### Session lessons (carry these, they cost real time)
+
+1. **Dedupe transcript lines by `requestId` for TOKENS, but UNION content blocks across all lines sharing it.** Claude
+   Code writes one JSONL line per content block. Keeping only the first line silently drops `tool_use`/`thinking` blocks
+   and produced two wrong figures in this session (89% thinking, 71% tool-free turns) before correction.
+2. **`overage_status: rejected` + `out_of_credits` means overage WAS used and the pool is now exhausted** — not that
+   none was ever paid. Cost `GBP 150.78` was invisible under the first reading.
+3. **`~/.claude-accounts/*.env` files gate HEADLESS slot spawns only.** Their absence says nothing about interactive
+   use, which goes through `claude /login`. This invalidated a "provably clean account" claim.
+4. **`account_usage` and `~/.claude.json` are both CURRENT-STATE only.** No history exists for the usage meters or the
+   laptop login; past windows are unrecoverable, which is why the samplers are P0.
+5. **A checker that takes a path argument may ignore it.** `check_reference_paths.py` scans all 2,042 files regardless,
+   and its `--only` mode reads the git index — so validating a single unstaged file needs a different approach.
+6. **This checkout is ~98 commits behind origin and cannot `git pull --ff-only`** (peer sessions' untracked files block
+   it). Local validators therefore disagree with the pre-commit hooks, which run against origin in an isolated worktree.
+   Trust the hook, not the local run.
+
 ### 2026-08-10 — AO account rotation timeline, and the cache-accounting verification
 
 **AO burns accounts to exhaustion then rotates**, rather than spreading load — measured from `task_usage` + `agents`:
