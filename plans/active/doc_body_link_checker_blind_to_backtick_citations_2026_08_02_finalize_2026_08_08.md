@@ -64,11 +64,11 @@ source: >-
       angle-bracket/ellipsis placeholders) rather than materially diverging. If it diverges, note why before treating
       the parent doc's estimate as validated. **Done when**: a real post-ship count is recorded here, sourced from a
       live run, not copied from the estimate. Repo: unified-trading-pm.
-- [ ] [REVIEW] P2. **Confirm the baseline was seeded via `--update-baseline` immediately after landing (not shipped
+- [x] ✅ [REVIEW] P2. **Confirm the baseline was seeded via `--update-baseline` immediately after landing (not shipped
       zero-tolerance day one), matching how the original markdown-link checker itself was seeded 2026-07-23.** Check
       `scripts/quality_gates/doc_body_link_baseline.yaml` for a fresh `codex/`-prefix entry set consistent with the
       parent doc's own stated seeding intent. **Done when**: confirmed present, or the discrepancy is recorded. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@d86597c6c3
 - [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `doc_body_link_checker_blind_to_backtick_citations_2026_08_02` and repoint every referrer (the 5 digest-only docs
