@@ -64,10 +64,20 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`.** Once batch15's todo 1 ships,
-      flip both of that source doc's todos (`[INFRA] P1` sizing/routing fix, `[INFRA] P2` ownership audit — both folded
-      into batch15's single combined todo) to `[x]`, citing the batch15 commit SHA. If both todos are now closed and the
-      doc is unlocked, it is archival-eligible — check before concluding either way. (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P2. **Reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`.** Once batch15's todo 1
+      ships, flip both of that source doc's todos (`[INFRA] P1` sizing/routing fix, `[INFRA] P2` ownership audit — both
+      folded into batch15's single combined todo) to `[x]`, citing the batch15 commit SHA. If both todos are now closed
+      and the doc is unlocked, it is archival-eligible — check before concluding either way. (repo: unified-trading-pm)
+      — **DONE 2026-08-10 (slot-7, review).** Batch15 todo 1 confirmed shipped: batch plan todo 1 is `[x]` (DONE by
+      slot-20, `infra_satellite_ao_dispatch_batch15-fc54cb24200b`), with `instruments-service@bc36e4a5` (scratch routing
+      off the tmpfs) + `unified-trading-pm@f6af641115`
+      (`feat(infra): reaper + codex SSOT for shared-host /tmp tmpfs large-parquet     scratch`) both verified on origin
+      (the batch plan's cited `9db60dd7d4` was a pre-push local SHA — landed as `f6af641115`). Source doc's P1
+      (sizing/routing fix) + P2 (ownership audit) todos were already flipped `[x]` citing the same batch commit —
+      nothing further to reconcile in the source doc. Archival-eligibility check: doc is 0-open + unlocked and therefore
+      archival-eligible, but correctly carries `archive_exempt: true` (bridge until the parent batch pair reaches
+      terminal status — `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), so its archival is
+      deferred past finalize todo 3, not this todo.
 - [ ] [REVIEW] P2. **Reconcile `s5_7_required_docs_gaps_2026_07_29.md`.** Once batch15's todo 2 ships, flip that source
       doc's corrected redirect-stub todo to `[x]`, citing the batch15 commit SHA, and update
       `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s own market-data-processing-service registry entry to mark the
@@ -93,3 +103,8 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 - **2026-08-10** — Drafted alongside `infra_satellite_ao_dispatch_batch15_2026_08_10.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 20, dispatch agt-7788a0). Set `status: active` per the no-double-gate
   ruling (its own `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early dispatch).
+- **2026-08-10 (slot-7, review)** — Executed todo 1 (reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`).
+  Batch15 todo 1 already `[x]` + shipped (verified on origin: `instruments-service@bc36e4a5`,
+  `unified-trading-pm@f6af641115`); source doc's P1 + P2 todos already `[x]`-CLOSED citing
+  `infra_satellite_ao_dispatch_batch15-fc54cb24200b`. Flipped this plan's todo 1 `[x]` — no source-doc edits needed, and
+  its `archive_exempt: true` bridge means archival is deferred past finalize todo 3, not this todo.
