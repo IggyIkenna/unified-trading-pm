@@ -146,6 +146,15 @@ done
 log()      { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 log_quiet(){ [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
 
+# Excluded frozen-snapshot clones — 2026-08-05 pre-history-rewrite backups, e.g.
+# <repo>.stale-pre-history-rewrite-<ts>/ (git-health-scan exclusion, 2026-08-10:
+# plans/active/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md). Not
+# real drift/dirt: exclude from the FF walk + prefetch so frozen snapshots never
+# accrue repo_dirty_ticks / FF tokens or pollute the sweep result.
+is_frozen_snapshot_clone() {
+    [[ "$(basename "$1")" == *.stale-* ]]
+}
+
 # Acquire lock (skip silently if another instance is running).
 exec 9>"${LOCK_FILE}"
 if ! flock -n 9 2>/dev/null; then
@@ -767,6 +776,7 @@ walk_slot() {
     for d in "${slot_dir}"/*/; do
         [[ -d "${d}" ]] || continue
         [[ -d "${d}.git" || -f "${d}.git" ]] || continue
+        is_frozen_snapshot_clone "${d}" && { log_quiet "[skip:stale-snapshot] $(basename "${d}")"; continue; }
         ff_one "${d}" "${do_fetch}" || true
         count=$((count + 1))
     done
@@ -791,6 +801,7 @@ prefetch_main_clones() {
         [[ -d "${d}.git" ]] || continue  # only main clones (file-.git = linked worktree)
         local repo_name int_branch
         repo_name=$(basename "${d}")
+        is_frozen_snapshot_clone "${d}" && { log_quiet "[skip:stale-snapshot] ${repo_name}"; continue; }
         int_branch="$(branch_for_repo "${repo_name}")"
         # Reference-clone prune protection (2026-07-13). This very fetch adds loose objects to
         # the base every tick — exactly what pushes it past git's auto-gc threshold. The base

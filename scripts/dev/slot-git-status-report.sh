@@ -245,6 +245,16 @@ except Exception:
     fi
 }
 
+# Excluded frozen-snapshot clones — 2026-08-05 pre-history-rewrite backups, e.g.
+# <repo>.stale-pre-history-rewrite-<ts>/ (git-health-scan exclusion, 2026-08-10:
+# plans/active/issues/git_health_scan_exclusion_infra_routing_2026_08_10.md). These
+# are intentional backups, NOT real drift/dirt — skip them in every per-repo
+# enumeration so they never inflate the dirty/drift picture, accrue repo_dirty_ticks,
+# or get starve/stash/parked-wip pings.
+is_frozen_snapshot_clone() {
+    [[ "$(basename "$1")" == *.stale-* ]]
+}
+
 # Defensive instrumentation (ao_remediation_b_code_chain_2026_07_23.md item 2 — the
 # diagnostic half of item 1). Item 1 made dirty_files := len(sample_list), so
 # `dirty_files>0 with an empty sample` is now structurally unreachable through
@@ -598,6 +608,7 @@ check_starvation_for_slot() {
         [[ -d "${repo_dir}" ]] || continue
         [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
         repo_name=$(basename "${repo_dir}")
+        is_frozen_snapshot_clone "${repo_dir}" && { log_quiet "[skip:stale-snapshot] ${repo_name}"; continue; }
         marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.starved"
         payload=$(FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD}" \
                   FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS}" \
@@ -638,6 +649,7 @@ check_stash_pile_for_slot() {
         [[ -d "${repo_dir}" ]] || continue
         [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
         repo_name=$(basename "${repo_dir}")
+        is_frozen_snapshot_clone "${repo_dir}" && { log_quiet "[skip:stale-snapshot] ${repo_name}"; continue; }
         marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.stash-warn"
         payload=$(STASH_WARN_COUNT="${STASH_WARN_COUNT}" \
                   STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS}" \
@@ -759,6 +771,7 @@ check_token_expiry_for_slot() {
 report_parked_wip() {
     local slot_id="$1" slot_dir="$2" notice repo
     for repo in "${slot_dir}"*/; do
+        is_frozen_snapshot_clone "${repo}" && continue
         notice="${repo}.parked-wip"
         [[ -f "${notice}" ]] || continue
         [[ -s "${notice}" ]] || continue
@@ -802,6 +815,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
     for repo_dir in "${slot_dir}"*/; do
         [[ -d "${repo_dir}" ]] || continue
         [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        is_frozen_snapshot_clone "${repo_dir}" && continue
         rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
     done
     post_snapshot "${slot_id_str}" "${rows_tsv}"
@@ -823,6 +837,7 @@ if slot_in_filter "0"; then
         [[ -d "${repo_dir}" ]] || continue
         [[ "$(basename "${repo_dir}")" == ".tabs" ]] && continue
         [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        is_frozen_snapshot_clone "${repo_dir}" && continue
         rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
     done
     if [[ -n "${rows_tsv//[$'\n\t ']/}" ]]; then
