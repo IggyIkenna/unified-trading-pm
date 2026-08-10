@@ -16,7 +16,7 @@ related:
   [
     /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
     /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
-    market-making.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
     ../archetypes/arbitrage-price-dispersion.md,
     ../cross-cutting/mev-protection.md,
   ]
@@ -221,6 +221,61 @@ execution_policy_ref version bump propagates new behavior (with consumer opt-in)
   allocation efficiency and how often the scanner fires.
 - **Kill switches**: abnormal dispersion (may indicate broken feed rather than arb), multiple consecutive losses
   (execution quality degraded), venue outage
+
+## Latency Requirements
+
+**Category: `Low`** — sub-second total E2E, live mode only (batch mode has no latency requirements; it replays
+historical data at compute speed). Baseline: the archived
+[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
+table — SUPERSEDED as a doc, but its **Statistical Arb** and **Cross-Exchange Arb** rows are the operative baseline and
+are **confirmed, not corrected**, here: the 2026-08-10 operator correction (arbitrage-based archetypes must be in the ms
+realm) agrees with — rather than changes — the archived doc's existing `Low` categorization. This family doc's own
+content already carries the execution-side facts those numbers imply — the ATOMIC-vs-leg-and-hedge split (Atomic vs
+leg-and-hedge), the `max_hedge_delay_ms: 500` hard timeout on the hedge leg (Leader-hedge strategy choice), and the
+partial-fill / adverse-move tail risk (Risk profile) — so nothing here contradicts a sub-second budget.
+
+| Expression                                                                              | Tick-to-Signal | Signal-to-Order | Order-to-Fill | Total E2E | Category |
+| --------------------------------------------------------------------------------------- | -------------- | --------------- | ------------- | --------- | -------- |
+| Stat-arb profile / ATOMIC (same-chain DEX, flash-loan bundles, within-venue dispersion) | < 100 ms       | < 100 ms        | Venue-dep.    | < 200 ms  | Low      |
+| Cross-exchange arb (leg-and-hedge, two venues)                                          | < 200 ms       | < 100 ms        | Venue-dep.    | < 300 ms  | Low      |
+| Sports cross-book / cross-domain (Unity, direct Betfair/Smarkets, Polymarket)           | < 500 ms       | < 200 ms        | < 1 s         | < 2 s     | Low      |
+
+`Latency distribution (detection → first leg filled → all legs filled)` in the UI dashboard is the monitor for the Total
+E2E numbers. The DeFi block-time archetypes (liquidation capture, MEV variants) are bound by confirmation time (Ethereum
+L1 12–24 s per the archived venue-baselines table), not by these decision budgets — their binding constraint is
+gas/finality, which the archived doc's `Special` (Liquidation Sniper) row captured; `Low` here governs the dispersion
+family's decision + inter-leg path.
+
+**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
+`deployment_profiles` category mapping (bundled services on one VM for low-latency handoff), matching the market-making
+family's derivation. Note this is NOT yet reflected in
+[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
+§ 6's `ARBITRAGE_STRUCTURAL` `topology_requirements` row (execution isolated / strategy shared OK / co-location `no` /
+min SLA `standard`), which predates this latency categorization — that row's `no` co-location + `standard` SLA tier
+conflicts with the Low→`co_located_vm` rubric, a discrepancy this audit surfaces for the derivation todo that writes
+`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`.
+
+### Decision latency vs. inter-leg execution gap
+
+The `< 200–300 ms` figures above are the **decision budget** — dislocation detected → a single multi-leg instruction
+emitted. They are NOT the whole requirement. For this family the binding constraint is the **inter-leg execution gap**
+(2026-08-10 operator ruling: "we are executing two legs of a trade... how are we ensuring the lag leg followed by the
+lead leg is ms timing"), and the two sub-profiles have very different risk surfaces:
+
+- **Stat-arb profile / ATOMIC expressions** (same-chain DEX arb, flash-loan bundles, within-venue dispersion): the legs
+  complete in a single atomic transaction/block, so there is no measurable inter-leg gap — the binding budget is the
+  decision latency (< 200 ms total per the archived Statistical Arb row). (The separate mean-reverting `stat-arb-pairs`
+  family shares that same archived row as its baseline; it is not in this family's alpha thesis.)
+- **Cross-exchange arb — the real risk surface**: two legs on **two different venues**, and no venue supports a
+  simultaneous cross-CEX fill, so execution runs leg-and-hedge (leader fills on venue A, hedge chases on venue B). The
+  gap between leader fill and hedge fill is where the edge lives or dies: if the hedge lags beyond ms timing the
+  dispersion can converge, or one leg can partially fill leaving a naked directional leg — exactly the
+  partial-fill/adverse-move tail risk the Risk profile section warns about. The `max_hedge_delay_ms: 500` value in the
+  Leader-hedge strategy choice config is the **abort ceiling**, not the operating target — the operating target is
+  ms-realm (well under 100 ms), with the 500 ms hard timeout triggering unwind if the chase fails.
+
+So for arbitrage, "Low" means the **inter-leg execution timing budget is ms-realm for every leg-and-hedge expression**
+(cross-CEX, cross-chain, cross-venue vol, sports-direct), not merely a sub-200–300 ms decision-to-signal number.
 
 ## UI dashboard (shared)
 
