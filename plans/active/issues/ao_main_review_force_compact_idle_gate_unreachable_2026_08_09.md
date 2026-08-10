@@ -109,8 +109,8 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
       Done-when: the Progress Log carries open-vs-blocked counts for both roles. **RETARGETED 2026-08-10**: the ruling
       it was meant to inform is already made on a 3.7h sample (see the [OPERATOR] todo below), so this is no longer a
-      gate on that decision — it now serves as the CONFIRMING run over a full window. Report it as confirmation that
-      the cooperative path keeps working, not as new input to a pending ruling.
+      gate on that decision — it now serves as the CONFIRMING run over a full window. Report it as confirmation that the
+      cooperative path keeps working, not as new input to a pending ruling.
 - [ ] [BACKEND] P2. Machine-guard the ruling so it cannot be silently reversed: add a test asserting main and review
       route through the idle-gated `_maybe_force_compact` and never the worker unconditional-force path (the mirror of
       `_forbid_idle_checks`, which already guards the worker side). A doc-only ruling is not a gate — a future agent
@@ -148,13 +148,15 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       the window, does not rearm before it elapses, does not rearm once a force has fired); full QG green (2989 passed,
       basedpyright clean).
 - [x] ✅ [OPERATOR] P1. Ruling, with measured evidence in hand: **KEEP main/review idle-gated and cooperative-first.**
-      The worker-style unconditional force is NOT extended to them. Operator ruling 2026-08-10, on a 3.7h live
-      measurement: the cooperative path was 17/17 = 100% effective (main guidance 1 -> compaction 1, idle gate blocked
-      only once; review 16 compactions, zero forces) while the forced path was 14/65 = 22% effective
-      (`forced_compact_ineffective` 51). Extending the force would move the two roles that compact reliably onto the
-      path that currently fails ~78% of the time. The 2026-08-05 rationale survives contact with the data. Recorded in
+      The worker-style unconditional force is NOT extended to them. Operator ruling 2026-08-10
+      (`/codex/04-architecture/agent-orchestrator-worker-liveness.md`), on a 3.7h live measurement: the cooperative path
+      was 17/17 = 100% effective (main guidance 1 -> compaction 1, idle gate blocked only once; review 16 compactions,
+      zero forces) while the forced path was 14/65 = 22% effective (`forced_compact_ineffective` 51). Extending the
+      force would move the two roles that compact reliably onto the path that currently fails ~78% of the time. The
+      2026-08-05 rationale survives contact with the data. Recorded in
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md` section "main/review stay COOPERATIVE-first — the
-      idle gate is intended, not a defect (operator ruling 2026-08-10)", including the correction that the idle
+      idle gate is intended, not a defect (operator ruling 2026-08-10, per the same
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`)", including the correction that the idle
       requirement is ~3 MINUTES (3 x 60s keeper ticks), not the >=6h instrumentation observation window.
 
 ## Progress Log
@@ -208,9 +210,9 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
 - 2026-08-10 — **Ruling's guard RELAXED from an operator gate to a DATA gate** (operator, same day). The anti-pattern
   first read "do NOT extend the force without a new operator ruling backed by a fresh measurement", which made every
   future revisit a human bottleneck even when the evidence would be unambiguous. It now states the objective bar
-  instead: a worker may extend the force to main/review with NO further ruling once a >=6h live-fleet measurement
-  shows forced-path effectiveness both (a) >= the cooperative path's and (b) >= 90% absolute. Baseline to beat:
-  cooperative 17/17 = 100%, forced 14/65 = 22%. This keeps the protection (evidence is still required, and
-  `submitted=True` is explicitly rejected as evidence) while making the condition worker-determinable, per the
-  dispatch-scope-eligibility principle that a todo's outcome must be checkable by the worker alone. SSOT:
+  instead: a worker may extend the force to main/review with NO further ruling once a >=6h live-fleet measurement shows
+  forced-path effectiveness both (a) >= the cooperative path's and (b) >= 90% absolute. Baseline to beat: cooperative
+  17/17 = 100%, forced 14/65 = 22%. This keeps the protection (evidence is still required, and `submitted=True` is
+  explicitly rejected as evidence) while making the condition worker-determinable, per the dispatch-scope-eligibility
+  principle that a todo's outcome must be checkable by the worker alone. SSOT:
   `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "main/review stay COOPERATIVE-first".
