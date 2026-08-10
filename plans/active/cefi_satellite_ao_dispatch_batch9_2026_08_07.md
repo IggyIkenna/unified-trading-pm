@@ -37,7 +37,7 @@ related:
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
-    /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
+    /plans/archive/2026_08/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
@@ -98,17 +98,17 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P3. **Chase the flagged-but-unconfirmed `fetch_l2_book` / `book_snapshot_5` case-sensitivity hypothesis for
-      HYPERLIQUID.** The source doc's Open Questions section states the uppercased K\*-symbol coin feeds
-      `HyperliquidS3Downloader.fetch_l2_book`'s S3 object key (`l2Book/KPEPE.lz4` vs `kPEPE.lz4`), which would 404 on
-      every hour for the 6 k-prefixed symbols as a SILENT absence — flagged as a plausible follow-up, never chased,
-      never confirmed against the live manifest. Verify or refute: (a) read the live manifest / GCS object listing for
-      the k-prefixed HYPERLIQUID symbols (KPEPE etc.) across the book_snapshot_5 write path and compare against the
-      `fetch_l2_book` key construction in `market-tick-data-service`; (b) if the hypothesis is CONFIRMED, apply the
-      scoped fix (preserve case / case-insensitive key fallback in the S3-key path) with regression tests + QG green;
-      (c) record the verdict (confirm/refute + evidence) in the source doc's Follow-ups checkbox, flipping it `[x]` only
-      with cited evidence. The untraced instruments-service catalogue uppercasing source (Open Questions) is out-of-repo
-      and explicitly non-blocking — do NOT expand scope to it. Source:
+- [x] ✅ [DATA] P3. **Chase the flagged-but-unconfirmed `fetch_l2_book` / `book_snapshot_5` case-sensitivity hypothesis
+      for HYPERLIQUID.** — market-tick-data-service@a8e98742 The source doc's Open Questions section states the
+      uppercased K\*-symbol coin feeds `HyperliquidS3Downloader.fetch_l2_book`'s S3 object key (`l2Book/KPEPE.lz4` vs
+      `kPEPE.lz4`), which would 404 on every hour for the 6 k-prefixed symbols as a SILENT absence — flagged as a
+      plausible follow-up, never chased, never confirmed against the live manifest. Verify or refute: (a) read the live
+      manifest / GCS object listing for the k-prefixed HYPERLIQUID symbols (KPEPE etc.) across the book_snapshot_5 write
+      path and compare against the `fetch_l2_book` key construction in `market-tick-data-service`; (b) if the hypothesis
+      is CONFIRMED, apply the scoped fix (preserve case / case-insensitive key fallback in the S3-key path) with
+      regression tests + QG green; (c) record the verdict (confirm/refute + evidence) in the source doc's Follow-ups
+      checkbox, flipping it `[x]` only with cited evidence. The untraced instruments-service catalogue uppercasing
+      source (Open Questions) is out-of-repo and explicitly non-blocking — do NOT expand scope to it. Source:
       `issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` (Follow-ups, line ~617). **Done
       when**: the source doc's `[DATA] P3` Follow-ups checkbox is flipped `[x]` citing a confirm/refute verdict backed
       by live manifest + archive-key evidence (or, if confirmed and a fix is out of the audit's scope, a new issue filed

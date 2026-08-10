@@ -800,7 +800,7 @@ here is NOT dispatch, per this doc's own standing convention.
 - [`cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`](/plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md)
   — 2 open items, both explicit design/redesign decisions for features-service's loader (classified 2026-08-06,
   orphaned_never_touched, not AO-eligible).
-- [`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`](/plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md)
+- [`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`](/plans/archive/2026_08/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md)
   — 9 of 10 todos done+verified; sole open `[DATA] P3` Follow-ups item (fetch_l2_book / book_snapshot_5 case-sensitivity
   audit) extracted into `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 1 (classified 2026-08-07).
 - [`cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`](/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md)

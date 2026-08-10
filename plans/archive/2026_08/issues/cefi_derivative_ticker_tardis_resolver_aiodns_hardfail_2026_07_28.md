@@ -30,7 +30,7 @@ summary: >-
   extended `make_resilient_connector()` to accept `**kwargs` (connection-pool tuning) and routed both Tardis clients
   through it, so a missing/broken `aiodns` now degrades to aiohttp's default resolver instead of failing the shard.
   Code: `market-tick-data-service` (see Todos for SHA).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -75,6 +75,12 @@ context_scope:
     market-tick-data-service/market_tick_data_service/_http_resolver.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-10** — all 10 todos done. Root causes #1 (aiodns @6a067cf1), #2 (HYPERLIQUID 429 @6c6fab03), #3
+> (K*-symbol KeyError @6c6fab03) fixed and shipped; VM cycled (2026-08-06, verified); Follow-ups
+> fetch_l2_book/book_snapshot_5 case-sensitivity hypothesis CONFIRMED + FIXED (@a8e98742). All 6 k-prefixed symbols now
+> resolve case-insensitively against HL's /info universe before S3 key construction. Successor: none — all root causes +
+> follow-ups closed.
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
 
@@ -620,11 +626,15 @@ and the residual-KeyError defense-in-depth path.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Chase the flagged-but-unconfirmed fetch_l2_book / book_snapshot_5 case-sensitivity hypothesis — the
-      doc's own Open Questions section states the same uppercased K*-symbol coin feeds
-      HyperliquidS3Downloader.fetch_l2_book's S3 object key (l2Book/KPEPE.lz4 vs kPEPE.lz4), which would 404 on every
-      hour for the 6 k-prefixed symbols as a SILENT absence, 'flagged as a plausible follow-up, not chased... not
-      confirmed against the live manifest'.
+- [x] ✅ [DATA] P3. **CONFIRMED 2026-08-10 — market-tick-data-service@a8e98742.** Chase the flagged-but-unconfirmed
+      fetch_l2_book / book_snapshot_5 case-sensitivity hypothesis — CONFIRMED: the IS catalogue stores the 6 k-prefixed
+      HYPERLIQUID meme coins UPPERCASED (KPEPE, KBONK, KFLOKI, KNEIRO, KLUNC, KSHIB), but HL's S3 archive keys use the
+      real mixed case (l2Book/kPEPE.lz4). S3 keys are case-sensitive → the uppercased key 404s on every hour as a SILENT
+      absence (empty_confirmed). Manifest evidence: all 6 symbols show empty_confirmed across their entire history
+      (~1,335 instrument-date shards each, ~8,010 total), zero captured rows ever. Fixed by adding a lazy
+      _hl_coin_universe property + _resolve_l2_book_coin helper (case-insensitive resolution against HL's /info
+      universe, cached per instance) and resolving the coin before building the S3 key in fetch_l2_book. Row coin/symbol
+      retain canonical uppercase form matching expected-universe catalogue keys. 3 regression tests added.
 
 > **2026-08-06 archive-candidate audit**: All 9 todos are [x] and the three root causes + VM cycle are fixed/verified
 > (aiodns @6a067cf1, HYPERLIQUID @6c6fab03, VM cycled 2026-08-06, tarball ancestors verified). But the Open Questions
