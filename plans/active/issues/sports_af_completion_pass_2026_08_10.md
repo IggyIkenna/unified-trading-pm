@@ -414,9 +414,17 @@ depends_on: []
           navigation, pace varies with league density. Now entering Sep 2021. Run now ~8h+ old. No stall detected.
         - No code shipped — pure monitoring across compact+resume cycles.
 
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-09-10` (prior session) → `2021-09-19`. Monotonic, forward progress. ~466/2258 days done (~20.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING via `gcloud compute instances list`.
+        - Pace: +9 season-start-dates this session. Steady forward progress — season-scoped navigation. Run now ~9h+
+          old. No stall detected.
+        - No code shipped — pure monitoring.
+
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-09-10`, ~457/2258 days (~20.2%)       | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-09-19`, ~466/2258 days (~20.6%)       | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
