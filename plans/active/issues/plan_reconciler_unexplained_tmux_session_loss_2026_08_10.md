@@ -53,6 +53,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.48
 assigned_role: backend_engineer
+effort: medium
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -82,6 +83,11 @@ source: >-
       trace. The most likely trigger for claude's exit is account-level rate-limiting (4 sessions sharing one account,
       mid-task limit hit). A `tmux_session_lost` rate canary is recommended for future detection. Repo:
       agent-orchestrator.
+- [ ] [BACKEND] P2. **Add a `tmux_session_lost` rate canary alert** (recommended in this doc's Progress Log — converting
+      the prose monitoring recommendation into a tracked todo per the todos-not-prose rule). Fire when ≥N sessions are
+      lost within a rolling window (e.g. ≥3 in 10 min); exclude `one_shot`/`scheduled` lifecycle agents and
+      `idle`-status slots so standing churn doesn't page. Detects the account-cluster session-loss failure mode
+      regardless of root cause. Repo: agent-orchestrator.
 
 ## Progress Log
 
