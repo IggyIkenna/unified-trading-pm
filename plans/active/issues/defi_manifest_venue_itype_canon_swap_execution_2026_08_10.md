@@ -71,39 +71,39 @@ mandatory verified pre-write snapshot).
       (`deployment-service/scripts/vm/` launcher per the vm-launcher-runbook; SPOT default) to run:
 
       ```python
-                  python -m market_tick_data_service.scripts.rebuild_defi_manifest --start-date <defi-floor> --end-date <today> --dry-run --beta-manifest-out gs://<audit-bucket>/<dir>/defi_proj.parquet --chunk-days <N> --workers 32
-                  ```
+                      python -m market_tick_data_service.scripts.rebuild_defi_manifest --start-date <defi-floor> --end-date <today> --dry-run --beta-manifest-out gs://<audit-bucket>/<dir>/defi_proj.parquet --chunk-days <N> --workers 32
+                      ```
 
-                  (full range; `--reemit-absence` per the rebuild's own guidance). Then run the swap's plan mode against live to
-                  surface the REAL ADD/REMOVE delta:
+                      (full range; `--reemit-absence` per the rebuild's own guidance). Then run the swap's plan mode against live to
+                      surface the REAL ADD/REMOVE delta:
 
-                  ```python
-                  python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod
-                  ```
+                      ```python
+                      python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod
+                      ```
 
-                  Record the delta (ADD/REMOVE counts by class + kept-legacy-no-twin) in this doc before proceeding. (repo:
-                  market-tick-data-service) Done when: the projection part files exist and the plan-mode delta is recorded with no
-                  surprise class-B mass downgrade.
+                      Record the delta (ADD/REMOVE counts by class + kept-legacy-no-twin) in this doc before proceeding. (repo:
+                      market-tick-data-service) Done when: the projection part files exist and the plan-mode delta is recorded with no
+                      surprise class-B mass downgrade.
 
-                  **STATUS 2026-08-10 (slot 2) — LAUNCHER GAP, not yet launched.** Investigation found **no existing
-                  `deployment-service/scripts/vm/launch-*.sh` can run this projection**: `launch-canonical-migration-vm.sh` builds
-                  only its hardcoded per-category `migrate_*_canonical.py` commands (line ~2060 sets `VM_MIGRATION_CMD` from a
-                  category builder; no raw-cmd override), and no launcher references `rebuild_defi_manifest`/`--beta-manifest-out`
-                  except `launch-backfill-defi-legacy-datatype-fold-vm.sh` (which hardcodes a different task). The generic
-                  `VM_MIGRATION_CMD` metadata dispatch in `setup-data-pipeline-vm.sh` would run the command verbatim, but there is
-                  no launcher that emits that metadata for a custom command without editing code. **The prerequisite is a small
-                  self-contained launcher** (model on `launch-backfill-defi-legacy-datatype-fold-vm.sh`: SPOT, `VM_BACKFILL_CMD`
-                  metadata, per-VM-shard isolation, tarball-freshness check) + a `VM_PREFIX_TO_BUCKET` entry in
-                  `deployment-service/deployment_service/vm/vm_zombie_watchdog.py` for the new prefix (e.g.
-                  `defi-manifest-projection-`), shipped via quickmerge — never hand-roll a VM name. Also confirmed the defi index is
-                  **133,041,278 rows / 1082 row-groups** (this doc's own measurement) → the projection MUST be chunked
-                  (`--chunk-days` ≥ 30-60, `--workers 32`, `--reemit-absence`) on a big SPOT VM (e2-standard-16+, per the
-                  `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md` OOM precedent), writing the projection
-                  to a bounded audit path (e.g. `gs://deployment-scripts-central-element-323112/n5r-n6r-projection/2026-08-10/`).
-                  A G1 defi full-history backfill launcher (same session, other plan) was stopped to keep the defi index quiet per
-                  this doc's step-(d) drain-gate intent. `--start-date <defi-floor>` needs pinning (DeFi data floor; recommend
-                  2020-01-01). Next dispatch: add the launcher + registry entry, launch the projection VM, record the plan-mode
-                  delta.
+                      **STATUS 2026-08-10 (slot 2) — LAUNCHER GAP, not yet launched.** Investigation found **no existing
+                      `deployment-service/scripts/vm/launch-*.sh` can run this projection**: `launch-canonical-migration-vm.sh` builds
+                      only its hardcoded per-category `migrate_*_canonical.py` commands (line ~2060 sets `VM_MIGRATION_CMD` from a
+                      category builder; no raw-cmd override), and no launcher references `rebuild_defi_manifest`/`--beta-manifest-out`
+                      except `launch-backfill-defi-legacy-datatype-fold-vm.sh` (which hardcodes a different task). The generic
+                      `VM_MIGRATION_CMD` metadata dispatch in `setup-data-pipeline-vm.sh` would run the command verbatim, but there is
+                      no launcher that emits that metadata for a custom command without editing code. **The prerequisite is a small
+                      self-contained launcher** (model on `launch-backfill-defi-legacy-datatype-fold-vm.sh`: SPOT, `VM_BACKFILL_CMD`
+                      metadata, per-VM-shard isolation, tarball-freshness check) + a `VM_PREFIX_TO_BUCKET` entry in
+                      `deployment-service/deployment_service/vm/vm_zombie_watchdog.py` for the new prefix (e.g.
+                      `defi-manifest-projection-`), shipped via quickmerge — never hand-roll a VM name. Also confirmed the defi index is
+                      **133,041,278 rows / 1082 row-groups** (this doc's own measurement) → the projection MUST be chunked
+                      (`--chunk-days` ≥ 30-60, `--workers 32`, `--reemit-absence`) on a big SPOT VM (e2-standard-16+, per the
+                      `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md` OOM precedent), writing the projection
+                      to a bounded audit path (e.g. `gs://deployment-scripts-central-element-323112/n5r-n6r-projection/2026-08-10/`).
+                      A G1 defi full-history backfill launcher (same session, other plan) was stopped to keep the defi index quiet per
+                      this doc's step-(d) drain-gate intent. `--start-date <defi-floor>` needs pinning (DeFi data floor; recommend
+                      2020-01-01). Next dispatch: add the launcher + registry entry, launch the projection VM, record the plan-mode
+                      delta.
 
 - [x] ✅ [INFRA] P2. **N5r/N6r (d) — drain gate + snapshot.** Before the prod write: confirm no in-flight defi manifest
       writer is racing the index (pause/verify the defi backfill/reconcile crons + any defi live VM; confirm
@@ -113,27 +113,40 @@ mandatory verified pre-write snapshot).
       exists.
 
       **CODE SHIPPED (market-tick-data-service@697d983c + @0a9ea724, 2026-08-10, slot 24).** The drain-gate capability
-          did NOT exist before this change (grep confirmed no drain-gate in the swap tool): added `--drain-gate` mode —
-          `drain_check()` confirms 0 concurrent defi manifest writers via (1) consolidator lock NOT in-flight
-          (`consolidator_cycle_in_flight`) + (2) consolidated index blob generation stable across a wait window
-          (the `written_at`-quiet proof), then `snapshot_index()` writes the byte-verified
-          `_index/snapshots/pre_defi_venue_itype_canon_swap_*.parquet` (refuses to snapshot while a writer races — the
-          snapshot must capture a QUIET index). Split into companion `defi_manifest_drain_gate.py` (900-line cap). 4 new
-          unit tests + full `quality-gates.sh` green, ancestry-verified on LDR. Live read-only drain probe (2026-08-10
-          17:4x UTC) correctly reports **NOT DRAINED — consolidator cycle in-flight** (a defi merge was actively writing at
-          probe time), i.e. the gate refuses exactly as designed. **Execution is VM-only per this doc** — the
-          drain-confirmation + snapshot run on the swap VM (todo (c)'s launcher is in-flight per the STATUS note above);
-          this checkbox covers the shipped INFRA capability. (repo: market-tick-data-service)
+              did NOT exist before this change (grep confirmed no drain-gate in the swap tool): added `--drain-gate` mode —
+              `drain_check()` confirms 0 concurrent defi manifest writers via (1) consolidator lock NOT in-flight
+              (`consolidator_cycle_in_flight`) + (2) consolidated index blob generation stable across a wait window
+              (the `written_at`-quiet proof), then `snapshot_index()` writes the byte-verified
+              `_index/snapshots/pre_defi_venue_itype_canon_swap_*.parquet` (refuses to snapshot while a writer races — the
+              snapshot must capture a QUIET index). Split into companion `defi_manifest_drain_gate.py` (900-line cap). 4 new
+              unit tests + full `quality-gates.sh` green, ancestry-verified on LDR. Live read-only drain probe (2026-08-10
+              17:4x UTC) correctly reports **NOT DRAINED — consolidator cycle in-flight** (a defi merge was actively writing at
+              probe time), i.e. the gate refuses exactly as designed. **Execution is VM-only per this doc** — the
+              drain-confirmation + snapshot run on the swap VM (todo (c)'s launcher is in-flight per the STATUS note above);
+              this checkbox covers the shipped INFRA capability. (repo: market-tick-data-service)
 
 - [ ] [SCRIPT] P2. **N5r/N6r (e) — apply + post-verify.** On the VM:
 
       ```python
-                  python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod --confirm-prod-write
-                  ```
+                      python -m market_tick_data_service.scripts.defi_manifest_venue_itype_canon_swap --projection-uri gs://<audit-bucket>/<dir>/defi_proj.parquet --apply-prod --confirm-prod-write
+                      ```
 
-                  (writes PROD). Verify: swap's own post-write verify (stale_remaining=0, canon_missing=0) AND an independent fresh
-                  GCS-sampled re-audit (0 legacy-spelled/uppercase-itype/chain-polluted rows remaining, 100% of their canonical
-                  twins present with matching row_count, 0 captured→failed mass flip). (repo: market-tick-data-service) Done when:
-                  the re-audit shows 0 stale rows + full twin coverage — which also satisfies the
-                  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` N5r/N6r item's done-when, at which point that checkbox
-                  is flipped with this evidence.
+                      (writes PROD). Verify: swap's own post-write verify (stale_remaining=0, canon_missing=0) AND an independent fresh
+                      GCS-sampled re-audit (0 legacy-spelled/uppercase-itype/chain-polluted rows remaining, 100% of their canonical
+                      twins present with matching row_count, 0 captured→failed mass flip). (repo: market-tick-data-service) Done when:
+                      the re-audit shows 0 stale rows + full twin coverage — which also satisfies the
+                      `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` N5r/N6r item's done-when, at which point that checkbox
+                      is flipped with this evidence.
+
+## Progress Log
+
+- **data_engineering (slot 15) 2026-08-10T19:40Z**: Picked up todo (e) but found it gated on (c) — no projection exists
+  yet. Attempted to unblock by creating the launcher + registry entries for (c):
+  `deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh` (new, modeled on
+  `launch-backfill-defi-legacy-datatype-fold-vm.sh`), plus `VM_PREFIX_TO_BUCKET` entry (`vm_prefix_registry.py`) and
+  `LAUNCHER_FOR_VM_PREFIX` entry (`launcher_registry.py`) for `defi-manifest-projection-` prefix. **Committed locally at
+  `deployment-service@56f46d4d` but BLOCKED from shipping** — deployment-service has 11 pre-existing
+  `test_dp_recovery_actuators` failures (confirmed at parent commit, not caused by my changes). Joined existing
+  repo-blocker RB-5d23ffad as waiter. When the repo goes green, the next worker can:
+  `git fetch && git merge --ff-only origin/live-defi-rollout`, push the launcher commit, then launch the projection VM
+  via `bash scripts/vm/launch-defi-manifest-projection-vm.sh`. Todo (e) remains gated on (c)'s projection output.
