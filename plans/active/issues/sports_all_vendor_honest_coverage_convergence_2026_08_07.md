@@ -685,3 +685,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   only the odds_api backfill as the sole remaining open campaign. **Odds fleet**: same instance
   (`mtds-backfill-odds-smallchunk17-20260810`), still 11x hang occurrences (no 12th); chunk 10/425, zero
   OOMs/CHUNK_FAILED, fresh — 8 chunks from chunk 18 (watch closer next tick as it approaches).
+- **04:58Z — AF CAMPAIGN COMPLETE: INJURIES needed confirmed stable at 334 (byte-identical repeat reading, no active
+  VM), all 4 AF entities converged.** Re-census with no INJURIES VM running reads **identical** to the prior tick:
+  INJURIES needed=334 (unchanged), manifest rows=16,181,741 (unchanged, 7th consecutive flat reading), confirmed no new
+  `af-backfill-*` instance exists anywhere. Per rule 4a (never trust a single reading), this repeat-stable value with
+  zero active writers confirms 334 is INJURIES' genuine honest-absence floor, not consolidator catch-up lag. **All 4 AF
+  entities are now at their converged floors**: PLAYER_STATS=3, INJURIES=334, STANDINGS=271, TEAMS=96 — grand total
+  needed=704 shards, unchanged from last tick. Combined with FIXTURE_STATS/FIXTURE_LINEUPS' earlier confirmed
+  convergence (both at needed=116, matching exactly), **the entire AF full-entity-completion campaign (FIXTURE_STATS →
+  FIXTURE_LINEUPS → PLAYER_STATS → INJURIES → STANDINGS → TEAMS) is now DONE** — no further AF VM launches are needed;
+  the singleton lock is permanently free going forward for this campaign. The standing monitoring loop continues for the
+  odds_api fleet only (the sole remaining open campaign). **Odds fleet**: `smallchunk17` was SPOT-preempted
+  (`compute.instances.preempted`, routine — NOT the tracked hang signature) at 04:44:35Z and auto-relaunched by the
+  fleet's own recovery mechanism (`unified-trading-sa@...`) within ~2min at 04:46:30Z, confirmed genuinely resuming
+  (chunk 2/415, zero OOMs, correctly skip-fasting). Still 11x hang occurrences (no 12th) — this preemption is unrelated
+  to that tracked pattern. No intervention needed.
