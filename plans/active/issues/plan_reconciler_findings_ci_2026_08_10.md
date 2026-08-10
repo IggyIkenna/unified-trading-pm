@@ -62,8 +62,16 @@ classified as not worth extracting, re-confirmed, not re-litigated this run.
 
 ## Flips verified
 
-None this run so far (hunter batch 3/6 report no checkbox-flip candidates with HARD evidence — every open todo checked
-is either genuinely open or already correctly flipped).
+1. **`archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` todo 2** — hunter batch 6, HARD
+   evidence: already shipped via a different, independently-filed duplicate issue
+   (`/plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`,
+   `unified-trading-pm@a231c2a80`). Independently re-verified live before flipping: the codex section, the
+   `check_archive_candidates.sh` skip logic (4 call sites), and the bats regression test all confirmed present on disk.
+   **FIXED**.
+
+No other flip candidates — hunter batches 1-6 collectively checked every open `- [ ]` across the 32-doc writable set;
+where evidence existed the checkbox was already flipped, and the remainder are genuinely still open (several
+independently re-confirmed AO-eligibility findings, see AO-dispatch-readiness below).
 
 ## Contradictions
 
@@ -75,54 +83,98 @@ is either genuinely open or already correctly flipped).
    done, citing the Todos section — `unified-trading-pm` (this run's commit).
 2. **`ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`** — self-contradiction (P1, one doc), hunter
    batch 1: the `## Deferred work after 2026-08-06` table (2 rows) was never resynced after later checkboxes flipped —
-   "Fix the 6 plan-hygiene ratchets" shows `[x] DONE — closed 2026-08-07` at line 594 but the table still says "Not
-   done" at line 703 (+ a "Recommended NEXT item" pointer at line 706 telling a reader to redo already-finished work);
-   "Downsize CI VM / planning VM" shows both `[x] DONE 2026-08-08`/`[x] DONE 2026-08-07` at lines 638/687 but the table
-   still says "Operator-owned... pending" at line 701. Independently re-verifying line numbers before fixing (see
-   Progress Log) — not yet applied as of this checkpoint.
+   "Fix the 6 plan-hygiene ratchets" shows `[x] DONE — closed 2026-08-07` at line 594 but the table still said "Not
+   done" (+ a "Recommended NEXT item" pointer telling a reader to redo already-finished work); "Downsize CI VM /
+   planning VM" shows both `[x] DONE` at lines 638/687 but the table still said "Operator-owned... pending".
+   Independently re-verified both underlying `[x]` claims (read the cited commit messages + evidence inline) before
+   fixing. **FIXED**: corrected both table rows + the "Recommended NEXT item" pointer (now points at the one row that is
+   genuinely still not-done: re-baseline `qg_resource_baseline.json`).
 3. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`** — stale "protected repos" list (P1, hunter batch
-   1): line 845's "6 explicitly-protected repos" (incl. `greeks-service`, `ibkr-gateway-infra`, `instruments-service`,
+   1): "6 explicitly-protected repos" (incl. `greeks-service`, `ibkr-gateway-infra`, `instruments-service`,
    `fund-administration-service`) is superseded — 4 of those 6 were public repos REMOVED from self-hosted entirely on
-   2026-08-05 per the live `scripts/workflow-templates/self-hosted-qg-repos.txt` header and corroborated by
-   `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`'s own more-current list. Not yet independently
-   re-verified against the live file or fixed as of this checkpoint.
+   2026-08-05. Independently re-verified against the live `scripts/workflow-templates/self-hosted-qg-repos.txt` (current
+   7-repo list: `agent-orchestrator`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
+   `execution-service`, `ml-service` — none of the 4 removed repos present). **NOT FIXED**: the doc is at 998/1000 lines
+   (2 lines of headroom); even the smallest clarifying banner I drafted tipped it to 1001-1003L, breaching the hard cap.
+   Reverted my edit cleanly (0 diff) rather than trade one hygiene violation for another. Routed to the operator (see
+   Filed) — needs a split/extraction pass before this or the doc's own already-flagged "one entry from breaching a 3rd
+   time" risk can be safely addressed.
 4. **K=cores/4 physical-vs-logical-core disagreement** (P2, hunter batch 1, cross-doc): `ci_vm_io_starvation_audit...`
-   (2026-08-06) claims the governor code uses physical cores (`floor(8/4)=2`); `qg_host_adaptive_resource_governor...`
-   (2026-08-09, "NEW FINDING") claims it actually uses `lscpu -p=core` logical-CPU counting with no HT dedup, so K could
-   be up to 2x too permissive on this host class. This is a claim about actual CODE behavior — provable by reading
-   `_qg_governor_default_k()` directly. Not yet independently verified as of this checkpoint.
+   (2026-08-06) claimed the governor code uses physical cores (`floor(8/4)=2`); `qg_host_adaptive_resource_governor...`
+   (2026-08-09, "NEW FINDING") claimed it actually uses `lscpu -p=core` logical-CPU counting with no HT dedup, so K
+   could be up to 2x too permissive. **RESOLVED — empirically re-verified live on this exact host**:
+   `lscpu -p=core | grep -vc '^#'` = 16 (logical), unique core ids = 8 (physical), `nproc` = 16 — confirms the governor
+   doc's claim (code counts logical, K is currently 4 not 2) and refutes the audit doc's (physical-core assumption). The
+   underlying CODE bug is already correctly tracked as an open todo in `qg_host_adaptive_resource_governor...` (line
+   ~420, NEW FINDING 2026-08-09, names the existing `_qg_physical_cores()` fix) — nothing further needed there.
+   **FIXED**: corrected the stale claim (2 locations) in
+   `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`.
 
 ## Doc-drift
 
-Batch 1's codex checks came back clean (4 codex docs spot-checked, no drift). Batch 4 found one real item — see Codex
-corrections below. Batches 2/5/6 still arriving.
-
-- **`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:related`** doesn't list
+- **`self_hosted_runner_public_repo_revert_2026_08_05.md:related`** didn't list
   `github_actions_operator_gated_followups_2026_07_17.md` even though named directly in that doc's own "Why this plan
-  exists" prose (batch 4, P3, mechanical). Not yet fixed as of this checkpoint.
-- **`shared_ci_workflow_repo_extraction_2026_08_06.md` todo 3's premise is false** (batch 4, P3): its cited
+  exists" prose (batch 4, P3, mechanical — note: my own first pass mis-attributed this finding to the WRONG file,
+  `fleet_workflow_template_dedup...`; caught on self-review before applying). **FIXED**: added the cross-reference.
+- **`shared_ci_workflow_repo_extraction_2026_08_06.md` todo 3's premise was false** (batch 4, P3): its cited
   "UNCONFIRMED" propagation-mechanism gap was already resolved the PREVIOUS DAY in
   `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 1 (DONE 2026-08-05) — `rollout-workflow-templates.sh`
-  byte-copies via a directory glob (confirmed at line 410), no per-file registration needed. Batch 4 independently
-  triple-confirmed (script read, file-existence-since-2026-06-27, sibling doc's already-resolved todo 1). Recommend
-  closing todo 3 as moot, not doing the work. Not yet fixed as of this checkpoint.
+  byte-copies via a directory glob (independently re-verified at line 410), no per-file registration needed; the file
+  has existed at that path since `168aa509e5` (2026-06-27). **FIXED**: closed todo 3 as moot.
 - **`github_actions_operator_gated_followups_2026_07_17.md`'s Phase-7 "fully shipped" checkbox lacks a forward-pointer**
   (batch 4, P3) to the later, much larger `self_hosted_runner_public_repo_revert_2026_08_05.md` (17-18 of the same
-  fanned-out repos reverted back to `ubuntu-latest` for public-repo billing/visibility reasons) — doc 1 only records an
-  unrelated single-repo caveat (deployment-ui/host-contention). Not currently misleading in a P0/P1 sense (both docs are
-  individually accurate for their own dates), but worth a pointer. Not yet fixed as of this checkpoint.
+  fanned-out repos reverted back to `ubuntu-latest` for public-repo billing/visibility reasons). Not currently
+  misleading in a P0/P1 sense (both docs are individually accurate for their own dates). **NOT FIXED**: doc is at
+  exactly 1000L (the hard cap, zero headroom) — any net-positive-line addition breaches it. Did fix one unrelated
+  corrupted-whitespace artifact in the same doc (net 0 lines). Routed to the operator (see Filed) alongside the other 2
+  line-cap-blocked docs.
+- **`monitoring_control_plane_master_2026_06_10.md` `parent_epic: observability_master`** — a corpus-wide keyword
+  heuristic flagged a mismatch (top match `infrastructure_master`) at run start. Batch 5 independently re-verified: the
+  doc's own body (lines 71-74) records an explicit, dated, first-party operator decision ("Parenting — SPLIT: CI
+  dashboard + this master under `observability_master`; fleet git-health under `orchestrator_master`") that directly
+  outranks the heuristic — matches the prior 2026-08-06 reconciliation run's conclusion. **CONFIRMED CORRECT, no fix
+  needed.**
+- **`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`** claimed (as a `[x]`-closed P1 todo) a fix
+  (`self_hosted_runner_labels` added to PM's own `quality-gates-v2.yml`) that was directly reverted 2 days later by an
+  unrelated change (PM went public, free `ubuntu-latest` became available). Independently re-verified live:
+  `.github/workflows/quality-gates-v2.yml:58` currently reads `self_hosted_runner_labels: ""`; the reverting commit is
+  `unified-trading-pm@c8cd56251e` (2026-08-07). **FIXED**: annotated the claim as superseded, corrected the doc's own
+  "Expected impact" misattribution.
+- **`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`'s 2026-08-09 na-eligibility-audit entry** cited
+  a stale rationale ("still parked as Deferred E8, unruled") — E8 was actually ruled the DAY BEFORE (2026-08-08, todo 5,
+  `[x]` DONE). Independently re-verified: todo 6 (`[SCRIPT] P2`, NEW 2026-08-08, implement the ruling) is the doc's
+  genuinely-still-open item and gives the same KEEP-NA verdict a valid basis. **FIXED**: corrected the cited rationale
+  without disputing the verdict itself (outside this skill's remit — verdict correctness is `/na-eligibility-audit`'s
+  call).
+- **`post_cutover_silent_assumption_sweep_2026_07_23.md`'s `## Docs (P2)` section** described
+  `/codex/08-workflows/ci-cd-flow.md`'s branch-model narrative as still stale — but the SAME doc's own
+  resolution-checklist item (`[DOC] P2`, DONE 2026-07-26, `unified-trading-pm@97970974e`) says it was already fixed.
+  Independently re-verified live: the codex doc's branch-model section now correctly describes the LDR→main model and
+  carries a "Staging re-entry procedure" section. **FIXED**: struck the stale section, pointed to the resolution item.
 
 ## Codex corrections applied (mechanical, evidence-cited)
 
-- **`/codex/08-workflows/ci-cd-flow.md:1258-1262`** claims `staging-lock-check.yml` is "still full content —
-  deliberately NOT yet converted, see todo 11 in `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`" —
-  but that todo 11 is `[x]` **DONE 2026-08-08** (all 24 repos converted, template source deleted). Independently
-  re-verified via `ls scripts/workflow-templates/`: `staging-lock-check.yml` is genuinely absent (only
-  `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` remain, matching the plan's own
-  dry-run-verified claim). Qualifies for the mechanical codex-staleness auto-apply carve-out (STEP 5.f2): HARD evidence
-  (live filesystem + a verified-DONE todo), single unambiguous substitution, no HARD-STOP governance area touched, no
-  new measurement needed. **Not yet applied as of this checkpoint** — queued for the consolidated STEP 5 pass once all
-  hunter batches land, so the codex edit and its citation land together.
+- **`/codex/03-observability/monitoring-control-plane.md`** described deployment-ui's `/fleet` "Fleet Git landing tab"
+  as the live single-pane surface — that tab is DELETED (2026-07-27,
+  `/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`), per a `🟡 PARTIALLY SUPERSEDED` banner in the
+  citing plan's own body (`monitoring_control_plane_master_2026_06_10.md`) plus its Progress Log naming the
+  correctly-updated sibling codex doc (`deployment-observability.md`) — this doc was simply missed at the time.
+  **FIXED**: corrected the paragraph, stamped `last_reviewed: 2026-08-10` (was empty).
+- **`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`** documented 2 of the corpus's 3 shipped
+  line-cap carve-outs (RULED 2026-07-30, RULED 2026-08-02) but not the 3rd (RULED 2026-08-09, bounded same-line
+  link-repoint on an over-cap doc) — independently re-verified the shipped fix (`unified-trading-pm@d765b4cfb1`,
+  `check_line_caps.sh`) and its citing issue doc
+  (`plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`) before writing. **FIXED**: added the 3rd
+  carve-out section, matching the existing 2 in style and evidence density.
+- **`/codex/08-workflows/ci-cd-flow.md:1258-1262`** — same stale `staging-lock-check.yml` claim I found independently
+  (batch 4): "still full content — deliberately NOT yet converted" vs. todo 11 (`[x]` DONE 2026-08-08, all 24 repos
+  converted). **SUPERSEDED, not applied by me**: a concurrent infra-tranche plan_reconciler run (`agt-716973`, slot-6)
+  independently found and fixed the identical staleness first (`unified-trading-pm@16c5f227d3`, landed while I was
+  mid-verification). My redundant edit produced a `git stash pop` conflict (2 files, `ci-cd-flow.md` +
+  `shared_ci_workflow_repo_extraction_2026_08_06.md`) when reconciling against their concurrent push — resolved by
+  discarding my version of this one correction (theirs is equivalent and already live) and re-applying my other,
+  non-overlapping edits cleanly on top of their content. No content lost; verified 0 conflict markers / clean diff
+  before the final commit.
 
 ## Hygiene fixes
 
@@ -136,6 +188,11 @@ corrections below. Batches 2/5/6 still arriving.
 2. `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` had 2 of 3 `related:` entries missing the
    leading-slash repo-root-relative convention — confirmed both targets exist at their stated paths (not dangling, pure
    format). Added leading slashes to both.
+3. `monitoring_control_plane_master_2026_06_10.md` (batch 5) had 3 corrupted/missing-slash path references: a `related:`
+   entry and a body-prose citation both missing the leading slash on
+   `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`; a body citation with embedded mid-filename whitespace
+   corruption pointing at `consolidator_throughput_backlog_monitor_2026_07_09.md` — target verified to exist at the
+   clean path. All 3 fixed.
 
 Corpus-wide `run_hygiene_sweep.sh --ci` hard failures at run start (3): `prettier proseWrap continuation-padding`
 (ratchet), `Reference path convention` (ratchet), `assigned_vm:NA corpus size` (ratchet). Per 2026-08-09's precedent,
@@ -150,7 +207,43 @@ scope note). No ci-tranche hygiene action needed from the Phase-0 corpus-wide ch
 
 ## Filed
 
-(pending)
+Routed to the operator via `POST /api/slots/2/blocked` (`blocked_id: BLK-6b80187a`, batched Q1-Q4 + 1 FYI note per
+SUB_AGENT_MANDATORY_RULES escalation format, options + `[WORKER REC]` marked). Every item below is durably tracked here
+too, per Phase-5.9(a)'s routed==parked reconciliation (8 routed, 8 parked — balanced):
+
+- [ ] [DOC] P1. **`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` is 1004L, OVER the 1000L hard
+      cap** (confirmed via `check_line_caps.sh` directly — the periodic sweep misses this doc because it globs
+      `plans/active/*.md` but not `plans/active/issues/*.md`, per hunter batch 2). Needs a split (`continued4`) or an
+      explicit ruling that the sweep gap is acceptable. Part of blocked-question Q1.
+- [ ] [DOC] P1. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is 998L**, 2 lines of headroom,
+      already breached its cap twice before (per its own Progress Log) — blocks even a small stale-content correction
+      (the "6 protected repos" fix above, see Contradictions #3) from landing safely. Needs a split/extraction pass.
+      Part of blocked-question Q1.
+- [ ] [DOC] P1. **`github_actions_operator_gated_followups_2026_07_17.md` is exactly 1000L**, zero headroom — blocks the
+      forward-pointer fix above (see Doc-drift) from landing safely. Needs a split/extraction pass. Part of
+      blocked-question Q1.
+- [ ] [DOC] P2. **`credential_ask_orphan_checker_ping_format_stale_2026_07_27.md` is `assigned_vm: planning` but its
+      sole open todo fails the dispatch-scope-eligibility bounded-outcome test** (it's an open design/naming decision —
+      "consider whether an IAM-permission gap should get a distinct marker" — not a worker-checkable fact; hunter batch
+      2). Needs the design question resolved (then rewrite the todo) or reclassification to `assigned_vm: NA`.
+      Blocked-question Q2.
+- [ ] [DOC] P2. **`ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "5→3 glue" sizing rationale may be moot** now
+      that PM carries zero self-hosted load (the fix it was sized against was reverted, see Doc-drift) — hunter batch 5
+      flagged this as needing arithmetic across 2 docs, not independently re-verified this run. Blocked- question Q3.
+- [ ] [DOC] P3. **AWS Cost Explorer $ quantification item (`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`)
+      has been "extraction-ready" since 2026-08-01 (9 days), promised for batch-7, never landed through batch-12**
+      (hunter batch 1, fresh-grepped every batch7-12/finalize doc, 0 matches). Needs extraction into the next ci-tranche
+      AO-dispatch batch. Blocked-question Q4.
+- [ ] [DOC] P3. **`plan_reconciler_findings_ci_2026_08_09.md` (yesterday's predecessor run) is still
+      `locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z`** — only 2 commits ever landed, several
+      sections left `(pending)`, consistent with the "reaped-stale mid-flight" failure mode. A dead session's lock,
+      never auto-unlocked per HARD LIMITS. FYI note in blocked-question (not a ruling — the answer is unambiguous, just
+      gated on unlock authority).
+- [ ] [DOC] P3. **`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`'s sole open todo has a definition-of-done
+      gap** (hunter batch 6): "run clean across a full fleet PR cycle" doesn't say whether the doc's own recorded 49
+      pre-existing bats failures are in-scope, or define a threshold for "a full fleet PR cycle." Needs scoping before
+      AO dispatch proceeds cleanly. Not separately escalated via blocked-question (lower stakes, bundled here for the
+      record per Phase-5.9(b) — every skip/defer gets enumerated, not just a bare count).
 
 ## Archive candidates (operator review)
 
@@ -219,11 +312,37 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md
 - plans/active/ui_build_warm_cache_2026_06_17.md
 
-(hunters/batches to be filled in as STEP 3 runs)
+**6 parallel read-only hunter sub-agents** (sonnet, `SUB_AGENT_MANDATORY_RULES.md` pasted in full at each spawn),
+covering all 30 of the 32 writable docs not already fully read directly by me
+(`plan_reconciler_findings_ci_2026_08_09.md`
+
+- `plan_reconciler_ci_late_findings_2026_08_06.md` — my own predecessor-continuity docs, see Scope):
+
+1. QG capacity/VM contention cluster (5 docs) — 4 contradiction candidates, 1 hedge-pointer (9-days-overdue extraction),
+   1 mechanical (998L near-cap)
+2. pytest-timeout flaky-under-contention series (4 docs) — 0 contradictions, 1 line-cap HARD violation (1004L), 1
+   AO-dispatch-readiness failure (task briefing itself was wrong about which doc was AO-dispatched — hunter
+   self-corrected and checked the right one)
+3. quickmerge/mtds-deployment-env-race cluster (5 docs) — 1 self-contradiction, 2 mechanical ref-path issues, 1
+   locked-placeholder corroboration; verified 3 commit shas
+4. self-hosted-runner/workflow-template/gh-actions infra (5 docs) — 2 contradiction candidates, 1 real codex-drift
+   (staging-lock-check.yml), 1 mechanical cross-ref gap; spot-checked a sibling codex doc unprompted, found it clean
+5. monitoring/pipeline-redesign/breaking-change/codebuild (4 docs) — 3 contradiction candidates (1 confirmed P1 fix, 1
+   needs further arithmetic, 1 resolved as parent_epic-correct), 1 real codex-drift, 3 mechanical ref-path issues; ran
+   the AO-dispatch-readiness check on both docs that needed it
+6. misc small ci-tranche docs (7 docs) — 1 flip candidate (HARD evidence), 1 contradiction (duplicate-of-archived), 2
+   codex-alignment findings (1 real gap, 1 stale-prose), 1 AO-dispatch-readiness gap, content-sanity-checked
+   `ui_build_warm_cache` per my own pre-verified claim
+
+**~1.29M hunter tokens, 144 tool calls, ~44 min total wall-clock** (parallel; slowest batch 6 at ~9min). Every candidate
+independently re-verified by me before any apply (live file reads, `git log`, an empirical on-host `lscpu` measurement,
+filesystem existence checks) — none taken on a hunter's word alone.
 
 ## Plans not reached
 
-(pending)
+None — all 32 writable docs were covered (30 via the 6 hunter batches, 2 read directly by me). The 25 grace-window docs
+were read only as cross-reference context where a writable doc cited them, per the grace-window contract (never
+written).
 
 ## Progress Log
 
@@ -233,3 +352,23 @@ Writable set (32 docs, outside 12h grace):
   `build_health_digest.sh`/`extract_plan_skeleton.sh` kicked off in background — host is heavily contended (multiple
   sibling slots running concurrent hygiene sweeps at the same time, matching yesterday's run's observation). Computed
   ci-tranche population via YAML-safe frontmatter parse: 57 docs, 25 grace / 32 writable.
+- **2026-08-10 ~05:35 UTC** — Dispatched 6 parallel hunter batches over the 30-doc writable set (2 docs already read
+  directly). Investigated the `locked_by: live-defi-rollout` anomaly independently while waiting — found a sibling
+  ui-tranche run had already root-caused it as a corpus-wide placeholder-lock data bug the same day; corroborated with 3
+  ci-tranche instances rather than re-filing a duplicate.
+- **2026-08-10 ~05:45-06:15 UTC** — All 6 hunter batches returned. Verified + applied the mechanical/HARD-evidence
+  findings inline as each batch landed (pipelined, not batched-at-the-end): 1 checkbox flip, 4 self-contradictions
+  fixed, 2 codex corrections applied, 5 mechanical ref-path/format fixes, 1 physical-vs-logical-core disagreement
+  settled via a live empirical `lscpu` measurement on this exact host.
+- **2026-08-10 ~06:16 UTC** — Hit a genuine cross-tranche collision: a concurrent infra-tranche plan_reconciler run
+  (`agt-716973`) independently fixed the identical `staging-lock-check.yml` codex staleness I'd found, landing first. My
+  `git pull --rebase --autostash` produced real conflict markers (not a clean auto-merge) across 2 files when
+  reconciling. Resolved conservatively: discarded my redundant `ci-cd-flow.md` edit (theirs is equivalent, already live,
+  verified), reconstructed `shared_ci_workflow_repo_extraction_2026_08_06.md` from clean origin + reapplied my own
+  non-overlapping edits, re-verified 0 conflict markers / clean line-caps / clean ref-paths on all 12 files before the
+  final commit. No content lost on either side.
+- **2026-08-10 ~06:25 UTC** — Committed + pushed the 12-file reconciliation batch (`unified-trading-pm@f1d2dd3e51`),
+  synced 0-ahead. Filed the 8 genuinely operator-gated findings (3 line-cap-blocked docs, 1 AO-dispatch-scope violation,
+  1 needs-more-arithmetic contradiction, 1 overdue extraction, 1 stale dead-session lock, 1 definition-of-done gap) as a
+  batched blocked-question (`BLK-6b80187a`, Q1-Q4 + FYI, options + `[WORKER REC]` marked) — `can_continue: true`.
+  Routed==parked reconciled at 8==8 (Phase-5.9(a)).
