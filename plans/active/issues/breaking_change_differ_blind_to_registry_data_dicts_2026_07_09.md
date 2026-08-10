@@ -37,7 +37,7 @@ related:
     /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/integration-testing-layers.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-09
 author: unknown

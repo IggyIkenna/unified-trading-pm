@@ -19,7 +19,7 @@ related:
     /plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-10
 parent_epic: observability_master

@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
@@ -51,20 +51,20 @@ failure (75 orphans vs 69 baseline).
 
 - [x] [DOC] P0. ✅ **Already resolved by 2026-08-09 (round-9 sweep verification)** — Link
       `monitoring_control_plane_master_2026_06_10.md` to its closeout family. Confirmed: `related:` now cites
-      `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md` (0-hop, satisfies the ≤3-hop linkage gate). Also
-      has 6 dangling `plans/active/` refs to archived targets (P1 finding below).
+      `/plans/active/ci_consolidated_closeout_2026_07_25.md` (0-hop, satisfies the ≤3-hop linkage gate). Also has 6
+      dangling `plans/active/` refs to archived targets (P1 finding below).
 - [x] [DOC] P0. ✅ **Already resolved by 2026-08-09 (round-9 sweep verification)** — Link
       `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` to its closeout family. Confirmed: `related:` cites
-      `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`.
+      `/plans/active/ci_consolidated_closeout_2026_07_25.md`.
 - [x] [DOC] P0. ✅ **Already resolved by 2026-08-09 (round-9 sweep verification)** — Link
       `quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md` to its closeout family. Confirmed:
-      `related:` cites `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`.
+      `related:` cites `/plans/active/ci_consolidated_closeout_2026_07_25.md`.
 - [x] [DOC] P0. ✅ **Already resolved by 2026-08-09 (round-9 sweep verification)** — Link
       `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` to its closeout family. Confirmed: `related:`
-      cites `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`.
+      cites `/plans/active/ci_consolidated_closeout_2026_07_25.md`.
 - [x] [DOC] P0. ✅ **Already resolved by 2026-08-09 (round-9 sweep verification)** — Link
       `deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md` to its closeout family. Confirmed:
-      `related:` cites `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`.
+      `related:` cites `/plans/active/ci_consolidated_closeout_2026_07_25.md`.
 - [x] [DOC] P0. ✅ **Already resolved (superseded)** — Link `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`
       to its closeout family. That doc is now `assigned_vm: planning` (self-dispatched, per
       `ag_closeout_audit_ci_parked_2026_08_09.md`'s "state change" note) and its own body already discusses the
@@ -154,9 +154,9 @@ failure (75 orphans vs 69 baseline).
     untouched.
 - **2026-08-09, round-9 combined RECLASSIFY + satellite-extraction sweep (`ci` tranche)**: re-verified all 9 remaining
   findings against live corpus state. **8 of 14 total todos closed**: 6 P0 closeout-linkage findings confirmed already
-  resolved (all 6 target docs' `related:` now cite `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`) + 1
-  P1 (review_role routing, stale-on-arrival) + 2 P2 (1 moot target-never-existed, 1 moot self-dispatched-supersede) + 1
-  P3 (cloudbuild already archived). **3 genuinely-still-open, bounded items extracted across TWO batches** (split by
+  resolved (all 6 target docs' `related:` now cite `/plans/active/ci_consolidated_closeout_2026_07_25.md`) + 1 P1
+  (review_role routing, stale-on-arrival) + 2 P2 (1 moot target-never-existed, 1 moot self-dispatched-supersede) + 1 P3
+  (cloudbuild already archived). **3 genuinely-still-open, bounded items extracted across TWO batches** (split by
   `parent_epic`, per the batch7/batch8 grouping precedent): `ci_satellite_ao_dispatch_batch9_2026_08_09.md`
   (`parent_epic: infrastructure_master`, todos 1-2: repoint 4 dangling refs in
   `qg_host_adaptive_resource_governor_2026_07_14.md`, fix stale `status: active` in

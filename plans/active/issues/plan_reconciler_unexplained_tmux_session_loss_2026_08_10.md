@@ -53,7 +53,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.48
 assigned_role: backend_engineer
-effort: medium
+archive_exempt: true # 0-open-todos 2026-08-10: investigation complete (root cause undetermined), doc serves as incident record + regression-watch; no further actionable todos
 drift_direction: advance-code
 resolved_by:
 locked_by:

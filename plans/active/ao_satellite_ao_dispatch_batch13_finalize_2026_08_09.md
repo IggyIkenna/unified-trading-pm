@@ -91,10 +91,10 @@ source: >-
       INDEX.md, parked issue `related:`, inventory dashboard, finalize plan's own `related:`/`context_scope:`), `git mv`
       to `plans/archive/2026_08/`. No deferred items to migrate; no new codex contracts. Repo: unified-trading-pm.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
-      corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
-      inventory generator. **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly,
-      and `check_finalize_plan_coverage.py` no longer names this pair.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md`, move to `plans/archive/2026_08/`, fix
+      every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the
+      active-plan inventory generator. **Done when**: the batch plan is archived with a banner, the inventory
+      regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names this pair.
 
 ## Codex SSOTs
 

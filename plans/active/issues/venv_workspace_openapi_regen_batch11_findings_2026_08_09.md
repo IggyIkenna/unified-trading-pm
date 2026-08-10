@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 author: infra worker (slot-10)

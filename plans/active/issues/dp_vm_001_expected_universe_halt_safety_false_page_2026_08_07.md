@@ -229,7 +229,7 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   direct instruction falls into the "general recurring notice" bucket, which has no ack path short of a 30x redelivery
   cap. Confirmed this is not unique to this instruction — 15 distinct "Direct instruction from main" campaigns are
   currently unanswered fleet-wide (18 rows, 12 slots). Full detail + recommended fix now lives in
-  `/plans/active/issues/ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md` (updated this
+  `/plans/archive/issues/ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md` (updated this
   session, its own Todo 1 flipped `[x]` with evidence). Nothing further to add here — this doc's own finding remains
   fully closed; future redeliveries of this same stale text should be resolved by the OTHER doc's fix, not by another
   re-verification pass here.

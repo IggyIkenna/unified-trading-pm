@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

@@ -20,7 +20,7 @@ related:
     /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-14"
 last_updated: 2026-08-03

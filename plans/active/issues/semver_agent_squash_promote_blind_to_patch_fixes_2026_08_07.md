@@ -50,7 +50,7 @@ related:
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/archive/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
 parent_epic: infrastructure_master

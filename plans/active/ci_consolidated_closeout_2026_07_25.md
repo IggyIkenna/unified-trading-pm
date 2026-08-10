@@ -7,12 +7,11 @@ summary: >-
   machinery, and build/test tooling flakes. Authored 2026-07-25 from a corpus-wide classification pass (33 docs) — part
   of making the AG↔topic partition (5 AGs + cross-cutting + ao + ci + infra) total across the whole plans/issues corpus,
   per operator request.
-# REVIVED 2026-08-10 per operator ruling BLK-9a03622c option A — re-opened as coordinator for
-# self_hosted_runner_public_repo_revert_2026_08_05.md + shared_ci_workflow_repo_extraction_2026_08_06.md
-# (dual-tagged [ci, infrastructure] P1 plans). archive_exempt: this doc carries zero checkbox todos BY DESIGN
-# (a reachability digest only, per its own todo), so it would otherwise be a permanent 0-open archive candidate.
-status: active
-archive_exempt: true
+status:
+  active # REVIVED 2026-08-10 per operator ruling BLK-9a03622c option A — re-opened to cover
+  # self_hosted_runner_public_repo_revert_2026_08_05.md + shared_ci_workflow_repo_extraction_2026_08_06.md
+  # (dual-tagged [ci, infrastructure] P1 plans with no consolidated-closeout coordinator since this doc was
+  # archived 2026-07-28)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,7 +37,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
 assigned_role: cicd
-effort: medium
+archive_exempt: true # 0-open-todos 2026-08-10: REVIVED per operator ruling BLK-9a03622c option A — active work covering self_hosted_runner_public_repo_revert + shared_ci_workflow_repo_extraction
 drift_direction: none
 locked_by:
 locked_since:
