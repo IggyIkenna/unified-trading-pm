@@ -346,25 +346,25 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       · no MIGRATE. **REDIRECT half SHIPPED** (`market-data-processing-service@0e9656c`, verified ancestor of
       `origin/live-defi-rollout` 2026-08-06) — DELETE/FIX-STALE halves not independently re-verified this pass;
       Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
-- [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
-      **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry HOLDS,
-      ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals env-tiered
-      `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the operator-hold-PERMITTED
-      residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
+- [x] ✅ [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`,
+      `codex/02-venues`. **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry
+      HOLDS, ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals
+      env-tiered `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the
+      operator-hold-PERMITTED residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
       `../../unified-trading-pm/codex/` (`06-coding-standards/integration-testing-layers.md` in `docs/TESTING.md`;
       `08-workflows/t1-batch-dag.md` in `docs/GCS_PATHS.md` — both VERIFIED-EXIST) + 1 dangling deploy-spec ref (dead
       `docs/SHARDING_GUIDE.md`+`docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` → live `docs/DEPLOYMENT_GUIDE.md`, in
       `docs/`+`specs/BACKTEST_DEPLOYMENT.md`) — **execution-service@`0c6a93e1`** (QG-green sentinel c4fbb495).
       Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps).
       **REDIRECT half ✅ SHIPPED** (`GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`,
-      `execution-service@2a59ca09`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE
-      half not shipped** (RE-VERIFIED 2026-08-10 by plan_reconciler infra shard, agt-716973: all 3 files still live on
-      disk): DELETE `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3
-      residual `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
-      `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`). no MIGRATE
+      `execution-service@2a59ca09`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DELETE half ✅
+      SHIPPED 2026-08-10** (`execution-service@da81755e`, verified ancestor of `origin/live-defi-rollout`): deleted
+      `docs/UNIFIED_BATCH_LIVE_ARCHITECTURE.md`, `docs/CLEAN_ALGORITHM_INTERFACE_DESIGN.md`,
+      `docs/DEFI_INTEGRATION_TODO.md`, `specs/CLEAN_ALGORITHM_INTERFACE_DESIGN.md`, `specs/DEFI_INTEGRATION_TODO.md`
+      (docs/+specs/ duplicates confirmed byte-identical; no live repo-wide refs to any of the 3 filenames). no MIGRATE
       (codex/04-architecture already holds the execution-arch SSOTs; codex/02-venues exists w/
-      venue-registry-reference). Un-checked 2026-08-10 — see deployment-service item above for rationale. Phase-3/4 hold
-      itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
+      venue-registry-reference). Item now fully closed. Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
+      2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
       `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
       SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
