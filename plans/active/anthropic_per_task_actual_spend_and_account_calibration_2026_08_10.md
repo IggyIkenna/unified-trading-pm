@@ -126,14 +126,15 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
       count.
-- [ ] [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE session,
-      and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts per-task cost
-      independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the transcript-derived one
-      for 4 of 5 accounts, despite being a strict subset of the same turns. Decide and implement one attribution rule
-      (proposed: a turn belongs to exactly one task — the task whose window contains it, earliest-assigned wins on
-      overlap) in `deepseek_usage.build_task_usage_snapshot` and the `/done` capture path. **Done when**: a regression
-      test with two overlapping task windows on one slot proves each turn is counted once, and re-running the
-      calibration shows method (A) no longer exceeding method (B).
+- [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
+      session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
+      per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
+      transcript-derived one for 4 of 5 accounts, despite being a strict subset of the same turns. Decide and implement
+      one attribution rule (proposed: a turn belongs to exactly one task — the task whose window contains it,
+      earliest-assigned wins on overlap) in `deepseek_usage.build_task_usage_snapshot` and the `/done` capture path.
+      **Done when**: a regression test with two overlapping task windows on one slot proves each turn is counted once,
+      and re-running the calibration shows method (A) no longer exceeding method (B). — agent-orchestrator@382e278 + QG
+      green; regression test proves each turn counted once (partition_task_usage + /done + backfill wiring).
 - [ ] [REVIEW] P0. **Quantify the double-count blast radius on the live DB before repricing anything — report how many
       existing `task_usage` rows overlap another row on the same slot, and the token volume involved.** Read-only via
       `scripts/orchestrator/query-ao-state-db-readonly.sh`. This decides whether historical rows can be repriced in
