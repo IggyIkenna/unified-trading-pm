@@ -23,7 +23,7 @@ summary: >-
   remaining judgment call." Combined into ONE sequential todo (same two files: `deployment-api`'s costs route +
   `deployment-ui`'s `CostObservability.tsx`) per CLAUDE.md's same-file concurrency rule — a deliberately small second
   batch, not an exhaustive one.
-status: active
+status: superseded
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -35,14 +35,14 @@ related:
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md,
-    /plans/active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md,
+    /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md,
     /plans/active/issues/cost_observability_deferred_followups_2026_07_10.md,
     /plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-10" # archived per plan-completion-and-archival-discipline.md
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -58,14 +58,14 @@ locked_since:
 context_scope:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
-    /plans/active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md,
+    /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md,
     /plans/active/issues/cost_observability_deferred_followups_2026_07_10.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/05-infrastructure/billing-cost-observability.md,
   ]
 supersedes:
-superseded_by:
+superseded_by: ui_satellite_ao_dispatch_batch2_finalize_2026_08_08
 depends_on: []
 source: >-
   `/ag-closeout-audit ui` run 2026-08-08 (Autonomous/AO-dispatched mode, dispatch agt-a0f1b7, tranche-sharded per the
@@ -77,11 +77,16 @@ source: >-
 
 # UI satellite docs — AO dispatch batch 2
 
-> **`status: active` — operator-approved 2026-08-08, ingested/dispatched.** Drafted autonomously 2026-08-08 by the
-> scheduled `ag_closeout_auditor` role; a fresh conflict-check re-verified the original Phase 3 clearance still held
-> before dispatch — see `## Operator approval gate` at the bottom for what approving this batch meant, and the Progress
-> Log for the re-check. **Independent of batch 1** (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, flipped `active` in
-> the same operator-approval pass) — the two batches' todos touch disjoint files, no collision.
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** The sole todo (ship the 4 combined cost-observability P3 enhancements) shipped
+> 2026-08-10 (`deployment-api@6a536a82d` + `deployment-ui@b7beaf33b`); all 4 source-doc checkboxes flipped + verified
+> ancestors of `origin/live-defi-rollout`. Archived via the standard 6-step ritual alongside the paired finalize plan —
+> see `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md`. Successor: the finalize plan.
+
+> **`status: active` (historical) — operator-approved 2026-08-08, ingested/dispatched.** Drafted autonomously 2026-08-08
+> by the scheduled `ag_closeout_auditor` role; a fresh conflict-check re-verified the original Phase 3 clearance still
+> held before dispatch — see `## Operator approval gate` at the bottom for what approving this batch meant, and the
+> Progress Log for the re-check. **Independent of batch 1** (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`, flipped
+> `active` in the same operator-approval pass) — the two batches' todos touch disjoint files, no collision.
 
 ## Why this plan exists (the coverage gap, measured)
 
@@ -232,3 +237,11 @@ for why Deferred item 1 was NOT drafted) · `/codex/11-project-management/ao-dis
   batch's drafting. `locked_by` unset. Batch 1 (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`) approved in the same
   pass — confirmed disjoint target files, no collision. Dispatching.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **slot-16 (ui_developer) 2026-08-10 — ARCHIVED.** Sole todo shipped 2026-08-10 (slot-32): `deployment-api@6a536a82d` +
+  `deployment-ui@b7beaf33b`, both verified ancestors of `origin/live-defi-rollout`; the 4 source-doc P3 checkboxes in
+  `cost_observability_deferred_followups_2026_07_10.md` were flipped citing those SHAs by the finalize plan's todo 1
+  (slot-33). Archived per the standard 6-step ritual (plan-completion-and-archival-discipline.md) alongside the paired
+  finalize plan. The `## Deferred` item (business-context-enrichment, STILL-BLOCKED) was NOT lost — it is tracked as a
+  documented cross-reference on `ui_consolidated_closeout_2026_07_30.md`'s Track 3 close-out criterion, and lives on in
+  `cost_observability_deferred_followups_2026_07_10.md` item 1 +
+  `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s standing follow-up todo.

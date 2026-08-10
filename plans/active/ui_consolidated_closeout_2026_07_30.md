@@ -177,6 +177,14 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       health-alert gate gets an independent poll schedule.
 - [ ] [REVIEW] P1. Track 3 close-out: `/artifacts` real API+UI wiring ships; Consolidators v2 histogram lands or stays a
       documented descope; Cost Observability deferred followups triaged; alerts N+1 read pattern fixed at root.
+      **Deferred-item cross-reference (added 2026-08-10, batch2 archival):** the still-open business-context-enrichment
+      item from `cost_observability_deferred_followups_2026_07_10.md` item 1 (asset_group launcher labeling + AWS
+      cost-allocation tags) remains STILL-BLOCKED (not a bounded batch todo) and is NOT covered by any active satellite
+      batch. It is tracked as an open `- [ ]` in the source doc + as the standing follow-up todo in
+      `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`; per the batch-2 Deferred analysis it should
+      piggyback on the infra-tranche's `lc_gcloud_create` migration, not fork a parallel effort. A future ui-tranche
+      audit must re-measure the infra migration's progress before re-assessing bounded-ness (see
+      `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md`).
 - [ ] [REVIEW] P1. Track 4 close-out: nav-surface operator decisions made; smoke-gate failures fixed with `pw:L2 ✓`
       evidence; mock/live parity restored on all 12 drifted endpoints; SIGABRT crash-loop root-caused.
 - [ ] [REVIEW] P2. **Corpus-wide `ui` retag audit still owed** — this session's 17-doc retag was a bounded discovery
@@ -296,15 +304,15 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   normal batch candidate," but a dedicated scoping check found the enrichment item is NOT safely bounded as one AO todo
   (176 VM launcher scripts, only ~9 through the shared label-injection choke point, a directly-analogous 2026-08-06
   operator ruling on a sibling infra-tranche issue already declined to treat a near-identical file count as one todo) —
-  deferred with full evidence rather than drafted blind. Drafted `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (1
-  conflict-cleared todo: the source doc's other 4 "unscheduled P3" items, combined per the same-file concurrency rule) +
-  gated finalize — pending operator approval, independent of batch1. Also found:
-  `artifact_pipeline_observability_2026_07_17.md` carries an 11th genuinely-open item (a prose-only "Still open"
-  sentence trailing an `[x]`-checked parent bullet, line 683) that 2 prior audit passes and the doc's own
-  na-eligibility-audit pass all missed — not fixed here (outside this skill's write-scope for a non-covering candidate
-  doc), flagged for na-eligibility-audit's next pass. **Batch1 is still `status: draft`, unapproved, 3 audit runs
-  (08-06/07/08) without operator action** — remains the top recommendation. Full write-up:
-  `issues/ag_closeout_audit_ui_parked_2026_08_08.md`.
+  deferred with full evidence rather than drafted blind. Drafted
+  `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md` (1 conflict-cleared todo: the source doc's
+  other 4 "unscheduled P3" items, combined per the same-file concurrency rule) + gated finalize — pending operator
+  approval, independent of batch1. Also found: `artifact_pipeline_observability_2026_07_17.md` carries an 11th
+  genuinely-open item (a prose-only "Still open" sentence trailing an `[x]`-checked parent bullet, line 683) that 2
+  prior audit passes and the doc's own na-eligibility-audit pass all missed — not fixed here (outside this skill's
+  write-scope for a non-covering candidate doc), flagged for na-eligibility-audit's next pass. **Batch1 is still
+  `status: draft`, unapproved, 3 audit runs (08-06/07/08) without operator action** — remains the top recommendation.
+  Full write-up: `issues/ag_closeout_audit_ui_parked_2026_08_08.md`.
 - **na-eligibility-audit 2026-08-08 (ui tranche)**: KEEP-NA, valid — re-confirmed; only change since the 2026-08-07
   marker is today's `ag_closeout_auditor` Progress Log entry (informational, no todo-content edit). Todos 1-4 remain
   self-declared verification-only rollups against work tracked elsewhere. Todo 5 (corpus-wide retag) still needs genuine

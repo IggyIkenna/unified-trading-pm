@@ -146,19 +146,20 @@ context_scope:
   ~9 route through the one shared label-injection choke point, and a directly-analogous 2026-08-06 operator ruling on a
   sibling infra-tranche issue already declined to treat a near-identical file count as one todo — so the "batched, no
   remaining judgment call" premise from yesterday's marker was wrong on the enrichment half. The 4 unscheduled P3 items
-  ARE still cleanly bounded and are now covered by `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (drafted today via
-  the satellite-batch pathway, `status: draft`, pending operator approval) — the intended mechanism for extracting just
-  the actionable slice, per this skill's own "not the corpus's main unblock pathway" guidance, so a whole-doc RECLASSIFY
-  here would only dispatch a duplicate of what batch2 already covers once approved. Doc stays NA as a whole. No citation
-  fix yet (batch2 hasn't shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation
-  instead of leaving them open.
+  ARE still cleanly bounded and are now covered by
+  `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md` (drafted today via the satellite-batch pathway,
+  `status: draft`, pending operator approval) — the intended mechanism for extracting just the actionable slice, per
+  this skill's own "not the corpus's main unblock pathway" guidance, so a whole-doc RECLASSIFY here would only dispatch
+  a duplicate of what batch2 already covers once approved. Doc stays NA as a whole. No citation fix yet (batch2 hasn't
+  shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation instead of leaving them
+  open.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read this doc end to end (5 open items).
-  Stale-note correction: `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (which carries the 4 unscheduled P3 items as
-  its 1 combined todo) is no longer "pending operator approval" — its own Progress Log shows it was approved and flipped
-  `status: active` the same day it was drafted (2026-08-08). These 4 items are KEEP-NA-STALE (already-duplicated in an
-  active AO plan, not yet shipped) — batch2's own finalize plan
-  (`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md` todo 1) already owns flipping these 4 checkboxes with a
-  shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The business-context
-  enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176 launcher scripts, ~9
-  through the shared choke point) — no change. Doc stays NA as a whole.
+  Stale-note correction: `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md` (which carries the 4
+  unscheduled P3 items as its 1 combined todo) is no longer "pending operator approval" — its own Progress Log shows it
+  was approved and flipped `status: active` the same day it was drafted (2026-08-08). These 4 items are KEEP-NA-STALE
+  (already-duplicated in an active AO plan, not yet shipped) — batch2's own finalize plan
+  (`/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md` todo 1) already owns flipping these 4
+  checkboxes with a shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The
+  business-context enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176
+  launcher scripts, ~9 through the shared choke point) — no change. Doc stays NA as a whole.

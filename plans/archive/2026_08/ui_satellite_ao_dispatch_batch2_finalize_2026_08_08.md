@@ -10,7 +10,7 @@ summary: >-
   checkboxes, then re-checks batch 2's 1 `## Deferred` item (the business-context-enrichment scoping question) to see
   whether the infra-tranche launcher migration it depends on has progressed enough to reconsider. Only then does the
   standard archival ritual run on batch 2.
-status: active
+status: complete
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -19,13 +19,13 @@ scope: [engineer, admin]
 tags: [ui, ao-dispatch, close-out, batch-2, satellite-docs, archival, plan-hygiene]
 related:
   [
-    /plans/active/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
+    /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-10" # all 4 todos done, archived per plan-completion-and-archival-discipline.md
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -40,7 +40,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
+    /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/issue-doc-lifecycle.md,
     /codex/11-project-management/cross-reference-path-convention.md,
@@ -59,6 +59,11 @@ source: >-
 ---
 
 # UI satellite AO batch 2 — finalize
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 4 todos done. Todo 1 reconciled the source doc's 4 P3 checkboxes (already
+> flipped by slot-33); todo 2 re-checked the 1 Deferred item (STILL-BLOCKED — no batch-3 drafted); todo 3 re-measured
+> the ui orphan count (~10 of 16); todo 4 archived `ui_satellite_ao_dispatch_batch2_2026_08_08.md` via the standard
+> 6-step ritual alongside this finalize doc, in the same commit set. Successor: none (batch-3 was not warranted).
 
 > **`status: draft` in the parent batch does NOT apply here** — this finalize plan ships `active` from the start
 > (`task_template.md`'s no-double-gate rule: `gate_on_depends: true` already machine-holds every task below until the
@@ -113,19 +118,21 @@ source: >-
       audit) — this is a delta analysis from the known 2026-08-08 classification, not a de-novo 16-doc
       re-classification. Repo: unified-trading-pm.
 
-- [ ] [DOCS] P2. **Archive batch 2 per the 6-step ritual, and only then.** In order: (1) migrate the still-open Deferred
-      item out of batch 2 into a real home — a batch-3 plan if todo 2 above found it clearable, otherwise leave it as a
-      documented cross-reference on `ui_consolidated_closeout_2026_07_30.md`'s own retag/follow-up todo rather than
-      losing it; (2) add the archival banner + set `status: superseded` with `superseded_by:` pointing at batch-3 if one
-      was created; (3) run the codex-alignment check against `/codex/05-infrastructure/billing-cost-observability.md`;
-      (4) update CLAUDE.md/codex if the shipped todo established a new durable contract (unlikely for a 4-item
-      UI/backend feature bundle, but confirm rather than assume); (5) update every referrer's path corpus-wide — grep
-      for `ui_satellite_ao_dispatch_batch2_2026_08_08` and repoint each hit to the archived path, leading-slash
-      repo-root-relative form; (6) clear the lock (batch 2 has none, so this is a no-op — confirm rather than assume).
-      Then physically move it under `plans/archive/2026_08/`. **Done when**:
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows no
-      NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans. Repo:
-      unified-trading-pm.
+- [x] ✅ [DOCS] P2. **DONE 2026-08-10 (slot-16)** — **Archive batch 2 per the 6-step ritual, and only then.** All 6
+      steps executed: (1) the still-open Deferred item (business-context-enrichment, STILL-BLOCKED per todo 2) migrated
+      as a documented cross-reference on `ui_consolidated_closeout_2026_07_30.md`'s Track 3 close-out criterion (no
+      batch-3 created — todo 2 found it not clearable); (2) archival banner added + `status: superseded` +
+      `superseded_by: ui_satellite_ao_dispatch_batch2_finalize_2026_08_08`; (3) codex-alignment check run — updated
+      `/codex/05-infrastructure/billing-cost-observability.md` to document the new contract fields the shipped todo
+      established (`discount_rate_pct`, `cost_per_unit`/`usage_amount`/`usage_unit` on sku rows, month-aware AWS
+      provisional cutoff, "Other resources" leaf); (4) confirmed no CLAUDE.md change needed (the codex doc is the SSOT);
+      (5) repointed every active-corpus referrer's path to
+      `/plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md` (epic relative refs +
+      `plan_reconciler_findings_ui` related frontmatter); (6) confirmed batch 2 has no `locked_by` (no-op). Then
+      physically moved batch 2 under `plans/archive/2026_08/` via `git mv` (mode-1 combined flip+archival for this
+      finalize, sanctioned per `plan-completion-and-archival-discipline.md`). **Done when verified**:
+      `run_hygiene_sweep.sh --ci --no-regen` = 0 hard, `check_reference_paths.py` shows no NEW dangling ref above its
+      baseline, `regenerate_active_plan_inventory.py` = 0 orphans. Repo: unified-trading-pm.
 
 ## Codex SSOTs
 
@@ -151,3 +158,11 @@ source: >-
   item STILL-BLOCKED). Denominator grew +3 (P0 incident pair self-covering, plan_reconciler findings ui +1 orphan).
   `check_ag_closeout_linkage.py`: 1 infrastructure orphan, 0 ui orphans — ui closeout family discoverable. Delta
   analysis from known 2026-08-08 classification, not de-novo 16-doc re-read.
+- **slot-16 (ui_developer) 2026-08-10 — ARCHIVED.** Todo 4 executed the full 6-step ritual on
+  `ui_satellite_ao_dispatch_batch2_2026_08_08.md`: deferred item cross-referenced onto the closeout's Track 3 criterion;
+  banner + `status: superseded` + `superseded_by: ui_satellite_ao_dispatch_batch2_finalize_2026_08_08`; codex-alignment
+  update to `billing-cost-observability.md` (new `discount_rate_pct` / `cost_per_unit` / `usage_amount`/`usage_unit`
+  fields + month-aware AWS provisional + "Other resources" leaf); no CLAUDE.md change needed; active-corpus referrers
+  repointed to the archive path (epic relative refs + plan_reconciler related); no lock to clear. Batch 2 `git mv`'d to
+  `plans/archive/2026_08/` + this finalize doc archived (mode-1 combined flip+archival). Hygiene sweep / ref-check /
+  orphan-count all verified green.

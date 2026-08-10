@@ -229,15 +229,18 @@ workgroup + results bucket). Wired into the Cloud Run deploy env via `cloudbuild
 `usage.amount_in_pricing_units` + `usage.pricing_unit`; AWS `line_item_usage_type` (as `sku`) +
 `SUM(line_item_usage_amount)` (AWS has no separate pricing-unit column, so `usage_unit` is `""` for AWS records). A
 `sku` breakdown dimension groups by `(cloud, service, sku)` — this surfaces the actual top cost driver inside a service
-(e.g. GCS Coldline Class-A ops) that the service-level rollup hides.
+(e.g. GCS Coldline Class-A ops) that the service-level rollup hides. **Unit economics (2026-08-10, batch2):**
+sku-dimension rows now additionally carry `cost_per_unit` (`net / summed usage_amount`, populated only where the group
+bills in ONE unit — e.g. `$/GB-month`, `$/vCPU-hour`) for the sortable "Usage + $/unit" columns in the UI. Buckets were
+already covered by `storage_gb`/`cost_per_gb` + `cost_by_component` (GB-stored vs GB-egress).
 
 **Endpoints** (`routes/costs.py`, mounted `/api`, auth + rate-limited):
 
-| Endpoint                    | Params                                                                                                                                                                               | Returns                                                                                                     |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `GET /api/costs/summary`    | `days`, `refresh`                                                                                                                                                                    | **net** total (+ `gross`/`credit`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
-| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku\|zone\|label`, `cloud`, `days`, `refresh`, `label_key` (`purpose\|category\|venue\|asset_group`, only when `dimension=label`) | grouped rows — full field set above                                                                         |
-| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                                                                                                                           | daily per-cloud series (stacked trend)                                                                      |
+| Endpoint                    | Params                                                                                                                                                                               | Returns                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/costs/summary`    | `days`, `refresh`                                                                                                                                                                    | **net** total (+ `gross`/`credit`/`discount_rate_pct`) + per-cloud net/gross/credit/deltas/daily sparkline + `provisional_days` |
+| `GET /api/costs/breakdown`  | `dimension=service\|resource\|bucket\|region\|day\|sku\|zone\|label`, `cloud`, `days`, `refresh`, `label_key` (`purpose\|category\|venue\|asset_group`, only when `dimension=label`) | grouped rows — full field set above                                                                                             |
+| `GET /api/costs/timeseries` | `days`, `cloud`, `refresh`                                                                                                                                                           | daily per-cloud series (stacked trend)                                                                                          |
 
 `cost_obs_backend_sku_usage_enrichment_2026_07_08.md` is now fully shipped — every field below has landed; the sibling
 UI plan (`cost_obs_ui_unified_breakdown_2026_07_08.md`) builds the breakdown-table UI against this contract.
@@ -256,6 +259,9 @@ applies (`None`/`""`/`0` when it doesn't):
 - `storage_gb` / `storage_class_gb` (`{"Standard"|"Nearline"|"Coldline"|"Archive": gb}`) / `cost_per_gb` — `bucket`
   dimension rows only, derived from the storage-volume SKUs' `usage_amount` (GiB/GB-month → average GB over the window).
   **GB only, never raw bytes**; no object count or soft-delete split (not billable, absent from the export).
+- `usage_amount` / `usage_unit` / `cost_per_unit` — `sku` dimension rows only (2026-08-10, batch2): the summed
+  usage-quantity + its billing unit + net-per-unit (`$/GB-month`, `$/vCPU-hour`), backing the sortable Usage + $/unit
+  columns in the UI. Populated only where the group bills in ONE unit; `None`/`""`/`0` otherwise.
 - `purchase_option` (`spot` | `on-demand` | `other`) — derived from the GCP SKU text (`Spot Preemptible …`) / AWS
   purchase-option marker, not a billed-export column; `other` covers non-compute SKUs where the axis doesn't apply.
 - `machine_type` / `vcpu` / `memory_gb` — VM rows only, parsed from the GCP billing `system_labels`
@@ -278,9 +284,14 @@ the GCP `labels` map — spend by purpose / venue / asset_group; rows with no su
 - **UI**: `deployment-ui/src/pages/CostObservability.tsx` at route **`/ops/costs`** (Cockpit tile "Billing
   (GitHub+GCP+AWS)") — a 2-column top (bigger daily trend chart on the left; the total-spend card with the cloud-share
   donut folded in + the 3 per-cloud cards on the right), then the dimension breakdown table (per-column header-filter
-  dropdowns, click-to-sort, 100/page pagination, drag-resize), then per-VM/per-bucket leaf tables. A `?` help button
-  opens a quick-guide dialog. Recent days flagged **provisional** (GCP ~2-day reconcile; AWS re-trues month-end 6th–7th)
-  — that note now lives in the help guide (no standing page banner).
+  dropdowns, click-to-sort, 100/page pagination, drag-resize), then per-VM/per-bucket/**Other-resources** leaf tables
+  (2026-08-10, batch2: the third leaf pins `resource_kind=other` — Cloud Run Jobs, build workers, … — which was only
+  surfacing inside the "By resource" rollup before). A `?` help button opens a quick-guide dialog. Recent days flagged
+  **provisional** — GCP ~2-day reconcile (trailing-2-days provisional, unchanged); **AWS provisional cutoff is the FIRST
+  of the current month** (AWS re-trues the whole current month on the 6th–7th, so early-current-month AWS days are
+  provisional until then; made cloud-aware 2026-08-10, batch2). The note now lives in the help guide (no standing page
+  banner). The per-cloud cards render an "≈ X% off" chip — `discount_rate_pct` = |credit|/gross on
+  `CloudSummary`/`SummaryResponse`, surface of the gross → credits → net derivation.
 - **GitHub**: **real** provider — `fetch_github_billing()` (`services/cost_observability/github_billing.py`) reads the
   Enhanced Billing usage API (`GET /users|organizations/{account}/settings/billing/usage`) with a **Plan-scoped** token
   from Secret Manager (`github_billing_secret`, default `github-billing-token`, then the shared `GH_PAT`); each usage

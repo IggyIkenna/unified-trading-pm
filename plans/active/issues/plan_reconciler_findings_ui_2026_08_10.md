@@ -18,7 +18,7 @@ related:
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
-    /plans/active/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
+    /plans/archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
   ]
 created: "2026-08-10"
@@ -199,8 +199,8 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 8. `deployment_registry_firestore_p3_cutover_2026_07_14.md` todo "the agreed window" (soak duration) — no duration
    stated anywhere in the doc; missing definition-of-done, needs domain knowledge this run doesn't have. Noted, not
    resolved. **Formalized 2026-08-10 — see `## Todos` below (todo 2); re-confirmed still undefined (grepped the doc
-   fresh, no duration anywhere), and the phase is currently HALTED on an earlier precondition regardless (see that
-   doc's own Progress Log).**
+   fresh, no duration anywhere), and the phase is currently HALTED on an earlier precondition regardless (see that doc's
+   own Progress Log).**
 9. `ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1's conflict-check — named only the 2 batch plans, not
    `batch1_finalize`'s own still-open todo 4, which touches the same file
    (`artifact_pipeline_observability_2026_07_17.md`'s checkboxes). Potential future same-file dispatch collision if both
@@ -220,11 +220,11 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 > todo, never prose" hard rule. `assigned_vm`/`status` on this doc left untouched.
 
 - [ ] [OPERATOR] P3. **Scope the 3 orphaned "Out of scope (named successors)" items in
-      `plans/active/deployment_registry_firestore_migration_2026_07_14.md`** (real-time UI listeners / push-instead-of-poll;
-      archiving emitted `lifecycle-events`/resource samples to a durable event log; `run.log` whole-file-overwrite
-      efficiency via GCS compose/rotation) — each is explicitly named as "separate, own plan" in that doc's own text but
-      none has a tracking plan/issue doc. Needs a human call on whether/when each becomes its own plan, not a mechanical
-      fix. From Filed item 7.
+      `plans/active/deployment_registry_firestore_migration_2026_07_14.md`** (real-time UI listeners /
+      push-instead-of-poll; archiving emitted `lifecycle-events`/resource samples to a durable event log; `run.log`
+      whole-file-overwrite efficiency via GCS compose/rotation) — each is explicitly named as "separate, own plan" in
+      that doc's own text but none has a tracking plan/issue doc. Needs a human call on whether/when each becomes its
+      own plan, not a mechanical fix. From Filed item 7.
 - [ ] [OPERATOR] P2. **Define "the agreed window" soak duration in
       `plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md`** — its `[REVIEW] P1` "Soak" todo (line 111)
       and the preceding `[BACKEND] P1` todo both reference "the agreed window" with no duration ever stated anywhere in
@@ -236,8 +236,8 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
       `artifact_pipeline_observability_2026_07_17.md`'s checkboxes against batch 3's work but its conflict-check doesn't
       name `plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (line 280, still open), which
       touches the SAME source doc's checkboxes for batch 1's work. Both finalize plans are `status: active` and
-      `assigned_vm: planning` today — a real same-file dispatch collision risk if both are ever worked concurrently.
-      Add a one-line note to batch3_finalize's todo 1 (or a `sequential`/conflict note) naming batch1_finalize todo 4
+      `assigned_vm: planning` today — a real same-file dispatch collision risk if both are ever worked concurrently. Add
+      a one-line note to batch3_finalize's todo 1 (or a `sequential`/conflict note) naming batch1_finalize todo 4
       explicitly. From Filed item 9.
 
 ## Archive candidates (operator review)
@@ -294,18 +294,18 @@ staged batch before commit).
   archive candidate (item 10 in Filed, item 1 in Archive candidates) was unlocked + archived — operator asked directly
   and approved a targeted `[unlock-plan]` for this one doc, ahead of the corpus-wide `locked_by` placeholder ruling in
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (todos 1-2 there remain open for the other 95
-  docs). Doc now lives at `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
+  docs). Doc now lives at
+  `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (1 already
   resolved, cited inline — Filed item 6, `ui_consolidated_closeout` Todo 6 confirmed `[x]`); Filed items 7-9 (orphaned
   Firestore-migration successor scoping, undefined soak-window duration, batch1/batch3-finalize same-file conflict-check
   gap) formalized into `## Todos` above with fresh re-verification of each.
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — 2 of the 3 open todos are
-  explicitly `[OPERATOR]`-tagged genuine human judgment/definition calls, not worker-determinable: todo 1 needs a
-  human decision on whether/when each of 3 named orphaned successor items becomes its own plan; todo 2 needs a human
-  to supply a soak-window duration nowhere stated in the source doc (and that doc's own phase is separately HALTED on
-  an earlier precondition regardless). Todo 3 (the batch1/batch3-finalize same-file conflict-check note) is
-  individually small and plausibly bounded, but the whole-doc RECLASSIFY bar requires every open todo to clear, and
-  todos 1-2 do not.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — 2 of the 3 open todos are explicitly
+  `[OPERATOR]`-tagged genuine human judgment/definition calls, not worker-determinable: todo 1 needs a human decision on
+  whether/when each of 3 named orphaned successor items becomes its own plan; todo 2 needs a human to supply a
+  soak-window duration nowhere stated in the source doc (and that doc's own phase is separately HALTED on an earlier
+  precondition regardless). Todo 3 (the batch1/batch3-finalize same-file conflict-check note) is individually small and
+  plausibly bounded, but the whole-doc RECLASSIFY bar requires every open todo to clear, and todos 1-2 do not.
 - **2026-08-10** — plan_reconciler dispatch `agt-ec1688` started. Confirmed 23-doc `ui` tranche membership via
   multi-line-aware frontmatter scan (the plain single-line grep undercounts — `asset_group:` often wraps its `[ui]`
   value to the next line). Grace set: 2 docs (`data_status_tab_and_downloads_remediation_2026_06_16.md`, 5h;
