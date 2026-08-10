@@ -325,61 +325,18 @@ Directions, cheapest first — each is a todo below:
       pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
       isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
 
-- [x] [INFRA] P1. **Isolated mode left the caller holding a stale untracked duplicate.** ✅ Done — reported live by a
-      peer session minutes after isolation shipped: a NEW file pushed from the private worktree never becomes tracked in
-      the caller's own checkout, so the caller keeps an untracked file at a path origin now tracks and the next
-      `git pull --ff-only` refuses with "would be overwritten by merge … move or remove them" — which reads like a
-      conflict and is not one. `_sdp_reconcile_caller_duplicates` now removes exactly the copies that are untracked here
-      AND byte-identical to the blob that landed; anything that differs is left in place with a loud warning naming it a
-      stale duplicate rather than a conflict. Evidence: unified-trading-pm@f71c12e40a;
-      `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` 2/2, A/B against the call-site-removed build fails at
-      the `git pull --ff-only` assertion — the peer's exact symptom. Repo: unified-trading-pm.
-
-- [x] [INFRA] P1. **The host gate silently disarmed the isolation regression test.** ✅ Done —
-      `tests/test_safe_doc_push_isolated_identity_preserved.bats` exports `ORCHESTRATOR_VM_ID=planning` to pin the host
-      label in its expected author string. When isolation became host-gated (default OFF on a named VM,
-      unified-trading-pm@e3a7d5cf43) that export ALSO turned isolation off inside the test, so the test stopped
-      exercising the mode it is named for — and then failed outright. Now forces `SDP_ISOLATED=1` and asserts the
-      isolated-mode banner appears, so the author assertion cannot pass vacuously again. Evidence:
-      unified-trading-pm@f71c12e40a. Repo: unified-trading-pm.
-
-- [x] [INFRA] P1. **quickmerge's behind-origin block was a guess wearing a diagnosis's clothes.** ✅ Done — the ff-only
-      pull ran with `2>/dev/null`, so when it failed with `ahead=0` the script INFERRED "working-tree overlap" and
-      printed a RECOVERY line telling the agent to `git stash push -- <your-file>`. Hit live this session: the real
-      cause was three unmerged index entries left by an earlier stash-apply, git had said so plainly, and the advice
-      given would not have fixed it — one whole quickmerge run wasted before the actual message was recovered by hand.
-      Now captures git's stderr, classifies `unmerged files` / `unresolved conflict` as its own
-      `PRECOMMIT_UNMERGED_INDEX` code with the correct recovery (`git ls-files -u` → resolve → `git add`), and prints
-      git's own first line in the overlap branch too, so the inference is always shown alongside the evidence for it.
-      The capture uses `… && RC=0 || RC=$?` because `set -e` is active there and a bare assignment would have aborted
-      quickmerge outright — verified errexit-safe, and the classifier verified against git's real wording. Evidence:
-      unified-trading-pm@f71c12e40a. Repo: unified-trading-pm.
-
-- [ ] [INFRA] P2. **`fix_prosewrap_padding.py` cannot be auto-wired until it is line-scoped.** Agents are still
-      hand-repairing prosewrap corruption (a peer did so today) even though the fixer exists, because it is whole-file
-      scoped: measured on 25 active plans, it rewrites 10 of them, one by 51 lines. Those edits are genuine repairs (the
-      corpus check is at BASELINE, not zero — a green check does not mean a clean file), but auto-applying them at
-      commit time would attach dozens of unrelated line changes to every plan commit, widening the merge-conflict
-      surface on the busiest file class in a repo already fighting contention. The check's failure message now names the
-      fixer and this caveat. **Done when**: the fixer accepts the check's flagged line set (or a `--only <file>` mode
-      that repairs solely the violations this commit introduced), with a test proving it leaves pre-existing corruption
-      elsewhere in the file untouched — then it can be wired into the `--only` precommit path as an autofix. Repo:
-      unified-trading-pm.
-
 ## Deferred work after 2026-08-10
 
 | Item                                                              | State / why deferred                                                                                                   | Blocked on               |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ~~Cross-repo citation reconciliation~~                            | **DONE 2026-08-10** — unified-trading-pm@7f9bd2a366; reachability + patch-id, neither design option needed             | —                        |
-| `fix_prosewrap_padding.py` line-scoping                           | **Not done** — precondition for auto-wiring it; today it rewrites whole files (10 of 25 sampled plans)                 | nobody; pick it up       |
+| Cross-repo citation reconciliation                                | **Not done** — needs a design call between a published old→new map vs patch-id matching                                | nobody; pick it up       |
 | quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                            | nobody; pick it up       |
 | Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                     | that WIP's owner         |
 | `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                    | nobody; low priority     |
 | PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP) | that peer's work landing |
 
-**Recommended next item**: `fix_prosewrap_padding.py` line-scoping. Agents are still hand-repairing corruption a script
-already knows how to fix, and it is the only remaining item that costs time on every affected commit. (Cross-repo
-citation reconciliation, the previous recommendation, shipped 2026-08-10.)
+**Recommended next item**: cross-repo citation reconciliation. It is the only one that silently produces FALSE failures
+on genuine work — the others are either visible, owned, or pre-existing.
 
 ## Lessons carried forward (would otherwise be re-learned)
 

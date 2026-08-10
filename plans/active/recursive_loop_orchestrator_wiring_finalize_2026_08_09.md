@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                              new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                              Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                              (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                              perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                              (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                              rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                              service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                              code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                              opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                              docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                              would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                              requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                                          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                                          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                                          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                                          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                                          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                                          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                                          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                                          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                                          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                                          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                                          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                                          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -230,27 +230,13 @@ context_scope:
       readers, USDC bridge, Bybit follow-up) — see also the verified machinery-state draft in
       `execution-service/_scratch/perp_hedge_execution_plan_draft.md`. — unified-trading-pm.
 
-- [x] ✅ [BACKEND] P2. Add `RecursiveLoopOrchestrator.rebalance()` + `.margin_topup()` consumer methods driving
+- [ ] [BACKEND] P2. Add `RecursiveLoopOrchestrator.rebalance()` + `.margin_topup()` consumer methods driving
       `HyperliquidConnector.place_order()` (SHORT=extend-short, COVER=reduce-short with `reduce_only`, NOOP no-op) +
       `hyperliquid_bridge.deposit_usdc_to_hyperliquid` for topup (`TREASURY_HOT` source, testnet/early-mainnet). Keep
       the BLK-1255d5cf single-designated-path constraint: `PerpHedgeDispatchRouter` routes through this consumer — no
       second instruction sink. Repo: execution-service. Done-when: unit tests (SHORT opens/extends, COVER reduces with
       reduce_only, NOOP no-op, margin topup routes to bridge deposit, error classified via UAC `classify_venue_error` in
-      per-tick loop); `quality-gates.sh` green. — execution-service@00739af34. Added
-      `RecursiveLoopOrchestrator.rebalance()`/`.margin_topup()` consumers (thin delegates) + the
-      `defi_execution/orchestrators/perp_hedge_consumer.py` module owning the guard logic + UAC venue-error
-      classification. SHORT→`place_order(side="sell")` (extend short), COVER→`side="buy"` + `reduce_only=True` (reduce
-      short), NOOP no-op; margin top-up routes TREASURY_HOT amounts to the injected bridge-deposit callable.
-      `PerpHedgeDispatchRouter.dispatch_rebalance`/`dispatch_margin_topup` are now thin async delegates awaiting these
-      consumers (single designated path, no second sink); `PerpHedgeMonitor` awaits dispatch in its tick loop. Venue
-      errors are classified via UAC `classify_venue_error` and returned on the result — never raised (shard-level
-      failure isolation); unclassified defaults to `ErrorAction.RETRY` (mirrors defi_adapter). Unwired connector/bridge,
-      non-Hyperliquid venue, and non-TREASURY source return honest NOT-WIRED/UNSUPPORTED results (Bybit = todo 15,
-      COPPER_MPC/CEFFU_MPC = Group F item 19 / todo 14). 12 new consumer unit tests
-      (SHORT/COVER/NOOP/unwired/unsupported venue + returned-error + raised-exception classification for both
-      consumers) + monitor tests updated for async dispatch + wiring test asserts router awaits the orchestrator
-      consumer. Full `quality-gates.sh` green on execution-service (7954 passed), ancestry-verified on
-      `origin/live-defi-rollout`. Codex SSOTs: `/codex/04-architecture/tier-and-import-architecture.md`,
+      per-tick loop); `quality-gates.sh` green. Codex SSOTs: `/codex/04-architecture/tier-and-import-architecture.md`,
       `/codex/04-architecture/defi-execution-overview.md`.
 
 - [ ] [BACKEND] P2. Wire `HyperliquidConnector` + credential reloader into production at `app.py` startup/shutdown.

@@ -1,22 +1,18 @@
 ---
 doc_type: issue
 title:
-  DeepSeek's context window was inferred from a corpus that could never reach it — every AO-derived estimate was too
-  small; the real ceiling is 1,048,565 tokens, measured
+  DeepSeek's real context window is unknown, its learned value re-poisons every few minutes, and the fallback prior is
+  almost certainly wrong
 summary: >-
-  RESOLVED 2026-08-10. DeepSeek V4-Pro and V4-Flash are BOTH 1M-context models, measured directly against the live API
-  rather than inferred: oversized prompts to api.deepseek.com served 988,249 tokens in a single request (HTTP 200) and
-  were refused at 1,235,325 with the ceiling named outright — "This model's maximum context length is 1048565 tokens"
-  (2^20 - 11). EVERY window AO had derived from its own transcripts was far too small — 325K/468K (manual-compaction
-  maxima), ~200K (auto-compaction cluster), and the live 240,211/177,703 pane calibrations — and all of them failed the
-  same way: Claude Code does not recognise the DeepSeek model string, assumes ~200K, and auto-compacts DeepSeek sessions
-  at ~166-190K, so no session was ever free to reach the ceiling being measured. Corroborated across 1,342 DeepSeek
-  transcripts (604 flash / 756 pro sessions): ZERO were ever refused for exceeding a context limit. Fixed in
-  agent-orchestrator@905c21061 + @809c405d6 — the prior is 1M for both, and context_window_for() takes that prior for
-  DeepSeek outright instead of its learned signals, which is what actually heals the live registry (excluding DeepSeek
-  from calibration only stopped NEW writes while the already-poisoned values kept being served). Follow-on work — the
-  CLI still compacting DeepSeek at ~17% of capacity — is carried in
-  /plans/active/issues/ao_cli_assumes_200k_window_for_deepseek_2026_08_10.md.
+  DeepSeek sessions reported ~5x their real context on 2026-08-10 (11 of 21 working slots at 100%, three thrashing)
+  because the learned window was ~5x too SMALL — deepseek-v4-pro held calibrated_window=82,715 against its own
+  watermark_tokens=266,764. The impossible-window guard now shipped (agent-orchestrator@4af78dc99) stops that class, but
+  it leaves a WORSE question open: with the bad calibration ignored, both DeepSeek models now fall back to model_tier's
+  1,000,000 prior, and the measured evidence says the true window is nearer 180-270K. That is the DANGEROUS direction —
+  under-reporting is exactly what let a session run to a hard wedge in the 2026-08-08 incident. Root cause of the
+  DeepSeek-vs-Claude asymmetry is measured and recorded below: DeepSeek's usage is ~99.4% cache_read_input_tokens and
+  its pane renders a real CLI percentage almost every turn, so it calibrates constantly, where sonnet-5 almost never
+  does.
 status: resolved
 nature: issue
 asset_group: [ao]
@@ -66,15 +62,6 @@ context_scope:
 > (`29526a4`), DeepSeek pane-pct calibration exclusion (`6be3454`), `token_total()` resident-context verification, and
 > the standing calibrated-window move-invariant (`c730f46`). Moved by the 2026-08-10 checkbox-flip + archive pass (slot
 > 14).
-
-> **🔴 READ THIS BEFORE THE ANALYSIS BELOW — its central number is WRONG.** Everything from here to the Progress Log was
-> written while the window was still being inferred from our own transcripts, and it argues for figures between 180K and
-> 468K. The real ceiling was later measured directly against the DeepSeek API: **1,048,565 tokens** (see the final
-> Progress Log entry). Todos 1 and 2 are flipped `[x]` against the superseded 325K/468K figures and todo 3's "the CLI's
-> ~200K denominator" framing is likewise pre-correction. The sections are kept because HOW three independent estimates
-> all landed too low is the lesson: a ceiling can only be measured by something free to reach it, and the CLI was
-> truncating every session at ~166-190K. Trust the frontmatter summary and the last Progress Log entry; treat the body
-> as history.
 
 ## Measured evidence (orchestrator VM, 2026-08-10, read-only)
 
@@ -264,33 +251,3 @@ over-compaction for under-compaction, and neither is correct until the real numb
   identical `observe(model, 200_000, pane_pct=100)` still latches `calibrated_window=200K`, proving the exclusion is
   DeepSeek-specific) + `test_deepseek_still_learns_from_the_watermark`. Full suite passed via `quality-gates.sh` (3114
   passed, 2 skipped).
-
-- **slot-4 2026-08-10 (RESOLUTION — the window measured directly, not inferred)**: the operator challenged every
-  transcript-derived figure with the vendor spec ("deepseek flash is 1m token context and so is pro"), then asked for
-  empirical proof. Running a session up to 1M cannot provide it — the CLI auto-compacts DeepSeek at ~166-190K, so a
-  session measures Claude Code's assumption, which IS the bug. Instead, oversized prompts were POSTed straight to
-  `api.deepseek.com/v1/messages` with `max_tokens: 16` (credential from the VM's `deepseek-v4-pro.env`, read-only via
-  SSM), laddering the payload until the API refused:
-
-  | prompt payload | tokens presented | result                                                    |
-  | -------------- | ---------------: | --------------------------------------------------------- |
-  | 0.2 MB         |           35,309 | HTTP 200                                                  |
-  | 3.6 MB         |          635,309 | HTTP 200                                                  |
-  | 4.8 MB         |          847,074 | HTTP 200                                                  |
-  | 5.6 MB         |          988,249 | HTTP 200                                                  |
-  | 7.0 MB         |        1,235,325 | **HTTP 400 — "maximum context length is 1048565 tokens"** |
-
-  **The ceiling is 1,048,565 = 2^20 - 11.** The operator was right and every AO-derived estimate was wrong, including my
-  own recommendation of 200K. All three failed identically — a ceiling can only be measured by something free to reach
-  it, and nothing in our corpus was: 1 of 604 flash sessions and 0 of 756 pro sessions ever passed 468K, because the CLI
-  truncates them first. The lone flash session that read 917,159 was not the outlier it appeared to be; it was the only
-  honest sample.
-
-  Shipped `agent-orchestrator@905c21061`: 1M prior for both (pro/flash split deleted, `is_deepseek` consolidated as the
-  single public predicate); `context_window_for` takes the prior for DeepSeek outright — necessary because the
-  calibration exclusion only stopped NEW writes while the registry kept serving flash 240,211 / pro 177,703, and because
-  the watermark path was ONE confirming session away (flash 427,391 held 2 of 3) from resolving DeepSeek to ~438K; plus
-  the transcript-selection fix (probe was blind on 2 of 21 working slots) and the confirmed-watermark bound. Then
-  `@809c405d6` recorded the measured ceiling in the code. My duplicate oscillation alert was dropped in favour of
-  slot-14's `calibrated_window_abrupt_move` (`@c730f46`), which is better — it persists a baseline across restarts and
-  its threshold is tuned to the measured 1.42x/2.18x moves.

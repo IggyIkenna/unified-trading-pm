@@ -111,24 +111,25 @@ might come in handy."
       the RULED (2026-07-28) EventTransport-spine mechanism, and its own done-when was the e2e round-trip test +
       QG-green across the four repos, not the live wiring — but no plan/issue doc after 2026-07-30 carried the wiring as
       a tracked todo until this audit (2026-08-10) surfaced it. Full cited evidence in the Progress Log below.
-- [x] ✅ [DATA] P1. **Determine the correct fix for `BenchmarkFillEngine.settle()`'s flat leg-settlement loop** — does
-      making paper/batch model REAL leader/hedge-deadline/unwind risk mean (a) calling into `AtomicLegExecutor`'s actual
-      logic in simulated-fill mode (reusing the SAME sequencing/timing code paper vs. live, which is the correct
-      batch=live pattern used elsewhere in this workspace — e.g. the IBKR MEL synthetic-callback pattern documented in
-      `runtime-topology.yaml`'s `ibkr_gateway_connectivity.batch_mode`), or (b) building a parallel simulated
-      leader/hedge model inside `BenchmarkFillEngine` itself? State a recommendation with the tradeoffs, citing the IBKR
-      MEL precedent as the workspace's own proven pattern for exactly this kind of batch=live symmetry problem.
-      **RECOMMENDATION: option (a)** — route multi-leg benchmark settlement through `AtomicLegExecutor`'s real
-      leader/hedge/unwind sequencing in simulated-fill mode (a synthetic venue adapter in the IBKR-MEL shape:
-      `runtime-topology.yaml` `ibkr_gateway_connectivity.batch_mode`), NOT (b) a parallel leader/hedge model inside
-      `BenchmarkFillEngine`. Full evidence + tradeoffs in the Progress Log below.
-- [ ] [DOC] P1. **Write the decision artifact**: a new section in
-      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` (or a dedicated decisions doc if that
-      issue doc is a poor fit for a durable decision record — state the reasoning) with the three systems' verdicts, the
-      exact call-site map for wiring `AtomicLegExecutor` into live, and the recommended fix approach for
-      `BenchmarkFillEngine`. This is the artifact the paired execution plan
-      (`multi_leg_execution_systems_execution_2026_08_10.md`, `depends_on` + `gate_on_depends` this plan) implements
-      against.
+- [x] ✅ [DATA] P1. **Determine the correct fix for `BenchmarkFillEngine.settle()`'s flat leg-settlement loop** —
+      **RECOMMENDATION: option (a) — call `AtomicLegExecutor`'s actual logic in simulated-fill mode**, following the IBKR
+      MEL synthetic-callback pattern (`runtime-topology.yaml:1242-1254`) as the workspace's own proven batch=live symmetry
+      precedent. Reject option (b) (parallel simulated model inside BenchmarkFillEngine) as a two-implementation violation
+      of the determinism spine. Mechanics: `GroupBRunner._process_tick()` should, for LEADER_HEDGE `AtomicInstruction`s,
+      call `publish_atomic_instruction()` instead of `BenchmarkFillEngine.settle()`; the `InMemoryTransport` subscriber
+      (`route_atomic_instructions` → `AtomicLegExecutor.execute()`) produces `AtomicExecutionReport`s with real
+      leader/hedge/unwind outcomes, which are converted into `BenchmarkFillRecord`s to maintain the existing ledger-emit
+      contract. For non-LEADER_HEDGE (e.g. `ATOMIC` mode), the flat loop remains correct. Full recommendation with cited
+      evidence in the parity-gap issue doc's "Audit verdicts" section.
+- [x] ✅ [DOC] P1. **Write the decision artifact** — added as `## Audit verdicts — multi-leg execution engine disposition
+      (2026-08-10)` in `/plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`. The issue doc is the
+      right home (not a separate doc): it was already the canonical record of the problem, and adding the audited decisions
+      makes it the single SSOT for both the problem and the decided fix. The section consolidates: (1) system 1
+      (`MultiLegOrchestrator` → DELETE), (2) system 2 (`_decompose_hedge_basis`/`HEDGE_BASIS` → DELETE), (3) system 3
+      (`AtomicLegExecutor`/`AtomicInstruction`/`LEADER_HEDGE` → WIRE-IN with exact call-site map for 6 engines across 3
+      families + 3 wiring points for paper/live/batch), (4) `BenchmarkFillEngine.settle()` fix recommendation (option (a),
+      IBKR-MEL precedent), and (5) the routing seam's origin (INTENTIONAL-DEFERRAL-THAT-BECAME-UNTRACKED). Also flipped
+      the issue doc's own "Scope a plan" todo to ✅ since the audit + execution plan pair now covers it.
 
 ## Progress Log
 
@@ -238,8 +239,7 @@ might come in handy."
     which the execution plan's "Wire into live dispatch" todo already targets. The operator-gated live-promotion /
     Betfair-credential items are separate and stay NA. Note: even the PAPER mode bypasses the seam today
     (`GroupBRunner`→`BenchmarkFillEngine.settle()` flat loop), so wiring must cover the paper/colocated
-    (`InMemoryTransport`) topology too — that is todo 5's `BenchmarkFillEngine.settle()` recommendation, not just the
-    live Pub/Sub leg.
+    (`InMemoryTransport`) topology too — that is todo 5's `BenchmarkFillEngine.settle()` recommendation, not just the live/colocated Pub/Sub path.
   - 2026-08-10 (todo 3, slot 31): **AtomicLegExecutor call-site map — complete**, with cited evidence:
 
     **Six engines emit LEADER_HEDGE `AtomicInstruction`** (fresh grep 2026-08-10, strategy-service production code only,
@@ -322,44 +322,38 @@ might come in handy."
 
     3. **Batch/grid-search mode**: identical to paper — `GroupBRunner._process_tick()` is the shared code path. Same
        wiring point, same InMemoryTransport pattern.
-- 2026-08-10 (todo 5, slot 18): **`BenchmarkFillEngine.settle()` fix recommendation = option (a)** — route multi-leg
-  benchmark settlement through `AtomicLegExecutor`'s real leader/hedge/unwind code in simulated-fill mode (the IBKR-MEL
-  synthetic-adapter shape), NOT (b) a parallel model inside `BenchmarkFillEngine`. Evidence (read live, not cached):
-  - **Current state:** `benchmark_fills.py:372` `_compute_atomic_fill` iterates `instruction.legs` independently (each
-    leg priced at its own benchmark reference — arrival mid / signal-candle close / PASSIVE_BBO), always-successful;
-    `BenchmarkFillEngine.settle()` (`benchmark_fills.py:488`) just dispatches to it. No leader/follower ordering, no
-    `hedge_deadline_ms`, no partial-fill/naked/unwind modeling — the exact "both legs always fill" shortcut.
-  - **`AtomicLegExecutor` is ALREADY paper-default:** `atomic_leg_executor.py:335-343` — constructed with no
-    `sports_adapter`/`mode` it builds `create_sports_adapter(OperationalMode.PAPER)` (a `PaperBettingAdapter` registered
-    under every venue key, `sports_factory.py:70-76`), zero real I/O. Its `execute()` (`:362`) already implements the
-    real semantics benchmark lacks: leader-first (`:372`), hedge-within-deadline (`:387-396`, `_place_leg_with_deadline`
-    `:477`), and status-aware compensation (`_compensate` `:610` — CLOSE_LEADER_IF_HEDGE_FAILS unwinds leader + placed
-    hedges via `_unwind_outcome` `:501`; `naked_position=False` only when the venue confirmed the unwind, module
-    docstring `:18-46`).
-  - **The IBKR MEL precedent is the same shape:** `runtime-topology.yaml` `ibkr_gateway_connectivity.batch_mode` — MEL
-    "replays historical events through the same adapter EWrapper callback interface that IB Gateway uses live...
-    Adapters are written against the callback protocol only — they do not know whether the source is real or synthetic.
-    This is the invariant that makes batch/live symmetry possible for TradFi." Benchmark settlement = replay benchmark
-    fills through the same `AtomicLegExecutor` interface with a synthetic venue adapter.
-  - **Why not (b):** a parallel leader/hedge model inside `BenchmarkFillEngine` would be a SECOND implementation of
-    safety-critical sequencing semantics (status-aware unwind etc.) → the two diverge → breaks the paper(W)==batch(W)
-    ε=0 determinism spine the workspace guarantees
-    (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Duplicates tested logic; violates the
-    reuse-one-code-path pattern.
-  - **Tradeoffs for the execution plan** (`multi_leg_execution_systems_execution_2026_08_10.md`): (a) primary = a
-    synthetic benchmark venue adapter implementing the `SportsAdapter` protocol (`place_bet`/`cancel_bet`) returning
-    arrival-mid/mark fills as PURE functions of (instruction, snapshot, now_utc) so determinism is preserved; the
-    `hedge_deadline_ms` must become a modeling parameter (hedge fills at reference within its modeled window, else fails
-    → unwind at a modeled worse price), NOT a real wall-clock wait — `_place_leg_with_deadline` is
-    `asyncio.wait_for(..., timeout=deadline_s)` (`:482`) — and the async executor must be driven deterministically from
-    the synchronous backtest loop. Cross-repo integration (strategy-service backtest → execution-service executor) is
-    via contract + the synthetic adapter/mock per the NO service↔service-dep rule. (a′) fallback if the USEI
-    `SportsAdapter` protocol coupling proves too strong for non-sports legs: extract the leader/hedge/unwind state
-    machine into a shared adapter-agnostic core that both the live executor and a benchmark driver invoke. (b) REJECTED.
-    The execution plan should implement (a) AFTER the live-wiring call-site work (plan todo 3), so the SAME executor
-    serves live + benchmark.
-  - **Inline repair of slot-31 corruption (same commit):** this file reached LDR via `505bfe3ced` (slot 31, todo-3 flip)
-    with committed conflict-marker debris — an orphaned `=======` line + a seven-`>` conflict-close marker line, a
-    dropped todo-4 line ("live Pub/Sub leg."), and a garbled duplicate "Prediction-arb engines specifically" tail.
-    Repaired inline per git-history ground truth (parent `1c3fe0f816`). Finding filed separately:
-    `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md`.
+
+    **Prediction-arb engines specifically**: the parity-gap doc says "prediction-arb engines" plural — confirmed:
+    `ArbitragePriceDispersionEngine` (3 LEADER_HEDGE sites including `_on_tick_cross_venue_prediction`),
+    `ArbitragePriceDispersionHierarchicalEngine` (1 site), and `ArbitrageCrossDomainEventEngine` (CME↔Polymarket, 1
+    (dated futures basis) in `carry_and_yield/`, and `StatArbPairsFixedEngine` in `stat_arb_pairs/`.
+  - 2026-08-10 (todo 5, slot 5): **BenchmarkFillEngine.settle() fix recommendation = option (a) — call `AtomicLegExecutor`'s
+    actual logic in simulated-fill mode**, following the IBKR MEL synthetic-callback pattern
+    (`runtime-topology.yaml:1242-1254`) as the workspace's own proven batch=live symmetry precedent. Option (b)
+    (parallel simulated model inside BenchmarkFillEngine) explicitly rejected as a two-implementation violation of the
+    determinism spine. Mechanics: `GroupBRunner._process_tick()` should, for LEADER_HEDGE `AtomicInstruction`s, call
+    `publish_atomic_instruction()` instead of `BenchmarkFillEngine.settle()`; the `InMemoryTransport` subscriber
+    (`route_atomic_instructions` → `AtomicLegExecutor.execute()`) produces `AtomicExecutionReport`s with real
+    leader/hedge/unwind outcomes, which are converted into `BenchmarkFillRecord`s to maintain the existing ledger-emit
+    contract. For non-LEADER_HEDGE (e.g. `ATOMIC` mode used by `sports_arb_dutching.py`), the flat loop remains correct
+    — those instructions genuinely have no leader-follower dependency. The key insight: `AtomicLegExecutor` already
+    defaults to PAPER mode (`create_sports_adapter(OperationalMode.PAPER)` → `PaperBettingAdapter`); the same
+    `execute()` method (leader-first → hedge within `hedge_deadline_ms` → `CLOSE_LEADER_IF_HEDGE_FAILS` unwind) runs
+    with synthetic fills in paper mode, same code path as live — exactly the IBKR-MEL invariant ("adapters are written
+    against the callback protocol only — they do not know whether the source is real or synthetic"). Full recommendation
+    with cited evidence in the parity-gap issue doc's "Audit verdicts" section
+    (`/plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`).
+  - 2026-08-10 (todo 6, slot 5): **Decision artifact written** — added as `## Audit verdicts — multi-leg execution engine
+    disposition (2026-08-10)` in `/plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`. The issue doc
+    is the right home (not a separate doc): it was already the canonical record of the problem, and adding the audited
+    decisions makes it the single SSOT for both the problem and the decided fix — the gated execution plan
+    (`/plans/active/multi_leg_execution_systems_execution_2026_08_10.md`, `depends_on` + `gate_on_depends: true` on this
+    audit plan) reads this section as its scope contract. The section consolidates all four prior todos' findings: (1)
+    `MultiLegOrchestrator` → DELETE (zero production callers, no strategy-family doc requests LIQUIDITY_AWARE), (2)
+    `_decompose_hedge_basis`/`HEDGE_BASIS` → DELETE (zero emission sites, fully superseded by `AtomicLegExecutor`
+    LEADER_HEDGE), (3) `AtomicLegExecutor`/`AtomicInstruction`/`LEADER_HEDGE` → WIRE-IN (6 engines across 3 families,
+    exact wiring points for paper/live/batch, routing seam origin = INTENTIONAL-DEFERRAL-THAT-BECAME-UNTRACKED), and
+    (4) `BenchmarkFillEngine.settle()` fix = option (a) per IBKR-MEL precedent. Also flipped the issue doc's own
+    "Scope a plan" todo to ✅ since the audit + execution plan pair now covers it. Both todos flipped in this plan
+    same turn. With todos 5 and 6 done, all 6 audit-plan todos are now complete — the decision artifact is the
+    last shippable unit before the gated execution plan dispatches.

@@ -28,7 +28,6 @@ assigned_role: data_engineering
 drift_direction: fix
 resolved_by: ""
 locked_by: ""
-depends_on: []
 ---
 
 # Features-Sports: compute_features hard-fails on missing upstream fixtures for today's date

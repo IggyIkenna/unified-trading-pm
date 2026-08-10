@@ -190,7 +190,6 @@ if [ "${1:-}" = "--only" ]; then
   done
   if [ "$FLAGGED_FILES" -gt 0 ]; then
     echo "❌ check_prosewrap_padding (--only): ${FLAGGED_FILES} staged file(s) with a NEW prosewrap-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe."
-    echo "   scripts/plan-hygiene/fix_prosewrap_padding.py <file> automates that repair — but it is WHOLE-FILE scoped, so it will also rewrite pre-existing corruption elsewhere in the file (measured: up to 51 lines in one active plan). Run it, then review the diff and keep only the lines this commit introduced; do not stage the incidental rest, or you widen the conflict surface on the busiest file class in the repo. It is deliberately NOT auto-wired here for that reason."
     exit 1
   fi
   [ "$QUIET" -eq 0 ] && echo "✅ check_prosewrap_padding (--only): 0 new violation(s) in staged files"

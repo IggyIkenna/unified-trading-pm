@@ -296,22 +296,11 @@ RESULTS=()
 # promote path is safe: every commit in that batch already passed these same checks
 # diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
 #
-# SAME lag-guard for a DIRECT LDR-branch run (e.g. workflow_dispatch on live-defi-rollout,
-# where GITHUB_HEAD_REF is empty so the ^promote/ gate above can't match). Its diff vs
-# origin/main IS the same whole unpromoted LDR→main accumulation, so diff-scoping there
-# measures the backlog rather than the change — the identical positive-feedback deadlock as
-# the promote path once promotion stalls and main lags
-# (/plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md).
-# The entire LDR state is already entry-gated commit-by-commit, so re-gating the aggregate
-# against a lagging origin/main is the same double jeopardy; baseline+buffer is the honest check.
-#
-# NOT a blanket disable — a normal feature PR (and a push to main, where origin/main is the
-# change's own base) still gets full diff-scoping, which is where these checks actually catch
-# new violations.
+# NOT a blanket disable — a normal PR or a push to LDR still gets full diff-scoping, which
+# is where these checks actually catch new violations.
 DIFF_BASE_REF=""
 if [ -n "$CI_MODE" ] \
   && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
-  && [[ "${GITHUB_REF:-}" != "refs/heads/live-defi-rollout" ]] \
   && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
   DIFF_BASE_REF="origin/main"
 fi

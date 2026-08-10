@@ -143,13 +143,3 @@ a normal ratchet into a self-reinforcing wall.
   Fleet sweep at the same time: 25/26 repos green on `quality-gates-v2`@LDR (`unified-trading-ci` has no such workflow —
   it hosts the reusable one); all 23 GH-Actions standing monitors green except `ldr-docs-gate`; both host-dispatched
   systemd watchdogs verified active and OK via live SSM.
-- **2026-08-10 (cicd escalation `agt-cced28`, slot-15)** — Recurrence of the same deadlock on the LDR-branch path:
-  `quality-gates-v2` RED on `live-defi-rollout` (workflow_dispatch re-runs) with
-  `check_na_corpus_ratchet (--diff-base origin/main)` reporting 57→59 new docs / 185→193 new todos while main slipped to
-  1501 commits behind LDR. Root cause: the shared `DIFF_BASE_REF` guard only excluded `promote/*` PRs; a DIRECT
-  LDR-branch run has empty `GITHUB_HEAD_REF`, so it still diff-scoped against the lagging `origin/main` and measured the
-  whole unpromoted backlog. Fixed by extending the same lag-guard to `GITHUB_REF == refs/heads/live-defi-rollout` (falls
-  back to baseline+buffer; current NA corpus 394 docs / 1148 todos, inside the reviewed 409/1350 ceiling). Verified:
-  guard unit cases (LDR-wfd→baseline, promote→baseline, feature-PR→diff-scope, push-main→diff-scope) + sweep
-  `--ci --no-regen` under LDR env sim EXIT 0 (Hard failures 0). Shipped via quickmerge:
-  `scripts/plan-hygiene/run_hygiene_sweep.sh`.

@@ -984,28 +984,9 @@ else
       echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
-      # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
-      # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
-      # "working-tree overlap" and a RECOVERY line telling the agent to `git stash push -- <file>`,
-      # when the real cause was three unmerged index entries left by an earlier stash-apply. That
-      # advice fixes nothing, and the whole quickmerge run was wasted before the agent worked out
-      # that git had said something else entirely.
-      # The `&& … || …` form is load-bearing: `set -e` is active here (line 89), and a bare
-      # assignment whose command substitution fails would abort quickmerge outright. The old
-      # `if git pull …; then` was safe only because a condition suppresses errexit.
-      _QM_FF_ERR="$(git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>&1)" \
-        && _QM_FF_RC=0 || _QM_FF_RC=$?
-      if [ "$_QM_FF_RC" -eq 0 ]; then
+      if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
-      elif printf '%s' "$_QM_FF_ERR" | grep -q 'unmerged files\|unresolved conflict'; then
-        # A DIFFERENT condition with a DIFFERENT fix. The index still holds conflict stages from
-        # an earlier interrupted merge/stash-apply; no amount of stashing a file by name helps.
-        echo "QUICKMERGE_BLOCKED code=PRECOMMIT_UNMERGED_INDEX repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=${_QM_AHEAD}"
-        echo "RECOVERY: your index has unmerged entries from an earlier interrupted merge or stash-apply — git refuses to pull until they are resolved. Inspect with 'git ls-files -u', resolve the file's content (search it for <<<<<<< markers), 'git add' it by name, then re-run. Do NOT 'git checkout --theirs/--ours' a file you do not own."
-        echo "[$REPO_NAME] ❌ BLOCKED: unmerged index entries — git said: ${_QM_FF_ERR%%$'\n'*}"
-        exit 1
       elif [ "${_QM_AHEAD:-0}" = "0" ]; then
-        echo "[$REPO_NAME]    git's own reason: ${_QM_FF_ERR%%$'\n'*}"
         # Pre-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
         # decided fix 2026-08-01): ahead=0 means there is no local commit for `--rebase` to
         # replay, so ff-only's failure here can ONLY be a working-tree content OVERLAP (a
