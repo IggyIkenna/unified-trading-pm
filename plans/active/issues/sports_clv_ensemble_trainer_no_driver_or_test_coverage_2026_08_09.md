@@ -105,13 +105,14 @@ the VM-scale run:
       deeper, real data gap one layer up in features-service — see
       `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. This todo
       cannot proceed until that doc's backfill todo lands.
-- [ ] [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
+- [x] ✅ [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
       `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
       `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler
       runs. Confirmed live 2026-08-09: dead-on-arrival for 5 `sports-ensemble-train` VM launches until
       `--asset-group     SPORTS` was added explicitly. Every existing production launcher happens to always pass a real
       value, so this was latent; harden it (e.g. drop the `"ALL"` default, or validate/translate it before it reaches
-      `ServiceRuntime`) so the next new operation added to this CLI doesn't hit the same trap. (repo: ml-service)
+      `ServiceRuntime`) so the next new operation added to this CLI doesn't hit the same trap. (repo: ml-service) —
+      ml-service@23006b4
 
 ## Progress Log
 
@@ -289,6 +290,11 @@ the VM-scale run:
   AO-eligible backfill — not a judgment call):
   `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. Todo 2 above now
   explicitly cites it as a hard blocker.
+
+- 2026-08-10 (slot-23): shipped todo 3 — changed `--asset-group` default from `"ALL"` to `None` in
+  `ml_service/training/cli/main.py:_add_scope_args`. `ServiceRuntime._resolve_asset_groups(None)` returns `[]`
+  gracefully; all handler code already uses `getattr(args, "asset_group", <fallback>)`. Updated test
+  `test_adds_required_args` to expect `None`. Shipped at ml-service@23006b4.
 
 ## Deferred work after 2026-08-10
 
