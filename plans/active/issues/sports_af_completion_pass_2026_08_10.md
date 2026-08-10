@@ -142,7 +142,12 @@ depends_on: []
           ETA ~14:30Z.
         - VM confirmed RUNNING; no `exit_code=` yet.
 
-## Deferred work after 2026-08-10 ~12:32Z
+      - **Session compacting 2026-08-10 ~12:36Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-05-13` (~48%), ~1184 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING; no `exit_code=` yet.
+
+## Deferred work after 2026-08-10 ~12:36Z
 
 | Item                                                                                                                | State / why deferred                              | Blocked on                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
