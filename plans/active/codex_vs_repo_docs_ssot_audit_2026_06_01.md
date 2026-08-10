@@ -318,25 +318,15 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       are now deleted, plus the now-empty `docs/specs/` dir removed and the dangling `IMPLEMENTATION_MAX_WORKERS` /
       `ML_IMPLEMENTATION` / `SPECS.md` links in `cli.md`/`BIGQUERY_INTEGRATION_GUIDE.md`/`INDEX.md` fixed. Phase-3/4
       hold itself LIFTED 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao).
-- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED + FIX-STALE
-      APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
-      `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
-      `_venue_errors_*` now `normalize_utils/errors`) and the 4 DELETE-class docs (`ICLOUD_REPO_MIGRATION_PROMPT`,
-      `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH`) each
-      already have a `docs/archive/` twin. Applied the operator-hold-PERMITTED FIX-STALE sweep only: 3 archived-mirror
-      `unified-trading-codex/` refs → verified-live PM `/codex` (`vcr-cassette-ownership.md`,
-      `contracts-scope-and-layout.md`, `contracts-integration.md`) in `docs/{README,MOCKS_AND_VCR,SCHEMA_GOVERNANCE}.md`
-      — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
-      permits sonnet ONLY for FIX-STALE literal sweeps). **REDIRECT half ✅ SHIPPED** (`PACKAGE_LAYOUT_AND_SCOPE`/
-      `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`, `unified-api-contracts@f952e17f`, verified ancestor of
-      `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE half + the rest not shipped** (RE-VERIFIED 2026-08-10
-      by plan_reconciler infra shard, agt-716973: all 4 `docs/` DELETE-class twins — `ICLOUD_REPO_MIGRATION_PROMPT`,
-      `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH` — still
-      live on disk): DELETE the 4 `docs/` twins; `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs
-      with NO 1:1 live target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 +
-      `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` → pick live equivalent). Un-checked 2026-08-10 — see
-      deployment-service item above for rationale. Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
-      2026-08-06 (/plan-reconcile ao).
+- [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — **CLOSED 2026-08-10 (slot-24)**. All DEFERRED items resolved: (1) 4
+      DELETE-class `docs/` twins already gone (verified absent; archive copies preserved). (2) SCHEMA_GOVERNANCE
+      placement-table already accurate — all paths verified against live dirs (`canonical/domain/`,
+      `canonical/crosscutting/`, `normalize_utils/`, `normalize_utils/errors/`, `canonical/crosscutting/errors/`,
+      `registry/` all exist). (3) 3 mirror refs: `SCHEMA_CHANGELOG` L13 already points to PM codex
+      `schema-versioning.md` (exists); `BATCH_LIVE_SYMMETRY` is now a REDIRECT (shipped
+      `unified-api-contracts@f952e17f`); `UAC_FULL_GAP…` L278 `unified-trading-codex` → PM
+      `/codex/04-architecture/batch-live-architecture.md` — **unified-api-contracts@e17837f01**. Phase-3/4 hold LIFTED
+      2026-07-28 (GATE-1).
 - [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
       REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
       LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
