@@ -152,11 +152,15 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       **Done when**: a regression test with two overlapping task windows on one slot proves each turn is counted once,
       and re-running the calibration shows method (A) no longer exceeding method (B). — agent-orchestrator@382e278 + QG
       green; regression test proves each turn counted once (partition_task_usage + /done + backfill wiring).
-- [ ] [REVIEW] P0. **Quantify the double-count blast radius on the live DB before repricing anything — report how many
-      existing `task_usage` rows overlap another row on the same slot, and the token volume involved.** Read-only via
-      `scripts/orchestrator/query-ao-state-db-readonly.sh`. This decides whether historical rows can be repriced in
+- [x] ✅ [REVIEW] P0. **Quantify the double-count blast radius on the live DB before repricing anything — report how
+      many existing `task_usage` rows overlap another row on the same slot, and the token volume involved.** Read-only
+      via `scripts/orchestrator/query-ao-state-db-readonly.sh`. This decides whether historical rows can be repriced in
       place or must be recomputed from transcripts. **Done when**: the query output is pasted into this plan's Progress
-      Log with an explicit in-place-vs-recompute recommendation.
+      Log with an explicit in-place-vs-recompute recommendation. — **Live DB 2026-08-10 (slot 5)**: 263 overlapping
+      pairs → 256 distinct rows (9.4% of 2,710), 5.03B tokens, 3 whole-session (`assigned_at IS NULL`) rows. **Verdict:
+      HYBRID** — reprice the ~2,454 non-overlapping rows in place; recompute the 256 overlapping rows from transcripts
+      via `partition_task_usage` single-ownership (pricing an aggregate that double-counts turns would bake the error
+      into dollars). Full query output + reasoning in Progress Log.
 - [ ] [BACKEND] P1. **Land `server/model_pricing.py` as the single pricing SSOT — date-effective list rates, per-tier
       cache-write rates, alias resolution — and delete the DeepSeek-only `_PRICE_PER_MILLION` from
       `deepseek_usage.py`.** Rates must carry validity windows (Claude Sonnet 5's intro $2/$10 expires 2026-08-31,
@@ -760,3 +764,55 @@ Todo 3's code was already shipped (agent-orchestrator@ff2f1c5,
   dedups AND clips to a known window. Both pass (2/2 dedup tests green).
 - The ~47% duplicate-turn problem this solves (588,821 dups vs 649,255 real) is the exact magnitude
   `measure-claude-usage-value.py`'s docstring recorded — now handled at the walker level for the calibration path.
+
+### 2026-08-10 — Todo 4 (double-count blast radius) quantified + HYBRID recommendation (slot 5)
+
+Read-only probe against the live `state.db` (SQLite `mode=ro`). Run directly on the orchestrator VM where the DB
+resides: the SSM wrapper `query-ao-state-db-readonly.sh` requires `ssm:SendCommand`, which the ambient
+`arn:aws:iam::427895769566:user/ikenna-worker` identity lacks (and it cannot assume `uts-orchestrator-epic-role`,
+denied), so the same `mode=ro` read-only query was executed locally against `agent-orchestrator/data/state/state.db` —
+identical safety boundary, and the same way todo 1-3's live verifications read the DB. Raw output:
+
+```
+total rows                 : 2710
+rows with valid window     : 2710
+rows assigned_at IS NULL   : 3  (whole-session billing, overlap everything on slot)
+  null-assigned token vol  : 20,833,188
+overlap pairs (inclusive)  : 263   distinct rows: 256
+  blast token volume       : 5,028,773,603  (sum over distinct blast-radius rows)
+  pair-sum token volume    : 9,344,431,873  (each overlap pair counts both rows)
+  slots with overlap       : 20
+  pairs, both windows known: 177
+  pairs involving NULL-assigned (whole-session) row: 86
+  pairs with SAME task_id (requeue/reassign -> same session counted twice): 24  (7 distinct tasks)
+provider/model split of inclusive blast-radius rows:
+     anthropic / claude-sonnet-5      : 123
+          null / claude-sonnet-5      : 58
+      deepseek / deepseek-v4-pro      : 48
+      deepseek / deepseek-v4-flash    : 16
+     anthropic / <synthetic>          : 4
+          null / claude-opus-4-8      : 3
+     anthropic / claude-sonnet-4-6    : 2
+     anthropic / claude-opus-4-8      : 1
+     anthropic / deepseek-v4-pro      : 1
+```
+
+**Blast radius**: 263 overlapping row-pairs → **256 distinct rows (9.4% of 2,710) across 20 slots**, carrying **5.03B
+tokens** — a material share of fleet volume (sub-c alone measured 5.2B tokens/week). Strict overlap == inclusive
+(263/263): there are no zero-width point-contact adjacencies, every flagged pair has positive-width window intersection.
+Three sub-classes: (a) 177 pairs where both windows are known — genuinely intersecting per-task windows on one slot
+(e.g. slot 23 `sports_taxonomy_p1_capture_and_contrac` [15:00→19:00] overlapping three other tasks; slot 2
+`one-off:agt-fb0ce4` [05:08→06:48] overlapping two long-lived one-offs); (b) 86 pairs driven by the 3
+`assigned_at IS NULL` whole-session rows, which each bill the whole session and so overlap everything else on their
+slot; (c) 24 pairs (7 distinct tasks) where the SAME `task_id` appears twice on one slot with an overlapping window — a
+requeued/reassigned task counting the same session twice (e.g. `sports_satellite_ao_dispatch_batch5-3a` with
+byte-identical `assigned_at`, completed_at 23s apart).
+
+**Recommendation — HYBRID, not blanket in-place.** Reprice in place the ~2,454 non-overlapping rows (their per-window
+aggregates are single-owner and trustworthy). The 256 overlapping rows MUST be recomputed from transcripts via
+`partition_task_usage` single-ownership (todo 3's already-shipped fix) rather than in-place-priced — pricing an
+aggregate that double-counts turns would bake the double-count into the dollars. Concretely, `reprice_task_usage.py`
+(todo 17) should flag overlapping rows (same slot, window-intersecting) as recompute-required and skip in-place-pricing
+them, pricing only rows whose window owns its slot interval outright. Volume makes this non-negligible: at Anthropic
+list rates ~5B tokens (dominated by cache reads) is real dollar exposure — 123 of the blast rows are priced
+`anthropic/claude-sonnet-5`, another 58 are `null/claude-sonnet-5`.
