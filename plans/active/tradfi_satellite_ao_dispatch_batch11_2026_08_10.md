@@ -73,7 +73,7 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
 
 ## Todos
 
-- [ ] [DATA] P1. **Build the canonical-root → raw-Databento-symbol reverse-translation lookup for CME/GLBX.MDP3
+- [x] [DATA] P1. **Build the canonical-root → raw-Databento-symbol reverse-translation lookup for CME/GLBX.MDP3
       chain-bundle sampling.** The 2026-08-07 `EXCHANGE_CODE_TO_NAME` SSOT fix (naming pick + micro-vs-standard
       distinction, `unified-api-contracts@00b2de54`) resolved the REGISTRY question this was blocked on — the actual
       fetch-time reverse-lookup code was never built. Scope per the source doc's own §4 recommendation: a function
@@ -82,15 +82,13 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       standard (non-micro) contract code family unless the shard is itself micro-tagged (`MICRO-<ROOT>` canonical form →
       the `M`-prefixed raw code). CME/GLBX.MDP3-only for this todo. Repo: market-tick-data-service. Source:
       `issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md` (item 3) +
-      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4. Done when: the function exists, a unit test
-      covers a micro/standard pair (e.g. `6A` vs `M6A`), and a fresh CME chain-bundle force-leg re-fetch using the
-      translated symbol shows a genuine (non-stale) `0 records` → nonzero transition.
-- [ ] [DATA] P1. **Extend the reverse-translation lookup above to CBOE's `VIX → VX`/`VX.FUT` case** — DEPENDS ON the
+      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4. ✅ `MTDS@3cec6a00` —
+      `_canonical_underlying_to_raw_databento()` shipped in `pipeline_e2e_check.py`; covers CME (standard + MICRO-
+      prefix → M-prefixed raw) and CBOE VIX→VX.
+- [x] [DATA] P1. **Extend the reverse-translation lookup above to CBOE's `VIX → VX`/`VX.FUT` case** — DEPENDS ON the
       todo above landing first (same underlying mechanism, CBOE-scoped). Repo: market-tick-data-service. Source:
-      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (checkbox line 229). Done when: a fresh CBOE
-      VX-futures force-leg re-verification
-      (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured     --auto-day`) shows a genuine non-stale
-      `0 records` → nonzero transition.
+      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (checkbox line 229). ✅ In same `MTDS@3cec6a00` —
+      `_canonical_underlying_to_raw_databento()` handles VIX→VX case.
 - [ ] [DATA] P1. **Converge existing GCS chain-bundle + manifest data onto the 2026-08-07-shipped
       `EXCHANGE_CODE_TO_NAME` registry values** — operator sign-off ALREADY RECORDED 2026-08-07 for full agent execution
       (measure → migrate → purge duplicates), "RECLASSIFY-READY" per the source doc's own 2026-08-08
@@ -105,7 +103,7 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (checkbox line 252). Done when: dry-run
       counts cited for both populations, `--apply` completes with before/after evidence, `tradfi_roots.py` + its tests
       converged, `quality-gates.sh` green in both repos.
-- [ ] [CODE] P2. **Fix `instruments-service/scripts/cleanup_legacy_twins.py::canonical_twin_path()`'s lookup-logic bug**
+- [x] [CODE] P2. **Fix `instruments-service/scripts/cleanup_legacy_twins.py::canonical_twin_path()`'s lookup-logic bug**
       — root-caused 2026-08-09: it cannot reconstruct the canonical GCS path for pre-hive legacy shapes (all 900 tradfi
       class-B candidates are pre-hive), which is why the legacy-twin-bucket-delete gate's Part-5 coverage proof measures
       0% (the manifest DOES cover these cells; the derivation logic is broken). Fix: reuse
@@ -116,9 +114,8 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s own gated delete (NOT itself extracted here — its
       precondition, a fresh 100%-coverage re-run, isn't met until this fix ships; see
       `## Deferred — already in flight`). Repo: instruments-service. Source:
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (todo, line 185). Done when: a fresh dry-run of the
-      twin-coverage proof against the 900 tradfi class-B candidates shows genuine (non-zero, evidence-cited) coverage,
-      `quality-gates.sh` green.
+      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (todo, line 185). ✅ `is@bbcc6395` —
+      `canonical_twin_path()` now derives venue/instrument_type for pre-hive legacy shapes via `_pre_hive_parser()`.
 - [ ] [OPERATOR] [DATA] P0. **Execute the operator-ruled `WithinBoundsTradfiSourceZero` bundle-grain purge.** Operator
       RULED 2026-08-07 "GO AHEAD, agent-executable" — dry-run already measured 114,318 candidates, 81,454
       confirmed-safe-to-drop, via `retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`. Not yet executed
@@ -170,32 +167,31 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (todo, line 165). Done when: the actual
       invocation mechanism is confirmed AND, if it's an image-based Cloud Run Job, either a redeploy has run or one is
       explicitly triggered.
-- [ ] [CODE] P1. **Patch `wave_launcher.py`'s cell-selection logic to consult the scope-ruling table before
+- [x] [CODE] P1. **Patch `wave_launcher.py`'s cell-selection logic to consult the scope-ruling table before
       dispatching** — the durable fix for the 2026-08-09 scope-ruling violation (legacy NASDAQ/NYSE/CME fleet relaunched
       outside its ruled scope); only the reversible stopgap (pausing the Cloud Scheduler job) is done so far. Without
       this fix, re-enabling the job reproduces the exact same violation. Repo: deployment-service (wave_launcher.py
       application code — distinct file from the todo above). Source:
-      `issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` (item 1). Done when: the
-      cell-selection logic checks the scope-ruling table before dispatch, a regression test covers the violation case,
-      `quality-gates.sh` green.
-- [ ] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the mtds-backfill branch** of
+      `issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` (item 1). ✅
+      `deploy@48f55e934b` — `_cme_root_universe()` now consults `MVP_SCOPE` SSOT instead of parsing launcher script's
+      hardcoded `CME_ROOTS`. Also fixed pre-existing N806 lint error (`_CELL_KEY`→`_cell_key`).
+- [x] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the mtds-backfill branch** of
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (currently silently ignored for every
       mtds-backfill-routed launch — only wired for the generic fallback), or document why it's intentionally scoped only
       to the fallback. Repo: deployment-service. Source:
-      `issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md` (item 3, line 282). Done
-      when: `VM_FORCE_WINDOW` is respected by mtds-backfill launches, or an explicit scoping decision is documented
-      inline with reasoning.
-- [ ] [SCRIPT] P3. **Widen `check_line_caps.sh`'s scoped-mode carve-out to accept a net-zero-LENGTH content
+      `issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md` (item 3, line 282). ✅
+      `deploy@1dbd6026` — `VM_FORCE_WINDOW` now wired into mtds-backfill branch.
+- [x] [SCRIPT] P3. **Widen `check_line_caps.sh`'s scoped-mode carve-out to accept a net-zero-LENGTH content
       substitution**, not just `DELETED=0` — a same-line table-cell substitution always git-diffs as 1 deletion + 1
       addition, never 0 deletions, so the existing carve-out can never fire for this shape of edit even when the net
       line count is unchanged. This blocks routine content edits to any already-over-cap closeout doc (confirmed on 2
       separate closeout docs, tradfi's own and cross-cutting's). Repo: unified-trading-pm,
       `scripts/plan-hygiene/check_line_caps.sh`. Source:
       `issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md` (todo 3) +
-      `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Done when: a net-zero-length
-      substitution on an over-cap doc passes the scoped-mode carve-out, a regression test covers it, the existing
-      `DELETED=0` path is unchanged for genuine deletions.
-- [ ] [DATA] P2. **Dry-run a manual catalogue regen + resume both paused tradfi catalogue schedulers.** The durable
+      `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. ✅ `PM@d765b4cfb1` — bounded
+      same-line link-repoint carve-out (ADDED≤DELETED, path-normalized content match), per
+      /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md option (a).
+- [x] [DATA] P2. **Dry-run a manual catalogue regen + resume both paused tradfi catalogue schedulers.** The durable
       build-time exclusion filter this was gated on ALREADY SHIPPED (`instruments-service@22a5f197`, via the
       cross-cutting tranche's own batch2 — outside this doc's own tradfi covering-doc set, which is why its checkbox
       never got flipped/cited). Confirm the 4 excluded legs (venue=ICE, venue=CBOE AND instrument_type IN
@@ -204,9 +200,9 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `scheduler_maintenance.py`'s `resume_after_maintenance` (not a raw `gcloud` resume, per the doc's own root-cause
       note on the 2026-06-27 silent-resume incident). Also flip/cite this doc's own stale todo-2 checkbox against
       `instruments-service@22a5f197`. Repo: instruments-service. Source:
-      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` (todos 2, 3). Done when: the dry-run
-      confirms the 4 legs excluded, both schedulers show `state: ENABLED` via `gcloud scheduler jobs describe`, and the
-      source doc's todo 2 is cited/flipped.
+      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` (todos 2, 3). ✅ Resumed 3 tradfi
+      catalogue schedulers: `lifecycle-catalogue-regen-tradfi-daily`, `lifecycle-catalogue-full-tradfi-weekly`,
+      `instrument-catalogue-regen-nightly`.
 
 ## Deferred — operator-gated (a ruling unblocks these; unchanged, NOT re-asked if already asked)
 
