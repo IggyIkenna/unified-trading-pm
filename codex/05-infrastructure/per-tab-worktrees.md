@@ -1234,9 +1234,23 @@ Default is `auto`, which resolves by host label (`ORCHESTRATOR_VM_ID` / `VM_NAME
 `git config --global slotIdentity.host`, falling back to `laptop` — the same signal `slot-identity-lib.sh` already
 uses):
 
-- **Laptop (Ikenna / Harsh) → isolation ON.** Concurrent interactive sessions share a checkout; this is the hazard.
+- **Laptop (Ikenna / Harsh) → isolation is OPT-IN via `--isolated`, NOT automatic** (corrected 2026-08-10, same day it
+  shipped). It was briefly default-on and that was wrong: `quality-gates.sh` cannot resolve its dependencies inside a
+  fresh worktree — the end-to-end dogfood died with `ModuleNotFoundError: No module named 'unified_api_contracts'` and
+  `'pandas'`, because symlinking `.venv` is insufficient (editable/sibling installs resolve relative to the ORIGINAL
+  checkout, and the tooling re-resolves the environment from the worktree's own project dir). Default-on turned every
+  laptop quickmerge into a QG failure — strictly worse than the race it guarded against. Until the venv-resolution
+  problem is solved, use `--no-isolated` semantics by default and reach for `--isolated` deliberately.
 - **agent-orchestrator planning VM → isolation OFF.** One task per slot, each slot already its own clone. Isolation
   would add a full worktree checkout per commit for zero safety gain.
+
+**Isolation forces a full QG re-gate in quickmerge, by design.** Your checkout's Pass-1 `quality-gates.sh` sentinel does
+NOT transfer into the worktree, and carrying it over would be a lie — the sentinel attests _your_ tree, whereas the
+worktree is your named files applied to `origin/HEAD`, a different tree. Re-gating is strictly stronger (it validates
+exactly what is being committed, rather than a sentinel a concurrent session may have invalidated since), and it earned
+its keep immediately: the first end-to-end run of this path caught a live P0 in F7's own `_pm_root` resolution that had
+already reached `live-defi-rollout`. But it costs a full QG run per quickmerge — use `--no-isolated` when you want the
+sentinel fast path and know no peer is writing your checkout.
 
 Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller's checkout into the worktree, because
 `quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink

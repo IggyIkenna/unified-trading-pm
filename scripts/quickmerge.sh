@@ -441,8 +441,21 @@ _qm_should_isolate() {
     force) return 0 ;;
     off) return 1 ;;
   esac
-  # auto: isolate on a laptop, not on a named VM (planning et al).
-  [ "$(_qm_host_label)" = "laptop" ]
+  # auto resolves to OFF (2026-08-10, same-day correction). Isolation was briefly default-ON
+  # for laptops and that was WRONG: quality-gates.sh cannot resolve its dependencies inside a
+  # fresh worktree. Measured in the end-to-end dogfood -- the re-gate died with
+  # `ModuleNotFoundError: No module named 'unified_api_contracts'` and `... 'pandas'`, because
+  # symlinking .venv is not sufficient (the venv resolves editable/sibling installs relative to
+  # the ORIGINAL checkout, and the tooling re-resolves the environment from the worktree's own
+  # project dir). Isolation therefore turns every laptop quickmerge into a QG failure, which is
+  # strictly worse than the shared-index race it was protecting against.
+  #
+  # Kept as an EXPLICIT opt-in (--isolated) so the path stays testable while the venv-resolution
+  # problem is solved; see the todo in
+  # plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md.
+  # safe-doc-push's isolation is UNAFFECTED and remains default-on: the docs fast path runs prek
+  # only, never quality-gates.sh, so it has no dependency-resolution problem to solve.
+  return 1
 }
 
 # Depth backstop -- learned the hard way on 2026-08-10: safe-doc-push's env handshake broke
@@ -555,6 +568,11 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
     done
     if [ "$_qm_copy_ok" = true ]; then
       echo "🔒 quickmerge isolated-worktree mode (host=$(_qm_host_label)) — your working tree is NOT touched"
+      echo "   NOTE: a FULL quality-gates.sh re-gate will run here. Your checkout's Pass-1 sentinel"
+      echo "   does not transfer: it attests YOUR tree, and this worktree is your named files on"
+      echo "   origin/HEAD — a different tree. Re-gating is the correct behaviour (it validates"
+      echo "   exactly what is being committed, not a sentinel a peer may have since invalidated),"
+      echo "   but it costs a full QG run. Use --no-isolated to keep the sentinel fast path."
       echo "   disable with --no-isolated; see codex/05-infrastructure/per-tab-worktrees.md"
       cd "$_qm_iso_wt" || exit 2
       QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
