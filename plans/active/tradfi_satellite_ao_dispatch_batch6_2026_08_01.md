@@ -860,3 +860,28 @@ dying (2026-01-08: 24,169 rows), so partial progress accumulates across retries.
   self-delete: run the corrected manifest query (`underlying in (SP500, ES)`) and check 2025≥90% + 2026≥95% targets. (3)
   If killed: re-launch both years with `--force` again — the idempotent backfill resumes from where it left off. (4)
   Once coverage targets met: flip todo #2 checkbox, update closeout plan MVP-cell row, commit+push, `/done`.
+
+### 2026-08-10T11:24Z — SPOT preemption (NOT zombie-watchdog!), re-launched immediately
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Both VMs preempted at exactly 04:23:35 PDT (T+17 min), confirmed via
+`gcloud compute operations list`:
+
+- `systemevent-1786361015026` — `compute.instances.preempted` on 2025 VM
+- `systemevent-1786361015095` — `compute.instances.preempted` on 2026 VM
+
+This was **NOT the zombie-watchdog** — both VMs were genuinely alive when preempted (PIPELINE_HEARTBEAT running,
+`mtds_chunk_loop.sh` executing, serial showing progress markers). Standard GCP SPOT preemption in a heavily-loaded zone
+(`asia-northeast1-c` hosts dozens of fleet VMs). 0 rows written before preemption — both VMs were still in chunk
+discovery/initialization (year-shard backfill with 53 chunks takes several minutes; preemption hit before first chunk
+completed).
+
+**Re-launched immediately (11:25:26Z-11:25:40Z, `--force`, SPOT)**:
+
+- `tradfi-bf-es-opt-light-2025-20260810-112526` — 2025, RUNNING
+- `tradfi-bf-es-opt-light-2026-20260810-112540` — 2026, RUNNING
+
+Same zone, same SPOT provisioning — may be preempted again (expected SPOT behavior). If preemption recurs repeatedly:
+switch to standard (non-SPOT) for one launch to guarantee completion.
+
+- **NEXT ACTION**: Monitor for data output or preemption. If preempted again within <30 min: try standard provisioning.
+  Once VMs complete: manifest query → coverage check → plan-flip.
