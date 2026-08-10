@@ -33,9 +33,10 @@ source: >-
 resolved_by:
 locked_by:
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 ---
@@ -91,3 +92,20 @@ subclass and today gets zero retries before falling through to shard-level failu
       (currently only `aiohttp.ClientError` is retried; a JSON decode error falls straight through to per-match shard
       isolation with zero retries). Done when: root cause identified and either fixed or documented as a genuine
       upstream provider limitation. Repo: instruments-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-10 (sports tranche)**: RECLASSIFY `assigned_vm: NA` → `planning`. Sole open todo is a
+  single-repo (instruments-service), single-function diagnosis with two bounded terminal outcomes (fix, or document as a
+  genuine upstream limitation) and an explicit stated done-when — meets the worker-determinable-outcome bar. Conflict
+  -check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against every active
+  `assigned_vm: planning` doc, the 5 draft `sports_satellite_ao_dispatch_batch{5,9,10,11,12}` docs, and
+  `sports_consolidated_closeout_2026_07_19.md`: the only other `progressive_stats` hits are unrelated (a `.team`
+  field-mapping bug, a contamination-code scan, and an odds-column question in
+  `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`); `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` — the
+  doc this issue was originally spun out of — explicitly says the JSON-truncation finding is "NOT this todo" and cites
+  this doc as where it's tracked, confirming no competing claim. Clear to dispatch. Added missing
+  `assigned_role: backend_engineer` (matches the discovering agent's own self-tagged role and the adapter-retry-logic
+  nature of the work); corrected `execution_scope` `local-only` → `orchestrator-agent`. Single-todo issue doc —
+  finalize-plan-coverage is structurally exempt (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`) and
+  archival on this one todo's own done-when is trivial, so no companion finalize doc authored.

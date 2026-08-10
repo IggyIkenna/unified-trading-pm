@@ -49,8 +49,8 @@ related:
 created: 2026-08-09
 author: agent (sub-agent, tab-2)
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
@@ -163,3 +163,18 @@ blocked/refused the way another backfill VM is — it must keep running).
   sibling prefix) across 7 files, mirroring the pattern `api_football`'s own launcher already used internally. Verified
   current live fleet has no active violation. Filed the live-credit-budget-accounting question (live VM vs. backfill
   cap) as a separate P3 follow-up rather than folding it into this fix.
+- **na-eligibility-audit 2026-08-10 (sports tranche)**: RECLASSIFY `assigned_vm: NA` → `planning`. The sole open todo
+  ("Investigate whether `odds-api-concurrency-guard.sh`'s credit-budget cap math should also account for the always-on
+  `mtds-live-sports-odds-api-trades-*` VM's ongoing consumption") is a single-repo (deployment-service), single-script,
+  determinable investigation with a stated done-when ("confirm which before changing anything") — meets the
+  worker-determinable-outcome bar, not an open-ended design call. Conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against every active
+  `assigned_vm: planning` doc, the 5 draft `sports_satellite_ao_dispatch_batch{5,9,10,11,12}` docs, and
+  `sports_consolidated_closeout_2026_07_19.md`: found several docs referencing `odds-api-concurrency-guard.sh`, but all
+  are about the VM-COUNT/launch-race guard (cap=1 concurrent VMs) — a different axis from this todo's CREDIT-BUDGET
+  cap-math-vs-live-VM-draw question. `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` has an adjacent but
+  distinct open P3 ("make the guard memory-aware") — different axis again (memory headroom, not budget accounting vs.
+  the live VM). No doc claims this specific question. Clear to dispatch. `assigned_role: data_engineering` already set;
+  `execution_scope` corrected `local-only` → `orchestrator-agent`. Single-todo issue doc — finalize-plan-coverage is
+  structurally exempt (`check_finalize_plan_coverage.py` only globs `plans/active/*.md`) and archival on this one todo's
+  own done-when is trivial, so no companion finalize doc authored.
