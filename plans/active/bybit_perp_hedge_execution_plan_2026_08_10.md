@@ -110,7 +110,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Build `BybitPerpHedgeConnector` — a thin adapter wrapping `BybitCCXTAdapter` for the perp-hedge
+- [x] ✅ [BACKEND] P2. Build `BybitPerpHedgeConnector` — a thin adapter wrapping `BybitCCXTAdapter` for the perp-hedge
       interface. Constructor takes `api_key: str`, `api_secret: str`, `testnet: bool`. Exposes:
       `place_order(symbol, side, size, reduce_only)` → `{"success": bool, "order_id": str | None, "error": str | None}`
       (delegates to `BybitCCXTAdapter.place_order()` translating the perp-hedge call signature), `fetch_positions()` →
