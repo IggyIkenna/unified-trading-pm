@@ -12,7 +12,7 @@ summary: >-
   `sports_datasource_concurrency_gating_audit_2026_08_09.md`, `plan_reconciler_findings_2026_08_07.md` for ui) — no real
   orphans hiding behind the softer signal for any of the 3 tranches. All 3 tranches' most-recent prior parked reports
   (2026-08-09) remain current; nothing new since.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -43,7 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: na_eligibility_auditor ARCHIVE verdict 2026-08-10
 depends_on: []
 context_scope: [/scripts/plan-hygiene/check_ag_closeout_linkage.py]
 source: >-
@@ -106,3 +106,10 @@ None — 0 real orphans, 0 operator-decision-requiring findings across all 3 tra
   surface. **Ledger**: 0 new operator-decision-requiring findings, 0 new orphans, 0 new mistags — this entry is a
   confirmatory re-verification, not a fresh findings set, so 0 new Todos entries needed (existing "None" stands).
   **Balanced.**
+
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: ARCHIVE — verified live: 0 open checkboxes (grep-confirmed),
+  `## Todos` section explicitly states "None", two independent confirmatory Progress Log passes above both re-verified 0
+  orphans/0 findings, no `locked_by`. The open watch-items this doc cross-references (Findings 1-5) belong to and remain
+  tracked in `ag_closeout_audit_prediction_parked_2026_08_09.md`, which stays active — nothing is lost by archiving this
+  doc. Archiving per the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); 0 corpus
+  referrers found besides this doc itself, so no referrer fixups needed.
