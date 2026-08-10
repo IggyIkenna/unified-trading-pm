@@ -127,12 +127,15 @@ task is already in-flight on another live slot.
       (reusing the exact discriminator `_sweep_dirty_slots` already uses) before releasing. Proven by 3 new tests in
       `tests/test_worker_liveness_watchdog.py` replaying incident 1 and incident 2's slot shapes; the silent-but-alive
       test confirmed to FAIL pre-fix with the exact `"...requeued (pinned)"` warning. Full `quality-gates.sh` green.
-- [ ] [BACKEND] P3. On re-dispatch, clear/curl-invalidate the prior owner's slot-side `current_task` (and surface a loud
+- [x] [BACKEND] P3. On re-dispatch, clear/curl-invalidate the prior owner's slot-side `current_task` (and surface a loud
       log naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
       condition observable instead of something main has to catch by pane inspection. — **Shipped
       agent-orchestrator@82578c3** (dispatched + executed via
-      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, full evidence there; checkbox flip pending this
-      batch's finalize plan reconciliation, per this doc's own todo-editing convention).
+      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, full evidence there) — checkbox flipped by
+      plan_reconciler agt-c7578b 2026-08-10, independently re-verified: `82578c3` confirmed ancestor of
+      `origin/live-defi-rollout` and its commit message explicitly cites this exact todo. (batch6-finalize's own todo 2,
+      which would normally do this reconciliation, is still open — flipping directly here since the source doc exited
+      the 12h grace window and the evidence bar was independently met.)
 - [ ] [BACKEND] P3. Make `/done` idempotent + owner-checked: a second `/done` on an already-terminal task by a non-owner
       slot should no-op with a warning (not double-flip the checkbox or re-run reconciliation). Confirm current behavior
       against incidents 1 & 2 (slot 8 /done as non-owner of record for sigabrt; slot 11 potentially /done batch2-001 as
