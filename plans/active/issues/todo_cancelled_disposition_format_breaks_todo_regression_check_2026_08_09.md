@@ -91,21 +91,36 @@ documented as the correct mechanism in `task_template.md` and still not exempted
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **Resolve the contradiction — pick one, then fix the other.** Either (a) teach
+- [x] ✅ [DEVOPS] P2. **Resolve the contradiction — pick one, then fix the other.** Either (a) teach
       `check_todo_regression.sh`'s `_check_one()` to recognize the CANCELLED/SUPERSEDED bold-bullet pattern (e.g. a line
       matching `^- \*\*\[[A-Z]+\] P\d\. CANCELLED`) and count it as equivalent to a retained checkbox line rather than a
       loss, or (b) update `task_template.md`'s CANCELLED/SUPERSEDED convention to keep the checkbox bracket
       (`- [ ] [TAG] P<n>. CANCELLED — SUPERSEDED ...`) instead of converting to a bold non-checkbox bullet, matching
       what `check_todo_regression.sh` already expects. Either fix is small; the risk is leaving them disagreeing.
       Done-when: a fresh conversion of a stale todo to CANCELLED/SUPERSEDED format, per whichever convention wins,
-      passes `check_todo_regression.sh --only <file>` cleanly. **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2 — do NOT action here.**
-- [ ] [DOC] P3. Grep the corpus for any EXISTING bold non-checkbox `CANCELLED —`/`SUPERSEDED` bullets that may have
+      passes `check_todo_regression.sh --only <file>` cleanly. — Done via
+      `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2: `unified-trading-pm@d01cd9ad41` (option (a) shipped —
+      `_check_one()` now counts `^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED` bullets alongside checkbox lines; verified with
+      a scratch-repo before/after repro — old logic flagged a fresh CANCELLED conversion as `lost=1`, fixed logic
+      reports 0 violations; a genuine todo deletion still correctly fails. Full QG green). Independently re-verified
+      2026-08-10 via `ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md` todo 1 — confirmed the regex is live in
+      the shipped script and re-derived `_check_one()`'s counting logic against synthetic before/after content.
+- [x] ✅ [DOC] P3. Grep the corpus for any EXISTING bold non-checkbox `CANCELLED —`/`SUPERSEDED` bullets that may have
       already silently reduced a plan's checkbox total below its origin value without anyone noticing (this check only
       runs `--only` on STAGED files today, so a prior conversion that landed via a path that skipped this hook — e.g.
       `safe-doc-push.sh` before its own recent hardening, or a raw push — could be sitting unnoticed). Not urgent; a
-      hygiene sweep item. **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 3 — do NOT
-      action here.**
+      hygiene sweep item. — Done via `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 3:
+      `unified-trading-pm@4eb3f143ac` (corpus-wide
+      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\. (CANCELLED|SUPERSEDED)'     plans/ codex/` found exactly 3 pre-existing
+      matches, all `CANCELLED` (no bare-`SUPERSEDED` instances):
+      `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md:90` (active plan),
+      `plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md:947` (archived),
+      `plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md:158` (archived). Ran
+      `check_todo_regression.sh --only <file>` against each individually — all 3 report `0 violation(s)` under the
+      now-fixed checker, so no currently-undetected silent checkbox-loss exists in the live corpus from this pattern. No
+      bulk-fix needed per the todo's own scope). Independently re-verified 2026-08-10 via
+      `ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md` todo 1 — re-ran the exact grep, same 3 matches/lines,
+      each individually re-checked as `0 violation(s)`.
 - [ ] [DEVOPS] P2. **Second, independently-found trigger for the SAME root cause — Finding-J archival extraction has no
       exemption either.** `check_todo_regression.sh` also has no special-case for `task_template.md` finding J's OTHER
       documented, sanctioned mechanism: extracting a fully-closed dated Progress Log section verbatim into an
@@ -155,3 +170,8 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   (Finding-J archival-extraction cross-file conservation fix for `check_todo_regression.sh`) is self-flagged in its own
   text as needing 'design judgment on the cross-file correlation logic, not a mechanical one-liner' — genuinely not
   bounded. Agrees with round9's assessment.
+- **ao_satellite_ao_dispatch_batch15_finalize 2026-08-10**: reconciled real completion evidence for both extracted todos
+  (`[DEVOPS] P2` format-contradiction fix, `[DOC] P3` corpus grep) back into this doc — both were bare `➡️ EXTRACTED`
+  redirect pointers, now carry the actual `unified-trading-pm@d01cd9ad41` / `unified-trading-pm@4eb3f143ac` evidence
+  plus the finalize plan's own independent re-verification. The 3rd item (Finding-J cross-file fix) is untouched — still
+  genuinely NA.

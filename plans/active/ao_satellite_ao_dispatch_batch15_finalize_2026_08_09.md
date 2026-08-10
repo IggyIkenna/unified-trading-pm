@@ -81,11 +81,17 @@ source: >-
       `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md:158`,
       `data_pipeline_check_mdps_features_history_2026_07_24.md:947`); re-ran `check_todo_regression.sh --only <file>`
       against each individually — all 3 report `0 violation(s)`, matching the claim.
-- [ ] [REVIEW] P0. **Reconcile verified evidence into each source doc's own checkbox** —
+- [x] ✅ [REVIEW] P0. **Reconcile verified evidence into each source doc's own checkbox** —
       `operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`'s `[DOCS] P3` rename item, and
       `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`'s `[DEVOPS] P2` + `[DOC] P3` items
       — replacing each redirect-pointer with real completion evidence. **Done when**: all 3 source checkboxes carry real
-      evidence, not bare redirect pointers.
+      evidence, not bare redirect pointers. — All 3 flipped `[x]` with real evidence copied from
+      `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todos 1/2/3 (real SHAs + verification detail, not bare
+      `➡️ EXTRACTED` pointers) plus a note that this finalize plan's own todo 1 independently re-verified each: (1)
+      `operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`'s `[DOCS] P3` rename item; (2)
+      `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`'s `[DEVOPS] P2` format-fix item;
+      (3) same doc's `[DOC] P3` corpus-grep item. Both source docs' own Progress Logs also got a dated entry recording
+      the reconciliation.
 - [ ] [REVIEW] P1. **Do NOT archive either source doc.** Confirm each still has open items after this extraction
       (`operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`: 3 remaining;
       `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`: 1 remaining) and leave both
@@ -106,3 +112,8 @@ source: >-
 - **2026-08-09** — Authored in the same turn as batch15, per the mandatory finalize-twin rule (task_template.md §4).
   `sequential: true` since the 4 todos are a genuine chain. Ships `status: active` (not `draft`) — `gate_on_depends`
   already machine-holds every task until batch15's own todos are done, matching the batch7-14 finalize precedent.
+- **2026-08-10 — todo 2 done**: reconciled real completion evidence into both source docs' checkboxes (3 items total),
+  replacing each bare `➡️ EXTRACTED` redirect pointer with the actual SHA + verification detail from batch15's own todos
+  1/2/3, plus a note citing this finalize plan's own todo 1 independent re-verification. Both source docs got a dated
+  Progress Log entry recording the reconciliation. Todos 3/4 (archive-decision confirmation, batch-plan archival ritual)
+  are separate, not actioned by this todo.
