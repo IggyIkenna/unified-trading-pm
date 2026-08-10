@@ -2,7 +2,7 @@
 doc_type: plan
 title: Audit — decide the disposition of every multi-leg execution engine (dead code vs. the real combo to wire in)
 summary: >-
-  Extends `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`'s finding into an actionable
+  Extends `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`'s finding into an actionable
   decision. Three systems exist: `MultiLegOrchestrator` (CeFi/TradFi leader-follower/liquidity-aware, ZERO production
   callers — likely genuinely dead), `instruction_adapter.py`'s `_decompose_hedge_basis`/`HEDGE_BASIS` path (ZERO
   production callers, likely dead), and `AtomicLegExecutor`/`AtomicInstruction`/`AtomicExecutionMode.LEADER_HEDGE` (the
@@ -11,7 +11,7 @@ summary: >-
   `BenchmarkFillEngine.settle()`'s flat, no-sequencing-risk loop today. This audit produces a definitive per-system
   disposition (delete / keep-as-is / wire-in) with evidence, so the paired execution plan implements against a decided
   scope rather than re-litigating architecture mid-implementation.
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -20,8 +20,8 @@ scope: [engineer]
 tags: [multi-leg, basis, arbitrage, leader-follower, determinism, batch-live-parity, atomic-instruction, audit]
 related:
   [
-    /plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
-    /plans/active/multi_leg_execution_systems_execution_2026_08_10.md,
+    /plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
+    /plans/archive/2026_08/multi_leg_execution_systems_execution_2026_08_10.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /plans/active/cross_cutting_strategy_execution_determinism_2026_07_26.md,
   ]
@@ -43,7 +43,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
+    /plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
     execution-service/execution_service/engine/multi_leg_orchestrator.py,
     execution-service/execution_service/engine/instruction_adapter.py,
     execution-service/execution_service/v2/atomic_leg_executor.py,
@@ -60,6 +60,10 @@ source: >-
   "add this to the plan ssot for the multi leg systems, the one that's genuinely separate should be a real combo of
   course" — plus separately confirmed AO-dispatchable with an audit-forces-decision structure.
 ---
+
+> **ARCHIVED 2026-08-10** — all 6 audit todos done; decision artifact shipped into
+> `multi_leg_paper_batch_live_parity_gap_2026_08_10.md`'s "Audit verdicts" section and fully implemented by
+> `multi_leg_execution_systems_execution_2026_08_10.md` (both archived same day).
 
 # Audit — multi-leg execution engine disposition
 
@@ -125,7 +129,7 @@ might come in handy."
       `BenchmarkFillEngine`. Full evidence + tradeoffs in the Progress Log below.
 - [x] ✅ [DOC] P1. **Write the decision artifact**: added
       `## Audit verdicts — multi-leg execution system disposition (2026-08-10)` section to
-      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — unified-trading-pm@ea0418421 — with
+      `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — unified-trading-pm@ea0418421 — with
       the three systems' verdicts (DELETE MultiLegOrchestrator, DELETE instruction_adapter HEDGE_BASIS path, WIRE-IN
       AtomicLegExecutor + routing seam), the exact 6-engine call-site map + 3-runtime wiring points, the
       BenchmarkFillEngine option-(a) recommendation with IBKR MEL precedent, and a summary table. Kept in the issue doc
@@ -365,3 +369,6 @@ might come in handy."
     dropped todo-4 line ("live Pub/Sub leg."), and a garbled duplicate "Prediction-arb engines specifically" tail.
     Repaired inline per git-history ground truth (parent `1c3fe0f816`). Finding filed separately:
     `plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md`.
+- 2026-08-10 (archival, slot 19): All 6 audit todos done + unlocked; decision artifact implemented by
+  `multi_leg_execution_systems_execution_2026_08_10.md` (all 8 todos shipped, live-verified). Archived per the 6-step
+  ritual — banner + `status: archived` + git mv to `plans/archive/2026_08/` + referrer sweep.
