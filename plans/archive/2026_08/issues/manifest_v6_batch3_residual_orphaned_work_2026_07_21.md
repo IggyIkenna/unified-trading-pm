@@ -12,7 +12,7 @@ summary: >-
   not a blind re-execution of the 2026-04-25 todo; (2) `manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md`'s
   "deployment-api data-status API + deployment-ui heatmap filterable by quote_asset/margin_type" — grepped both repos,
   zero hits, never shipped, no active plan claims it.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [cross-cutting] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cefi, cross-cutting],
@@ -65,6 +65,12 @@ depends_on: []
 gate_on_depends: false
 sequential: true
 ---
+
+> **ARCHIVED (2026-08-10) — all todos done, unlocked.** Both residual items resolved: the legacy CAS-path re-scope
+> concluded "no deletion, no code change" (still live + deliberately reused for canonical-index force-rewrites); the
+> quote_asset/margin_type API+UI gap shipped `deployment-api@c250348` + `deployment-ui@e2d109a` (2026-08-05). Archived
+> by `plan_reconciler` (cross-cutting tranche, dispatch `agt-33a6ec`). Deferred work migrated to: none (no
+> DEFERRED/NICE-TO-HAVE items found in this doc).
 
 # What I found
 
@@ -175,6 +181,14 @@ overhead.
   deployment-api response) has not been implemented; this is still genuinely open, just no longer blocked. Same applies
   to the UI todo below (transitively gated on this one).
 
+  **RESOLVED 2026-08-05 — verified by plan_reconciler 2026-08-10.** The checkbox above (`[x]`, `deployment-api@c250348`)
+  is correct, not this note — the API work landed the same day this note's gate-clearing finding did, just a few commits
+  later. Live-verified: `c250348a92eab639e95f66c784ebd062ad0ff6e7` is on `deployment-api`'s `origin/live-defi-rollout`
+  and its own commit message ("Fixes: manifest_v6_batch3_residual_orphaned_work-001") matches the exact 6-file
+  `AXIS_CENSUS_COLUMNS`/schema/manifest-API change this todo describes. This "still genuinely open" line is left in
+  place as the historical record of the state at 08-03, not a live claim — see also the Follow-ups section below, which
+  reopened this (and the UI todo) as fresh duplicate items based on this same stale read; both closed as moot there.
+
 - [x] ✅ [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
       them — deployment-ui@e2d109a | pw:L2 ✓ | regression: tests/e2e/data-status-axis-value-census.spec.ts (repo:
       deployment-ui)
@@ -226,10 +240,20 @@ overhead.
 
 ## Follow-ups
 
-- [ ] [CODE] P3. Add quote_asset/margin_type to the deployment-api data-status API response for cefi chain shards
-      (prose: 'still genuinely open, just no longer blocked'); - [ ] [UI] P3. Make the deployment-ui coverage heatmap
-      filterable by quote_asset/margin_type once the API exposes them (still open, transitively gated).
+- [x] ✅ [CODE] P3. ~~Add quote_asset/margin_type to the deployment-api data-status API response for cefi chain shards~~
+      **MOOT — verified by plan_reconciler 2026-08-10.** This duplicated the main `[CODE] P3` checkbox above (itself a
+      malformed entry too — the original text ran this together with the UI item below via a mid-line `; - [ ]`, which
+      never parsed as two real list items). Both are already done: `deployment-api@c250348` (2026-08-05).
+- [x] ✅ [UI] P3. ~~Make the deployment-ui coverage heatmap filterable by quote_asset/margin_type once the API exposes
+      them~~ **MOOT — verified by plan_reconciler 2026-08-10.** Duplicated the main `[UI] P3` checkbox above; already
+      done: `deployment-ui@e2d109a` (2026-08-05).
 
 > **2026-08-06 archive-candidate audit**: Both CODE and UI todos are marked [x] but the inline na-eligibility-audit
 > 2026-08-03 note says 'the actual API work ... has not been implemented; this is still genuinely open, just no longer
 > blocked' and 'Same applies to the UI todo below' — checkbox contradicts the prose.
+>
+> **RESOLUTION (plan_reconciler, 2026-08-10):** the checkboxes were right, the 08-03 prose was stale by the time this
+> audit ran — both `deployment-api@c250348` and `deployment-ui@e2d109a` shipped 2026-08-05, one day before this audit
+> note, and are confirmed live on `origin/live-defi-rollout` in their respective repos. The correct fix at the time
+> would have been a closing note on the 08-03 prose (now added above), not reopening the items as fresh duplicate
+> Follow-ups (done immediately above, marked moot rather than removed so the record of why they existed is preserved).

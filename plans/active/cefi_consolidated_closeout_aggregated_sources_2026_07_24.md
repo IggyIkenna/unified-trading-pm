@@ -228,7 +228,9 @@ context_scope:
       advisory.
     - **[DATA] P1.** Migrate/restate the historical non-canonical live objects (1,697 colon_wire cefi) as part of the
       surface-A re-run.
-  - [`plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`](/plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md)
+  - [`plans/archive/2026_08/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`](/plans/archive/2026_08/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md)
+    — **ARCHIVED 2026-08-10** (plan_reconciler, cross-cutting tranche): both items resolved, see the archived doc's own
+    banner for evidence.
     - **[CODE] P3.** Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain
       shards (gated on v6 canonicalisation landing).
     - **[UI] P3.** Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API
