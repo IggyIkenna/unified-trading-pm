@@ -639,3 +639,63 @@ within the 1800s window for remaining dates.
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
 Next milestones: 04-28 deadline 16:31:56 → 04-29 spawn ~16:32 → 04-30 spawn ~17:02. Full VM completion ETA ~17:30 UTC.
+
+---
+
+### Session continuation (post-compact #12, ~16:08 UTC)
+
+Compaction kill #12 — pipeline (1303000) + heartbeat (1305009) both dead at session start. Re-armed: pipeline PID
+1871585, heartbeat PID 1872640. Armed monitors: `bjekxi8zh` (90s log polls), `bd7qglize` (60s VM status). Safety
+fallback wakeup at 16:29 UTC.
+
+**Full 1h candle audit across ALL 11 dates** — queried every completion marker from VM log to determine exactly which
+dates have both trades AND derivative_ticker (1h candles = trades ∧ derivative_ticker):
+
+| Date  | trades             | deriv_ticker     | book_snapshot_5  | 1h candles   |
+| ----- | ------------------ | ---------------- | ---------------- | ------------ |
+| 04-20 | ✅ 45/45 (195s)    | ✅ 376/376 (57s) | various          | **COMPLETE** |
+| 04-21 | ✅ 47/47 (197s)    | ❌ never reached | blocked deriv    | PARTIAL      |
+| 04-22 | ❌ never reached   | ❌ never reached | blocked all      | **NONE**     |
+| 04-23 | ✅ 219/219 (1182s) | ❌ never reached | blocked deriv    | PARTIAL      |
+| 04-24 | ❌ never reached   | ❌ never reached | blocked all      | **NONE**     |
+| 04-25 | ✅ 159/159 (753s)  | ❌ never reached | blocked deriv    | PARTIAL      |
+| 04-26 | ✅ 156/156 (686s)  | ✅ 378/378 (55s) | 200/339 (TO)     | **COMPLETE** |
+| 04-27 | ❌ never reached   | ✅ 378/378 (70s) | 300/357 (TO)     | PARTIAL      |
+| 04-28 | ⏳ queued          | ✅ 394/394 (91s) | 🔄 100/352 (28%) | PARTIAL      |
+| 04-29 | ⏳                 | ⏳               | ⏳               | Pending      |
+| 04-30 | ⏳                 | ⏳               | ⏳               | Pending      |
+
+**Result: 2/11 dates have complete 1h candles** (04-20, 04-26). The root cause is confirmed across all dates:
+book_snapshot_5 at ~0.2/s dominates the 1800s budget. The processing order is non-deterministic per date — whichever of
+{trades, derivative_ticker} gets queued AFTER book_snapshot_5 is starved:
+
+| Date  | Order                                          | Starved source    |
+| ----- | ---------------------------------------------- | ----------------- |
+| 04-25 | futures→options→trades→book                    | derivative_ticker |
+| 04-26 | liquidations→options→trades→futures→deriv→book | (none — both ran) |
+| 04-27 | deriv→futures→liquidations→book                | trades            |
+| 04-28 | deriv→book                                     | trades (queued)   |
+
+**04-28 current state** (VM time 16:10): book_snapshot_5 at 100/352 (28%, 372s elapsed, 0.27/s, ETA 937s → ~16:25:50).
+Rate slightly improved from 04-27's 0.21/s. Trades queued behind it — unlikely to start before 16:34 deadline unless
+book_snapshot_5 completes with margin. 04-28 deadline 16:31:56 → 04-29 spawn ~16:32.
+
+**Cascade load**: 04-29 will inherit 04-28's full workload (trades + residual book_snapshot_5 ~252 items) + accumulated
+cascade from 04-26 (139) + 04-27 (57 trades + 57 book). The final dates will face 3-4× normal load.
+
+**Stale manifest errors expanded**: Now observed on 04-24 (age=2-12s) and 04-26 (age=3-8s) in addition to previously
+noted occurrences. All report age <15s against threshold=86400s — comparison direction clearly inverted. Issue doc:
+`/plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`.
+
+**Lessons reinforced**:
+
+- book_snapshot_5 mid-process projections are NOT reliable — 04-27 projected completion at 1715s (85s margin) but rate
+  collapsed after 300/357; the 350 marker never appeared
+- The non-deterministic processing order means each date loses a DIFFERENT candle source — there's no "always secured"
+  guarantee except that one of {trades, derivative_ticker} runs before book_snapshot_5 blocks the queue
+- `ps aux | grep` alone isn't sufficient to detect process death across compaction boundaries — always verify PIDs
+  explicitly at session start
+
+**Where to resume**: Pipeline PID 1871585, heartbeat PID 1872640, monitors `bjekxi8zh` + `bd7qglize`. VM RUNNING. 04-28
+book_snapshot_5 at 100/352. Next: 04-28 deadline 16:31:56 → 04-29 spawn → 04-30 spawn. Full completion ETA ~17:30 UTC.
+On VM stop: pipeline auto-triggers manifest merge → verify candle counts → flip Todo 5.
