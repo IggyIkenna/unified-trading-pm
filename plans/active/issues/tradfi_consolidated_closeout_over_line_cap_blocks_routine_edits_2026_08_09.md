@@ -20,7 +20,7 @@ summary: >-
   (still shows the old, now-confirmed-wrong "66% attempted_failed... not yet launched" text) until this is resolved.
 status: open
 nature: issue
-asset_group: [tradfi, cross-cutting]
+asset_group: [tradfi] # was [tradfi, cross-cutting] — tradfi-only (tradfi_master parent_epic, no other AGs in body), orthogonality fix 2026-08-10 ag-closeout-audit
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
