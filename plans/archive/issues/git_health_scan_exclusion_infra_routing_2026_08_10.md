@@ -86,3 +86,12 @@ roster presence. Do **not** delete any worktrees or backup dirs.
       fleet roster** so its 3-week-stale worktrees stop inflating `summary.dirty` / `not_clean_since`. Operator decision
       on recover-vs-ignore is pending — **do NOT delete the stale worktrees**, only exclude the host from the scan —
       agent-orchestrator@b4ab17e84e
+
+## Progress Log
+
+- **2026-08-10 (slot-7, shipped)** — all 3 todos landed: agent-orchestrator@b4ab17e84e (server-side `*.stale-*` +
+  `_DECOMMISSIONED_HOSTS` exclusions in `server/routes/git_health.py`) + unified-trading-pm@71f10bc0f (reporter/FF-cron
+  `*.stale-*` skip). Archived same day.
+- **2026-08-10 (slot-24, test-coverage addendum)** — agent-orchestrator@0d4b98816 added the missing unit tests for the
+  decommissioned-host exclusion (`_build_local_git_health` drops `ip-172-31-0-185` rows), which the shipped code lacked.
+  QG green (3344 py + 290 dashboard), quickmerge-landed, verified on origin.
