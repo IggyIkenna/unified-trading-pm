@@ -163,18 +163,19 @@ exists" section together before scoping the workstream.
       `tests/test_blocked_claude_session_id_capture.py` proves: capture at creation, survival across a simulated respawn
       (the exact BLK-f09e9ca9 failure mode), and NULL-safety when the slot has no session id. `quality-gates.sh` green.
       Repo: agent-orchestrator.
-- [ ] [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI**, using the
-      `claude_session_id` from the todo above and the already-working `server/transcript_log.py` retrieval primitive
-      (the dashboard's existing "Show log" render, keyed by `claude_session_id` — reuse it, don't rebuild it). Add a
-      "View asking session's transcript" link/button on each open `BlockedRow` card in whichever dashboard component
-      renders the blocked-questions queue (`deployment-ui`), so the operator can jump straight to what the asking agent
-      actually saw, even if that agent/slot is now dead or respawned to a different session. Handle the case where the
-      transcript file has itself rotated out (`claude_session_id` present but no matching JSONL) with a clear
-      "transcript no longer available" state, not a silent failure. **Done when**: a live blocked question shows a
-      working transcript-jump link, a dead-agent/respawned-slot case is manually verified to still resolve to the
-      ORIGINAL session's transcript (not the current occupant's), `pw:L2` Playwright coverage per this workspace's UI
-      gate, and `tsc`/`vitest` clean. Repo: deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column
-      populated first) — sequence via `sequential: true` if these are ever pulled into their own dispatched plan.
+- [x] ✅ [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI** —
+      agent-orchestrator@c6273b2, using the `claude_session_id` from the todo above and the already-working
+      `server/transcript_log.py` retrieval primitive (the dashboard's existing "Show log" render, keyed by
+      `claude_session_id` — reuse it, don't rebuild it). Add a "View asking session's transcript" link/button on each
+      open `BlockedRow` card in whichever dashboard component renders the blocked-questions queue (`deployment-ui`), so
+      the operator can jump straight to what the asking agent actually saw, even if that agent/slot is now dead or
+      respawned to a different session. Handle the case where the transcript file has itself rotated out
+      (`claude_session_id` present but no matching JSONL) with a clear "transcript no longer available" state, not a
+      silent failure. **Done when**: a live blocked question shows a working transcript-jump link, a
+      dead-agent/respawned-slot case is manually verified to still resolve to the ORIGINAL session's transcript (not the
+      current occupant's), `pw:L2` Playwright coverage per this workspace's UI gate, and `tsc`/`vitest` clean. Repo:
+      deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column populated first) — sequence via
+      `sequential: true` if these are ever pulled into their own dispatched plan.
 - [ ] [BACKEND] P3. **Cross-question dedup/similarity surfacing.** Add a lightweight similarity signal across open
       `BlockedRow` entries (per this doc's pain point 3: the same underlying question sometimes gets asked by multiple
       different agents, or multiple times by different sessions on the same respawned slot) — start with an
