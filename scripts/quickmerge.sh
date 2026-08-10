@@ -637,7 +637,15 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       echo "   but it costs a full QG run. Use --no-isolated to keep the sentinel fast path."
       echo "   disable with --no-isolated; see codex/05-infrastructure/per-tab-worktrees.md"
       cd "$_qm_iso_wt" || exit 2
-      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
+      # QG_ALLOW_SKIP_DASHBOARD=1 (2026-08-10): quality-gates.sh fails closed when a repo with
+      # dashboard/package.json has no dashboard/node_modules (agent-orchestrator@8f1a08a). An
+      # isolated worktree NEVER has node_modules (gitignored; isolation provisions a venv but no
+      # node deps), so the full re-gate here would hard-fail on every dashboard-carrying repo.
+      # The isolated worktree IS the "deliberately python-only environment" the override exists
+      # for — the explicit exemption (not the silent skip the commit closed). CI runs the real
+      # UI checks: the shared QG template installs dashboard deps when dashboard/package.json is
+      # present, so a UI regression is still caught at push/promote, just not at the local fast path.
+      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
       _qm_rc=$?
       cd "$_qm_caller_repo" || true
       exit "$_qm_rc"
