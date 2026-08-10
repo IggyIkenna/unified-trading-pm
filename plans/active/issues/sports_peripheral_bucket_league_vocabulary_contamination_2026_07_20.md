@@ -322,3 +322,23 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   - Running the scoped, verified `--apply-prod` migration (13,911 objects / 4,497 units) now; will update this doc +
     flip the plan checkbox once complete and a fresh census confirms 0 objects remain for the 3 target mappings
     (quarantine population excluded per the todo's own done-when wording).
+- **2026-08-10 (slot-22, data_engineering, `sports_closeout_track_x_hygiene-006`) — migration completion attempt →
+  BLOCKED on a live-writer finding; the apply is NOT verified complete and the delete is NOT autonomously executable.**
+  Ran a fresh full-bucket census (13,916 contaminated objects still present: SEGUNDA_DIVISION 13,893 / BRAZIL_SERIE_A 3
+  / ENGLAND_PREMIER_LEAGUE 20) and a delete-pass dry-run against `instruments-store-sports-prd-central-element-323112`:
+  12,988 of 13,916 have byte-identical canonical twins (delete-eligible); 928 have twins that EXIST but differ (src
+  ~35KB vs twin ~14.5KB; concentrated in `batch_footystats` footystats_matches 846 + `batch_api_football` 82 +
+  BRAZIL_SERIE_A 3 + ENGLAND_PREMIER_LEAGUE 15) — QUARANTINE, never delete. **NEW BIG FINDING**:
+  `league=SEGUNDA_DIVISION` is STILL being written — `batch_api_football` standings/teams for day 2026-08-06 AND
+  2026-08-07 are dual-written with the same day's `LA_LIGA_2` standings/teams, and footystats_matches carry
+  `available_at=2026-08-07`. Root causes: `api_football_reference.py:165` still builds the league key via raw
+  `build_league_id(country, name)` (not the 08-04 `_resolve_league_id` fix, which only covered the api_football FIXTURES
+  normalizer); `FOOTYSTATS_HISTORICAL_SEASON_IDS` maps 15+ footystats competition ids → `SEGUNDA_DIVISION`; and the UAC
+  registry (`league_data.py:668-669`) registers BOTH `SEGUNDA_DIVISION` and `LA_LIGA_2` so the write-universe gate
+  accepts both. Because a live writer still emits the contaminated vocabulary, delete-safety protocol Part 3 (no live
+  writer) FAILS → the delete is `no-migrate-first` (fix first), and the migration done-when cannot be durably met until
+  the writers emit only LA_LIGA_2. Filed `/plans/active/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`
+  with the full evidence + P1 fix todos (reference-data league key, registry dedup, footystats mapping) + a gated
+  delete-pass todo once the writers are fixed. Delete-pass tool shipped (`market-tick-data-service`,
+  `scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`, dry-run exit 0,
+  fresh §3a retention check = 604,800s). Plan-level P2 checkbox stays OPEN (done-when not met).

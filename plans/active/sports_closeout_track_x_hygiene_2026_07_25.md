@@ -188,3 +188,12 @@ review-blocking.
 - **context-scout 2026-08-06**: re-scouted; swapped the `league_id_relocation/` dir entry for the specific migration
   script it now points to (`migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`, shipped 2026-08-04),
   still 5 entries.
+- **2026-08-10 (slot-22, data_engineering, `sports_closeout_track_x_hygiene-006`)**: completed the migration completion
+  attempt → **BLOCKED on a live-writer finding (delete NOT autonomously executable; checkbox stays OPEN).** Ran the
+  fresh census (13,916 contaminated objects still present) + delete-pass dry-run: 12,988 byte-identical twins
+  (delete-eligible) / 928 differing twins (quarantine). Found `league=SEGUNDA_DIVISION` is STILL being written
+  (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches available_at=2026-08-07), root
+  causes = `api_football_reference.py:165` raw `build_league_id`, `FOOTYSTATS_HISTORICAL_SEASON_IDS`→SEGUNDA_DIVISION,
+  and the SEGUNDA_DIVISION/LA_LIGA_2 registry duplicate. Delete pass = no-migrate-first (Part 3 fails). Filed
+  `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass todo) + shipped
+  the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first, then the delete.
