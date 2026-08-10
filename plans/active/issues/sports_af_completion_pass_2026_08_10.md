@@ -308,11 +308,19 @@ depends_on: []
           date now covers more active leagues, pace per calendar-date decelerating as expected into 2022+ seasons.
         - No code shipped — pure monitoring.
 
-## Deferred work after 2026-08-10 ~20:20Z
+      - **2026-08-10 (slot 28, data_engineering, ~20:38Z)** — STANDINGS VM heartbeat check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-05-04` (~20:20Z) → `2021-05-30` (~20:38Z). Monotonic, forward progress. Heartbeat alive, no `exit_code=`
+          yet. VM confirmed RUNNING.
+        - Pace ~26 season-start-dates in ~18 min (~1.4 dates/min). Still in 2021 seasons. Non-linear density curve
+          continues — later years will be denser. Run now ~4h old.
+        - No code shipped — pure monitoring.
+
+## Deferred work after 2026-08-10 ~20:38Z
 
 | Item                                                             | State / why deferred                                  | Blocked on                         |
 | ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-05-04`, pace non-linear (decelerating) | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-05-30`, pace ~1.4 dates/min non-linear | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
