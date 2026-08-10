@@ -224,11 +224,28 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `4fa74521bb`). Evidence: `audit_false_done.py --db .../state.db --pm ../unified-trading-pm` (live read-only, same
       host). Source: `/plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md:343`. Repo:
       agent-orchestrator (read-only DB query).
-- [ ] [BACKEND] P3. **Confirm whether the standing false-done breach's silent breach→breach Slack-transition-only
+- [x] ✅ [BACKEND] P3. **Confirm whether the standing false-done breach's silent breach→breach Slack-transition-only
       behavior in `audit_cron_notify.apply_transition` matches the actionable-only alerting contract** documented in
       `/codex/04-architecture/agent-orchestrator-alerting.md`. Report match/mismatch; if mismatched, file a follow-up
       todo rather than fixing silently. **Done when**: the match/mismatch verdict is recorded with the specific contract
-      clause cited. Source:
+      clause cited. — **VERDICT: MATCH** (2026-08-10, slot 25). `audit_cron_notify.apply_transition`
+      (`scripts/orchestrator/audit_cron_notify.py:73-93`) implements exactly the state-transition dedup the contract
+      mandates: clean→breach fires the OPEN page (`notify_audit_false_done_breach`), breach→clean fires the ✅ RESOLVED
+      bookend (`notify_audit_false_done_resolved`), breach→breach / clean→clean stay silent — disk-persisted via
+      `dedup_state.load/save_bool_sentinel` so the 15-min timer tick (`OnUnitActiveSec=900`) never re-pages. **Contract
+      clause cited**: `/codex/04-architecture/agent-orchestrator-alerting.md` summary — "Standing conditions dedup by
+      state-transition (fire on change / RESOLVED / a re-remind interval), never every tick"; plus § "Alert-lifecycle
+      closure bookends — every actionable OPEN gets a visible CLOSE" ("post a ✅ closure bookend for every actionable
+      alert that previously paged") and § "What DOES page (operator-actionable)" (false-done is a genuine
+      data-correctness failure with an explicit Action, pages once per episode). A re-remind interval is one of three
+      listed dedup modes, not a mandate — the codex's own pager-audit table lists change-only standing pagers with no
+      re-remind (`notify_disk_space_low`, `notify_head_backward_dataloss`,
+      `notify_backlog_sibling_reset_guard_refused`), and git-staleness's 4h re-remind was added for a specific coverage
+      bug, not a general rule. The wrapper's design SSOT
+      (`plans/archive/issues/audit_cron_slack_alerting_and_15min_cadence_2026_07_25.md`) was built explicitly to mirror
+      this clause; transition behavior is regression-tested (`tests/test_slack_notifications.py`). No mismatch → no
+      follow-up todo required. Minor observation (not actioned, out of scope): the codex "Complete pager audit
+      (2026-07-13)" table predates these 4 `notify_audit_*` notifiers (added 2026-07-25) and does not list them. Source:
       `/plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md:347`. Repo:
       agent-orchestrator (read-only).
 - [x] ✅ [DEVOPS] P2. **Clean-reset the 5 drift-violating repos on `ip-172-31-5-118` slot 0** (`e2e-testing`,
