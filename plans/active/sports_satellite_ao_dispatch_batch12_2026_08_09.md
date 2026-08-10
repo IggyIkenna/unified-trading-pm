@@ -162,7 +162,7 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
       `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (## Follow-ups, `[DATA] P3`).
       Done when: each of the 23 days has a stated, evidenced explanation, or a citation showing the in-flight backfill
       already covers/will cover it.
-- [ ] [CODE] P2. **Register a `sports-drop-stale` category in
+- [x] ✅ [CODE] P2. **Register a `sports-drop-stale` category in
       `deployment-service/scripts/vm/launch-canonical-migration-vm.sh`**, mirroring the existing `cefi-drop-stale`
       category's exact pattern (line ~1229), then run the dry-run census against the real sports target population to
       measure Part-5's 100% canonical-twin-coverage proof for REAL (not just the delete mechanism's existing
@@ -465,3 +465,25 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
   (`memory.current`/`memory.max` on `/sys/fs/cgroup/system.slice/orchestrator.service/`) before deciding whether a
   resource-watchdog kill was a code problem, a genuinely-too-high peak, or a transient host-contention spike worth
   retrying against.
+
+- **2026-08-10 (slot-7, todo 4 — `sports-drop-stale` category registered + real dry-run census executed; twin-coverage
+  measured 74.3%, Part-5 proof FAILS, delete stays [OPERATOR])**: Registered the `sports-drop-stale` category in
+  `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` mirroring `cefi-drop-stale` exactly (usage line,
+  `_script_for` case, apply-on-full list, `_ag="SPORTS"` normalization, main dispatcher) — shipped
+  `deployment-service@ad2ee421` (quickmerge, `quality-gates.sh --no-fix` green, sentinel-matched, ancestry-verified).
+  The category invokes
+  `migrate_sports_canonical_v9 --surface mdps --start-date $START_DATE --end-date $END_DATE --workers 16 --drop-stale`
+  (DRY-BY-DEFAULT; `--apply` only on `full`, which stays the operator-gated follow-up). **Executed the dry-run census
+  for real** via `bash launch-canonical-migration-vm.sh sports-drop-stale 2020-06-06 2026-08-10 dry` — VM
+  `canonical-migration-sports-drop-stale-20260810-100832` (e2-standard-8, SPOT, asia-northeast1-c, tarballs pinned
+  UAC@3cca8360/UTL@9a338051/MTDS@01753701), 2026-08-10 ~10:12–10:25Z.
+  **`MDPS DROP-STALE TOTAL checked=178291 deleted=0 (DRY-RUN)`** — raw 69,007 (42,920 SKIPs) + processed 109,284 (2,852
+  SKIPs) = **45,772 no-twin (25.7%) → twin-coverage 74.3%** (132,519/178,291). Dominant raw gaps: FOOTYSTATS
+  `batch_footystats`→`batch_odds_api` twin absent (15,981) + `batch_odds_api` venue-`trades`
+  (MATCHBOOK/PINNACLE/BETFAIR/DRAFTKINGS…) with league-alias dispatch anomalies (`SEGUNDA_DIVISION→LA_LIGA_2` — possible
+  dispatch bug vs real gap, worth a follow-up). Processed gaps: `odds_horizon_bucket` lacking
+  `batch_mdps_odds_horizon_bucket` twins (2,852). **Conclusion**: Part-5 100%-coverage proof FAILS at 74.3% — the E8
+  delete stays `[OPERATOR]` and is NOT ready; the 45,772 no-twin objects need canonical copy (`sports-mdps --apply`) +
+  dispatch-anomaly investigation first. Caveat: 56-VM `mdps-sports` backfill in-flight on the same bucket (2026-08-10);
+  historical-estate gaps are real, but re-run the census post-convergence. Todo 4 flipped; result written into the
+  source doc's E8 section (`/plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`).
