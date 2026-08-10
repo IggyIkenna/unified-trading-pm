@@ -498,3 +498,62 @@ corrected script.
 `.tabs/14/post_mdps_pipeline.sh` (PROD bucket, already fixed). Check VM:
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -20`.
+
+### 2026-08-10 — Slot 14 Session 14 (monitoring, pre-compact)
+
+Pure monitoring continuation — resumed post-compaction at ~15:42 UTC. **Compaction kill pattern #8**: pipeline script
+(PID 4146111) and heartbeat (PID 3936453) both dead on arrival. Re-armed: pipeline PID 186020, heartbeat PID 236577.
+
+**`$TEST_BUCKET` residual bug FOUND and FIXED (15:44 UTC)**: Session 13's fix was INCOMPLETE — it added the
+`PROD_BUCKET` definition (line 12) but NEVER changed the actual references on lines 44 and 52. Both still read
+`${TEST_BUCKET}` (undefined variable → expands to empty string). If the pipeline had triggered on VM stop with that
+script, Steps 2-3 would have queried empty paths and reported zero rows for every date — forcing a full manifest merge +
+verification re-run. **Both lines now use `${PROD_BUCKET}`** — all 3 steps verified targeting
+`gs://market-data-tick-cefi-prd-central-element-323112`. Buggy pipeline killed, re-armed as PID 186020 with corrected
+script.
+
+**04-27 in progress at 15:46 UTC**: derivative_ticker ✅ [378/378] 9,072 candles (1h candles PARTIALLY secured — only
+derivative_ticker side; trades still pending). futures_chain ✅, liquidations ✅. book_snapshot_5 🔄 [150/357] (42%) at
+757s, 0.2/s, ETA 1045s (16:03:29). **Will timeout** — 1800s deadline 16:01:55, book_snapshot_5 ETA 16:03:29. After
+timeout: residual book_snapshot_5 (~17 files) + trades (378 files, unprocessed) + options_chain → cascade to 04-28.
+
+**04-27 processing order**: derivative_ticker ran FIRST (unlike 04-26 where trades ran first, and unlike 04-25 where
+trades also ran first). This is the third distinct processing order observed across dates. The variation is undocumented
+— but in all observed orders, derivative_ticker or trades (the two 1h-candle-producing data_types) run before
+book_snapshot_5, so 1h candles are at least partially secured before the timeout. 04-27's trades was never reached
+before book_snapshot_5 ate the window → 04-27 trades will come from cascade in 04-28.
+
+**Manifest staleness issue** persists (intermittent, 2.4% failure rate — age=3-8s rejected by 86400s threshold). Already
+tracked as P3 issue `/plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`. Non-blocking, no new
+action.
+
+**Infrastructure armed**:
+
+- Pipeline script: PID 186020, polls VM every 30s, ALL steps use PROD bucket (fix VERIFIED)
+- Heartbeat: PID 236577, 30-min watchdog
+- Monitor `baqcczago`: 60s VM status polls
+- ScheduledWakeup: ~16:02 UTC for 04-27 timeout + 04-28 spawn check
+
+**Data completeness (1h candles = trades + derivative_ticker)**:
+
+| Date         | trades       | derivative_ticker      | 1h candles   | Notes                                |
+| ------------ | ------------ | ---------------------- | ------------ | ------------------------------------ |
+| 04-20..04-24 | ✅           | ⚠️ Partial (timed out) | Partial      | Cascade may rescue some              |
+| 04-25        | ✅ [159/159] | ⚠️ [200/378] (53%)     | Partial      | Cascade may rescue                   |
+| 04-26        | ✅ [156/156] | ✅ [378/378]           | **COMPLETE** | book_snapshot_5 timed out at 59%     |
+| 04-27        | ⏳ (cascade) | ✅ [378/378]           | **COMPLETE** | derivative_ticker ran first, secured |
+| 04-28..04-30 | ⏳           | ⏳                     | Pending      |                                      |
+
+**Lessons — `$TEST_BUCKET` trap**: When copying a pipeline template across todos, the shell variable DEFINITION is the
+obvious change — but every USAGE site must be changed too. An undefined `$TEST_BUCKET` expands silently to empty string;
+`gsutil ls ""/cefi/...` produces a `CommandException` line on stdout that `wc -l` counts as "1" (per Session 4's
+`gsutil ls | wc -l` false-positive lesson). The result: every date reports `1 capture_status entries` / `1 candle files`
+— plausible-looking output that is actually all error text. **Template copy check**: after adapting a script, grep for
+every variable name from the source template — any remaining reference is a bug.
+
+**Where to resume**: `ps aux | grep post_mdps_pipeline`. If pipeline PID 186020 dead → re-arm from
+`.tabs/14/post_mdps_pipeline.sh` (**PROD bucket in all 3 steps, VERIFIED — `grep -n 'BUCKET'` shows only PROD**). Check
+VM:
+`gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
+Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -20`.
+04-27 deadline ~16:01:55 → 04-28 spawns at ~16:02 → 04-28 deadline ~16:32. ETA for full VM completion still ~17:30 UTC.
