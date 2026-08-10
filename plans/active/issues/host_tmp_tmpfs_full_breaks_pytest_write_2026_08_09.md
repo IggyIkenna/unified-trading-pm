@@ -23,7 +23,11 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [infra, disk-space, tmpfs, host-contention, capacity, pytest]
 related:
-  [/plans/active/issues/host_root_disk_full_transient_2026_07_13.md, /codex/05-infrastructure/vm-launcher-runbook.md]
+  [
+    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
+    /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 created: 2026-08-09
 last_updated: 2026-08-09
 parent_epic: infrastructure_master
@@ -78,5 +82,12 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
 - [ ] [INFRA] P1. **Determine whether `/tmp` tmpfs sizing is fixed-too-small or the real problem is scratch files not
       being cleaned up post-run**, and fix at the root (raise tmpfs size and/or route large one-off parquet scratch
       writes to a non-tmpfs path). Repo: unified-trading-pm (host/VM config) or wherever the tmpfs mount is provisioned.
+      **Relevant prior history (added 2026-08-10, plan_reconciler infra shard, agt-716973)**:
+      `shared_host_home_filesystem_full_2026_07_26.md` documents this SAME `/tmp` tmpfs-full symptom recurring at least
+      4 times between 2026-07-27 and 07-31, at a measured **2.0G total tmpfs** size then — vs. this doc's 2026-08-09
+      reading of an **8.0G total tmpfs**. The tmpfs was already resized ~4x between those dates and still saturates —
+      suggestive evidence toward "cleanup problem, not sizing problem." That doc also documents a workaround (point
+      `TMPDIR`/`TF_DATA_DIR` at a short path under `/home/ubuntu/` instead of `/tmp`) worth checking before this todo's
+      own investigation starts from scratch.
 - [ ] [INFRA] P2. **Audit the specific large `/tmp/enum-univ-*` files for genuine ownership** (is the writing process
       still alive?) before any cleanup — do not blind-delete another slot's WIP.

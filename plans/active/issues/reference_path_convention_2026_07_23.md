@@ -100,20 +100,22 @@ estimate_calibrated_ai_days: 1.6
       physically sitting in `plans/active/` and apply the real 6-step ritual, including the referrer-update step this
       exact doc's own P3 items already partially track) — not filed as a new todo here since it's outside this specific
       item's scope and the existing dangling-reference P3 backlog below already covers the referrer-update half.
-- [ ] [DOC] P3. **109 format violations** (baseline-seeded, `scripts/plan-hygiene/reference_paths_baseline.yaml`) — bare
-      `related:` filenames the migration could not safely resolve: some are genuinely ambiguous (multiple files share
-      the basename, e.g. `README.md` in ~35 places), some are genuinely dangling (target doesn't exist anywhere under
-      `plans/` or `codex/`). Re-run `python3 scripts/plan-hygiene/check_reference_paths.py` for the live list; fix
-      what's resolvable by hand, remove references that are genuinely stale, then `--update-baseline` to ratchet the
-      count down. **Done when**: `format_count` in the baseline reaches 0.
-- [ ] [DOC] P3. **1,286 existence violations** (baseline-seeded) — pre-existing dangling `/plans/...`/`/codex/...`
+- [ ] [DOC] P3. **62 format violations** (baseline 81 — CORRECTED 2026-08-10 by plan_reconciler infra shard, agt-716973:
+      live-ran `python3 scripts/plan-hygiene/check_reference_paths.py`, got `format: 62 (baseline 81)`, well under
+      baseline/PASS. Was stated as "109" here, ~20x stale — the number drifted down via unrelated corpus cleanup over 2+
+      weeks but this todo's text was never refreshed; see Progress Log) — bare `related:` filenames the migration could
+      not safely resolve: some are genuinely ambiguous (multiple files share the basename, e.g. `README.md` in ~35
+      places), some are genuinely dangling (target doesn't exist anywhere under `plans/` or `codex/`). Re-run the
+      checker for the live list; fix what's resolvable by hand, remove stale references, then `--update-baseline` to
+      ratchet the count down further. **Done when**: `format_count` in the baseline reaches 0.
+- [ ] [DOC] P3. **61 existence violations** (baseline 86 — CORRECTED 2026-08-10, same live run as above: was stated as
+      "1,286" here, ~21x stale, same drift-without-refresh cause) — pre-existing dangling `/plans/...`/`/codex/...`
       references this migration surfaced but did not cause: codex docs describing planned-but-never-shipped content
       (e.g. several `codex/09-strategy/architecture-v2/` docs cite sibling strategy docs that appear to have never been
-      written), and references to plans since renamed/archived/consolidated under a different slug. Re-run
-      `python3 scripts/plan-hygiene/check_reference_paths.py` for the live list. Large enough to warrant its own triage
-      pass (candidate for a Workflow fan-out — independent per-reference, no cross-file dependency) rather than one
-      session's manual sweep. **Done when**: `existence_count` in the baseline reaches 0, or the remaining count is
-      explicitly re-baselined with a stated reason per entry (e.g. "intentionally documents unshipped future work").
+      written), and references to plans since renamed/archived/consolidated under a different slug. Re-run the checker
+      for the live list. At 61 items this no longer needs a dedicated Workflow fan-out (the doc's prior framing, sized
+      for 1,286) — a single-session sweep is now proportionate. **Done when**: `existence_count` in the baseline reaches
+      0, or the remaining count is explicitly re-baselined with a stated reason per entry.
 - [x] [DOC] P3. ✅ **DONE 2026-07-25 (agt-72ba07)** — plan_health hard-failure regression (`existence_count` 1257→1381,
       +124 net new dangling refs / 79 distinct stale targets) root-caused to two un-referrer-updated moves: (1) the
       `codex/14-playbooks/` → `codex/14-customer-journeys/` rename (with a `infra-spec/` subset moving to
@@ -204,13 +206,11 @@ convention's scope).
   already-resolved investigation, not new open scope. The 5 open items (`- [ ]` count confirmed via
   `grep -cE '^- \[ \]'`) are unchanged from the prior two verdicts: the P2 REVIEW archival-convention policy call is
   still unresolved, and the two P3 dangling-reference backlogs still partially depend on it. Doc stays NA as a whole.
-- [ ] [DOC] P3. **2026-08-03 baseline drift, root cause not yet investigated**: `check_reference_paths.py` live-run
-      showed `existence_count` 88 vs. baseline 87 (format_count 81, unchanged/passing) — confirmed via `git stash`
-      round-trip that this +1 already existed at HEAD before that session's own edits, so it landed via someone else's
-      commit in the interim (this doc's own baseline had dropped to ~87-901 range across 2026-08-02, so a lot of cleanup
-      landed that day too — exact commit that introduced the +1 not identified). **Done when**: run
-      `python3 scripts/plan-hygiene/check_reference_paths.py` fresh, diff against this doc's last-known-good baseline
-      number, find + fix the specific new dangling ref, `--update-baseline`.
+- [x] [DOC] P3. **2026-08-03 baseline drift** — CLOSED 2026-08-10 (plan_reconciler infra shard, agt-716973): MOOT. This
+      item asked to re-measure a +1-over-baseline (88 vs 87) condition; live re-measurement today shows
+      `existence_count: 61` against a baseline of `86` — comfortably PASSING, the described drift condition no longer
+      exists (superseded by subsequent corpus-wide cleanup). Re-running the prescribed diagnostic today would find
+      nothing resembling the original complaint.
 
 - **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, but this is a REVISED read,
   not a re-stamp.** In scope because the doc was edited since the 2026-08-02 marker. The P2 REVIEW item (line 85,
@@ -262,3 +262,12 @@ convention's scope).
   finalize: `reference_path_convention_2026_07_23_finalize_2026_08_08.md`.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-10 (plan_reconciler infra shard, agt-716973)**: live-ran `check_reference_paths.py` (repo root) —
+  `format: 62 (baseline 81)`, `existence: 61 (baseline 86)`, both PASS with large margin. The doc's 2 remaining open
+  todos stated 109/1,286 respectively (~20-21x stale vs. live), a drift that accumulated silently across 8+ prior
+  na-eligibility-audit passes (all of which re-verified the doc's DISPOSITION correctly but never re-ran the cited
+  checker to confirm the NUMBERS, including the 2026-08-08 RECLASSIFY that dispatched this doc to
+  `assigned_vm: planning` using the stale 1,286 figure to justify a Workflow-fan-out framing). Updated both todos to
+  live numbers + closed the now-moot 2026-08-03 baseline-drift item. **Practical effect**: a future AO dispatch of this
+  doc's existence-violation todo will now correctly size a single-session sweep instead of over-provisioning a large
+  fan-out for a backlog that no longer exists at that size.

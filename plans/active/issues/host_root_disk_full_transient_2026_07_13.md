@@ -40,9 +40,11 @@ context_scope:
 source: [unified_trading_api_pip_audit_stale_ignore_list-001 -- observed while shipping the dependency fix]
 related:
   [
-    plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md,
+    /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
+    /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
   ]
 depends_on: []
 ---

@@ -52,6 +52,8 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+sequential: true # 2026-08-10 (plan_reconciler infra shard, agt-716973): todo 3 explicitly must not run before
+# todos 1+2 land (own text: "DO NOT RUN until todos 1+2 have landed") but had no machine enforcement -- see Progress Log
 context_scope:
   [
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
@@ -186,3 +188,8 @@ by a subsequent `/na-eligibility-audit` pass applying that same self-assessment.
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `check_todo_format.sh`, confirmed affected
   by the same fence-blindness bug per the doc's own "Recommended fix" evidence and todo 2.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-10 (plan_reconciler infra shard, agt-716973)**: added `sequential: true` to frontmatter. Todo 3's own text
+  already stated an ordering dependency on todos 1+2 ("DO NOT RUN until... ordering NOT machine-enforced") but no
+  `sequential:`/`depends_on`+`gate_on_depends` backed it — per CLAUDE.md, same-plan todos run concurrently by default,
+  so AO could have dispatched todo 3 (bake the corrected baseline) before todos 1+2 shipped (the fence-parsing fix),
+  baking in the inflated baseline the fix exists to correct. Todo 3's own warning is now machine-enforced.
