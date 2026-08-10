@@ -10,7 +10,7 @@ summary: >-
   their own actionable "Done when: run X with credential Y" recipe. Re-baselined 1->2 to unblock (established precedent:
   commit 309124c73 did the same for a prose false-positive). Filing this so the checker itself gets tightened rather
   than the baseline silently ratcheting up again next time.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -49,6 +49,11 @@ context_scope:
     /codex/02-data/external-data-always-available-rule.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Both todos done: BLK-<id> recognition shipped 2026-07-30; BLOCKED-PERMISSIONS taxonomy token
+> created + shipped 2026-08-10 (`unified-trading-pm@8ae8dbbc50`). Moved by slot-27 (infra).
 
 # credential-ask orphan checker: stale ping-format + BLOCKED-CREDENTIALS meaning overload
 
@@ -93,13 +98,18 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
 - [x] [SCRIPT] P3. **DONE — already shipped, unified-trading-pm@75adf01c4** ("fix(qg): recognize BLK-<id> as valid
       credential-ask-orphan evidence"). Verified live 2026-07-30: `BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")` is
       defined and wired into `_has_ask_evidence()`'s accepted-evidence checks alongside `PING_PATH_RE`/`SECRET_NAME_RE`.
-- [ ] [SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact remedy
-      command, no secret needed) should be tagged with a distinct permissions-gap marker instead of the credential
-      marker going forward — a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful.
-      If adopted, migrate the two lines found here as part of the same change.
+- [x] ✅ [SCRIPT] P3. **DONE — adopted, shipped unified-trading-pm@8ae8dbbc50**. Created `BLOCKED-PERMISSIONS` as a
+      distinct closed-set taxonomy token (SSOT: `/codex/02-data/external-data-always-available-rule.md` § "Status
+      Taxonomy"): IAM role/permission gap naming exact missing role + exact remedy command, no secret needed;
+      self-service per `RULES.md` §5. Updated `check_credential_ask_orphans.py` docstring with full taxonomy. Migrated
+      the bucket_iam line 262 (`setIamPolicy` gap → `BLOCKED-PERMISSIONS`). The instruments_tradfi line 521 (ICE futures
+      data) was correctly `BLOCKED-CREDENTIALS` — a vendor-data-subscription ask, not an IAM gap — and was NOT migrated.
 
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (4 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **slot-27 (infra) 2026-08-10**: flipped last open checkbox. Created `BLOCKED-PERMISSIONS` taxonomy token in codex SSOT
+  - checker docstring; migrated the one genuine IAM-permission-gap line (bucket_iam `setIamPolicy`); instruments_tradfi
+    ICE line remains correctly tagged `BLOCKED-CREDENTIALS`. Shipped `unified-trading-pm@8ae8dbbc50`.

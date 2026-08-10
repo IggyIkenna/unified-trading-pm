@@ -321,7 +321,7 @@ Writable set (32 docs, outside 12h grace):
 - plans/archive/2026_08/issues/aws_codebuild_terraform_import_pending_2026_07_22.md
 - plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md
 - plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md
-- plans/active/issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md
+- plans/archive/issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md
 - plans/active/issues/deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md
 - plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md
 - plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
