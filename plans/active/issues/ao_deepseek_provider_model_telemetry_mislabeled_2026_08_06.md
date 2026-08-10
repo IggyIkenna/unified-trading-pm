@@ -19,6 +19,9 @@ summary: >-
   actually produced by a Claude session vs a much cheaper/weaker DeepSeek Flash session — undermining any policy
   (explicit or implicit) that scales scrutiny by model tier.
 status: open
+# Sanctioned bridge (archive-exempt on the flip-only commit, dropped on the archival git mv) —
+# see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md § archive_exempt.
+archive_exempt: true
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -131,8 +134,8 @@ and nothing on the server side catches the mismatch.
       telemetry is equally misleading for non-Anthropic sessions and spawn flags are wasted/possibly erroneous.
       Follow-up fix tracked as new todo 4. — agent-orchestrator@(audit-only, no code change).
 
-- [ ] [SCRIPT] P3. **NEW (slot-13 audit, 2026-08-10).** Fix the effort/thinking cross-check gap found by todo 3's audit:
-      either (a) add `effective_effort_for_telemetry()` / `effective_thinking_for_telemetry()` to `accounts.py`
+- [x] ✅ [SCRIPT] P3. **NEW (slot-13 audit, 2026-08-10).** Fix the effort/thinking cross-check gap found by todo 3's
+      audit: either (a) add `effective_effort_for_telemetry()` / `effective_thinking_for_telemetry()` to `accounts.py`
       mirroring `effective_model_for_telemetry()`, storing a provider-aware value (e.g. `null` or the provider's own
       reasoning-tier label for non-Anthropic) in `SlotRow` + `slot_boot` activity events, AND/OR (b) provider-gate the
       `--effort` and `--max-thinking-tokens` CLI flags in `tmux_spawn.py:_append_model_flags()` the same way
@@ -144,7 +147,15 @@ and nothing on the server side catches the mismatch.
       2026-08-10): this todo is already implemented as orphan commit `cf9eef3` (slot-11, `agent-orchestrator`, "fix(ao):
       provider-gate effort/thinking telemetry + spawn flags for non-Anthropic", 2026-08-10 08:56) — 1 ahead of origin
       and unshipped. Recover it (`git -C <tabs>/11/agent-orchestrator show cf9eef3`), verify against this done-when,
-      ship via quickmerge — do NOT re-author it.
+      ship via quickmerge — do NOT re-author it. — agent-orchestrator@70281b1: recovered orphan commit `cf9eef3`
+      byte-faithful (cherry-pick onto LDR HEAD; change set identical — 13 files, 273+/8−; only delta = preserved HEAD's
+      `running_checkout_sha` import in tmux_spawn.py); both done-when assertions covered by
+      `test_deepseek_flash_boot_stores_none_effort_thinking_not_anthropic_labels` (SlotRow.effort/thinking → None, not
+      `"high"`/`"on"`) + `test_non_anthropic_spawn_omits_effort_and_thinking_flags` (non-Anthropic spawns omit
+      `--effort`/`--max-thinking-tokens`); full quality-gates.sh green (3156 passed). Companion test-isolation fix at
+      `7a1016f` (patch `capture_pane` in the two `switch_main_*` resume tests — env-dependent flake on the shared host
+      where the live `orch-agent-main` pane reads ~92% context and dropped the resume target; stacks on top of the
+      already-landed `425a779` `_main_context_saturated_pct` patch). (slot-29, 2026-08-10).
 
 ## Progress Log
 
@@ -197,3 +208,20 @@ and nothing on the server side catches the mismatch.
   files (`accounts.py`, `slots_worker.py`, `model_tier.py`, `tmux_spawn.py:_append_model_flags`). No code change made
   (audit-only). Filed follow-up fix as new todo 4 (provider-corrected telemetry + provider-gated CLI flags, same
   `effective_*_for_telemetry()` pattern as the `model` fix). Checkbox flipped; Progress Log entry written.
+
+- **slot-29 2026-08-10 (infra, todo -004, `ao_deepseek_provider_model_telemetry_mislabeled-004`)**: RECOVERED + SHIPPED
+  the already-implemented orphan commit `cf9eef3` per the RECOVERY NOTE (did NOT re-author). Cherry-picked the exact
+  commit byte-faithful onto LDR HEAD (only delta vs the original: preserved HEAD's `running_checkout_sha` import after a
+  trivial tmux_spawn.py import conflict). Recovered change set = 13 files, 273+/8−: `effective_effort_for_telemetry()` /
+  `effective_thinking_for_telemetry()` in `accounts.py` (non-Anthropic → `None`), wired into `boot_slot()`'s
+  `upsert_slot` + `slot_boot` event; `_build_claude_flags()` provider-gates `--effort`/`--max-thinking-tokens`
+  (Anthropic-only), `provider` threaded through all 17 `spawn`/`spawn_named` call sites. Shipped as
+  `agent-orchestrator@70281b1` (+ `7a1016f` for the companion test-isolation fix) via quickmerge after full
+  `quality-gates.sh` green (3156 passed). QG initially FAILED on 2 pre-existing env-dependent tests
+  (`test_switch_main_account_resumes_with_stored_session`, `test_switch_main_model_resumes_and_writes_sonnet_default`) —
+  verified PRE-EXISTING at base HEAD via a clean worktree (byte-identical failure): both read the LIVE `orch-agent-main`
+  tmux pane through the unpached `_main_context_saturated_pct()` fallback (~92% context on this host → resume dropped →
+  `assert None == 'sess-abc'`). Fixed the determinism gap by patching `capture_pane` in both tests (4a131ed/7a1016f),
+  which stacks on top of the concurrently-landed `425a779` `_main_context_saturated_pct` patch from another slot. Both
+  done-when assertions covered by `test_deepseek_flash_boot_stores_none_effort_thinking_not_anthropic_labels`
+  - `test_non_anthropic_spawn_omits_effort_and_thinking_flags`. Checkbox flipped; Progress Log entry written.
