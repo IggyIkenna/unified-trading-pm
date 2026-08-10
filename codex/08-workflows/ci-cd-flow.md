@@ -183,14 +183,18 @@ steps below are required when flipping a repo off `ldr_main`:
    TEMPLATE + re-run `rollout-workflow-templates.sh` (never hand-edit a per-repo rendered copy), then ship each affected
    repo via its own `quickmerge.sh --agent --files`. The other four are PM-only drivers, edited directly:
 
-   | File                                                       | Owner                     | Uncomment                                                                                  |
-   | ---------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-   | `scripts/workflow-templates/staging-backmerge-to-ldr.yml`  | fleet template (24 repos) | `schedule: - cron: "10 * * * *"` (hourly convergence safety-net)                           |
-   | `scripts/workflow-templates/staging-lock-check.yml`        | fleet template (24 repos) | `repository_dispatch: types: [staging-locked, staging-unlocked]`                           |
-   | `.github/workflows/staging-to-main.yml`                    | PM                        | `schedule: - cron: "0 * * * *"` (hourly drain)                                             |
-   | `.github/workflows/staging-conflict-ldr-main-fallback.yml` | PM                        | `schedule: - cron: "47 * * * *"`                                                           |
-   | `.github/workflows/reconcile-staging-versions.yml`         | PM                        | `schedule: - cron: "35 * * * *"`                                                           |
-   | `.github/workflows/ldr-to-staging-promote.yml`             | PM                        | `schedule: - cron: "2,17,32,47 * * * *"` AND `repository_dispatch: types: [tier-ab-green]` |
+   **CORRECTED 2026-08-10** (plan_reconciler infra shard, agt-716973): the first two rows' PM template paths were
+   deleted 2026-08-06/08 — both reusable workflows now live in `unified-trading-ci` (live-verified: neither path exists
+   in PM anymore).
+
+   | File                                                                | Owner                     | Uncomment                                                                                  |
+   | ------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+   | `unified-trading-ci/.github/workflows/staging-backmerge-to-ldr.yml` | fleet template (24 repos) | `schedule: - cron: "10 * * * *"` (hourly convergence safety-net)                           |
+   | `unified-trading-ci/.github/workflows/staging-lock-check.yml`       | fleet template (24 repos) | `repository_dispatch: types: [staging-locked, staging-unlocked]`                           |
+   | `.github/workflows/staging-to-main.yml`                             | PM                        | `schedule: - cron: "0 * * * *"` (hourly drain)                                             |
+   | `.github/workflows/staging-conflict-ldr-main-fallback.yml`          | PM                        | `schedule: - cron: "47 * * * *"`                                                           |
+   | `.github/workflows/reconcile-staging-versions.yml`                  | PM                        | `schedule: - cron: "35 * * * *"`                                                           |
+   | `.github/workflows/ldr-to-staging-promote.yml`                      | PM                        | `schedule: - cron: "2,17,32,47 * * * *"` AND `repository_dispatch: types: [tier-ab-green]` |
 
 **Default-branch gotcha**: a `schedule:` trigger fires only from the DEFAULT branch (`main`) — landing the uncomment on
 LDR alone does NOT restart a cron; it takes effect only once promoted to `main`.
@@ -1252,17 +1256,20 @@ precedent**: `major-bump-issue-handler.yml`, `request-major-bump.yml`, and `semv
 block), not stale duplicates. Once every repo's local caller of `notify-slack.yml` was gone (i.e. once
 `main-backmerge-to-ldr.yml`/`semver-agent.yml` became thin stubs), the local `notify-slack.yml` copy itself became dead
 weight in 22 of 23 fleet repos and was deleted (kept: PM's own canonical copy, and `deployment-service`, which still has
-an unrelated live local caller). The 7 now-redundant template sources were deleted from `scripts/workflow-templates/` in
-PM — **`rollout-workflow-templates.sh`'s role is now limited to what remains genuinely templated**:
-`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` (both already thin caller stubs, rolled out so each repo's local
-file matches), `notify-slack.yml` (still full content, canonical, never migrated), and `staging-lock-check.yml` (still
-full content — deliberately NOT yet converted, see todo 11 in
-`plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`: its `check-staging-lock` job is a
-literal required-status-check context on 16 repos' branch-protection rulesets, and a naive stub conversion would
-silently rename the reported check to `"check-staging-lock / check-staging-lock"`, permanently failing that context).
-Full migration history + the two real bugs found while converting (a dropped `env:` block in the conversion tooling, and
-an SSOT-drift gap where a same-day squash-promote fix had landed on 21 repos' rendered copies but never reached the
-canonical template): `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (once archived,
+an unrelated live local caller). The 9 now-redundant template sources (incl. `staging-lock-check.yml`, converted +
+deleted 2026-08-08, see todo 11 below) were deleted from `scripts/workflow-templates/` in PM — **CORRECTED 2026-08-10
+(plan_reconciler infra shard, agt-716973, mechanical codex-staleness carve-out): `rollout-workflow-templates.sh`'s role
+is now limited to `image-build-gate.yml` + `quality-gates-v2.yml.tmpl`** (both thin caller stubs, rolled out so each
+repo's local file matches) **and `notify-slack.yml`** (still full content, canonical, never migrated).
+`staging-lock-check.yml` was ALSO converted + its template source deleted 2026-08-08 (todo 11 in
+`plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` — a landmine discovered after this
+paragraph was first written: its `check-staging-lock` job is a literal required-status-check context on 16 repos'
+branch-protection rulesets, so the 16 rulesets' check-names were updated FIRST, then the file converted, THEN the
+template source deleted — live-verified 2026-08-10: `scripts/workflow-templates/staging-lock-check.yml` no longer exists
+in PM; the reusable workflow now lives at `unified-trading-ci/.github/workflows/staging-lock-check.yml`). Full migration
+history + the two real bugs found while converting (a dropped `env:` block in the conversion tooling, and an SSOT-drift
+gap where a same-day squash-promote fix had landed on 21 repos' rendered copies but never reached the canonical
+template): `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (once archived,
 `plans/archive/`).
 
 **SSOT template**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl`. **Roll-forward** a workflow change: (1) edit
