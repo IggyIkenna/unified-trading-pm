@@ -137,15 +137,19 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       assigned to it — the mechanism works, both variants are receiving and completing real dispatches. See Progress Log
       for the ratio-skew nuance discovered during this check (not a blocker, but relevant to todo 2's unit test and todo
       9's eventual comparison).
-- [ ] 8. [REVIEW] P2. Let the split run for ~24h of real fleet dispatch (per operator ask, 2026-08-05) before drawing
+- [x] ✅ 8. [REVIEW] P2. Let the split run for ~24h of real fleet dispatch (per operator ask, 2026-08-05) before drawing
       conclusions — a few hours of sample size isn't enough given the turn-count variance already measured (31-100 turns
-      is the modal range, but the tail runs to 500+).
-- [ ] 9. [REVIEW] P1. Pull the post-window comparison: real `$/task`, `$/plan`, avg turn count, and avg total
+      is the modal range, but the tail runs to 500+). — Window ran its full course (2026-08-05T20:41:33Z →
+      2026-08-06T20:41:33Z); resolved by context as part of todo 9's pull below (batch18 2026-08-10).
+- [x] ✅ 9. [REVIEW] P1. Pull the post-window comparison: real `$/task`, `$/plan`, avg turn count, and avg total
       tokens/task for pro vs flash over the monitoring window, individually and aggregated — the exact breakdown the
       operator asked for. Compute whether flash's per-token discount actually beats pro once turn-count is priced in,
-      not just compare headline `$/task`. **➡️ EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md`
-      todo 1 (combined with todos 10/11/13 as one sequential chain) — do NOT action here.**
-- [ ] 10. [REVIEW] P1. **Completion-quality audit — the part that makes the cost comparison meaningful.**
+      not just compare headline `$/task`. — Done via `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1
+      (2026-08-10): flash $0.07707/task vs pro $0.08931/task (~13.7% cheaper) and $0.12937/plan vs $0.13968/plan (~7.4%
+      cheaper) despite ~68% more turns/task (79.7 vs 47.33) and ~2.3x more tokens/task — flash's ~2.6x cheaper blended
+      $/M-tokens ($0.00531 vs $0.01401) more than offsets the turn overhead. Full numbers + method in Progress Log
+      below.
+- [x] ✅ 10. [REVIEW] P1. **Completion-quality audit — the part that makes the cost comparison meaningful.**
       `agents/review.md`'s persistent review agent DOES watch every `slot_done`/PR and check the diff against the plan's
       `done_definition` — but confirmed 2026-08-05 (grep across `server/`) it is (a) ONE persistent agent for the WHOLE
       fleet (coverage at ~150-280 completions/day unverified), (b) enforcement is explicitly conversational only — its
@@ -159,13 +163,20 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       sample of ~15-20 completed todos from EACH pool, matched by plan/`estimate_class` so difficulty is comparable, and
       run an independent review pass (fresh agent or operator, no stake in the outcome) against the actual diff — did
       this todo genuinely get done correctly, not just "did it commit and pass QG." Done-when: a written verdict per
-      sampled item (correct / needs-rework / broken) exists for both pools, not just an aggregate percentage. **➡️
-      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
-- [ ] 11. [REVIEW] P2. **Verify the review agent's real coverage** — pull its own activity/chat history for the
+      sampled item (correct / needs-rework / broken) exists for both pools, not just an aggregate percentage. — Done via
+      batch18 todo 1 (2026-08-10): Layer 1 reopen-rate pro 1/61 (1.6%) vs flash 3/47 (6.4%), all 4 from one 2026-08-08
+      false-done audit. Layer 2 matched-by-same-plan sample (12 shared plans, 26 pro + 25 flash items) reviewed via
+      `git show --stat`+message (2 full-diff spot-checks): 51/51 verdicted correct, 0 broken/needs-rework in either
+      pool. Full verdict list in Progress Log.
+- [x] ✅ 11. [REVIEW] P2. **Verify the review agent's real coverage** — pull its own activity/chat history for the
       monitoring window and count how many of the window's completed todos it actually touched (spot-checked) vs. the
       total completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary
-      weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it. **➡️
-      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
+      weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it. — Done
+      via batch18 todo 1 (2026-08-10): 124 fleet-wide completions in-window, review agent posted 16 chat messages but
+      only 2 carried an explicit per-commit "[✓ REVIEWED ok]" verdict (~1.6% real coverage) — the rest were batch-level
+      retire-audits/incident escalations, not diff reviews. Concrete miss found: its "already reviewed ok" call on
+      deployment_scripts_bucket_soft_delete_retention_drift-002@97d37ce57 was later overturned by the 2026-08-08
+      false-done audit. Confirms the plan's own hypothesis — Layer 2, not the review agent, is the real quality check.
 - [x] ✅ 12. [OPERATOR] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 2 —
       /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Yes, build it." Decide whether the
       review agent's findings should become a structured, queryable event (e.g. a `review_finding` activity-log entry
@@ -183,9 +194,13 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       finding, a query/report endpoint or script can pull findings by task_id/date range/severity, a regression test
       proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator. **➡️ EXTRACTED 2026-08-09
       to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 — do NOT action here.**
-- [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
-      plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual. **➡️
-      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
+- [x] ✅ 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
+      plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual. — Verdict
+      written to Progress Log below (batch18 todo 1, 2026-08-10): **KEEP FLASH** — cheaper per task and per plan even
+      after pricing in its turn-count overhead, no quality gap found in the Layer-2 diff sample. **NOT archived**: todos
+      2/4/12a/17b are done (verified via `ao_satellite_ao_dispatch_batch12_2026_08_09.md`), but todo 25's batch12
+      extraction (`[BACKEND] P3`, backfill_task_usage.py one-off extension) is still open — doc stays active until that
+      lands.
 - [x] 14. ✅ [BACKEND] [UI] P1. **Per-turn/per-task efficiency metrics** — operator ask (2026-08-05): avg turns/task,
       context/task, and cache-read/cache-write/output/non-cache-input tokens per turn, with real
       $ values, on both usage
@@ -745,28 +760,108 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
   through BOTH dispatch shapes into the role-group-filtered aggregate. Full QG green both ships (2524→2546 backend). See
   todo 24 for the complete writeup. **Not yet done**: todo 25, the historical backfill for completions lost while bug 1
   was live — operator-gated, not started.
+- **2026-08-10 — post-window analysis + final verdict (todos 8/9/10/11/13, via
+  `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1)**: the 24h monitoring window (2026-08-05T20:41:33Z, first
+  real flash dispatch, → 2026-08-06T20:41:33Z) had long closed; this is the deferred pull. All figures pulled directly
+  from the live orchestrator `state.db` (this session ran ON the orchestrator VM itself, `localhost:8765`/direct sqlite3
+  read-only — no SSM needed). **Methodology note (a real bug caught mid-audit)**: `task_usage.completed_at` /
+  `agent_messages.created_at` are stored as naive `YYYY-MM-DD HH:MM:SS.ffffff` strings (no `T`, no tz suffix) — a first
+  pass that string-compared them against `"...T20:41:33+00:00"` window bounds silently mis-filtered (space `<` `T`
+  lexicographically, so the upper bound never actually applied). Re-ran every query parsing to real `datetime` objects
+  before comparing; all numbers below are from the corrected pass.
+  - **(a) Todo 9 — cost/throughput** (`task_usage` rows in-window, joined to `tasks` for plan_ref):
+
+    |                    | pro                            | flash                          |
+    | ------------------ | ------------------------------ | ------------------------------ |
+    | n tasks            | 61                             | 47                             |
+    | sum spend          | $5.4477                        | $3.6224                        |
+    | avg $/task         | $0.08931                       | $0.07707                       |
+    | median $/task      | $0.08277                       | $0.06775                       |
+    | avg turns          | 47.33 (median 39, range 7-458) | 79.7 (median 80, range 17-255) |
+    | avg tokens/task    | 6,374,864                      | 14,521,505                     |
+    | blended $/M tokens | $0.01401                       | $0.00531                       |
+    | avg $/turn         | $0.001887                      | $0.000967                      |
+    | distinct plans     | 39                             | 28                             |
+    | avg $/plan         | $0.13968                       | $0.12937                       |
+
+    **Verdict: flash's per-token discount beats pro even after pricing in turn-count.** Flash needs ~68% more turns and
+    ~2.3x more tokens per task than pro, but its blended
+    $/M-tokens is ~2.64x cheaper (matches the raw price-table ratio
+    of ~3.1x — `deepseek_usage.py::_PRICE_PER_MILLION`, pro input-miss/hit/output $0.435/$0.003625/$0.87
+    vs flash $0.14/$0.0028/$0.28 — discounted somewhat by real cache-hit-ratio differences between the two pools), so
+    flash still lands ~13.7% cheaper per task and ~7.4% cheaper per plan. Sample sizes stay unequal (61:47, ~1.3:1) —
+    expected per the 2026-08-05 ratio-skew finding (least-loaded tie-break in the unfiltered picker), reported as-is per
+    this todo's own instruction not to force balance.
+
+  - **(b) Todo 10 — completion-quality audit.** **Layer 1** (reopen check via
+    `activity_log event_type='backlog_task_reopened'`): pro 1/61 reopened (1.6%,
+    `cefi_track2_backfill_vm_preempted_no_recovery-003`), flash 3/47 (6.4%,
+    `sports_fast_t1_recon_oom_live_capture_outage-003` / `defi_cefi_venue_chain_axis_contamination-011` /
+    `deployment_scripts_bucket_soft_delete_retention_drift-002`) — flash reopened ~4x pro's rate, but all 4 events come
+    from the SAME single operator-run "false-done audit" pass on 2026-08-08
+    (`reason: "plan checkbox still - [ ] at HEAD; cited done_sha does not deliver the todo"`), not independent audits —
+    real signal, small-N, directional not conclusive. (The `quality-gates-v2` CI-green half of Layer 1 was not run
+    exhaustively — no per-SHA CI status is stored in `state.db`, it lives in Firestore per-repo; scoped out as beyond
+    this pull's "cheap, automated" tier for 108 window completions.) **Layer 2** (independent diff review): matched by
+    literal SAME plan_ref across both pools (the tightest apples-to-apples control available) — 12 plans had
+    `status='done'` tasks in both pools during the window, yielding 26 pro-pool + 25 flash-pool sampled items (above the
+    15-20/pool floor). Reviewed via `git show --stat` (full commit message + diffstat) for all 51, plus 2 full-diff
+    spot-checks on the thinnest-message items (`sports_satellite_ao_dispatch_batch9-005` pro,
+    `ao_scheduled_job_reserve_and_staggering-005` flash — both confirmed the terse commit _subject_ undersold real,
+    detailed evidence already recorded in the plan doc body). **Verdict: 51/51 correct, 0 broken/needs-rework in either
+    pool** — every sampled commit's diff plausibly and verifiably delivers its claimed done-when (tests added where code
+    changed, root-causes cited file:line, terminal verifications with real counts). Caveat: this matched-plan sample
+    does not include any of Layer 1's 4 reopened tasks (none shared a plan with the other pool) — Layer 1 and Layer 2
+    are sampling different populations, not contradicting each other; combined read: both pools are generally high
+    quality, with a real but small-N gap favoring pro visible only in the reopen-rate signal.
+  - **(c) Todo 11 — review-agent coverage.** Fleet-wide `task_usage` completions in-window (all providers): 124 (61
+    pro + 47 flash + 14 `claude-sonnet-4-6` + 2 `claude-sonnet-5`). Persistent review agent's `agent_messages`
+    (`from_role='review'`) in-window: 16. Of those 16, only **2** carry an explicit per-commit `[✓ REVIEWED ok]`
+    diff-level verdict (`agent-orchestrator@5941552` → `ao_scheduled_job_reserve_and_staggering-009` [flash];
+    `unified-trading-pm@298552ac4`+`@f83716c0b` → `ci_satellite_ao_dispatch_batch4-006` [flash]) — real per-task diff
+    coverage ≈ 2/124 ≈ **1.6%**. The other 14 messages are batch-level retire-audits (slot health, not diff review),
+    promote-pipeline/incident escalations, and worktree-health watches — none independently verify a specific commit's
+    correctness. **Concrete miss found**: at 14:53Z the review agent referenced
+    `deployment_scripts_bucket_soft_delete_retention_drift-002@97d37ce57` as "already reviewed ok" (a backward reference
+    — the original review predates this window) — that EXACT task+sha is the one the 2026-08-08 false-done audit later
+    reopened (Layer 1 above). Confirms this todo's own hypothesis: coverage is a small fraction, and Layer 2's
+    independent sample — not the review agent — is doing the real verification for either pool.
+  - **(d) Todo 13 — final verdict.** **KEEP FLASH** as a fleet-eligible DeepSeek variant, not just a completed
+    experiment: over the full controlled 24h window it was cheaper per task (~13.7%) and per plan (~7.4%) than pro
+    despite ~68% more turns and ~2.3x more tokens/task, because its ~2.6x lower per-token price more than compensates;
+    the 51-item Layer-2 matched-plan diff sample found 0 quality difference between pools. The one signal favoring pro
+    (reopen-rate: flash 6.4% vs pro 1.6%) is real but small-N and driven by a single audit event — worth another
+    independent false-done-audit cycle to see if it repeats, not yet strong enough to reverse the cost verdict.
+    Recommend: keep the current 50/50-target (least-loaded-tie-break) split live; do not rely on the persistent review
+    agent as a quality backstop for either pool (~1.6% measured real per-task coverage) — operator-run false-done audits
+    and Layer-2-style independent sampling are the load-bearing quality check going forward. **Archival**: NOT archived
+    — todos 2/4/12a/17b are done (verified live in `ao_satellite_ao_dispatch_batch12_2026_08_09.md`), but that batch's
+    own extraction of todo 25 (`[BACKEND] P3`, `backfill_task_usage.py` one-off-completion extension) is still open
+    (`- [ ]`) as of this entry — this doc stays active until that lands, then the standard 6-step archival ritual
+    applies.
 
 ## Deferred work after 2026-08-05
 
-| Item                                                                                                                                                   | State / why deferred                                                                                                                                                                    | Blocked on                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                                                      | Nothing — pick up directly                                        |
-| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                                                | Nothing — pick up directly                                        |
-| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Cannot be done yet** — needs real elapsed time, not work. Clock starts `20:41:33` (first real flash selection), not the earlier deploy time — target check-in ≈`2026-08-06 20:41 UTC` | Elapsed time                                                      |
-| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Cannot be done yet** — all depend on todo 8's 24h window closing                                                                                                                      | Todo 8                                                            |
-| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Operator-owned** — a product/process decision, not something to start unprompted                                                                                                      | Operator                                                          |
-| Todo 13 — final verdict + archive                                                                                                                      | **Cannot be done yet** — depends on todos 9-11                                                                                                                                          | Todos 9-11                                                        |
-| Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                              | Nothing — pick up directly                                        |
-| Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                         | Nothing — pick up directly                                        |
-| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s own todos (confirm blast radius, decide + implement the fix direction)       | **Not done** — separate issue doc; leaves one pre-existing, unrelated test red in `deepseek-per-turn-metrics.spec.ts`                                                                   | Nothing — pick up directly, independent of this plan              |
-| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                    | Nothing — pick up directly, independent of this plan's 24h window |
-| Todo 25 — historical backfill for one-off completions lost while todo 24's bug 1 was live                                                              | **Not started** — operator-gated (worth the effort vs accept the gap), transcript retention may have already rotated some sessions out                                                  | Operator decision                                                 |
+| Item                                                                                                                                                   | State / why deferred                                                                                                                                                                            | Blocked on                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Todo 2 — unit test proving the ~50/50 pro/flash split ratio + reproducibility                                                                          | **Not done** — real work, nobody's turn to wait on                                                                                                                                              | Nothing — pick up directly                                        |
+| Todo 4 — Playwright regression spec for the new filter toggle                                                                                          | **Not done** — real work                                                                                                                                                                        | Nothing — pick up directly                                        |
+| Todo 8 — let the split run ~24h before drawing conclusions                                                                                             | **Done 2026-08-10** — window ran its full course; see Progress Log                                                                                                                              | —                                                                 |
+| Todos 9-11 — post-window cost comparison, quality audit, review-agent coverage check                                                                   | **Done 2026-08-10** — flash cheaper per task/plan even after turn-count; 0 quality defects in 51-item sample; review-agent coverage ~1.6%. See Progress Log for full numbers.                   | —                                                                 |
+| Todo 12 — decide whether review-agent findings become a structured event                                                                               | **Done** — operator ruled "yes, build it" 2026-08-08; built + shipped via `ao_satellite_ao_dispatch_batch12_2026_08_09.md`                                                                      | —                                                                 |
+| Todo 13 — final verdict + archive                                                                                                                      | **Verdict done 2026-08-10: KEEP FLASH.** Archive still blocked — see next row                                                                                                                   | Todo 25 (below)                                                   |
+| Todo 17b — unverified thinking-flag meaning for DeepSeek slots (17a done — pro/flash variant now shown)                                                | **Not done** — real work, needs investigation into whether DeepSeek's API honors the thinking param at all                                                                                      | Nothing — pick up directly                                        |
+| Flash's own ~$2.35 residual real-time-vs-task-usage gap (no review-role slots involved)                                                                | **Not done** — root cause genuinely unknown, don't guess; needs the same kind of direct investigation todo 19's pro finding got                                                                 | Nothing — pick up directly                                        |
+| `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s own todos (confirm blast radius, decide + implement the fix direction)       | **Not done** — separate issue doc; leaves one pre-existing, unrelated test red in `deepseek-per-turn-metrics.spec.ts`                                                                           | Nothing — pick up directly, independent of this plan              |
+| `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s own todos (confirm systemic, strengthen worker prompt, turn-count circuit breaker) | **Not done** — real work, separate issue doc, not blocking this plan                                                                                                                            | Nothing — pick up directly, independent of this plan's 24h window |
+| Todo 25 — historical backfill for one-off completions lost while todo 24's bug 1 was live                                                              | **Retagged to `[BACKEND]`, extraction tracked + still open in `ao_satellite_ao_dispatch_batch12_2026_08_09.md`** (not actioned here — this doc's todo 13 archival is gated on it landing there) | `ao_satellite_ao_dispatch_batch12_2026_08_09.md`'s own todo       |
 
-**Recommended next item**: nothing until todo 8's window closes (≈`2026-08-06 20:41 UTC`, 24h from the first real flash
-selection). Do not re-poll the fleet for the A/B split itself in the meantime — todo 7 already confirmed the mechanism
-works; further early checks just burn an SSM round-trip without changing the answer to anything actionable yet. Todo 17
-(Fleet-table label fix) is real, standalone work that could be picked up independently of the 24h wait if there's
-appetite for it.
+**Recommended next item**: nothing on this doc directly. Todos 2/4/12a/17b's real work is already done (shipped via
+`ao_satellite_ao_dispatch_batch12_2026_08_09.md`); their checkboxes here stay `[ ]` pending that batch's own finalize
+plan reconciling evidence back (standard extraction pattern — see that plan's finalize doc, not this one's concern).
+Todo 25's extraction is the only one of the five still genuinely open (real work not yet done) — tracked and actionable
+in `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. Once batch12 (+finalize) closes out all five, this doc reaches zero
+open todos and should run the standard 6-step archival ritual.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
