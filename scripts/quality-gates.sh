@@ -23,6 +23,60 @@ PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by 
 PYTEST_UNIT_DIR="tests/unit/ scripts/quality_gates/ scripts/cicd/ scripts/docs/"
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
+
+# ── --sliced: run the full surface as three separately-budgeted processes ────────────────
+# MAX_DURATION is enforced per PROCESS, and it is the SAME 600s whether you run one slice or
+# the whole gate — so a full local run does three slices' work on one slice's budget. On
+# 2026-08-10 PM's gate breached it on CPU alone (658s vs 600s), blocking every ship from the
+# host regardless of content, until an accidentally-expensive test fixture was fixed (that
+# brought it to 212s). The fixture was the immediate cause; the structural exposure is that
+# one process carries the whole bill and the suite only grows.
+#
+# `--sliced` runs the three CI slices as separate children, each enforcing its own budget and
+# its own CPU accounting, so no single run carries the whole thing. The partition is not a
+# claim -- check_qg_slice_completeness.py machine-proves these three cover the full local gate,
+# and it runs above.
+#
+# It deliberately does NOT write the sentinel. A sliced run is a PARTIAL run per process, and
+# the sentinel certifies the FULL surface for `quickmerge --agent`'s fast path; aggregating it
+# correctly means reproducing the H5 content-vs-SHA semantics documented in base-service.sh,
+# which is its own change with its own review. Getting that wrong means a green sentinel for a
+# surface that was never fully gated -- so `--sliced` is a way to RUN the gate under budget,
+# not a way to certify a ship. Use the normal full run for that.
+if [ "${1:-}" = "--sliced" ] || [ "${QG_SLICED:-}" = "1" ]; then
+    # No unconditional-success bypass here (the pipe-pipe-true form): the codex gate bans them
+    # inside the gate itself, and it is right -- this shift is only reached when $1 is literally
+    # "--sliced", so $# >= 1 and it cannot fail. A defensive bypass would have hidden a real
+    # argument-handling bug rather than prevented one.
+    #
+    # The token is spelled out in words above deliberately: the checker greps the file and is
+    # comment-blind, so merely DESCRIBING the bypass trips it -- the same trap CLAUDE.md already
+    # documents for the CI skip marker ("even when only describing it"), which is why that rule
+    # says to write it hyphenated. Worth knowing before you explain a bypass you did not add.
+    [ "${1:-}" = "--sliced" ] && shift
+    _qg_sliced_rc=0
+    for _qg_s in tests typecheck lint-codex; do
+        echo ""
+        echo "══════════════════════════════════════════"
+        echo "  QG_SLICE=${_qg_s}  (own ${MAX_DURATION}s budget)"
+        echo "══════════════════════════════════════════"
+        if QG_SLICE="${_qg_s}" bash "${BASH_SOURCE[0]}" "$@"; then
+            echo "✅ slice ${_qg_s} passed"
+        else
+            echo "❌ slice ${_qg_s} FAILED"
+            _qg_sliced_rc=1
+        fi
+    done
+    echo ""
+    if [ "$_qg_sliced_rc" -eq 0 ]; then
+        echo "✅ ALL SLICES PASSED — full surface covered (partition machine-proven by"
+        echo "   check_qg_slice_completeness.py). NOTE: no sentinel written; a ship still"
+        echo "   needs a normal full run to certify."
+    else
+        echo "❌ one or more slices failed — see above"
+    fi
+    exit "$_qg_sliced_rc"
+fi
 # basedpyright is fully EXCLUDED for PM scripts/ (RESOLVED 2026-07-27, operator ruling finding 87,
 # per plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md). History: the 2026-06-24
 # "warn-only" fix (unified-trading-pm@22b2f89d7) removed BASEDPYRIGHT_MAX_ERRORS to end the

@@ -1103,7 +1103,13 @@ else
       # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
       # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
       if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-        autostash_guard_bound_backlog "${_QM_REMOTE_REF}" || true
+        # ARGUMENT ORDER IS ($protected_paths, $branch) -- fixed 2026-08-10. Passing only the
+        # branch put it in $1 where the function reads PROTECTED PATHS, so $protected became
+        # "origin/live-defi-rollout", matching no path: the caller's --files were NEVER protected.
+        # The guard then quarantined the work being shipped and quickmerge printed "No changes to
+        # commit" and exited 0. Measured four times in one session; reads like a peer revert.
+        # Sibling autostash_guard_quarantine_stale_pop 65 lines below passes both args.
+        autostash_guard_bound_backlog "$FILES_ARG" "${_QM_REMOTE_REF}" || true
       fi
       # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
       # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
@@ -1852,6 +1858,19 @@ if [ "$NO_PR" != "true" ]; then
     _UNPUSHED=$(git rev-list --count origin/live-defi-rollout..HEAD 2>/dev/null || echo 0)
     if [ "${_UNPUSHED:-0}" != "0" ]; then
       echo "[$REPO_NAME] clean tree with ${_UNPUSHED} unpushed commit(s) ahead of origin/live-defi-rollout — shipping the committed work"
+    elif [ -n "$FILES_ARG" ]; then
+      # HARD FAIL, not exit 0. You NAMED files and there is nothing to commit -- almost never
+      # "already landed", it is your work taken out from under you between invocation and staging.
+      # Catch-all for the silent-success family measured 2026-08-10 (guard quarantine, STAGE-5
+      # stash-then-fatal, peer checkout): each ended here, exited 0, and left the NEXT ship looking
+      # complete while carrying a fraction of the change. Gated on --files. Never soften to exit 0.
+      echo "[$REPO_NAME] ❌ NOTHING TO COMMIT, but --files named: $FILES_ARG" >&2
+      echo "   Named files are not dirty. They were almost certainly PARKED, not lost." >&2
+      echo "   Do NOT re-run blindly -- a retry can add a stash entry and make this fire sooner." >&2
+      echo "     git stash list | head" >&2
+      echo "     git checkout 'stash@{N}' -- $FILES_ARG   # never a blind pop; may hold a peer's WIP" >&2
+      echo "   SSOT: /codex/12-agent-workflow/ship-tooling-silent-success.md" >&2
+      exit 12
     else
       echo "[$REPO_NAME] No changes to commit"
       exit 0
