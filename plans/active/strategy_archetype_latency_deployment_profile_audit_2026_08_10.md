@@ -113,9 +113,18 @@ collapsing them into one number the way the archived doc did.
       `ARBITRAGE_STRUCTURAL` topology_requirements row (co-location `no` / min SLA `standard`) as a discrepancy the
       deployment-profile derivation todo resolves. Same commit fixed a pre-existing dangling `related:` frontmatter
       reference (`market-making.md` → leading-slash path) flagged by plan-hygiene.
-- [ ] [DOC] P2. **Populate `carry-and-yield.md`** (basis/staking-basis family) with the same section, category `Low` per
-      the operator correction above — explicitly document the spot-leg/perp-hedge-leg inter-leg gap requirement, not
-      just a decision-latency number.
+- [x] ✅ [DOC] P2. **Populate `carry-and-yield.md`** (basis/staking-basis family) with the same section, category `Low`
+      per the operator correction above — explicitly document the spot-leg/perp-hedge-leg inter-leg gap requirement, not
+      just a decision-latency number. **Done**: `unified-trading-pm@47c6b8ffd6` — formal `## Latency Requirements`
+      section added (category `Low`, decision-cycle Tol.-to-Signal <5 s / Signal-to-Order <2 s / Order-to-Fill
+      venue-dep. / inter-leg execution gap ms-realm <500 ms operating target / Total E2E <40 s CeFi, block-time + <5 s
+      DeFi staked), archived Delta-One Basis Medium baseline CORRECTED per the operator ruling at
+      `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`, including
+      a `### Decision latency vs. inter-leg execution gap` subsection breaking down all 10 archetypes (8 multi-leg
+      basis/ staking-basis variants at ms-realm gap, 2 single-sided yield/staking variants inherit Medium), the Low→
+      `co_located_vm` deployment implication flagging the current `CARRY_BASIS_PERP`/`CARRY_STAKED_BASIS`
+      topology_requirements discrepancy (co-location `no` / min SLA `standard`), and a pre-existing reference-path fix
+      (`market-making.md` → leading-slash path in `related:` frontmatter).
 - [ ] [DOC] P2. **Populate `ml-directional.md`** with the same section, category `Low` per operator correction — this
       family doc currently has ZERO latency content, so this is greenfield within the doc (not a correction of existing
       numbers).
