@@ -137,3 +137,14 @@ I/O-bound enough to tolerate it, but that's an inference, not a direct measureme
   the throughput leg of the done_definition is still UNVERIFIED. **Todo remains gated**: needs a completed post-downsize
   CME-family heavy-root VM (roots currently preempting + relaunching on SPOT) for a valid throughput comparison.
   Releasing back to queue with `reason_code: GATED` per worker.md § 4c.
+- **data_engineering (slot 12) 2026-08-10T23:20Z**: Re-measurement re-attempted. Fleet state unchanged from slot 20's
+  assessment: **zero completed CME-family heavy-root OHLCV VMs post-downsize**. 1 CME VM RUNNING
+  (`tradfi-bf-cme-ohlcv-1m-gc-2021-20260810-211922`, e2-highmem-8 ✓, created 21:19Z, chunk 11/53, ~21% complete, est.
+  completion ~06:00Z Aug 11). 7 CFE VMs completed (e2-highmem-8, exit 0, 2020-2026) but per slot 20 precedent are light
+  single-instrument VX futures workload — not comparable to the CME GC/ES/NQ/CL heavy-root 46.9k baseline. Zero
+  post-14:00Z CBOE-idx VMs (the 8 that completed were 01:3x UTC pre-downsize). **CPU profile leg (b) confirmed** from
+  running CME VM (206 `resource_samples`): avg 101.6% per-vCPU (~12.7% of 8 vCPU), max 189.4% (startup burst), mem avg
+  29.4%/max 52.9% of 64GB — brief-burst pattern holds, no sustained saturation. **Throughput leg (a) still UNVERIFIED**
+  — needs ≥1 completed CME-family heavy-root VM. Estimated next check viable after ~06:00Z Aug 11 when the running
+  gc-2021 VM completes (assuming no SPOT preemption). Releasing back to queue with `reason_code: GATED` +
+  `estimated_unblock_minutes: 480` per worker.md § 4c.
