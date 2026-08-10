@@ -80,21 +80,22 @@ source: >-
       **Evidence**: verified 2026-08-10 — `deployment-api@6a536a82d` and `deployment-ui@b7beaf33b` both confirmed on
       origin.
 
-- [ ] [REVIEW] P2. **Re-check batch 2's 1 `## Deferred` item for resolution.** Has
-      `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s standing follow-up todo ("dedicated migration plan
-      for remaining ~136 raw-create launchers to `lc_gcloud_create`") progressed enough that a critical mass of
-      launchers now route through the shared choke point? If so, re-scope the business-context-enrichment item's
-      READ-SIDE half (AWS cost-allocation-tag support in `cost_observability/models.py`, a `strategy` key in
-      `BUSINESS_LABEL_KEYS`, a backfill script reconciling the `asset_group=`/`asset-group=` key-name drift already
-      found in launchers that HAVE labels) as a possible future-satellite-batch candidate — this half is genuinely
-      ui/cost-observability scoped and doesn't depend on the launcher-migration completing 100%, only on there being
-      enough labeled resources to make the read-side work meaningful. Do NOT re-scope or draft the launcher-migration
-      half itself — that stays infra-tranche's own surface regardless of progress. **Done when**: a dated
-      CLEARED-or-STILL-BLOCKED verdict is recorded with evidence (the infra doc's own current todo/progress state), and
-      if cleared, the read-side half is written up as an explicit future-satellite-batch candidate line (name corrected
-      2026-08-10, plan_reconciler: "batch-3" is now taken by `ui_satellite_ao_dispatch_batch3_2026_08_09.md`, an
-      unrelated artifact_pipeline_observability meta-items batch — use the next free number at execution time). Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-10 (slot-9, review)** — **Re-check batch 2's 1 `## Deferred` item: STILL-BLOCKED.**
+      `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s standing P3 follow-up todo ("dedicated migration
+      plan for remaining ~136 raw-create launchers to `lc_gcloud_create`") is **still open** — no dedicated plan has
+      been authored. Only 3 of ~139 launchers migrated to `lc_gcloud_create` (first batch, deployment-service@6998cc228,
+      2026-08-08). Live recount 2026-08-10: `lc_gcloud_create` callers = 10, raw `gcloud compute instances create`
+      callers = 149 — the gap has **widened**, not closed (new launchers added since the issue doc was filed, most
+      bypassing the shared choke point). The 2026-08-09 incident (slot-28, documented in the issue doc's Progress Log)
+      confirmed `lc_gcloud_create` still lacks `--provisioning-model=SPOT`/`--instance-termination-action` support,
+      meaning SPOT-backfill launchers cannot migrate to it yet. With only ~6% (10/159) of launchers routing through the
+      shared label-injection choke point, the precondition for the read-side half (critical mass of labeled resources
+      making the work meaningful) is not met. **No future-satellite-batch candidate drafted** — the deferred item's
+      recommendation from the batch-2 plan stands unchanged: this enrichment item should piggyback on the
+      infra-tranche's `lc_gcloud_create` migration, not fork a parallel effort. A future ui-tranche audit should
+      re-measure the infra migration's progress before re-assessing bounded-ness. **Evidence**: direct read of the issue
+      doc's open follow-up todo + live `grep -c` counts on `deployment-service/scripts/vm/*.sh` confirming the migration
+      is barely started. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P2. **Re-measure the ui tranche's orphan count.** Re-run the `/ag-closeout-audit ui` classification over
       the tranche's now-updated docs and report the new orphan count against this run's 9-of-13 baseline. Expect
@@ -131,3 +132,10 @@ source: >-
   agt-a0f1b7, `/ag-closeout-audit ui`, Autonomous mode). Ships `active` per the no-double-gate rule; genuinely cannot
   dispatch early due to `gate_on_depends: true`.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **slot-9 (review) 2026-08-10** — Todo 2 (re-check deferred item): **STILL-BLOCKED**. Verified
+  `vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s P3 follow-up todo remains open — no dedicated migration plan
+  exists. Live recount: `lc_gcloud_create` callers 10, raw-create callers 149 — gap widening, not closing.
+  `lc_gcloud_create` still lacks SPOT support (confirmed 2026-08-09 incident). With ~6% launcher penetration through the
+  shared label-injection choke point, the read-side half is not meaningfully scoped yet. No future-batch candidate
+  drafted — recommendation stands: piggyback on infra-tranche's own `lc_gcloud_create` migration. Re-measure at the next
+  ui-tranche audit.
