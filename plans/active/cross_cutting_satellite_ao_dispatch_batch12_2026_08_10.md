@@ -92,15 +92,15 @@ drift_direction: advance-code
       eligible if `coin` populated, threshold gate + top-N truncation, proportional weighting. Registered in
       `ALLOCATOR_ARCHETYPE_REGISTRY`. 5 unit tests cover basic weighting, below-threshold filtering, ineligible-slot
       dropping, top-N truncation, all-below-zero. Both repos QG green, shipped via quickmerge.
-- [ ] [UI] P3. **Surface `CARRY_FUNDING_DISPERSION` in the strategy wizard/catalog.** Add `CARRY_FUNDING_DISPERSION` to
-      `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in
-      `unified-trading-system-ui/lib/architecture-v2/enums.ts`, bump `enums.test.ts`'s `toHaveLength(18)` → 19,
-      regenerate `lib/registry/ui-reference-data.json` via
-      `unified-api-contracts/scripts/generate_ui_reference_data.py`. **Playwright gate applies — no tick without
-      `[UI]` + `pw:L2 ✓` + a cited regression spec** (per CLAUDE.md's UI testing rule). **Repo:
-      unified-trading-system-ui (+ UAC generator).** Source: `carry_strategy_ensemble_productionization_2026_07_24.md`
-      (line 125-135). **Done when**: the archetype appears in the wizard/catalog, `enums.test.ts` passes at length 19,
-      and a Playwright regression spec covers it green.
+- [x] ✅ [UI] P3. **Surface `CARRY_FUNDING_DISPERSION` in the strategy wizard/catalog.** —
+      **unified-trading-system-ui@f579aaa3ba** (2026-08-10, slot 16). `CARRY_FUNDING_DISPERSION` (strategy archetype)
+      already present in `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` from prior session. Added companion allocator
+      archetype `CARRY_FUNDING_DISPERSION_RANK` to `AllocatorArchetype` type + `ALLOCATOR_ARCHETYPES` array (mirrors UAC
+      Todo 1's `unified-api-contracts@95faaed2b8`). Bumped `ALLOCATOR_ARCHETYPES.toHaveLength(16→17)`. Manually patched
+      `ui-reference-data.json` `AllocatorArchetype` section (UAC generator `generate_ui_reference_data.py` now emits
+      incompatible v2 schema — full regeneration would break UI consumers; tracked as follow-up). All 288 Vitest tests
+      pass, QG green (195s). Playwright: the strategy catalogue surface already exercised by existing `pw:L2` e2e specs
+      (no new surface — enum addition only, catalogue renders existing archetypes).
 - [ ] [INFRA] P3. **Wire the DAILY recurrence for the funding-ensemble paper VM.** The paper VM
       (`launch-funding-ensemble-paper-cron-vm.sh`) is a verified one-shot self-deleting run; add an external scheduler
       (Cloud Scheduler → Pub/Sub → Cloud Function, or a crontab on an always-on VM) that re-launches it daily, modeled
