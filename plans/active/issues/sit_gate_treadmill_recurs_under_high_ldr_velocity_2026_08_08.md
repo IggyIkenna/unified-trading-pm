@@ -96,8 +96,62 @@ fatal grounds — re-deriving and re-attempting that design is explicitly out of
 this session does not re-attempt it. The practical mitigation that doc DID ship (2026-08-06) reduces exposure but cannot
 eliminate the race under sustained high commit velocity — which is what today's window is.
 
+## What was measured (live, 2026-08-10 ~19:00Z) — the check the audits could not run
+
+Three consecutive `na-eligibility-audit` passes (08-08, 08-09, 08-10) kept this doc NA on the same stated ground: "as a
+read-only text-classification pass with no cloud/network access, I cannot independently verify whether LDR has since
+gone quiet or the streak has reset." Run live from an interactive session with API access:
+
+- **The streak DOES reset — there is no masked second bug.** Todo 2 asked whether the gate ever converges. It does: the
+  17:31Z promoter tick PASSED the SIT gate for market-tick-data-service and cut promote PR #939 (PR creation sits AFTER
+  the gate, so an existing PR is itself proof the gate passed). The current 8-tick streak began at the NEXT tick
+  (17:45Z) — it is a fresh treadmill cycle, not an unbroken one. This happened DESPITE velocity never dropping, which is
+  a stronger answer than todo 2 asked for.
+- **Velocity vs round-trip, measured today**: market-tick-data-service LDR took 79 commits; gaps between consecutive LDR
+  commits ran 19/4/12/0/8/47/24/9/10/13/20 min (median ~12). `full-workspace-sit` round trips measured 25/26/31/18/21
+  min. SIT therefore finishes ~2 commits behind a moving tree — the documented race, unchanged.
+- **The gate compares TREES, not SHAs, and that materially helps**: `8ed80c4b1614` (18:31Z) and `c20ed049c0c4` (18:50Z)
+  share tree `97bbdbb13330`, so a re-provenance commit does NOT reset the clock. Worth knowing before anyone "fixes"
+  velocity that is not actually re-staling anything.
+- **NEW, and the actual cause of the recurring alert**: promote PR #939 was cut at 17:31Z from a tree that still carried
+  a STEP-5.105 violation (subprocess `gsutil` object CLI). Its `quality-gates-v2` went red; the violation was then fixed
+  on a LATER LDR commit (`8ed80c4b1614`) which can never reach the frozen per-SHA head. So the PR was permanently red
+  AND permanently open — because `ldr_to_main_fleet_promote.sh`'s superseded-PR cleanup (L962-979) runs ~200 lines after
+  the SIT gate's `_done BLOCKED; return 0` (L756). While the gate blocks — precisely when LDR is racing ahead and PRs go
+  stale — the cleanup is unreachable. Same shape the 2026-07-20 doc noted for the promote REF ("created ~175 lines and
+  one early-return AFTER the gate"); it applies to the PR cleanup too. Closed by hand 2026-08-10T19:05:49Z, citing the
+  bot's own semantics.
+
 ## Todos
 
+- [x] [DEVOPS] P2. **`promotion_lag_monitor.py` reported every BLOCKED promote PR as "cause unknown".** ✅ Root cause:
+      `_open_promote_pr()` read the PR **list** endpoint, which GitHub does not populate with `mergeable`/
+      `mergeable_state` (only `GET /pulls/{number}` does — mergeability is computed on demand). `_promote_pr_cause`'s
+      `blocked_conflicting` branch keys on `mergeable_state`, so fed a list-derived dict it was **dead code**, and every
+      blocked promote PR degraded to "state matched none of the known causes; investigate directly" — the recurring
+      "PROMOTION LAG cause unknown" Slack line. Measured on #939: list → field ABSENT, single GET → `"blocked"`. Fixed
+      by hydrating via a single-PR GET (one extra call per ALREADY-lagging repo; falls back to the list entry so a
+      hydration failure cannot regress below today's behaviour). Verified live end-to-end: the same invocation went from
+      `cause unknown — 14 commit(s)` to
+      `🚧 promote PR #939 BLOCKED/CONFLICTING (15 change(s), oldest 251m). Resolve the     merge conflict or failing required check on the PR.`
+      **Why its tests missed it**: all pre-existing cases hand-build the PR dict WITH `mergeable_state` set — a shape
+      the production path never produces. Added a test that routes the real LIST shape through `_open_promote_pr` →
+      `_promote_pr_cause` and asserts the actionable cause, so removing hydration fails a test rather than silently
+      re-deadening the branch. Evidence: unified-trading-pm@d901c4e050.
+- [x] [DEVOPS] P3. **Re-check after LDR goes quiet** — ✅ Answered live 2026-08-10 (see the measured section above): the
+      streak resets on gate PASS (17:31Z, PR #939 cut) even under sustained velocity, so this is the documented
+      treadmill and NOT the "different, currently-masked bug" this todo was written to rule out. No fresh investigation
+      warranted. The na-eligibility gate on "once LDR goes quiet" is discharged: convergence was observed WITHOUT LDR
+      going quiet.
+- [ ] [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate** — L962-979 is unreachable whenever
+      L756 returns BLOCKED, so an orphaned red promote PR survives indefinitely and is what makes the lag monitor page
+      (see the measured section). **Design constraint (do NOT skip)**: the predicate must not mass-close. Closing every
+      `headRefName != $PROMOTE_HEAD` PR early is unsafe — if `LDR_SHA` is empty from a failed API read, `PROMOTE_HEAD`
+      degrades to `promote/$REPO/` and every open promote PR mismatches. Close only a PR whose head is a strict ANCESTOR
+      of the current LDR tip AND whose required checks have already CONCLUDED failure (an immutable head with a
+      concluded red check can never merge, so no viable promotion is discarded — the case that makes a naive hoist
+      risky). Needs a test in `scripts/quality-gates-base/tests/` extracting the real function body, per the
+      `test-sit-fleet-green-auto-retrigger.sh` precedent. Repo: unified-trading-pm.
 - [ ] [DEVOPS] P2. **Fix `sit-gate-stuck-detector.yml`'s dedup key** — the cooldown should not suppress a repost when
       the detector's own worst-repo streak count has INCREASED since the last post (i.e. include the streak count, or a
       monotonic-worsening check, in the dedup decision alongside the flat 60-min timer). Read
