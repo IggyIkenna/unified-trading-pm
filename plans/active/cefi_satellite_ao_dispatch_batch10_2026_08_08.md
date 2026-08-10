@@ -152,16 +152,21 @@ context_scope:
       relaunch todo added to the Track-7 doc for once it terminates. Evidence:
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` § "2026-08-08 84-cell audit" +
       unified-trading-pm@<sha>, market-data-processing-service@e9f9819.
-- [ ] [SCRIPT] P3. **Remove `BINANCE-DELIVERY` from `VENUES_BY_ASSET_GROUP["cefi"]`** in
-      `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py` to stop the daily zombie cron (704 wasted
-      `attempted_failed`/`empty_confirmed` rows/day). The venue was deliberately excluded from MVP scope by operator
-      decision #3 (2026-06-27, `mvp_scope.py` v10) — this todo does not reopen that decision, it only stops the
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-10 (slot-32)** — **Remove `BINANCE-DELIVERY` from `VENUES_BY_ASSET_GROUP["cefi"]`**
+      in `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py` to stop the daily zombie cron (704
+      wasted `attempted_failed`/`empty_confirmed` rows/day). The venue was deliberately excluded from MVP scope by
+      operator decision #3 (2026-06-27, `mvp_scope.py` v10) — this todo does not reopen that decision, it only stops the
       forward/cron pipeline from continuing to iterate a venue that's already MVP-excluded (code wiring, symbol_rules,
       and the Tardis adapter all stay intact for a future MVP re-add). Source:
       `issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (P3 BINANCE-DELIVERY item) +
       `issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` (duplicate todo, keep both docs' checkboxes
       in sync). **Done when**: the venue is removed from the cefi iteration list, `quality-gates.sh` is green, and a
       fresh manifest check on the next cron cycle confirms no new BINANCE-DELIVERY `attempted_failed` rows are written.
+      **DONE**: venue removed from `VENUES_BY_ASSET_GROUP["cefi"]` AND `tardis_to_venue`/`all_tardis_exchanges` (the
+      forward-poll's actual iteration source — the group removal alone would not stop the attempts, bare-OKX
+      precedent) + `VENUE_DATA_TYPE_CAPABILITIES`; QG green (12,637 passed); wiring kept for re-enable. Evidence:
+      `unified-api-contracts@56db28e6` (verified ancestor of `origin/live-defi-rollout`, current tip) — source issue doc
+      archived 2026-08-10 (`plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`).
 - [ ] [INFRA] P3. **Fix the LONG_LIVED_LIVE VM heartbeat status field so it transitions past `"starting"`** once boot
       completes, and root-cause + fix the `_publish_boundary_event` exception for `ASTER:PERPETUAL:1000LUNC-USDT@LIN`
       seen after `_record_empty_window` succeeds (both from
