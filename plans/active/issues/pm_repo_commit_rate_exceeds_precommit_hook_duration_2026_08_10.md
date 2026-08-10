@@ -298,59 +298,6 @@ Directions, cheapest first — each is a todo below:
       cross-reference F4 so an agent seeing exit 5 checks `git stash list` before believing "transient, re-run". **Done
       when**: the codex doc carries the recipe and the exit-5 caveat. Repo: unified-trading-pm.
 
-- [ ] [INFRA] P1. **Cross-repo evidence citations still go stale on rebase.** `scripts/dev/reconcile-sha-citations.sh`
-      heals a citation to a commit THIS push is rebasing, using ORIG_HEAD + preserved subjects. It cannot heal a PM plan
-      citing `agent-orchestrator@<sha>` that AO's own push rebased — PM has no visibility of that rewrite. Options: a
-      durable old→new map published per repo, or a reconciler that matches by patch-id across repos. **Done when**: a
-      cross-repo citation invalidated by the other repo's rebase is auto-corrected, with a regression test. Repo:
-      unified-trading-pm.
-- [ ] [INFRA] P2. **quickmerge isolation is opt-in until the cached-venv path is proven under load.** The
-      miniature-workspace + `~/.cache/qm-iso-venv/<repo>` fix took the isolated re-gate from 18 QG failures to 0 (1913
-      passed), but it has been exercised on ONE repo (PM) on ONE host. Before flipping laptop default back on, verify on
-      a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
-      when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
-      change. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** 81 commits behind, blocked
-      on 4 unresolved conflict markers in `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min
-      stale at 2026-08-10, no `.agent-claim`). Deliberately NOT resolved by this session — it is another session's
-      in-flight work and the inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is
-      resolved by its owner (or explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo:
-      unified-trading-pm.
-- [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
-      pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
-      isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
-
-## Deferred work after 2026-08-10
-
-| Item                                                              | State / why deferred                                                                                                   | Blocked on               |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Cross-repo citation reconciliation                                | **Not done** — needs a design call between a published old→new map vs patch-id matching                                | nobody; pick it up       |
-| quickmerge isolation back to laptop-default                       | **Not done** — proven on one repo/host only; wants a second repo + cache-invalidation check                            | nobody; pick it up       |
-| Slot 2 unwedge                                                    | **Operator-owned** — live conflict in another session's WIP, must not be resolved by a third party                     | that WIP's owner         |
-| `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                    | nobody; low priority     |
-| PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP) | that peer's work landing |
-
-**Recommended next item**: cross-repo citation reconciliation. It is the only one that silently produces FALSE failures
-on genuine work — the others are either visible, owned, or pre-existing.
-
-## Lessons carried forward (would otherwise be re-learned)
-
-- **A gating unit-test proves nothing about a shipping path.** Four defects shipped or nearly shipped today were
-  invisible to code review and to unit tests, and surfaced only by running the thing end-to-end: `.git` is a FILE in a
-  linked worktree; isolation re-exec'd the worktree's copy of its own script; a comment between a trailing `\` and
-  `bash` detached the env assignments and recursed 116 deep / 722 worktrees; symlinking `.venv` let `uv sync --frozen`
-  PRUNE the operator's real environment.
-- **A clean-checkout concurrency test measures the easy case.** Legacy mode scores 5/6 on a clean checkout and 0/6 with
-  a peer-noise writer. prek only does its patch save/restore when unstaged changes exist, so foreign WIP is the variable
-  that matters — not load, not drift.
-- **CORRECTION to an earlier claim in this doc**: the core-derived governor cap (K 8→2) was reverted. Three paired
-  samples (K=8: 74/30/27s, K=2: 27/37/29s) are indistinguishable; the original 74s was ambient noise. The 118s sweep was
-  real but measured WITHOUT isolation — isolation removed the contention that made admission control matter, so K is not
-  the lever.
-- **Rejected: copying the QG sentinel into the isolated worktree.** A sentinel attests one specific tree, and the
-  worktree is deliberately a different tree (named files on origin/HEAD). Copying it would assert a gate result never
-  obtained. The full re-gate stays — and it is what caught the F7 P0 already on live-defi-rollout.
-
 ## Progress Log
 
 - **2026-08-10 (filed, slot-3 interactive)**: filed after eight consecutive `safe-doc-push.sh` invocations to land two

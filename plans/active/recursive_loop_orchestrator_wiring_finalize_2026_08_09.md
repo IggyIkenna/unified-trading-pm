@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                      new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                      Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                      (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                      perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                      (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                      rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                      service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                      code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                      opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                      docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                      would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                      requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -189,7 +189,7 @@ context_scope:
       holding_wallet fallback, wallet_id fallback, default-wallet fallback); full `quality-gates.sh` green on both repos
       (strategy 164s, execution 213s).
 
-- [x] ✅ [BACKEND] P2. Wire `PerpHedgeMonitor` lifecycle at `execution-service/execution_service/api/app.py`'s
+- [ ] [BACKEND] P2. Wire `PerpHedgeMonitor` lifecycle at `execution-service/execution_service/api/app.py`'s
       `@app.on_event("startup")`/`@app.on_event("shutdown")`, sourcing the currently-open Family-2 position set from
       todo 6's registry (one `PerpHedgeMonitor` instance per open position, matching shutdown stop-all), and route each
       instance's `dispatch_rebalance`/`dispatch_margin_topup` callables through the SAME instruction-execution path
@@ -198,34 +198,7 @@ context_scope:
       position (per todo 6's registry) and shutdown stops them cleanly; (2) `quality-gates.sh` green on
       execution-service; (3) confirms the emitted rebalance/topup instructions reach the same execution path as
       `recursive_loop_runner.py`'s outputs (no second, divergent instruction sink). Codex SSOTs:
-      `/codex/04-architecture/tier-and-import-architecture.md`, `/codex/04-architecture/defi-execution-overview.md`. —
-      execution-service@afd0166b (feature @163b3c90). RULED 2026-08-10 (BLK-1255d5cf, option C — split): done-when (3)'s
-      execution-level premise was false — `recursive_loop_runner.py`'s path is
-      `RecursiveLoopOrchestrator.open()/unwind()`, and no rebalance/topup operation, perp-venue order adapter,
-      USDC-transfer adapter, or production `RebalanceInstruction`/`MarginTopupInstruction` consumer exists anywhere
-      (verified: `execution_service/venues/` has no hyperliquid/bybit adapter). Ruled C — ship the lifecycle + dispatch
-      ROUTING now, defer the real execution to todo 10. Shipped: `PerpHedgeMonitorLifecycle` (one monitor task per open
-      position; start_all/stop_all with graceful stop + cancel-on-timeout) wired at app.py startup/shutdown;
-      `PerpHedgeDispatchRouter` (single designated `RecursiveLoopOrchestrator`-typed target — the same path
-      `recursive_loop_runner.py` uses, no second sink); `PerpHedgeFetchProvider` seam raising
-      `PerpHedgeFetchNotWiredError` (inert while the registry enumerates zero positions). Tests: lifecycle
-      integration/wiring (one monitor per open position + clean stop + skip-closed + skip-Family-1) + wiring tests
-      (dispatch routing to the injected router bound to the orchestrator + fetch seam raises + router logs intents).
-      Full `quality-gates.sh` green on execution-service.
-
-- [ ] [DESIGN] P2. Decide + scope the actual on-chain rebalance/topup execution path for `PerpHedgeMonitor` (the
-      dispatch target todo 7's `PerpHedgeDispatchRouter` is bound to). RULED 2026-08-10 (BLK-1255d5cf, option C): todo 7
-      shipped the lifecycle + dispatch ROUTING (`execution-service@afd0166b (feature @163b3c90)`); the real execution is
-      deferred here, gated on machinery that does not exist yet. `RecursiveLoopOrchestrator` exposes only
-      `open()`/`unwind()`; there is no perp-venue order adapter, USDC-transfer adapter, or production
-      `RebalanceInstruction`/ `MarginTopupInstruction` consumer (verified 2026-08-10, slot 16:
-      `execution_service/venues/` has no hyperliquid/bybit adapter; only `PerpHedgeSizer` produces and
-      `PerpHedgeMonitor` dispatches the two intent types). The production on-chain fetch readers
-      `PerpHedgeFetchProvider` currently raises for are the same machinery bucket (Aave account data via RPC, LST
-      exchange rate, perp-venue position/margin reads). Repo: execution-service. Done-when: a properly-scoped
-      implementation plan/todo pair (with exact done-when + test plan) filed covering the real execution path —
-      perp-venue order + USDC-transfer adapters + a real consumer under `RecursiveLoopOrchestrator`, plus the production
-      fetch readers — gated on the machinery that doesn't exist yet.
+      `/codex/04-architecture/tier-and-import-architecture.md`, `/codex/04-architecture/defi-execution-overview.md`.
 
 ## Progress Log
 
@@ -337,19 +310,3 @@ context_scope:
   holding_wallet fallback, wallet_id fallback, default fallback). Full `quality-gates.sh` green on both repos
   (strategy-service 164s, execution-service 213s); both commits landed on LDR and verified as ancestors of
   `origin/live-defi-rollout`.
-- **2026-08-10 (slot 16, backend_engineer)**: Todo 7 shipped — lifecycle + dispatch routing per the BLK-1255d5cf ruling
-  (option C — split, mirroring todo 8's precedent). Verified done-when (3)'s execution-level premise was false before
-  escalating: `recursive_loop_runner.py`'s path is `RecursiveLoopOrchestrator.open()/unwind()`, and no rebalance/topup
-  operation, perp-venue order adapter, USDC-transfer adapter, or production
-  `RebalanceInstruction`/`MarginTopupInstruction` consumer exists (checked `execution_service/venues/` — only
-  deribit/lido/uniswap adapters, no hyperliquid/bybit). Implemented `PerpHedgeMonitorLifecycle` (one monitor task per
-  open Family-2 position from todo 6's registry; start_all/stop_all with graceful stop + cancel-on-timeout), wired at
-  app.py `@on_event("startup")`/`@on_event("shutdown")`; `PerpHedgeDispatchRouter` (single designated
-  `RecursiveLoopOrchestrator`-typed target — the same path `recursive_loop_runner.py` uses, no second divergent sink);
-  `PerpHedgeFetchProvider` seam raising `PerpHedgeFetchNotWiredError` for the follow-up-gated on-chain readers (inert
-  while the registry enumerates zero open positions). 8 new tests: lifecycle integration/wiring (one monitor per open
-  position, clean stop, skip-closed, skip-Family-1, stop-noop) + wiring (dispatch routes to the injected router bound to
-  the orchestrator, fetch seam raises, router logs rebalance+topup intents). Full `quality-gates.sh` green on
-  execution-service; `execution-service@afd0166b (feature @163b3c90)` landed on LDR + verified as an ancestor of
-  `origin/live-defi-rollout`. Filed the gated follow-up as todo 10 (the real on-chain execution path + production fetch
-  readers).

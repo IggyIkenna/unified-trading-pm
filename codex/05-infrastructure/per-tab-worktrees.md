@@ -1227,37 +1227,6 @@ no second writer to race.
 
 **Do not** re-improvise fetch/reconcile/stage-by-name/retry logic in-context. Call the script.
 
-### Which race isolation actually solves — and which it does not
-
-Two separate hazards get conflated. Keep them apart when reasoning about a host:
-
-- **Shared-index race.** Two processes in ONE checkout: prek's patch save/restore interleaves with git's autostash
-  push/pop, and the loser's uncommitted edits are reverted with no error. Measured 0/6 landed vs 6/6 isolated.
-  **Isolation solves ONLY this**, and it requires a shared index to exist at all — a laptop condition, since interactive
-  sessions have no allocation mechanism and share a `.tabs/N` checkout. On the AO VM one task runs per slot and each
-  slot is its own clone, so the hazard is structurally absent and isolation would cost a full ~7,155-file worktree
-  checkout per commit for nothing.
-- **Push contention on the shared branch.** Many slots and hosts, one `live-defi-rollout`. Every host has this, AO
-  included. **Isolation does nothing for it either way.** It is handled by the per-repo+branch push mutex (K=1), the
-  rebase-and-retry loop, the advisory drift gate (which removed the livelock where a commit could never pass while
-  origin moved during the ~2min hook chain), and the exit-10 content-vanished guard — all host-independent, all active
-  regardless of the isolation gate.
-
-So turning isolation off on the VM removes overhead for a hazard it does not have, and removes none of the protection
-for the hazard it does. Both scripts therefore share ONE host gate: laptop → on, named VM → off, explicit flag/env wins
-either way.
-
-### Rebase-invalidated evidence citations reconcile themselves
-
-A worker commits (SHA X), records `<repo>@X` in a plan todo, and ships — but both shipping scripts rebase onto origin
-before pushing, which REWRITES the commit, so what lands is SHA Y and the citation resolves nowhere. This is not
-fabrication; the SHA aged out between `git commit` and `git push`. Live instance 2026-08-10:
-`unified-trading-pm@0f9b8a65ca`, whose work had really landed as `034cb4e2ad`. A pre-commit check structurally cannot
-catch it — at commit time the citation IS resolvable. `scripts/dev/reconcile-sha-citations.sh` therefore runs AFTER the
-last rebase and BEFORE the push, deriving the old→new mapping from `ORIG_HEAD` plus preserved commit subjects (ambiguous
-subjects are skipped, never guessed), rewriting citations in the named files and amending. Best-effort and non-blocking;
-`SHA_CITATION_RECONCILE=0` disables it.
-
 ### quickmerge isolation gating
 
 `--isolated` forces it on, `--no-isolated` forces it off, `QUICKMERGE_ISOLATED=force|off` sets it non-interactively.

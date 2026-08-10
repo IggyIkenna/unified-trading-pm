@@ -14,7 +14,6 @@ summary: >-
   `test_consolidated_repo_treated_as_inactive`, `test_missing_canonical_returns_2`
   (`tests/unit/test_check_workspace_code_workspace_drift.py`).
 status: open
-archive_exempt: true
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +38,7 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by: unified-trading-pm@8a7b1860a0
+resolved_by:
 source: slot-17 quality-gates Pass-1 run on cross_cutting_satellite_ao_dispatch_batch6 todo 3 (2026-08-10)
 ---
 
@@ -101,20 +100,7 @@ root). That alternative is operator-gated if ever wanted.
 
 ## Fix todos
 
-- [x] ✅ [SCRIPT] P1. Redirect `_pm_root_or_legacy` to the fixture PM root in the two broken test suites so they
-      exercise the drift/coverage logic against their synthetic `tmp_path` corpus again (exact patch recipe in
-      "Recommended decision" above; do not change `_pm_root.py` or the checkers). Done when: all 8 tests pass under
-      `bash scripts/quality-gates.sh`. (repo: unified-trading-pm) — fixed by slot-17, unified-trading-pm@8a7b1860a0
-      (2026-08-10)
-
-## Progress Log
-
-- **2026-08-10 (slot-17)**: Regression root-caused + fixed in the same pass that surfaced it. `55a43797a4`'s
-  content-based `_pm_root.py` resolution made the checkers ignore the synthetic `--workspace-root` fixture; slot-17
-  shipped the test-side `_pm_root_or_legacy` redirect (`unified-trading-pm@8a7b1860a0`, part of the same quickmerge as
-  the batch6 todo 3 template-lint pre-flight) and verified all 8 tests pass under `quality-gates.sh`. Set
-  `archive_exempt: true` (status stays `open` — a terminal `resolved` status demands archival, but this freshly-resolved
-  regression record is cited as SSOT by two shipped test files
-  (`tests/unit/test_check_workspace_code_workspace_drift.py`,
-  `scripts/quality_gates/test_check_finalize_plan_coverage.py`); archiving it now would break those references and force
-  a code change, so it is intentionally kept active for fleet-wide bulk archival later).
+- [ ] [SCRIPT] P1. Redirect `_pm_root_or_legacy` to the fixture PM root in the two broken test suites so they exercise
+      the drift/coverage logic against their synthetic `tmp_path` corpus again (exact patch recipe in "Recommended
+      decision" above; do not change `_pm_root.py` or the checkers). Done when: all 8 tests pass under
+      `bash scripts/quality-gates.sh`. (repo: unified-trading-pm)

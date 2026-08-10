@@ -104,7 +104,7 @@ corrected, now conflict-clear todo is extracted here.
 
 ## Todos
 
-- [x] ✅ [INFRA] P1. **Fix the shared-host `/tmp` tmpfs capacity issue at the root.** Determine whether the fixed 8GB
+- [ ] [INFRA] P1. **Fix the shared-host `/tmp` tmpfs capacity issue at the root.** Determine whether the fixed 8GB
       ceiling is genuinely too small for current fleet-wide scratch-write load, or whether the real problem is large
       one-off parquet scratch files (`enum-univ-*`, per-slot corrector/regen scratch) never being cleaned up post-run —
       check `free -h` for real RAM headroom before proposing any ceiling raise (only ~1.6GB free at last check, so a
@@ -118,21 +118,7 @@ corrected, now conflict-clear todo is extracted here.
       confirmed routed elsewhere), and the fix is documented (a codex SSOT or the VM provisioning script, worker's call
       on which). Source: `issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md` (both todos, combined — the
       ownership-audit caution folds into how this fix is verified, not a separate deliverable). Repo: unified-trading-pm
-      (host/VM tmpfs provisioning) or wherever the mount is actually configured. — **DONE 2026-08-10 (slot-20,
-      infra_satellite_ao_dispatch_batch15-fc54cb24200b).** Root cause: accumulation of large one-off parquet scratch on
-      the fixed 8GB RAM-backed /tmp tmpfs (resized 2G→8G ~4x and still saturates → sizing is NOT the fix; only ~3.3G RAM
-      genuinely free). Fix = route + reap + document: (1) instruments-service@bc36e4a5 routes the recurring writers
-      (`enumerate_expected_universe.py` enum-univ-_/enum-shard-_,
-      `reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py` cefi-corrector-*) to
-      `$HOME/.cache/instruments-scratch` (root disk) via a `_scratch_dir()` helper (+ `--scratch-dir` /
-      `$INSTRUMENTS_SCRATCH_DIR` override) — confirmed routed off the tmpfs; (2) unified-trading-pm reaper
-      `cleanup-stale-tmp-parquet-scratch.sh` + cron installer (liveness-gated, 6h TTL) reclaims SIGKILL orphans +
-      residual one-off /tmp parquet scratch (PM@9db60dd7d4, committed; push blocked by pre-existing repo red RB-5b82f02e
-      — plan-commit-sha-evidence ratchet red from slot-28's unresolvable citation, filed as
-      `issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`); (3) codex SSOT
-      `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md` (PM@9db60dd7d4) documents root cause + routing
-      convention + sizing decision. `df -h /tmp` 8.0G 3.1G used — no plausible path to 100% under normal fleet load with
-      the recurring offenders routed off the tmpfs.
+      (host/VM tmpfs provisioning) or wherever the mount is actually configured.
 - [ ] [DOCS] P2. **Reconcile market-data-processing-service's `DEPLOYMENT_GUIDE.md`/`TESTING.md` via redirect stubs, not
       new content.** Verify `DEPLOYMENT_GUIDE_FEMI.md` and `TESTING_GUIDE.md` genuinely cover what the canonical S5.1
       filenames would need to say (read both against `/codex/06-coding-standards/documentation-standards.md`'s
@@ -163,25 +149,6 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
 - `/codex/06-coding-standards/documentation-standards.md` — S5.1/S5.1a/S5.11 required-docs + redirect-stub convention
 
 ## Progress Log
-
-- **2026-08-10 (slot-20, infra_satellite_ao_dispatch_batch15-fc54cb24200b)** — Executed todo 1 (P1 `/tmp` tmpfs root
-  fix). Investigation (plan context_scope + live host): `/tmp` is a fixed 8GB RAM-backed tmpfs in `/etc/fstab`, already
-  resized ~4x (2G→8G per 2026-07-27→08-09 history) and STILL saturated to 100% on 08-09 → **accumulation problem, not
-  sizing**. Live `free -h`: ~3.3G genuinely free → a resize is a poor trade (and prior operator rulings 07-08/07-26 kept
-  the mount resize out of scope). Recurring offenders confirmed: instruments-service writers
-  (`enumerate_expected_universe.py` enum-univ-_/enum-shard-_,
-  `reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py` cefi-corrector-*) via `tempfile.NamedTemporaryFile` →
-  `/tmp`, with cleanup only in `finally` (SIGKILLed runs orphan 150MB–2.8GB files). Shipped:
-  **instruments-service@bc36e4a5** (routing to `$HOME/.cache/instruments-scratch`, root disk, off the tmpfs;
-  `--scratch-dir`/`$INSTRUMENTS_SCRATCH_DIR` override; 5+2 NamedTemporaryFile sites routed) +
-  **instruments-service@451737d1** (fixture `_PER_AG_TARGET_COUNTS` CEFI 25→24 for UAC@56db28e6 BINANCE-DELIVERY removal
-  — pre-existing drift surfaced by QG, fixed ≤30min per findings triage; both verified on origin). PM: **PM@9db60dd7d4**
-  reaper (`scripts/dev/cleanup-stale-tmp-parquet-scratch.sh` + `install-...cron.sh`, liveness-gated 6h TTL) + codex SSOT
-  (`/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`). PM push blocked by a PRE-EXISTING repo red (not mine):
-  slot-28's flip `b9d9725354` cites `unified-trading-pm@0f9b8a65ca` (404 on GitHub, unresolvable) → plan-commit-sha-
-  evidence ratchet 0→1 blocks the `.n_sha` sentinel. Filed
-  `issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md` (+ fix todo) and registered as waiter on
-  repo-blocker RB-5b82f02e. PM reaper/codex ship + this flip will land once the pre-existing PM red clears.
 
 - **2026-08-10** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 20, dispatch
   agt-7788a0), the tranche's second same-day dispatch (after slot 26's `all`-mode linkage-only sweep at 01:10 UTC found

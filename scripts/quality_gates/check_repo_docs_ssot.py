@@ -276,24 +276,10 @@ def _scan_doc(path: Path, codex_index: dict[str, tuple[str, int]] | None = None)
 
 
 def _rel_key(path: Path, workspace_root: Path) -> str:
-    """Workspace-relative baseline key, stable under symlinked repo layouts.
-
-    Bug fixed 2026-08-10: this resolved the DOC path (following symlinks) but compared it
-    against an UNRESOLVED ``workspace_root``. When a sibling repo is reached through a symlink
-    -- as it is when quickmerge commits from an isolated worktree whose parent symlinks the
-    real siblings -- ``.resolve()`` yields the real checkout path, which is not relative to the
-    isolation workspace, so this raised ValueError and fell back to an ABSOLUTE path. Every
-    pre-existing violation then missed its baseline key and was reported as NEW drift (measured:
-    28 false NEW violations, against a real checkout reporting zero). Try both the literal and
-    the resolved form of each side, so the key is identical whichever way the tree was reached.
-    """
-    for base in (workspace_root, workspace_root.resolve()):
-        for candidate in (path, path.resolve()):
-            try:
-                return candidate.relative_to(base).as_posix()
-            except ValueError:
-                continue
-    return path.as_posix()
+    try:
+        return path.resolve().relative_to(workspace_root).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
 def find_violations(

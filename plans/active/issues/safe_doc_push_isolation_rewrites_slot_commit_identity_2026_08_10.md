@@ -35,7 +35,6 @@ superseded_by:
 source:
   - safe-doc-push.sh isolated-worktree mode (default since 2026-08-10)
 depends_on: []
-archive_exempt: true
 ---
 
 # safe-doc-push isolated-worktree mode silently mis-attributes slot commit identity to main
@@ -74,11 +73,7 @@ Fix `safe-doc-push.sh` to propagate the caller's resolved slot identity into the
 re-exec, so the default isolated mode preserves `[slot-<N>·<host>]` attribution for every worker — not just those who
 happen to know the `SDP_ISOLATED=0` escape hatch.
 
-- [x] ✅ [INFRA] P1. **Propagate caller slot identity into safe-doc-push's isolated worktree** (repo:
-      unified-trading-pm) — unified-trading-pm@015b869269. Fix shipped + verified: the isolated commit worktree now
-      carries the caller's `.tabs/<N>/` segment so `fix-commit-identity` derives `[slot-N·host]` and no-ops; regression
-      bats test `tests/test_safe_doc_push_isolated_identity_preserved.bats` asserts the pushed commit's author carries
-      the slot label. Live-verified on slot 29 (issue-doc flip landed as `[slot-29·planning]`, not `[main·planning]`).
+- [ ] [INFRA] P1. **Propagate caller slot identity into safe-doc-push's isolated worktree** (repo: unified-trading-pm).
       In the isolated-worktree branch (`scripts/dev/safe-doc-push.sh`, ~line 217), before re-exec'ing the inner script,
       set the caller's resolved identity on the worktree so `fix-commit-identity` derives the correct label — either (a)
       run `source scripts/hooks/slot-identity-lib.sh` + `slot_identity_resolve "$_sdp_origin_repo"` in the caller, then
@@ -106,17 +101,3 @@ happen to know the `SDP_ISOLATED=0` escape hatch.
   requires a green PM QG, which the pre-existing red blocks. Joined fleet-wide repo-blocker `RB-5b82f02e` (PM qg_red,
   escalated). **Resume**: when PM QG is green (fleet fixing via the sibling issue's todos), re-run `quality-gates.sh` on
   this commit, quickmerge, flip this checkbox with evidence.
-- **slot-29 2026-08-10 (infra, todo -001, SHIPPED)**: PM QG green after slot-23's `_pm_root.py` root-cause fix
-  (`465ea24093`). Re-ran `quality-gates.sh` → **ALL QUALITY GATES PASSED (116s)**. Quickmerge `--agent --files` pushed
-  both commits to `origin/live-defi-rollout`: `015b869269`
-  (`fix(ao): propagate caller slot identity into safe-doc-push's isolated worktree` — author
-  `ikennaigboaka [slot-29·planning]`, `Quickmerge: agent` trailer) + `22c6e73822` (depends_on hygiene). Verified:
-  `git rev-list --count origin/live-defi-rollout..HEAD` = 0, tree clean. Checkbox flipped with evidence
-  `unified-trading-pm@015b869269`. Task 2 (`safe_doc_push_isolation_rewrites_slot_commit_identity-001`) complete.
-- **slot-29 2026-08-10 (archival)**: `archive_exempt: true` set as the SANCTIONED flip-then-mv bridge
-  (`check_archive_candidates.sh` --only mode, flip-then-mv exemption 2026-08-09). Flipping this doc's last open todo to
-  done makes it a 0-open/some-done/unlocked archive candidate; combining the flip with the `git mv` in ONE commit would
-  show only a deletion at the original plan_ref path and defeat the AO server's cross-repo `/done` M3 checkbox-flip
-  verification. Per the sanctioned pattern: the flip + `archive_exempt: true` land in THIS commit (file stays at the
-  original path so M3 sees the `- [x]`); the `git mv` to `plans/archive/issues/` (dropping the now-moot exempt line,
-  `status: resolved`, archive banner) is the IMMEDIATELY FOLLOWING commit. This is a bridge, not a durable exemption.

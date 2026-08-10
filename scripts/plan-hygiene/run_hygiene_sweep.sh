@@ -277,31 +277,8 @@ RESULTS=()
 # `cron_hygiene_sweep_entrypoint.sh`'s shallow single-branch clone never fetches
 # origin/main, so this guard is what keeps that periodic path on baseline mode instead of
 # silently hard-failing on the corpus's entire pre-existing debt.
-# PROMOTION PRs GET NO DIFF BASE AT ALL (2026-08-10). A promote PR's diff IS the entire
-# LDR→main accumulation, so `--diff-base origin/main` there measures the whole unpromoted
-# backlog rather than the change under test — and the further behind main falls, the more
-# it measures, so the gate blocks the promote, main falls further behind, and the reported
-# violation count GROWS. Measured on the NA-corpus check the same day: 51→53→55 new docs
-# and 116→151→181 new todos across three runs on distinct HEADs while main went 1180→1440
-# commits behind. A count that climbs across distinct HEADs is definitionally not a fixable
-# regression, and no amount of retrying converges it.
-#
-# 4c964f8447 established this rule and the promote/ detection, scoped to the NA-corpus
-# check. It is set HERE instead so the SAME rule covers every DIFF_BASE_REF consumer —
-# reference-paths, archive-candidates and effort-ratchet carry the identical latent bug and
-# were already tripping it (`check_reference_paths (--diff-base origin/main): 2 NEW
-# violation(s)` hard-failed the 11:25Z promote-path run). Setting it once also avoids four
-# copies of one rule, which is precisely the shape that rotted the tranche lists (see
-# scripts/scheduled_job_already_ran.py's header). Falling back to baseline+buffer on the
-# promote path is safe: every commit in that batch already passed these same checks
-# diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
-#
-# NOT a blanket disable — a normal PR or a push to LDR still gets full diff-scoping, which
-# is where these checks actually catch new violations.
 DIFF_BASE_REF=""
-if [ -n "$CI_MODE" ] \
-  && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
-  && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
+if [ -n "$CI_MODE" ] && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
   DIFF_BASE_REF="origin/main"
 fi
 
@@ -407,15 +384,7 @@ run_check "Create-only archival guard (archive/active duplicate pairs)" hard pyt
 # diff-scoped in CI-gate mode with a resolvable base, baseline+buffer mode otherwise (periodic
 # cron sweep, interactive/local runs unchanged).
 NACORPUS_DIFF_ARGS=()
-# Promotion PRs (LDR→main) carry the entire LDR accumulation as their diff, which
-# will always include legitimate new NA docs/todos from normal work.  `--diff-base
-# origin/main` on a promotion PR is therefore structually fail-unsafe: it catches
-# ALL growth, not just unattended growth, and the check becomes un-convergeable on
-# the promote path.  Use baseline+buffer mode instead (the same mode the periodic
-# cron sweep and interactive/local runs already use), which tolerates routine
-# accumulation within the buffer while still catching a genuine spike.
-# Detect promotion PRs via GITHUB_HEAD_REF (e.g. "promote/unified-trading-pm/4840cdac0125").
-if [ -n "$DIFF_BASE_REF" ] && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]]; then
+if [ -n "$DIFF_BASE_REF" ]; then
   NACORPUS_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" "${NACORPUS_DIFF_ARGS[@]}"

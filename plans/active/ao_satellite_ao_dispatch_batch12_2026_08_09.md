@@ -181,7 +181,7 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       sandbox's no-new-privileges flag) — plausibly a missing browser system dependency specific to this host, not this
       repo's test code. Recommend a follow-up check on a normal dev/CI host before treating `pw:L2` as fully green for
       this spec; the spec itself mirrors a previously-shipped, presumably-passing pattern exactly.
-- [x] ✅ [BACKEND] P3. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) — the source todo this was extracted from
+- [ ] [BACKEND] P3. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) — the source todo this was extracted from
       (`deepseek_flash_ab_routing_test_2026_08_05.md:447` todo 25) already dropped `[OPERATOR]` in favor of plain
       `[BACKEND]`; this copy's tag was stale, not the underlying work, which remains open (see below).** Extend
       `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions lost during a prior
@@ -197,26 +197,7 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       test (a one-off candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is
       reviewed, `--apply` runs via SSM against the live orchestrator VM, and the affected window's one-off
       `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to transcript rotation — report either way).
-      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo: agent-orchestrator. —
-      agent-orchestrator@463ee10. Extended `backfill_task_usage.py` with a second candidate source
-      (`_load_one_off_candidates` + `_match_one_off_usage` + `_slot_id_from_transcript`): archived one_shot/scheduled
-      AgentRows registered in the deploy window (reflog-pinned to `de73f93` 2026-08-06 09:22:53Z → `acd6d70` 16:05:58Z)
-      lacking a `TaskUsageRow`, each matched by resolving its OWN transcript via `claude_session_id` (globally-unique
-      filename) and bracketing `[AgentRow.registered_at, finished_at]` exactly like the live `_done_one_off` capture;
-      slot_id recovered from the transcript's `orch-slot-N` config-dir segment (AgentRow.tmux_session is nulled on
-      archive); merged into the same `record_task_usage(backfilled=True)` path with account_id + dispatch_role carried
-      from the AgentRow. 3 new regression tests (matched+backfilled with slot_id derived from the transcript dir,
-      missing-transcript unmatched, already-covered skipped — the last one is what kept the pre-existing live row
-      `one-off:agt-53f733` untouched). Full `quality-gates.sh` green (3194 passed, run once on the committed SHA per the
-      sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`. Live run on the orchestrator VM
-      `i-0c9b283b31d6b5ca7` (on-host — the SSM agent is inactive on this host, so the run was direct, not a remote SSM
-      call): dry-run first (`--since 2026-08-06`, scoped so the 2007 pre-existing pre-08-06 Class-A gaps are NOT
-      reprocessed) → 23 matched / 0 unmatched (2 one-off + 21 recent Class-A),
-      $0.9360
-      partial; then `--apply` wrote all 23. Affected window's one-off `TaskUsageRow` count verified NON-ZERO: 2 newly
-      backfilled — `one-off:agt-7e7e2c` (slot 9, conflict_resolver, 84 turns, $0.072119)
-      and `one-off:agt-a0bd62` (slot 4, conflict_resolver, 31 turns, $0.029804), both `backfilled=1` — plus the 1
-      pre-existing live-captured row `one-off:agt-53f733` correctly left alone by the idempotency check.
+      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows in the AO backlog `state.db`.** Re-run
       `audit_false_done.py`, re-measure the current count (it has moved since `agent-orchestrator@aaa2db8` shipped), and
       confirm every remaining unhashed row's `status` is `done` (bounds the exposure — a row that is NOT `done` and

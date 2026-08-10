@@ -101,32 +101,11 @@ depends_on: []
           (~36%). Pace steady at ~10 dates/min. ETA: ~14:40Z.
         - SSH remains unavailable (transient, same as prior session). VM healthy per GCS tee progression + watchdog.
 
-      - **Session compacting 2026-08-10 ~12:04Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2022-09-28` (direct `gsutil cat`). ~844/2256 days done (~37%). Pace
-          steady at ~10 dates/min, ~1412 days remaining → ETA ~14:25Z.
-        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet (expected — still mid-flight).
-
-      - **Session compacting 2026-08-10 ~12:09Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2022-10-23` (~39%), ~1387 days remaining. Pace steady at ~10 dates/min.
-          ETA ~14:30Z.
-        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet (mid-flight). Monitors re-armed.
-
-      - **Session compacting 2026-08-10 ~12:16Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2023-01-07` (~42%), ~1311 days remaining. Pace steady at ~10 dates/min.
-          ETA ~14:27Z.
-        - VM confirmed RUNNING; no `exit_code=` yet. Monitors armed.
-
-      - **Session compacting 2026-08-10 ~12:19Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2023-02-12` (~43.5%), ~1274 days remaining. Pace steady at ~10
-          dates/min. ETA ~14:27Z.
-        - VM confirmed RUNNING; no `exit_code=` yet. Monitors armed (`bomhvtqy0` 3-min poll + `bwdr9v3z7` 10-min
-          watchdog).
-
-## Deferred work after 2026-08-10 ~12:19Z
+## Deferred work after 2026-08-10 ~12:15Z
 
 | Item                                                                                                                | State / why deferred                              | Blocked on                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2023-02-12` (~44%), ETA ~14:27Z | VM completion (real infra)                                                                           |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2022-08-27` (~36%), ETA ~14:40Z | VM completion (real infra)                                                                           |
 | **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM       | INJURIES VM exit_code                                                                                |
 | **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                 | All entity backfills complete                                                                        |
 | **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                             | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |

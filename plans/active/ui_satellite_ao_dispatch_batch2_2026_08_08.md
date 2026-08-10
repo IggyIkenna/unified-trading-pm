@@ -115,16 +115,15 @@ those as two separate tests, not one.
 
 ## Todos
 
-- [x] ✅ [BACKEND] [UI] P3. **DONE 2026-08-10 (slot-32)** — **Ship the 4 combined cost-observability P3 enhancements as
-      one sequential change.** (1) Make the AWS provisional-flag cutoff month-aware — AWS re-trues the whole current
-      month on the 6th-7th, so early- current-month AWS days currently render as final though they are not; GCP's
-      trailing-2-days provisional logic is correct as-is and untouched. (2) Add a credits/discounts view — GCP credits
-      are already fetched; surface gross → credits → net + the effective discount rate (how much promo/CUD/SUD is
-      saving). (3) Add usage-quantity → unit-economics — GCP `usage.amount`/`unit` and AWS
-      `line_item_usage_amount`/`pricing_unit` → $/GB-month,
-      $/vCPU-hour, and GB-stored vs GB-egress for buckets.
-      (4) Add an "Other resources" leaf table — Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem
-      $882), bigger than any single VM, but today only vm+bucket leaf
+- [ ] [BACKEND] [UI] P3. **Ship the 4 combined cost-observability P3 enhancements as one sequential change.** (1) Make
+      the AWS provisional-flag cutoff month-aware — AWS re-trues the whole current month on the 6th-7th, so early-
+      current-month AWS days currently render as final though they are not; GCP's trailing-2-days provisional logic is
+      correct as-is and untouched. (2) Add a credits/discounts view — GCP credits are already fetched; surface gross →
+      credits → net + the effective discount rate (how much promo/CUD/SUD is saving). (3) Add usage-quantity →
+      unit-economics — GCP `usage.amount`/`unit` and AWS `line_item_usage_amount`/`pricing_unit` →
+      $/GB-month,
+      $/vCPU-hour, and GB-stored vs GB-egress for buckets. (4) Add an "Other resources" leaf table —
+      Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any single VM, but today only vm+bucket leaf
       tables exist; it only surfaces inside the "By resource" rollup. Implement in the order listed (1 is an independent
       bugfix; 2-4 are additive view/table features that can share scaffolding) — do not skip re-reading
       `/codex/05-infrastructure/billing-cost-observability.md` first, it is the API row contract all 4 extend. **Done
@@ -132,14 +131,6 @@ those as two separate tests, not one.
       citing this todo's shipped sha(s), and a fresh `npx playwright test` run on `CostObservability.tsx`'s existing
       spec(s) is green (`pw:L2 ✓`) with the new surfaces exercised. Repo: deployment-api, deployment-ui. Source:
       `cost_observability_deferred_followups_2026_07_10.md` (the 4 items under "## Unscheduled P3 enhancements").
-      **DONE**: (1) AWS provisional cutoff first-of-current-month + cloud-aware provisional fold/`provisional_days`
-      (`deployment-api@6a536a82d`); (2) `discount_rate_pct` on summary/clouds + UI "≈ X% off" chip
-      (`deployment-api@6a536a82d`, `deployment-ui@b7beaf33b`); (3) `usage_amount`/`usage_unit`/`cost_per_unit` on
-      sku-dimension rows + sortable Usage/$/unit
-      columns (`deployment-api@6a536a82d`, `deployment-ui@b7beaf33b`); (4) "Other resources" leaf table for
-      `resource_kind=other` (`deployment-ui@b7beaf33b`). Both repos QG green (api: full suite incl. 2 new tests; ui:
-      tsc/eslint/vitest 25/25 — pw:L2 ✓, 3 new specs exercising the new surfaces). All 4 source-doc checkboxes flipped
-      citing these shas. Both commits verified ancestors of `origin/live-defi-rollout`.
 
 ## Deferred — real remaining work held back, with the reason (per the non-batchable taxonomy)
 

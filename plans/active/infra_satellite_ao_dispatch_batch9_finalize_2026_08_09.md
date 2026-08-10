@@ -63,13 +63,13 @@ skill's no-double-gate mechanism).
 
 ## Todos
 
-- [x] ✅ [REVIEW] P2. **Reconcile `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`'s todos 1-4.**
-      Source doc's todos 1-4 were already `[x]` (closed 2026-08-09 reclassify+satellite sweep). Updated each with batch9
-      landing commit citations: todos 1+2 → unified-trading-pm@809d6b8d22 (AR_REPO fix), todo 3 → GCP-only (both
-      orphaned triggers confirmed dead + deleted in project central-element-323112), todo 4 →
-      unified-trading-pm@ad3fb19596 (deployed_versions retirement). Todo 5 (`[OPERATOR] P3` AWS IAM grant) stays open —
-      correctly not this batch's scope. Source doc is NOT an archival candidate (todo 5 remains open,
-      `assigned_vm: NA`). Progress Log entry added to source doc citing this reconciliation. (repo: unified-trading-pm)
+- [ ] [REVIEW] P2. **Reconcile `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`'s todos 1-4.** Once
+      batch9's todos 2-4 ship, flip that source doc's matching `- [ ]` checkboxes (its own todo 1↔2 map to batch9's
+      combined `_AR_REPO` todo, its todo 3 maps to batch9's trigger-cleanup todo, its todo 4 maps to batch9's
+      `deployed_versions` todo) to `[x]`, citing the batch9 commit SHA(s) for each. Do NOT touch its todo 5
+      (`[OPERATOR] P3` AWS IAM read-access decision) — that stays open, `assigned_vm: NA`, not this batch's scope.
+      Confirm the source doc is NOT an archival candidate afterward (todo 5 remains open by design). (repo:
+      unified-trading-pm)
 - [ ] [REVIEW] P3. **Note G2's resolution against `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred
       item 3.** That item is prose documentation (not a live checkbox) recording why the 0.10.8-constant move was
       originally parked. Once batch9's todo 1 ships, add a one-line dated note to that Deferred entry pointing at
@@ -93,6 +93,3 @@ skill's no-double-gate mechanism).
 
 - **2026-08-09** — Authored alongside `infra_satellite_ao_dispatch_batch9_2026_08_09.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 22, dispatch agt-3b6f6b).
-- **2026-08-10 (slot-5, review) — todo 1 reconciliation**: Source doc's todos 1-4 already `[x]` (closed 2026-08-09).
-  Updated each with batch9 landing commit citations. Source doc confirmed NOT an archival candidate (todo 5 `[OPERATOR]`
-  stays open).

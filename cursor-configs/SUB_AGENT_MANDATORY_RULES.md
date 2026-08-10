@@ -130,7 +130,3 @@ bare yes/no without framing both sides.
 `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; confirm its `summary:` line, open ONLY that doc; its
 `code_refs` jumps doc→code. Fallback: the domain pointers in `cursor-configs/CLAUDE.md`'s conditional index — or ask the
 operator a focused question (≤1 min read-only investigation first, so it's specific).
-
-- **Ship via `safe-doc-push.sh`/`quickmerge.sh` — they COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your
-  checkout can't revert your edits; never re-improvise reconcile-retry. **Exit 10 = your edits were reverted — RECOVER
-  from the printed stash ref, never plain re-run.** SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
