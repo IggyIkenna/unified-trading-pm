@@ -15,7 +15,7 @@ summary: >-
   prerequisite gate) and all 4 blockers cleared 2026-08-07/08, but none of the 4 items were ever promoted into a live
   dispatched todo anywhere in the tranche's 15-doc covering set — independently re-verified via a fresh basename +
   content-term grep across every active batch/finalize/phase-child doc before drafting.
-status: complete
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -30,12 +30,12 @@ related:
     /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
     /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -71,20 +71,10 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 10 — 2026-08-09
 
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 4 todos shipped/measured with real evidence (see Progress Log): (1)
-> POLYMARKET `book_snapshot_5` batch row-proof — live manifest rows >0 (4 dates, 648K rows) + shipped code fixes
-> (`mtds@82ba5399`/`0a6ad2de`) + batch VM launched, live=batch; (2) `base_prediction_adapter.py` FALLBACK path fix
-> (`market-tick-data-service@5738858d`, 162 ia-not-ml dates confirmed exercised); (3) Kalshi historical OTHER-bucket CQG
-> reclassify backfill (`instruments-service@d4e5c23d`, 18 dates, 162,692 instruments, 69,292→correct CQGs, backup in
-> `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`); (4) Polymarket dead
-> `_cross_reference_fixture` deletion (`instruments-service@4b55c57b`); (5) MTDS dead live-REST-polling interface
-> deletion (`market-tick-data-service@a0b4957e`). Independently re-checked by
-> `prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`'s todos 1-4 (source-doc reconciliation +
-> deferred-items re-check). Archived per the 6-step ritual
-> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); codex-alignment check found no staleness. The
-> 4 non-extracted Deferred items remain parked per this run's parked-findings doc (`data_completion_prediction` Phase-B
-> STILL-HELD, 07-31 Finding 1 CLEARED, Group E gate STILL-HELD, tarball-race infra/ci STILL-HELD — see finalize todo 4's
-> verdicts).
+> **Status: draft — awaiting operator approval to dispatch (CLAUDE.md "Plan destination — ASK BEFORE CREATING" HARD
+> RULE).** A skill-drafted AO batch is never auto-shipped; frontmatter `status: draft` (above) is the real ingestion
+> gate — a draft is not picked up by `regen_backlog_from_plan.py`. Flipping to `status: active` to actually dispatch
+> this batch is an operator decision, parked as a follow-up in this run's `/done` evidence.
 
 4 items, all conflict-clear against the full active covering-doc set (consolidated closeout, 4 Phase A-E children,
 satellite batches 4/6/7/8/9 + finalizes — re-verified via basename + content-term grep immediately before drafting, not

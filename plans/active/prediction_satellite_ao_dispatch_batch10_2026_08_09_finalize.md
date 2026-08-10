@@ -10,7 +10,7 @@ summary: >-
   6-step ritual. Authored `status: active` (not draft) per the skill's no-double-gate finding — `gate_on_depends: true`
   already machine-holds every task here until batch10's own todos are done, regardless of batch10's own draft/active
   status, so a second manual flip on this plan would be a redundant gate.
-status: complete
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-10, satellite-docs, archival]
 related:
   [
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     /plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
@@ -27,7 +27,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,7 +41,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 depends_on: [prediction_satellite_ao_dispatch_batch10_2026_08_09]
@@ -56,14 +56,7 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 10 — finalize
 
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 5 todos done: todos 1-3 reconciled all 4 source docs' checkboxes (slot 8),
-> todo 4 re-checked the 4 Deferred items with explicit still-held/cleared verdicts (slot 30), todo 5 archived batch10
-> via the 6-step ritual (`status: complete` + ARCHIVED banner, `git mv` to `plans/archive/2026_08/`, all leading-slash
-> referrers repointed, INDEX.md regenerated — slot 30). The gated dependency (`depends_on` + `gate_on_depends: true` on
-> `prediction_satellite_ao_dispatch_batch10_2026_08_09`) is satisfied — batch10 is archived alongside. This finalize
-> plan is now fully complete and archived per the plan-completion-and-archival-discipline HARD RULE.
-
-**status: complete — batch10 archived 2026-08-10, gated dependency satisfied.**
+**status: active — gated on batch10's 4 todos via `depends_on` + `gate_on_depends: true`.**
 
 ## Todos
 
@@ -88,13 +81,12 @@ drift_direction: advance-code
       CLEARED — operator-ruled DELETE 2026-08-07, extracted to batch10 todos 3/4, both done; (3) STILL-HELD — Group E
       gate still unchecked; (4) STILL-HELD — infra/ci tranche scope, no infra/ci batch extracted it. Full evidence in
       the Progress Log.
-- [x] ✅ [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`** via the standard 6-step ritual
-      (per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm the prior 4 todos' verdicts
-      are recorded, add the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md
+- [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`** via the standard 6-step ritual (per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm the prior 4 todos' verdicts are
+      recorded, add the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md
       contract is owed, update every corpus referrer, `git mv` to `plans/archive/2026_08/`. Repo: unified-trading-pm.
       Done when: batch10 is at its archived path with every referrer updated and this finalize plan's own todos all
-      `[x]`. — **DONE 2026-08-10**: `git mv` to `plans/archive/2026_08/`, `status: complete` + ARCHIVED banner, all
-      referrers repointed, INDEX.md regenerated. Full evidence in the Progress Log.
+      `[x]`.
 
 ## Progress Log
 
@@ -154,32 +146,6 @@ drift_direction: advance-code
     registry-resolution partial), not 3b's mapping population. This is the 2026-08-09 Finding 5 verification gap —
     `prediction_cross_venue_arb_and_coverage`'s fixture-pairing RESIDUAL sub-todo stays open on 3a/3b. Both still-held.
     All 4 verdicts explicit. Todo 4 flipped.
-
-- 2026-08-10 (slot 30, data_engineering, todo 5): Archived `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` via
-  the standard 6-step ritual. Steps performed:
-  - Prior 4 todos' verdicts confirmed recorded (todo 1-3 in the Progress Log above + this plan's todo 4 verdicts).
-  - `git mv` to `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`; frontmatter
-    `status: active -> complete`, `last_updated: 2026-08-10`; added the `> **🟢 ARCHIVED 2026-08-10 — COMPLETE.**`
-    banner with the full evidence summary (todo 1 book_snapshot_5 row-proof + mtds@82ba5399/0a6ad2de; todo 2 fallback
-    fix mtds@5738858d; todo 3 Kalshi reclassify instruments-service@d4e5c23d; todo 4 is_polymarket deletion
-    instruments-service@4b55c57b; todo 5 MTDS dead-REST deletion market-tick-data-service@a0b4957e), replacing the stale
-    "Status: draft" dispatch banner.
-  - Codex-alignment check (step 3): no new codex contract owed — the batch shipped launcher-VM-prefix + reclassify
-    mechanics that resolve under existing codex entries; the 4 Deferred items' verdicts live in the parked-findings doc
-    (not a new codex contract). No CLAUDE.md change owed (step 4).
-  - Referrer sweep (step 5): repointed every leading-slash reference to batch10's old active path
-    (`/plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`) to its archive home
-    (`/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`) in 6 files
-    (`prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`,
-    `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`,
-    `prediction_live_clob_depth_capture_2026_07_24.md`, `prediction_phase_ab_residuals_2026_07_24.md`,
-    `ag_closeout_audit_prediction_parked_2026_08_09.md`, `is_polymarket_dead_fixture_cross_reference_2026_07_31.md`);
-    regenerated `plans/active/INDEX.md` (`regenerate_active_plan_index.py`) so batch10's own row dropped from the active
-    index (its `_finalize` twin stays — still active until this plan's own archival). Epic `../active/...` relative
-    links left per the batch9-archival precedent (archived batch4/6 refs remain there too; not leading-slash path-form).
-  - Lock: none (`locked_by:` empty) — cleared/confirmed.
-  - `run_hygiene_sweep.sh --precommit` green on the staged set. Done when met: batch10 at archived path, every
-    leading-slash referrer updated, this plan's own todos now all `[x]` (todo 5 flipped). Todo 5 flipped.
 
 ## Deferred work — migrated to:
 

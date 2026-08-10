@@ -63,7 +63,7 @@ context_scope:
 > `api_football_api_key` constructor param, `factory.py`'s `af_key` threading, and the dedicated
 > `TestPolymarketCrossReferenceFixture` test class. `quality-gates.sh` green
 > (`.qg_last_passed_sha=4b55c57b3ecf51c587441e7017c9c34b992803d0`); verified on origin/live-defi-rollout. Executed via
-> `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`'s todo of the same name.
+> `plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`'s todo of the same name.
 
 ## What I found
 

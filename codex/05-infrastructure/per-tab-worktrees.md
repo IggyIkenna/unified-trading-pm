@@ -481,37 +481,6 @@ worktree-level (separate index/working tree). Separate clones drop the entire **
 (deleted fleet-wide), the tab-rebase/upstream self-heal in `slot-cron-ff-pull.sh`, and the diverged-tab recovery class.
 Contention moves to **LDR push-time** (rebase-on-reject), already handled by quickmerge STAGE 0.4.
 
-### Ship scripts run isolated on a DETACHED HEAD and push a refspec (codified 2026-08-10)
-
-That same "can't check out one branch in two worktrees of a clone" constraint governs the **ship scripts' own** isolated
-mode, and it is not optional: an isolated worktree of a slot clone can never `git checkout live-defi-rollout`, because
-the clone itself already holds it. Both `safe-doc-push.sh` and `quickmerge.sh` therefore:
-
-1. create the throwaway worktree with **`git worktree add --detach`**, and **stay detached** — no branch checkout at any
-   later stage; and
-2. push an **explicit refspec** — `git push origin "HEAD:refs/heads/<branch>"`, never `git push -u origin <branch>`.
-
-Step 2 is load-bearing, not stylistic. From a detached HEAD, `-u origin <branch>` pushes the **shared clone's**
-`refs/heads/<branch>` — a stale ref that does not contain the commit just made — and can **exit 0 having shipped none of
-your work**. A silent no-op ship is worse than a failure, so the refspec form is required.
-
-`safe-doc-push.sh` was built this way; `quickmerge.sh` was not, and its isolated mode consequently died on
-`fatal: '<branch>' is already used by worktree at '<main clone>'` for every ship until 2026-08-10
-(`unified-trading-pm@dad266ff61`, regression tests in `/tests/test_quickmerge_isolated_branch_collision.bats`). The
-practical cost was indirect: callers fell back to `--no-isolated`, which is precisely the shared-checkout mode where a
-peer's pull/rebase cycle can revert your uncommitted work mid-ship.
-
-**A corollary worth knowing before you add a stage:** anything reading `git rev-parse --abbrev-ref HEAD` gets the
-literal string `HEAD` in isolation, not a branch name. Fall back to the ship branch explicitly.
-
-**The isolated worktree must also be given a toolchain, or its gate is a lie.** Its `.venv` is a symlink to a per-repo
-cache that nothing else creates, and `quality-gates.sh` gates its PATH export on `[ -d .venv/bin ]` — **false for a
-dangling symlink**, so before 2026-08-10 the gate silently ran `pytest` on the _system_ interpreter and reported
-failures for a tree whose tests pass. quickmerge now provisions it (`uv sync`), and the gate now **fails closed** rather
-than degrading silently (`agent-orchestrator@8f1a08ad53`). Node deps are cached per repo and seeded by **copy, never a
-symlink** — `uv sync` pruned a shared `.venv` once already, and a linked `node_modules` would let `npm ci` do the same
-to the operator's real tree.
-
 ### What worktree isolation does NOT cover (codified 2026-07-30)
 
 Worktree/clone isolation covers exactly three things: the **working tree**, the **index**, and **HEAD**. Two surfaces

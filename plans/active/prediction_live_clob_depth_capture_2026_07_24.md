@@ -267,7 +267,7 @@ context_scope:
         VERDICT: FAIL — this row-proof backfill does not change that verdict. Re-open in a future batch as a ready
         `[DATA]` candidate now that its P0 dependency has landed. **na-eligibility-audit 2026-08-10: citation
         repointed** — the live current owner is
-        [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
+        [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
         todo 1 (`status: active`, `assigned_vm: planning`, verbatim `Source:` cites this exact checkbox), not batch4 —
         batch10 independently re-extracted the same item and is the current dispatch surface; batch4's older, staler
         Deferred-section copy of this item is superseded by batch10's, not a second live claim.
@@ -360,7 +360,7 @@ context_scope:
   present on days 2026-08-02 and 2026-08-03). This is the EXPECTED state given the two upstream resolutions: (1) todo 1
   root-caused the gap: the MDPS live-mode worker was never deployed/launched for ANY asset_group (fleet-wide, not
   prediction-specific); (2) todo 2 fixed the `_mode_dispatch_handler` construction + categories-default bugs
-  (`market-data-processing-service@9357fac`) so the code path is correct when invoked, but — (3) todo 3 (slot-10)
+  (`market-data-processing-service@558b5b7`) so the code path is correct when invoked, but — (3) todo 3 (slot-10)
   **DECIDED NOT TO LAUNCH** the `mdps-features-live` cluster after 2 real pilot VMs (cefi + tradfi) both failed with
   distinct bugs (OOM + argparse mismatch) AND the structural finding that `mdps_mvp_universe('prediction')` returns zero
   shards by design (2026-07-30 ruling), so even a successful launch would not have produced prediction MDPS candle
