@@ -45,6 +45,9 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # 2026-08-10 bridge -- last todo flipped this commit, full archival lands as the immediately
+# following commit (per plan-completion-and-archival-discipline.md's sanctioned two-commit bridge); drop this line
+# in that follow-up commit.
 ---
 
 # ag-closeout-audit ui parked findings — 2026-08-10
@@ -192,13 +195,17 @@ negative result so a future pass doesn't have to re-derive it.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. **Run `[unlock-plan]` on `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
-      then complete its archival** (Finding 6) — frontmatter still reads `status: open`,
+- [x] ✅ [OPERATOR] P3. **Run `[unlock-plan]` on `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
+      then complete its archival** (Finding 6) — frontmatter had read `status: open`,
       `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`, a lock timestamp predating the doc's own
-      `created: 2026-07-21` by ~2 months, still impossible for a genuine exclusive claim. This is now the 6th
-      consecutive flag (2026-08-06/07/08/09/10) across two skills (`/ag-closeout-audit ui` + `/plan-reconcile ui`),
-      neither of which can unlock it (out of both skills' write-scope). Needs a human/operator session per the
-      standard `[unlock-plan]` gate, then the normal archival ritual (doc is otherwise fully done).
+      `created: 2026-07-21` by ~2 months, impossible for a genuine exclusive claim. This was the 6th consecutive flag
+      (2026-08-06/07/08/09/10) across two skills (`/ag-closeout-audit ui` + `/plan-reconcile ui`), neither of which
+      could unlock it (out of both skills' write-scope). **RESOLVED 2026-08-10** — operator asked directly via a
+      human/operator session, approved `[unlock-plan]` for this doc specifically; unlocked + archived to
+      `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per the 6-step
+      ritual, all active-corpus referrers repointed. This todo was this doc's only open item — see Progress Log for the
+      note on why this doc itself is left for the next `/ag-closeout-audit ui`/`/na-eligibility-audit` pass to
+      classify for its own archival, consistent with how its 2026-08-07/08/09 siblings were handled.
 
 **Already resolved (Finding 3)**: `plan_reconciler_findings_2026_08_07.md`'s ACTIVE_INDEX.md dangling-reference item
 was already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same-day 2026-08-10 `/plan-reconcile
@@ -226,6 +233,15 @@ ui` run (dispatch `agt-ec1688`) — verified present at that doc's line ~135. No
 
 ## Progress Log
 
+- **2026-08-10 (operator-approved archival)**: flipped the `[OPERATOR]` P3 todo above — operator asked directly and
+  approved a targeted `[unlock-plan]` for `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, unlocked
+  + archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per
+  the 6-step ritual, all active-corpus referrers repointed. This was this doc's only open todo, so this doc itself now
+  reads 0 open todos + unlocked — **deliberately NOT archived as part of this action**: the task that resolved the
+  todo above was scoped to that one target doc only, and this doc's own archival-eligibility is a judgment call for
+  this skill's own next pass (mirrors how the 2026-08-07/08/09 siblings sat similarly classified without immediate
+  same-day archival). Flagging here so the next `/ag-closeout-audit ui` or `/na-eligibility-audit` run picks it up
+  rather than re-deriving the "why is this still active" question from scratch.
 - **2026-08-10 (ag_closeout_auditor, dispatch agt-e9985d, slot 18)**: Phase 0 discovery — candidate set grew 14→17 (2
   new `plan_reconciler_findings_*` docs), covering set unchanged at 7 (closeout + 3 batch/finalize pairs, all
   `status: active`). Orthogonality HARD CHECK: 0 dual-tag hits; targeted spot-check of 4 newer single-tag candidates

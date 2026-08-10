@@ -6,7 +6,7 @@ summary: >-
   visibility, mtds_data_status_page_parity_2026_07_21.md). Confirmed unrelated to that change (none reference the
   touched files/constants). Filed rather than silently ignored per this workspace's "pre-existing is not a triage
   criterion" rule; not fixed here to avoid scope creep on an unrelated dispatch.
-status: open
+status: resolved
 nature: process
 asset_group:
   [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; repos:[deployment-ui]
@@ -24,19 +24,31 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
+locked_by:
 context_scope:
   [
     /plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md,
     /codex/06-coding-standards/ui-testing-layers.md,
     deployment-ui/tests/smoke/top-nav-bar.spec.ts,
   ]
-locked_since: 2026-05-21
+locked_since:
 assigned_vm: planning
 resolved_by:
+  "unified-trading-pm (operator-approved [unlock-plan] 2026-08-10) — locked_by/locked_since were a stale
+  corpus-wide placeholder (locked_since 2026-05-21 predates this doc's own created 2026-07-21 by ~2 months, see
+  /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md); all 3 todos independently
+  HARD-verified done through the 2026-08-06 context-scout entry, flagged archivable by 5 consecutive audit passes
+  (2026-08-06/07/08/09/10) before operator explicitly approved the unlock+archive"
 ---
 
 # deployment-ui smoke failures — Daily Costs / mobile nav / nav-menu-dedup
+
+> **🟢 ARCHIVED 2026-08-10** — status=resolved, 0 open todos, unlocked via operator-approved `[unlock-plan]`. Archived
+> per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual. The `locked_by:
+> live-defi-rollout` / `locked_since: 2026-05-21` this doc carried was a stale corpus-wide placeholder (see
+> `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`), not a genuine lock — the
+> operator directly approved unlocking THIS doc while the broader 96-doc corpus-wide fix remains a separate open
+> question in that issue doc.
 
 Full `tests/smoke/` run (2026-07-21): 396 passed, 8 failed. All 8 are on pages/components unrelated to
 `DataStatusTab.tsx`/`CLIPreview.tsx`/`ServiceDetails.tsx`/`api/client.ts` (grep confirmed no references to those files
@@ -118,3 +130,14 @@ or their MTDS-related constants).
   `deployment-ui/tests/smoke/top-nav-bar.spec.ts` (confirmed via the live "the always-visible top bar carries all 16
   canonical entries" test). Swapped the entry to the real current file.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **2026-08-10** — Operator explicitly approved unlocking + archiving this doc (asked directly, per the `[unlock-plan]`
+  human-only gate — 6 consecutive audit passes since 2026-08-06 had correctly flagged it archive-eligible but never
+  touched it autonomously, exactly because that gate wasn't cleared until now). Independently re-verified before
+  acting: `grep -cE '^[[:space:]]*[-*] \[ \]'` on this doc → 0 open checkboxes; `locked_since: 2026-05-21` vs.
+  `created: "2026-07-21"` confirmed impossible for a genuine claim (predates the doc's own existence by ~2 months).
+  Cleared `locked_by`/`locked_since`, flipped `status: open` → `resolved`, archived to
+  `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per the 6-step
+  ritual. Fixed every active-corpus referrer's path to the new location (see that ritual's step 5) — archived docs
+  citing the old path were left untouched per `check_reference_paths.py`'s own ruling that archived docs' reference
+  paths are frozen historical record. No new codex contract established by this doc's completion (a routine smoke-test
+  triage close-out), so no codex-alignment update was needed.
