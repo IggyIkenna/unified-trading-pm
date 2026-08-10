@@ -668,3 +668,21 @@ words: "this branch is churning faster than one CI worker can chase serially").
   No code/doc-content fix pushed beyond this Progress Log entry + the new OPERATOR todo (the underlying check logic is
   correct and working as designed; the fix here is a policy/process decision, not a bug). `AUTHORING_SLOT=ci` (not a
   numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
+- 2026-08-10 (cicd agt-75d0b0, slot 8, `sit_failure` on `unified-trading-pm` promotion PR #2706, 16th dispatch into this
+  lineage — the 3rd dispatch of this SAME escalation id, after the slot-5 and slot-9 dispatches above): confirmed #2706
+  is CLOSED (`closedAt: 2026-08-09T23:47:05Z`), superseded by the `Option-B auto-drain` chain #2707→#2708→#2709; #2709 is
+  the sole currently-open promote PR (head `promote/unified-trading-pm/59d422665faf`, opened 2026-08-10T04:46:28Z). Its
+  `QG slice (checks)` shows 3 hard-fails (`Reference path convention`, `No prettier proseWrap continuation-padding`,
+  `assigned_vm:NA corpus size`) — but verified via `git merge-base --is-ancestor` that this is a STALE snapshot, not a
+  regression: `59d422665faf` was cut at 04:44:59Z, 29 minutes before the slot-9 dispatch's fix
+  (`unified-trading-pm@f57562d711`, landed 05:14:14Z) which resolved reference-paths + prosewrap; that fix IS present on
+  current `origin/live-defi-rollout` tip (`dd11edb0d4`). Re-ran `run_hygiene_sweep.sh --ci --no-regen` against fresh LDR
+  HEAD directly (not the frozen PR snapshot) — confirms exactly 1 live hard failure, same as the 14th/15th dispatches:
+  `assigned_vm:NA corpus size` (`origin/main` now ~1121+ commits behind LDR, no promote merged since #2671). No open
+  `repo-blockers` for this repo. Per the 15x-reaffirmed precedent, and since the `[OPERATOR]` P1 deadlock-resolution todo
+  is already filed above (still open, unanswered) — not re-filing it, not attempting a bulk NA-corpus reclassification
+  myself (audit-scale, outside one-shot CI-wall scope), and not manually triggering `ldr-to-main-promote-fleet.yml` per
+  CLAUDE.md's standing ban on ad-hoc dispatches of that shared single-concurrency workflow. No code/doc-content fix
+  needed beyond this Progress Log entry — the durable fixes from the 13th dispatch hold, the sole blocker is the
+  already-escalated operator-gated deadlock. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per
+  this role's skip-rule. Completing via `/done`.
