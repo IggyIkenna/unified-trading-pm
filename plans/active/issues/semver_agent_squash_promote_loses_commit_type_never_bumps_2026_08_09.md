@@ -282,3 +282,18 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   chase serially — that doc's own scope). No alternate lever: `Semver Agent`'s caller stub on `unified-trading-library`
   still has no `workflow_dispatch` trigger, and the reusable workflow's classifier fetch is still unpinned to PM's live
   default branch. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
+- **2026-08-10 (cicd worker, slot 4, todo 2 re-check)**: Re-verified from scratch —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 968 commits, up from slot 5's 904). `unified-trading-library`'s
+  `origin/main` tag is still `v0.77.0` with no tag containing `609299ad`. The auto-drain promote PR has rolled to a new
+  attempt, #2707 (opened 2026-08-09T23:47:08Z, superseding slot 5's #2706) — `QG slice (checks)` job `93319130685`
+  FAILED with the exact same hard-ratchet class as every prior attempt:
+  `No prettier proseWrap continuation-padding (ratchet)` and `assigned_vm:NA corpus size (docs + open todos, ratchet)`
+  (now 37 new NA docs / 102 new open todos vs `origin/main`, up from slot 10's 34/97) — confirmed via the live job log.
+  Same blocker, same root cause (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same
+  precedent (hand off, don't chase serially — that doc's own scope, not this INFRA todo's). No alternate lever still
+  available. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again. Note for whoever next reviews this
+  doc: this todo has now been re-checked identically by 7 separate workers (slots 18, 20, 13, 10, 23, 5, 4) across ~6
+  hours with zero forward progress possible from this todo's own scope — the blocking condition (PM `main` catching up
+  past `30ed07eff`) is entirely owned by the plan-hygiene ratchet fix, not by re-polling here; further re-checks of THIS
+  todo add no new information unless the promote PR's hard-failure class changes.
