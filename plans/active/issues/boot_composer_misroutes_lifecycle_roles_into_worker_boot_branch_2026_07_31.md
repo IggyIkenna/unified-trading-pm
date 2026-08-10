@@ -268,3 +268,9 @@ cefi-specific** — same defect now reproduced on a second tranche.
   `[SCRIPT] P1` data-integrity fix). Standing corpus ruling (AO dispatch/state machinery stays human-reviewed) still
   applies.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item (`/done` empty-`sha` data-integrity fix in `state_store/tasks.py::mark_done()`). This doc cites a standing corpus
+  ruling explicitly: AO dispatch/state machinery stays human-reviewed even when a fix 'looks mechanical,' because a
+  wrong fix corrupts the very backlog this audit depends on — this doc's own history (3 confirmed silent-data-loss
+  incidents) is the proof case for that ruling. High-stakes; agrees fully, not re-litigated.

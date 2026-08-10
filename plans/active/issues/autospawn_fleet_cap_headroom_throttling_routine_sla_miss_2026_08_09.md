@@ -102,3 +102,9 @@ are irregular (0.6 min to 3h11min) rather than clustered around a fixed per-tick
   No code change here — the fix requires an operator capacity/tuning decision per
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" (an open-ended
   judgment call, not a bounded worker todo).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — first audit pass on this doc
+  (no prior marker). The sole open item is a 3-way capacity/tuning tradeoff decision (raise
+  `ORCHESTRATOR_FLEET_WORKER_CAP` further / design priority-aware headroom allocation / accept-and-document) with real
+  host-resource-degradation risk if the wrong branch is picked unilaterally — the doc's own text explicitly frames this
+  as 'not resolvable as a bounded worker todo.' Genuine capacity/operator judgment call.

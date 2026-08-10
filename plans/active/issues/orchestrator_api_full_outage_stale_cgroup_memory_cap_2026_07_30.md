@@ -178,3 +178,9 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
   deployment-ui dashboard tile needing its own `pw:L2` regression spec per the `[UI]` gate) — self-assessed "correctly
   skipped" 2026-07-30, unchanged. Checked against the round7-10 precedent set — none apply. Corroborated same-day:
   `/ag-closeout-audit ao` batch12 independently lists this doc under genuinely-human-only (4).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item (dashboard/alerting surface for `MemoryAvailable`/cgroup-vs-host RAM mismatch). Self-assessed 2026-07-30 as real
+  feature-sized, cross-repo work (new agent-orchestrator cgroup-v2 memory-stat reader AND a new deployment-ui dashboard
+  tile needing its own `pw:L2` regression spec) — 4 prior audits plus `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s
+  own Deferred section agree. No new facts found.
