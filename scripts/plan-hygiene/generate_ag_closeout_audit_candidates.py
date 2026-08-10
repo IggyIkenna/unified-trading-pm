@@ -185,10 +185,16 @@ def main(argv=None) -> int:
         basename = path.name
         if path in covering_paths:
             continue
-        if re.search(r"_consolidated_closeout", basename):
+        if re.fullmatch(r"[a-z_]+_consolidated_closeout(?:_aggregated_sources)?_\d{4}_\d{2}_\d{2}\.md", basename):
             # a sibling tranche's own hub doc citing/being-cited-by another hub doc (e.g. ao's closeout
             # linking to ci's) is a hub cross-reference, never a real audit-target membership -- exclude
             # every *_consolidated_closeout_* doc regardless of which tranche's citation surfaced it.
+            # ANCHORED as a fullmatch (not re.search) -- a bare substring search also matched issue docs
+            # whose own (longer, more specific) title merely CONTAINS "_consolidated_closeout" while
+            # describing a problem WITH the hub doc rather than being the hub doc itself, e.g.
+            # tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md -- that doc
+            # carries genuine open tradfi-scoped work and was silently invisible to EVERY tranche's
+            # candidate list (found live 2026-08-10, ag-closeout-audit tradfi tranche).
             continue
         if re.search(r"_finalize(_\d{4}_\d{2}_\d{2})?\.md$", basename):
             # a finalize doc's filename is inherited from its SOURCE doc, not tranche-prefixed (e.g.

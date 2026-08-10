@@ -351,6 +351,40 @@ def test_cross_cutting_membership_not_gated_on_data_epic_or_citation(monkeypatch
     )
 
 
+def test_issue_doc_title_merely_mentioning_closeout_is_not_excluded_as_a_hub_doc(monkeypatch, tmp_path):
+    """2026-08-10 (ag-closeout-audit, tradfi tranche): the hub-doc exclusion used to be an unanchored
+    `re.search(r"_consolidated_closeout", basename)`, which also matched any issue doc whose own (longer,
+    more specific) title merely CONTAINS that substring while describing a problem WITH the hub doc,
+    e.g. `tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md`. That doc carries
+    genuine open tradfi-scoped work and was silently invisible to the candidate list for EVERY tranche
+    (the substring match fires regardless of which tranche is being audited). Fixed by anchoring the
+    exclusion to the real hub-doc filename shape via `re.fullmatch`."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cefi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md",
+        title="cefi_consolidated_closeout is over the line cap",
+        status="open",
+        asset_group="cefi",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cefi dispatch batch 1",
+        status="active",
+        asset_group="cefi",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    result = json.loads(_run_json("cefi"))
+    assert result["total_members"] == 1, (
+        "an issue doc whose title merely mentions the closeout doc must still count as a real member, "
+        "not be silently excluded as if it were the hub doc itself"
+    )
+    all_paths = {c["path"] for c in result["candidates"]}
+    target = "plans/active/issues/cefi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md"
+    assert target in all_paths
+
+
 def test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair(monkeypatch, tmp_path):
     """2026-08-01 (ag-closeout-audit, tradfi tranche): a line-cap-split fork that never got its OWN
     `*_finalize*` doc (e.g. tradfi_backfill_throughput_followups_2026_07_24.md,
