@@ -23,7 +23,7 @@ tags: [agent-orchestrator, blocked-questions, plan-health, doc-drift, dashboard,
 related:
   [
     /plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md,
-    /plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md,
+    /plans/active/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md,
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
@@ -280,8 +280,8 @@ behaviour recorded.
   computed and discarded in `record_dispatch_result`. Verified the `-1` sentinel is `orm.NO_WORKER_SLOT_SENTINEL` and is
   _correct_ (the `plan_health` one-shot frees its slot before the row outlives it; `0` was unavailable because
   `autospawn._MAIN_SLOT_ID` already claims it, per
-  `/plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`) — the defect is rendering it
-  raw, not the value. Conflict check against `plans/active/` found
+  `/plans/active/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`) — the defect is rendering it raw, not
+  the value. Conflict check against `plans/active/` found
   `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`; read it in full and established the scope
   boundary above rather than folding into it (that doc is `assigned_vm: planning`, this one is human/NA per operator
   instruction, and their subject matter is disjoint). While cross-checking it, found its `[UI]` todo and `repos:`

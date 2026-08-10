@@ -20,7 +20,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, watchdog, unpushed-sweep, merge-gate, governance-bypass, blocked-queue, bug]
-related: [/plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md]
+related: [/plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md]
 created: 2026-07-26
 priority: P1
 parent_epic: orchestrator_master
@@ -38,7 +38,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/epics/orchestrator_master.md,
   ]
 ---
@@ -52,7 +52,7 @@ context_scope:
 
 BLK-ec018203 was an **operator_pending** merge sign-off gate on the CLV `odds_targets` export (`uac` +
 `features-service`, both QG-green), reserved to the operator by the design doc
-`/plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s binding guardrail **"⚠️
+`/plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s binding guardrail **"⚠️
 OPERATOR RATIFICATION REQUIRED BEFORE MERGE."** The commits were deliberately held unpushed pending that ratification
 (the worker got only an interim "HOLD, escalating upward, do NOT quickmerge yet").
 
@@ -141,7 +141,7 @@ defeated by automation, not by any agent or operator decision. This is a governa
   describing an already-implemented, already-tested mechanism (`push_or_preserve_ahead_commits`'s `gated:` param,
   `unpushed_held_behind_open_gate` event) — no open design question, no operator-only act, checkable done-when (the doc
   section exists and cites the shipped contract). Phase 2 conflict-check:
-  `plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md` and this doc's own sibling
+  `plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md` and this doc's own sibling
   `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md` (still `assigned_vm: NA`, unchanged this
   run) both reference the shipped `[BACKEND] P1` fix but neither claims the `[DOC] P2` SSOT-write itself — clear. Set
   `assigned_role: infra` (no prior value; closest real match in the live `agents/*.md` registry for a

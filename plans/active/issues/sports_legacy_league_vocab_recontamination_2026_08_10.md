@@ -133,13 +133,9 @@ Fix the writers + registry FIRST, then run the delete pass:
       get_league_by_api_football_id(fixture.league.api_football_id) when the numeric ID is populated, falling back
       non-lossy to build_league_id(). This ensures the CanonicalLeague's api_football_id → LEAGUE_REGISTRY canonical key
       path.
-- [x] ✅ [DATA] P1. Reconcile the `SEGUNDA_DIVISION`/`LA_LIGA_2` duplicate registry entries in
+- [ ] [DATA] P1. Reconcile the `SEGUNDA_DIVISION`/`LA_LIGA_2` duplicate registry entries in
       `unified-api-contracts/.../canonical/domain/sports/league_data.py` — decide the single canonical key and make
-      `_is_in_canonical_write_universe` stop accepting the legacy key (repo: unified-api-contracts). —
-      unified-api-contracts@3cca83603: removed SEGUNDA_DIVISION LeagueDefinition (kept LA_LIGA_2). Flipped alias
-      direction SEGUNDA_DIVISION→LA_LIGA_2. Migrated all 15 FOOTYSTATS provider-id mappings + season structure +
-      transfer windows + honest-coverage clusters + polymarket mappings + api-football team aliases + footystats drift
-      script + bookmaker coverage JSON to LA_LIGA_2. Updated tests. QG 12636 passed.
+      `_is_in_canonical_write_universe` stop accepting the legacy key (repo: unified-api-contracts).
 - [ ] [DATA] P1. Fix `FOOTYSTATS_HISTORICAL_SEASON_IDS` so the Spanish-2nd-division competition ids map to the canonical
       key, and confirm the 15 ids mapped to `SEGUNDA_DIVISION` genuinely belong to one league (repo:
       unified-api-contracts).

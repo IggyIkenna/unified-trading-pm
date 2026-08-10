@@ -20,7 +20,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-10, finalize, satel
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
-    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
