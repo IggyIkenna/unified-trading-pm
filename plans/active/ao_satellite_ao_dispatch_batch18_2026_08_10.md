@@ -26,6 +26,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch18_finalize_2026_08_10.md,
     /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-10"
