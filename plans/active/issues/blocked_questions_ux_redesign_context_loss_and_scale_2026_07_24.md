@@ -23,6 +23,7 @@ related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 created: 2026-07-24
 author: unknown
@@ -44,6 +45,7 @@ context_scope:
     agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 ---
 
@@ -236,3 +238,15 @@ exists" section together before scoping the workstream.
       this without a doc split — worth checking before hand-rolling the split).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **2026-08-10 (cross-link, slot-3 interactive)**: linked
+  [`/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md)
+  in both directions. That plan is a LOCAL/human companion covering a DISJOINT axis — blocked-question **payload
+  sufficiency** (the `plan_health` `doc_drift` path raises undecidable questions) and **condition-derived
+  auto-retirement** (a `doc_drift:<key>` row can never retire, since all three `classify_retirement` exits resolve a
+  `TaskRow`). This doc's remaining scope (transcript-jump, dedup/similarity) is untouched by it; neither supersedes the
+  other. **Correction owed to this doc, tracked as that plan's todo D**: the `[UI] P2` transcript-jump todo says "Repo:
+  deployment-ui" and `repos:` lists `deployment-ui`, but the blocked-question queue is rendered ONLY by
+  `agent-orchestrator/dashboard/src/layout.tsx` (`BlockedCard`) — `deployment-ui` has zero blocked-question code
+  (verified 2026-08-10; its only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx`). Both
+  `ui_developer` workers dispatched onto that todo (slot-11, slot-27, 2026-08-08) declined it as GATED on the backend
+  dependency and neither caught the wrong repo.
