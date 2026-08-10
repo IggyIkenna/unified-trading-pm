@@ -35,6 +35,7 @@ assigned_vm: NA
 execution_scope: local-only
 resolved_by:
 locked_by:
+archive_exempt: true
 source:
   "review worktree-health finding msg #3630 (2026-08-04 00:06Z), cascade-verification STILL-ORPHANED verdicts
   00:02:14-18Z; c927ec58 + 06c8e90b independently orphan-verified by main agt-1756f6 via git merge-base --is-ancestor"
@@ -101,15 +102,22 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       `git show origin/live-defi-rollout:market_tick_data_service/cli/handlers/vault_share_price_handler.py` carries the
       per-shard `instrument_id` fix citing the same issue doc. Same reasoning as this doc's already-closed todo 1
       (`b411374c1`, ruled moot on outcome-defined done-when) — found by `/plan-reconcile ao` 2026-08-06.
-- [ ] [BACKEND] P3. Rescue slot-4's orphaned `market-data-processing-service` throttle fix `~036c568` (proactive GCS-429
-      avoidance) — a small untracked improvement that never landed; only the earlier crash-prevention `db055ba` is on
-      origin, so crash risk is already mitigated and this is genuinely low-priority (hence P3). Review agt-8fee2f
+- [x] ✅ [BACKEND] P3. Rescue slot-4's orphaned `market-data-processing-service` throttle fix `~036c568` (proactive
+      GCS-429 avoidance) — a small untracked improvement that never landed; only the earlier crash-prevention `db055ba`
+      is on origin, so crash risk is already mitigated and this is genuinely low-priority (hence P3). Review agt-8fee2f
       verified it (msg #3648); main could NOT independently re-check (not in main's orchestrator-host clone). Locate the
       commit (wip-preserve ref or slot-4's worktree), confirm it's a real orphan
       (`git merge-base --is-ancestor     036c568 origin/live-defi-rollout` → not-ancestor), reconcile onto LDR tip, QG
       green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
       out already-superseded/landed, close with that note). (repo: market-data-processing-service) **➡️ EXTRACTED
-      2026-08-10 to `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 — do NOT action here.**
+      2026-08-10 to `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 — do NOT action here.** — **RESOLVED
+      2026-08-10 (finalize, slot 23): landed via batch17 — `market-data-processing-service@5b30f41`
+      (`fix(mdps): throttle defi-dex-swaps checkpoint writes to avoid GCS 429`), independently re-verified an ancestor
+      of `origin/live-defi-rollout` (`git merge-base --is-ancestor 5b30f41 origin/live-defi-rollout` → true); the
+      proactive throttle delta (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0` + always-flush-final-day `is_last_day` gate)
+      confirmed on the current LDR file `scripts/backfill_defi_dex_pool_swaps_source_correction.py`. Done-when
+      (429-avoidance change is an ancestor of LDR) MET — see `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 for
+      the full trail.**
 
 - [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-04 (main agt-1756f6 verify) — fix landed independently, b411374c1 moot.** Slot
       6 shipped `market-tick-data-service@b0909a5e` at 02:33:55Z (BEFORE this todo was even written) fixing the EXACT
@@ -182,14 +190,14 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   checkbox in `ao_satellite_ao_dispatch_batch6_2026_08_04.md` with the same evidence. Remaining open todos (2, 3) are
   the slot-8/slot-4 items, still conditionally gated per the batch6 Deferred section — untouched by this run.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: satellite-extraction, not whole-doc RECLASSIFY
-  — todo 2 (slot-8's `bd0e231f`) is already `[x]` (closed 2026-08-06 by `/plan-reconcile ao` as MOOT, already covered
-  by `market-tick-data-service@b0909a5e`). The sole remaining open item is todo 3 (slot-4's `~036c568` throttle-fix
-  rescue-or-confirm-moot) — this is individually bounded (a clear, outcome-defined git-rescue matching the exact
-  pattern todos 1-2 already used successfully in this same doc), no longer blocked on batch6's own conditional gate
-  (batch6 itself completed all 10 of its own todos 2026-08-08 without drafting this item as one of them — it stayed
-  in batch6's Deferred § "Conditionally gated" list, never independently re-verified there). Extracted to
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: satellite-extraction, not whole-doc RECLASSIFY —
+  todo 2 (slot-8's `bd0e231f`) is already `[x]` (closed 2026-08-06 by `/plan-reconcile ao` as MOOT, already covered by
+  `market-tick-data-service@b0909a5e`). The sole remaining open item is todo 3 (slot-4's `~036c568` throttle-fix
+  rescue-or-confirm-moot) — this is individually bounded (a clear, outcome-defined git-rescue matching the exact pattern
+  todos 1-2 already used successfully in this same doc), no longer blocked on batch6's own conditional gate (batch6
+  itself completed all 10 of its own todos 2026-08-08 without drafting this item as one of them — it stayed in batch6's
+  Deferred § "Conditionally gated" list, never independently re-verified there). Extracted to
   `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 + gated
   `ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md`. Conflict-check: grepped active `assigned_vm: planning`
-  docs + all `ao_satellite_ao_dispatch_batch*` docs for `036c568`/`market-data-processing-service.*throttle` — zero
-  hits besides this source doc, clear to extract.
+  docs + all `ao_satellite_ao_dispatch_batch*` docs for `036c568`/`market-data-processing-service.*throttle` — zero hits
+  besides this source doc, clear to extract.
