@@ -240,11 +240,14 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       disabled coverage becomes permanent. Capture real WS frames for both and remove the xfails. Do NOT fabricate a
       cassette to close this. **Done when**: both connectors have real cassettes + venue dirs and
       `test_ws_cassette_coexistence.py` passes with no xfail for either.
-- [ ] [REVIEW] P3. **Add the standing rule that an `xfail`/`skip` needs a tracked todo.** Found 2026-08-08 during the
+- [x] ✅ [REVIEW] P3. **Add the standing rule that an `xfail`/`skip` needs a tracked todo.** Found 2026-08-08 during the
       fleet-wide "tests weakened rather than fixed" sweep: an xfail with a good reason and no remediation todo is
       indistinguishable, six months later, from coverage that was never written. Either wire a check (every
       `pytest.xfail`/`mark.skip` reason must cite a plan/issue slug) or record in codex why that is not worth enforcing.
-      **Done when**: the check exists, or the decision is recorded with rationale.
+      **Done when**: the check exists, or the decision is recorded with rationale. — unified-trading-pm@32c5440a8d:
+      check wired (QG STEP 5.107 service / 5.102 library via `check_xfail_skip_tracked.py`, shrinking ratchet
+      `xfail_skip_tracked_baseline.yaml` 43 baselined at bootstrap; `skipif` + reason-bearing `pytest.skip()` calls
+      exempt by design — boundary recorded in codex quality-gates.md). PM QG green incl. STEP 5.107; 29 unit tests pass.
 
 ## Progress Log
 
