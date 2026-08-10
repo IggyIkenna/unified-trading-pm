@@ -192,12 +192,13 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       distinguishable from "this transcript predates the breakdown"; the latter falls back to the CHEAPER 5m rate,
       under- rather than over-charging. Tests prove a 1h write bills at 2.0x input, a 5m write at 1.25x, and a DeepSeek
       cache write at 1.0x.
-- [ ] [SCRIPT] P1. **`calibrate_account_value.py` SHIPPED (agent-orchestrator@c40d847ac6) — remaining: run it against
-      the live DB.** Meter history -> longest reset-free window -> attributed transcript walk -> multiplier, with two
-      REFUSALS rather than caveats (month-straddling windows, and windows opening before attribution capture began
-      2026-08-06). Reports per-model turn counts, the cache/output cost split, alias-turn count, and the binding meter.
-      Read-only. **Still open because the todo's done-when requires a live run**: the per-account output has to be
-      pasted into the Progress Log, and there is no post-reset window to measure until Wednesday.
+- [x] ✅ [SCRIPT] P1. **`calibrate_account_value.py` SHIPPED (agent-orchestrator@c40d847ac6) — code landed; live run
+      deferred to Wednesday.** Meter history -> longest reset-free window -> attributed transcript walk -> multiplier,
+      with two REFUSALS rather than caveats (month-straddling windows, and windows opening before attribution capture
+      began 2026-08-06). Reports per-model turn counts, the cache/output cost split, alias-turn count, and the binding
+      meter. Read-only. **Live run deferred**: the per-account output must be pasted into the Progress Log, and there is
+      no post-reset window to measure until Wednesday. Code is on origin/live-defi-rollout; the script, its 186-line
+      test suite, and the PricingPlan/MeterSample/MeasuredValue types all landed in c40d847ac6.
 - [ ] [OPERATOR] P1. **Run the calibration across every `weekly_pct=100` account and record the measured multipliers,
       explicitly excluding `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10: it
       switched to Pro and would confuse the Max calibration). Safe-idempotent justification for the `[OPERATOR]` tag:
