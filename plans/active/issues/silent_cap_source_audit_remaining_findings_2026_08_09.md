@@ -191,7 +191,7 @@ findings.
       large safety-net page count, e.g. mirroring `polymarket/clob.py`'s `_CLOB_MAX_PAGES = 10000` "safety cap against
       runaway loop" pattern which already correctly exits on the CLOB's own cursor sentinel) BEFORE either venue's
       `_REPOINT_PENDING` flag flips to re-enable it.
-- [ ] [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
+- [x] ✅ [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
       trusting the current mitigation is sufficient.**
       `instruments_service/reference_data/adapters/prediction/kalshi.py`'s live snapshot already mitigates the top-2000
       cap via a category/series-scoped supplemental fetch (`_fetch_series_scoped_batch`), but that mitigation has its
@@ -202,7 +202,17 @@ findings.
       call — unverified whether Kalshi's `/series` endpoint has its own hidden page cap. Repo: instruments-service. Done
       when: a live (or sandbox) probe of Kalshi's `/series` endpoint confirms whether it paginates; if the nested caps
       are provably safe at current real-world series/market counts, document the measured headroom in a code comment; if
-      not, extend the pagination the same way.
+      not, extend the pagination the same way. — instruments-service@74763c05: live probes (2026-08-10) confirmed
+      `/series` is non-paginating (no cursor, `limit` ignored, full category list in one response) and measured BOTH
+      nested caps already being silently exceeded — 447 non-OTHER series vs `_MAX_SERIES_TOTAL=362` (old cap dropped
+      ~85, mostly the Politics tail: only 1 of its 86 fetched), and KXNASDAQ100U holding 2800+ open markets vs the
+      1000-market/series page budget (old budget silently dropped ~1800 markets for that one series). Raised
+      `_MAX_SERIES_TOTAL` 362→1000 and `_MAX_SERIES_PAGES` 5→50 (10k/series safety-net, mirrors clob.py's
+      `_CLOB_MAX_PAGES`); both cap-hits now log a warning + emit `ADAPTER_PAGE_CAP_HIT` (for/else on page-budget
+      exhaustion; empty-page honest-exhaustion break added); measured headroom documented in code comments. 6 new
+      regression tests (460-series universe not truncated at old cap; 7-page/1400-market series fully collected;
+      page-budget + total-cap-hit emit the event; constant guards vs measured counts). Full quality-gates.sh green
+      (127s).
 - [ ] [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
       session added a page-cap WARNING to `morpho.py` (not full pagination) because Morpho Blue's `blue-api.morpho.org`
       GraphQL schema is first-party (not The Graph) and its `skip`/cursor support was NOT verified against a live schema
@@ -272,6 +282,9 @@ findings.
 - 2026-08-09 (slot 31, data_engineering): shipped the Raydium REST pagination todo — see the todo's own evidence line
   above for detail. instruments-service@5502e9e7, QG green (107s), quickmerge landed + ancestry-verified on
   origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-10 (slot 19, review): shipped the Kalshi nested series-scoped mitigation caps todo — see the todo's own
+  evidence line above for detail. instruments-service@74763c05, QG green (127s), quickmerge landed + ancestry-verified
+  on origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
