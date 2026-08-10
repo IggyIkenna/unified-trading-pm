@@ -298,12 +298,17 @@ Directions, cheapest first — each is a todo below:
       cross-reference F4 so an agent seeing exit 5 checks `git stash list` before believing "transient, re-run". **Done
       when**: the codex doc carries the recipe and the exit-5 caveat. Repo: unified-trading-pm.
 
-- [ ] [INFRA] P1. **Cross-repo evidence citations still go stale on rebase.** `scripts/dev/reconcile-sha-citations.sh`
-      heals a citation to a commit THIS push is rebasing, using ORIG_HEAD + preserved subjects. It cannot heal a PM plan
-      citing `agent-orchestrator@<sha>` that AO's own push rebased — PM has no visibility of that rewrite. Options: a
-      durable old→new map published per repo, or a reconciler that matches by patch-id across repos. **Done when**: a
-      cross-repo citation invalidated by the other repo's rebase is auto-corrected, with a regression test. Repo:
-      unified-trading-pm.
+- [x] [INFRA] P1. **Cross-repo evidence citations still go stale on rebase.** ✅ Done — neither option in the original
+      framing was needed. `scripts/dev/reconcile-sha-citations.sh` gained a second pass that asks a question requiring
+      no published map and no cross-repo coordination: **is the cited commit reachable from any ref in the sibling
+      clone?** A commit reachable from no branch, no remote, and no tag is an orphan a rebase left behind, and its
+      landed twin is the same-subject commit on the integration branch whose **patch-id** matches (patch-id is invariant
+      under rebase — tree hash is not, since rebasing onto a moved base changes the tree). Runs from the existing call
+      site in `safe-doc-push.sh`, and now also inside `quickmerge.sh`'s push-retry loop (each retry rebases and
+      re-orphans what the last pass fixed). Prevention half: quickmerge prints `📌 CITE THIS: <repo>@<sha>` after
+      post-push ancestry, the SHA that actually landed rather than the pre-rebase one the worker sees at commit time.
+      Evidence: unified-trading-pm@7f9bd2a366; 11/11 in `scripts/dev/test-cross-repo-citation-reconcile.sh`, A/B 5/9
+      against the pre-change reconciler. Repo: unified-trading-pm.
 - [ ] [INFRA] P2. **quickmerge isolation is opt-in until the cached-venv path is proven under load.** The
       miniature-workspace + `~/.cache/qm-iso-venv/<repo>` fix took the isolated re-gate from 18 QG failures to 0 (1913
       passed), but it has been exercised on ONE repo (PM) on ONE host. Before flipping laptop default back on, verify on
