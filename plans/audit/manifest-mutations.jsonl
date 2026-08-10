@@ -1398,3 +1398,5 @@
 {"timestamp": "2026-08-10T18:06:56Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "unified-trading-library=0.78.0 (branch=main, bump=minor)", "commit_sha": "a6cda1c5bf14d421d3934652c327b67396acbfa6"}
 {"timestamp": "2026-08-10T18:31:41Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.101.1 (branch=main, run=31419475579)", "commit_sha": "a6fe687dd2dc9e3df5fba9ed6688a91d293195eb"}
 {"timestamp": "2026-08-10T18:31:45Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.101.1 (branch=main, bump=patch)", "commit_sha": "a6fe687dd2dc9e3df5fba9ed6688a91d293195eb"}
+{"timestamp": "2026-08-10T18:33:40Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.1 (branch=main, run=31419587110)", "commit_sha": "6a6fa0a660541271ecaea52c133997371f1242a2"}
+{"timestamp": "2026-08-10T18:33:42Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ml-service=0.58.1 (branch=main, bump=patch)", "commit_sha": "6a6fa0a660541271ecaea52c133997371f1242a2"}
