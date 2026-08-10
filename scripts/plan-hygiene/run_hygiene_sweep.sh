@@ -384,7 +384,15 @@ run_check "Create-only archival guard (archive/active duplicate pairs)" hard pyt
 # diff-scoped in CI-gate mode with a resolvable base, baseline+buffer mode otherwise (periodic
 # cron sweep, interactive/local runs unchanged).
 NACORPUS_DIFF_ARGS=()
-if [ -n "$DIFF_BASE_REF" ]; then
+# Promotion PRs (LDR→main) carry the entire LDR accumulation as their diff, which
+# will always include legitimate new NA docs/todos from normal work.  `--diff-base
+# origin/main` on a promotion PR is therefore structually fail-unsafe: it catches
+# ALL growth, not just unattended growth, and the check becomes un-convergeable on
+# the promote path.  Use baseline+buffer mode instead (the same mode the periodic
+# cron sweep and interactive/local runs already use), which tolerates routine
+# accumulation within the buffer while still catching a genuine spike.
+# Detect promotion PRs via GITHUB_HEAD_REF (e.g. "promote/unified-trading-pm/4840cdac0125").
+if [ -n "$DIFF_BASE_REF" ] && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]]; then
   NACORPUS_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" "${NACORPUS_DIFF_ARGS[@]}"
