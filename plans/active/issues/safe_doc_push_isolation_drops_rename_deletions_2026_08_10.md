@@ -136,3 +136,21 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   the same session via `SDP_ISOLATED=0`. Filed rather than fixed in-line because the fix touches a fleet-wide ship
   script every repo and every agent depends on, which wants its own regression test and blast-radius check (rule 11)
   rather than a same-session patch buried in a docs close-out.
+
+## Sweep result — TWO diverged pairs found 2026-08-10 (feeds todo 5)
+
+Running `scripts/plan-hygiene/archive_completed_parked_reports.py` (promoted from this session's scratchpad) surfaced
+two live duplicate pairs beyond the 17 already recovered in `1653006e52`:
+
+| doc                                                 | state                                                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `ag_closeout_audit_prediction_parked_2026_08_10.md` | exists at BOTH `plans/active/issues/` and `plans/archive/2026_08/issues/`, contents **DIVERGED** |
+| `ag_closeout_audit_tradfi_parked_2026_08_10.md`     | exists at BOTH paths, contents **DIVERGED**                                                      |
+
+Neither was touched. Divergence means the archived copy is NOT automatically authoritative — the two have taken
+different edits since the split, exactly the drift the 2026-08-06 incident documented (5 diverged pairs). Reconciling
+them is a per-doc read-and-merge, not a delete, so it belongs to todo 5 rather than being done blind here.
+
+The script now REFUSES to `git mv` onto an existing destination and reports the pair with an identical-vs-diverged
+verdict instead — before hardening it raised `CalledProcessError` mid-run, having already written `status: resolved`
+into the source doc (that partial write was reverted, not committed).
