@@ -296,22 +296,27 @@ RESULTS=()
 # promote path is safe: every commit in that batch already passed these same checks
 # diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
 #
-# SAME lag-guard for a DIRECT LDR-branch run (e.g. workflow_dispatch on live-defi-rollout,
-# where GITHUB_HEAD_REF is empty so the ^promote/ gate above can't match). Its diff vs
-# origin/main IS the same whole unpromoted LDR→main accumulation, so diff-scoping there
-# measures the backlog rather than the change — the identical positive-feedback deadlock as
-# the promote path once promotion stalls and main lags
-# (/plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md).
-# The entire LDR state is already entry-gated commit-by-commit, so re-gating the aggregate
-# against a lagging origin/main is the same double jeopardy; baseline+buffer is the honest check.
+# A WHOLE-BRANCH RUN AGAINST THE INTEGRATION BRANCH GETS NO DIFF BASE EITHER (2026-08-10).
+# `cascade-qg-ordering.yml` (and `ldr-to-staging-promote.yml`) `workflow_dispatch` this gate
+# directly at `live-defi-rollout` to answer "is LDR healthy?" — LDR has no push-triggered CI of
+# its own. On a dispatch `GITHUB_HEAD_REF` is EMPTY (it is a PR-only variable), so the promote
+# rule above cannot fire, and the diff once again spans the entire unpromoted backlog. Measured
+# 2026-08-10: EIGHT such runs failed in one day (07:33/08:33/09:01/09:33/10:29/11:25/12:18/13:31Z),
+# each paging #ci-failures CRITICAL, each reporting the same backlog-scale number
+# (`61 new NA-population doc(s); 198 new open todo(s)`) that no commit under test caused.
+# The cost is not just noise — it is MASKING. The 13:31Z run also carried a REAL hard failure
+# (`No conflict markers (mid-line + mangled)` — genuine, transient corpus corruption, since
+# resolved), and it was buried under a permanent false failure that fires every hour. An alert
+# that always fires trains everyone to ignore the one time it means something.
+# "Is this whole branch healthy?" is an ABSOLUTE question, so baseline+buffer is its correct
+# shape; a diff base only makes sense when there is a specific change under test.
 #
-# NOT a blanket disable — a normal feature PR (and a push to main, where origin/main is the
-# change's own base) still gets full diff-scoping, which is where these checks actually catch
-# new violations.
+# NOT a blanket disable — a normal PR into main still gets full diff-scoping, which is where
+# these checks actually catch a specific change's new violations.
 DIFF_BASE_REF=""
 if [ -n "$CI_MODE" ] \
   && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
-  && [[ "${GITHUB_REF:-}" != "refs/heads/live-defi-rollout" ]] \
+  && [ "${GITHUB_REF_NAME-}" != "live-defi-rollout" ] \
   && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
   DIFF_BASE_REF="origin/main"
 fi
