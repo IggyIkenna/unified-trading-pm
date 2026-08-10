@@ -129,10 +129,11 @@ dispatched `sports_travel_calculator-001` 38 times). These 16 must be reopened/t
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Reopen or FLIP all 16 false-done rows listed above** (repo: agent-orchestrator,
-      `POST /api/backlog/{id}/reopen` for each, or verify+flip the plan checkbox where the work genuinely completed;
-      priority P0 for the 3 `anthropic_per_task_actual_spend_and_account_calibration` P0-shaped rows +
-      `defi_risk_params_cron_job_fleet_wide_zero_rows-446c87badf4c`). **Done when**: audit re-run exits 0.
+- [x] ✅ [BACKEND] P0. **Reopen or FLIP all 16 false-done rows listed above** — agent-orchestrator (API only, no code
+      commit). All 16 reopened via `POST /api/backlog/{id}/reopen` (reason: false_done audit 2026-08-10). Audit re-run
+      exits 0: `false_done: 0, honest: 918, UNAUDITABLE: 11, unresolved: 1529`. Evidence:
+      `scripts/orchestrator/audit_false_done.py --db <live state.db> --pm ../unified-trading-pm --ref origin/live-defi-rollout`
+      exit 0.
 - [ ] [BACKEND] P1. **Re-characterise the 1,528 `unresolved` rows** (up from 1,013) — confirm the growth is still
       expected (rows whose plan_ref points at since-archived plans) and no NEW non-archived referents are being dropped.
       **Done when**: a fresh unresolved-count breakdown by category is recorded.
