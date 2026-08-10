@@ -67,3 +67,35 @@ depends_on: []
     writing. Fetched 0 INJURIES for early dates (2020-06-14, 2020-06-15 — expected for COVID-era sparse fixture
     calendar). VM left running; next entities (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) queued behind
     the singleton lock. Will monitor for completion via run.log → exit_code.
+  - **Session compacted 2026-08-10 ~11:00Z** — VM still mid-flight. Deferred work table below.
+
+## Deferred work after 2026-08-10 ~11:00Z
+
+| Item                                                       | State / why deferred                                               | Blocked on                                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)      | RUNNING, chunk ~5-6/26, `last_completed_date=2021-05-13`, ETA 1-2h | VM completion (real infra)                                                                           |
+| **STANDINGS backfill** (271 needed)                        | Queued — singleton lock held by INJURIES VM                        | INJURIES VM exit_code                                                                                |
+| **TEAMS backfill** (96 needed)                             | Queued                                                             | INJURIES VM exit_code                                                                                |
+| **FIXTURE_STATS backfill** (136 needed)                    | Queued                                                             | INJURIES VM exit_code                                                                                |
+| **FIXTURE_LINEUPS backfill** (136 needed)                  | Queued                                                             | INJURIES VM exit_code                                                                                |
+| **PLAYER_STATS backfill** (3 needed)                       | Queued (may be done already — 3 is daily-drift)                    | INJURIES VM exit_code                                                                                |
+| **Re-census to confirm ~0**                                | Gated on all backfills converging                                  | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`** | Gated on re-census ~0                                              | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+
+**Recommended NEXT item**: Check `af-backfill-20260810-103218` status:
+
+```bash
+gcloud compute instances list --filter='name=af-backfill-20260810-103218' --format='table(name,status)'
+# If TERMINATED: check exit_code:
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260810-103218/run.log | grep 'exit_code='
+# If exit_code=0: cd deployment-service && bash scripts/vm/launch-api-football-backfill-vm.sh --entity STANDINGS 2020-06-06 2026-08-10
+#   Repeat for TEAMS, FIXTURE_STATS, FIXTURE_LINEUPS — or launch one all-entity VM (no --entity) to close all at once
+# If RUNNING: monitor until completion
+```
+
+**Launch cadence tip from campaign history**: entities move in lockstep — TEAMS and STANDINGS resolve together even when
+only `--entity TEAMS` is passed; FIXTURE_STATS and FIXTURE_LINEUPS also move together. A single `af-backfill-*` VM
+WITHOUT `--entity` may close all 6 entities in one pass, more efficient than 6 sequential entity-scoped launches. The
+campaign doc (`/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md`) confirms this pattern repeatedly.
+Also: always use `--on-demand` to avoid `asia-northeast1-c` SPOT preemption — the first launch
+(`af-backfill-20260810-102659`, SPOT) vanished before writing a `run.log`.
