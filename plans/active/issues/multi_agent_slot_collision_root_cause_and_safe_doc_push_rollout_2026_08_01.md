@@ -159,47 +159,47 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       — fixed. Repo: unified-trading-pm.
 
       **Root cause, refined during reproduction**: the fix sketch's own hypothesis (mid-flight `git diff --cached
-                                              --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
-                                              empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
-                                              realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
-                                              cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
-                                              **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
-                                              see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
-                                              while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
-                                              rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
-                                              BOTH paths, reproducing the doc's own observed symptom exactly.
+                                                  --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
+                                                  empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
+                                                  realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
+                                                  cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
+                                                  **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
+                                                  see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
+                                                  while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
+                                                  rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
+                                                  BOTH paths, reproducing the doc's own observed symptom exactly.
 
-                                              **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
-                                              --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
-                                              script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
-                                              unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
-                                              every captured source path that is still missing from disk, right before every commit attempt — regardless of
-                                              whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
-                                              from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
-                                              `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
-                                              disk, so a caller can optionally name BOTH rename halves explicitly.
+                                                  **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
+                                                  --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
+                                                  script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
+                                                  unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
+                                                  every captured source path that is still missing from disk, right before every commit attempt — regardless of
+                                                  whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
+                                                  from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
+                                                  `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
+                                                  disk, so a caller can optionally name BOTH rename halves explicitly.
 
-                                              **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
-                                              at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
-                                              across runs:
-                                              1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
-                                              2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
-                                                 HEAD` displays it as a clean `rename from`/`rename to` diff.
-                                              3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
-                                                 once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
-                                              4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
-                                                 output).
-                                              5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
-                                                 correct.
-                                              6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
-                                                 correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
-                                                 a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
-                                                 origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
-                                                 index, never an already-baked commit's tree).
+                                                  **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
+                                                  at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
+                                                  across runs:
+                                                  1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
+                                                  2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
+                                                     HEAD` displays it as a clean `rename from`/`rename to` diff.
+                                                  3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
+                                                     once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
+                                                  4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
+                                                     output).
+                                                  5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
+                                                     correct.
+                                                  6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
+                                                     correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
+                                                     a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
+                                                     origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
+                                                     index, never an already-baked commit's tree).
 
-                                              `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
-                                              flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
-                                              does not apply to shipping safe-doc-push.sh's own source).
+                                                  `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
+                                                  flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
+                                                  does not apply to shipping safe-doc-push.sh's own source).
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 (slot-14, infra craft)** — `unified-trading-pm@f75e752d8`. **UNBLOCKED
       2026-08-08 (operator ruling, ao round-5 apply item 15, via
@@ -254,23 +254,23 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       safety" block gets a condensed pointer (one sentence + SSOT link, per CLAUDE.md's own size-budget rule) —
       `cursor-configs/CLAUDE.md` stays at 38,952 B, well under the 40,960 B hard cap (`check_agent_rules_size_cap.py`
       green, WARN-only past the 95% threshold, pre-existing).
-- [ ] [SCRIPT] P1. **The autostash CHAIN re-applies an ever-staler snapshot — measured 107 files, 2026-08-10 slot-1.** A
-      new instance of the class in
-      `/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md`, at a scale that one does
-      not describe. Found at session resume: 107 files dirty, **all with an identical mtime** (a bulk mechanical write,
-      not authored edits) — 97 modified docs whose diffs REVERTED content committed hours earlier, 9 already-archived
-      plans resurrected as untracked files under `plans/active/`, and 1 deletion of a doc live on origin. Committing it
-      would have reverted 97 docs and re-fed 9 archived plans into the AO dispatch backlog. **Mechanism**: every
-      `git pull --rebase --autostash` (which both ship scripts run internally, several times per push) stashes the dirty
-      tree and pops it back. If the tree is already carrying stale content, each cycle re-applies and re-preserves it,
-      so the snapshot ages forward indefinitely — `git stash list` held **14+** accumulated `autostash` entries, one
-      already named "safety-snapshot: stale reapplied-autostash noise" from an earlier session hitting the same thing on
-      2026-08-09. **Why it is not self-correcting**: nothing ever compares the popped content against origin, so a
-      revert is indistinguishable from an edit. **Done when**: a pop that would revert content already committed on
-      `origin/$BRANCH` is detected and refused (or quarantined to a named stash) rather than applied silently, AND the
-      autostash backlog is bounded so the chain cannot age. Recovery used this session, which is also the diagnostic:
-      `git stash push -u -m "<why>"` to quarantine the whole dirty set reversibly, then verify `git status` is clean
-      against HEAD before doing anything else.
+- [x] ✅ [SCRIPT] P1. **The autostash CHAIN re-applies an ever-staler snapshot — measured 107 files, 2026-08-10
+      slot-1.** — **DONE 2026-08-10 (slot-9, infra craft), `unified-trading-pm@7861143b97`.** A new instance of the
+      class in `/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md`, at a scale that
+      one does not describe. Found at session resume: 107 files dirty, **all with an identical mtime** (a bulk
+      mechanical write, not authored edits) — 97 modified docs whose diffs REVERTED content committed hours earlier, 9
+      already-archived plans resurrected as untracked files under `plans/active/`, and 1 deletion of a doc live on
+      origin. Committing it would have reverted 97 docs and re-fed 9 archived plans into the AO dispatch backlog.
+      **Mechanism**: every `git pull --rebase --autostash` (which both ship scripts run internally, several times per
+      push) stashes the dirty tree and pops it back. If the tree is already carrying stale content, each cycle
+      re-applies and re-preserves it, so the snapshot ages forward indefinitely — `git stash list` held **14+**
+      accumulated `autostash` entries, one already named "safety-snapshot: stale reapplied-autostash noise" from an
+      earlier session hitting the same thing on 2026-08-09. **Why it is not self-correcting**: nothing ever compares the
+      popped content against origin, so a revert is indistinguishable from an edit. **Done when**: a pop that would
+      revert content already committed on `origin/$BRANCH` is detected and refused (or quarantined to a named stash)
+      rather than applied silently, AND the autostash backlog is bounded so the chain cannot age. Recovery used this
+      session, which is also the diagnostic: `git stash push -u -m "<why>"` to quarantine the whole dirty set
+      reversibly, then verify `git status` is clean against HEAD before doing anything else.
 
 ## Codex SSOTs
 
@@ -375,3 +375,18 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`) is now
   dispatchable for the archival ritual; this doc intentionally stays `status: open` until that finalize plan performs
   the 6-step archival (its own todos own that step, not this one).
+- **2026-08-10 (slot-9, infra craft)**: Shipped the autostash CHAIN breaker (the last open todo, flipped above) —
+  `unified-trading-pm@7861143b97`. Added two shared functions to `scripts/dev/tree-wip-guard.sh`:
+  `autostash_guard_quarantine_stale_pop()` (after a successful autostash pop, files NOT in the caller's `--files` whose
+  working-tree content differs from `origin/<branch>` are quarantined to a NAMED stash — never dropped — and the origin
+  version restored, so the next reconcile cycle does not re-stash them) and `autostash_guard_bound_backlog()` (before
+  any reconcile that creates a new autostash entry: warn at ≥5 autostash/safety-snapshot entries, self-arrest an extreme
+  ≥10 pile by quarantining the dirty tree first so no new entry forms). Wired into `safe-doc-push.sh` (after
+  `autostash_rebase_reconcile`'s pop + at the top of the retry loop) and `quickmerge.sh` (after the behind-remote
+  autostash pop + before the behind-remote reconcile). New hermetic bats suite
+  `tests/test_tree_wip_guard_autostash.bats` (7 tests: quarantine, protected-files pass-through, origin-matching no-op,
+  untracked-ignored, both backlog-bound tiers) — 7/7 green in the QG run (ok 88/92/93 confirmed in-log); the existing
+  `test_tree_wip_guard.bats` suite stays green (no regressions); `bash -n` + `shellcheck -S error` clean;
+  `quality-gates.sh` full run green (exit 0). All todos in this doc are now done — the gated finalize plan is
+  dispatchable for the archival ritual; this doc stays `status: open` until that finalize plan performs the 6-step
+  archival.
