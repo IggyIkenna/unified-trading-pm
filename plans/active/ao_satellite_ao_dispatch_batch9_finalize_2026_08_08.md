@@ -86,10 +86,12 @@ source: >-
       re-verified `agent-orchestrator@5353b6b` and `unified-trading-pm@6f7ed49c2` via `git show --stat` against their
       claimed content (both matched) and re-ran the named regression test fresh (38/38 passed) before flipping; both
       checkboxes flipped in the same commit as this one. See that doc's Progress Log for the full evidence chain.
-- [ ] [REVIEW] P0. **Archive `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`** once both its checkboxes are
-      flipped (it has no other open items) — run the standard 6-step archival ritual (banner, codex-alignment check, fix
-      every referrer's path corpus-wide, clear the lock). **Done when**:
+- [x] ✅ [REVIEW] P0. **Archive `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`** once both its checkboxes
+      are flipped (it has no other open items) — run the standard 6-step archival ritual (banner, codex-alignment check,
+      fix every referrer's path corpus-wide, clear the lock). **Done when**:
       `grep -rl review_role_boot_read_unconfirmed_stuck_loop plans/ codex/` returns only the archived copy's own path.
+      **DONE (2026-08-10, slot-11, review craft)** — see Progress Log below for the full ritual + a scope-driven second
+      archival (`ag_closeout_audit_cross_cutting_parked_2026_08_02.md`) this pass also closed out.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch9_2026_08_08.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
@@ -151,3 +153,22 @@ source: >-
   independently re-verifying `agent-orchestrator@5353b6b` and `unified-trading-pm@6f7ed49c2` (`git show --stat`, content
   matched claims) and re-running `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py` fresh (38/38 passed)
   before flipping. That issue doc now has zero open checkboxes — todo 4 (archive it) is next.
+
+- **2026-08-10 (slot-11, review craft) — todo 4 DONE**: ran the standard 6-step archival ritual on
+  `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`. No DEFERRED item to migrate (both todos already closed
+  with evidence, its own A/B/C options section was superseded by the doc reaching zero open work). While fixing
+  referrers, found `ag_closeout_audit_cross_cutting_parked_2026_08_02.md`'s sole open `[DOCS] P3` todo (an `assigned_vm`
+  reclassify) had gone moot — its target is now fully resolved, so there is nothing left to reclassify-and-dispatch —
+  closed that todo as moot and archived that doc too in the same pass (its own zero-open- todos state is a direct,
+  well-evidenced consequence of this archival, not a redesign). Two-commit flip-then-mv split per the archival ritual's
+  own rule (never combine the checkbox flip with `git mv` in one commit): flip-only commit with `archive_exempt: true`
+  as the sanctioned bridge (`b26e65ffe2`), then the actual `git mv` + banner + status flip (`f346b0c462`), then the
+  corpus-wide referrer repoint (`75d519148a`) — `plans/active/ao_satellite_ao_dispatch_batch9_2026_08_08.md`,
+  `plans/active/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`,
+  `plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md`, and
+  `plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`'s `/plans/...` path citations now resolve
+  to `plans/archive/2026_08/issues/`. No codex-alignment update needed — the mechanism fix (composer-guard routing +
+  regression test) already landed in prior todos and codex has no SSOT describing this specific docs-drift incident.
+  Verified: `grep -rl review_role_boot_read_unconfirmed_stuck_loop plans/ codex/` now returns only bare-slug prose
+  mentions (no leading-slash path, out of `check_reference_paths.py`'s scope by design) plus the two archived docs' own
+  paths — zero active-corpus `/plans/...` citations remain dangling.
