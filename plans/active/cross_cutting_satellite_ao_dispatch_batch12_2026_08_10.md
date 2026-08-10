@@ -237,3 +237,29 @@ NoSchemaContract errors on BINANCE-FUTURES/DERIBIT). 4298 instruments, 27%/s, ET
 the pipeline steps manually. The monitor on the pipeline log (`bn9rrx7fh`) also times out at 10 min — re-arm if the
 pipeline still hasn't triggered. Flip both plan checkboxes (batch-12 todo 7 + source doc
 `/plans/active/features_service_e2e_pipeline_test_2026_05_26.md` line 711), commit with `docs(plans):`, POST `/done`.
+
+**Session 4 resumed 2026-08-10 ~12:40 UTC** (fourth compaction). Pipeline script v3 (PID 1488466) was **dead on
+arrival** — killed during compaction at ~12:38 UTC. Re-armed as v4 (PID 2280335) with `run_in_background: true` from the
+workspace copy. VM still **RUNNING** at 12:46 UTC, processing Aug 02 (PID 17151, 130% CPU, started 12:40). Aug 03 still
+pending.
+
+**Critical discovery — GCS completeness checks were FALSE POSITIVES across sessions 2-3**: `gsutil ls <path> | wc -l`
+returns 1 even when no objects match, because the "CommandException: One or more URLs matched no objects." message is
+one line written to stdout (not stderr). All `wc -l` = 1 results in earlier sessions for batch_tardis paths were
+actually MISSING, not PRESENT. The MDPS writes to `by_date/` structure (visible at
+`gs://.../processed_candles/by_date/`), and the canonical `pipeline_mode=batch_tardis/...` paths only materialize after
+`merge_manifest_from_canonical_paths` runs. **This means the pipeline MERGE step is load-bearing, not optional** — the
+raw data exists in the per-VM manifest shard (`_index/per_vm/mdps-backfill-cefi-20260810-114949.parquet` at 18,713
+entries as of 12:45 UTC, growing ~45-50 entries/5s) but has NOT been merged into canonical paths yet. The pipeline
+script's Step 1 (manifest merge) is essential.
+
+**Correct method for future checks**: use `gsutil -q ls ... && echo EXISTS || echo MISSING` (exit-code-based, not
+line-counting) or `gsutil ls ... 2>/dev/null | grep -c 'gs://'` (count actual URIs).
+
+**Monitors active**: `bg1rkehel` (pipeline log watcher, 600s), `bewrju5xq` (GCS poll, noise). Pipeline script v4 polling
+every ~31s. Scheduled wakeup at ~12:50 UTC.
+
+**Next (session 5)**: verify pipeline script v4 alive (`ps aux | grep post_mdps_pipeline`). If dead, re-arm. Check VM
+status — if still RUNNING, wait. If TERMINATED/STOPPED, check pipeline log to see if steps auto-triggered. If pipeline
+triggered, verify delta_one output at `gs://features-cefi-test-central-element-323112/delta_one/funding_oi/` and
+`.../returns/`. Flip both plan checkboxes. Commit with `docs(plans):`. POST `/done`.
