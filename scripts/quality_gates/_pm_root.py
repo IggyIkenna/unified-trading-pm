@@ -41,10 +41,19 @@ def _looks_like_pm_root(candidate: Path) -> bool:
 def pm_root(workspace_root: Path | None = None, *, caller_file: str | None = None) -> Path | None:
     """Absolute path to the PM checkout root, or ``None`` if it cannot be resolved.
 
-    ``caller_file`` should be the calling module's ``__file__``; it defaults to this module's
-    own location, which resolves identically for every current caller (all live in the same
-    directory).
+    Resolution order is deliberate and was corrected on 2026-08-10 after an earlier version
+    broke 18 tests: the CALLER'S EXPLICIT ``workspace_root`` wins whenever
+    ``<workspace_root>/unified-trading-pm`` exists at all. Tests construct a fake workspace in
+    a tmpdir (often containing only ``plans/``) and pass ``--workspace-root`` at it; requiring
+    a full PM shape there rejected the fake and silently returned the REAL repo instead. Only
+    when that directory does NOT exist -- the worktree case this module exists for -- do we
+    fall back to the checkout this script physically lives in.
     """
+    if workspace_root is not None:
+        explicit = Path(workspace_root) / _PM_DIR_NAME
+        if explicit.is_dir():
+            return explicit
+
     anchor = Path(caller_file).resolve() if caller_file else Path(__file__).resolve()
     # <PM>/scripts/quality_gates/<module>.py -> parents[2] == <PM>
     if len(anchor.parents) >= 3:
@@ -52,21 +61,13 @@ def pm_root(workspace_root: Path | None = None, *, caller_file: str | None = Non
         if _looks_like_pm_root(candidate):
             return candidate
 
-    if workspace_root is not None:
-        legacy = Path(workspace_root) / _PM_DIR_NAME
-        if _looks_like_pm_root(legacy):
-            return legacy
-
     return None
 
 
 def pm_root_or_legacy(workspace_root: Path) -> Path:
     """``pm_root`` with the legacy path as an unconditional fallback.
 
-    Returns the legacy ``<workspace_root>/unified-trading-pm`` path even when it does not
-    exist, so a caller's own "not found" handling fires exactly as it did before this module
-    existed. This keeps the change behaviour-preserving in a canonically-named checkout while
-    fixing the worktree case.
-    """
+    Returns ``<workspace_root>/unified-trading-pm`` even when it does not exist, so a caller's
+    own "not found" handling fires exactly as it did before this module existed."""
     resolved = pm_root(workspace_root)
     return resolved if resolved is not None else Path(workspace_root) / _PM_DIR_NAME
