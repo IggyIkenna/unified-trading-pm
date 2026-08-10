@@ -63,10 +63,11 @@ drift_direction: advance-code
 - [x] ✅ [REVIEW] P1. **Reconcile `prediction_live_clob_depth_capture_2026_07_24.md`**: confirmed "DEFERRED-CROSS-DEP"
       checkbox flipped `[x]` — batch10 todo 1 SHIPPED (slot 22, 2026-08-10), live manifest rows >0 (4 dates, 648K rows),
       mtds@82ba5399/0a6ad2de, batch VM launched, live=batch architecture. Repo: unified-trading-pm.
-- [ ] [REVIEW] P1. **Reconcile `prediction_capture_incident_remediation_2026_07_06.md`**: confirm Phase 6's second
-      checkbox (historical Kalshi `OTHER`-bucket reclassify) is flipped `[x]` with batch10 todo 2's backup location +
-      post-patch distribution-check evidence. Repo: unified-trading-pm. Done when: the checkbox is closed-by-citation
-      and the backup location is recorded in this doc's own Progress Log for future auditability.
+- [x] ✅ [REVIEW] P1. **Reconcile `prediction_capture_incident_remediation_2026_07_06.md`**: confirmed Phase 6's second
+      checkbox flipped `[x]` — batch10 todo 3 SHIPPED (instruments-service@d4e5c23d, 2026-08-10), 18 dates reclassified
+      (162,692 instruments, 69,292→correct CQGs, 12,051 genuine OTHER), backup:
+      `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Repo:
+      unified-trading-pm.
 - [ ] [REVIEW] P1. **Reconcile the 2 dead-code issue docs**
       (`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
       `issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`): confirm each sole todo is flipped
@@ -94,6 +95,14 @@ drift_direction: advance-code
   DEFERRED-CROSS-DEP checkbox — confirmed `[x] ✅` flipped (line 247) with batch10 todo 1's full evidence chain: live
   manifest rows >0 (4 dates, 648K rows), shipped code fixes (mtds@82ba5399/0a6ad2de), batch VM launched, live=batch
   architecture. Verdict: reconciled, no orphaned gap. Todo 1 flipped.
+
+- 2026-08-10 (slot 8, review, todo 2): Reconciled `prediction_capture_incident_remediation_2026_07_06.md`'s Phase 6
+  second checkbox (historical Kalshi OTHER-bucket reclassify) — confirmed `[x] ✅` flipped (line 337) with batch10 todo
+  3's full evidence: instruments-service@d4e5c23d, 18 dates (2026-07-12→2026-07-29), 162,692 instruments, 69,292
+  reclassified to correct CQGs, 12,051 genuine OTHER (22.0% noise floor matches expected ~21%), 39 unique CQGs in window
+  (was 1). Backup location for future auditability:
+  `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Verdict: reconciled,
+  backup location recorded. Todo 2 flipped.
 
 ## Deferred work — migrated to:
 
