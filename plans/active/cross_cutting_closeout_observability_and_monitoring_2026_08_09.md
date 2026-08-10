@@ -233,3 +233,9 @@ smoke-green foundation gate would be premature).
   doc does not duplicate that map" (see header note). There is no orphaned action item here that isn't already a real
   checkbox in one of the 15 `related:` source docs. 0 prose findings converted, 0 already-resolved citations needed —
   no genuinely-actionable content of THIS doc's own to formalize.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
+  candidate despite 0 open todos of its own. This is a standing closeout-tracking hub (Tracks 14, 18-22), not a
+  findings ledger: by design it never duplicates its 15 source docs' own checkboxes, and several sources are
+  confirmed still genuinely open on direct read (Track 14's DeFi-handlers-zero-concurrency refactor, Track 19's
+  residual forks, Track 20's data-status items). Persists until its Tracks close, per its own "Close-out criterion"
+  per Track. Doc stays `assigned_vm: NA`.

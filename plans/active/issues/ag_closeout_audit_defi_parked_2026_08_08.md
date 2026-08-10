@@ -221,3 +221,11 @@ this doc. ✓
   (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` todo 3;
   `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) — not duplicated here. This doc is a findings ledger by
   design (per its own repeated na-eligibility-audit verdicts); no new `## Todos` section added.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
+  candidate despite 0 open todos. Unlike the ci/prediction tranches (where a same-tranche successor doc that
+  re-derives IDENTICAL Phase-0-3 content over an unchanged candidate set gets `status: resolved` +
+  `superseded_by:` — confirmed precedent: `ag_closeout_audit_ci_parked_2026_08_07.md`), this doc's defi-tranche
+  siblings (08-06/08-07/08-10, all still `status: open`, none archived) form a genuinely growing, incremental corpus
+  (80 members here -> 91 by 08-10) where each day surfaces distinct new candidates rather than re-deriving the same
+  ones — the observed, consistent tranche convention keeps every daily parked doc active as its own audit-run
+  provenance record. Not locked. Doc stays `assigned_vm: NA`.

@@ -51,7 +51,7 @@ created: "2026-08-06"
 author: unknown
 last_updated: "2026-08-06"
 parent_epic: defi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: local-only
 priority: P2
 estimate_class: infra
@@ -202,3 +202,16 @@ root-caused, fixed, and archived 2026-08-09 (`plans/archive/2026_08/issues/mtds_
   resolved, cited inline); Finding 1 (mtds_pipeline_check orphan) confirmed fully resolved + archived 2026-08-09, cited
   with evidence; Finding 2 (stale tradfi closeout claim) confirmed still stale on re-verification, now a real `- [ ]`
   checkbox tagged for the tradfi tranche's write.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: **RECLASSIFY, `assigned_vm: NA ->
+  planning`.** The doc's sole remaining open todo (fix the stale "0 open todos" claim for
+  `phantom_audit_estate_coverage_gap_2026_07_10.md` at `tradfi_consolidated_closeout_2026_07_18.md:745`) is a fully
+  bounded, mechanical `[DOC]` P3 single-line text fix — exact target file+line, exact stale text, exact correct fact
+  all independently re-verified live this pass (`tradfi_consolidated_closeout_2026_07_18.md:745` still reads "0 open
+  todos"; `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly 1 open `- [ ] [SCRIPT] P2` checkbox,
+  line 180). No judgment call, no operator gate. Conflict-check clear: `tradfi_consolidated_closeout_2026_07_18.md` is
+  itself `assigned_vm: NA`, unlocked, `status: active`; neither `defi_satellite_ao_dispatch_batch9_2026_08_06.md` nor
+  `…batch10_2026_08_06.md` carries any todo referencing this fix; `defi_satellite_ao_dispatch_batch11_2026_08_09.md`
+  only cites this doc's path in passing (line 434), no duplicate claim. The todo targets a different tranche's doc
+  (tradfi) per the doc's own stated primary-owner note, but that does not block AO-dispatch — it is still a bounded,
+  worker-executable edit, just not one `defi`'s own audit process would perform unilaterally mid-run.
+  `unified-trading-pm@<pending — see session push>`.

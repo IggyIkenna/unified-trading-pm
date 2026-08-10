@@ -204,6 +204,11 @@ its own source doc (10 carried-forward items, re-verified unchanged). The one it
   doc's own findings were all either already-resolved-with-evidence or already tracked in their own source docs, per its
   own accurate "## Todos: None" framing); 1 genuinely-open item (item 12's mistag corroboration) was cross-referenced to
   the formal todo added in the sibling `ag_closeout_audit_ci_parked_2026_08_10.md` doc rather than duplicated here.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
+  candidate. Today's most current infra+ci audit ledger, actively tracking 14 carried-forward findings (a live,
+  genuine cross-tranche conflict among them) across 3 same-day dispatches (slot 26 all-mode, slot 20 infra-specific
+  follow-up). "## Todos: None" is by design (every genuine finding either resolved directly this run or already
+  tracked at its own source doc). Not locked. Doc stays `assigned_vm: NA`.
 - **2026-08-10 (scheduled `ag_closeout_auditor`, slot 20, `agt-7788a0`, ~4.7h later)**: Second same-day dispatch,
   infra-only (sharded). Ran the full Phase 0-3 procedure (candidate generator + 17-agent Phase-1 Workflow) rather than
   the lighter linkage-only pre-filter slot 26 used. Fixed 4 stale operator-approval banners, archived 1 fully-done doc

@@ -257,5 +257,10 @@ nothing changed that could clear a conflict or create a new candidate.
   flagged stuck-lock doc were both genuinely actionable and not tracked as a checkbox anywhere else in the corpus
   (verified: `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 is still `[ ]` open;
   `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` still carries its impossible lock) — added a
-  `## Todos` section formalizing both. Findings 2 (Phase-3 rationale) and 3 (mistag candidates, already tracked by
+  `## Todos` section formalizing both.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — neither of the 2
+  todos is worker-determinable-now. Todo 1 (`[REVIEW]` P3) is a contingent reminder that only becomes actionable once
+  `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s own todo 4 executes (still `[ ]` open, unfired) — nothing
+  to dispatch today. Todo 2 (`[OPERATOR]` P2) needs `[unlock-plan]`, human-gated per the corpus HARD RULE (never
+  autonomous), before the normal archival ritual can even start. Doc stays `assigned_vm: NA`. Findings 2 (Phase-3 rationale) and 3 (mistag candidates, already tracked by
   `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) needed no new todo.

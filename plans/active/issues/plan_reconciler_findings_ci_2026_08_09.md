@@ -12,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, ci, sharded-run]
-related: [/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md]
+related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: "2026-08-09"
 author: plan_reconciler
 source: agt-04cb0e
@@ -157,6 +157,12 @@ own note).
   inline, no duplicate todo added); this doc's "(pending)" sections turned out to be an incomplete/died-mid-flight run
   rather than an unconverted prose finding — added a "Run status" section explaining why and cross-referencing the
   successor doc's own already-tracked follow-up.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not ARCHIVE-eligible.
+  `locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z` is still set (dead session, never auto-cleared)
+  — per the HARD RULE, a `locked_by:` doc is never archived autonomously. 0 open todos of its own (died mid-flight
+  before reaching a `## Todos`-bearing step); the real remaining action (unlock or explicitly abandon) is already
+  tracked as an `[OPERATOR]` P3 todo in the successor `plan_reconciler_findings_ci_2026_08_10.md`. Doc stays
+  `assigned_vm: NA`.
 - **2026-08-09 16:22 UTC** — Run started. FF'd PM + all 25 sibling repo clones (all clean). Computed ci-tranche
   population (56 docs) and grace set (52 grace / 4 writable). Hygiene sweep (`--ci`) kicked off in background — host is
   heavily contended (multiple sibling slots running concurrent hygiene sweeps / QGs at the same time).

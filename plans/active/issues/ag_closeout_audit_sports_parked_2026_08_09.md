@@ -254,3 +254,8 @@ launcher category + run a real dry-run census — the actual delete stays operat
   genuinely operator-gated design forks) or points at an already-tracked gate/doc elsewhere in the corpus — none
   contains a distinct, unconverted actionable claim of its own that isn't already one of those two states. 0 prose
   findings converted to new todos; 0 new already-resolved citations needed beyond what the doc already states.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
+  candidate. Standing triage ledger for 26 parked orphan docs across 6 taxonomy categories (operator-gated, time-gated,
+  dependency-gated, too-large-or-risky, self-progressing, not-this-tranche's-write); 0 checkboxes by design (every
+  item's actual dispatchable work lives at its own source doc). Reconfirmed unchanged by the same-tranche round-9
+  RECLASSIFY sweep. Not locked. Doc stays `assigned_vm: NA`.

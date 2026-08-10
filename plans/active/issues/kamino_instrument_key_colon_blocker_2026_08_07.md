@@ -103,3 +103,8 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   resolved). The options (a)/(b)/(c) ruling flagged by every prior na-eligibility-audit pass as "1 real prose-only
   open item" had never actually been formalized as a `- [ ]` checkbox — added a `[OPERATOR] P2` todo under a new
   `## Todos` section.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — the sole todo is
+  explicitly `[OPERATOR]`-tagged and self-describes as "Genuinely a judgment call, not worker-determinable" (a
+  GCS-path-changing instrument-key format ruling with manifest-migration implications, 3 undismissed options). Never
+  re-litigating: the same disposition was independently reached by the 2026-08-07 and 2026-08-09 na-eligibility-audit
+  passes on this exact doc. Doc stays `assigned_vm: NA`.

@@ -162,3 +162,11 @@ mechanism for surfacing batch2 candidates — not another `/ag-closeout-audit` p
   todo #5 (confirmed via grep). The `archivable_now` stuck-lock item is genuinely actionable but superseded by the more
   current `ag_closeout_audit_ui_parked_2026_08_09.md`, which now carries the formal todo — added a superseded-pointer
   note above rather than duplicating it here.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — a plausible-looking
+  ARCHIVE candidate on the surface (0 open todos, content fully carried forward/superseded), but deliberately NOT
+  archived here: `/ag-closeout-audit`'s own Phase-1 classification has repeatedly (2026-08-08 and 2026-08-09 runs)
+  verdicted this exact doc `archivable_after_planned_work`, not `archivable_now` — "claimed by an active covering
+  todo," specifically `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s still-open todo 4 (the designated
+  archival-ritual vehicle for this doc, per that plan's own step-1 text). Archiving it now via na-eligibility-audit
+  would preempt/duplicate that already-assigned, `assigned_vm: planning` todo — never re-litigate an established
+  ruling. Not locked. Doc stays `assigned_vm: NA` pending batch1_finalize todo 4.

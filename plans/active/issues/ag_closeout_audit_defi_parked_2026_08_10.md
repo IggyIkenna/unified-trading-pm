@@ -318,3 +318,7 @@ Cumulative doc total: 9 findings across 3 runs today.
   (`defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md`,
   `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`) all already have their own tracked todos. This
   is a findings ledger correctly pointing at already-tracked work; no `## Todos` section needed.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
+  candidate. This is today's most current defi audit ledger, still receiving same-day updates (3 dispatches today:
+  slot 14, slot 26 all-mode cross-check, slot 20 iterative-drain follow-up with a fresh live-state finding). Not
+  locked; unambiguously a live standing record, not moot. Doc stays `assigned_vm: NA`.

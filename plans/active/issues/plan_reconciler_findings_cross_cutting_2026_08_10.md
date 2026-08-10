@@ -340,3 +340,10 @@ a missing checkbox, so no new todo is added here; a future hygiene pass should c
   re-confirmed; Item K's grace-window status and Item A's retag status were also re-confirmed unchanged). This is a
   formalization-only pass per the workspace's "every follow-up is a `- [ ]` todo, never prose" rule — it does not
   change `assigned_vm`/`status`, and does not itself execute any of the underlying work.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not all 13 todos are
+  worker-determinable, so whole-doc RECLASSIFY does not apply. Items D (`[OPERATOR]` P2, rewrite an operator re-install
+  todo whose instructions now hard-fail — needs operator access to re-verify), E (`[OPERATOR]` P3, explicitly "needs a
+  call: ... genuinely unclear from the text alone") and F (`[OPERATOR]` P3, explicitly "needs a call: ... a structural
+  decision") are stated judgment calls, not bounded outcomes; Item I (`[OPERATOR]` P2) requires `[unlock-plan]`, which
+  is human-gated per the corpus HARD RULE (never autonomous). The remaining items (A, G, H, J, K, L, N) are individually
+  bounded, but the audit's whole-doc bar requires every open todo to clear, not a majority. Doc stays `assigned_vm: NA`.
