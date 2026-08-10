@@ -319,6 +319,25 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
     _sdp_copy_ok=true
     for _f in "${FILES[@]}"; do
       if [[ ! -f "$_f" ]]; then
+        # A named path absent from the caller tree but PRESENT at origin/$BRANCH is a DELETION
+        # (the normal case: a plan archived with `git mv`), NOT a caller typo. Propagate it by
+        # removing it from the worktree -- `git add -- <path>` then stages the deletion, exactly
+        # as documented below for tracked-but-missing paths.
+        #
+        # Without this, an archival move landed its ADD and silently dropped its DELETE, and the
+        # push still reported success. Measured 2026-08-10: a resolved issue stayed in
+        # plans/active/ alongside its archived copy, where AO would have kept dispatching it.
+        # Archiving a completed plan is a mandated routine operation, so this misfired quietly
+        # every time anyone did it from isolated mode.
+        if git rev-parse -q --verify "origin/${BRANCH}:${_f}" >/dev/null 2>&1; then
+          if rm -f -- "$_sdp_iso_wt/$_f"; then
+            echo "  isolation: propagating deletion of $_f (absent here, tracked on origin/$BRANCH)"
+          else
+            echo "  isolation: could not propagate deletion of $_f" >&2
+            _sdp_copy_ok=false
+          fi
+          continue
+        fi
         echo "  isolation: named file not present in caller tree, skipping copy: $_f" >&2
         continue
       fi
