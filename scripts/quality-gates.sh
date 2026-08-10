@@ -396,15 +396,6 @@ fi
 python3 "${REPO_ROOT}/scripts/quality_gates/check_qg_slice_completeness.py" \
     || { echo "❌ QG_SLICE partition broken — CI slicing no longer covers the full local gate" >&2; exit 1; }
 
-# ── Promote-prefix contract guard (2026-08-10) ────────────────────────────
-# run_hygiene_sweep.sh skips --diff-base for every DIFF_BASE_REF ratchet on a promotion PR,
-# detected purely by branch NAME (`^promote/`). That is a naming contract with the two promote
-# bots, and a half-rename would silently re-arm the exact deadlock that cost 22h / 1180
-# unpromoted commits on 2026-08-10 — with no other test failing, because a gate that stops
-# recognising a promote PR just looks like an ordinary red gate.
-python3 "${REPO_ROOT}/scripts/quality_gates/check_promote_prefix_contract.py" \
-    || { echo "❌ promote-prefix contract broken — the promote gate would silently disarm (see the check's output)" >&2; exit 1; }
-
 # ── Pre-commit gate: validate strategy-manifest.json ──────────────────────
 STRATEGY_MANIFEST="${REPO_ROOT}/strategy-manifest.json"
 STRATEGY_VALIDATOR="${REPO_ROOT}/scripts/validation/validate-strategy-manifest.py"

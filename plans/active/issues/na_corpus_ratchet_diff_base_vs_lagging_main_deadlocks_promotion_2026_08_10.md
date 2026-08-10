@@ -104,13 +104,12 @@ a normal ratchet into a self-reinforcing wall.
       moving `4c964f8447`'s promote gate from the NA-corpus wiring up to the shared `DIFF_BASE_REF` assignment, so one
       predicate covers all four consumers. Verified by simulation: `GITHUB_HEAD_REF=promote/…` ⇒ `DIFF_BASE_REF=''`; a
       normal PR and a push to LDR keep full diff-scoping.
-- [x] ✅ [BACKEND] P2. The promote gate keys on `GITHUB_HEAD_REF =~ ^promote/`, a NAMING contract with the promote bots
-      rather than a structural one — a half-rename would silently revert all four gates with no test failing. DONE
-      2026-08-10: `scripts/quality_gates/check_promote_prefix_contract.py` asserts all THREE sites agree (both producers
-      — `.github/workflows/ldr-to-main-promote.yml` and `scripts/cicd/ldr_to_main_fleet_promote.sh` — plus the sweep's
-      consumer regex), AND that the gate sits on the SHARED `DIFF_BASE_REF` rather than one consumer. Wired into
-      `quality-gates.sh`. Verified both directions: renaming the consumer regex OR either producer makes the check exit
-      1 naming the exact file; the unmodified tree passes.
+- [ ] [BACKEND] P2. The promote gate keys on `GITHUB_HEAD_REF =~ ^promote/`, which is a NAMING contract with
+      `ldr-to-main-promote-fleet.yml`'s branch-naming, not a structural one — rename the promote branch prefix and every
+      one of these four gates silently reverts to the deadlocking behaviour with no test failing. Add a guard that fails
+      loudly if the promote workflow's branch prefix and this regex ever diverge (a shared constant, or a test asserting
+      the workflow's `promote/` literal). Repo: unified-trading-pm. Done-when: changing the prefix in one place breaks a
+      check rather than silently disabling the gate.
 - [ ] [BACKEND] P3. The deeper shape is still unaddressed: `origin/main` is a proxy for "this change's base" that is
       only valid while promotion FLOWS. The promote gate handles the one case where that proxy is known-bad, but a
       normal PR opened against a long-stalled main has the same problem in miniature. Preferred end state: resolve the
