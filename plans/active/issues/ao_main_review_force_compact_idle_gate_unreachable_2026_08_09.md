@@ -205,3 +205,12 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   "the gate never opens" does not treat it as a defect and ship the reversal. Note the doc TITLE still says
   "unreachable", which the ruling supersedes: the gate is rarely reached because the cooperative nudge lands first, and
   that is working as designed. Remaining work is the confirming measurement + the machine guard.
+- 2026-08-10 — **Ruling's guard RELAXED from an operator gate to a DATA gate** (operator, same day). The anti-pattern
+  first read "do NOT extend the force without a new operator ruling backed by a fresh measurement", which made every
+  future revisit a human bottleneck even when the evidence would be unambiguous. It now states the objective bar
+  instead: a worker may extend the force to main/review with NO further ruling once a >=6h live-fleet measurement
+  shows forced-path effectiveness both (a) >= the cooperative path's and (b) >= 90% absolute. Baseline to beat:
+  cooperative 17/17 = 100%, forced 14/65 = 22%. This keeps the protection (evidence is still required, and
+  `submitted=True` is explicitly rejected as evidence) while making the condition worker-determinable, per the
+  dispatch-scope-eligibility principle that a todo's outcome must be checkable by the worker alone. SSOT:
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "main/review stay COOPERATIVE-first".

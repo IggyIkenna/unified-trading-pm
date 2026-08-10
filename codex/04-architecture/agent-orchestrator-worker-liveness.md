@@ -813,6 +813,26 @@ regression).
 
 ### Anti-pattern (adds to the list above)
 
-- **Do NOT extend the worker unconditional force-compact to main/review** without a new operator ruling backed by a
-  fresh measurement. Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the
-  idle-gated `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently.
+- **Do NOT extend the worker unconditional force-compact to main/review while the forced path measures WORSE than
+  the cooperative one.** This is a DATA gate, not an operator gate (operator ruling 2026-08-10, deliberately relaxed
+  from "requires a new operator ruling" so a worker can act on evidence without waking a human). The bar is stated
+  and checkable — a worker may extend the force to main/review, without any further ruling, once a fresh measurement
+  over a window of **>=6h of live fleet activity** shows BOTH:
+
+  1. forced-path effectiveness (`context_compact_observed` following a `forced_compact`, divided by `forced_compact`)
+     is **>= the cooperative path's** over the same window, and
+  2. forced-path effectiveness is **>= 90%** in absolute terms.
+
+  Baseline to beat, measured 2026-08-09 over 3.7h: cooperative **17/17 = 100%**, forced **14/65 = 22%**. Below that
+  bar the ruling stands and the idle gate stays. Record the new measurement in this section when you change it, so the
+  next reader sees the numbers that moved it rather than an assertion.
+
+  Two things this gate does NOT accept as evidence: the force *submitting* (`submitted=True` is what
+  `forced_compact_ineffective` exists to disprove — see
+  `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`), and the idle gate merely
+  *refusing to open* (judge the path by whether the target compacts, never by whether the force fired).
+
+  Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the idle-gated
+  `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently. Changing the
+  policy therefore means deliberately updating that test WITH the measurement above in the commit message — which is
+  the intended friction, not a blocker.
