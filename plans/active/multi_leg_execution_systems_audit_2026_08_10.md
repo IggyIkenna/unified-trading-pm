@@ -122,18 +122,32 @@ might come in handy."
       leader/hedge/unwind sequencing in simulated-fill mode (a synthetic venue adapter in the IBKR-MEL shape:
       `runtime-topology.yaml` `ibkr_gateway_connectivity.batch_mode`), NOT (b) a parallel leader/hedge model inside
       `BenchmarkFillEngine`. Full evidence + tradeoffs in the Progress Log below.
-- [ ] [DOC] P1. **Write the decision artifact**: a new section in
-      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` (or a dedicated decisions doc if that
-      issue doc is a poor fit for a durable decision record — state the reasoning) with the three systems' verdicts, the
-      exact call-site map for wiring `AtomicLegExecutor` into live, and the recommended fix approach for
-      `BenchmarkFillEngine`. This is the artifact the paired execution plan
-      (`multi_leg_execution_systems_execution_2026_08_10.md`, `depends_on` + `gate_on_depends` this plan) implements
-      against.
+- [x] ✅ [DOC] P1. **Write the decision artifact**: a new section in
+      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — verdicts for all three systems
+      (DELETE/DELETE/WIRE-IN), exact call-site map for wiring `AtomicLegExecutor` into live (paper + live/colocated +
+      batch), and the recommended fix approach for `BenchmarkFillEngine` (option (a): route through `AtomicLegExecutor`
+      in simulated-fill mode, the IBKR-MEL shape). The issue doc was a good fit for a durable decision record (the
+      investigation context is right there; a separate decisions doc would duplicate it). Paired execution plan
+      (`multi_leg_execution_systems_execution_2026_08_10.md`, `depends_on` + `gate_on_depends` this plan) now has a
+      complete decision surface — todos require no further architectural judgment at dispatch time.
 
 ## Progress Log
 
 - 2026-08-10: Plan created following the same-day parity-gap investigation. Audit-forces-decision structure per operator
   direction, so the execution plan's todos require no further architectural judgment at dispatch time.
+- 2026-08-10 (todo 6, slot 8 — FINAL): **Decision artifact written** into
+  `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` as a new
+  `## Audit verdicts — multi-leg execution engine disposition (2026-08-10)` section (placed between the original
+  "Recommended fix approach" and "Todos" sections — the issue doc was a good fit for a durable decision record since the
+  investigation context is right there; a separate decisions doc would have duplicated it). Covers: (1) three definitive
+  per-system verdicts with evidence — `MultiLegOrchestrator` = DELETE, `instruction_adapter.py`'s `HEDGE_BASIS` path =
+  DELETE, `AtomicLegExecutor`/`AtomicInstruction`/`LEADER_HEDGE` = WIRE-IN; (2) exact call-site map for wiring
+  `AtomicLegExecutor` into paper (`GroupBRunner._process_tick()`), live/colocated (new tick driver in `client_worker.py`
+  or `colocated_engine.py`), and batch (same as paper) modes; (3) `BenchmarkFillEngine.settle()` fix recommendation =
+  option (a) — route through `AtomicLegExecutor` in simulated-fill mode (IBKR-MEL shape), option (b) REJECTED. Added a
+  "Impact on the issue's original recommendations" subsection mapping each of the four original recommendation points to
+  the refined audit verdict. All six plan todos now complete — this audit plan is ready for archival once the gated
+  execution plan picks up.
 - 2026-08-10 (todo 1, slot 11): **`MultiLegOrchestrator` disposition = DELETE**, with cited evidence:
   - **Zero production callers (fresh grep, not cached):** `MultiLegOrchestrator(` is instantiated ONLY in
     `tests/unit/engine/test_multi_leg_orchestrator.py`, `tests/unit/engine/test_multi_leg_orchestrator_new.py`,
