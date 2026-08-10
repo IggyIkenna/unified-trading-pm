@@ -28,6 +28,7 @@ estimate_calibrated_ai_days: 0.08
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra
+archive_exempt: true
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -77,7 +78,15 @@ check exists to catch.
 
 ## Todo
 
-- [ ] [INFRA] P1. **Fix the unresolvable `unified-trading-pm@0f9b8a65ca` citation in
-      `blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250`** — replace with the real reachable
-      commit sha (or remove the citation / reword the evidence line), so `check_plan_commit_sha_evidence.py` returns to
-      baseline 0 and PM QG turns green. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P1. **Fix the unresolvable `0f9b8a65ca` citation in
+      `blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250`** — replaced with the real reachable
+      commit sha `034cb4e2ad` by `5f5654c90e` (18th dispatch agt-e56165). Ratchet verified green: 2725 citations, 0
+      unresolvable. — unified-trading-pm@5f5654c90e (repo: unified-trading-pm)
+
+## Progress Log
+
+- **2026-08-10 (slot-19, data_engineering worker adopting infra role)**: Citation already fixed by commit `5f5654c90e`
+  (18th dispatch agt-e56165) which replaced `0f9b8a65ca` with `034cb4e2ad` in the target plan. Ratchet verified green:
+  2725 citations, 0 unresolvable. Flipped the sole todo ✅. `archive_exempt: true` is TEMPORARY — per RULES.md §2's
+  "never combine the checkbox flip with a git mv archival in ONE commit", the archive will be a separate follow-up
+  commit immediately after this one.
