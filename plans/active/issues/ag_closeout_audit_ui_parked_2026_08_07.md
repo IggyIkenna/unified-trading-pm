@@ -98,7 +98,10 @@ Phase 1 (12-agent Workflow, one per tranche-primary doc) completed after Finding
 
 - `archivable_now`: 1 — `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` (unchanged from 2026-08-06;
   still fully done but stuck at a stale `status: open` + an impossible `locked_since` predating `created` — still not
-  this skill's to fix, flagging again for `/plan-reconcile ui` or `/archive-candidates-audit`).
+  this skill's to fix, flagging again for `/plan-reconcile ui` or `/archive-candidates-audit`). **Superseded pointer
+  (2026-08-10 formalization sweep)**: this same finding, still unresolved as of the 4th consecutive audit pass, is now
+  formalized as a real `- [ ]` todo in the more current `ag_closeout_audit_ui_parked_2026_08_09.md`'s `## Todos`
+  section — not re-formalized here to avoid a duplicate.
 - `archivable_after_planned_work`: 2 — `deployment_registry_firestore_migration_2026_07_14.md` (self-covered by its own
   P3/P5 phase-chain), `deployment_api_sigabrt_crash_loop_2026_07_24.md` (self-dispatched, `assigned_vm: planning`, still
   an extremely active 900+-line live investigation — both unchanged from 2026-08-06).
@@ -154,3 +157,8 @@ mechanism for surfacing batch2 candidates — not another `/ag-closeout-audit` p
   not a dispatchable work item; all 3 findings are already actioned (2 folded into the tracked corpus-wide `ui` retag
   todo, 1 is this same day's result summary) and content is current as of today.
 - **context-scout 2026-08-09**: populated context_scope (3 entries).
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into 0 formal todos (0 already
+  resolved). Findings 1-2 (mistag candidates) are already tracked by `ui_consolidated_closeout_2026_07_30.md`'s P2
+  todo #5 (confirmed via grep). The `archivable_now` stuck-lock item is genuinely actionable but superseded by the more
+  current `ag_closeout_audit_ui_parked_2026_08_09.md`, which now carries the formal todo — added a superseded-pointer
+  note above rather than duplicating it here.

@@ -215,6 +215,34 @@ complete. The next real step is launching the `dex_pools` fold VM (`--only dex_p
 `dex_pools`, wait for it + the still-running `canonical-migration-defi-rebuild` VM to reach terminal state, then resume
 the manifest consolidator cron and trigger a fresh honest-coverage rollup (this doc's stated end state).
 
+## Todos
+
+_(formalized 2026-08-10 from prose in the "REVISED completion sequencing" and Progress Log below — see that section for
+full evidence/citations. Everything else in the Deferred-work table and Progress Log below already has its own
+delegated tracking doc with real checkboxes — not duplicated here.)_
+
+- [ ] [DATA] P2. **Retire POOL (uppercase `instrument_type`) / `rate_indices` / `dex_pool_fees` legacy manifest rows.**
+      Per the 2026-08-10 "REVISED completion sequencing" steps 3-5 (Progress Log below): once
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 rebuild VM reaches a genuinely stable terminal
+      state (not another resource-exhaustion kill — see that doc's own R3 item for the current relaunch decision, gate
+      on it rather than duplicating its tracking), re-measure all three counts live (must be STABLE across two queries
+      a few minutes apart before trusting them), pause the manifest consolidator cron
+      (`uts-prod-manifest-consolidator-market-data-defi-cron`, `asia-northeast1`), retire each via the proven
+      reversible `capture_status: captured→attempted_failed` pattern (mirror
+      `retire_dex_pools_legacy_captured_rows_2026_08_05.py` / `retire_dex_swaps_legacy_captured_rows_2026_08_09.py`),
+      resume the consolidator, then trigger a fresh `measure_honest_coverage.py` rollup and re-check the Distinct
+      Values panel. Repo: market-tick-data-service.
+- [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s
+      locked instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before
+      assuming drift vs. legitimate") but never followed up.
+- [ ] [BACKEND] P3. **Fix the Distinct Values panel's `<blank>` `instrument_type` badge to exclude `empty_confirmed`
+      rows.** Currently over-reports ~5.35M blank rows when only ~58 `captured` rows are a genuine gap (the rest are
+      legitimate honest-absence markers, ~212,800-215,600 per data_type, consistent with one empty-marker per missing
+      cell). Needs a `_distinct_values.py` / `measure_honest_coverage.py` change to exclude `empty_confirmed` from the
+      blank-key check specifically (mirrors the `capture_status != "attempted_failed"` filter already shipped
+      2026-08-10 for the enumeration-key bug, `instruments-service@8b59e8ba2`). Repo: instruments-service or
+      deployment-api.
+
 ## Progress Log
 
 - **2026-08-08 (sub-agent dispatch, Balancer composite-venue scope check)**: dispatched to build/dry-run/ship a fold
@@ -597,3 +625,10 @@ the manifest consolidator cron and trigger a fresh honest-coverage rollup (this 
        HYPERLIQUID/EXTENDED/LIGHTER + the 24 composite venues, which are CORRECTLY non-canonical-but-accepted, not a
        bug), data_types clean (dex_pools/dex_swaps/rate_indices/dex_pool_fees all retired), instrument_types clean
        modulo the small genuine `<blank>` gap.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (0 already
+  resolved, so nothing cited-as-resolved-inline); added a `## Todos` section for the POOL/rate_indices/dex_pool_fees
+  retirement sequencing (gated on `defi_track01`'s R3 rebuild VM, not duplicating that doc's own tracking), the
+  `spot_pair` canonical-naming cross-check, and the Distinct Values panel's `<blank>` instrument_type over-report fix.
+  Every other prose item in this doc's Deferred-work table and Progress Log already has its own delegated issue doc
+  carrying real `- [ ]` checkboxes (verified via direct grep of each cited doc) and was left untouched to avoid
+  duplication.

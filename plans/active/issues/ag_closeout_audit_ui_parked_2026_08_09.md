@@ -199,6 +199,23 @@ mathematically-predetermined outcome. **Updated tally including the new self-ref
 orphaned (unchanged composition), 1 newly `archivable_after_planned_work`** (this file itself). No new batch drafted —
 nothing changed that could clear a conflict or create a new candidate.
 
+## Todos
+
+- [ ] [REVIEW] P3. **Verify the full 6-item CLEARED list, not just the 5-item summary, when
+      `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s todo 4 (archival ritual, still `[ ]` open as of
+      2026-08-10) actually executes.** Per Finding 1: todo 2's own narrative cleared 6 items from
+      `data_status_tab_and_downloads_remediation_2026_06_16.md` (incl. the low-priority Phase B "Rollup-difference
+      clarity" tooltip), but todo 4's operative candidate-summary list names only 3 groups covering 5 of those 6 —
+      silently dropping the tooltip item. Whoever executes todo 4 should re-read todo 2's full narrative before
+      migrating cleared work forward, not just the summary line.
+- [ ] [OPERATOR] P2. **Clear the stale/impossible lock on
+      `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` and archive it.** Per Finding 4:
+      `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` predates the doc's own `created: 2026-07-21` by ~2
+      months — impossible for a genuine exclusive claim. All 3 of that doc's own todos are already `[x]` done. This is
+      the 4th consecutive ag-closeout-audit pass (2026-08-06/07/08/09) to flag it unchanged; needs `[unlock-plan]`
+      (human-gated, never autonomous) then the normal archival ritual — `/plan-reconcile ui` or
+      `/archive-candidates-audit` are the natural owners but neither has picked it up yet.
+
 ## Recommendation carried to `/done` evidence
 
 1. **No operator decision needed today.** Findings 1, 3, 4 are process/bookkeeping notes; Finding 2 is a no-new-batch
@@ -235,3 +252,10 @@ nothing changed that could clear a conflict or create a new candidate.
   linkage gate re-run clean for `ui` (0 tagged orphans). Tally re-confirmed: 8/14 orphaned unchanged, +1 new
   `archivable_after_planned_work` (this file). No new batch drafted. Parked-count reconciliation: 1 finding (Finding 5),
   1 written to this doc.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 2 prose findings into 2 formal todos (0 already
+  resolved). Finding 1's bookkeeping-gap flag ("whoever executes todo 4 double-checks...") and Finding 4's 4-times-
+  flagged stuck-lock doc were both genuinely actionable and not tracked as a checkbox anywhere else in the corpus
+  (verified: `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 is still `[ ]` open;
+  `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` still carries its impossible lock) — added a
+  `## Todos` section formalizing both. Findings 2 (Phase-3 rationale) and 3 (mistag candidates, already tracked by
+  `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) needed no new todo.

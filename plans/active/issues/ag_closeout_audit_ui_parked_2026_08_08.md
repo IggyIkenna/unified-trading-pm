@@ -177,6 +177,33 @@ approve `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (1 todo, independent of 
 on Findings 1-3 today (process notes, informational); (4) Finding 4's launcher-migration piggyback recommendation is FYI
 only, no action needed until the infra-tranche migration progresses further.
 
+## Todos
+
+- [ ] [DOC] P3. **Fold Finding 1's coverage-bar clarification into `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s
+      Phase 1 instructions** — state explicitly that only a covering doc's own dispatched `## Todos` section counts as
+      coverage; a `## Deferred`/analysis-only mention does not. Verified 2026-08-10: not yet present in SKILL.md.
+      Bundle with the next unrelated SKILL.md edit per the finding's own "not urgent enough to justify a standalone
+      edit" framing.
+- [ ] [DOC] P3. **Fix `ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s stale Phase 7 wording** (Finding 3) — its
+      Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as "STILL OPEN," but
+      Phase 7 closed 2026-08-07 (verified 2026-08-10: batch1 doc still reads "STILL OPEN — prod is silent..." at line
+      202). Update when batch1 is next touched (approval or its finalize plan's re-check) so the framing reads "9 known
+      + Finding 2's newly-found item," not a clean drop.
+- [ ] [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
+      category's current wording ("Once ruled, it becomes a normal batch candidate") should note a ruled item still
+      needs the ordinary bounded-outcome/worker-determinable check before drafting; "operator-ruled" and
+      "worker-determinable" are two separate tests, not one. Verified 2026-08-10: not yet present in SKILL.md (line
+      198 still reads the un-clarified version).
+
+**Already resolved (Finding 2)**: `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open"
+vulnerability-scan sentence was already converted to a real `- [ ]` checkbox by the 2026-08-08 na-eligibility-audit
+pass (see this doc's own Progress Log entry below) — no further action.
+
+**Already tracked elsewhere (Finding 5)**: the 2 mistag candidates are correctly folded into
+`ui_consolidated_closeout_2026_07_30.md`'s standing `[REVIEW] P2` retag-audit todo (verified 2026-08-10: both
+`deployment_api_prod_disable_auth_true_2026_08_06.md` and `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`
+are named explicitly in that todo's text) — no duplicate todo needed here.
+
 ## Progress Log
 
 - **2026-08-08 (ag_closeout_auditor, dispatch agt-a0f1b7, slot 11)**: Phase 0 discovery — candidate set grew 12→13
@@ -201,3 +228,8 @@ only, no action needed until the infra-tranche migration progresses further.
   `- [ ]` checkbox (see that doc's own marker) so it's no longer at risk of being missed a 5th time. Findings 1/3/4/5
   are process notes / already correctly deferred / no new information — no further action needed from this skill.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
+- **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (2 already
+  resolved/tracked-elsewhere, cited inline); Findings 1/3/4 (SKILL.md coverage-bar clarification, batch1's stale Phase
+  7 wording, SKILL.md taxonomy addition) were all still-open on re-verification and are now real `- [ ]` checkboxes;
+  Finding 2 was already fixed by the 2026-08-08 na-eligibility-audit pass (cited); Finding 5 is already tracked in
+  `ui_consolidated_closeout_2026_07_30.md`'s own retag todo (cited, not duplicated).

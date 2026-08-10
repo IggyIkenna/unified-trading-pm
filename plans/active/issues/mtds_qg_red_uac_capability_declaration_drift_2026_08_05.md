@@ -135,7 +135,21 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
 
 ## Follow-ups (tracked)
 
-- `- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards`seed + venue capabilities** — delete the AAVE_V3`rewards`seed in`defi_prediction_instrument_seeds.py:153`and the`rewards`entries for all 10 AAVE_V3 chains in`defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as `6e791b05`/`b2874193`).`
+> **2026-08-10 (prose-findings formalization sweep) — hygiene fix**: the item below was originally written wrapped
+> entirely in a single inline-code span (`` `- [ ] [UAC] P2. ... .` `` — one unbroken backtick-delimited run from the
+> leading dash to the trailing period), which meant it rendered as plain monospace text and, more importantly, never
+> matched `^- \[ \]`/`^- \[x\]` — invisible to `check_todo_format.sh`/`count_open_tasks.py` and every other
+> checkbox-counting tool despite looking like a real todo. Reformatted below with a real checkbox and inline-code spans
+> only around actual identifiers. Also audited before reformatting: the work itself is **DONE** — see the `[x]` below.
+
+- [x] ✅ [UAC] P2. **DONE 2026-08-09 — `unified-api-contracts@9e44d861`** ("fix(defi): delete orphaned AAVE_V3 rewards
+      seed + venue capability entries", verified ancestor of `origin/live-defi-rollout`). Removed the orphaned
+      `(AAVE_V3-ETHEREUM, rewards)` seed entry from `defi_prediction_instrument_seeds.py` and the `rewards` start-date
+      entry from all 8 AAVE_V3 chains that had one in `defi_venue_capabilities.py` (SCROLL/ZKSYNC never had one),
+      completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal shipped at `5f441e0d`. Live
+      re-verified 2026-08-10: `grep -i reward` against both files in the current `live-defi-rollout` checkout returns no
+      AAVE_V3 `rewards` seed/capability hits. UAC QG did not flag this gap (verified green with the orphans present), so
+      this was consistency-by-precedent, not gate-driven — closed anyway per the `bc397b93` precedent this doc cites.
 
 ## Status / owner
 
@@ -196,3 +210,10 @@ same UAC-churn class:
   at `market-tick-data-service@5d428486` (see fred plan).
 
 - **context-scout 2026-08-06**: populated context_scope (6 entries).
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 new prose findings into todos (this doc's only
+  remaining follow-up was already written AS a checkbox), but found and fixed a load-bearing formatting bug: the sole
+  `## Follow-ups (tracked)` item was wrapped in a single unbroken backtick code-span, so it never matched the
+  `- [ ]`/`- [x]` checkbox regex and was invisible to `check_todo_format.sh`/`count_open_tasks.py` despite reading like
+  a real todo — exactly the class of bug this sweep exists to catch. Audited the underlying work before fixing: it was
+  already done (`unified-api-contracts@9e44d861`, 2026-08-09) — reformatted as a proper `- [x]` citing that commit,
+  live-reverified 2026-08-10 (0 AAVE_V3 `rewards` hits remain in either source file).

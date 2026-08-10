@@ -89,6 +89,17 @@ restored: live-verify with a cheap real call (e.g. `definition` schema fetch for
 bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that confirms it works (per the
 "retag the moment the block resolves" hard rule).
 
+## Todos
+
+- [ ] [OPERATOR] P0. **Pay the outstanding Databento bill so the vendor restores account access.** Gates every open
+      TradFi Databento-fetch todo across the corpus (see "Plans/issues gated by this doc" below for the current
+      7-todo/4-doc sweep — re-sweep once paid, since the gate list drifts as new work lands). Not tracked as a
+      checkbox anywhere else in the corpus (verified via grep) despite being escalated in prose in at least
+      `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s "Deferred — operator-gated" section ("has sat blocked
+      since 2026-08-09 and gates multiple other orphaned docs' items"). Once paid: live-verify with a cheap real call
+      before resuming any bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that
+      confirms it works.
+
 ## Plans/issues gated by this doc (sweep log)
 
 **Method**: swept every active plan/issue whose `asset_group` frontmatter includes `tradfi` (61 docs), narrowed to the
@@ -132,3 +143,11 @@ re-stamp/backfill of already-captured rows), `mdps_features_deadcode_consolidati
 generic launcher bugs, none tradfi-specific), and `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` /
 `..._batch8_2026_08_08.md` / the `_finalize` plans (all open todos there are manifest reconciliation, investigation, or
 archival — no live Databento dependency).
+
+## Progress Log
+
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (0 already
+  resolved). The doc's own "Resolution path" prose ("Operator pays the outstanding Databento bill...") had never been
+  formalized as a `- [ ]` checkbox despite `status: blocked`/`priority: P0` and being escalated in prose elsewhere
+  (`tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s Deferred section) — added an `[OPERATOR] P0` todo under a new
+  `## Todos` section.

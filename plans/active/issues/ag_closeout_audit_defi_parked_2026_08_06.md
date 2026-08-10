@@ -155,6 +155,21 @@ operator ruling.
   regression (`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`); its 9 defi-tagged flags are all
   accounted above (7 deferred + 2 batch9-covered), i.e. zero genuine defi orphans there.
 
+## Todos
+
+- [ ] [DOC] P3. **Fix stale "0 open todos" claim for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
+      `tradfi_consolidated_closeout_2026_07_18.md`** (Finding 2/informational) — line 745 there still reads "— 0 open
+      todos (closed/archived/record-only)," but the doc actually carries 1 open `[SCRIPT] P2` todo (widen the phantom
+      audit to the full ~47-bucket kind×AG matrix). Verified 2026-08-10: still stale. Not defi's write (primary-owner
+      rule — the fix belongs to the tradfi tranche); flagging for its next `/ag-closeout-audit`/`/plan-reconcile` pass.
+      Note: the cefi closeout no longer references this doc at all (already resolved or removed there), only tradfi's
+      citation is stale.
+
+**Already resolved (Finding 1)**: `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was
+root-caused, fixed, and archived 2026-08-09 (`plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`,
+`status: resolved`, companion finalize plan `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`)
+— confirmed root cause was OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no action needed.
+
 ## Ledger (HARD rule — assert equality)
 
 - parked_findings this run: **2** (1 operator-gated orphan finding + 1 informational cross-tranche note)
@@ -183,3 +198,7 @@ operator ruling.
   run report (findings ledger, not a task list). 2 findings: 1 orphaned-elsewhere item (cross-cutting-owned), 1
   informational note about sibling-tranche false-0-open-todos claims. Nothing to reclassify. Doc stays
   `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (1 already
+  resolved, cited inline); Finding 1 (mtds_pipeline_check orphan) confirmed fully resolved + archived 2026-08-09, cited
+  with evidence; Finding 2 (stale tradfi closeout claim) confirmed still stale on re-verification, now a real `- [ ]`
+  checkbox tagged for the tradfi tranche's write.

@@ -246,3 +246,11 @@ launcher category + run a real dry-run census — the actual delete stays operat
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`, and
   `sports_predictions_live_mode_activation_readiness_2026_07_21.md` were independently confirmed still current when
   those docs were read directly this pass. Stays `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: full read for unconverted actionable prose — none found. Both
+  named findings are already self-resolved within this doc's own text: Finding 1's "Action taken" already fixed the
+  live-VM-conflict risk directly (a doc-hygiene note added to the 2 source docs, not a deferred recommendation) and
+  Finding 2 concluded "no action needed" on its own evidence (mistag confirmed NOT a mistag by a same-day sibling
+  run). Every entry in the "Parked —" taxonomy sections below either explicitly states "no recommendation" (the
+  genuinely operator-gated design forks) or points at an already-tracked gate/doc elsewhere in the corpus — none
+  contains a distinct, unconverted actionable claim of its own that isn't already one of those two states. 0 prose
+  findings converted to new todos; 0 new already-resolved citations needed beyond what the doc already states.

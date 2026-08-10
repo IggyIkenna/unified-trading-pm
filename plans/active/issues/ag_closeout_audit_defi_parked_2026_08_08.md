@@ -103,12 +103,16 @@ Re-verified against current live state (not just re-reading yesterday's text):
 
 1. **`defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`** — `[DIAG] P3`: investigate raising the per-date
    subprocess timeout from 1800s for DeFi years with 10K+ instruments. Bounded, target file
-   (`market-data-processing-service/.../process_handler.py`) named.
+   (`market-data-processing-service/.../process_handler.py`) named. **RESOLVED (2026-08-10 formalization sweep,
+   corroborated by `ag_closeout_audit_defi_parked_2026_08_10.md`'s own iterative-drain step 1) — now cited/picked up
+   in `defi_satellite_ao_dispatch_batch11_2026_08_09.md:438`.** No longer a live candidate; not re-added as a todo here
+   to avoid duplication.
 2. **`defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`** (ARCHIVED 2026-08-09, all 12 todos closed —
    `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) — item 3:
    retry-fixable historical `attempted_failed` residue backfill for now-healthy dex-swap pairs. Bounded SPOT backfill
    re-run, checkable via manifest. Re-verify this parked item is still open before dispatching — the source doc's own
-   item 3 todo may already be closed.
+   item 3 todo may already be closed. **RESOLVED (2026-08-10 formalization sweep) — confirmed via the archived doc
+   itself: all 12 todos, including item 3, are `[x]` closed.** No longer a live candidate.
 
 ## Finding 2 — orphaned_never_touched, 0 AO-eligible for defi: `ag_closeout_audit_defi_parked_2026_08_06.md`
 
@@ -135,12 +139,18 @@ for `market-data-tick-defi-prd` paused as a likely-intentional precondition for 
 covered by any of the 17 covering docs:
 
 1. `[OPERATOR] P3` — confirm with the VM's launcher that the pause was intentional; get a resume-ETA. Operator-gated.
+   **RESOLVED (2026-08-10 formalization sweep)** — the source doc's own todo 1 is now `[x]` closed ("stale-check-defi
+   -tranche" independent confirmation, 2026-08-09).
 2. `[SCRIPT] P3` — once the rebuild VM completes, verify the scheduler resumed and `CONSOLIDATOR_DOWN` clears.
    **AO-eligible but explicitly premature** — gated on the rebuild VM's multi-day completion (ETA 4-5+ days from
    2026-08-07, likely still running as of today). Valid future-batch candidate once that dependency is actually reached,
-   not an immediate dispatch.
+   not an immediate dispatch. **RESOLVED (2026-08-10 formalization sweep)** — the source doc's own todo 2 is now `[x]`
+   closed (alert-clearing half, `ag_closeout_auditor` 2026-08-10 live investigation; see
+   `ag_closeout_audit_defi_parked_2026_08_10.md` Finding 5 for the full evidence trail).
 3. `[SCRIPT] P3` — undecided design question (should `CONSOLIDATOR_DOWN` alert-routing gain a Slack channel). Explicitly
-   "not something to change unilaterally" per the doc's own text — operator/design-gated.
+   "not something to change unilaterally" per the doc's own text — operator/design-gated. **Still open** as of
+   2026-08-10 (source doc's own todo 3, `[ ]`) — genuinely design-gated, not re-formalized here since it already has a
+   real checkbox at source.
 
 ## Finding 4 (informational) — linkage-gate vs candidate-script discrepancy (carried, not re-litigated)
 
@@ -201,3 +211,13 @@ this doc. ✓
   ag-closeout-audit parked-findings doc (created 2026-08-08, self-edited 2026-08-09). Confirmed via repo-wide search
   that no 2026-08-09 successor doc exists yet. Still carries live, unclaimed batch11-candidate pointers. Findings
   ledger, not a task doc. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into 0 formal todos (4 already
+  resolved, cited inline). Full re-read found every genuinely-actionable item in this doc had since been picked up
+  elsewhere: Finding 1's 2 batch11 candidates are now resolved (item 1 cited in
+  `defi_satellite_ao_dispatch_batch11_2026_08_09.md:438`; item 2's source doc archived 2026-08-09 with all 12 todos
+  closed), and Finding 3's items 1-2 are now `[x]` closed at their source doc
+  (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`). Finding 3 item 3 and Finding 5's retag
+  recommendation remain genuinely open but already carry real `- [ ]` checkboxes at their own source docs
+  (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` todo 3;
+  `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) — not duplicated here. This doc is a findings ledger by
+  design (per its own repeated na-eligibility-audit verdicts); no new `## Todos` section added.

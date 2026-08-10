@@ -75,6 +75,17 @@ batch.
 
 Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batch9-001, slot 2, 2026-08-07).
 
+## Todos
+
+- [ ] [OPERATOR] P2. **Rule on the SOLANA_VAULT compound-symbol format for `kamino.py:199`** — needs a decision among
+      options (a) `-` separator, (b) `@` separator, or (c) leave the f-string as-is (kamino stays off the
+      `build_instrument_id` passthrough path). (a)/(b) change the instrument_key = GCS path segment and require a
+      manifest migration for existing rows; (c) needs no migration but leaves kamino permanently un-retrofitted.
+      Genuinely a judgment call, not worker-determinable — no options were dismissed as clearly wrong in the Finding
+      above. Not tracked as a todo anywhere else in the corpus (verified via grep); `defi_satellite_ao_dispatch_batch9_
+      2026_08_06.md` only cites this doc as the reason kamino.py:199 was retained unfixed, it does not itself carry a
+      resolution todo.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. The doc carries
@@ -88,3 +99,7 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   checkboxes but 1 real prose-only open item (this corpus's confirmed trap): UAC's colon-guard hard-rejects kamino.py's
   SOLANA_VAULT compound symbol. 3 explicit options laid out, each with different GCS-path/manifest-migration
   implications -- doc's own text: "operator ruling required" before any implementation. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (0 already
+  resolved). The options (a)/(b)/(c) ruling flagged by every prior na-eligibility-audit pass as "1 real prose-only
+  open item" had never actually been formalized as a `- [ ]` checkbox — added a `[OPERATOR] P2` todo under a new
+  `## Todos` section.

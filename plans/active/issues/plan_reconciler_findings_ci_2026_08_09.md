@@ -127,18 +127,36 @@ None this run (no genuinely-undecidable item was hit — see STEP 6 / blocked-qu
 
 ## Refuted (dropped by verify)
 
-(pending)
+(pending — run terminated before this step; see "Run status" below)
 
 ## Coverage (hunters / batches / docs)
 
-(pending)
+(pending — run terminated before this step; see "Run status" below)
 
 ## Plans not reached
 
-(pending)
+(pending — run terminated before this step; see "Run status" below)
+
+## Run status (resolved 2026-08-10, prose-findings formalization sweep)
+
+This run died mid-flight (only 2 commits ever landed against it — the run-start commit + the checkpoint at 16:31 UTC
+above — and STEP 7/hunter-fan-out/Coverage/Refuted/Plans-not-reached were never reached), consistent with the
+sharded-dispatch design's own "reaped-stale mid-flight" failure mode. **No separate todo added here**: the successor run
+`plan_reconciler_findings_ci_2026_08_10.md` (dispatch `agt-fb0ce4`) already found this exact condition (its own "Scope"
+section, "Predecessor-run continuity") and formally tracked the follow-up as
+`- [ ] [DOC] P3. plan_reconciler_findings_ci_2026_08_09.md (yesterday's predecessor run) is still locked_by...` in its
+own "Filed" section — adding a second todo here would duplicate that tracked item. This doc's
+`locked_by: plan_reconciler (agt-04cb0e) since 2026-08-09T16:22:00Z` is intentionally left untouched (a dead session's
+lock is never auto-cleared by a later run or a formalization pass — unlock authority is gated, per the successor run's
+own note).
 
 ## Progress Log
 
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into formal todos (0 already
+  resolved via a new todo — 1 finding was already resolved by pointing to an existing todo in a successor doc, cited
+  inline, no duplicate todo added); this doc's "(pending)" sections turned out to be an incomplete/died-mid-flight run
+  rather than an unconverted prose finding — added a "Run status" section explaining why and cross-referencing the
+  successor doc's own already-tracked follow-up.
 - **2026-08-09 16:22 UTC** — Run started. FF'd PM + all 25 sibling repo clones (all clean). Computed ci-tranche
   population (56 docs) and grace set (52 grace / 4 writable). Hygiene sweep (`--ci`) kicked off in background — host is
   heavily contended (multiple sibling slots running concurrent hygiene sweeps / QGs at the same time).

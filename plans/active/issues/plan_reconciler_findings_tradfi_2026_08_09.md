@@ -172,3 +172,9 @@ _(pending STEP 7, if applicable)_
   underlying issue as `ag_closeout_audit_tradfi_parked_2026_08_10.md` Finding 4, which independently discovered this
   same stalled/locked state and already filed it as an `[OPERATOR] P1` ask there -- not duplicating. `assigned_vm`
   unchanged.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into 0 formal todos (0 already
+  resolved). The one genuinely-actionable item in this doc (resume-or-abandon the stalled STEP-3→7 run / clear the
+  impossible `locked_by`) is not orphaned prose — it is already a real `- [ ]` checkbox at
+  `ag_closeout_audit_tradfi_parked_2026_08_10.md` (`[OPERATOR] P1. Resume or explicitly abandon+unlock the stalled
+  plan_reconciler_findings_tradfi_2026_08_09.md...`), confirmed via direct grep of that doc. No `## Todos` section
+  added here to avoid duplicating that tracked item.

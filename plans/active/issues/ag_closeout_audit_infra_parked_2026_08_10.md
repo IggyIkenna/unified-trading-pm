@@ -165,7 +165,12 @@ the filename-pattern one), 17 never-cited. Ran a 17-agent Phase-1 Workflow (0 er
     last being TODAY) that both docs' content is CI-pipeline-internal (self-hosted runner capacity/billing/checkout
     mechanics), not infra's actual Track 1-3 scope. Not retagged this run either — corroborating `ci`'s own stated
     2026-08-10 recommendation for "a dedicated corpus-wide `ci`↔`infrastructure` retag pass" rather than a unilateral
-    single-tranche fix, consistent with the multi-day restraint both sides have already shown.
+    single-tranche fix, consistent with the multi-day restraint both sides have already shown. **Formalized 2026-08-10
+    (prose-findings formalization sweep): now a real `- [ ]` todo in `ag_closeout_audit_ci_parked_2026_08_10.md`'s own
+    `## Todos` section (covers all 4 known dual-tagged docs, this pair plus
+    `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` +
+    `shared_ci_workflow_repo_extraction_2026_08_06.md`) — not duplicated here to avoid two independently-drifting
+    checkboxes for the same corpus fix.**
 13. `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` — DeFi-owned (title-prefixed,
     content is a DeFi manifest-purge saga; the `infrastructure` co-tag was earned by now-fully-closed VM-launcher
     reliability fixes surfaced along the way). One small remaining item (fix a stale row in a sibling DeFi doc) — not
@@ -189,10 +194,16 @@ already correctly held; nothing new required fresh escalation).
 ## Todos
 
 None — every genuine finding this dispatch either resolved directly (4 items) or is already correctly tracked/held in
-its own source doc (10 carried-forward items, re-verified unchanged).
+its own source doc (10 carried-forward items, re-verified unchanged). The one item that WAS genuinely still-prose-only
+(item 12, the `ci`↔`infrastructure` mistag corroboration) was formalized 2026-08-10 into a `- [ ]` todo in the sibling
+`ag_closeout_audit_ci_parked_2026_08_10.md` doc instead (see the note on item 12 above) — not duplicated here.
 
 ## Progress Log
 
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into a NEW todo in this doc (this
+  doc's own findings were all either already-resolved-with-evidence or already tracked in their own source docs, per
+  its own accurate "## Todos: None" framing); 1 genuinely-open item (item 12's mistag corroboration) was cross-referenced
+  to the formal todo added in the sibling `ag_closeout_audit_ci_parked_2026_08_10.md` doc rather than duplicated here.
 - **2026-08-10 (scheduled `ag_closeout_auditor`, slot 20, `agt-7788a0`, ~4.7h later)**: Second same-day dispatch,
   infra-only (sharded). Ran the full Phase 0-3 procedure (candidate generator + 17-agent Phase-1 Workflow) rather than
   the lighter linkage-only pre-filter slot 26 used. Fixed 4 stale operator-approval banners, archived 1 fully-done doc

@@ -308,3 +308,13 @@ Cumulative doc total: 9 findings across 3 runs today.
   the 1 genuinely new candidate directly (Finding 8). Surfaced 1 material live-state update (Finding 9: R3 rebuild VM's
   2nd terminal failure + consolidator self-heal), documented at the owning doc per the primary-owner rule rather than
   duplicated here. Batch13 decision reconfirmed unchanged. 2 findings parked this run, ledger reconciled.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into 0 formal todos (0 already
+  resolved). Full re-read of every finding confirmed each genuinely-actionable item already carries a real `- [ ]`
+  checkbox at its own source doc, verified via direct grep: Finding 1's HYPERLIQUID `perp_funding` scoping query
+  (`defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`, todos
+  present), Finding 3's 3 zero-AO-eligible docs (`defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`,
+  `defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md`,
+  `onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md`), and Finding 4's 2 AO-mechanism docs
+  (`defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md`,
+  `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`) all already have their own tracked todos. This
+  is a findings ledger correctly pointing at already-tracked work; no `## Todos` section needed.

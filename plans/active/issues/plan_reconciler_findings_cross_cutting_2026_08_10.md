@@ -261,3 +261,82 @@ counts in Progress Log prose) across INFRA_A (S2-S5), MTDS_MDPS (#7-#8), AOF_HYG
 nits), topic-AO (#2/HEDGE-1) — each individually named in the hunter scratch reports this run's coverage section
 references; not worth a dedicated fix pass at corpus scale, flagged here so the count is honest rather than silently
 absorbed.
+
+## Todos
+
+Formalized from "Plans not reached" (items A-N above) — each was a confirmed, still-actionable finding this run
+diagnosed but did not apply. Re-verified 2026-08-10 (same day) before conversion; all still current unless noted.
+
+- [ ] [DOC] P3. **Item A — retag `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`**
+      `asset_group: [cross-cutting]` → `[ui]` (dominant owner — repo, both broken tests, and the re-ship target all
+      live in deployment-api) with a `sports` cross-reference note on its todo 2, per
+      `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`'s own `[WORKER REC]`. Verified 2026-08-10: still tagged
+      `[cross-cutting]`. All 3 of its own todos are bounded/worker-determinable — AO-eligible once retagged.
+- [ ] [DOC] P2. **Item B — reword `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5** — god-SA-removal
+      status still says "Pending" though P2.1b shipped 2026-08-08; needs the whole §8 framing reworded plus the
+      residual `storage.admin` drift reflected (multi-part, not a single substitution).
+- [ ] [DOC] P2. **Item C — rewrite `/codex/02-data/external-data-always-available-rule.md`** — prescribes a RETIRED
+      ping-file mechanism plus a stale cross-link to an archived doc; needs a multi-part rewrite.
+- [ ] [OPERATOR] P2. **Item D — rewrite `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md`'s
+      open `[OPERATOR]` re-install todo** (line 491) — its literal instructions now hard-fail (the script it names
+      moved to `systemd --user`, refuses `sudo`), and its "not-live" premises are contradicted by dated evidence
+      elsewhere in the corpus (including this run). Needs a careful rewrite of the existing todo's instructions, not a
+      quick substitution — tagged `[OPERATOR]` since the underlying re-install itself already requires operator
+      access.
+- [ ] [OPERATOR] P3. **Item E — needs a call: does `carry_staked_basis_funding_scan_experiment_2026_06_16.md`'s Drift
+      creds/RPC todo duplicate the sibling MTDS-production todo?** Annotated, not flipped, this run — genuinely
+      unclear from the text alone; needs someone with both docs' full context to rule.
+- [ ] [OPERATOR] P3. **Item F — needs a call: how should `plans/epics/manifest_master.md`'s live `[AGENT]`/`[OPERATOR]`
+      checkboxes (in the epic body itself) be made visible to the plan-corpus tooling?** All corpus-wide checkbox/todo
+      tools scan `plans/active/*.md` only, never `plans/epics/*.md` — this is a distinct orphan class. Moving the
+      items to a real plan doc is a structural decision, not a mechanical fix.
+- [ ] [DOC] P2. **Item G — correct stale G3/G10 status in `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`**
+      — text still says G3/G10 are "still genuinely open as of 2026-07-27," but verified 2026-08-10: both were
+      rescoped into `blrs_g3_g10_rescope_2026_07_28.md`, which is fully archived (`status: resolved`, all checkboxes
+      `[x]`) — G3/G10 are actually DONE via that successor. Update the stale text with this citation.
+- [ ] [DIAG] P3. **Item H — live re-verify `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P9.2's
+      UAC version-drift citation** (dated 2026-06-20) against current UAC — the doc's own later entries suggest it
+      self-resolved days later, but this needs an independent live check, not an assumption.
+- [ ] [OPERATOR] P2. **Item I — unlock (`[unlock-plan]`) then archive `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`**
+      — verified 2026-08-10: 100% done (0 open / 20 closed checkboxes), `status: open`, `locked_by: live-defi-rollout`
+      — a genuine stuck-archive-candidate, not actioned this run (prioritized the already-verified `bucket_iam` case
+      instead).
+- [ ] [SCRIPT] P2. **Item J — fix `check_na_corpus_ratchet.py`'s `--diff-base` fenced-code-block checkbox-overcounting
+      bug** — verified 2026-08-10: `_CHECKBOX_RE` (line 79) is still a bare `^\s*[-*]\s*\[ \]` regex with no
+      fence-awareness, so it double-counts checkbox-shaped text inside fenced code blocks. Open since 2026-08-02,
+      unfixed.
+- [ ] [DOC] P2. **Item K — add the real backlog todo to `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`**
+      — 4 of that doc's own Progress Log entries claim a "P3 backlog todo" exists for the prosewrap `--diff-base`
+      conversion (mirroring the pattern already shipped for `check_archive_candidates.sh` and
+      `check_na_corpus_ratchet.py`), but no such checkbox exists anywhere in the doc — the real, still-needed work has
+      no tracked home. Was grace-protected when this run checked it; re-verify grace has lifted before adding.
+- [ ] [DOC] P3. **Item L — backfill the real sha in `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`**
+      — its checked `[x]` `[SCRIPT] P2` todo (~line 138) cites a literal unfilled template placeholder
+      ("Implemented `unified-trading-pm@<sha>` (2026-08-07)") as its evidence sha. Verified 2026-08-10: placeholder
+      still unfilled. Underlying work is genuinely done (independently verified against a different doc per the
+      original finding) — just needs the real sha substituted in.
+- [ ] [DOC] P3. **Item N — fix 3 docs' stale "cross-cutting closeout over the 1000-line hard cap" citations** —
+      `plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` (verified 2026-08-10: still present,
+      lines 9/45) and `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`
+      (verified 2026-08-10: still present, line 97, explicitly names `cross_cutting_consolidated_closeout_2026_07_25.md`
+      "1007L, already over the 1000L hard cap") both cite the closeout hub as over-cap; live-verified 720 lines (split
+      via an earlier, untraced commit). `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
+      references the same underlying line-cap-deadlock chain indirectly (line 451) and needs tracing to confirm it's
+      the same stale claim. Low priority, all 3 claims are stale but harmless — batchable together.
+
+**Not converted (Item M)**: `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` and
+`governance_sweep_deferred_followups_2026_08_06.md` both already carry their OWN real `- [ ]` `[OPERATOR]`/`[DOCS]` P1/P3
+todos tracking the identical "human line-cap trim `data_completion_defi_2026_07_15.md`, then restore the 2 dropped
+context_scope entries" action (verified 2026-08-10, both still open) — the actual gap is duplication across 2 docs, not
+a missing checkbox, so no new todo is added here; a future hygiene pass should close one as moot once the other lands.
+
+## Progress Log
+
+- **2026-08-10 (prose-findings formalization sweep)**: converted 13 prose findings (Plans-not-reached items A-N, minus
+  M) into 13 formal `- [ ]` todos; item M's underlying action was found to already exist as a real checkbox in BOTH its
+  target docs (a duplication, not a missing-checkbox gap) so no new todo was added for it, cited inline instead. Every
+  converted item was independently re-verified against live corpus state same-day before conversion (Items G's stale
+  status, I's stuck-lock, J's script bug, L's placeholder sha, and N's 2-of-3 stale citations were all directly
+  re-confirmed; Item K's grace-window status and Item A's retag status were also re-confirmed unchanged). This is a
+  formalization-only pass per the workspace's "every follow-up is a `- [ ]` todo, never prose" rule — it does not
+  change `assigned_vm`/`status`, and does not itself execute any of the underlying work.

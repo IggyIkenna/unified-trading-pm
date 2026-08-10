@@ -183,23 +183,61 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
    locked_by question's context, not a separate ask (resolves once that lock question is ruled).
 6. `plans/active/ui_consolidated_closeout_2026_07_30.md` Todo 6 ("First `/ag-closeout-audit ui` + `/plan-reconcile ui`
    runs...") — will flip at STEP 7 flush citing this run's own dispatch (both skills have now run on this tranche at
-   least once; `/ag-closeout-audit ui` ×4, `/plan-reconcile ui` ×2 counting 2026-08-07).
+   least once; `/ag-closeout-audit ui` ×4, `/plan-reconcile ui` ×2 counting 2026-08-07). **RESOLVED (2026-08-10,
+   prose-findings formalization sweep): confirmed done.** `plans/active/ui_consolidated_closeout_2026_07_30.md:194` is
+   `[x]` — this run's own STEP 7 flush did flip it as promised (see that doc's own Progress Log, "Flipped Todo 6
+   above"). No further action.
 7. `plans/active/deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md`'s Out-of-scope successors (3
    real follow-up items in `deployment_registry_firestore_migration_2026_07_14.md`, prose-only, no tracking doc cited:
    real-time UI listeners, lifecycle-events archival, run.log overwrite efficiency) — NOT converted to todos here
    (explicitly "out of scope" for that plan, and inventing new tracked plans for genuinely new future work is bigger
-   than this run's reconciliation mandate). Noted for a human session to decide where these belong.
+   than this run's reconciliation mandate). Noted for a human session to decide where these belong. **Formalized
+   2026-08-10 — see `## Todos` below (todo 1); the finalize doc is archived
+   (`plans/archive/2026_07/deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md`), the 3 items
+   actually live in the still-active parent's own "Out of scope (named successors)" section
+   (`plans/active/deployment_registry_firestore_migration_2026_07_14.md:187-190`).**
 8. `deployment_registry_firestore_p3_cutover_2026_07_14.md` todo "the agreed window" (soak duration) — no duration
    stated anywhere in the doc; missing definition-of-done, needs domain knowledge this run doesn't have. Noted, not
-   resolved.
+   resolved. **Formalized 2026-08-10 — see `## Todos` below (todo 2); re-confirmed still undefined (grepped the doc
+   fresh, no duration anywhere), and the phase is currently HALTED on an earlier precondition regardless (see that
+   doc's own Progress Log).**
 9. `ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1's conflict-check — named only the 2 batch plans, not
    `batch1_finalize`'s own still-open todo 4, which touches the same file
    (`artifact_pipeline_observability_2026_07_17.md`'s checkboxes). Potential future same-file dispatch collision if both
-   ever run concurrently. Noted for whoever dispatches either.
+   ever run concurrently. Noted for whoever dispatches either. **Formalized 2026-08-10 — see `## Todos` below (todo 3);
+   re-confirmed both todos (`batch1_finalize` todo 4 at line 280, `batch3_finalize` todo 1 at line 56) are still open
+   and the collision risk is unchanged.**
 10. `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` archive candidate — all 3
     todos independently re-verified done (2 hunters cross-checked via the deployment-ui git history this run, confirming
     no regression through later renames). Blocked solely by the `locked_by` bug (item 1 above). Will archive immediately
     once that's ruled.
+
+## Todos
+
+> Added 2026-08-10 (prose-findings formalization sweep) — formalizing 3 genuinely-still-open Filed items (7, 8, 9 above)
+> that were left as narrative flags rather than tracked checkboxes, per the workspace's "every follow-up is a `- [ ]`
+> todo, never prose" hard rule. `assigned_vm`/`status` on this doc left untouched.
+
+- [ ] [OPERATOR] P3. **Scope the 3 orphaned "Out of scope (named successors)" items in
+      `plans/active/deployment_registry_firestore_migration_2026_07_14.md`** (real-time UI listeners / push-instead-of-poll;
+      archiving emitted `lifecycle-events`/resource samples to a durable event log; `run.log` whole-file-overwrite
+      efficiency via GCS compose/rotation) — each is explicitly named as "separate, own plan" in that doc's own text but
+      none has a tracking plan/issue doc. Needs a human call on whether/when each becomes its own plan, not a mechanical
+      fix. From Filed item 7.
+- [ ] [OPERATOR] P2. **Define "the agreed window" soak duration in
+      `plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md`** — its `[REVIEW] P1` "Soak" todo (line 111)
+      and the preceding `[BACKEND] P1` todo both reference "the agreed window" with no duration ever stated anywhere in
+      the doc; the soak can't be run to a defined done-when without it. Currently moot while the phase is HALTED on an
+      earlier precondition (dual-write-soak precondition not yet met, per that doc's own Progress Log), but needs
+      resolving before Phase 3 can proceed once unblocked. From Filed item 8.
+- [ ] [DOC] P3. **Add the missing cross-file conflict-check to
+      `plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md` todo 1** — it reconciles
+      `artifact_pipeline_observability_2026_07_17.md`'s checkboxes against batch 3's work but its conflict-check doesn't
+      name `plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (line 280, still open), which
+      touches the SAME source doc's checkboxes for batch 1's work. Both finalize plans are `status: active` and
+      `assigned_vm: planning` today — a real same-file dispatch collision risk if both are ever worked concurrently.
+      Add a one-line note to batch3_finalize's todo 1 (or a `sequential`/conflict note) naming batch1_finalize todo 4
+      explicitly. From Filed item 9.
 
 ## Archive candidates (operator review)
 
@@ -250,6 +288,10 @@ staged batch before commit).
 
 ## Progress Log
 
+- **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (1 already
+  resolved, cited inline — Filed item 6, `ui_consolidated_closeout` Todo 6 confirmed `[x]`); Filed items 7-9 (orphaned
+  Firestore-migration successor scoping, undefined soak-window duration, batch1/batch3-finalize same-file conflict-check
+  gap) formalized into `## Todos` above with fresh re-verification of each.
 - **2026-08-10** — plan_reconciler dispatch `agt-ec1688` started. Confirmed 23-doc `ui` tranche membership via
   multi-line-aware frontmatter scan (the plain single-line grep undercounts — `asset_group:` often wraps its `[ui]`
   value to the next line). Grace set: 2 docs (`data_status_tab_and_downloads_remediation_2026_06_16.md`, 5h;

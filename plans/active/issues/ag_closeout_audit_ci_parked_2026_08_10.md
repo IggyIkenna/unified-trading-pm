@@ -318,8 +318,35 @@ entries written to this section, 5 parked findings generated this run — balanc
 `BLOCKED-OPERATOR-DECISION` (the basedpyright conflict was already surfaced by na-eligibility-audit on 2026-08-08; this
 run re-confirmed rather than newly escalated it).
 
+## Todos
+
+> Added 2026-08-10 (prose-findings formalization sweep). Finding 1 and Finding 2 above are "informational" findings by
+> this doc's own framing, but their content is a genuine, repeatedly-re-confirmed, still-not-executed recommendation —
+> the workspace's "every follow-up is a `- [ ]` todo, never prose" hard rule applies regardless of a finding's own
+> "informational" label. `assigned_vm`/`status` left untouched.
+
+- [ ] [DOC] P2. **Corpus-wide `ci`↔`infrastructure` retag pass** (from Finding 1). 4 docs dual-tagged
+      `[ci, infrastructure]` — `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`,
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,
+      `self_hosted_runner_public_repo_revert_2026_08_05.md`, `shared_ci_workflow_repo_extraction_2026_08_06.md` — have
+      been independently confirmed CI-pipeline-internal (real owner `ci`, not `infra`'s Track 1-3 scope) across 5-6
+      separate runs since 2026-08-07 (this doc's own Finding 1, `ci`'s 2026-08-07/08/09/10 runs, `infra`'s own
+      2026-08-08/10 corroboration — see `ag_closeout_audit_infra_parked_2026_08_10.md` item 12) but never actually
+      retagged, out of stated caution about racing a concurrent tranche-classification worker. Needs one dedicated pass:
+      conflict-check each of the 4 docs fresh, then drop the `infrastructure` co-tag (keep `ci`) on all 4 in one commit.
+- [ ] [OPERATOR] P3. **Resolve the ambiguous `[ci, cross-cutting]` dual-tag on
+      `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** (from Finding 2). Content reads
+      closer to `infra`/`meta` than `ci` — re-confirmed unchanged across multiple runs (2026-08-09 Finding 4, this run's
+      Finding 2) that the `ci`-half of the tag may itself be wrong, not just the `cross-cutting`-half. Needs a human/
+      operator call on the correct `asset_group` value(s) — every prior run has correctly declined to guess, per the
+      Orthogonality check's own race-avoidance caution, so this has sat unresolved since at least 2026-08-08.
+
 ## Progress Log
 
+- **2026-08-10 (prose-findings formalization sweep)**: converted 2 prose findings into 2 formal todos (0 already
+  resolved); Finding 1 (4-doc `ci`↔`infrastructure` mistag, re-confirmed 5-6× across runs, never executed) and Finding 2
+  (ambiguous `[ci, cross-cutting]` dual-tag, needs an operator call) formalized into `## Todos` above — both had been
+  left as "informational" prose despite being genuinely actionable, never-executed recommendations.
 - **2026-08-10 (scheduled `ag_closeout_auditor`, slot 27, `agt-d6ed2a`)**: Delta-only re-audit per the Method note
   above. Found the 2026-08-09 report's stopping condition no longer held (2 new conflict-clear AO-eligible items) —
   drafted `ci_satellite_ao_dispatch_batch12_2026_08_10.md` (`status: draft`) + gated finalize. Completed a flagged

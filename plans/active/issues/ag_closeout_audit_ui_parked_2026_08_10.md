@@ -190,6 +190,23 @@ evidence-backed" bar the skill's precedent retags used (contrast the 2026-07-25 
 on direct content read) — no retag applied. Not re-litigating the same standing P2 todo; noting this spot-check's
 negative result so a future pass doesn't have to re-derive it.
 
+## Todos
+
+- [ ] [OPERATOR] P3. **Run `[unlock-plan]` on `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
+      then complete its archival** (Finding 6) — frontmatter still reads `status: open`,
+      `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`, a lock timestamp predating the doc's own
+      `created: 2026-07-21` by ~2 months, still impossible for a genuine exclusive claim. This is now the 6th
+      consecutive flag (2026-08-06/07/08/09/10) across two skills (`/ag-closeout-audit ui` + `/plan-reconcile ui`),
+      neither of which can unlock it (out of both skills' write-scope). Needs a human/operator session per the
+      standard `[unlock-plan]` gate, then the normal archival ritual (doc is otherwise fully done).
+
+**Already resolved (Finding 3)**: `plan_reconciler_findings_2026_08_07.md`'s ACTIVE_INDEX.md dangling-reference item
+was already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same-day 2026-08-10 `/plan-reconcile
+ui` run (dispatch `agt-ec1688`) — verified present at that doc's line ~135. No action needed here.
+
+**Already tracked elsewhere (Finding 5)**: both mistag candidates remain correctly tracked in
+`ui_consolidated_closeout_2026_07_30.md`'s standing `[REVIEW] P2` retag-audit todo — no duplicate todo needed.
+
 ## Recommendation carried to `/done` evidence
 
 1. **No operator decision needed today.** Findings 1, 2, 5, 6, 7 are process/bookkeeping/steady-state notes; Findings
@@ -217,3 +234,8 @@ negative result so a future pass doesn't have to re-derive it.
   2026-08-09 baseline (0 flips among the 15 pre-existing candidates). Phase 3: conflict-check found both new candidates'
   actionable content already non-batchable (Findings 3-4) — no batch 4 drafted. Parked-count reconciliation: 7 findings,
   all 7 written to this doc.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (2 already
+  resolved/tracked-elsewhere, cited inline). Finding 6's stuck-lock doc is now a real `[OPERATOR]` todo (6th
+  consecutive flag, still no `[unlock-plan]`); Finding 3's ACTIVE_INDEX.md item was confirmed already converted to a
+  checkbox by the same-day plan_reconciler run; Finding 5's mistag candidates confirmed already tracked in
+  ui_consolidated_closeout. Findings 1/2/4/7 are process/informational, no todo warranted.
