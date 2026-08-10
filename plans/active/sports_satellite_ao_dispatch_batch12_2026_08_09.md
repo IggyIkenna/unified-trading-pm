@@ -266,19 +266,44 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   `quality-gates.sh` launched (task `bm8lyhs3i`, backgrounded); not yet green, not yet committed/shipped/re-attempted as
   of this note.
 
+- **2026-08-10 (slot-29, todo 1 — 2nd fix shipped + verified insufficient; real bottleneck is the pandas parquet read
+  itself; 3rd fix applied)**: `quality-gates.sh` (task `bm8lyhs3i`) went green; shipped as
+  `market-tick-data-service@ae600255` (post-push ancestry verified). Re-ran
+  `--population 2025 --apply-prod --confirm-prod-write`: died AGAIN, exit 143, but this time **before printing even the
+  first GCS-scan checkpoint** — i.e. before `_filter_to_actually_missing`'s ThreadPoolExecutor loop ran at all, meaning
+  it died during (or immediately after) the bare `pd.read_parquet(io.BytesIO(raw))` load of the 17,090,683-row index,
+  before any of the 2nd fix's code (`_relabel`, `precise_mask`) ever executed.
+  `KILL #53: pid=3589585 slot=29 rss:12046320kB > 4194304kB`. This proves the 2nd fix, while a real and correct
+  improvement, was never the dominant cost — **the bare full-index `pd.read_parquet()` call alone exceeds the ~4GB
+  cap**, before any of this script's own logic runs. Root cause: pandas' default parquet read materializes string
+  columns as numpy object arrays (one Python `str` object per cell) — extremely memory-heavy at 17M rows x 5 string
+  columns (`data_type`, `capture_status`, `date`, `league_id`, `error_reason`). **Third fix applied**: added
+  `dtype_backend="pyarrow"` to both `pd.read_parquet(...)` call sites (`_index_read()` and `apply()`'s per-attempt read)
+  — keeps columns as compact Arrow-backed `string[pyarrow]` arrays instead of exploding into per-cell Python objects.
+  **Verified safe before spending another full QG+prod-run cycle**: (a) a synthetic all-null `error_reason` test column
+  hit `pyarrow.lib.ArrowInvalid: Invalid null value` on `.loc[mask, col] = "some string"` assignment (pyarrow infers an
+  all-null column as `null`-typed, which then rejects a string assignment) — looked like a real landmine, so (b) checked
+  the ACTUAL production schema via a metadata-only `pyarrow.parquet.ParquetFile(...).schema_arrow` read (242,156,398 raw
+  bytes, 17,090,683 rows, no full materialization): `error_reason` is genuinely `string`-typed in production (has real
+  non-null values elsewhere in the corpus), so the null-type edge case does NOT apply here — a test-data artifact, not a
+  production risk. (c) re-ran the full mask-relabel-write round-trip against a realistically-typed (non-null
+  `error_reason`) synthetic frame under `dtype_backend="pyarrow"` — mask construction, `.loc` assignment, and
+  `to_parquet()` round-trip all worked correctly. `quality-gates.sh` launched (task `b60zb0g2a`, backgrounded); not yet
+  green, not yet committed/shipped/re-attempted as of this note.
+
 ## Deferred work after 2026-08-10
 
-| Item                                                               | State / why deferred                                                                                                                                                                   | Blocked on                                                                                                           |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Ship the `_relabel().copy()` + full-index-rescan removal (2nd fix) | In progress. Patch made (uncommitted); `quality-gates.sh` running in the background as of this note (task `bm8lyhs3i`), not yet confirmed green.                                       | Nothing but elapsed QG time — pick this up first in the next session/tick if it wasn't finished before this compact. |
-| Todo 1 — `--apply-prod` for 2025 population (~88 rows)             | Not done. Dry-run + the GCS-existence-scan portion of apply both fully validated (88/4,437 confirmed missing) twice now; needs a fresh apply-prod attempt once the 2nd fix is shipped. | The 2nd memory fix above landing + QG passing.                                                                       |
-| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows)     | Not done. Dry-run itself has never completed for this population under any code version — confirmed-missing count is still unmeasured.                                                 | The 2nd memory fix above landing + QG passing; run as a plain dry-run first to finally get the count.                |
+| Item                                                           | State / why deferred                                                                                                                                                                                | Blocked on                                                                                                           |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Ship the `dtype_backend="pyarrow"` read fix (3rd fix)          | In progress. Patch made (uncommitted) + sanity-tested against the real production schema; `quality-gates.sh` running in the background as of this note (task `b60zb0g2a`), not yet confirmed green. | Nothing but elapsed QG time — pick this up first in the next session/tick if it wasn't finished before this compact. |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | Not done. Dry-run + the GCS-existence-scan portion of apply both fully validated (88/4,437 confirmed missing) twice now; needs a fresh apply-prod attempt once the 3rd fix is shipped.              | The 3rd memory fix above landing + QG passing.                                                                       |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Not done. Dry-run itself has never completed for this population under any code version — confirmed-missing count is still unmeasured.                                                              | The 3rd memory fix above landing + QG passing; run as a plain dry-run first to finally get the count.                |
 
-**Recommended next action**: confirm `quality-gates.sh` (task `bm8lyhs3i`) finished green, ship via
+**Recommended next action**: confirm `quality-gates.sh` (task `b60zb0g2a`) finished green, ship via
 `quickmerge.sh --agent --files 'scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py'`, then re-run
-`--population 2025 --apply-prod --confirm-prod-write`. If it STILL dies with a `resource-watchdog` kill (check
-`/var/log/syslog` for a new `KILL #` line naming the PID), the cap has proven dynamic-and-low enough that even a
-single-copy 17M-row load is unsafe on this host under current conditions — at that point stop patching this script's
-internals and instead read the manifest with column projection (`pd.read_parquet(..., columns=[...])`) for the
-mask-building step, or move the run to a VM with headroom, rather than attempting a 3rd in-process memory shave. Two
-genuinely identical failures at the same fix-version would be the stop-and-escalate signal, not a 3rd blind retry.
+`--population 2025 --apply-prod --confirm-prod-write`, watching whether it gets PAST the initial load this time (check
+`/var/log/syslog` for a new `KILL #` line naming the PID if it dies again). If this 3rd fix still dies, stop iterating
+on in-process memory shaves — escalate to either (a) a genuinely columnar (pyarrow-native, no pandas) mutate-and-write
+path with column-projected reads for the mask-building step, a real design change, not a quick patch, or (b) moving this
+one-off script's execution to a VM with real headroom rather than a slot's capped host share. Two genuinely identical
+failures at the same fix-version is the stop-and-escalate signal, not a blind 4th retry.
