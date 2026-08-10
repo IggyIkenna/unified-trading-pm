@@ -407,6 +407,23 @@ doc for the full history).
   executed. Task released via `/skip-current-task` `reason_code=GATED` — re-dispatch when step-1 lands (forward-poll
   cron gap closed + corpus recompute current) AND the in-flight defi rebuild completes.
 
+- **slot-2 2026-08-10 (task -016 re-check, same gates, ADDITIONAL FINDING — Part 1 twin claim DISPROVED)**: re-verified
+  both gates — **still unmet, same state as slot-8 above**. (1) Corpus freshness: 0 `perp_funding`/`perp_daily_ctx`
+  objects for all 6 venues on 2026-08-08..10. (2) `canonical-migration-defi-rebuild-20260810-204358` still RUNNING. (3)
+  **NEW — prior "cefi-bucket twins verified (14/14 per venue)" claim DISPROVED on closer inspection.** Fresh bounded
+  probe (UTL `list_blobs`, single-date single-venue, not a corpus walk): the cefi bucket
+  (`market-data-tick-cefi-prd-central-element-323112`) DOES have objects for
+  `venue={BINANCE,BYBIT,OKX,KRAKEN,BITFINEX, BITGET}-FUTURES|DERIBIT` under `pipeline_mode=batch_tardis`, but with
+  **different data_types** — `derivative_ticker`, `trades`, `liquidations`, `book_snapshot_5` (the raw Tardis captures).
+  **0 objects for `data_type=perp_funding` or `data_type=perp_daily_ctx`** in the cefi bucket — these data_types exist
+  ONLY in the DeFi bucket. The prior "twin" claim likely matched at the venue prefix level without verifying
+  `data_type=` sub-prefix. **Part 1 of the 5-part delete-safety proof FAILS**: the DeFi-bucket
+  `perp_funding`/`perp_daily_ctx` copies are NOT duplicates — they are the ONLY copy of this derived data. Disposition:
+  `no-still-authoritative` (these objects are the SSOT for `CanonicalPerpFundingProvider`, confirmed by prior code
+  read). Soft-delete retention 604800s confirmed. Task skipped `reason_code=GATED` — re-dispatch only after (a) step-1
+  corpus-freshness gate clears, (b) defi rebuild completes, AND (c) the Part 1 twin claim is independently re-verified
+  with data_type-level precision.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
