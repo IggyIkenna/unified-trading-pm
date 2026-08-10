@@ -67,44 +67,55 @@ source: >-
       clean spawn-auth test remains genuinely untestable, not a new regression.
 
       **DISCREPANCY FOUND**: batch14's claim "Literal key removed from the live file; re-sourced via
-          `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
-          --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
-          `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
-          `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
-          live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
-          itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
-          on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
-          (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
-          backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
-          STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
-          was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
-          not have caught this because there was no "after" state to compare against.
+              `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
+              --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
+              `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
+              `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
+              live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
+              itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
+              on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
+              (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
+              backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
+              STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
+              was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
+              not have caught this because there was no "after" state to compare against.
 
-          **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
-          own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
-          violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
-          does not change since it was already resident in cleartext on this host prior to and independent of this
-          session).
+              **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
+              own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
+              violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
+              does not change since it was already resident in cleartext on this host prior to and independent of this
+              session).
 
-          **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
-          `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
-          called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
-          immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
-          MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
-          checkbox, which doesn't exist yet.
+              **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
+              `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
+              called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
+              immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
+              MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
+              checkbox, which doesn't exist yet.
 
-- [ ] [INFRA] P0. **Actually apply the GSM re-sourcing to the live env file** — batch14's todo 1 done-claim was false
-      (see above): the literal token is still live in `~/.claude-accounts/deepseek-v4-pro.env`, byte-identical to the
-      pre-change backup. Replace the literal `ANTHROPIC_AUTH_TOKEN=...` line with
-      `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key     --project=central-element-323112)"`
-      (mirrors `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern) in the live file, verify the resolved
-      value still hashes identical to the prior literal token (proving no typo/wrong secret), and — once
-      `deepseek-v4-pro`'s balance is topped up (see the open `[OPERATOR] P2` recurrence todo in
-      `deepseek_claude_blended_provider_routing_2026_07_28.md`) — confirm one real clean (non-402) spawn authenticates
-      before calling this done. **Done when**: the live file contains the indirection command (not a literal key), a
-      fresh diff confirms the substitution actually landed (not just a hash self-match), and a genuine successful spawn
-      is confirmed post-topup (or, if still blocked on balance at review time, state that explicitly rather than
-      re-using the stale 402-comparison method).
+- [x] ✅ [INFRA] P0. **DONE 2026-08-10 (slot 5).** Actually applied the GSM re-sourcing to the live env file — batch14's
+      todo 1 done-claim was false (see above): the literal token was still live in
+      `~/.claude-accounts/deepseek-v4-pro.env`, byte-identical to the pre-change backup, prior to this fix. Real
+      before/after evidence (not a self-match): backed up the live file to
+      `~/.claude-accounts/deepseek-v4-pro.env.bak-realfix-1786323452` (`chmod 600`), then replaced the literal
+      `export ANTHROPIC_AUTH_TOKEN=...` line with
+      `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key --project=central-element-323112)"`
+      (mirrors `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern) via an `awk` line-substitution (no literal
+      value ever printed to a tool-output stream). Post-edit checks: (1) `grep -c 'gcloud secrets versions access'` on
+      the live file returns `1` (was `0`); (2) live file's sha256 (`c154633...c2f42`) now DIFFERS from the pre-change
+      backup's sha256 (`42b42e2...d181b`) — proves the substitution actually landed, not a self-match; (3) the 4
+      non-token lines are byte-identical before/after (`diff` clean); (4) sourcing the new file and hashing the resolved
+      `$ANTHROPIC_AUTH_TOKEN` value gives `715f0bb8...f80d8c9`, matching the hash of the ORIGINAL literal token
+      extracted pre-edit — confirms the GSM secret content is the same token, no typo/wrong-secret substitution. Spawn
+      test: `deepseek-v4-pro`'s balance is still exhausted at review time (`balance_usd=-0.21`,
+      `balance_is_available=false`, checked `2026-08-10T00:46:43Z` via live `/api/accounts` — same open `[OPERATOR] P2`
+      recurrence in `deepseek_claude_blended_provider_routing_2026_07_28.md`, unchanged since the prior review pass), so
+      a genuine clean (non-402) spawn cannot be confirmed right now — stating that explicitly per this todo's own
+      done-when clause, not reusing the stale same-file 402-comparison method. Instead ran a real `claude -p` auth probe
+      under the NEW indirection-based config: `API Error: 402 Insufficient Balance` — a 402 (not 401/403) confirms the
+      resolved token itself reaches the API and authenticates correctly through the new GSM-indirection path; only the
+      account balance blocks a full success. Follow-up: once balance is topped up, re-run the probe for a clean 200 and
+      record it here or on the source doc's `[OPERATOR] P2` recurrence todo.
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
       `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox** — replace the
       redirect-pointer text batch14 left behind with the real completion evidence (both hosts, verified). **Done when**:
@@ -134,3 +145,10 @@ source: >-
   live. Reverted batch14's own todo checkbox + reopened its backlog task; opened a new `[INFRA] P0` todo here to perform
   the real fix. Full evidence on the flipped todo above. Todo 2 (reconcile) stays blocked behind the new todo — there is
   no real evidence yet to reconcile into the source doc.
+- **2026-08-10 (slot 5, infra craft) — todo 2 DONE.** Applied the real GSM re-sourcing edit to
+  `~/.claude-accounts/deepseek-v4-pro.env` with genuine before/after evidence (backup taken, sha256 of the live file now
+  differs from the pre-change backup, `gcloud secrets versions access` line present exactly once, non-token lines
+  byte-identical). Resolved-token hash matches the original literal token's hash (no wrong-secret substitution). Balance
+  is still exhausted (`balance_usd=-0.21`) so a clean-200 spawn couldn't be confirmed; ran a real `claude -p` probe
+  through the new config instead — `402 Insufficient Balance` (not 401/403), proving the new auth path itself works.
+  Full evidence on the flipped todo above. Todo 3 (reconcile into source doc) can now proceed — real evidence exists.
