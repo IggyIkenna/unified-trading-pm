@@ -152,9 +152,9 @@ row appear to belong to main.
       the self-report floor semantics identical (higher of {self-report, probe}, ratchet-up persisted). Done-when: the
       main-specific branch is deleted, and the existing `_main_pct` regression tests pass unchanged against the unified
       path.
-- [x] ✅ [BACKEND] P2. Collapse the derived-pressure and wedge-recovery main branches the same way, so main reaches
-      those paths as a slot rather than via a special case. Done-when: both main-specific branches are deleted and their
-      existing tests pass against the shared path. — agent-orchestrator@abcdee3
+- [ ] [BACKEND] P2. Collapse the derived-pressure and wedge-recovery main branches the same way, so main reaches those
+      paths as a slot rather than via a special case. Done-when: both main-specific branches are deleted and their
+      existing tests pass against the shared path.
 - [x] ✅ [BACKEND] P2. Add a standing guard against the regression class: a test asserting every context-lifecycle
       target returned by the policy's own target list has a SlotRow. Done-when: the test fails if a future target is
       added without one. — agent-orchestrator@c8109bd
@@ -261,16 +261,3 @@ row appear to belong to main.
   still claimed main had no SlotRow (the `_main_pct` collapse is todo 5, not yet done — the banner says so explicitly),
   and bumped `last_reviewed`. Corpus-wide grep confirmed this codex doc was the only place in `codex/` still documenting
   main's slot-less special-casing as expected. Shipped via safe-doc-push.sh (pure docs).
-- 2026-08-10 — Todo 6 (collapse main's derived-pressure + wedge-recovery branches) complete, agent-orchestrator@abcdee3.
-  `ContextLifecyclePolicy.tick()` now ticks main as slot `context_lifecycle.MAIN_SLOT_ID` (an independent literal pinned
-  equal to `main_agent_keeper.MAIN_SLOT_ID` in the todo-7 guard test), so main reaches the SHARED `_read_pct` and
-  `_recover_wedged_target` paths. `_read_pct`'s derived-pressure `slot_id is None` else-branch is deleted — main reads
-  its SlotRow like every slot; the probe-vs-self-report ratchet moved to `MainAgentKeeper._sync_main_slot_row` via
-  `context_lifecycle.main_pct` (renamed public, was `_main_pct`) so the self-report floor survives the read-path
-  collapse. `_recover_wedged_target`'s `slot_id is None` branch is deleted — main uses the shared slot recovery, which
-  additionally clears `AgentRow.claude_session_id` for `role == "main"` (main's resume target lives on the AgentRow, not
-  just the SlotRow, so the SlotRow clear alone would let AgentKeeper --resume the over-limit transcript).
-  `_latest_context_lifecycle_activity_ts` lost its `is_(None)` main filter; `_active_worker_slot_ids` excludes
-  `MAIN_SLOT_ID` so main's status=working row never becomes a phantom worker target. slot_id call-chain types tightened
-  `int | None → int`. Tests updated to tick main as slot `MAIN_SLOT_ID` (idle-gate, wedge-recovery, thrashing-pressure,
-  direct `_read_pct` callers). Full suite passed via `quality-gates.sh`; landed on LDR via quickmerge.

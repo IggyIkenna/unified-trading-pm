@@ -242,11 +242,10 @@ ever applied after an explicit operator ruling — filed here, not edited:
 
 ### Other filed follow-ups
 
-- [x] ✅ [SCRIPT] P3. Extend `check-locked-plan-deletion.sh`'s `locked_by` parser to treat a literal `""`/`''` value as
+- [ ] [SCRIPT] P3. Extend `check-locked-plan-deletion.sh`'s `locked_by` parser to treat a literal `""`/`''` value as
       empty (currently a naive `grep -oP` extracts the quote characters themselves as a non-empty string) — found via 6
       real corpus instances this run, all now individually normalized, but the parser bug itself is unfixed and will
-      recur on any future doc authored with `locked_by: ""` instead of a true-blank value. —
-      unified-trading-pm@81dbe27cd7
+      recur on any future doc authored with `locked_by: ""` instead of a true-blank value.
 - [x] ✅ [REVIEW] P3. Live-check whether `market-tick-data-service`'s VM `fts-backfill-20260806-012831`
       (`sports_closeout_track_s2_foldin_2026_07_25.md` todo, "RELAUNCHED 2026-08-06") has since completed —
       last-observed state (2026-08-06) was "still RUNNING, no exit signal"; ~2 days have passed as of this run

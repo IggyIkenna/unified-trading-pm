@@ -116,11 +116,11 @@ source: >-
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
       inventory generator. **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly,
       and `check_finalize_plan_coverage.py` no longer names this pair.
-- [x] ✅ [REVIEW] P1. **Corpus-wide plan-hygiene gates drifted since batch10's sweep — archive the 2 new
+- [ ] [REVIEW] P1. **Corpus-wide plan-hygiene gates drifted since batch10's sweep — archive the 2 new
       `check_archive_candidates.sh` candidates + epic-wire the orphaned 2026-08-10 satellite plans.** Re-opened by P0's
       re-verification (claim 3 held as-of the 2026-08-09 sweep, but both gates are now RED against baseline). (1)
       `check_archive_candidates.sh` now reports **2 candidates vs baseline 0**:
-      `plans/archive/2026_08/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (archived 2026-08-10)
+      `plans/active/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`
       (`asset_group: [defi, prediction]`, `parent_epic: infrastructure_master` — out of batch10's
       `ao`/`orchestrator_master` scope; its done `[x]` was wrapped in a code-span and invisible to the checker until the
       2026-08-10 prose-formalization reformat; genuinely all-done + unlocked → archive-eligible via the 6-step ritual)
@@ -131,17 +131,7 @@ source: >-
       sweep) — the newly-created 2026-08-10 satellite batch/finalize plans (`tradfi_satellite_ao_dispatch_batch12_*`,
       `ao_satellite_ao_dispatch_batch19_*`, `cefi_satellite_ao_dispatch_batch17_*`) aren't yet referenced by
       master/epics. **Done when**: both candidates archived + the rate-canary todo captured, the orphaned plans are
-      epic-wired, and the inventory regenerates clean. **DONE 2026-08-10 (slot 24, review)** — both named candidates
-      resolved: mtds doc archived via the 6-step ritual (banner, status→resolved, git mv to
-      `plans/archive/2026_08/issues/`, referrers repointed; `unified-trading-pm@36b7cbc984`), and the plan_reconciler
-      doc's rate-canary recommendation converted into a tracked `- [ ] [BACKEND] P2` todo (doc now 1-open, no longer a
-      candidate; `unified-trading-pm@0f5b5f01ac`). Two ADDITIONAL candidates that surfaced during execution
-      (`ci_consolidated_closeout`, `s5_7_required_docs_gaps`) were verified as FALSE positives (deliberately-active
-      coordinator revived 2026-08-10 / intentionally archive_exempt) and their frontmatter cleaned so the checker parses
-      them correctly. `check_archive_candidates.sh` re-run: **0 candidates, baseline 0**. All 5 orphaned 2026-08-10
-      satellite plans epic-wired (`tradfi_satellite_ao_dispatch_batch12` → tradfi_master,
-      `ao_satellite_ao_dispatch_batch19`(+finalize) → orchestrator_master, `cefi_satellite_ao_dispatch_batch17`
-      (+finalize) → infrastructure_master); `regenerate_active_plan_inventory.py` re-run: **0 orphans, 313 plans**.
+      epic-wired, and the inventory regenerates clean.
 
 ## Codex SSOTs
 
@@ -158,7 +148,7 @@ source: >-
 - **2026-08-10 (slot 24, review)** — P0 done: re-verified all 6 of batch10's done-claims against reality (see todo 1's
   evidence). 5 claims confirmed cleanly; claim 3 (ao archive sweep) confirmed as-of its 2026-08-09 sweep but the
   corpus-wide gates have since drifted: `check_archive_candidates.sh` is RED (2 candidates vs baseline 0 —
-  `plans/archive/2026_08/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (archived 2026-08-10) +
+  `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` +
   `plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`) and the inventory reports 3 orphans / 313 plans (was
   0/297). Re-opened as new todo 5 (P1).
 - **2026-08-10 (slot 24, review)** — P0 reconcile done: all 6 source checkboxes now carry real completion evidence
@@ -169,9 +159,3 @@ source: >-
   retains 3 open / dashboard_prettier retains 1 open (no archival for either). batch2's archival is owned by its own
   active finalize plan (`ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` todo 5, now ungated) — not duplicated
   here.
-- **2026-08-10 (slot 24, review)** — P1 drift-resolve done: mtds doc archived (6-step ritual, `36b7cbc984`);
-  plan_reconciler rate-canary converted to a tracked todo (`0f5b5f01ac`); 2 further candidate false-positives
-  (ci_consolidated active coordinator, s5_7 archive_exempt) frontmatter-cleaned; check_archive_candidates back to 0; 5
-  orphaned 2026-08-10 satellite plans epic-wired (tradfi batch12 → tradfi_master, ao batch19+finalize →
-  orchestrator_master, cefi batch17 +finalize → infrastructure_master); inventory regenerated clean (0 orphans, 313
-  plans).

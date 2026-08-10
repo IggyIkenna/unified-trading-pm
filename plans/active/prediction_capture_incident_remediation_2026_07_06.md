@@ -334,30 +334,22 @@ orchestrator-dispatched).
       `tests/unit/test_prediction_canonical_group_shard.py::test_kalshi_composite_instrument_key_still_classifies_correctly`
       asserts a `KXBTC-26MAR-90000`-style composite key now classifies to `BTC_PRICE_RANGE_DAILY`, not `OTHER`; 3/3
       Kalshi CQG tests pass at HEAD.
-- [x] ✅ [DATA] P2. Once the Phase 6 CODE fix ships + is verified live for ≥1 day, assess whether the historical
+- [ ] [DATA] P2. Once the Phase 6 CODE fix ships + is verified live for ≥1 day, assess whether the historical
       `OTHER`-bucketed Kalshi rows (2026-07-12 onward, ~9,500/day, ~30 days) are worth a one-off backfill/reclassify
       pass into their correct CQG buckets, or whether forward-only correctness is sufficient (per
       `/codex/02-data/data-pipeline-correctness-hard-rule.md`'s "fix issues in FULL" bar vs the practical cost of
-      reclassifying historical manifest rows). **RESOLVED (round5-cefi-question-resolution 2026-08-08) — not actually an
-      open architect call; the workspace's own HARD RULE already answers it.** The Phase 6 code fix shipped 2026-07-30
-      and has been live 9+ days (well past the "≥1 day" gate). **DONE 2026-08-10 — instruments-service@d4e5c23d** via
-      `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3. Reclassify script
-      (`scripts/reclassify_kalshi_other_historical.py`) ran against 18 affected dates (2026-07-12→2026-07-29): 162,692
-      instruments across 206 manifest rows. 69,292 instruments reclassified to correct CQGs, 12,051 kept as genuine
-      OTHER (22.0% noise floor on 2026-07-18 — matches expected ~21%). Manifest updated from 30,669→31,230 rows (39
-      unique CQGs in affected window, was 1). Backup:
-      `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Soft-delete
-      retention 604800s verified. Post-patch distribution verified on 3 sample dates.
-      `/codex/02-data/data-pipeline-correctness-hard-rule.md` states plans/audits are "fixed in FULL (no deadline
-      deferrals...)" — accepting forward-only correctness for a known, already-diagnosed, already-measured (~30 days ×
-      ~9,500/day) mis-bucketing is precisely the kind of incomplete fix that rule exists to prevent, so the default is:
-      do the reclassify. It also qualifies as self-service under `plans/active/task_template.md` finding T/U — fresh
-      same-run check (2026-08-08):
-      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
-      → **604800** (the 7-day floor finding T requires). Reclassifying as an ordinary AO-dispatchable `[DATA]` SCRIPT
-      todo (backup-first, content-patch in place, mirroring the same reclass-script pattern used elsewhere in this
-      corpus); the actual sizing script + apply was not built/run in this pass (documentation-question audit, not an
-      implementation dispatch).
+      reclassifying historical manifest rows). **RESOLVED (round5-cefi-question-resolution 2026-08-08) — not actually
+      an open architect call; the workspace's own HARD RULE already answers it.** The Phase 6 code fix shipped
+      2026-07-30 and has been live 9+ days (well past the "≥1 day" gate). `/codex/02-data/data-pipeline-correctness-hard-rule.md`
+      states plans/audits are "fixed in FULL (no deadline deferrals...)" — accepting forward-only correctness for a
+      known, already-diagnosed, already-measured (~30 days × ~9,500/day) mis-bucketing is precisely the kind of
+      incomplete fix that rule exists to prevent, so the default is: do the reclassify. It also qualifies as
+      self-service under `plans/active/task_template.md` finding T/U — fresh same-run check (2026-08-08):
+      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112
+      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (the 7-day floor finding T requires).
+      Reclassifying as an ordinary AO-dispatchable `[DATA]` SCRIPT todo (backup-first, content-patch in place,
+      mirroring the same reclass-script pattern used elsewhere in this corpus); the actual sizing script + apply was
+      not built/run in this pass (documentation-question audit, not an implementation dispatch).
 
 ---
 
@@ -514,28 +506,29 @@ orchestrator-dispatched).
   passes.
 - **round5-cefi-question-resolution 2026-08-08**: Phase 6's backfill-assessment todo resolved — per
   `/codex/02-data/data-pipeline-correctness-hard-rule.md`'s "fix in FULL" bar plus a fresh reversibility check
-  (`plans/active/task_template.md` finding T/U, target bucket soft-delete retention live-verified at 604800s), this was
-  never an open architect judgment call; see the todo's own annotation above. The 7 DESCOPED-NOT-MVP perp items remain
-  correctly parked on the standing 2026-07-14 operator ruling (that ruling itself doesn't need re-asking — see this same
-  round's Item 20 finding on the sibling doc).
+  (`plans/active/task_template.md` finding T/U, target bucket soft-delete retention live-verified at 604800s), this
+  was never an open architect judgment call; see the todo's own annotation above. The 7 DESCOPED-NOT-MVP perp items
+  remain correctly parked on the standing 2026-07-14 operator ruling (that ruling itself doesn't need re-asking —
+  see this same round's Item 20 finding on the sibling doc).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — Phase 6's backfill-assessment
   todo is now bounded per the round5 finding directly above, but the 7 `[DESCOPED-NOT-MVP 2026-07-14]` perp-repoint
-  items (Phases 1-4) remain open (parked, not closed) pending a future operator announcement of Kalshi/Polymarket perps
-  prod access — genuinely not worker-determinable today. Whole-doc flip stays blocked per the HARD RULE. **Conflict +
-  scope note**: this doc carries `locked_by: live-defi-rollout` (not touched for a flip regardless of a flip) and is
-  dual-tagged `asset_group: [prediction, cefi]` — `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (today's
-  independent cefi full-corpus audit) explicitly excluded it as "cross-tranche... ambiguous parent_epic ownership."
-  Extracting Phase 6's now-bounded todo is deferred to a prediction-tranche sweep or a dedicated cross-tranche pass, not
-  claimed unilaterally here.
-- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi + prediction tranches, dual-tagged doc)**: KEEP-NA,
-  valid — re-checked against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1
-  tiering, plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
-  agent-executable after a fresh check, Option B retirement [confirmed unrelated], GSM secret
-  `deepseek-v4-pro-api-key` + 5 Slack webhooks) — the 7 DESCOPED-NOT-MVP perp items remain correctly parked on the
-  standing 2026-07-14 operator ruling; none of round11's criteria touch Kalshi/Polymarket perps prod access. **The
-  follow-through round7 flagged is now DONE — by a peer, not this sweep**: Phase 6's backfill-assessment todo has SINCE
-  been extracted verbatim into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted 2026-08-09,
-  `status: draft`, `assigned_vm: planning`, Source citing "Phase 6's second checkbox, verbatim"). Verified via direct
-  read of that batch before touching this doc — no duplicate extraction created. Whole-doc flip stays blocked (7 items
-  still genuinely parked). No reclassification here; flagging for whoever next reconciles this doc's own Phase 6
-  checkbox once batch10 lands.
+  items (Phases 1-4) remain open (parked, not closed) pending a future operator announcement of Kalshi/Polymarket
+  perps prod access — genuinely not worker-determinable today. Whole-doc flip stays blocked per the HARD RULE.
+  **Conflict + scope note**: this doc carries `locked_by: live-defi-rollout` (not touched for a flip regardless of a
+  flip) and is dual-tagged `asset_group: [prediction, cefi]` — `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`
+  (today's independent cefi full-corpus audit) explicitly excluded it as "cross-tranche... ambiguous parent_epic
+  ownership." Extracting Phase 6's now-bounded todo is deferred to a prediction-tranche sweep or a dedicated
+  cross-tranche pass, not claimed unilaterally here.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi + prediction tranches, dual-tagged doc)**:
+  KEEP-NA, valid — re-checked against the full round-11 precedent set (IAM self-service default, D16 all-repos
+  carve, S5.1 tiering, plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days,
+  reversibility-qualified deletes agent-executable after a fresh check, Option B retirement [confirmed unrelated],
+  GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — the 7 DESCOPED-NOT-MVP perp items remain correctly
+  parked on the standing 2026-07-14 operator ruling; none of round11's criteria touch Kalshi/Polymarket perps prod
+  access. **The follow-through round7 flagged is now DONE — by a peer, not this sweep**: Phase 6's
+  backfill-assessment todo has SINCE been extracted verbatim into
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted 2026-08-09, `status: draft`,
+  `assigned_vm: planning`, Source citing "Phase 6's second checkbox, verbatim"). Verified via direct read of that
+  batch before touching this doc — no duplicate extraction created. Whole-doc flip stays blocked (7 items still
+  genuinely parked). No reclassification here; flagging for whoever next reconciles this doc's own Phase 6 checkbox
+  once batch10 lands.

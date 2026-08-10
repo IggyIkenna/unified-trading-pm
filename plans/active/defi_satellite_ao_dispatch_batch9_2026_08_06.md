@@ -300,10 +300,9 @@ over all pending draft batches) that independently spot-verified every todo belo
       the `rewards` entries for all 10 AAVE_V3 chains in `defi_venue_capabilities.py`, completing the
       `bc397b93`-precedent cross-surface cleanup for the AAVE `rewards`/`collect-rewards` removal already shipped at
       `unified-api-contracts@5f441e0d`. Repo: unified-api-contracts. Source:
-      `plans/archive/2026_08/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (archived 2026-08-10).
-      Done when: `defi_prediction_instrument_seeds.py` no longer contains an AAVE_V3 `rewards` seed,
-      `defi_venue_capabilities.py` no longer declares `rewards` for any of the 10 AAVE_V3 chains, and
-      `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
+      `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`. Done when: `defi_prediction_instrument_seeds.py` no
+      longer contains an AAVE_V3 `rewards` seed, `defi_venue_capabilities.py` no longer declares `rewards` for any of
+      the 10 AAVE_V3 chains, and `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
 - [ ] [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
       MAKER/YEARN_V3/ETHENA/FRAX/MORPHO_VAULTS and confirm at least one row per venue now carries a non-null
       `instrument_id` matching its written GCS object's own `instrument_id` column value (post the

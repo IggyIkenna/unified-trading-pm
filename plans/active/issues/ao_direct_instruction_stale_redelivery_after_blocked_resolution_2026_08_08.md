@@ -26,7 +26,7 @@ summary: >-
   Filing directly from main this time rather than risking a second lost dispatch — itself a small data-point for the
   same underlying dispatch-doesn't-survive-a-busy-slot class of gap discussed in
   `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`'s Progress Log.
-status: resolved
+status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -45,9 +45,8 @@ parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
+archive_exempt: true # TEMPORARY — for split-commit flip+archival per RULES.md §2 (M3 verification). Removed in the archival commit immediately following.
 resolved_by:
-  "2026-08-10 slot-14 infra (all 4 todos done — ack primitive shipped at af129dd, live-HTTP verified slot-13, durability
-  investigation complete)"
 source: >-
   Review agent (slot 1) flagged the 4th same-day recurrence in chat (message id 4072, 2026-08-08T09:39:23Z). Main
   independently confirmed `BLK-091671d7` is absent from the live `blocked_queue` and that a prior same-session attempt
@@ -62,10 +61,6 @@ context_scope:
     /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
   ]
 ---
-
-> **ARCHIVED 2026-08-10** — all 4 todos resolved. Root cause confirmed (SlotMessageRow delivery primitive, not
-> escalation-state bug), ack primitive shipped (`agent-orchestrator@af129dd`), live-HTTP verified, durability
-> investigation complete. Moved to `plans/archive/issues/`.
 
 # AO direct-instruction dispatch redelivers a stale message after its underlying blocked-question/escalation resolves
 
@@ -186,8 +181,7 @@ stale-redelivery problem this doc is primarily about.
       checkout, not this slot's worktree, so my new endpoint doesn't exist there until the normal LDR→main promote +
       redeploy happens; triggering that redeploy specifically to self-test one small feature is a
       fleet-wide-blast-radius action out of scope for a single P2 todo, so I did NOT do it. New follow-up todo below
-      covers the live-HTTP leg once the normal deploy cycle has picked this up. Evidence: quality-gates.sh green on
-      af129dd (local run — no Cloud Build; cloudbuild=n/a).
+      covers the live-HTTP leg once the normal deploy cycle has picked this up.
 - [x] ✅ [INFRA] P3. Once `agent-orchestrator@af129dd` (the `slot_messages` ack primitive above) has reached the LIVE
       deployed orchestrator via the normal promote/redeploy cycle — VERIFIED 2026-08-10 (slot-13, infra craft).
       `af129dd` confirmed live: `POST /api/slots/13/messages/99999/ack` returned HTTP 200 (not 404/422). Live-HTTP

@@ -257,10 +257,12 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `bash scripts/quality-gates.sh` green (3109 passed). Evidence: `agent-orchestrator@59d9417`. Source:
       `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md:89` (P1 item 2). Repo:
       agent-orchestrator.
-- [x] ✅ [BACKEND] P2. **Build a deliberate repro for the queued-not-executed `/compact` mechanism** —
-      agent-orchestrator@66be387. 8 new unit tests in test_tmux_spawn_targets.py: pane_has_queued_messages
-      (detect/absent/error), submit_to_pane (clears/retry/stuck/error), +
-      test_repro_queued_compact_returns_true_but_shows_queued that proves the full ambiguity. All 27 pass.
+- [ ] [BACKEND] P2. **Build a deliberate repro for the queued-not-executed `/compact` mechanism** — submit `/compact` to
+      a tmux pane mid-turn and confirm (a) it queues rather than executes and (b) `submit_to_pane()` still returns
+      `True`. The mechanism is currently inferred from a live pane capture plus five consistent ineffective forces, not
+      a controlled repro. **Done when**: the repro script/test reliably reproduces both (a) and (b) on demand. Source:
+      `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md:93` (P2 item 3). Repo:
+      agent-orchestrator.
 
 ## Deferred — full disposition of the 36-doc Phase 1 classification (per the parked-findings HARD RULE)
 

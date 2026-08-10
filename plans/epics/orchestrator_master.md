@@ -361,15 +361,6 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 12 — finalize
 
-### [`ao_satellite_ao_dispatch_batch19_2026_08_10`](../active/ao_satellite_ao_dispatch_batch19_2026_08_10.md)
-
-**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 19 —
-dispatch-ordering unpark + TmuxPruner
-
-### [`ao_satellite_ao_dispatch_batch19_finalize_2026_08_10`](../active/ao_satellite_ao_dispatch_batch19_finalize_2026_08_10.md)
-
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 19 — finalize
-
 ### [`ao_satellite_ao_dispatch_batch2_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AO satellite AO batch 2 — second

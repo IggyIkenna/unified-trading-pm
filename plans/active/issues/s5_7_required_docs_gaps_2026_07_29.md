@@ -15,7 +15,10 @@ summary:
   tracks this. This is a scoping judgment (should S5.1 tier its required set by repo type?), not a bounded worker todo —
   captured here per the findings-closure HARD RULE."
 status: open
-archive_exempt: true
+archive_exempt:
+  true # 0-open-todos 2026-08-10 (last todo closed per operator ruling BLK-2b076fa9); archival
+  # blocked by codex_vs_repo_docs_ssot_audit_2026_06_01.md (active, parent audit plan) still referencing this doc —
+  # archive_exempt bridges until the parent plan itself reaches a terminal status
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]

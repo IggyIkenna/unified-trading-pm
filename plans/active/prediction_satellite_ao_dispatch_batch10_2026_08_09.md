@@ -125,18 +125,31 @@ assumed from the Phase-1 agents' own grep alone).
       confirmed either dead (never exercised — document why, no code change needed) or fixed + tested to match the
       CQG-bundled shape.
 
-- [x] ✅ [DATA] P2. **Kalshi historical `OTHER`-bucket CQG reclassify backfill, now declassified from an
-      operator/architect call to an ordinary AO-dispatchable script.**
-      `prediction_capture_incident_remediation_2026_07_06.md`'s Phase 6 CODE fix (`instruments-service@e0f7aaad`,
-      `prediction.py:95`'s ticker-extraction bug) has been live 9+ days; every Kalshi row captured 2026-07-12 through
-      the fix's ship date fell to `canonical_question_group=OTHER` due to the now-fixed bug. **DONE 2026-08-10 —
-      instruments-service@d4e5c23d (reclassify script) + production run complete.** Re-measured affected range from live
-      manifest: 18 dates (2026-07-12→2026-07-29), 162,692 instruments, 36 manifest rows. Backup saved:
-      `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Soft-delete
-      retention verified at 604800s (≥7 days). Reclassify executed: 69,292 instruments moved to correct CQGs, 12,051
-      kept as genuine OTHER. Verification: 2026-07-18 post-patch shows 39 CQGs (was 1), OTHER at 2,003/9,118 (22.0%
-      noise floor — matches expected ~21% genuine-OTHER share). Source doc Phase 6 checkbox flipped below. Script:
-      `scripts/reclassify_kalshi_other_historical.py` in instruments-service (oneoff lifecycle).
+- [ ] [DATA] P2. **Kalshi historical `OTHER`-bucket CQG reclassify backfill, now declassified from an operator/architect
+      call to an ordinary AO-dispatchable script.** `prediction_capture_incident_remediation_2026_07_06.md`'s Phase 6
+      CODE fix (`instruments-service@e0f7aaad`, `prediction.py:95`'s ticker-extraction bug) has been live 9+ days; every
+      Kalshi row captured 2026-07-12 through the fix's ship date fell to `canonical_question_group=OTHER` due to the
+      now-fixed bug. This was explicitly declassified from "operator/architect call" via
+      `round5-cefi-question-     resolution 2026-08-08`, citing `/codex/02-data/data-pipeline-correctness-hard-rule.md`
+      ("fixed in FULL, no deadline deferrals") — accepting forward-only correctness for an already-diagnosed,
+      already-measured mis-bucketing is the incomplete-fix pattern that rule exists to prevent — plus `task_template.md`
+      finding T/U's self-service reversibility path: a fresh same-run check (2026-08-08, re-verify before executing
+      since this is a NEW run) of
+      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
+      must show `>= 604800`. Work: (1) **first re-measure the real affected date range and row count from the live
+      manifest** — do not trust the ~30-day/~9,500-rows/day estimate in the source doc blindly, it may have drifted
+      since 2026-08-08; (2) **backup the affected manifest partition(s) before any mutation** (this is a content-patch
+      of EXISTING captured rows, not a fresh write — no GCS object is deleted, but existing `canonical_question_group`
+      values are overwritten in place, so a pre-mutation backup is the safety net, mirroring the reclass-script pattern
+      already used elsewhere in this corpus); (3) run the now-fixed `_extract_prediction_canonical_group` classification
+      logic against every backed-up `OTHER`-bucketed Kalshi row in the affected window and patch the
+      `canonical_question_group` field in place; (4) verify: a post-patch distribution check shows the affected window's
+      `OTHER` share back to the normal noise floor (not the near-100%-of-day mis-bucketing the source doc measured).
+      Repo: instruments-service. Source: `prediction_capture_incident_remediation_2026_07_06.md` (Phase 6's second
+      checkbox, verbatim — "assess whether the historical OTHER-bucketed Kalshi rows... are worth a one-off
+      backfill/reclassify pass," RESOLVED to "do the reclassify" 2026-08-08). **Done when**: the backup exists, the
+      affected window's rows are reclassified out of `OTHER` per the fixed classifier, the post-patch distribution check
+      is recorded, and the source doc's Phase 6 checkbox is flipped `[x]` citing the evidence.
 
 - [x] ✅ [BACKEND] P2. **Delete Polymarket's dead `_cross_reference_fixture()` capability**, per operator ruling (see
       `issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`) (2026-08-07, option A — prediction markets
