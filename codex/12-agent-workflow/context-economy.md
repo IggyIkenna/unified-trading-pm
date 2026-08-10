@@ -91,7 +91,34 @@ touches a plan doc.
   responds).
 - Model/effort tier selection — `/codex/06-coding-standards/model-tier-selection.md`.
 
+## NEVER self-estimate remaining context — and never use it to defer work (HARD RULE, 2026-08-10)
+
+An agent has **no reliable read on its own remaining window from inside a session**, and the intuition it does have is
+systematically wrong in one direction. "This conversation feels long, so I must be nearly out" infers budget from
+TRANSCRIPT LENGTH — and a compaction resets the window while leaving the transcript feeling just as long. Measured
+2026-08-10: an agent repeatedly announced it was "nearly out of context" and scoped work down accordingly, while
+actually sitting at ~300K of a 1M window, having forgotten a compaction earlier in the same session had already
+reclaimed the space. The operator had to correct it.
+
+Two rules, and the second is the one that costs real work:
+
+1. **Do not state a remaining-context figure or "running low" claim unless you MEASURED it.** There is no counter
+   available to an agent inside a task; a terminal-hosted CLI session can run `/context`, an extension-hosted one
+   cannot. Absent a measurement, say nothing about budget.
+2. **Never use "low on context" as grounds to decline, defer, or half-do a task.** This is the damaging half. It reads
+   as a principled engineering judgment — "I'd rather hand off than ship something half-verified" — which is exactly
+   what makes it persuasive and exactly why it goes unchallenged. Deferring on a budget you have not measured is
+   deferring on a guess. If a task genuinely should be handed off, the reason is a REAL one (a live path you cannot
+   safely verify, a decision that is the operator's, a missing credential) — cite that instead, and it will survive
+   scrutiny on its own merits.
+
+Compaction is the normal, designed lifecycle here (`/pre-compact` → `/compact`, `context_lifecycle.py`), not an
+emergency: the correct posture is to keep working and let the ritual reclaim space, not to pre-emptively shrink scope
+against an imagined ceiling.
+
 ## Codex SSOTs
 
 `/codex/12-agent-workflow/pre-task-plan-conflict-check.md` (the other "applies at task start, not just to plan
-authoring" precedent this doc follows the same pattern as), `cursor-configs/skills/context-scout/SKILL.md`.
+authoring" precedent this doc follows the same pattern as), `cursor-configs/skills/context-scout/SKILL.md`,
+`/codex/06-coding-standards/model-tier-selection.md` § "Context window is PER-MODEL" (what the window actually IS per
+model — this section is about not GUESSING your remaining share of it).
