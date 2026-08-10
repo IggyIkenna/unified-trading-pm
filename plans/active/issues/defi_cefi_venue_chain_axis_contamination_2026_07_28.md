@@ -424,6 +424,26 @@ doc for the full history).
   corpus-freshness gate clears, (b) defi rebuild completes, AND (c) the Part 1 twin claim is independently re-verified
   with data_type-level precision.
 
+- **slot-13 2026-08-10 (task -017 re-check, same gates; CORRECTION to slot-2's twin DISPROVAL)**: Both gates re-verified
+  fresh 2026-08-10T23:05Z — **still unmet**. (1) Corpus freshness FAIL: bounded UTL list-only probe of
+  `market-data-tick-defi-prd-central-element-323112` — **0** `perp_funding`/`perp_daily_ctx` objects for all 6
+  `catalog_carry.py` venues on 2026-08-07..10 (`funding_window()` empty for current days; step-1 not landed). (2)
+  In-flight defi rebuild `canonical-migration-defi-rebuild-20260810-204358` **still RUNNING** (gcloud instances list
+  2026-08-10) — any GCS-delete/manifest-CAS rewrite remains forbidden concurrently. (3) **Part 1 twin claim re-verified
+  at data_type precision: slot-2's "0 perp_funding/perp_daily_ctx in the cefi bucket" is CONTRADICTED.** Bounded probe
+  of `market-data-tick-cefi-prd-central-element-323112` at the matching prefix
+  (`day=2026-05-16|2026-05-22/ pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES|OKX-FUTURES/instrument_type=perpetual/ data_type=perp_funding|perp_daily_ctx/`)
+  finds **1 object each** — e.g.
+  `.../venue=BINANCE-FUTURES/.../data_type=perp_funding/cefi_BINANCE-FUTURES_2026-05-16.parquet` (size 6202) + its
+  `perp_daily_ctx` sibling, matching the DeFi-bucket shape (14 objects/day under `asset_group=cefi` there, both
+  data_types). Sizes differ from the DeFi copies (e.g. DeFi perp_funding BINANCE-FUTURES 2026-05-16 = 5945) — so **Part
+  2 CONTENT equivalence still NOT verified** (twins may be row-identical or not); full per-venue/day coverage not
+  enumerated this pass (2 venues × 2 days probed). Disposition: delete remains BLOCKED on gates (1)+(2); when they
+  clear, Part 2 content-verify must still run AND Part 4 must genuinely re-verify clean —
+  `CanonicalPerpFundingProvider._read_parquets_for_day` globs `raw_tick_data/by_date/day=.../` filtering only on the
+  `data_type=` path segment (no asset_group/venue allowlist), so it reads these DeFi-bucket copies today. Task
+  re-skipped `reason_code=GATED`.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
