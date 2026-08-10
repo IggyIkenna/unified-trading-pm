@@ -510,16 +510,16 @@ EXCLUDED from this cutover — still a separate, unresolved operator call.
 for NEW writes only** — the historical legacy raw-tick objects (shapes #3/#3b `data_type=prediction_trades`, 2,477
 manifest rows/348 dates, and shape #4's 10-segment tree, corpus-wide extent NOW KNOWN — 348 days, 1,126,358 objects,
 563,173 unique condition_ids; 4b-ii enumeration COMPLETE 2026-08-04, slot-15, `market-tick-data-service@e46fb943`) are
-NOT yet migrated. Three legacy shapes, all in `market-data-tick-pred-prd-{pid}`:
+now split: shapes #3/#3b MIGRATED (4b-i COMPLETE 2026-08-06 — 3,574 legacy objects deleted, 0 remain), while shape #4
+(4b-iii) remains pending. All in `market-data-tick-pred-prd-{pid}`:
 
 - **Shapes #3/#3b** (`data_type=prediction_trades` bundle-per-underlying): 2,477 manifest rows, 348 dates (2025-03-14 →
   2026-04-14), 14 `underlying` values, 100% `capture_status=captured`. Migration (4b-i) in progress:
-  `market-tick-data-service@e4acf0c4` (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`), **299/348 dates
-  enriched, 0 anomalies** (durable checkpoint at
-  `gs://market-data-tick-pred-prd-central-element-323112/_ops/prediction_trades_migration_checkpoint_2026_07_31.jsonl`).
-  Blocked on `uts-prod-manifest-consolidator-market-data-prediction-cron` (PAUSED per sibling plan
-  `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s Apply/Resume protocol). Delete pass gated on enrichment
-  completion + fresh `gcs_bucket_soft_delete_retention_seconds()` check.
+  `market-tick-data-service@e4acf0c4` (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`), **COMPLETE
+  2026-08-06 — 3,574 legacy `prediction_trades` objects enriched + deleted across the full 2025-03-14→2026-04-14 range,
+  0 legacy objects remain** (final verification re-run over all 348 dates; see
+  `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b session-end entry). Delete executed after
+  a fresh `gcs_bucket_soft_delete_retention_seconds()` check (604800s, reversibility-qualified).
 
 - **Shape #4** (10-segment `data_source=POLYMARKET_CLOB/.../data_type=trades/{cid}.parquet` tree under
   `raw_tick_data/by_date/day=.../pipeline_mode=batch_polymarket_clob/asset_group=prediction/`): **1,126,358 objects,
@@ -529,9 +529,9 @@ NOT yet migrated. Three legacy shapes, all in `market-data-tick-pred-prd-{pid}`:
 See `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and
 `/codex/02-data/non-canonical-path-inventory.md` row 22 for the full disposition.
 
-| asset_group | effective-from (new writes) | historical backfill state                                                                                                |
-| ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| prediction  | 2026-07-28                  | NOT migrated — shapes #3/#3b (299/348 enriched, 4b-i) + shape #4 (1.13M objects enumerated, merge+delete pending 4b-iii) |
+| asset_group | effective-from (new writes) | historical backfill state                                                                                                                              |
+| ----------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| prediction  | 2026-07-28                  | shapes #3/#3b MIGRATED + legacy deleted 2026-08-06 (4b-i, 3,574 objects, 0 remaining); shape #4 (1.13M objects enumerated) merge+delete pending 4b-iii |
 
 ---
 
