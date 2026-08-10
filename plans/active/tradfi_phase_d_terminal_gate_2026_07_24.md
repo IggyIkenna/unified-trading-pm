@@ -111,9 +111,9 @@ context_scope:
       **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
       (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real
       metered `GLBX.MDP3` ES.FUT and `XCBF.PITCH` VX.FUT pulls both succeeded — see
-      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a SEPARATE,
-      unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green per the
-      note above; do not start this until the chain-bundle follow-up
+      `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a
+      SEPARATE, unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green
+      per the note above; do not start this until the chain-bundle follow-up
       (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, CBOE VIX + 15 micro-contract codes + 8
       sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient. **MVP
       backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
@@ -126,7 +126,7 @@ context_scope:
       /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
       **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
       (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls
-      both succeeded — see `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`).
+      both succeeded — see `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`).
       **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill
       readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this
       terminal gate's final verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md`

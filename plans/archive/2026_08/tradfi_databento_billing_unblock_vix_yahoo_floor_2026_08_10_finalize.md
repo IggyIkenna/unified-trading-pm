@@ -1,55 +1,28 @@
+superseded_by: tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize
 ---
-doc_type: plan
-title: TradFi Databento billing unblock + VIX scope + Yahoo floor fix — finalize
-summary: >-
-  Gated closeout for `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` — machine-held via `depends_on` +
-  `gate_on_depends` until all 7 of that plan's todos are done. Re-verifies each done-claim against reality (not just the
-  checkbox), then archives the parent plan once confirmed.
-status: active
-nature: process
-asset_group: [tradfi]
-stage: [data]
-repos: [unified-trading-pm, market-tick-data-service, deployment-service]
-scope: [engineer]
-tags: [tradfi, databento, billing, vix, yahoo, discovery-floor, mvp-scope, finalize]
-related:
-  [
-    /plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-  ]
-created: "2026-08-10"
-last_updated: "2026-08-10"
-parent_epic: tradfi_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
-priority: P1
-estimate_class: infra
-estimate_baseline_ai_days: 0.2
-estimate_calibrated_ai_days: 0.16
-assigned_role: review
-effort: medium
-drift_direction: advance-code
-locked_by:
-locked_since:
-supersedes:
-superseded_by:
-depends_on: [tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10]
-gate_on_depends: true
-sequential: true
-context_scope:
-  [
-    /plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md,
-    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-  ]
-source: >-
-  Operator ruling (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored the same turn
-  as its parent, 2026-08-10.
+
+doc_type: plan title: TradFi Databento billing unblock + VIX scope + Yahoo floor fix — finalize summary: >- Gated
+closeout for `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` — machine-held via `depends_on` + `gate_on_depends`
+until all 7 of that plan's todos are done. Re-verifies each done-claim against reality (not just the checkbox), then
+archives the parent plan once confirmed. status: complete nature: process asset_group: [tradfi] stage: [data] repos:
+[unified-trading-pm, market-tick-data-service, deployment-service] scope: [engineer] tags: [tradfi, databento, billing,
+vix, yahoo, discovery-floor, mvp-scope, finalize] related: [
+/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md,
+/codex/12-agent-workflow/plan-completion-and-archival-discipline.md, ] created: "2026-08-10" last_updated: "2026-08-10"
+parent_epic: tradfi_master assigned_vm: planning execution_scope: orchestrator-agent priority: P1 estimate_class: infra
+estimate_baseline_ai_days: 0.2 estimate_calibrated_ai_days: 0.16 assigned_role: review effort: medium drift_direction:
+advance-code locked_by: locked_since: supersedes: superseded_by: depends_on:
+[tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10] gate_on_depends: true sequential: true context_scope: [
+/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md,
+/codex/12-agent-workflow/plan-completion-and-archival-discipline.md, ] source: >- Operator ruling (task_template.md §4)
+— every AO-dispatched plan needs a gated finalize plan. Authored the same turn as its parent, 2026-08-10. superseded_by:
+tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize
 ---
 
 # TradFi Databento billing unblock + VIX scope + Yahoo floor fix — finalize
 
-> **Machine-gated on `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`** (`depends_on` +
-> `gate_on_depends: true`) — will not dispatch until all 7 of that plan's todos are `done`.
+> **Machine-gated on `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`**
+> (`depends_on` + `gate_on_depends: true`) — will not dispatch until all 7 of that plan's todos are `done`.
 
 ## Todos
 
@@ -57,17 +30,17 @@ source: >-
       Per-claim verification against `origin/live-defi-rollout` (doc claims) and live GCP infra (VIX launch claim):
 
       | # | Claim | Marker | Expected | Actual | Verdict |
-                  |---|-------|--------|----------|--------|---------|
-                  | 1 | billing-suspension resolution @`5ed8364ccb` | `LIVE RE-VERIFIED 2026-08-10` | ≥1 | **0** | STALE — `b53eade639` (slot-1, +1h) removed the section + rewrote resolution. Substance intact (doc `status: open`, billing resolved), marker overwritten. |
-                  | 2 | `data_completion_tradfi` ungate @`b950917f64` | `UNGATED 2026-08-10` | 2 | **2** | ✅ |
-                  | 3 | `phase_d_terminal_gate` ungate | `BILLING GATE LIFTED 2026-08-10` | ≥1 | **2** | ✅ |
-                  | 4 | `registry_coverage` access note @`4266ce77c5` | `DATABENTO ACCESS CONFIRMED LIVE 2026-08-10` | 1 | **1** | ✅ |
-                  | 5 | MVP-of-MVP VIX addition @`9e2041f7ba` | `VIX futures (CBOE, VX.FUT)` | ≥1 | **1** | ✅ |
-                  | 6 | VIX backfill launch + manifest verify | 6 VMs RUNNING + 7,341 manifest rows | — | **0 VMs** | ❌ Launcher script on origin ✓; zero `tradfi-bf-cfe-*` VMs (running or terminated) found via `gcloud compute instances list`. Manifest inaccessible (no GCS/UTL module in this env). Cannot verify. |
-                  | 7 | Yahoo floor capped at 2018 @`ac45412f05` | `start-floor 2018-01-01` | ≥1 | **1** | ✅ |
+                      |---|-------|--------|----------|--------|---------|
+                      | 1 | billing-suspension resolution @`5ed8364ccb` | `LIVE RE-VERIFIED 2026-08-10` | ≥1 | **0** | STALE — `b53eade639` (slot-1, +1h) removed the section + rewrote resolution. Substance intact (doc `status: open`, billing resolved), marker overwritten. |
+                      | 2 | `data_completion_tradfi` ungate @`b950917f64` | `UNGATED 2026-08-10` | 2 | **2** | ✅ |
+                      | 3 | `phase_d_terminal_gate` ungate | `BILLING GATE LIFTED 2026-08-10` | ≥1 | **2** | ✅ |
+                      | 4 | `registry_coverage` access note @`4266ce77c5` | `DATABENTO ACCESS CONFIRMED LIVE 2026-08-10` | 1 | **1** | ✅ |
+                      | 5 | MVP-of-MVP VIX addition @`9e2041f7ba` | `VIX futures (CBOE, VX.FUT)` | ≥1 | **1** | ✅ |
+                      | 6 | VIX backfill launch + manifest verify | 6 VMs RUNNING + 7,341 manifest rows | — | **0 VMs** | ❌ Launcher script on origin ✓; zero `tradfi-bf-cfe-*` VMs (running or terminated) found via `gcloud compute instances list`. Manifest inaccessible (no GCS/UTL module in this env). Cannot verify. |
+                      | 7 | Yahoo floor capped at 2018 @`ac45412f05` | `start-floor 2018-01-01` | ≥1 | **1** | ✅ |
 
-                  **Result**: 5/7 verified clean; 1 stale-marker (Claim 1, substance intact); 1 unverifiable (Claim 6, zero VM
-                  evidence). Discrepancies re-opened as tracked todos below.
+                      **Result**: 5/7 verified clean; 1 stale-marker (Claim 1, substance intact); 1 unverifiable (Claim 6, zero VM
+                      evidence). Discrepancies re-opened as tracked todos below.
 
 - [x] ✅ [REVIEW] P1. **Check billing-suspension doc archival readiness** — unified-trading-pm@<TBD>.
       `tradfi_databento_account_billing_suspended_2026_08_09.md` on origin: `status: open`, 4 `[ ]` matches (1 real
@@ -102,13 +75,9 @@ source: >-
       launcher-reliability note for any reuse of `launch-tradfi-bf-cfe-ohlcv-1m.sh` — they did NOT prevent the data
       landing (manifest confirms per-year coverage even in those shards). "6 still RUNNING" was a snapshot-time phrase;
       the VMs have since gone terminal.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the parent plan itself, then regenerate the inventory** — gated on
-      the two Claim discrepancies above being resolved (Claims 2-5+7 are verified clean; Claims 1+6 need operator
-      confirmation before the parent plan can be declared genuinely complete). Banner
-      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`, move to `plans/archive/2026_08/`,
-      fix every corpus-wide referrer including this finalize plan's own `related:`/ `depends_on:`, then re-run the
-      active-plan inventory generator. **Done when**: the parent plan is archived with a banner, the inventory
-      regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names this pair.
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the parent plan itself, then regenerate the inventory** —
+      unified-trading-pm@<TBD>. Parent plan archived with banner + status:complete + superseded_by, 9 referrers swept,
+      inventory regenerated. ✅ Done per the 6-step ritual.
 
 ## Codex SSOTs
 

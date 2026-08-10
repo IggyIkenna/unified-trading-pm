@@ -13,7 +13,7 @@ summary: >-
   to flip this to an AO plan so a worker can complete it cleanly instead of fighting the same race interactively. Every
   todo below is self-contained (exact old/new text given) so a worker does not need to re-derive anything, and is
   idempotent (grep-check current state first) so it's safe if another session already landed a piece of this mid-race.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -57,7 +57,12 @@ source: >-
   gate as-is, but add VIX futures ("i forgot about those"); (2) scope the Yahoo CBOE discovery-floor fix, capped at 2018
   (not chasing the full 2000 history). Explicitly asked to flip to an AO plan after the interactive session hit
   sustained commit contention.
+superseded_by: tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize
 ---
+
+> **ARCHIVED 2026-08-10** — all 7 todos done, `locked_by` empty. All done-claims re-verified by
+> `/plans/archive/2026_08/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize.md`. Archived via the
+> standard 6-step ritual. superseded_by: `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize`.
 
 # TradFi Databento billing unblock + VIX scope + Yahoo floor fix
 
