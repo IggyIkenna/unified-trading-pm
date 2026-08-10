@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                              (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                              #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                              walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                              pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                              content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                              then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                              re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                              273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                              build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                              verification.
+                                  (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                                  #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                                  walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                                  pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                                  content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                                  then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                                  re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                                  273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                                  build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                                  verification.
 
 - [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -925,3 +925,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
     peer pushed newer MTDS commits) — the pinned-SHA tarball copy guarantees the VM runs MY exact commit; verify via the
     migration log once started. **Resume**: confirm 201105 passes the retention check + progresses (Monitor
     `br5h30v30`), then wait for many-hour completion.
+
+- **2026-08-10T20:16Z (slot 25, data_engineering, 4b-iii continuation)**: **VM #2 (201105, SPOT) PREEMPTED before setup
+  — RELAUNCHED ON-DEMAND.** The 201105 SPOT instance was preempted by GCE ~2 min after creation
+  (`compute.instances.preempted`, system, 20:13Z) — no setup log/run.log ever appeared (nothing to resume; setup hadn't
+  started). Given 2 consecutive SPOT launches failed (VM #1 403→self-delete; VM #2 preempted), relaunched **201105
+  ON-DEMAND** (`ON_DEMAND=true VM_NAME_OVERRIDE=canonical-migration-prediction-shape4-merge-20260810-201105`,
+  non-preemptible STANDARD, same `MTDS_TARBALL_SHA=b9ce3b65e862` pin, full mode) — RUNNING (new IPs
+  10.146.0.66/35.200.95.158). Reusing the exact same vm_name intentionally blocks the fleet `RelaunchPreemptedVm`
+  actuator from duplicating it (instance-already-exists safe-fail); no fleet auto-relaunch had fired yet (no insert op
+  seen). **Also**: deployment-service QG re-run in flight (first run's 11 `test_dp_recovery_actuators.py` failures were
+  suite-ordering contamination — all 59 pass standalone; my e25dcfb3 touches only the bash launcher). **Resume**:
+  confirm 201105 passes the retention check (IAM grant) + progresses (Monitor `b68cwqm0m`), then wait for many-hour
+  completion; quickmerge deployment-service when its QG re-run is green.
