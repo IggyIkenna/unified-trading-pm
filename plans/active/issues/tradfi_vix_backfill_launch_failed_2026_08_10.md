@@ -117,8 +117,20 @@ operations log (all times UTC):
       market-tick-data-service) — currently every VIX shard write fails `MalformedRowKeyError: chain explicitly empty`,
       so captured rows never reach the manifest. — market-tick-data-service@f0345e7df4 (omit empty chain from the
       nontrade-sentinel row_key + 3 regression tests locking in the bundle-path omit-when-empty fix)
-- [ ] [SCRIPT] P1. RELAUNCH the 7-year VIX futures backfill (2020-2026, CBOE/ohlcv_1m) on-demand or with a
+- [x] ✅ [SCRIPT] P1. RELAUNCH the 7-year VIX futures backfill (2020-2026, CBOE/ohlcv_1m) on-demand or with a
       preemption-resilient strategy after the two code fixes land (repo: deployment-service) — the 2026-08-10 SPOT
-      launch lost 5/7 VMs to preemption within minutes and the other 2 were deleted mid-run with no completion.
+      launch lost 5/7 VMs to preemption within minutes and the other 2 were deleted mid-run with no completion. — All 7
+      VMs relaunched on-demand (`tradfi-bf-vix-light-{2020..2026}-20260810-172*`, deployment-service, zone
+      asia-northeast1-c) and verified RUNNING past the prior 3.5-min kill window (10 min, 0 deletes). Two ADDITIONAL
+      root causes beyond the issue's 2 bugs were found + fixed during this relaunch: (a) deployment-service@98ec8ddb —
+      the deployed vm-zombie-watchdog killed every tradfi-bf-vix-light VM as `tardis_cap_violation` (the name matches
+      the legacy Tardis name-pattern fallback, but these are Databento VMs) — fixed by honoring an explicit
+      `VM_TARDIS_CONSUMER=0` opt-out in both guards + stamping it in launch-tradfi-backfill-vm.sh, watchdog VM
+      relaunched; (b) market-tick-data-service@e14f358b — `_write_bundle_shard_row` passed no `source=` to
+      `record_captured_from_counts`, so the multi-source (tradfi, ohlcv_1m) manifest write failed non-blocking and
+      captured rows were never recorded — now passes `source=latency_source` (=databento). Verified live:
+      `2026-01-02 VIX ohlcv_1m captured row_count=4183 source=databento` in the per-VM manifest shard, 0 schema
+      validation failures, parquet carries canonical `timestamp` + `ts_event`. Both fixes QG-green + quickmerged; mtds
+      tarball rebuilt at e14f358b.
 - [ ] [DATA] P2. After relaunch, verify the manifest shows real captured VIX/CBOE rows (row_count>0) spanning 2020-01-01
       through today — currently 2020 has zero real captured rows (300 phantom captured row_count=0).
