@@ -320,6 +320,22 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
       measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
       or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
+- [ ] [DOC] P1. **Add tool-call batching guidance to `cursor-configs/AUTONOMOUS_AGENT_RULES.md` so every autonomous run
+      inherits it — measured 2026-08-10 as the single highest-leverage cost change available.** 65.1% of API calls in
+      the controlled window came from sessions that genuinely invoked `/autonomous` (8 sessions, 63.8% of cache reads),
+      and 57.3% of ALL calls are consecutive same-tool chains that could collapse into one — Bash alone is 52.8%, with
+      observed runs of 20, 23, 26, 28 and 32 consecutive Bash calls. Every collapsed call saves one full ~406k-token
+      prefix re-read. State the rule positively (compound shell commands with `;`/`&&`; multiple `tool_use` blocks in
+      one message for independent calls; `replace_all` or one Write instead of serial Edits; never re-read a file
+      already read) and note the exception that genuinely result-dependent calls must stay separate. **Done when**: the
+      rules file carries the guidance and a follow-up measurement over a later window shows the consecutive-same-tool
+      share below 40%.
+- [ ] [DATA] P2. **Re-measure the collapsible-call share after the batching guidance ships, to confirm it moved rather
+      than assuming it did.** Baseline to beat (2026-08-10 controlled window): 3,123 calls, 57.3% collapsible, 405,833
+      mean cache-read tokens per call, 1.27B total reads. Reuse the same requestId-unioned method (content blocks must
+      be unioned across all JSONL lines sharing a requestId — deduping to the first line silently drops tool_use blocks
+      and was the bug in this plan's first content pass). **Done when**: a post-change window is measured with the same
+      method and the before/after collapsible share and cache-read totals are recorded here.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
