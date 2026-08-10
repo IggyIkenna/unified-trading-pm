@@ -204,9 +204,9 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       confirming liveness/intent. Separately, `git status --branch` on that checkout reports
       `main...origin/live-defi-rollout` as the tracking ref — wrong (should track `origin/main`); plausibly because
       `unified-trading-ci` is a brand-new repo (extracted 2026-08-06 per
-      `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md`) whose per-slot worktree setup may not have run
-      `setup-tab-worktrees.sh`'s normal tracking-branch step consistently across slots yet. Needs: (1) confirm slot-4
-      liveness and either let them push it or recover it if the slot is dead, (2) audit whether OTHER slots'
+      `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md`) whose per-slot worktree setup may not
+      have run `setup-tab-worktrees.sh`'s normal tracking-branch step consistently across slots yet. Needs: (1) confirm
+      slot-4 liveness and either let them push it or recover it if the slot is dead, (2) audit whether OTHER slots'
       `unified-trading-ci` clones have the same tracking misconfig, (3) fix at the root (worktree setup script) if
       systemic. Whoever owns `unified-trading-ci`/worktree infra, not this tranche.
 

@@ -6,7 +6,7 @@ summary: >-
   (task_template.md §4). Once the batch's single todo is done, reconciles the corresponding item back into
   `shared_ci_workflow_repo_extraction_2026_08_06.md` (flip its todo 20), then archives ONLY the batch pair itself — the
   source doc is NOT an archival candidate (its todo 3 stays open, conflict-gated pending a future ci-tranche batch).
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -15,13 +15,13 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, finalize, batch-14, ci-cd, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch14_2026_08_09.md,
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -35,11 +35,10 @@ sequential: true
 drift_direction: advance-code
 locked_by:
 locked_since:
-archive_exempt: true
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch14_2026_08_09.md,
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
@@ -52,6 +51,11 @@ source: >-
 ---
 
 # Infra satellite AO batch 14 — finalize
+
+> **ARCHIVED 2026-08-10** — Both todos done (slot 16): reconciled the source doc's todo 20
+> (`unified-trading-ci@ce50bc9`), verified its todo 3 was already closed as MOOT (plan_reconciler) → source doc reached
+> 0 open todos and was archived here alongside the batch pair per the archival HARD RULE, then git-mv'd both batch14
+> docs + the source doc to `plans/archive/2026_08/` in a separate commit from the flip. No Deferred items.
 
 > **`status: active`, but machine-gated** (`depends_on` + `gate_on_depends: true`) — per the no-double-gate ruling, the
 > finalize twin stays `active` even while its parent batch (`infra_satellite_ao_dispatch_batch14_2026_08_09.md`) is

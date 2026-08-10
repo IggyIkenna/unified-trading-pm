@@ -49,7 +49,7 @@ tags:
   [ci-cd, github-actions, reusable-workflows, workflow-templates, fleet-dedup, unified-trading-ci, incident-followup]
 related:
   [
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
@@ -67,7 +67,7 @@ drift_direction: advance-code
 depends_on: [shared_ci_workflow_repo_extraction_2026_08_06]
 context_scope:
   [
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
     unified-trading-pm/scripts/workflow-templates/self-hosted-qg-repos.txt,
@@ -421,9 +421,9 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 
 - `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / reusable-workflow rollout mechanism; needs todo 9's
   update once this plan ships.
-- `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` — the prior plan this one directly follows; its
-  "Confirmed technical facts" + Progress Log document the base state (the 2-file extraction, the revert incident, the
-  dangling-reference sweep) this plan's own facts build on.
+- `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` — the prior plan this one directly follows;
+  its "Confirmed technical facts" + Progress Log document the base state (the 2-file extraction, the revert incident,
+  the dangling-reference sweep) this plan's own facts build on.
 
 ## Progress Log
 
