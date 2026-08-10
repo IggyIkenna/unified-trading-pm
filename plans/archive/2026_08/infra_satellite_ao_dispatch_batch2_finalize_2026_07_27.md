@@ -19,7 +19,7 @@ related:
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
+    /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
   ]
 created: "2026-07-27"
 last_updated: "2026-07-27"
@@ -42,7 +42,7 @@ context_scope:
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
+    /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:

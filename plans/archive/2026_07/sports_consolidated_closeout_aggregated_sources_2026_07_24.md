@@ -381,7 +381,7 @@ drift_direction: advance-code
 - **Cross-cutting infra (shared across asset groups, sports-tagged too — primary tracking in the owning domain/sibling
   closeout, listed here only for discoverability)**:
   `/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`,
-  `/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`,
+  `/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`,
   `/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`,
   `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`,
   `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`,

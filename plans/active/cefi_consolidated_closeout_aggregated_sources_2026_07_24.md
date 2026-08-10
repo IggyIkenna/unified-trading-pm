@@ -374,7 +374,7 @@ context_scope:
     - NEW todo. **[SCRIPT] P1.** Implement R1 bounded-concurrent `_run_date_as_subprocess` dispatch.
     - NEW todo. **[DATA] P0.** Real-VM re-measure of end-to-end per-instrument-day rate after the read-path fix.
     - +6 more P2 — see file for the rest.
-  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
     - 1. **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write using the sink PREFIX
          mechanism, NOT the partition dict.
     - 2. **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail — `partitioned_writer.py:291-293`
