@@ -70,7 +70,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
-    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
   ]
 ---
 
@@ -237,7 +237,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       `cefi-hyperliquid-2023-*`. (repo: market-tick-data-service / deployment-service — investigation + cross-ref only,
       no code shipped this task)
 - [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-9, duplicate of the same finding in
-      `/plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`, synced here to avoid a stale
+      `/plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`, synced here to avoid a stale
       duplicate)** — DERIBIT's `trades` sparse-2019 gap root-caused: Tardis confirms `availableSince: 2019-03-30` for
       DERIBIT (denser + earlier than our 2019-05-08 floor); root cause was `_venue_years()` in
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` never including `"2019"` for DERIBIT, so no
@@ -258,8 +258,8 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       at 2020-01-01 is Tardis metadata only (unverifiable). Annotated the comment in venue_mapping.py to document this;
       kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse). **CORRECTION
       (2026-08-09, plan_reconciler agt-5f7f31):** a later, same-topic investigation in
-      `/plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (2026-08-05, slot-5) found this
-      "dead/never-implemented" conclusion was WRONG on the live-fetch question — the forward/cron pipeline STILL
+      `/plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (2026-08-05, slot-5) found
+      this "dead/never-implemented" conclusion was WRONG on the live-fetch question — the forward/cron pipeline STILL
       attempts BINANCE-DELIVERY daily (704 manifest rows: 669 attempted_failed + 35 empty_confirmed, 2026-05-01 to
       2026-08-04, 6 data_types, all instrument_count=0.0), because the venue stays in `VENUES_BY_ASSET_GROUP["cefi"]` so
       it's iterated even though MVP catalog-tagging makes every attempt fail — wasting Tardis API quota daily. The

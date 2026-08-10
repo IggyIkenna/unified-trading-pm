@@ -5,7 +5,7 @@ summary: >-
   Small standalone note (disk-full incident prevented editing the parent issue doc directly at write time — see
   coverage_floor_registries_no_cross_propagation_2026_07_17.md's [DATA] P1 status note for the full context). Fold these
   3 todos into that doc once disk recovers and delete this file.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -19,7 +19,7 @@ related:
   ]
 created: "2026-07-27"
 author: unknown
-last_updated: "2026-07-27"
+last_updated: "2026-08-10"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -36,7 +36,6 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
-archive_exempt: true
 context_scope:
   [
     /plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md,
@@ -45,6 +44,11 @@ context_scope:
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 3/3 todos + 3/3 follow-ups `[x]`, unlocked). All
+> data-completeness findings closed: HYPERLIQUID backfill verified, DERIBIT 2019 heavy+light dispatched,
+> BINANCE-DELIVERY zombie deregistered (`unified-api-contracts@56db28e6`). The header's fold-into-parent-and-delete note
+> is superseded by direct archival — the parent doc already carries synced copies of all todo text.
 
 # 3 new backfill/data-completeness findings
 
