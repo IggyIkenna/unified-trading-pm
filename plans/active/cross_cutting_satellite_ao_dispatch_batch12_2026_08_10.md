@@ -106,13 +106,16 @@ drift_direction: advance-code
       lint). **Repo: deployment-service.** Source: `carry_strategy_ensemble_productionization_2026_07_24.md` (line
       191-194). **Done when**: `deployment-service`'s `quality-gates.sh` lint stage is green on this file, no new
       ratchet regressions.
-- [ ] [STRATEGY] P2. **Add an asset-class filter for the live broad universe.** The top-volume perp universe now
+- [x] ✅ [STRATEGY] P2. **Add an asset-class filter for the live broad universe.** The top-volume perp universe now
       surfaces tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) alongside crypto; add an
       optional crypto-only gate (or a UAC asset-class tag) so the carry book can exclude non-crypto underlyings when
       desired. **Repo: e2e-testing → unified-api-contracts (asset-class registry).** Source:
       `carry_strategy_ensemble_productionization_2026_07_24.md` (line 308-312). **Done when**: the filter is wired into
       `funding_reversion_crossvenue_book.py`'s universe construction, defaults preserve current behavior, and a test
-      covers the crypto-only exclusion.
+      covers the crypto-only exclusion. — **e2e-testing@f2b26a2** (2026-08-10): added `--crypto-only` flag,
+      `_NON_CRYPTO_UNDERLYINGS` frozenset (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT), `_crypto_only()` filter wired into
+      both `main()` (SURVIVORS path, no-op) and `_main_multi_venue()` (broad universe path); 10 unit tests
+      (`test_funding_reversion_crypto_filter.py`) green. Default `--crypto-only=False` preserves current behavior.
 - [ ] [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30).** The VM-launch bug
       that blocked it is fixed (`deployment-service@49b50814`, 2026-08-09); relaunch via `launch-mdps-backfill-vm.sh`
       (the `--timeframes`-scoped fix `deployment-service@8f1feb4eb9e4` is already live) and confirm it runs to
