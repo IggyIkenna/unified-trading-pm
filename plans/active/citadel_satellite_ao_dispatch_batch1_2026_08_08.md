@@ -326,6 +326,20 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
     attempt 3 also preempts at boot, escalate: document the 3×-preemption in an issue doc + request operator ruling on
     `--on-demand` for this tiny bounded 4-date window.
 
+  - **Attempt 3 OUTCOME: PREEMPTED at boot too — 3× total, task escalated to `[OPERATOR]`.** Watcher fired with
+    `STATUS_EMPTY`; ground-truthed: `compute.instances.preempted` DONE 2026-08-10 07:28:03-07:00 (3.5 min after insert),
+    VM gone, zero progress (only `TARBALL_PINS.json` written). Three identical boot-stage preemptions in 18 min on the
+    same hardcoded `asia-northeast1-c` zone (822 VMs running) = stable-condition signal, not flapping. Launcher `ZONE`
+    is a hard literal (no env override), so sibling-zone isn't a clean autonomous option (would require editing shared
+    infra code + quickmerge). Per this entry's own escalation note + the
+    `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` precedent (operator ruled ON_DEMAND after repeated
+    preemption), filed `plans/active/issues/features_delta_one_cefi_btc_trend_3x_preempted_2026_08_10.md` with a
+    `[OPERATOR] P1` ruling todo: (A) approve `--on-demand` for this 4-date window (features launcher's `--on-demand`
+    verified functional — `launch-features-vm.sh:188` sets `ON_DEMAND=true` after init, not the cefi launcher's
+    pre-2026-08-06 env-var bug) or (B) park for a less-contended window. **This todo is now BLOCKED on the operator
+    ruling** — checkboxes P2.11.16/P2.11.20 remain `- [ ]` (corpus genuinely absent, no false progress). Resume after
+    ruling: relaunch (with `--on-demand` if approved) → verify terminal state → manifest-row check → flip → /done.
+
 - 2026-08-09 (slot 9, citadel_satellite_ao_dispatch_batch1-006, "features-service: recompute the corpus for the intraday
   BTC mean-reversion cs-ML feature"): **item remains OPEN — blocked, not done.** Attempted the `returns` +
   `statistical_anomaly` backfill for cefi/BTC over the existing paper-trading window (`day=2026-04-22`,
