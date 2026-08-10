@@ -284,42 +284,44 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       a MASTER/WORKER role split. Filed `[BACKEND] P3` follow-up per this todo's own WORKER-match resolution path.
       SIGABRT silent since `2026-08-04T05:57:56Z` (4+ days). No code shipped.
 
-- [ ] [BACKEND] P1. DEFERRED-BY-DESIGN. **NEW, opened 2026-07-31 (slot-6) — `uts-shared-deployment-api`'s container
-      stdout/stderr has stopped reaching Cloud Logging entirely since `~08:40:27Z` (last entry, revision `00353-dng`),
-      silently blinding every log-based diagnostic this doc's SIGABRT investigation depends on (including the
-      pid-role-logging todo above and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence:
-      full-lifetime raw-JSON log dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY
-      `run.googleapis.com/varlog/system` (platform events, incl. Cloud Run's own externally-observed "Uncaught signal:
-      6" line) and `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries.
-      Same for the last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service`
-      (same project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
-      `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor sandbox/log-capture path than gen2,
-      and this doc already flagged gen1-vs-gen2 differences as relevant to a separate sandbox-kill theory. Next steps:
-      (1) confirm `acdd4c8`'s deploy landed at/before `08:40:27Z` (correlate git history against
-      `gcloud run revisions list --format='table(name,creationTimestamp)'` around that time); (2) if confirmed, test
-      reverting to gen2 (or an explicit gen2 pin) on a canary revision and check whether stdout/stderr resumes; (3) if
-      gen1 is NOT the cause, check for a stray `--no-cpu-throttling`/ buffering flag change, a Python-level `sys.stdout`
-      redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change scoped to this specific
-      service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for this service in Cloud
-      Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix deploys. (repo:
-      deployment-api) — **2026-07-31 (slot 4, backend_engineer)**: step (1) done with live data — **gen1 pin is NOT a
-      day-one trigger.** `acdd4c8` first went live on `00333-p62` (`2026-07-30T06:26:01Z`); stderr kept working for
-      **~26h** after that (confirmed real entries on 5 gen1-pinned revisions spanning that window, last one
-      `00353-dng@08:40:27Z` itself). A day-one sandbox-capture break would show zero output from `00333-p62` onward — it
-      didn't, so **not reverting to gen2** on this evidence (would fight the data + risk reopening the pyarrow-crash
-      issue gen1 fixed); flagging as a judgment call, not guessing. New lead instead: the 4 stderr lines immediately
-      before permanent silence (`08:40:27.833501-833861Z`) are FRAGMENTS of one never-completing traceback —
-      `uvicorn httptools_impl.py:422 run_asgi` → `requests/adapters.py:696 send` →
-      `urllib3 connectionpool.py:788/464/1106` → `connection.py:796 connect` → `_ssl_wrap_socket_and_match_hostname` —
-      i.e. a SYNCHRONOUS HTTPS/TLS handshake invoked inside an async ASGI handler, cut off mid-connect, no exception
-      message ever captured. `deployment_api/` has zero direct `requests` imports but 6 files make a sync
-      `google.auth.transport.requests`/`AuthorizedSession` HTTPS call from a route handler (`firebase_auth.py`,
-      `routes/_reap_scheduler.py`, `routes/_cloud_scheduler.py`, `routes/service_status.py`,
-      `routes/_code_builds_aws.py`, `services/cost_observability/aws_wif.py`, `utils/artifact_registry.py`) — any could
-      match. Not yet confirmed causal (single sample; exact call site not pinned). Narrower follow-up filed below. Root
-      cause + fix now shipped (`deployment-api@e8ce86a`, see todo below); this todo's own done-when (stdout resuming)
-      awaits that fix reaching a live deploy — tracked by the `[REVIEW]` todo below, not re-guessed here, hence
-      DEFERRED-BY-DESIGN rather than a false flip.
+- [x] ✅ [BACKEND] P1. DEFERRED-BY-DESIGN, now satisfied. **NEW, opened 2026-07-31 (slot-6) —
+      `uts-shared-deployment-api`'s container stdout/stderr has stopped reaching Cloud Logging entirely since
+      `~08:40:27Z` (last entry, revision `00353-dng`), silently blinding every log-based diagnostic this doc's SIGABRT
+      investigation depends on (including the pid-role-logging todo above and, likely, every prior faulthandler-dump
+      attempt in this doc's history).** Evidence: full-lifetime raw-JSON log dump for revision `00373-7wt` (current
+      live, `15:39:42Z`-created) shows ONLY `run.googleapis.com/varlog/system` (platform events, incl. Cloud Run's own
+      externally-observed "Uncaught signal: 6" line) and `run.googleapis.com/     requests` (structured, no textPayload)
+      — zero `stdout`/`stderr` entries. Same for the last 20+ revisions spanning 7+ hours. Ruled out a platform-wide
+      outage: `market-data-query-service` (same project/region) has fresh `stderr` entries as recent as `16:43:03Z`.
+      Prime candidate: the `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor
+      sandbox/log-capture path than gen2, and this doc already flagged gen1-vs-gen2 differences as relevant to a
+      separate sandbox-kill theory. Next steps: (1) confirm `acdd4c8`'s deploy landed at/before `08:40:27Z` (correlate
+      git history against `gcloud run revisions list --format='table(name,creationTimestamp)'` around that time); (2) if
+      confirmed, test reverting to gen2 (or an explicit gen2 pin) on a canary revision and check whether stdout/stderr
+      resumes; (3) if gen1 is NOT the cause, check for a stray `--no-cpu-throttling`/ buffering flag change, a
+      Python-level `sys.stdout` redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change
+      scoped to this specific service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for
+      this service in Cloud Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix
+      deploys. — DONE-WHEN SATISFIED, verified by plan_reconciler 2026-08-10: the 2026-08-08 (slot 12, review) Progress
+      Log entry below confirms `deployment-api@785405d`'s pid-role logging appeared live on `00374-4pd` from
+      `2026-08-02T23:21:30Z` — stdout/stderr resumed. (repo: deployment-api) — **2026-07-31 (slot 4,
+      backend_engineer)**: step (1) done with live data — **gen1 pin is NOT a day-one trigger.** `acdd4c8` first went
+      live on `00333-p62` (`2026-07-30T06:26:01Z`); stderr kept working for **~26h** after that (confirmed real entries
+      on 5 gen1-pinned revisions spanning that window, last one `00353-dng@08:40:27Z` itself). A day-one sandbox-capture
+      break would show zero output from `00333-p62` onward — it didn't, so **not reverting to gen2** on this evidence
+      (would fight the data + risk reopening the pyarrow-crash issue gen1 fixed); flagging as a judgment call, not
+      guessing. New lead instead: the 4 stderr lines immediately before permanent silence (`08:40:27.833501-833861Z`)
+      are FRAGMENTS of one never-completing traceback — `uvicorn httptools_impl.py:422 run_asgi` →
+      `requests/adapters.py:696 send` → `urllib3 connectionpool.py:788/464/1106` → `connection.py:796 connect` →
+      `_ssl_wrap_socket_and_match_hostname` — i.e. a SYNCHRONOUS HTTPS/TLS handshake invoked inside an async ASGI
+      handler, cut off mid-connect, no exception message ever captured. `deployment_api/` has zero direct `requests`
+      imports but 6 files make a sync `google.auth.transport.requests`/`AuthorizedSession` HTTPS call from a route
+      handler (`firebase_auth.py`, `routes/_reap_scheduler.py`, `routes/_cloud_scheduler.py`,
+      `routes/service_status.py`, `routes/_code_builds_aws.py`, `services/cost_observability/aws_wif.py`,
+      `utils/artifact_registry.py`) — any could match. Not yet confirmed causal (single sample; exact call site not
+      pinned). Narrower follow-up filed below. Root cause + fix now shipped (`deployment-api@e8ce86a`, see todo below);
+      this todo's own done-when (stdout resuming) awaits that fix reaching a live deploy — tracked by the `[REVIEW]`
+      todo below, not re-guessed here, hence DEFERRED-BY-DESIGN rather than a false flip.
 
 - [x] ✅ [BACKEND]/[REVIEW] P1/P2 (4 entries). **2026-07-31 line-cap remediation (4th pass, slot 14)**: the
       stdout/stderr-blackout root-cause chain extracted verbatim to
@@ -374,7 +376,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       traffic) cannot be attempted until that blocker ships. Stray revision `uts-shared-deployment-api-     00388-9mt`
       left in place (never received traffic, Cloud Run already refuses to route to it — same cannot-delete-cleanly
       situation this todo already flags for `00382-cat`; not a safety issue, just build cruft). No code shipped this
-      entry (investigation only — the fix ships under the new todo below).
+      entry (investigation only — the fix ships under the new todo below). — **PARTIAL RESOLUTION, verified by
+      plan_reconciler 2026-08-10**: the deploy blocker this todo was waiting on (the "Cloud Run startup failure
+      mechanism" above) was later root-caused and fixed via the `[INFRA] P0` todos below; the deploy reached prod and
+      the 2026-08-08 (slot 12, review) Progress Log entry confirms stdout/stderr resumed (`deployment-api@785405d`'s
+      pid-role logging live on `00374-4pd` from `2026-08-02T23:21:30Z`) — so this todo's FIRST half ("confirm real
+      stdout/stderr resume") is satisfied. Its SECOND half ("read the next SIGABRT's dump") is genuinely still open, not
+      stale: no SIGABRT has recurred since `2026-08-04T05:57:56Z` (per that same entry), so there is no dump to read yet
+      — tracked by the `[BACKEND] P3` "investigate WHY gunicorn WORKERs call abort()" follow-up near the end of this
+      Todos section, which explicitly picks this back up if/when it recurs. Not flipping this checkbox (the literal
+      AND-condition isn't fully met), but recording the partial so a future pass doesn't re-investigate the
+      already-closed first half.
 
 - [x] ✅ [BACKEND] P1. **NEW, opened 2026-07-31 (slot 7, backend_engineer) — `deployment-api@e8ce86a` (the confirmed
       stdout/stderr-blackout root-cause fix) BLOCKS its own rollout: the resulting Cloud Run revision consistently fails
