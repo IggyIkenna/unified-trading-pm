@@ -590,3 +590,52 @@ context.
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
 Next key milestone: 04-27 deadline 16:01:55 → 04-28 spawn ~16:02.
+
+---
+
+### Session continuation (post-compact #11, ~16:05 UTC)
+
+Compaction kill #11 — pipeline (643155) + heartbeat (646297) killed. Re-armed: pipeline PID 1303000, heartbeat
+PID 1305009. Monitor `bdl4lvkuu` timed out, re-armed as `bey4720hh` (120s polls, 30-min timeout). Monitor `baqcczago`
+alive throughout.
+
+**04-27 outcome** (child spawned 15:31:55, deadline 16:01:56):
+
+- derivative_ticker: ✅ 378/378 (70s)
+- futures_chain: ✅
+- liquidations: ✅
+- book_snapshot_5: **300/357 (84%) only** — projected to complete (ETA 274s at 1441s = 85s margin) but rate COLLAPSED
+  after 300; 350 marker never appeared. **Projections from mid-process book_snapshot_5 markers are unreliable** — the
+  rate can degrade late (likely API contention or larger instruments at tail).
+- trades: ❌ never started, cascaded to 04-28
+
+**04-28** (child spawned 16:01:56, deadline 16:31:56):
+
+- derivative_ticker: ✅ 394/394 (91s, 4.3/s, 9,456 candles) — started first at 16:02:29
+- book_snapshot_5: started 16:04:00 — cascade load ~540 items (139 from 04-26 + ~57 from 04-27 + 04-28's own)
+- trades: ⏳ queued behind book_snapshot_5, unlikely to start before 16:31:56 deadline
+- 1h candles: **secured** (derivative_ticker ✅)
+
+**04-28 had 394 derivative_ticker files** (04-27 had 378) — the extra 16 are cascade residuals from earlier dates being
+re-processed as "stale." Initial rate 1.6/s (bootstrap), accelerated to 4.3/s (cache warmup).
+
+**Cascade accumulation**: 04-26 residual (139 book_snapshot_5) → 04-27 adds (57 book_snapshot_5 + 378 trades) → 04-28
+adds (?? book_snapshot_5 + trades). By 04-29/04-30 the cascade will be 3-4× normal workload. Each date secures its 1h
+candles via derivative_ticker (always runs first in observed orders), but trades + book_snapshot_5 may never complete
+within the 1800s window for remaining dates.
+
+**Data completeness (revised)**:
+
+| Date         | deriv_ticker | trades     | book_snapshot_5   | 1h candles   |
+| ------------ | ------------ | ---------- | ----------------- | ------------ |
+| 04-20..04-25 | Various      | Various    | Various           | Partial      |
+| 04-26        | ✅ 378/378   | ✅ 156/156 | 200/339 (59%, TO) | **COMPLETE** |
+| 04-27        | ✅ 378/378   | ❌ cascade | 300/357 (84%, TO) | Partial      |
+| 04-28        | ✅ 394/394   | ⏳ queued  | 🔄 in progress    | **COMPLETE** |
+| 04-29..04-30 | ⏳           | ⏳         | ⏳                | Pending      |
+
+**Where to resume**: `ps aux | grep post_mdps_pipeline`. If pipeline PID 1303000 dead → re-arm from
+`.tabs/14/post_mdps_pipeline.sh`. Check VM:
+`gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
+Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
+Next milestones: 04-28 deadline 16:31:56 → 04-29 spawn ~16:32 → 04-30 spawn ~17:02. Full VM completion ETA ~17:30 UTC.
