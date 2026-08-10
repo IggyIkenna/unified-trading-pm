@@ -375,7 +375,7 @@ infrastructure required.
 | `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`          | Consecutive frozen ticks before kill (3 × interval = 180s)                                                                      |
 | `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`        | Heartbeat-silent threshold (15 min)                                                                                             |
 | `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`        | Per-slot kill cooldown (5 min)                                                                                                  |
-| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`         | Per-VM kills before dormancy                                                                                                    |
+| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `50`         | Per-VM kills before dormancy                                                                                                    |
 
 ---
 
@@ -426,7 +426,7 @@ Expected: kill event within 180s, fresh tmux session within 300s total.
 - **Do NOT roll Phase 3 in parallel across all VMs** — canary-first, same discipline as autospawn.
 - **Do NOT bypass the per-slot 5-min cooldown** — without it, a misconfigured watchdog could kill+respawn the same slot
   every 60s indefinitely.
-- **Do NOT bypass the per-VM 20-kills-per-day cap** — at cap, Slack alert fires + watchdog goes dormant; operator must
+- **Do NOT bypass the per-VM 50-kills-per-day cap** — at cap, Slack alert fires + watchdog goes dormant; operator must
   investigate root cause, not mask it.
 
 ---
@@ -778,29 +778,27 @@ self-report of its own.
 
 **The ruling.** main and review keep the cooperative-first compaction path with its idle-verified forced fallback. The
 worker-style UNCONDITIONAL force (`context_worker_force_compact_pct`, no idle check, operator ruling 2026-08-05) is
-**not** extended to them. This reaffirms the 2026-08-05 rationale — *"never compact mid-work — a single pane-snapshot
-'looks idle' is untrustworthy on a days-long loop"* — against live measurement.
+**not** extended to them. This reaffirms the 2026-08-05 rationale — _"never compact mid-work — a single pane-snapshot
+'looks idle' is untrustworthy on a days-long loop"_ — against live measurement.
 
-**What the idle gate actually costs.** The forced fallback needs `classify_pane == "idle"` on
-`_FORCE_IDLE_OBSERVATIONS` (3) consecutive keeper ticks, plus an empty input box, plus ≤1 child process under the pane
-shell. The keeper ticks every `main_agent_interval_seconds` (**60s**), so the requirement is **~3 minutes of continuous
-quiet** — not hours. A recurring misreading is to treat the ≥6h instrumentation OBSERVATION WINDOW as an idle
-expectancy; it is not.
+**What the idle gate actually costs.** The forced fallback needs `classify_pane == "idle"` on `_FORCE_IDLE_OBSERVATIONS`
+(3) consecutive keeper ticks, plus an empty input box, plus ≤1 child process under the pane shell. The keeper ticks
+every `main_agent_interval_seconds` (**60s**), so the requirement is **~3 minutes of continuous quiet** — not hours. A
+recurring misreading is to treat the ≥6h instrumentation OBSERVATION WINDOW as an idle expectancy; it is not.
 
-**The measurement that decided it** (read-only `GET /api/activity?limit=4000`, 3.7h window 2026-08-09
-19:50Z→23:30Z, live fleet, taken after the idle-gate instrumentation landed):
+**The measurement that decided it** (read-only `GET /api/activity?limit=4000`, 3.7h window 2026-08-09 19:50Z→23:30Z,
+live fleet, taken after the idle-gate instrumentation landed):
 
-| path                        | events                                                                   | effectiveness             |
-| --------------------------- | ------------------------------------------------------------------------ | ------------------------- |
-| COOPERATIVE (main + review) | main: guidance 1 → compaction 1, idle gate blocked 1 · review: 16 compactions, 0 forces | **17/17 = 100%**          |
-| FORCED (workers)            | `forced_precompact` 68 · `forced_compact` 65 · `forced_compact_ineffective` 51 | **14/65 = 22%**           |
+| path                        | events                                                                                  | effectiveness    |
+| --------------------------- | --------------------------------------------------------------------------------------- | ---------------- |
+| COOPERATIVE (main + review) | main: guidance 1 → compaction 1, idle gate blocked 1 · review: 16 compactions, 0 forces | **17/17 = 100%** |
+| FORCED (workers)            | `forced_precompact` 68 · `forced_compact` 65 · `forced_compact_ineffective` 51          | **14/65 = 22%**  |
 
 The cooperative nudge lands before the force is needed: main and review are not starved of the 3-minute idle window,
 they mostly never reach the fallback at all. Extending the unconditional force to them would move the two roles that
 compact reliably onto the path that currently fails ~78% of the time
-(`/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive
-"verify by EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a
-regression).
+(`/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive "verify by
+EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a regression).
 
 **Consequences for future work — read before "fixing" the idle gate:**
 
@@ -813,26 +811,26 @@ regression).
 
 ### Anti-pattern (adds to the list above)
 
-- **Do NOT extend the worker unconditional force-compact to main/review while the forced path measures WORSE than
-  the cooperative one.** This is a DATA gate, not an operator gate (operator ruling 2026-08-10, deliberately relaxed
-  from "requires a new operator ruling" so a worker can act on evidence without waking a human). The bar is stated
-  and checkable — a worker may extend the force to main/review, without any further ruling, once a fresh measurement
-  over a window of **>=6h of live fleet activity** shows BOTH:
+- **Do NOT extend the worker unconditional force-compact to main/review while the forced path measures WORSE than the
+  cooperative one.** This is a DATA gate, not an operator gate (operator ruling 2026-08-10, deliberately relaxed from
+  "requires a new operator ruling" so a worker can act on evidence without waking a human). The bar is stated and
+  checkable — a worker may extend the force to main/review, without any further ruling, once a fresh measurement over a
+  window of **>=6h of live fleet activity** shows BOTH:
 
-  1. forced-path effectiveness (`context_compact_observed` following a `forced_compact`, divided by `forced_compact`)
-     is **>= the cooperative path's** over the same window, and
+  1. forced-path effectiveness (`context_compact_observed` following a `forced_compact`, divided by `forced_compact`) is
+     **>= the cooperative path's** over the same window, and
   2. forced-path effectiveness is **>= 90%** in absolute terms.
 
-  Baseline to beat, measured 2026-08-09 over 3.7h: cooperative **17/17 = 100%**, forced **14/65 = 22%**. Below that
-  bar the ruling stands and the idle gate stays. Record the new measurement in this section when you change it, so the
-  next reader sees the numbers that moved it rather than an assertion.
+  Baseline to beat, measured 2026-08-09 over 3.7h: cooperative **17/17 = 100%**, forced **14/65 = 22%**. Below that bar
+  the ruling stands and the idle gate stays. Record the new measurement in this section when you change it, so the next
+  reader sees the numbers that moved it rather than an assertion.
 
-  Two things this gate does NOT accept as evidence: the force *submitting* (`submitted=True` is what
+  Two things this gate does NOT accept as evidence: the force _submitting_ (`submitted=True` is what
   `forced_compact_ineffective` exists to disprove — see
   `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`), and the idle gate merely
-  *refusing to open* (judge the path by whether the target compacts, never by whether the force fired).
+  _refusing to open_ (judge the path by whether the target compacts, never by whether the force fired).
 
   Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the idle-gated
   `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently. Changing the
-  policy therefore means deliberately updating that test WITH the measurement above in the commit message — which is
-  the intended friction, not a blocker.
+  policy therefore means deliberately updating that test WITH the measurement above in the commit message — which is the
+  intended friction, not a blocker.
