@@ -52,7 +52,6 @@ context_scope:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
-    agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md,
     /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
     /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     agent-orchestrator/server/dispatch.py,
