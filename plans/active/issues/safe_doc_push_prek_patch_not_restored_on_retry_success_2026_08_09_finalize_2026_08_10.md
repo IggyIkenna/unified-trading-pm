@@ -71,10 +71,21 @@ source: >-
       verdict**: NOT reproducible as a same-process "prek only wires the restore to the first hook invocation" defect —
       prek's stash/restore is reliable across repeated sequential invocations in an uncontended checkout. Cross-repo
       evidence: unified-trading-pm (verification only, no code change).
-- [ ] [REVIEW] P0. **Re-verify the safety-net code (todo 2) against reality.** Confirm the shipped change actually
+- [x] ✅ [REVIEW] P0. **Re-verify the safety-net code (todo 2) against reality.** Confirm the shipped change actually
       detects an orphaned `~/.cache/prek/patches/*.patch` file created during the script's own run and warns loudly
       (non-zero exit or a clearly-flagged stderr warning) instead of exiting 0 silently — reproduce a retry-with-orphan
-      scenario and confirm the warning fires, not just re-reading the diff/tests.
+      scenario and confirm the warning fires, not just re-reading the diff/tests. — VERIFIED (2026-08-10, slot 26,
+      review): independently reproduced at TWO levels against the verbatim shipped `check_orphaned_prek_patches()`
+      (`scripts/dev/safe-doc-push.sh` lines 264-291) without reusing slot 15's prior session findings. (1) Isolated
+      function extraction against 3 sandboxed-`$HOME` scenarios: no patch dir → exit 0; a patch pre-dating
+      `_SDP_RUN_START_EPOCH` (touched `2020-01-01`) → exit 0, no false positive; a patch created 2s into the run
+      (genuine orphan) → exit 1 + the documented loud stderr warning. (2) Full END-TO-END run of the real, unmodified
+      script against a fresh scratch repo + local bare remote (no reuse of any prior scratch state): baseline push with
+      no injected orphan → script exits 0; second push with a real orphan `.patch` planted in the sandboxed
+      `~/.cache/prek/patches/` immediately before invocation → script printed the exact documented warning text and
+      exited **9**, matching the call-site wiring (`if ! check_orphaned_prek_patches; then ... exit 9; fi`). **VERDICT:
+      CONFIRMED (independently, cross-session)** — the safety net genuinely detects an orphaned patch and fails loudly
+      (exit 9); it does not silently exit 0.
 - [ ] [REVIEW] P1. **Confirm todo 3's disposition matches todo 1's actual verdict** — if the reproduction confirmed a
       genuine prek-level defect, confirm it was filed upstream or a known-good prek version was pinned or the workaround
       was documented in the script's own header comment (whichever the source doc's todo 3 actually did); if the
@@ -127,3 +138,11 @@ source: >-
     disposition correctly tracks todo 1's verdict, not blindly executed as originally worded.
   - Net: all 3 source-doc todos independently re-verified against reality (repro'd, not re-read) and all 3 verdicts
     hold. Todo 4 (archival) is next in the sequential chain, once a dispatched task exists for it.
+- **2026-08-10 (slot 26, review,
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize-ba5c6b36d333`)**: this session's
+  dispatched task was todo 2 specifically. Flipped above with an independent (not reused) two-level reproduction —
+  isolated function extraction (3 scenarios) plus a full end-to-end run of the real, unmodified script against a fresh
+  scratch git repo + local bare remote. Confirms slot 15's earlier same-session finding via a wholly separate repro
+  setup, strengthening the verdict rather than just re-citing it. Todo 3 was already independently re-verified by slot
+  15 (disposition matches todo 1's verdict, header comment accurate) — leaving that checkbox for whichever session is
+  actually dispatched todo 3 to flip, per one-task-per-session scope discipline.
