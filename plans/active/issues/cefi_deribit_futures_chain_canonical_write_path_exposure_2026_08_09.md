@@ -215,3 +215,15 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   fully occupied (genuine consumer running pre-fix code); a fresh post-fix DERIBIT capture cannot run without breaching
   the hard cap → do NOT force. Precondition unmet; releasing via `/skip-current-task {"reason_code": "GATED"}`. Did not
   touch todo 2 (separately dispatchable).
+- **2026-08-10T22:03Z (slot 18, data_engineering)** — re-dispatched on todo 1, re-checked the precondition via the
+  CANONICAL guard (same as slots 27/8/19): `tardis_running_vm_count asia-northeast1-c central-element-323112` returns
+  **1** (rc=0) — the sole N=1 Tardis slot is STILL fully occupied. Pre-flight `tardis_concurrency_guard 1 ...` REFUSES
+  (rc=1: 1+1=2 > cap 1). Holder unchanged: `cefi-queue-heavy-binancefutu-x17-20260809-083733` (created 08-09T08:37Z,
+  still RUNNING, `VM_TARDIS_CONSUMER=1`, cefi-coverage-backfill VM_DATA_TYPES=trades;book_snapshot_5,
+  VM_START_DATE=2019-01-01, 10+ venues incl. DERIBIT) — created ~4.5h BEFORE the fix `market-tick-data-service@e24199df`
+  landed (2026-08-09T13:10Z), so it executes PRE-fix code and cannot itself prove the fix. Note: the guard count is now
+  1 (not slot 19's 4) — the three `tradfi-bf-*-light-*` Databento VMs that tripped the name-pattern over-count have
+  since terminated, so that earlier over-count is moot for this re-check. Todo 1's precondition ("Once a CeFi Tardis
+  capture/backfill slot is available for DERIBIT") remains UNMET — a fresh post-fix DERIBIT futures_chain capture would
+  breach the hard N=1 cap → do NOT force. Not touching todo 2 (separately dispatchable). Releasing via
+  `/skip-current-task {"reason_code": "GATED"}`.
