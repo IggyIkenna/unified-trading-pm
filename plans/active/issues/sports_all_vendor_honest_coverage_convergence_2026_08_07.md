@@ -664,3 +664,24 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   the other 3 entities' small non-zero floors). Manifest row total flat at 16,181,741 for a 5th consecutive tick while
   needed keeps dropping — the decoupled-metric pattern remains stable and not concerning. No intervention needed on
   either fleet.
+- **04:39Z — MAJOR MILESTONE: INJURIES backfill VM (`af-backfill-20260809-222924`) completed its full date range CLEANLY
+  and self-deleted — needed dropped to 334, near the same order of magnitude as the other 3 entities' floors.**
+  Confirmed via run.log: reached `PROGRESS: chunk=26/26 range=2026-08-04→2026-08-09` (the full 2020-06-06→2026-08-09
+  assigned range), `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`, then
+  `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`. Confirmed via `gcloud compute operations list`: the delete
+  op was issued by `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` (the VM's own service account
+  self-terminating on completion), NOT the `1060025368044-compute@...` watchdog account — this is a genuine clean
+  finish, not a silent-hang kill (the hang-doc's tracked signature is unrelated to this event). Fresh census confirms
+  INJURIES needed **5,406 → 334** (-5,072); all 4 AF entities are now at small residual floors: PLAYER_STATS=3,
+  INJURIES=334, STANDINGS=271, TEAMS=96 — grand total needed only **704** shards (down from tens of thousands at
+  campaign start). **Not yet declaring the AF campaign fully done**: per rule 4a (never trust a single reading), 334
+  needs at least one more stable re-census before treating it as INJURIES' genuine honest-absence floor rather than a
+  residual still being caught up by the manifest consolidator from the VM's final batch of per-VM shard writes (the
+  manifest row total itself is still flat at 16,181,741 for a 6th consecutive tick, though no active INJURIES VM remains
+  to explain further catch-up the way earlier ticks did) — will re-check next tick with no VM running to see if 334
+  holds steady. The AF singleton lock is now free (no AF VM running); with FIXTURE_STATS, FIXTURE_LINEUPS, PLAYER_STATS,
+  STANDINGS, and TEAMS already converged and INJURIES now essentially converged too, there is no further AF entity
+  queued to launch — if 334 confirms stable, the AF side of this dual-fleet campaign is effectively complete, leaving
+  only the odds_api backfill as the sole remaining open campaign. **Odds fleet**: same instance
+  (`mtds-backfill-odds-smallchunk17-20260810`), still 11x hang occurrences (no 12th); chunk 10/425, zero
+  OOMs/CHUNK_FAILED, fresh — 8 chunks from chunk 18 (watch closer next tick as it approaches).
