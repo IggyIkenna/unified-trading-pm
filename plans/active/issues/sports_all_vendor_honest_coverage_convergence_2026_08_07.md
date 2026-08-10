@@ -709,3 +709,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `VM_SHUTDOWN_ON_COMPLETION` self-delete, mirroring exactly how the INJURIES AF-entity VM completed last tick. Watching
   for that same signature on this fleet as the terminal completion event, alongside the shrinking chunk-total trend as a
   proxy for how close the campaign is to done. No intervention needed this tick.
+- **05:54Z — Odds fleet healthy, no new hang (still 11x); AF sanity-check clean.** `smallchunk17`: chunk 8/415, zero
+  OOMs/CHUNK_FAILED, RSS=10.2GiB (unremarkable), ~3min log lag (within normal noise, not concerning — established hang
+  signature is 15-21min total silence) — 10 chunks from chunk 18. No new `af-backfill-*` instance exists (AF campaign
+  remains closed as expected). No intervention needed.
