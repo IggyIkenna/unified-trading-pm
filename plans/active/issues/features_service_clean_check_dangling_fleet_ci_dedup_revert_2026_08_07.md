@@ -78,9 +78,22 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
 `stash@{0}` against current HEAD to check). Stash entry:
 `slot8-2026-08-07: unexplained staged revert of fleet-workflow-dedup thin-caller-stubs...`.
 
+## Todos
+
+- [ ] [INFRA] P2. Inspect `stash@{0}` in the `features-service-clean-check` worktree (`git stash show -p stash@{0}`) and
+      disposition it per the Resolution path above: (a) abandoned experiment — drop the stash; (b) deliberate rollback
+      that should land — investigate why, commit with a real message, add a Progress Log entry to
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`; or (c) already superseded by a later commit —
+      diff `stash@{0}` against current HEAD to confirm, then drop it. Done when: the stash is resolved (dropped or
+      landed) and this doc's Progress Log records which of (a)/(b)/(c) applied. Repo: features-service.
+
 ## Progress Log
 
 - **2026-08-07 (slot 8, autonomous)**: Found + stashed during unrelated task `defi_satellite_ao_dispatch_batch9-018`.
   Filed this doc per the RED-git-status auto-nudge + existing worktree precedent. Not investigated further -- primary
   task (gas_fees purge VM monitoring, time-critical 45-min threshold validation) resumed immediately.
 - **context-scout 2026-08-09**: populated context_scope (3 entries).
+- **plan_reconciler 2026-08-10 (cross-cutting tranche)**: this doc had ZERO checkboxes despite `assigned_vm: planning` —
+  structurally undispatchable (backlog regen is checkbox-driven). Converted the prose "Resolution path" into a real
+  tracked todo above per the HARD RULE (every follow-up is a `- [ ]` todo, never prose). Did not investigate the stash
+  myself — out of scope for a plan-reconciliation pass.
