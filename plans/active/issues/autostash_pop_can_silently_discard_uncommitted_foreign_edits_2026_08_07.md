@@ -25,7 +25,7 @@ summary: >-
   real-time confirmation this is neither rare nor theoretical under current fleet load.
 status: open
 nature: issue
-asset_group: [ao, cross-cutting]
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -36,6 +36,7 @@ related:
     plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     scripts/quickmerge.sh,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-07"
 author: ikennaigboaka [interactive session]
@@ -196,8 +197,8 @@ FOUR TIMES in one session, currently-live hazard regardless of whether it explai
       unrelated plain `git pull` (see Progress Log entry below) and revert freshly-landed work — every additional
       orphaned entry is latent re-trigger risk, not inert. For each entry: `git stash show -u --stat` to inspect
       content, diff each touched file against current HEAD to confirm the stash's content is a strict subset of
-      already-landed commits (i.e. fully superseded, safe to drop) before `git stash drop` — never blind-drop, and
-      never drop an entry whose content isn't provably redundant against HEAD.
+      already-landed commits (i.e. fully superseded, safe to drop) before `git stash drop` — never blind-drop, and never
+      drop an entry whose content isn't provably redundant against HEAD.
 
 ## Corroborating reproduction — safe-doc-push.sh's own false-success path (2026-08-07, na-eligibility-audit run)
 
@@ -291,8 +292,8 @@ understanding the root cause to be valuable.
 
 - **2026-08-09 (round11 na-eligibility-audit verification, main session)**: new live corroboration, a variant not
   previously captured — a plain `git pull --ff-only origin live-defi-rollout` (not `--rebase --autostash`) printed
-  `Applied autostash` and reintroduced STALE content that reverted already-landed, ancestor-verified work: 33 files
-  came back modified/deleted in the working tree, including two brand-new files
+  `Applied autostash` and reintroduced STALE content that reverted already-landed, ancestor-verified work: 33 files came
+  back modified/deleted in the working tree, including two brand-new files
   (`ao_satellite_ao_dispatch_batch16_2026_08_09.md` + its finalize twin, committed and pushed minutes earlier in
   `82a36f4055`) showing as locally-deleted, and several other files had their round11 Progress Log citation markers
   stripped back out — a systematic revert to a pre-commit-82a36f4055 state, not random noise (confirmed via `git diff`
@@ -300,25 +301,24 @@ understanding the root cause to be valuable.
   Unlike the doc's existing stash-interleaving reproduction (wrong CONCURRENT process's entry popped), this instance's
   pop reportedly "succeeded" (no stuck `stash@{0}` left behind matching this specific pop) but reapplied an entry that
   was already stale relative to the current HEAD at pop time — i.e. the entry itself was old/orphaned (created at some
-  earlier point, never cleaned up), and a routine `--ff-only` pull's autostash logic popped whatever sat at
-  `stash@{0}` without checking its vintage. Root cause of the underlying commit's own `82a36f4055` push not being
-  affected: the STASH pop only touches the working tree/index, not already-pushed commits — the corruption was
-  entirely local and never reached origin. **Recovery**: `git stash push -u` (safety-snapshot, in case anything of
-  value got swept in) followed by `git restore` back to HEAD; verified clean (`git status` empty) and the two batch16
-  files back on disk with correct content. **New finding**: `git stash list` immediately after recovery showed 4
-  MORE orphaned `autostash` entries still present (pre-dating this incident, from earlier rounds' concurrent
-  `--rebase --autostash` pulls) — confirming the latent-risk pattern is ongoing, not a one-off; added as a new P2 todo
-  above rather than acted on blind.
+  earlier point, never cleaned up), and a routine `--ff-only` pull's autostash logic popped whatever sat at `stash@{0}`
+  without checking its vintage. Root cause of the underlying commit's own `82a36f4055` push not being affected: the
+  STASH pop only touches the working tree/index, not already-pushed commits — the corruption was entirely local and
+  never reached origin. **Recovery**: `git stash push -u` (safety-snapshot, in case anything of value got swept in)
+  followed by `git restore` back to HEAD; verified clean (`git status` empty) and the two batch16 files back on disk
+  with correct content. **New finding**: `git stash list` immediately after recovery showed 4 MORE orphaned `autostash`
+  entries still present (pre-dating this incident, from earlier rounds' concurrent `--rebase --autostash` pulls) —
+  confirming the latent-risk pattern is ongoing, not a one-off; added as a new P2 todo above rather than acted on blind.
 
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — full re-read. Todo 1
-  (recoverability determination) is explicitly opportunistic, needing a live reproduction in progress, not
-  independently schedulable. Todo 3 (candidate mitigations a-d) explicitly reads "do not implement without operator
-  sign-off" on HIGH-RISK shared infra (`quickmerge.sh`/`safe-doc-push.sh`) — a genuine design fork among 4 named
-  options, not a mechanical fix. Todo 4 is downstream of todo 3's decision. The round11-added P2 todo (audit + clear
-  this checkout's orphaned autostash entries) is mechanically bounded in isolation, but deliberately NOT extracted:
-  this exact bug is independently confirmed STILL LIVE today (2026-08-10) per this very sweep's own
-  `SUB_AGENT_MANDATORY_RULES.md` ("a plain `git pull` can silently pop a STALE, unrelated orphaned stash entry and
-  revert your own already-committed work locally") — automating stash-drops in a shared, heavily-contended checkout
-  while the underlying race is still under active, unresolved investigation (todo 1) carries real risk of destroying
-  another concurrent session's genuine uncommitted work, which is precisely what round11's own author chose to log
-  rather than act on blind. Keeping it paired with the todo1/3 investigation is the safer, more conservative call.
+  (recoverability determination) is explicitly opportunistic, needing a live reproduction in progress, not independently
+  schedulable. Todo 3 (candidate mitigations a-d) explicitly reads "do not implement without operator sign-off" on
+  HIGH-RISK shared infra (`quickmerge.sh`/`safe-doc-push.sh`) — a genuine design fork among 4 named options, not a
+  mechanical fix. Todo 4 is downstream of todo 3's decision. The round11-added P2 todo (audit + clear this checkout's
+  orphaned autostash entries) is mechanically bounded in isolation, but deliberately NOT extracted: this exact bug is
+  independently confirmed STILL LIVE today (2026-08-10) per this very sweep's own `SUB_AGENT_MANDATORY_RULES.md` ("a
+  plain `git pull` can silently pop a STALE, unrelated orphaned stash entry and revert your own already-committed work
+  locally") — automating stash-drops in a shared, heavily-contended checkout while the underlying race is still under
+  active, unresolved investigation (todo 1) carries real risk of destroying another concurrent session's genuine
+  uncommitted work, which is precisely what round11's own author chose to log rather than act on blind. Keeping it
+  paired with the todo1/3 investigation is the safer, more conservative call.

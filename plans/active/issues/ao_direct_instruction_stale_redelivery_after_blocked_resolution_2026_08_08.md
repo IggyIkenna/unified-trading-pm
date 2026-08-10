@@ -28,12 +28,16 @@ summary: >-
   `/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`'s Progress Log.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, dedup, direct-instruction, blocked-queue, false-positive, alert-fatigue]
-related: [/plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md]
+related:
+  [
+    /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-08
 author: agt-30eb02 (main)
 priority: P2
