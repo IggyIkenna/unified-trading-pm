@@ -264,8 +264,14 @@ status — if still RUNNING, wait. If TERMINATED/STOPPED, check pipeline log to 
 triggered, verify delta_one output at `gs://features-cefi-test-central-element-323112/delta_one/funding_oi/` and
 `.../returns/`. Flip both plan checkboxes. Commit with `docs(plans):`. POST `/done`.
 
-**Session 4 verdict (pre-compact ~12:48 UTC)**: Safe to compact: YES — pushed `35d3cfc4cf`, `ahead=0`. Saved: (1) gsutil
+**Session 4 verdict (pre-compact ~12:50 UTC)**: Safe to compact: YES — pushed `552d1f8a07`, `ahead=0`. Saved: (1) gsutil
 false-positive discovery — earlier data-completeness checks were counting error messages as data; pipeline merge step is
-load-bearing. (2) Exact VM state (PID 17151 processing Aug 02, 18,713+ manifest entries). (3) Pipeline script v4 alive
-(PID 2280335). Deliberately NOT saved: `/tmp/post_mdps_pipeline_stdout_v{2,3}.log` (regenerable, superseded by workspace
-log). Resume: `ps aux | grep post_mdps_pipeline` → check VM status → wait or run pipeline manually.
+load-bearing. (2) Exact VM state (Aug 03 PID 19261 at 129% CPU, started 12:47 — LAST day). (3) Pipeline script v5
+re-armed (PID 2679779) after v4 died from compaction. (4) Premature pipeline run results from `b3xnq4wbw` task: manifest
+merge SUCCESS (62,102 entries), but both delta_one features FAILED on PARTIAL data: `funding_oi` (0/1 feature groups)
+and `returns` (62/331 instruments insufficient candles). These failures are expected — Aug 03 had only 2 modes when the
+premature run triggered, now has 4 at 12:50. Pipeline v5 will re-run on full data when VM stops.
+
+Deliberately NOT saved: `/tmp/post_mdps_pipeline_stdout_v{2,3,5}.log` (regenerable, superseded by workspace log).
+Resume: `ps aux | grep post_mdps_pipeline` → if dead, re-arm from `.tabs/14/post_mdps_pipeline.sh` → wait for VM
+TERMINATED → check pipeline log for funding_oi + returns results → flip checkboxes + POST /done.
