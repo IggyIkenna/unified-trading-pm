@@ -346,11 +346,11 @@ context_scope:
       `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen" — so the actual cqg-bundle-grain seed run this
       checkbox asks for is still not executed; not flipping here, the AO-dispatchable seed-run work now lives (or should
       be tracked) in `prediction_phase_ab_residuals_2026_07_24.md` (active).
-- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.**
-      G1.run-full-history — extend the bounded-window seed to the full 2018→today per-instrument universe (~190M
-      rows fleet-wide), per the operator's unconditional 2026-08-08 approval (NA-corpus blocker digest round 5,
-      id=53). See the batch doc for the full scoped todo (dry-run-first sizing check, VM launch per
-      vm-launcher-runbook, post-run verify); do not duplicate-dispatch from here.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** G1.run-full-history
+  — extend the bounded-window seed to the full 2018→today per-instrument universe (~190M rows fleet-wide), per the
+  operator's unconditional 2026-08-08 approval (NA-corpus blocker digest round 5, id=53). See the batch doc for the full
+  scoped todo (dry-run-first sizing check, VM launch per vm-launcher-runbook, post-run verify); do not
+  duplicate-dispatch from here.
 - [x] ✅ [INFRA] P1. (**APPLIED 2026-06-11, autonomous run** — `tofu apply` vs `terraform/state/prod`: **16 added / 0
       changed / 0 destroyed**; all 5 `lifecycle-catalogue-regen-<ag>` Cloud Run jobs + 5 ENABLED 01:00-UTC schedulers
       verified via `gcloud run jobs list`/`scheduler jobs list`; cefi smoke execution triggered + watched. THREE
@@ -391,8 +391,11 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   todo's own updated text above. The operator-decision fork (decision 338) is ratified; the remaining gate is the IS
   catalogue-rollup loader wiring (`prediction_cqg_residual_2026_07_24.md` todo 2), tracked there, not a
   `predictions_master` Phase 3 operator decision.
-- G1.run-full-history (extend bounded-window seed to full 2018→today): N/A — no migration, named successor is this same
-  item (gated on operator review of the 190M index-size blow-up), still owned + open in this plan.
+- G1.run-full-history (extend bounded-window seed to full 2018→today): **STALE, corrected by plan_reconciler
+  2026-08-10** — this line said "still owned + open in this plan" but the item's own entry above (in the todos list)
+  shows it was EXTRACTED 2026-08-09 to `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`. Live-verified: that
+  doc's line 502 carries the item, open, citing this doc by name as its source. Migrated to:
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.
 
 ## Progress Log
 
