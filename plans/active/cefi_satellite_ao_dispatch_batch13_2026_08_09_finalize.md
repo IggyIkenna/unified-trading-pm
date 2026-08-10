@@ -56,11 +56,17 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile both source docs' checkbox pointers with real evidence**: (1)
-      `crypto_alpha_research_2026_07_24.md` line 181 as of drafting; (2) `l2_book_microstructure_capture_2026_07_13.md`
-      todo 7 (line 232 as of drafting). **Verify each cited commit is reachable on `origin/live-defi-rollout` before
-      citing it.** **Done when**: both landed todos' pointers are replaced with verified commits + evidence, and each
-      source doc's remaining-open count is explicitly re-stated.
+- [x] ✅ [REVIEW] P1. **Reconcile both source docs' checkbox pointers with real evidence** —
+      `unified-trading-pm@b502acfcab` (verified ancestor of `origin/live-defi-rollout`). (1)
+      `crypto_alpha_research_2026_07_24.md` P2.5: converted extracted prose pointer to `- [x]` with
+      `e2e-testing@06c709e` (verified) + remaining-open count re-stated: **20** (all operator-gated
+      `BLOCKED-OPERATOR-DECISION`). (2) `l2_book_microstructure_capture_2026_07_13.md` todo 7: converted extracted prose
+      pointer to `- [x]` with 6 verified commits (`deployment-service@28e64163, 778ee0e3, 4b947b63`;
+      `market-tick-data-service@15f5657b, 52383e877, 55fac6f5`) + live evidence (1,743 warm parquet objects, 9,156
+      availability-index rows across all 5 venues) + remaining-open count re-stated: **1** (`BLOCKED-DATA-CORRECTNESS`
+      todo 5, operator-gated MDPS column-pipeline extension). **(NB: batch13 Progress Log cites `deployment-service`
+      Terraform SHA as `5821d4da` — not a real commit; the actual Pub/Sub wiring commit is `4b947b63`, verified on
+      origin.)**
 - [ ] [REVIEW] P2. **Re-check `l2_book_microstructure_capture_2026_07_13.md`'s remaining open item** (todo 5, still
       gated on an operator authorization decision to greenlight a new MDPS column-pipeline extension plan) for whether
       it has newly cleared, now that todo 7's live-wiring gap (this batch's item 2) is landing — record a dated re-check
