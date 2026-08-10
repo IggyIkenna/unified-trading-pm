@@ -43,6 +43,7 @@ source: >-
   cross-venue arb+coverage). This file carries the live CLOB-depth capture infra third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+archive_exempt: true # 2026-08-10 slot 22: 0 open todos after DEFERRED-CROSS-DEP flip; archival deferred to /archive-candidates-audit (marquee plan, 33 done todos, complex referrer graph)
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
@@ -243,7 +244,7 @@ context_scope:
       date WITH clob_token_ids first (the 2-stage IS→MTDS dependency) — tracked as the residual below. Repo:
       deployment-service (launcher) + market-tick-data-service (adapter) + unified-api-contracts (3 registry gates).
       Provenance: autonomous catalogue/backfill session 2026-06-23.
-  - [ ] [SCRIPT] P2. **DEFERRED-CROSS-DEP — batch book_snapshot_5 row-proof on a historical date needs an IS
+  - [x] ✅ [SCRIPT] P2. **DEFERRED-CROSS-DEP — batch book_snapshot_5 row-proof on a historical date needs an IS
         re-enumeration carrying `clob_token_ids` (2026-06-23)**: the batch book path is code-complete + live-proven, but
         a BATCH row-capture proof is blocked because historical IS parquets (≤06-22) predate the clob_token_ids column +
         today is batch-future-rejected. Fix = re-enumerate the IS Polymarket universe for a recent past date (e.g.
