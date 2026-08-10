@@ -137,9 +137,16 @@ last_updated: 2026-06-27
       **market-data-processing-service@93d783df**, `MDPS_QG_EXIT=0`, 2399 passed; 8 new tests including a NEGATIVE
       CONTROL that reproduces `MalformedTickFieldError` against `CefiTradesAdapter` with the real 25-column frame —
       which is what makes the fix provable rather than merely passing.
-- [ ] [SCRIPT] P1. features-service must record honest absence, not exit 1, when an upstream instruments-service shard
-      for the CURRENT day does not exist yet (batch mode). Preserve LIVE-mode halt exactly. Never fake
-      `record_captured`.
+- [x] ✅ [SCRIPT] P1. features-service records honest absence instead of exiting 1 when an upstream IS shard for the
+      current day is missing (batch). Root cause: `DependencyError` was absent from `_run_feature_group`'s per-shard
+      `except` tuple, so it escaped shard isolation and killed the process. Uses `record_failed` (retryable
+      `attempted_failed`), NOT `record_empty` — a lagging upstream is not a confirmed absence, and a false
+      `empty_confirmed` would block the later recompute (codex `/codex/02-data/honest-absence-downstream-handling.md`
+      §6A Class 1). LIVE-mode halt verified unchanged. Evidence: **features-service@692ce76b**, `FS_QG_EXIT=0`, 18,387
+      passed; full `tests/sports/unit` 3107 passed / 0 failed. NOTE: this ALSO closes the FALSE claim in
+      `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md` that the
+      fix had landed at `features-service@305d897a` — that sha never existed (`git cat-file -t` → not a valid object);
+      692ce76b is the real one.
 - [ ] [SCRIPT] P1. Alert-accuracy quartet (deployment-service): interpolate or drop the fixed-template `"(0 → 0)"`;
       extend the captured-reader probe fallback to the bucket-resolves-but-blob-absent case (+ `instruments-store` /
       `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
