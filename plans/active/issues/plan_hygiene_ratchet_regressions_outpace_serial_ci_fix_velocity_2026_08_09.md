@@ -121,30 +121,30 @@ words: "this branch is churning faster than one CI worker can chase serially").
       File the decision as its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
 
       **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
-                                          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
-                                          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
-                                          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
-                                          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
-                                          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
-                                          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
-                                          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
-                                          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
-                                          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
-                                          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
-                                          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
-                                          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
-                                          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
-                                          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+                                              `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+                                              same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+                                              express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+                                              P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+                                              current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+                                              `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+                                              DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+                                              question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+                                              reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+                                              the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+                                              drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+                                              this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+                                              block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+                                              still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
 
-                      **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
-                      `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
-                      the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
-                      slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
-                      is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
-                      runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
-                      symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
-                      note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
-                      change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
+                          **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
+                          `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
+                          the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
+                          slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
+                          is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
+                          runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
+                          symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
+                          note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
+                          change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
 
 - [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
       commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
@@ -586,3 +586,27 @@ words: "this branch is churning faster than one CI worker can chase serially").
   from the original 4 never converted to `--diff-base` (covered by the existing P3 backlog todo above — no new todo
   needed). Verdict: the P2 structural fix (diff-base pattern) demonstrably stopped the "different check fails every
   retrigger" pattern for the checks it touched. Flipped the [REVIEW] todo done on this finding.
+- 2026-08-10 (cicd agt-75d0b0, slot 9, `sit_failure` on `unified-trading-pm` promotion PR #2706 (closed/superseded by
+  the time of pickup — `Option-B auto-drain` had already rolled to #2707→#2708→#2709), 13th dispatch into this lineage):
+  confirmed via `gh pr list --search promote --state all` that NO promotion PR has merged since #2671
+  (2026-08-09T09:19:49Z) — 38 consecutive auto-drain PRs (#2672-#2709) closed unmerged over ~19.5h, all blocked by this
+  lineage's tracked ratchets. Triaged the live #2709 `QG slice (checks)` failure fresh (3 hard-fails:
+  `Reference path convention`, `No prettier proseWrap continuation-padding`, `assigned_vm:NA corpus size`) — unlike
+  several prior dispatches, 2 of the 3 were genuinely fixable this tick, not ambient churn: (1) **reference-paths** — 1
+  NEW violation, a single dangling `related:` entry in `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`
+  pointing at `dp_exit_code_monitor_oom_signal9_2026_08_09.md`, a file that was never created anywhere in the corpus
+  (active or archive, confirmed via full-corpus grep) — removed the dangling entry (content-invention to recreate the
+  missing doc was out of scope/unsafe). (2) **prosewrap-padding** — 4483 vs baseline 4472 (+11); since this check is
+  STILL not diff-base-converted (per this doc's own P3 backlog todo), isolated the 21-line worst offender by inspection
+  rather than a corpus-wide diff (confirmed unusable per the slot-5/2026-08-09 entry above) —
+  `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md` lines 73-93 carried the exact documented
+  prettier non-idempotent-reflow bug (58-space continuation padding on a list-item's 2nd nested paragraph, vs. the
+  sibling paragraph's correct 6-space indent 2 lines above it) — dedented all 21 lines, re-verified locally (4462 ≤
+  baseline 4472, comfortable margin). Both fixes shipped: `unified-trading-pm@f57562d711`, verified
+  `git merge-base --is-ancestor` of `origin/live-defi-rollout`. (3) **`assigned_vm:NA corpus size`** — 46 new NA docs /
+  112 new open todos vs `origin/main` (which is now ~1065 commits behind LDR, the worst-measured gap in this lineage's
+  history, consistent with the 38-PR unmerged streak above) — same audit-scale blocker this doc has tracked 12x over;
+  declining to chase per established precedent, no bulk reclassification attempted. Post-fix,
+  `run_hygiene_sweep.sh --ci` confirms exactly 1 remaining hard failure (`assigned_vm:NA corpus size`), down from 3 — a
+  real, durable reduction, not just a snapshot artifact. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping
+  applicable per this role's skip-rule. Completing via `/done`.
