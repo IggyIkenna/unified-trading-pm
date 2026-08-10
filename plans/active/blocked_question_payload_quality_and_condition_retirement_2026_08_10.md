@@ -238,12 +238,14 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       `quality-gates.sh` is green. — agent-orchestrator@4ba24dd37 (QG green 3122 passed; 5 new tests covering
       no-truncation, both-sides+description, Slack-path-still-truncates, and end-to-end blocked-question path). Repo:
       agent-orchestrator.
-- [ ] [BACKEND] P1. **Refuse to raise a blocked row for an undecidable or self-resolving finding** — require non-empty
-      `contradicted_by` AND `claim`, and honour a new `resolution_required` boolean from the worker. A finding failing
-      the gate still emits its `doc_drift_open` activity row and its Slack digest line, but creates no `BlockedRow`.
-      **Done when**: a finding with empty `contradicted_by` produces the activity row and zero `BlockedRow` rows, a test
-      covers both the raised and suppressed paths, and the live instance in this doc's header would have been
-      suppressed. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P1. **Refuse to raise a blocked row for an undecidable or self-resolving finding** — require
+      non-empty `contradicted_by` AND `claim`, and honour a new `resolution_required` boolean from the worker. A finding
+      failing the gate still emits its `doc_drift_open` activity row and its Slack digest line, but creates no
+      `BlockedRow`. **Done when**: a finding with empty `contradicted_by` produces the activity row and zero
+      `BlockedRow` rows, a test covers both the raised and suppressed paths, and the live instance in this doc's header
+      would have been suppressed. Repo: agent-orchestrator. — agent-orchestrator@8a785cd (QG green: 3131 passed;
+      `_blocked_row_suppression_reason` gate + `doc_drift_suppressed` activity; 5 new tests cover suppressed/raised
+      paths incl. the live-instance shape; also fixed pre-existing live-state-coupled switch tests at 425a779).
 - [ ] [DOCS] P1. **Tighten the `plan_health` agent finding contract** in `unified-trading-pm/agents/plan_health.md` —
       make `contradicted_by` and `description` REQUIRED, add `doc_line` / `contradicted_by_line` anchors and a
       `resolution_required` boolean the worker sets itself, and restate that `doc` must be a governance doc (`CLAUDE.md`
