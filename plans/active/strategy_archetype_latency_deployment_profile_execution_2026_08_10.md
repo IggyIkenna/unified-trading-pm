@@ -71,10 +71,12 @@ source: >-
       arbitrage-structural, carry-and-yield basis, ml-directional, rules-directional, stat-arb-pairs),
       Medium/High→`distributed` (vol-trading, event-driven, portfolio, single-sided yield/staking). —
       unified-api-contracts@f39e800992
-- [ ] [SCRIPT] P2. **Add a `required_by_archetypes` reverse-index to `runtime-topology.yaml`'s `co_location_rules`
-      /`deployment_profiles` sections** (or a new adjacent section if retrofitting the existing ones is awkward — state
-      the reasoning) so a deployment-profile entry can be traced back to which archetypes require it — the
-      deployment-side half of the link.
+- [x] ✅ [SCRIPT] P2. **Add a `required_by_archetypes` reverse-index to `runtime-topology.yaml`** — new
+      `archetype_deployment_profile_mapping` top-level section (v7→v8) mapping each deployment_profile back to its
+      StrategyArchetype values. co_located_vm: 34 archetypes across 6 Low-latency families; distributed: 26 archetypes
+      across 4 Medium/High families + single-sided yield. Rationale for new section (not retrofitting
+      co_location_rules): co_location_rules enumerates service groups, deployment_profiles defines capabilities —
+      neither models archetype→profile. Schema changelog documents v7_to_v8 migration. — unified-trading-pm@ab157b54a1
 - [ ] [SCRIPT] P2. **Build the "union of registered deployments = union of what active archetypes need" derivation** — a
       function/script (likely in `deployment-service`, alongside `runtime_topology_validator.py`) that, given the
       currently-active archetype set (from strategy-service's registry) and their declared `deployment_profile` needs,
