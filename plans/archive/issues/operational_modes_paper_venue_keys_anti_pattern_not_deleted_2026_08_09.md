@@ -4,9 +4,9 @@ title: >-
   operational-modes.md claims the `_PAPER_VENUE_KEYS` sports anti-pattern was deleted (pvl-p17c) — it still exists live,
   moved and grown
 summary: >-
-  `codex/04-architecture/operational-modes.md`'s "Anti-patterns (deleted)" section states `_PAPER_VENUE_KEYS = ("paper",
-  "betfair", "matchbook")` in `execution-service/execution_service/sports_execution/routing.py:16-25` was deleted by
-  `pvl-p17c` with routing migrated to read `OperationalMode.PAPER` directly. Live code shows otherwise:
+  `/codex/04-architecture/operational-modes.md`'s "Anti-patterns (deleted)" section states `_PAPER_VENUE_KEYS =
+  ("paper", "betfair", "matchbook")` in `execution-service/execution_service/sports_execution/routing.py:16-25` was
+  deleted by `pvl-p17c` with routing migrated to read `OperationalMode.PAPER` directly. Live code shows otherwise:
   `_PAPER_VENUE_KEYS` still exists in `execution_service/adapters/sports_factory.py:21`, at a different path than the
   doc names, with 5 entries (`"paper", "betfair", "matchbook", "kalshi", "polymarket"`) instead of the doc's claimed 3 —
   it was moved/renamed and grew, never deleted. Caught during a routine codex-doc-freshness re-review (2026-08-09, the
@@ -37,7 +37,7 @@ depends_on: []
 > **🟢 ARCHIVED 2026-08-09** — `status: resolved` with zero open todos; archived per
 > [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
 > archive-on-resolve rule. Single `[x]` todo resolved via option (b): `unified-trading-pm@527e1831c` updated
-> `codex/04-architecture/operational-modes.md` to reflect that `_PAPER_VENUE_KEYS` was relocated (not deleted) to
+> `/codex/04-architecture/operational-modes.md` to reflect that `_PAPER_VENUE_KEYS` was relocated (not deleted) to
 > `adapters/sports_factory.py` and reclassified from mode-detection anti-pattern to a legitimate per-adapter allowlist —
 > no code change needed. See Progress Log below.
 
@@ -45,7 +45,7 @@ depends_on: []
 
 ## What I found
 
-`codex/04-architecture/operational-modes.md` § "Anti-patterns (deleted)", item 2:
+`/codex/04-architecture/operational-modes.md` § "Anti-patterns (deleted)", item 2:
 
 > **sports `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`** in
 > `execution-service/execution_service/sports_execution/routing.py:16-25` — string-set rather than enum. **Deleted** by
@@ -104,7 +104,7 @@ but it is exactly the kind of doc/code divergence `check_codex_doc_freshness.py`
 - **worker slot 25, 2026-08-09**: resolved via option (b) — `_PAPER_VENUE_KEYS` in `sports_factory.py` is not a
   mode-detection anti-pattern; `create_sports_adapter()` already branches on `mode == OperationalMode.PAPER` (the enum)
   and only consults `_PAPER_VENUE_KEYS` afterward, to pick which venue keys the single `PaperBettingAdapter` instance
-  registers under. Updated `codex/04-architecture/operational-modes.md`: item 2 of "Anti-patterns (deleted)" now names
+  registers under. Updated `/codex/04-architecture/operational-modes.md`: item 2 of "Anti-patterns (deleted)" now names
   the current path (`adapters/sports_factory.py:21`) and the current 5 entries, reclassifies it as a legitimate
   per-adapter allowlist rather than a deleted anti-pattern, and cites this issue doc; the summary/TL;DR lines making the
   same blanket "deleted" claim were corrected too. Bumped `last_reviewed: 2026-08-09`. No code change (option (a) would

@@ -93,7 +93,6 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
     /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/runtime-deployment-topology.md,
