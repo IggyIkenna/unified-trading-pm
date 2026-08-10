@@ -38,6 +38,7 @@ supersedes:
 superseded_by:
 source:
   - slot-29, 2026-08-10, blocking ship of safe_doc_push_isolation_rewrites_slot_commit_identity
+depends_on: []
 ---
 
 # PM quality-gates.sh red on 8 pre-existing live-corpus tests
@@ -95,12 +96,11 @@ Fix the two test families so PM QG is deterministic on the shared host:
 
 ## Todos
 
-- [ ] [INFRA] P1. **Fix `check_workspace_code_workspace_drift.py` test fixtures to match the current canonical repo
-      list** (repo: unified-trading-pm). The 5 failing `TestCheck` tests in
-      `tests/unit/test_check_workspace_code_workspace_drift.py` assert drift the checker no longer finds because the
-      canonical `.code-workspace` (26 repos) has evolved past the test fixtures. Fix by pointing the tests at a FIXED
-      fixture `.code-workspace` (or updating the fixtures to the current 26-repo list) so they don't depend on the live
-      canonical file. Done when: the 5 tests pass deterministically on the shared VM at `origin/live-defi-rollout`.
+- [x] ✅ [INFRA] P1. **Fix `check_workspace_code_workspace_drift.py` test fixtures to match the current canonical repo
+      list** (repo: unified-trading-pm) — unified-trading-pm@465ea24093. Root cause was `_pm_root.py` not prioritizing
+      explicit `--workspace-root` over `__file__` anchor; tests' own tmp_path fixtures were already correct. Fix
+      `465ea24093` (main·laptop) resolved both test families. Verified: 9/9 workspace-drift + 7/7 finalize-coverage
+      tests pass deterministically at LDR HEAD.
 - [ ] [INFRA] P1. **Make `check_finalize_plan_coverage.py` tests use a fixed fixture corpus, not the live
       `plans/active/`** (repo: unified-trading-pm). The 3 failing tests in
       `scripts/quality_gates/test_check_finalize_plan_coverage.py` scan the live plan corpus and assert violation counts
@@ -113,3 +113,8 @@ Fix the two test families so PM QG is deterministic on the shared host:
   Verified pre-existing via a base-HEAD worktree (`origin/live-defi-rollout`, HEAD `5d7019869b`) — identical 8 failures
   with no local commit. Declared PM `qg_red` repo-blocker RB-… (backend now owns the wait). Filed this doc with 2 fix
   todos.
+- **2026-08-10 (slot-23, infra)**: Todo 1 verified — root cause was `_pm_root.py` not prioritizing explicit
+  `--workspace-root` over `__file__` anchor (tests' own tmp_path fixtures were already correct). Fix `465ea24093`
+  (main·laptop, `fix(qg): P0 — explicit --workspace-root must win over the __file__ anchor in _pm_root`) resolved both
+  test families. Verified: 9/9 workspace-drift + 7/7 finalize-coverage tests pass at LDR HEAD (`ad48335f5e`). Flipped
+  todo 1 checkbox. Todo 2 also resolved by same root-cause fix — ready for flip.
