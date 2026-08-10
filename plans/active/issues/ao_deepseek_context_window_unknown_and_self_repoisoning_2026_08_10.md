@@ -118,15 +118,24 @@ over-compaction for under-compaction, and neither is correct until the real numb
       to the 1M default. The current fallback is a Claude number applied to a non-Claude model, and it is the value in
       force right now. Done-when: a unit test asserts the DeepSeek prior is not the 1M default, and the live registry
       resolves both models to it.
-- [ ] [BACKEND] P1. Decide whether a DeepSeek pane percentage may calibrate at all. If the CLI's denominator for a
+- [x] ✅ [BACKEND] P1. Decide whether a DeepSeek pane percentage may calibrate at all. If the CLI's denominator for a
       DeepSeek-backed session is not that model's real window, `derive_calibration_pct` is authoritative about the CLI,
       but the CLI is not authoritative about DeepSeek — in which case DeepSeek must be excluded from calibration and
       learn from the watermark alone. Done-when: the decision plus its evidence is recorded here and enforced in
-      `observe()`.
+      `observe()`. — agent-orchestrator@6be3454: DECISION — DeepSeek pane percentages must NOT calibrate. The CLI is
+      authoritative about its OWN ~200K divisor, not about DeepSeek's real window: auto-triggered DeepSeek compactions
+      cluster at 169-259K (pro) / 179-191K (flash) — the CLI's ~200K fallback for the unknown DeepSeek model string —
+      while forced/manual compactions reached 325K (pro) / 468K (flash), the true lower bounds from todo 1. So
+      `tokens / (pct/100)` for DeepSeek latches the wrong ~200K divisor and re-poisons the registry on every one of its
+      frequent CLI-rendered percentages (the 2026-08-10 5x-over-report symptom's root). Enforced in `observe()`: the
+      `pane_pct` calibration branch is gated on `not _is_deepseek(model)`; the watermark path (a genuine lower bound)
+      still applies — DeepSeek learns from the watermark alone. Tests: `test_deepseek_pane_pct_never_calibrates`
+      (control model with the identical measurement still calibrates) + `test_deepseek_still_learns_from_the_watermark`.
 - [x] ✅ [BACKEND] P1. Verify `token_total()` is the right measure for a provider whose usage is ~99.4% cache-read with
       zero cache-creation. Confirm cache_read is genuinely resident context and not a cumulative counter (a cumulative
       counter would inflate every DeepSeek reading without bound). **DONE 2026-08-10 (slot-28)** — finding recorded in
       Progress Log below. token_total() is resident context, not cumulative.
+
 - [ ] [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves by
       more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed — that
       oscillation is itself the signal a denominator is wrong.
@@ -190,3 +199,19 @@ over-compaction for under-compaction, and neither is correct until the real numb
   these lower bounds (not 1M), and todo 3 treat the CLI's ~200K denominator as the mis-calibration source. Note: the
   learned registry's current watermarks (pro 324,819 / flash 427,391) already match or under-cut these figures — the
   live probe only reads current-session tails, so the historical max (flash 468,339) is not yet in the registry.
+
+- **slot-3 2026-08-10 (todo 3 — calibration decision)**: DECISION — **DeepSeek pane percentages must NOT calibrate**,
+  enforced in `observe()` (`agent-orchestrator@6be3454`, with the test fix on top of @e943d72). Evidence: todo 1
+  established the true lower bounds (pro ≈ 325K / flash ≈ 468K) and that auto-triggered CLI compactions cluster at
+  169-259K (pro) / 179-191K (flash) — the CLI defaulting the unknown DeepSeek model string to a ~200K window. So
+  `derive_calibration_pct` IS authoritative about the CLI (it returns the real rendered percentage), but the CLI's
+  divisor is not DeepSeek's real window: `tokens / (pct/100)` for DeepSeek yields that ~200K fallback and re-poisons the
+  registry on every one of its frequent CLI-rendered percentages (the 5x-over-report root: DeepSeek calibrates
+  constantly because its pane renders a real pct nearly every turn, where sonnet-5 almost never does). The 4af78dc99
+  plausibility guard cannot catch this — it only rejects a calibration SMALLER than the observed watermark, and a ~200K
+  calibration against a real ~325-468K window sails through. Implementation: `_is_deepseek(model)` substring gate on the
+  `pane_pct` calibration branch of `observe()`; the watermark path (a genuine lower bound) still applies — DeepSeek
+  learns from the watermark alone. Regression tests: `test_deepseek_pane_pct_never_calibrates` (a control model with the
+  identical `observe(model, 200_000, pane_pct=100)` still latches `calibrated_window=200K`, proving the exclusion is
+  DeepSeek-specific) + `test_deepseek_still_learns_from_the_watermark`. Full suite passed via `quality-gates.sh` (3114
+  passed, 2 skipped).
