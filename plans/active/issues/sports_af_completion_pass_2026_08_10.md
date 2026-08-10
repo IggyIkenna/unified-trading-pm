@@ -214,17 +214,30 @@ depends_on: []
         - **No code shipped** — pure monitoring. GCS sync stall is a concern but may self-recover (INJURIES VM also had
           transient GCS tee lag).
 
-## Deferred work after 2026-08-10 ~16:00Z
+      - **2026-08-10 (slot 28, data_engineering, ~16:07Z–16:11Z)** — Stalled VM stopped + replacement launched:
+        - **VM `af-backfill-20260810-154220` stalled**: 5 watchdog checks (16:01Z–16:06Z) confirmed no progress — GCS
+          run.log (15:53:32Z) + manifest shard (15:52:11Z) + serial-port gcloud scopes all stopped within 1 min window.
+          VM RUNNING but producing zero external output for 14+ min. No OOM/crash/traceback evidence. Root cause
+          inconclusive (likely network issue on the instance or Python process deadlock). Stopped at 16:07Z (TERMINATED
+          by 16:09Z).
+        - **Replacement `af-backfill-20260810-160958` launched**: same zone (`asia-northeast1-c`), on-demand
+          `e2-standard-8`, no `--entity` (all 5 remaining entities: STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/
+          PLAYER_STATS). Launched at 16:10Z, RUNNING at 16:11Z (external IP 136.110.92.190).
+        - **First-progress monitor armed** (`bxik8gb08`) — polls GCS run.log for `[[VM_PROGRESS]]` marker. Stall
+          watchdog to follow.
+        - **No code shipped** — pure operations (VM stop + re-launch).
 
-| Item                                                                 | State / why deferred                            | Blocked on                       |
-| -------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------- |
-| **All-entity backfill** (`af-backfill-20260810-154220`)              | RUNNING, `2020-06-06`, GCS sync stalled ~7+ min | VM completion (real infra)       |
-| **Re-census to confirm ~0**                                          | Gated on all backfills converging               | All-entity VM exit_code=0        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**           | Gated on re-census ~0                           | Re-census confirms ~0 needed     |
-| **VM rightsizing check** (`af-backfill-20260810-103218` — completed) | VM ~5.5h `e2-standard-8` on-demand, completed   | GCP monitoring data (historical) |
-| **VM rightsizing check** (`af-backfill-20260810-154220` — running)   | Running ~15 min, `e2-standard-8` on-demand      | After VM >30min or terminates    |
-| **GCS sync stall diagnosis** (`af-backfill-20260810-154220`)         | Heartbeat daemon GCS sync stopped at 15:53:32Z  | SSH access / VM self-recovery    |
+## Deferred work after 2026-08-10 ~16:11Z
 
-**Recommended NEXT item**: Re-check GCS log + manifest in 2-3 min. If still stalled: investigate via serial port /
-`gcloud compute instances get-serial-port-output` for any Python tracebacks. If VM reaches 20+ min total stall, consider
-re-launching with `--entity` per-entity batch strategy (singleton lock means we must wait for this VM to stop first).
+| Item                                                                    | State / why deferred                                | Blocked on                       |
+| ----------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------- |
+| **All-entity backfill** (`af-backfill-20260810-160958`)                 | Just launched, RUNNING, `e2-standard-8`             | VM completion (real infra)       |
+| **Re-census to confirm ~0**                                             | Gated on all backfills converging                   | All-entity VM exit_code=0        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**              | Gated on re-census ~0                               | Re-census confirms ~0 needed     |
+| **VM rightsizing check** (`af-backfill-20260810-103218` — completed)    | VM ~5.5h `e2-standard-8` on-demand, completed       | GCP monitoring data (historical) |
+| **VM rightsizing check** (`af-backfill-20260810-154220` — stalled/stop) | Stalled ~14 min, `e2-standard-8` on-demand, stopped | After VM terminates              |
+| **VM rightsizing check** (`af-backfill-20260810-160958` — running)      | Just launched, `e2-standard-8` on-demand            | After VM >30min or terminates    |
+| **Stall root cause** (`af-backfill-20260810-154220`)                    | Complete GCS silence 14+ min; root cause unknown    | Post-hoc diagnosis (if needed)   |
+
+**Recommended NEXT item**: Monitor `af-backfill-20260810-160958` for first `[[VM_PROGRESS]]` marker (~16:13-16:15Z
+expected). If this VM also stalls, escalate to per-entity batch strategy (launch one `--entity` per entity, serialized).
