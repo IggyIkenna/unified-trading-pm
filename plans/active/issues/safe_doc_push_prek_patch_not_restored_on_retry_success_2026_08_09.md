@@ -209,9 +209,14 @@ mitigations, cheapest first:
   process/commit-call produced it. Both now ship together. See todo 2's own entry above for the full reconciliation
   reasoning.
 - **2026-08-10 (slot 8, cicd, `safe_doc_push_prek_patch_not_restored_on_retry_success-e302dfdaa856`)**: todo 3 shipped
-  (re-scoped form) — unified-trading-pm@c692a472e6: added a header comment block to `scripts/dev/safe-doc-push.sh`
+  (re-scoped form) — unified-trading-pm@fe47a4b219: added a header comment block to `scripts/dev/safe-doc-push.sh`
   (immediately before `set -uo pipefail`) recording the reproduction verdict from todo 1 — no confirmed prek-level
   defect, do not file upstream — and pointing at `_prek_race_snapshot`/`_prek_race_check` as the mechanism that already
   covers this failure signature regardless of root cause. All 3 todos in this doc are now done and unlocked (`locked_by`
   empty) — archival-eligible per the plan-completion-and-archival-discipline SSOT; will `git mv` to `plans/archive/` in
   a separate follow-up commit (never bundled with the checkbox-flip commit).
+- **docs-reconcile 2026-08-10 (unrelated sweep, hit this as a blocking corpus-wide gate failure)**: corrected both
+  `unified-trading-pm@c692a472e6` citations above to the real commit — `c692a472e6` is not a valid object in this repo
+  (`plan-commit-sha-evidence` gate confirmed); `fe47a4b219` ("docs(scripts): safe-doc-push.sh header note on prek
+  patch-restore reproduction verdict") matches the claimed change exactly (same file, same header-comment content, same
+  commit message topic) — the work was genuinely done, only the citation was wrong.
