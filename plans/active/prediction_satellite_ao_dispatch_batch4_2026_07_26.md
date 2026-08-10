@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-              (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-              #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-              walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-              pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-              content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-              then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-              re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-              273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-              build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-              verification.
+                  (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                  #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                  walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                  pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                  content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                  then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                  re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                  273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                  build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                  verification.
 
 - [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -874,3 +874,12 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   tarball, then launch `bash launch-canonical-migration-vm.sh prediction-shape4-merge 2025-03-14 2026-04-14 full` (the
   VM runs ~many-hours; deletes only verified cells, keeps + flags the subset-divergent cells). 4b-iii checkbox stays
   OPEN until the VM run is verified (same multi-session pattern as 4b-i).
+
+- **2026-08-10T20:00Z (slot 25, data_engineering, 4b-iii continuation)**: **MTDS SHIPPED.** MTDS QG turned GREEN (full
+  `quality-gates.sh`, exit 0, all phases incl. diff-scoped 5.94/5.95 ratchets PASS vs base `5c0c7f3f`); quickmerge
+  landed **`market-tick-data-service@b9ce3b65e8` on live-defi-rollout** (post-push ancestry verified). Launcher
+  `prediction-shape4-merge` (`deployment-service@e25dcfb3`, usage strings + `_launch` dispatch +
+  `_prediction_shape4_merge_cmd` dry/full flag wiring confirmed) is committed, deployment-service QG in flight — will
+  quickmerge on green. **Resume**: quickmerge `e25dcfb3` → republish MTDS code tarball (`create-code-tarballs.sh`) →
+  launch `bash launch-canonical-migration-vm.sh prediction-shape4-merge 2025-03-14 2026-04-14 full` → verify VM
+  STARTED + progress (many-hours run) → 4b-iii checkbox flips only after VM completion verified.
