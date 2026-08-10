@@ -351,15 +351,15 @@ architecture (L0–L4)".
   per-tier SAs), `/codex/05-infrastructure/gcs-object-operations.md`.
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
-- **Launching VMs / infra?** READ `/codex/05-infrastructure/vm-launcher-runbook.md` FIRST (full gotchas + measured
-  incidents live there, not here). Headline HARD RULES: heavy I/O (full-corpus GCS walks, manifest rewrites, bulk
-  renames) NEVER runs on the operator's local machine, always a VM in-region; **no fire-and-forget** (verify STARTED +
-  ongoing progress + a terminal state); name/register every launcher via the `VM_PREFIX_TO_BUCKET` registry, never
-  hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
-  `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
-  launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
-  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check` (CPU+mem-growth) —
-  skip only if a cited doc justifies the sizing. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
+- **Launching VMs / infra?** Read the runbook FIRST — gotchas live there, not here. Heavy I/O (full-corpus GCS walks,
+  manifest rewrites, bulk renames) NEVER runs on the operator's local machine, always a VM in-region; **no
+  fire-and-forget** (verify STARTED + ongoing progress + terminal state); name/register every launcher via
+  `VM_PREFIX_TO_BUCKET`, never hand-roll; **backfill VMs default SPOT**, preemption resume from measured PROGRESS, never
+  replays `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (count the fleet first); audit
+  preemption/billing-waste via `/vm-preemption-billing-waste-audit`. **Rightsizing (2026-08-10)**: any VM >30min gets
+  `/vm-resource-rightsizing-check` unless a cited doc justifies the sizing. **Shared-bucket check (2026-08-10)**: verify
+  no co-tenant VM already writes the target bucket — a newcomer gets throttled ~7-9x, the incumbent barely dips; measure
+  marginal impact if unavoidable. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
   `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
   `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
