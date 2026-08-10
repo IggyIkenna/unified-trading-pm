@@ -46,7 +46,7 @@ related:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
+    /plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
   ]
 created: "2026-08-10"
 author: unknown

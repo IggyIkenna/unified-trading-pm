@@ -24,8 +24,8 @@ tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-11, plan-hyg
 related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
-    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
+    /plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
@@ -49,7 +49,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
+    /plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
     scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
     tests/unit/test_generate_na_doc_tranche_inventory.py,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,

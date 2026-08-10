@@ -1077,9 +1077,6 @@ by hand._
   — shared_ci_workflow_repo_extraction_2026_08_06.md extracted the 2 files every repo calls via `uses:` (the actual
   cross-repo dependency surface) into unified-trading-ci. It deliberately left alone a SECOND, larger class: ~9 more
   workflow…
-- [`infra_satellite_ao_dispatch_batch11_2026_08_09`](./infra_satellite_ao_dispatch_batch11_2026_08_09.md) — Eleventh
-  AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-08-09,
-  second run of the day — slot 9, dispatch agt-c74a01). Single source:…
 - [`infra_satellite_ao_dispatch_batch11_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch11_2026_08_09.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by

@@ -17,8 +17,8 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-11, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
-    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
@@ -40,8 +40,8 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
-    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:

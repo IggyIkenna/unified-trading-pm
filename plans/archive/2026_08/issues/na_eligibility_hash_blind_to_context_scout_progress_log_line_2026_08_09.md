@@ -64,7 +64,6 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrers) -- see Progress Log
 context_scope:
   [/cursor-configs/skills/na-eligibility-audit/SKILL.md, scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
 ---
