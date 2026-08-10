@@ -7,7 +7,7 @@ summary: >-
   Track X pointer, re-checks whether the league_id fold-in item's landing has unblocked Track V's own league_id todos,
   then runs the standard archival ritual on the Track X plan. Mirrors
   sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md's pattern.
-status: complete # (was: active) 2026-08-10 — all 3 todos done, archived via the standard 6-step ritual
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, track-x, finalize, archival]
 related:
   [
-    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-25"
@@ -34,6 +34,7 @@ supersedes:
 superseded_by:
 depends_on: [sports_closeout_track_x_hygiene_2026_07_25]
 gate_on_depends: true
+archive_exempt: true # bridge for the flip-then-mv two-commit shape (plan-completion-and-archival-discipline.md § archive_exempt); dropped in the immediately-following archival mv commit
 source: >-
   task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize plan,
   mirroring the sports_satellite_ao_dispatch_batch2-finalize precedent.
@@ -42,16 +43,12 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-10.** All 3 todos done: the parent closeout's Track X pointer flipped to ✅ DONE (todo 1), Track
-> V's league_id section confirmed citing the merged tracking location (todo 2), and this archival itself (todo 3) —
-> alongside `sports_closeout_track_x_hygiene_2026_07_25.md`, archived in the same commit.
 
 # Sports closeout Track X hygiene — finalize
 

@@ -140,3 +140,11 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
   `lifecycle-catalogue-regen-sports-gg4kh` reached `Completed=True` ("Execution completed successfully in 15m37.77s"),
   and `prod/catalog.parquet` mtime advanced 2026-08-09T01:15:36Z → 2026-08-10T10:52:49Z (12,121,446 → 12,142,085 bytes,
   verified via `gsutil stat`). Matches slot-19's flip (8bac881309); DP-CATALOG-001 cleared.
+- **slot-5 (data_pipeline_failure escalation agt-0ab5b0, re-dispatch re-verification) 2026-08-10**: Confirmed the fix is
+  fully shipped + live and the probe now passes for ALL five AGs. `deployment-service@1218fad3` (4Gi→16Gi/cpu4),
+  `instruments-service@783b448a` (.copy() removal), `UAC@3cca8360` (LA_LIGA_2) all ancestors of
+  `origin/live-defi-rollout`; live job reads `16Gi/4`; scheduler `lifecycle-catalogue-regen-sports-daily` ENABLED
+  (`0 1 * * *`); latest execution `gg4kh` EXECUTION_SUCCEEDED 2026-08-10T10:52:55Z; `prod/catalog.parquet` mtime
+  2026-08-10T10:52:49Z. Re-probed all AG catalog.parquet mtimes — cefi 01:03Z, defi 09:30Z, tradfi 08-09 15:06Z, sports
+  10:52Z, prediction 01:09Z — all < 24h budget. DP-CATALOG-001 fully cleared (root cause = sports manifest OOM at 4Gi,
+  fixed by memory bump + manifest-read hardening). Open P3 streaming follow-up tracked above.

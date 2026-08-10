@@ -121,30 +121,30 @@ words: "this branch is churning faster than one CI worker can chase serially").
       File the decision as its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
 
       **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
-                                                                  `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
-                                                                  same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
-                                                                  express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
-                                                                  P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
-                                                                  current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
-                                                                  `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
-                                                                  DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
-                                                                  question the claim above says can't be asked. This resolves the concrete symptom both docs independently
-                                                                  reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
-                                                                  the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
-                                                                  drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
-                                                                  this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
-                                                                  block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
-                                                                  still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+                                                              `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+                                                              same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+                                                              express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+                                                              P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+                                                              current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+                                                              `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+                                                              DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+                                                              question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+                                                              reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+                                                              the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+                                                              drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+                                                              this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+                                                              block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+                                                              still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
 
-                                              **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
-                                              `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
-                                              the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
-                                              slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
-                                              is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
-                                              runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
-                                              symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
-                                              note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
-                                              change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
+                                          **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
+                                          `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
+                                          the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
+                                          slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
+                                          is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
+                                          runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
+                                          symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
+                                          note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
+                                          change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
 
 - [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
       commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
@@ -707,27 +707,3 @@ words: "this branch is churning faster than one CI worker can chase serially").
   filing a duplicate escalation or attempting a bulk reclassification. No code/doc-content fix pushed beyond this
   Progress Log entry. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's skip-rule.
   Completing via `/done`.
-- 2026-08-10 (cicd agt-e56165, slot 3, `sit_failure` on `unified-trading-pm` promotion PR #2709, 18th dispatch into this
-  lineage): pulled `live-defi-rollout` clean (ff-only) and re-ran `run_hygiene_sweep.sh --ci --no-regen` — found TWO NEW
-  genuine plan-hygiene regressions vs the immediately-prior dispatch's "durable green" confirmation (which was on
-  `ecf5ba05f0`, now 222+ commits behind): (1) `check_reference_paths.py --diff-base origin/main` → **2 NEW violations**
-  — `plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`'s 3 refs to
-  `ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` dangled because the finalize was archived
-  (`plans/archive/2026_07/`) by a later commit, and
-  `plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` refs
-  `dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md` which the prose claimed was "filed" but the file was never
-  created; and (2) `check_prosewrap_padding.sh` → **4649 > baseline 4472** (was 4403 at `ecf5ba05f0`) — 452 new
-  over-indent/backtick-padding lines across 12 files landed after the prior green confirmation. FIXED BOTH on LDR:
-  batch2 refs re-pointed to the archive path; the referenced `dp_live_003_..._2026_08_10.md` issue doc created (it
-  documents a real confirmed production blocker — AWS credentials gap in the `uts-prod-dp-meta-watchers` Cloud Run Job,
-  per the dp_cron doc's own evidence); 452 prosewrap lines hand-repaired (content-preserving, `git diff -w` empty) →
-  `check_prosewrap_padding.sh` now 4197 ≤ baseline 4472. Post-fix `run_hygiene_sweep.sh --ci --no-regen`: exactly **1
-  hard failure**, the same already-tracked operator-gated blocker — `check_na_corpus_ratchet.py --diff-base origin/main`
-  (56 new NA-population docs / 181 new open todos vs `origin/main`, which is now **~1159+ commits behind LDR**, no
-  promote merged since #2671 on 2026-08-09T09:19:49Z, 40+ closed-unmerged auto-drain PRs, 21+ hours). Reference-paths
-  and prosewrap-padding both durably green again. This dispatch's value-add over the prior 17: it caught + fixed two NEW
-  regressions that had re-broken the 2 checks the lineage had already cleared, restoring LDR to the single known
-  blocker. The NA-corpus check remains the `[OPERATOR]` P1 todo above (3 resolution options, no new information to add,
-  not attempting bulk reclassification — the corpus is within its own baseline mode, the diff-base-vs-main is the
-  main-behind-LDR deadlock). `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's
-  skip-rule. Completing via `/done`.

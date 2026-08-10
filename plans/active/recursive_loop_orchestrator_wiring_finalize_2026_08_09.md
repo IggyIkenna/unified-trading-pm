@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -167,27 +167,17 @@ context_scope:
       Family-2 close/unwind emission path, which does not exist yet and had no tracked prerequisite anywhere in the
       corpus. Rather than build the consumer against a speculative event schema, split into a dedicated gated plan pair:
       `/plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md` (prerequisite — ships the
-      real emission path) → `/plans/archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md`
-      (`depends_on` + `gate_on_depends: true` on the prerequisite — the actual registry-consumption work). This todo's
-      own disposition is closed (split, not built here); the two linked plans are where the work actually dispatches
-      from.
+      real emission path) → `/plans/active/family2_position_registry_unwind_consumption_2026_08_09.md` (`depends_on` +
+      `gate_on_depends: true` on the prerequisite — the actual registry-consumption work). This todo's own disposition
+      is closed (split, not built here); the two linked plans are where the work actually dispatches from.
 
-- [x] ✅ [DESIGN][BACKEND] P3. Add a genuine per-position wallet attestation to the Family-2 `AtomicInstruction`
-      pipeline — today neither the instruction nor its attestations carry a wallet identifier anywhere (confirmed via
-      todo 6's direct inspection of `recursive_staked.py::_build_family2_instruction`), so `Family2PositionRegistry`
-      emits a caller-supplied `default_wallet` placeholder for every position instead of the real per-position wallet.
-      Repo: strategy-service (emit the attestation) + execution-service (`Family2PositionRegistry` reads it instead of
-      the placeholder). Done-when: `OpenFamily2Position.wallet` reflects the real per-position wallet sourced from the
-      instruction, not a shared default; unit test covers a multi-wallet scenario. — strategy-service@568b4298 +
-      execution-service@bac36e16. Strategy-side `_build_family2_instruction`/`_build_family2_close_instruction` now emit
-      `attestations["wallet"]` sourced from the identity's genuine per-position wallet (`holding_wallet`, else the
-      operational `wallet_id`), omitted entirely when none is provisioned (never an empty placeholder). Registry-side
-      `Family2PositionRegistry._resolve_wallet()` reads that attestation first, then the identity's
-      `holding_wallet`/`wallet_id`, then `default_wallet` as a legacy fallback for pre-attestation envelopes. Unit
-      tests: strategy-service 4 new (open-wallet-from-holding_wallet, wallet_id fallback, omit-when-none,
-      close-carries-wallet) + execution-service 5 new (genuine attestation wins, multi-wallet distinct wallets,
-      holding_wallet fallback, wallet_id fallback, default-wallet fallback); full `quality-gates.sh` green on both repos
-      (strategy 164s, execution 213s).
+- [ ] [DESIGN][BACKEND] P3. Add a genuine per-position wallet attestation to the Family-2 `AtomicInstruction` pipeline —
+      today neither the instruction nor its attestations carry a wallet identifier anywhere (confirmed via todo 6's
+      direct inspection of `recursive_staked.py::_build_family2_instruction`), so `Family2PositionRegistry` emits a
+      caller-supplied `default_wallet` placeholder for every position instead of the real per-position wallet. Repo:
+      strategy-service (emit the attestation) + execution-service (`Family2PositionRegistry` reads it instead of the
+      placeholder). Done-when: `OpenFamily2Position.wallet` reflects the real per-position wallet sourced from the
+      instruction, not a shared default; unit test covers a multi-wallet scenario.
 
 - [ ] [BACKEND] P2. Wire `PerpHedgeMonitor` lifecycle at `execution-service/execution_service/api/app.py`'s
       `@app.on_event("startup")`/`@app.on_event("shutdown")`, sourcing the currently-open Family-2 position set from
@@ -291,22 +281,8 @@ context_scope:
   than guess a schema. **Main ruled option A**: split into a dedicated gated plan pair instead of building the consumer
   speculatively or folding the strategy-service work into this execution-service-scoped todo. Authored
   `/plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md` (the prerequisite, ungated) and
-  `/plans/archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md` (the consumer,
+  `/plans/active/family2_position_registry_unwind_consumption_2026_08_09.md` (the consumer,
   `depends_on: [strategy_service_family2_close_unwind_emission_2026_08_09]` + `gate_on_depends: true`), replaced this
   todo's checkbox with a bold digest pointer (not real checkbox syntax, per task_template.md §3 finding H) to the two
   new plans, and released this task (`skip-current-task`, `reason_code: GATED`) since the underlying work no longer
   lives here.
-- **2026-08-10 (slot 16, backend_engineer)**: Todo 9 shipped — the genuine per-position wallet attestation.
-  Strategy-service (`recursive_staked.py`, `strategy-service@568b4298`): both `_build_family2_instruction` and
-  `_build_family2_close_instruction` now emit `attestations["wallet"]` from the new `_family2_wallet()` helper
-  (`identity.holding_wallet` — the on-chain address that holds the strategy's positions — else `identity.wallet_id`),
-  omitting the key entirely when neither is provisioned so no empty placeholder is emitted. Execution-service
-  (`family2_position_registry.py`, `execution-service@bac36e16`): `_to_open_position` now resolves
-  `OpenFamily2Position.wallet` via the new `_resolve_wallet()` — attestation first, then identity
-  `holding_wallet`/`wallet_id`, then `default_wallet` as a legacy fallback for envelopes that predate the attestation
-  (module docstring's "NO WALLET" gap note updated to reflect the resolution). Unit coverage: strategy-service 4 new
-  tests (open carries holding_wallet, wallet_id fallback, omitted when none provisioned, close carries wallet) +
-  execution-service 5 new tests (attestation wins, multi-wallet distinct wallets — the todo's required scenario,
-  holding_wallet fallback, wallet_id fallback, default fallback). Full `quality-gates.sh` green on both repos
-  (strategy-service 164s, execution-service 213s); both commits landed on LDR and verified as ancestors of
-  `origin/live-defi-rollout`.

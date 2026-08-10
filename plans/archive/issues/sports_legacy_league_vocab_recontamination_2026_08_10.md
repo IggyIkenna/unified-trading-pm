@@ -28,7 +28,7 @@ tags: [sports, canonical, league-id, contamination, data-correctness, ssot-contr
 related:
   [
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
-    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
   ]
 created: "2026-08-10"
@@ -173,12 +173,11 @@ Fix the writers + registry FIRST, then run the delete pass:
   league key, todo 2: registry dedupe + FOOTYSTATS migration, todo 3: verified). Todo 4 (gated delete pass) is the sole
   remaining item — needs a fresh census confirming zero new SEGUNDA_DIVISION writes.
 - **2026-08-10 (slot 25)**: Cross-reference — the plan-level P2 checkbox in
-  `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task
-  `sports_closeout_track_x_hygiene-006`) tracks the SAME migration completion as this issue's todo 4 (the gated delete
-  pass, `-81828e9c8a94`, currently queued behind the 3 P1 fix todos — all dispatched). **When todo 4's delete pass
-  completes and a fresh census = 0 for the 3 mappings, ALSO flip that plan-level P2 checkbox** (`- [x]` + evidence). The
-  `sports_closeout_track_x_hygiene-006` backlog entry is parked/skipped GATED pending that completion — no separate
-  worker needs to run the delete twice.
+  `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task `sports_closeout_track_x_hygiene-006`)
+  tracks the SAME migration completion as this issue's todo 4 (the gated delete pass, `-81828e9c8a94`, currently queued
+  behind the 3 P1 fix todos — all dispatched). **When todo 4's delete pass completes and a fresh census = 0 for the 3
+  mappings, ALSO flip that plan-level P2 checkbox** (`- [x]` + evidence). The `sports_closeout_track_x_hygiene-006`
+  backlog entry is parked/skipped GATED pending that completion — no separate worker needs to run the delete twice.
 - **2026-08-10 (slot-18, data_engineering, `sports_legacy_league_vocab_recontamination-81828e9c8a94`)**: Recovered
   orphan commit `0dcddec1` from slot-22's market-tick-data-service, shipped via quickmerge at
   market-tick-data-service@b37b8553. Ran delete pass with `--delete-prod --confirm-delete`: 12,988 DELETED (verified

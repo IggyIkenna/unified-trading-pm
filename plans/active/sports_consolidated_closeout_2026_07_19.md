@@ -45,7 +45,7 @@ related:
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
     /plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
-    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
@@ -88,7 +88,7 @@ supersedes:
 superseded_by: # recounted 2026-07-25 (plan-reconcile + consolidated-plan split pass) — 37 open/27 done post-split
   # (was 51 open/11 done as of 2026-07-21; this doc's own Track content was substantially relocated into 3 new child
   # plans on 2026-07-25, `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
-  # `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`, so the lower
+  # `sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`, so the lower
   # count reflects relocation, not just fresh unexecuted work draining down) — real unexecuted work (canonical-honesty
   # fixes, ODDS-LEAK cleanup, honest-coverage backfill tracks). sports_master_closeout_2026_07_21.md
   # is an entry-point redirect only ("that plan + the audit remain the detailed backing" — its own words), not a
@@ -145,9 +145,9 @@ context_scope:
 >
 > - Track C's EXCHANGE_ODDS/FIXED_ODDS fork block → `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`
 >   (`sequential: true`, 11 todos) — see the short pointer left in Track C below.
-> - Track X (plan/doc hygiene + orphan-satellite reconciliation) →
->   `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos, after excluding 3 items
->   `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted from the same Track).
+> - Track X (plan/doc hygiene + orphan-satellite reconciliation) → `sports_closeout_track_x_hygiene_2026_07_25.md` (4
+>   todos, after excluding 3 items `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted from the same
+>   Track).
 > - Track S2 (fold-in absorption from the 3 archived plans) → `sports_closeout_track_s2_foldin_2026_07_25.md` (after
 >   excluding 7 items/sub-parts `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted, and correcting 4
 >   items that turned out to already be resolved — see that child's own staleness-correction note).
@@ -205,7 +205,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   are still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of
   07-17) and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
   `entity={fixtures,teams, injuries}/` under a different namespace) — tracked via Track S/E's todos below. **SECOND
-  CROSS-LINK (2026-07-25, `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
+  CROSS-LINK (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
   `sports_catalog_league_grain_only_scope_2026_07_08.md` also independently designs a manifest-schema extension for
   per-fixture-grain capture tracking (its own todos), a parallel, independently-designed fixture-grain redesign running
   alongside this closeout's own fixture-grain entity-split work (Track E), with neither doc aware of the other until
@@ -745,8 +745,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track V — COVERAGE: backfill to honest-100% · P1 (operator-gated where noted)
 
-> **league_id-migration tracking merge (2026-07-27,
-> `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 2)**:
+> **league_id-migration tracking merge (2026-07-27, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 2)**:
 > `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`'s open `LEAGUE_ID_TO_TIER` mapping +
 > 28-unmapped-`league_id` gap-analysis (its own P1 "gap-analysis follow-ups" todos 1-2) are now merged into
 > `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" — that section, not this
@@ -884,15 +883,15 @@ Fully closed (both items `[x]`) — extracted to
 
 ## Track X — CLEANUP + plan reconciliation · P2 (✅ DONE 2026-08-10)
 
-All open work shipped via `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos + the
-split-out migration sub-todo): the `sports_catalog_league_grain_only_scope` cross-link
-(`unified-trading-pm@dc8b142a4e`), the `sports_odds_bookmaker_coverage_enumeration` league_id fold-in merge
-(`unified-trading-pm@69b8c3f7f3`), the peripheral-bucket league-vocabulary contamination fix
-(`unified-api-contracts@f3f1bbe0` write-path fix + the 9,733-object migration `market-tick-data-service@b37b8553`), and
-the 2 parked worktree changes (`market-tick-data-service@03b9ffd6` + `deployment-service` no-op clean). All cited
-commits verified via `git log` (2026-08-10). 3 further items (the issue-doc index fix, the adapter dead-code/fallback
-audit, the `data_completion_sports_history_2026_07_24.md` aggregated-sources index entry) were independently extracted
-by `sports_consolidated_native_ao_extract_2026_07_25.md` before this split ran, so are not duplicated in the new child
+All open work shipped via `sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos + the split-out migration sub-todo):
+the `sports_catalog_league_grain_only_scope` cross-link (`unified-trading-pm@dc8b142a4e`), the
+`sports_odds_bookmaker_coverage_enumeration` league_id fold-in merge (`unified-trading-pm@69b8c3f7f3`), the
+peripheral-bucket league-vocabulary contamination fix (`unified-api-contracts@f3f1bbe0` write-path fix + the
+9,733-object migration `market-tick-data-service@b37b8553`), and the 2 parked worktree changes
+(`market-tick-data-service@03b9ffd6` + `deployment-service` no-op clean). All cited commits verified via `git log`
+(2026-08-10). 3 further items (the issue-doc index fix, the adapter dead-code/fallback audit, the
+`data_completion_sports_history_2026_07_24.md` aggregated-sources index entry) were independently extracted by
+`sports_consolidated_native_ao_extract_2026_07_25.md` before this split ran, so are not duplicated in the new child
 either. Every item that was already `[x]` done at split time is preserved verbatim in
 `/plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md`'s "2026-07-25 — Track X + Track S2 line-cap
 split" section.
@@ -918,9 +917,8 @@ split" section.
 > the source of truth on the rest). The "Aggregated source docs" discoverability index moved verbatim to
 > `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`. Nothing was dropped or
 > summarized — see those two docs for full content. **Correction (2026-07-25, 3rd trim pass)**: Track X and Track S2 are
-> no longer fully retained here either — both were mostly forked out to
-> `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` /
-> `sports_closeout_track_s2_foldin_2026_07_25.md` (see the Split notice near the top of this doc); this parent now
+> no longer fully retained here either — both were mostly forked out to `sports_closeout_track_x_hygiene_2026_07_25.md`
+> / `sports_closeout_track_s2_foldin_2026_07_25.md` (see the Split notice near the top of this doc); this parent now
 > retains Tracks F/C(remainder)/S/E/O/H/V/K/D in full, plus short pointers for X/S2, the Codex SSOTs, and the still-open
 > "Operator decisions needed (blocking)" section.
 

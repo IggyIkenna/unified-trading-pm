@@ -159,27 +159,6 @@ instruments, 3 pipeline modes: batch_aster, batch_extended, batch_hyperliquid) t
 **MDPS launch 2** (ON-DEMAND, non-SPOT, relaunched ~11:31 UTC): same scope. Aug 1 already written → should be skipped
 (MDPS incremental mode). Expected to complete Aug 2-3 within ~20 min.
 
-**Pipeline E2E verified (~11:48 UTC)**: manifest merge (3,628 derivative_ticker entries added), delta_one discovered 36
-instruments via manifest, loaded candles from test bucket, computed funding_oi features. Only 1 instrument (ZBT-USDT)
-processed — insufficient lookback (24 candles vs 48 needed). Pipeline mechanically correct: MDPS → test bucket →
-manifest → delta_one → feature compute. Lookback gap is a data-scope issue (3-day MDPS window is too narrow for
-delta_one's 48-candle requirement), not a correctness issue.
-
-**`IS_TEST_RUN` routing caveat**: `IS_TEST_RUN=true` routes instruments-store to `-test-` tier (empty → 0 instruments).
-Fixed by using explicit `PROTOCOL_DATA_SOURCE_BUCKET_CEFI` (MDPS source → test) + `PROTOCOL_DATA_SINK_BUCKET_CEFI`
-(features output → test) without `IS_TEST_RUN`, keeping instruments-store on prod.
-
-**IAM fix expanded**: added `roles/storage.objectAdmin` (was `storage.objectCreator`) — manifest writes need
-`storage.objects.get` in addition to `create`. The first two VMs had 102 manifest-write 403s each. IAM now covers full
-read/write on test bucket.
-
-**MDPS launch 3** (ON-DEMAND, `mdps-backfill-cefi-20260810-114949`, ~11:50 UTC): expanded date range **2026-07-27 →
-2026-08-03** (8 days) to cover delta_one's 3-day lookback buffer (needs July 29-31 data for Aug 1 compute). Aug 1 data
-already in test bucket → skipped. ETA ~70 min.
-
-**Auto-pipeline armed** (background task `b3xnq4wbw`): polls every 120s for Aug 3 completion → auto-runs manifest merge
-→ auto-runs delta_one `funding_oi`@1h → auto-runs delta_one `returns`@1h → reports results.
-
-**Next**: wait for auto-pipeline to complete, then read-back verify the features output in
-`gs://features-cefi-test-central-element-323112/delta_one/`, then flip both plan checkboxes (batch-12 todo 7 + source
-doc line 711).
+**Next**: wait for MDPS completion →
+`IS_TEST_RUN=true PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112 features-service --feature-family delta_one --operation compute --mode batch --asset-group CEFI --start-date 2026-08-01 --end-date 2026-08-03 --feature-group funding_oi --timeframe 1h`
+(and same for `returns`) → read-back verify → flip checkbox.

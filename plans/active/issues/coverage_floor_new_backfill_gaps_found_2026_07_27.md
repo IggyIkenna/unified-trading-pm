@@ -5,7 +5,7 @@ summary: >-
   Small standalone note (disk-full incident prevented editing the parent issue doc directly at write time — see
   coverage_floor_registries_no_cross_propagation_2026_07_17.md's [DATA] P1 status note for the full context). Fold these
   3 todos into that doc once disk recovers and delete this file.
-status: resolved
+status: open
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -19,7 +19,7 @@ related:
   ]
 created: "2026-07-27"
 author: unknown
-last_updated: "2026-08-10"
+last_updated: "2026-07-27"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,11 +44,6 @@ context_scope:
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 3/3 todos + 3/3 follow-ups `[x]`, unlocked). All
-> data-completeness findings closed: HYPERLIQUID backfill verified, DERIBIT 2019 heavy+light dispatched,
-> BINANCE-DELIVERY zombie deregistered (`unified-api-contracts@56db28e6`). The header's fold-into-parent-and-delete note
-> is superseded by direct archival — the parent doc already carries synced copies of all todo text.
 
 # 3 new backfill/data-completeness findings
 
@@ -169,22 +164,6 @@ context_scope:
   `cefi-deribit-2019-light-20260807-194407` (`YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light VENUES=DERIBIT`); VM
   RUNNING at 35.194.123.82 (asia-northeast1-c). Covers derivative_ticker;options_chain;futures_chain
   2019-03-30..2019-12-31. Machine n2-highmem-16 (128GB, registry floor). All follow-up todos in this doc now closed.
-- **slot-32 2026-08-10**: closed the BINANCE-DELIVERY P3 zombie follow-up — deregistered from
-  `VENUES_BY_ASSET_GROUP["cefi"]` + `tardis_to_venue`/`all_tardis_exchanges` + `VENUE_DATA_TYPE_CAPABILITIES`
-  (`unified-api-contracts@56db28e6`, QG green, 12,637 passed). Audit note: the MTDS daily forward-poll
-  (launch-cefi-forward-poll.sh → `get_venues_for_asset_groups(["CEFI"])`) derives its venue set from
-  `tardis_to_venue.values()`, NOT `VENUES_BY_ASSET_GROUP` — so the group removal alone (the option-1 letter) would not
-  have stopped the 704 wasted rows/day; the tardis_to_venue removal was required (bare-OKX precedent, 5,225-row incident
-  2026-08-04/05). Known residual (out of scope, noted for the doc's archival flow): instruments-service
-  `scripts/enumerate_expected_universe.py` `_CEFI_EXPECTED_UNIVERSE_EXCLUDED_VENUES` comment block (~line 1113) says
-  BINANCE-DELIVERY "stays REGISTERED in UAC VENUES_BY_ASSET_GROUP["cefi"]" — now stale post-deregistration (the
-  exclusion set itself is unchanged + still correct as a guard). All todos in this doc now closed.
-- **archive_exempt (2026-08-10, slot-32)**: the 0-open-todos state is TERMINAL — all 3 todos + all 3 follow-ups closed.
-  `archive_exempt: true` here is the hygiene-gate escape hatch for the flip commit ONLY: archival (status → resolved +
-  `git mv` to plans/archive/2026_08/issues/ + referrer fixes) follows in the immediately next commit, per the
-  flip-then-mv discipline (never combine the checkbox flip with a git mv in ONE commit — see
-  /codex/12-agent-workflow/plan-completion-and-archival-discipline.md). The header's fold-into-parent-and-delete note is
-  superseded by direct archival (the parent doc already carries synced copies of all todo text).
 
 ## Follow-ups
 
@@ -205,17 +184,8 @@ context_scope:
       with `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light     VENUES=DERIBIT`; VM RUNNING at 35.194.123.82
       (asia-northeast1-c). Covers `derivative_ticker;options_chain;futures_chain` 2019-03-30..2019-12-31. Machine
       n2-highmem-16 (128GB, registry floor). VM_TARDIS_CONSUMER=1 stamped; shuts down on completion.
-- [x] ✅ [INFRA] P3. **DONE 2026-08-10 (slot-32)** — BINANCE-DELIVERY deregistered from the cefi venue axis: removed
-      from `VENUES_BY_ASSET_GROUP["cefi"]` (market_data_categories.py) AND from `tardis_to_venue`/`all_tardis_exchanges`
-      (venue_mapping.py) — the audit showed the daily forward-poll derives its venue list from
-      `tardis_to_venue.values()`, so the group removal alone would NOT have stopped the attempts (same class as the
-      bare-OKX 5,225-row incident, 2026-08-04/05); `VENUE_DATA_TYPE_CAPABILITIES["BINANCE-DELIVERY"]` also removed (the
-      cross-repo invariant `test_cefi_registry_expected_universe_invariant.py` demands a capability block for a
-      never-declared venue be deleted, POLYGON precedent). Routing/adapter wiring kept intact for a future COIN-M MVP
-      re-enable: `venue_instrument_type_to_tardis` (PERPETUAL/FUTURE → binance-delivery), `VENUE_TO_ADAPTER_KEY`,
-      `symbol_rules.py`, `venue_start_dates`/`coverage_starts` (BARE_KEY mapping). Evidence:
-      `unified-api-contracts@56db28e6` (quickmerge-landed, QG green 12,637 passed, verified ancestor of
-      `origin/live-defi-rollout`; sentinel `.qg_last_passed_sha=56db28e6`). (repo: unified-api-contracts)
+- [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator
+      re-adds to MVP scope) — 704 wasted attempted_failed rows/day continue
 
 > **2026-08-06 archive-candidate audit**: All 3 checkboxes [x] but each describes a prose-only follow-up explicitly 'not
 > re-dispatched as a separate todo': HYPERLIQUID post-backfill row re-verify, DERIBIT YEARS=2019 backfill launch (code

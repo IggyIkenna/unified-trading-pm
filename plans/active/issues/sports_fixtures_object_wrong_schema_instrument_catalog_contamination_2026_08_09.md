@@ -26,7 +26,7 @@ tags: [sports, data-correctness, schema-contamination, gcs, instruments-store-sp
 related:
   [
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
-    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
   ]
 created: "2026-08-09"
 author: sports_closeout_track_x_hygiene-006 (slot-6, data_engineering)
@@ -149,7 +149,7 @@ contamination this issue was found alongside.
 
 Evidence: `sports_closeout_track_x_hygiene-006` dispatch session (slot-6, 2026-08-09) — direct GCS verification
 transcript available in that session's Progress Log entry on
-`plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md`.
+`plans/active/sports_closeout_track_x_hygiene_2026_07_25.md`.
 
 ## Todos
 
@@ -213,8 +213,8 @@ transcript available in that session's Progress Log entry on
   **Evidence-gap note first**: this issue's own text cites "the 53 other affected league values found the same day's
   census — see the sibling issue's 2026-08-09 Progress Log for the full list." Checked both places that citation could
   resolve to — `/plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` (the linked
-  sibling issue) and `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (the dispatch session named
-  in this doc's own "Evidence" line) — neither contains a 2026-08-09 entry with a 53/54-league list or any
+  sibling issue) and `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (the dispatch session named in this
+  doc's own "Evidence" line) — neither contains a 2026-08-09 entry with a 53/54-league list or any
   `af_league_id`/schema-mismatch content. The census this doc's "Not isolated" paragraph describes may have run in a
   session that never got committed, or the citation is simply wrong. Proceeded on the one item this doc DOES verify
   directly (the BOLIVIA_PRIMERA_DIVISION object) rather than blocking on the missing list — that's todo 1's scope

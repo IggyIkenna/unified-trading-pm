@@ -274,7 +274,7 @@ orchestrator-dispatched).
       `_index/availability_index.parquet` manifest, `data_type=prediction_canonical_question_group`: KALSHI shows
       exactly 1 CQG/day (`OTHER`, ~9,500 rows) every day 2026-07-12→2026-07-26; POLYMARKET shows 24-60 distinct CQGs/day
       over the same window. (3) Downloaded today's real captured parquet
-      (`instrument_availability/by_date/day=2026-07-26/pipeline_mode=batch_kalshi/asset_group=prediction/ venue=KALSHI/canonical_question_group=OTHER/instruments.parquet`,
+      (`instrument_availability/by_date/day=2026-07-26/pipeline_mode=batch_kalshi/asset_group=prediction/     venue=KALSHI/canonical_question_group=OTHER/instruments.parquet`,
       9,513 rows) and re-ran the SAME classifier against each row's `instrument_key`-embedded ticker: 7,510 rows (79%)
       resolve to 30 real named groups (`NDX_UP_DOWN_DAILY` 1,103, `SPORTS_MLB_TOTAL` 716, `SPX_UP_DOWN_DAILY` 544,
       `SOL_PRICE_RANGE_DAILY` 462, `BTC_*` 388-390, `CPI_PRINT_PER_MONTH` 268, `FED_RATE_DECISION_PER_FOMC` 201, …) —
@@ -353,7 +353,7 @@ orchestrator-dispatched).
       ~9,500/day) mis-bucketing is precisely the kind of incomplete fix that rule exists to prevent, so the default is:
       do the reclassify. It also qualifies as self-service under `plans/active/task_template.md` finding T/U — fresh
       same-run check (2026-08-08):
-      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112 --format="value(softDeletePolicy.retentionDurationSeconds)"`
+      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
       → **604800** (the 7-day floor finding T requires). Reclassifying as an ordinary AO-dispatchable `[DATA]` SCRIPT
       todo (backup-first, content-patch in place, mirroring the same reclass-script pattern used elsewhere in this
       corpus); the actual sizing script + apply was not built/run in this pass (documentation-question audit, not an

@@ -15,7 +15,7 @@ tags: [defi, carry, recursive-loop, family2, close-unwind]
 related:
   [
     /plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md,
-    /plans/archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md,
+    /plans/active/family2_position_registry_unwind_consumption_2026_08_09.md,
     /plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]

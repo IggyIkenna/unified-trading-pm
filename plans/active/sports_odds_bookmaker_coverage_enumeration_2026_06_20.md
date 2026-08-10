@@ -67,13 +67,13 @@ context_scope:
 > doc** — check the closeout's current Track sections (Track C, Track V) for the latest state before acting on either
 > doc.
 >
-> **MERGED 2026-07-27** (`/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 2): the convention
-> conflict this banner flags is already decided elsewhere in the closeout (UAC registry form is canonical) — this todo
-> only propagates that, it does not re-litigate it. This plan's `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-league_id gap
-> analysis (the P1 todos below) are now also tracked in `issues/sports_league_id_namespace_migration_2026_07_20.md` §
-> "MERGED TRACKING 2026-07-27" — that section is the single settled location cross-referenced from Track V; this plan's
-> own P1 todos below remain the execution home (not duplicated, not moved). See that section's "Vocabulary flag" for why
-> this plan's "canonical namespace" label (below) is scoped to this plan's own golden-window audit only.
+> **MERGED 2026-07-27** (`sports_closeout_track_x_hygiene_2026_07_25.md` todo 2): the convention conflict this banner
+> flags is already decided elsewhere in the closeout (UAC registry form is canonical) — this todo only propagates that,
+> it does not re-litigate it. This plan's `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-league_id gap analysis (the P1 todos
+> below) are now also tracked in `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING
+> 2026-07-27" — that section is the single settled location cross-referenced from Track V; this plan's own P1 todos
+> below remain the execution home (not duplicated, not moved). See that section's "Vocabulary flag" for why this plan's
+> "canonical namespace" label (below) is scoped to this plan's own golden-window audit only.
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas were carrying stale May-08 inline todos that the backlog regen — which only scans
@@ -266,9 +266,9 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — was thin/codex-only; added the source file both
   remaining open todos actually touch (`_honest_coverage_clusters.py`), the merged league_id-tracking issue, and the
   regression-test-discrepancy audit the 🔒 banner says to check before trusting todos 2/3.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-verified live: the 🔒
-  `locked_by: live-defi-rollout` lock + its explicit "do not archive, do not unlock without an operator ruling" banner
-  are both still present, unchanged. No 2026-08-08 operator ruling touches this doc's 2 open todos (extend
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-verified live: the 🔒 `locked_by:
+  live-defi-rollout` lock + its explicit "do not archive, do not unlock without an operator ruling" banner are both
+  still present, unchanged. No 2026-08-08 operator ruling touches this doc's 2 open todos (extend
   `EXPECTED_BOOKMAKER_MARKET_SETS` to 28 unmapped league_ids OR add a `tier_3_global` tier; decide+implement the
   `trades` cluster-validation gap) — both remain genuine either/or design forks with no evidence-based tiebreaker, per
   every prior pass's reasoning, and neither matches any of today's cheat-sheet precedents (not an IAM/permission issue,

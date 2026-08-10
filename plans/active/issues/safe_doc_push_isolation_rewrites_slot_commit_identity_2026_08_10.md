@@ -81,22 +81,3 @@ happen to know the `SDP_ISOLATED=0` escape hatch.
       Verify: land a slot-31 doc flip via default isolated mode, confirm `git log -1 --format='%an'` reads
       `[slot-31·planning]`, and `check-slot-commit-identity.sh` passes. Also add a one-line note in the script header
       documenting `SDP_ISOLATED=0` as the documented escape hatch until the fix lands.
-
-## Progress Log
-
-- **slot-29 2026-08-10 (infra, todo -001, `safe_doc_push_isolation_rewrites_slot_commit_identity-001`)**: IMPLEMENTED +
-  LIVE-VERIFIED, **SHIPPING BLOCKED on PM `qg_red`**. Implemented the fix in `scripts/dev/safe-doc-push.sh`: the
-  isolated commit worktree is now built at `$TMPDIR/sdp-iso-$$/.tabs/<N>/unified-trading-pm` (carrying the caller's
-  `.tabs/<N>/` segment, leaf stays `unified-trading-pm` per F7) so the PATH-based `fix-commit-identity` hook derives the
-  caller's label and no-ops; identity resolved early via `slot-identity-lib.sh` against the caller repo path, with a
-  belt-and-suspenders pre-stamp of the worktree config; header documents `SDP_ISOLATED=0` as the escape hatch.
-  Regression bats test `tests/test_safe_doc_push_isolated_identity_preserved.bats` asserts the pushed commit's author
-  carries the slot label. **Live-verified**: a real isolated-mode push from slot 29 (this issue's sibling doc flip)
-  landed with author `ikennaigboaka [slot-29·planning]`, NOT `[main·planning]` (the exact bug). **BLOCKER**: PM
-  `quality-gates.sh` is red on 8 PRE-EXISTING live-corpus test failures (`check_workspace_code_workspace_drift.py` ×5 +
-  `check_finalize_plan_coverage.py` ×3 — see
-  `/plans/active/issues/pm_qg_pre_existing_red_workspace_drift_and_finalize_coverage_2026_08_10.md`, verified
-  pre-existing at base HEAD). Fix committed locally as `7b84434c0f` (ahead=1) but NOT pushed — quickmerge sentinel
-  requires a green PM QG, which the pre-existing red blocks. Joined fleet-wide repo-blocker `RB-5b82f02e` (PM qg_red,
-  escalated). **Resume**: when PM QG is green (fleet fixing via the sibling issue's todos), re-run `quality-gates.sh` on
-  this commit, quickmerge, flip this checkbox with evidence.
