@@ -116,7 +116,11 @@ discipline for whoever executes these:
 
 ## Todos
 
-- [ ] [DOCS] P1. **Land the billing-suspension doc's resolution**
+- [x] ✅ [DOCS] P1. **Land the billing-suspension doc's resolution** — unified-trading-pm@5ed8364ccb. Issue doc
+      `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` now carries
+      `## LIVE RE-VERIFIED 2026-08-10` (grep count 3), `status: open` (not terminal — genuine open P2 follow-up keeps it
+      non-archivable), `resolved_by:` citing this plan + the 3-call live verification, Resolution-path section marked
+      RESOLVED, and the `[DOCS] P2` follow-up todo listing the 4 downstream docs' retag work.
       (`plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`). Grep-check first:
       `grep -c "LIVE RE-VERIFIED 2026-08-10" <file>` — if already `1` or more, skip to verifying `status:` is `open`
       (not `resolved` — this doc has a genuine open follow-up todo below, so it must NOT be archived;
