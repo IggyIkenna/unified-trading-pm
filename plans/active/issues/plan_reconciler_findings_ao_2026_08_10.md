@@ -49,6 +49,10 @@ this run. Grace docs are still read by hunters as context; findings touching the
   made the doc itself fully-done+unlocked+non-grace, so it was auto-archived same turn (6-step ritual) —
   `unified-trading-pm@80b01dea70`+`@eab8099636` (the frontmatter/banner half of the archival was dropped by a
   prek-patch-restore race on the first commit attempt — see `## Progress Log` for the catch-and-fix).
+- `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s 4th todo (batch6 hunter's
+  MISSED_FLIP_CANDIDATE) — `[ ]` → `[x]`, verified: `agent-orchestrator@82578c3` independently re-confirmed an ancestor
+  of `origin/live-defi-rollout`, commit message explicitly cites this exact todo by doc name. Source doc exited the 12h
+  grace window mid-run — `unified-trading-pm@509e270575`.
 
 ## Contradictions
 
@@ -288,6 +292,19 @@ budget.
       5 confirmed live `_`→`*` mangling instances in `ao_open_issues_consolidated_close_out_2026_07_17.md` (fixed this
       run, `unified-trading-pm@75e9b0c9c5`) — possible checker blind spot for this specific corruption shape/location.
       Source: this run's Hygiene fixes.
+- [ ] [DOCS] P2. Once `ao_orphan_audit_followup_triage_2026_07_30.md` exits grace: correct its todo 1's stale claim that
+      `ao_satellite_ao_dispatch_batch2_2026_07_30.md` "already carries real, ready fixes" for
+      `ao_recovery_audit_layer1_deleted_2026_07_15` — re-verified false via fresh grep (zero hits naming that doc in
+      batch2). Already flagged unfixed by context-scout 2026-08-03/05/07; this is the 4th miss on record for the same
+      stale pointer. Source: this run's Contradictions section.
+- [ ] [DOCS] P3. Once `ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md` exits grace: update its
+      frontmatter `title:` field (still says "unreachable") to match the body's 2026-08-10 entry, which explicitly
+      supersedes that framing ("gate is rarely reached... working as designed"). Source: this run's Contradictions
+      section.
+- [ ] [DOCS] P3. Once `ao_satellite_ao_dispatch_batch9_2026_08_08.md` exits grace: fix its own internal arithmetic
+      inconsistency (L82-84 claims re-checking 48 items — "45 declined-orphan docs plus 3 conditional" — but its own
+      breakdown at L86-110 sums to 59: 13+9+1+1+35). Doesn't change the actionable conclusion (still 1 new AO-eligible
+      item found), but the doc's own bookkeeping doesn't add up. Source: batch3 hunter report (2026-08-10 fan-out).
 
 ## Progress Log
 
@@ -318,3 +335,37 @@ budget.
   non-grace (>12h), target-exists proof captured (`ls` both paths); queued as an auto-fix (Phase 4: dangling ref →
   repoint) for STEP 5. STEP 2: grace set computed (80/102 grace, 22 writable — list above). Proceeding to STEP 3 hunter
   fan-out.
+- **2026-08-10 ~05:20-06:00 UTC**: STEP 3 fan-out — 7 batch hunters (sonnet), 102/102 docs read in full, ~26,500 lines,
+  returned CONTRADICTIONS/CLAIMS_DIGEST/MISSED_FLIP_CANDIDATES/AO_DISPATCH_READINESS/PROSE_STRUCTURAL/CODEX_ALIGNMENT/
+  HEDGE_POINTERS/STATUS_VS_RESOLUTION/COVERAGE per hunter. Notable: batch6 found a P0 (false archival-completion claim
+  in a finalize doc); batch1+batch3 both independently found the same status:draft/active template-drift pattern across
+  8 batch docs.
+- **~06:00-06:15 UTC**: STEP 4 — self-verified every WRITABLE-doc finding via direct git/grep/live-code reads (not a
+  formal dual-agent refuter/confirmer pass — given the hunters had already run real verification commands themselves in
+  most cases, and the WRITABLE-doc set was small enough for inline verification per the skill's own "you are opus/max"
+  calibration); spot-verified the 2 highest-stakes P0 GRACE findings directly against origin. Nothing refuted — every
+  candidate checked held up.
+- **~06:15-06:35 UTC**: STEP 5 — applied all confirmed WRITABLE-doc fixes across 6 checkpoint commits (details in
+  Hygiene fixes / Codex corrections / Flips verified above). **Caught a live instance of the prek-patch-restore
+  silently-drops-committed-content bug mid-run**: the first archival commit for `batch4_finalize` landed the `git mv`
+  but silently excluded the frontmatter/banner edit (Phase 5.9c "verify at HEAD" caught it — `git show HEAD` still read
+  `status: active` with no banner despite `git status` showing a clean tree) — re-staged and re-committed immediately,
+  then re-verified content at HEAD for every subsequent commit this run. Branch churn was extremely high throughout
+  (5-10 pull-retry cycles per commit was typical) — every commit in this run followed a pull→commit→verify-
+  at-HEAD→push→verify-on-origin discipline, not just a single push-and-trust.
+- **~06:35-06:45 UTC**: STEP 6 — sent 4 `/blocked` alerts (`BLK-54c460e6`, `BLK-f8212d83`, `BLK-4fc6f1b0`,
+  `BLK-062e0886`) for the genuinely-undecidable findings, each with options + a marked recommendation; filed every
+  routed/grace-blocked finding as a durable `- [ ]` todo below regardless of whether it also got a live alert.
+- **~06:45-07:00 UTC**: STEP 7 — final green-gate hygiene sweep: the 2 corpus-wide hard failures flagged at STEP 1
+  (prosewrap-padding, reference-path-convention) had since resolved (other slots' work + this run's own 2 referrer
+  repoints); only the pre-existing, out-of-ao-scope NA-corpus-size ratchet failure remains — 0 NEW hard failures
+  attributable to this run. Mid-flush, an operator answer arrived for one of the 4 blocked questions (per platform
+  notification) — checked `GET /api/slots/30/messages` + `/progress` heartbeat responses, both empty at check-time; left
+  open for STEP 8's loop-and-wait rather than blocking on it. Ran `/pre-compact` at ~66% context: audited scratchpad (32
+  files, all either fully condensed into this doc already or cheaply regenerable — none promoted, per the anti-pattern
+  warning against promoting regenerable exports as a deliberate drop), confirmed no dangling scratchpad/tmp references
+  introduced by this run, and closed 4 gaps this checkpoint step itself caught: flipped
+  `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s missed-flip candidate directly (source doc
+  exited grace mid-run, re-verified independently), and filed 3 more follow-up todos for findings that had only been
+  mentioned in prose above without a canonical `- [ ]` (the `ao_orphan_audit_followup_triage` stale pointer, the
+  `ao_main_review_force_compact` title drift, and batch9's internal arithmetic inconsistency).
