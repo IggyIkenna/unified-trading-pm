@@ -86,7 +86,20 @@ def parse_frontmatter(text: str) -> dict[str, str]:
             j = i + 1
             while j < n and lines[j] != "---" and (lines[j].startswith((" ", "\t")) or lines[j].strip() == ""):
                 stripped = lines[j].strip()
-                if stripped and stripped not in ("[", "]"):
+                if not stripped or stripped in ("[", "]"):
+                    j += 1
+                    continue
+                # Skip standalone comment lines (e.g. `  # purely a note`).
+                if stripped.startswith("#"):
+                    j += 1
+                    continue
+                # Strip trailing `# comment` on value-bearing continuation lines —
+                # same treatment as single-line scalars below (line 98).  Without
+                # this a line like `[sports] # corrected 2026-07-25 (...), a genuine
+                # mistag: ...` gets its comment prose shattered on commas into
+                # garbage tokens by parse_asset_groups().
+                stripped = re.sub(r"\s+#.*$", "", stripped).strip()
+                if stripped:
                     parts.append(stripped)
                 j += 1
             fm[key] = " ".join(parts)
