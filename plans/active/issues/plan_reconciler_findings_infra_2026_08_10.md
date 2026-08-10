@@ -154,9 +154,12 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       remaining). Both `asset_group: [meta]`, adjacent/out-of-tranche. **DONE 2026-08-10**: replaced stale table with
       current "Deferred work after 2026-08-10" (2 real remaining items + done summary); corrected finalize summary
       "5"→"1" (14/15 todos `[x]`). — unified-trading-pm@2828e0e230
-- [ ] [DOCS] P3. Re-count and correct `defi_compute_gcp_migration_2026_08_08.md` + its finalize's off-by-one todo-number
-      citations (Doc-drift #1 — e.g. "todo 14" cited for what a positional recount shows is todo 15). Needs a careful
-      fresh recount done in one sitting to avoid introducing a second error.
+- [x] ✅ [DOCS] P3. Re-count and correct `defi_compute_gcp_migration_2026_08_08.md` + its finalize's off-by-one
+      todo-number citations (Doc-drift #1 — e.g. "todo 14" cited for what a positional recount shows is todo 15). Needs
+      a careful fresh recount done in one sitting to avoid introducing a second error. **DONE 2026-08-10**: positional
+      recount confirmed 18 todos; fixed 6 off-by-one/two references: parent doc "todo 14"→15 (×2, codex SSOTs), "Todo
+      15"→17 (×2, body + codex SSOT); finalize doc "todos 14-15"→"todos 15 and 17" + "todo 15"→16. —
+      unified-trading-pm@d6118cac0e
 - [ ] [DOCS] P3. `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "beaten by 10-50x" headline directly contradicted
       by its own next sentence (~7.5min average pre-PR latency from promotion-cron cadence, not captured by the
       "open→merge" metric) — Contradictions #6. Needs a judgment call: add a new todo tracking the cron-cadence
