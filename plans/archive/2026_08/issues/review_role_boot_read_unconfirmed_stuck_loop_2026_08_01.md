@@ -17,7 +17,7 @@ summary: >-
   basis (interspersed activity shows the slot DOES do other work in between, e.g.
   `agentkeeper_review_succeeded`/`escalation_dispatched` events — so this is a recurring re-trigger, not a single wedged
   tmux session, but the sheer repetition count means real wasted cycles every occurrence).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-08-02 (/ag-closeout-audit cross-cutting finding 1, corroborated by /na-eligibility-audit cross-cutting) -- was [ci, cross-cutting]; content is 100% agent-orchestrator boot/spawn read-confirmation-gate mechanics, zero cross-cutting/CI vocabulary hits
 stage: [meta]
@@ -47,7 +47,6 @@ depends_on: []
 gate_on_depends: false
 supersedes:
 superseded_by:
-archive_exempt: true
 source: >-
   Discovered during `/na-eligibility-audit ci` (2026-08-01) while classifying
   `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own `[DOCS] P3` todo (opened
@@ -63,6 +62,11 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both remaining checkboxes
+> (`[DOCS] P1` cross-role-file audit, `[BACKEND] P2` regression test) independently re-verified and flipped by
+> `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md` todo 3 (2026-08-09) — `agent-orchestrator@5353b6b` +
+> `unified-trading-pm@6f7ed49c2`. Archived by that same finalize plan's todo 4.
 
 # Review-role boot stuck in a 225+-rejection `boot_read_unconfirmed` loop since 2026-07-27
 

@@ -26,7 +26,7 @@ summary: >-
   since 2026-06-17 unchanged, `phantom_captures_tradfi` still cited unchanged in tradfi's own batch2 — both still
   genuinely gated on their owning tranche's action, not cross-cutting's). Orthogonality HARD CHECK re-run: clean, same 4
   legitimate multi-AG coordination docs as 2026-08-01, 0 new dual-tag mistags.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,7 +38,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-02"
@@ -57,7 +57,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 resolved_by: "moot — target doc resolved and archived via ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md todo 4"
 depends_on: []
 source: >-
@@ -69,9 +68,14 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Sole open todo (`[DOCS] P3` retag)
+> closed as moot: its target, `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`, was independently verified
+> + fully resolved 2026-08-09 and archived 2026-08-10 by `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md`
+> todo 4 — no `assigned_vm` reclassify remains to action. Archived by that same finalize plan's todo 4.
 
 # Parked finding — 2026-08-02 `/ag-closeout-audit cross-cutting` run
 
