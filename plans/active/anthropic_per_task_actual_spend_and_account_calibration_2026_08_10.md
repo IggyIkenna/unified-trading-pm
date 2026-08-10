@@ -91,6 +91,15 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
 
 ## Todos
 
+- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
+      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+      verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
+      unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
+      `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
+      `overage_status`, `account_status` on a cadence at least twice per 5-hour window, keyed
+      `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
+      when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
+      sampler survives an orchestrator restart.
 - [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
       the account that owned its slot at that timestamp.** Current attribution has no correct path:
       `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
@@ -182,6 +191,45 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
       `spend_usd` in every window.
+- [ ] [BACKEND] P1. **Gate the calibration set to windows fully inside the `account_id` capture era and require >= 98%
+      meter consumption; treat every other window as a LOWER BOUND, never a measurement.** Consuming fraction `p` of an
+      entitlement yields `p x M`, so a partial window cannot measure the multiplier (operator ruling 2026-08-10).
+      Capture began ~2026-08-06, so `sub-e-odum2default`'s window (opens 2026-08-05 23:00) is structurally undercounted
+      and must be excluded — this, not double-counting, is the leading explanation for the 6x list-value spread across
+      four identically-entitled max20 accounts. **Done when**: the calibration script refuses to emit a multiplier for a
+      sub-98% or partially-captured window, labelling it a lower bound instead, with a test covering both rejection
+      paths.
+- [ ] [BACKEND] P1. **Calibrate the 5-hour meter as its own track, and record which meter was BINDING for each window.**
+      `representative_claim` shows 5 of 6 accounts are `five_hour`-bound and only `sub-c-ikenna-odum` is
+      `seven_day`-bound (2026-08-10), so weekly-only calibration measures the non-binding constraint for most accounts.
+      5h windows reset ~33x more often than weekly, so once the sampler from todo 1 has run they are the far better
+      statistical surface. Depends on todo 1 — there is no retroactive 5h data. **Done when**: a per-account 5h
+      multiplier is reported from >= 3 fully-consumed 5h windows and compared against that account's weekly multiplier,
+      with any divergence stated rather than averaged away.
+- [ ] [DATA] P2. **Determine whether the quota meter weights models differently from list pricing, and stop treating the
+      multiplier as a scalar if it does.** The `weekly_sonnet_pct` / `weekly_sonnet_msgs_used` sub-meter exists in
+      schema but is NULL/0 on every account (verified 2026-08-10), so there is currently NO per-model quota signal — a
+      single multiplier is unvalidated against model mix, and our five sampled accounts had materially different mixes
+      (opus-4-8 + sonnet-4-6 vs near-pure sonnet-5). Either populate the sub-meter from `claude /usage`, or infer
+      per-model quota weights by solving across many (window, mix, consumed-pct) observations once todo 1 supplies them.
+      **Done when**: either per-model weights are reported with their residuals, or the evidence that a single scalar is
+      adequate is recorded explicitly.
+- [ ] [DATA] P2. **Quantify how sensitive the measured multiplier is to cache-read share, since ~78% of our list-priced
+      value is cache reads.** If Anthropic's quota meter discounts cache reads relative to list pricing, the multiplier
+      is a property of the WORKLOAD's cache profile rather than of the account or tier, and would not transfer to a
+      differently-shaped workload. Regress measured multiplier against cache-read share of tokens across all calibrated
+      windows. **Done when**: the correlation is reported, and if material, the multiplier is redefined over a
+      cache-read-adjusted base rather than raw list value.
+- [ ] [DATA] P3. **Detect account tier changes over history rather than applying today's tier retroactively.**
+      `sub-a-ikenna` is currently `pro`; if it was Max earlier, every historical window priced against a $20/mo cost is
+      wrong. **Done when**: either a tier-change timeline is reconstructed from available evidence, or windows preceding
+      the earliest confirmed tier are excluded from calibration and that exclusion is recorded.
+- [ ] [BACKEND] P3. **Exclude usage-probe replay turns from value while still counting their real turns toward quota.**
+      `measure-claude-usage-value.py`'s docstring records 588,821 duplicate turns against 649,255 real ones (~47%) on
+      this VM, caused by probe sessions replaying a resumed session's prior turns into their own transcript — those
+      replayed turns were never re-billed and must not inflate list value, but the probe's own genuine turns do consume
+      quota. **Done when**: a test proves a replayed turn is excluded from value and a probe's own turn is retained, and
+      the calibrated totals change in the expected direction.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
@@ -228,6 +276,33 @@ bound, yet reads higher for 4 of 5 accounts. That inversion isolates the two def
 every pre-compaction session. `sub-f` is the only account where both methods converge (22.4x vs 23.0x), consistent with
 it having rotated sessions least. Shipping any multiplier from this spread would bake a 3x-107x error into the cost
 column, so the attribution fixes gate the pricing work.
+
+### 2026-08-10 — Calibration feasibility probe (read-only): what data does NOT exist
+
+Follow-up to the operator's question "anything we need to research to avoid an unfair representation, and do we only
+measure fully-consumed windows?" — four findings that reshaped the todo list:
+
+1. **No usage-meter history exists.** `account_usage` is keyed by `account_id` alone — 8 rows, 8 distinct accounts,
+   current state only. Every past weekly and 5-hour window is unrecoverable, so today there is exactly ONE weekly
+   observation per account and ZERO historical 5h observations. Retroactive 5h calibration is impossible; sampling has
+   to start now (todo 1) or the same n=1 problem persists indefinitely. This is the most time-critical item in the plan.
+2. **Most accounts are 5-hour-bound, not weekly-bound.** `representative_claim`: `five_hour` for sub-a, sub-b, sub-d,
+   sub-e, sub-f; `seven_day` only for sub-c. Weekly-only calibration therefore measures the non-binding constraint for 5
+   of 6 accounts.
+3. **No overage was ever paid** — `overage_status='rejected'` on every account (`out_of_credits` for sub-a/sub-b,
+   `org_level_disabled` for sub-c/d/e/f). The subscription price is the full cost for these windows, so the denominator
+   of the multiplier needs no overage adjustment. One less confound.
+4. **Double-counting is NOT the main driver of the 6x spread.** Measured: only **162 overlapping `task_usage` row
+   pairs** (both windows known) and **3 rows with `assigned_at IS NULL`** (2 anthropic, 1 deepseek) doing whole-session
+   counting. Against 2,622 rows that is ~6% — real (todo 3 still fixes it) but far too small to explain a 6x spread. The
+   leading explanation is **coverage**: `sub-e`'s window opens 2026-08-05 23:00 while `account_id` capture began ~08-06,
+   so its first day is structurally missing, and it is precisely the account with the fewest attributed rows (49). This
+   is what todo 5's capture-era gate exists to prevent. Partially answers todo 4 — the remaining piece is the token
+   volume inside those 162 pairs.
+
+Also unresolved and now tracked: the `weekly_sonnet_pct` sub-meter is NULL/0 on every account, so there is currently no
+per-model quota signal to validate a scalar multiplier against (todo 7); and ~78% of our list-priced value is cache
+reads, whose quota weighting is unknown (todo 8).
 
 **Incidental findings**: every cache write on this fleet is 1h TTL (`ephemeral_5m_input_tokens` = 0 across 17,446+
 sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is enormous (5.2B tokens on `sub-c` in one
