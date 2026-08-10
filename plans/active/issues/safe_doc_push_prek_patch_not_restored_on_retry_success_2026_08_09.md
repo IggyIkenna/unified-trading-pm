@@ -121,16 +121,26 @@ mitigations, cheapest first:
       passes, with an unrelated unstaged edit present) rather than relying on the live incident alone. — Verdict: NOT a
       confirmed prek-level defect; see Progress Log 2026-08-10 for the full reproduction + reasoning. —
       unified-trading-pm (this doc only, no code change for this todo).
-- [ ] [DEVOPS] P1. Add the immediate safety net from the Recommended fix above — **NOTE (2026-08-10, todo 1's
-      investigation): likely ALREADY SATISFIED, by a different mechanism than originally worded.**
-      `scripts/dev/safe-doc-push.sh`'s `locked_git_commit()` (see `_prek_race_snapshot`/`_prek_race_check`, shipped
-      `f8a307badf` 2026-08-09) already hashes every already-unstaged file immediately before and after each `git commit`
-      call and hard-stops (exit 7, loud stderr) on any mismatch — this catches a silently-dropped restore by its OUTCOME
-      (content changed underneath an unstaged edit) rather than by scanning `~/.cache/prek/patches/` for orphans, but
-      covers the same failure signature this todo asks for. Whoever picks this up next should verify (not just re-read
-      the diff) that this mechanism actually fires for a genuine retry-drops-the-restore scenario before deciding
-      whether the orphaned-patch-scan approach is still needed on top of it, or whether this todo can close as
-      already-covered.
+- [x] ✅ [DEVOPS] P1. Add the immediate safety net from the Recommended fix above — unified-trading-pm@24ac737541: added
+      `check_orphaned_prek_patches()` to `scripts/dev/safe-doc-push.sh`, called once after a successful push. It
+      compares every `~/.cache/prek/patches/*.patch` file's mtime against this run's start epoch
+      (`_SDP_RUN_START_EPOCH`, captured before any commit could run); a hit means a patch created during this run
+      outlived a successful push, i.e. its restore never happened. Prints a loud, actionable warning and exits 9 (new
+      documented exit code) instead of 0. Verified functionally with a standalone positive/negative test (injected patch
+      → detected, exit 1 from the check function; no patch → clean exit 0).
+
+      **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
+          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+          redundant, so both mechanisms are now kept.
+
 - [ ] [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
       comment that a prior live incident (this issue doc) suspected a prek patch-restore defect but a deliberate
@@ -187,3 +197,12 @@ mitigations, cheapest first:
   unstaged edit during a commit call. **Disposition for todo 3**: since the reproduction did NOT confirm a genuine
   prek-level defect, todo 3 (upstream-file / pin-known-good-version / document-workaround) should be RE-SCOPED, not
   executed as originally worded — see todo 3's own updated wording below.
+- **2026-08-10 (slot 8, cicd, `safe_doc_push_prek_patch_not_restored_on_retry_success-3e24fb54367b`)**: todo 2 shipped —
+  `check_orphaned_prek_patches()` added to `scripts/dev/safe-doc-push.sh`, unified-trading-pm@24ac737541. Started this
+  work before todo-1's parallel investigation (slot 12) landed its re-scoping note on this doc; reconciled on completion
+  rather than discarding — confirmed by inspecting `_prek_race_snapshot`/`_prek_race_check`'s actual scope (per-call,
+  only already-unstaged files at snapshot time, only around this script's own commit calls) that the two mechanisms are
+  complementary, not duplicative: the checksum check catches a same-process retry silently reverting an edit it already
+  knew was dirty; the new orphan scan catches any leftover patch in the shared cache dir regardless of which
+  process/commit-call produced it. Both now ship together. See todo 2's own entry above for the full reconciliation
+  reasoning.
