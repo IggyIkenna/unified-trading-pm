@@ -222,16 +222,37 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   pending a quieter host window — see the Deferred table below. The fix itself is fully shipped and durable regardless
   of this blocker.
 
+- **2026-08-10 (slot-29, todo 1 — 2026-08-10-earlier "host contention" hypothesis WAS WRONG; real root cause found +
+  fixed)**: Retried the 2025 `--apply-prod` under confirmed-quieter host conditions (`free -h` swap 5.8Gi, only one
+  other slot running a light `pytest`, vs. 18Gi swap + 4-6 concurrent QG runs during the earlier 4 failures) — it died
+  identically anyway (5th consecutive identical SIGTERM death in `_filter_to_actually_missing`), which disproves the
+  prior "host contention" hypothesis outright: a quiet host did not help. **Correction to the 2026-08-10-earlier
+  entry**: the swap-usage correlation was circumstantial and wrong; do not carry that hypothesis forward. Diagnosed for
+  real this time via `/var/log/syslog` (readable, unlike `dmesg`/`journalctl -k` which stayed permission-denied): a
+  per-slot `resource-watchdog` daemon enforces a hard **10240MB (10GB) RSS cap per process**, independent of host-wide
+  load — `KILL #46: pid=2280957 slot=29 rss:12314448kB > 10485760kB`, clean SIGTERM exit 1s later. This is
+  deterministic, not flaky, and explains why even the _small_ 2025 population (4,437 candidates) failed identically to
+  the large 2018-2020 population. Root-caused the 12GB+ RSS itself by reading `apply()` (script lines 228-336): the
+  actual driver is NOT the 17,090,683-row live-index load, it's
+  `precise_mask = df.apply(lambda r: (r["_date_s"], r["_league_s"]) in _keys, axis=1)` — a `DataFrame.apply(axis=1)`
+  over all 17M rows, which is a well-known pandas anti-pattern that materializes a Python `Series` object per row and
+  balloons both memory and CPU at this scale. **Fixed** in
+  `scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`: replaced the row-wise `.apply(axis=1)`
+  lambda with a vectorized `pd.Series(list(zip(df["_date_s"], df["_league_s"])), index=df.index).isin(confirmed_keys)` —
+  logically identical membership test, no per-row Series construction. `quality-gates.sh` launched (task `b4vaiwbjd`,
+  backgrounded); not yet green, not yet committed/shipped/re-attempted as of this note — see Deferred table.
+
 ## Deferred work after 2026-08-10
 
-| Item                                                           | State / why deferred                                                                                                                                          | Blocked on                                                                                                                       |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | Not done. Dry-run fully validated (88/4,437 confirmed missing); the apply attempt died with SIGTERM/143 before any mutating write (snapshot-only, no risk).   | Infra/host resource contention (see Progress Log 2026-08-10) — retry when fewer concurrent slot QG/heavy-python runs are active. |
-| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Not done. Dry-run itself never completed (3× identical SIGTERM/143, zero output each time) — confirmed-missing count for this population is still unmeasured. | Same infra/host contention.                                                                                                      |
+| Item                                                           | State / why deferred                                                                                                                                                             | Blocked on                                                                                                           |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Ship the `df.apply(axis=1)` → vectorized `.isin()` memory fix  | In progress. Patch made (uncommitted); `quality-gates.sh` running in the background as of this note (task `b4vaiwbjd`), not yet confirmed green.                                 | Nothing but elapsed QG time — pick this up first in the next session/tick if it wasn't finished before this compact. |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | Not done. Dry-run fully validated (88/4,437 confirmed missing) under the OLD code; needs a fresh apply-prod attempt once the memory fix above is shipped.                        | The memory fix above landing + QG passing.                                                                           |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Not done. Dry-run itself never completed under the OLD code (3× identical SIGTERM/143, zero output each time) — confirmed-missing count for this population is still unmeasured. | The memory fix above landing + QG passing.                                                                           |
 
-**Recommended next action**: re-run
-`uv run python scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py --population 2025 --apply-prod --confirm-prod-write`
-first (small, already-validated population, quick to finish once the host is quieter), then `--population 2018_2020` as
-a plain dry-run (no `--apply-prod`) to get its confirmed-missing count before attempting its apply. Check `free -h` swap
-usage and `ps -ef | grep quality-gates` for concurrent load before retrying — this is not new work, just re-running the
-same already-shipped script once the host has headroom.
+**Recommended next action**: confirm `quality-gates.sh` (task `b4vaiwbjd`) finished green, ship via
+`quickmerge.sh --agent --files 'scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py'`, then re-run
+`--population 2025 --apply-prod --confirm-prod-write` (small, quick to confirm the fix actually holds RSS under 10GB),
+then `--population 2018_2020` as a plain dry-run first (get its confirmed-missing count), then its own apply-prod. The
+prior "wait for a quiet host" advice is **superseded and wrong** — do not wait for low swap usage, the cap is
+per-process and fixed regardless of host load.
