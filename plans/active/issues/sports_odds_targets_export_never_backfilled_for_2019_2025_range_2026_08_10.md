@@ -114,6 +114,11 @@ parent issue doc's Progress Log for the exact VM names / evidence.
       (`launch-sports-ensemble-train-vm.sh`, `deployment-service`) and report the measured coverage + performance delta
       back into `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2 and
       `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service)
+- [ ] [INFRA] P3. `launch-sports-ensemble-train-vm.sh` hardcodes `METADATA="VM_TASK=features-backfill"` — the run is a
+      training run (`VM_OPERATION=sports-ensemble-train`, and the actual log line reads `task=features-backfill` in
+      PIPELINE_HEARTBEAT), so deployment-ui/vm-life classification labels these trainer VMs as features-backfill.
+      Cosmetic (the real `op=sports-ensemble-train` is correct in run.log), but fix the label to
+      `VM_TASK=sports-ensemble-train` so fleet monitoring/classification reads correctly. (repo: deployment-service)
 
 ## Progress Log
 
@@ -175,3 +180,14 @@ parent issue doc's Progress Log for the exact VM names / evidence.
   `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` result line
   (`SportsEnsembleTrainingRunner(<model_id>) complete: train=N val=N test=N rows, K features, test_metrics=...` /
   `no data available, run aborted`) before assuming a re-launch is needed.
+
+## Deferred work after 2026-08-10
+
+| Item                                                                                                                                                                                                                                       | State / why deferred                                                                    | Blocked on                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------- |
+| Collect the 5 trainer runs' result lines once terminal (`complete:` metrics or abort)                                                                                                                                                      | Cannot be done yet — VMs in-flight (launched 2026-08-10T09:27-09:28Z, multi-hour train) | Elapsed wall-clock on GCE |
+| Report measured coverage + rmse/mae/r2-per-outcome delta into this P1's text + `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2 + `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` | Cannot be done yet — needs the result lines above                                       | The item above            |
+| Flip this P1's checkbox with evidence + `/done`                                                                                                                                                                                            | Cannot be done yet — needs the measured delta written                                   | The items above           |
+
+**Recommended next item**: pick up this doc's P1 once the 5 `ml-train-sports-model-2a/b/c/d/e-20260810-09xxxx` VMs reach
+terminal state (watchdog armed; VM names + log paths in the Progress Log above).
