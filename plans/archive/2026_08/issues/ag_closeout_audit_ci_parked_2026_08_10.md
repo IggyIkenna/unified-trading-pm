@@ -22,8 +22,8 @@ tags: [ag-closeout-audit, parked, ci, orphan, mistag, batch12, final-report]
 related:
   [
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
-    /plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
@@ -46,7 +46,7 @@ supersedes: ag_closeout_audit_ci_parked_2026_08_09
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
   ]
 ---

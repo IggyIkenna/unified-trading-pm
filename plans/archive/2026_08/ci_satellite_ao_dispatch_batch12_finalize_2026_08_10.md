@@ -7,7 +7,7 @@ summary: >-
   (`archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`,
   `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`) against batch 12's actual outcome, then archives batch
   12 (and this plan) once reconciled — mirroring the batch9/batch11-finalize precedent for this exact shape.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [ci, ao-dispatch, close-out, batch-12, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
     /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md,
     /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
   ]
@@ -47,7 +47,7 @@ sequential: true
 drift_direction: none
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
     /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md,
     /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
     /plans/active/task_template.md,
@@ -55,6 +55,13 @@ context_scope:
 ---
 
 # CI satellite AO batch 12 — finalize
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 3 todos done: reconciled
+> `archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`'s checkboxes against batch12 todo 1
+> (done-with-evidence; codex narrowed to mode-2 only) and `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`
+> against batch12 todo 2 (deadlock self-cleared, doc stays open with `[OPERATOR]` structural-fix paths #2/#3), then
+> archived `ci_satellite_ao_dispatch_batch12_2026_08_10.md` + this finalize plan via the standard 6-step ritual. Both
+> docs now at `/plans/archive/2026_08/`.
 
 > **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch12_2026_08_10]` + `gate_on_depends: true` holds
 > both todos below until batch 12's own todos are `done` — which itself cannot happen until an operator flips batch 12
@@ -87,15 +94,10 @@ context_scope:
   - Source: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`.
   - **Done when**: the resolution section is verified accurate and current, the doc's `status` is confirmed `open`, and
     PM's `quality-gates.sh` is green.
-- [ ] [DOC] P2. **Archive batch 12 (this plan's own sibling) once both todos above are done.** Per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE and the
-      batch9/batch10/batch11 precedent for this exact batch-N/finalize shape: `git mv` both
+- [x] ✅ [DOC] P2. **Archived batch 12 (this plan's own sibling).** `git mv`'d both
       `ci_satellite_ao_dispatch_batch12_2026_08_10.md` and this finalize doc to `plans/archive/2026_08/`,
-      `status:     complete` on both, archive banner added, corpus referrers repointed. Ship the checkbox-flip commits
-      (todos 1-2) SEPARATELY from this git-mv archival commit, per the codex "never combine" rule this batch's own todo
-      1 may end up narrowing — until it does, follow the existing rule here too (use the `archive_exempt: true`
-      one-commit bridge if `check_archive_candidates.sh --only` blocks the flip-only commit, exactly as
-      batch9/batch10/batch11-finalize did).
+      `status: complete` on both, archive banner added, corpus referrers repointed, INDEX.md regenerated.
+      `check_ag_closeout_linkage.py` 0 orphans (baseline 0) + `regenerate_active_plan_inventory.py` clean.
   - **Done when**: both docs are archived, referrers fixed corpus-wide, and PM's `quality-gates.sh` is green.
 
 ## Codex SSOTs
@@ -125,3 +127,8 @@ context_scope:
   `unified-trading-pm@4f901b9916` → `unified-trading-pm@72adcb234c` (the former resolves to no commit anywhere on this
   branch — plan-hygiene's commit-SHA check rejected it; `72adcb234c` is the actual "flip ci batch12 finalize todo 1"
   commit, verified ancestor of `origin/live-defi-rollout`).
+- **2026-08-10 (slot-17, infra) — todo 3**: Archived `ci_satellite_ao_dispatch_batch12_2026_08_10.md` to
+  `plans/archive/2026_08/` via the standard 6-step ritual, then archived this finalize plan alongside it (all 3 todos
+  now done, unlocked). Both `git mv`'d + banner + `status: complete`; every corpus referrer repointed to the archive
+  home; INDEX.md regenerated. `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
+  `regenerate_active_plan_inventory.py` clean.
