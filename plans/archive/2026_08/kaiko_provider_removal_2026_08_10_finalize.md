@@ -9,7 +9,7 @@ summary: >-
   all three repos rather than trusting the removing worker's per-repo reports, then rescopes
   `glassnode_kaiko_credential_ask_2026_08_09.md` so the Glassnode half survives as a live BLOCKED-CREDENTIALS ask while
   the Kaiko half is closed as ruled-out.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [kaiko, removed-provider, finalize, credential-ask, verification]
 related:
   [
-    /plans/active/kaiko_provider_removal_2026_08_10.md,
+    /plans/archive/2026_08/kaiko_provider_removal_2026_08_10.md,
     /plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md,
   ]
 created: "2026-08-10"
@@ -41,7 +41,7 @@ depends_on: [kaiko_provider_removal_2026_08_10]
 gate_on_depends: true
 context_scope:
   [
-    /plans/active/kaiko_provider_removal_2026_08_10.md,
+    /plans/archive/2026_08/kaiko_provider_removal_2026_08_10.md,
     /plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md,
   ]
 source: >-
@@ -51,7 +51,13 @@ source: >-
 
 # Finalize — Kaiko provider removal
 
-Gated behind `kaiko_provider_removal_2026_08_10.md`. Do not start until all 4 of its todos are `[x]`.
+> **🟢 ARCHIVED 2026-08-10.** All 4 todos done. The verification this plan existed to perform came back clean: a
+> fleet-wide `rg -il kaiko` sweep found zero live integration references, the two code removals shipped QG-green in
+> dependency order (UAC first, then MTDS), and the credential ask was rescoped to Glassnode-only rather than closed
+> outright. No deferred items — the Glassnode half remains live in [[glassnode_kaiko_credential_ask_2026_08_09]] and on
+> the operator's consolidated action list.
+
+Gated behind [[kaiko_provider_removal_2026_08_10]]. Do not start until all 4 of its todos are `[x]`.
 
 ## Todos
 
@@ -85,9 +91,22 @@ Gated behind `kaiko_provider_removal_2026_08_10.md`. Do not start until all 4 of
       the operator provisions or declines it). Update the doc's `title`, `summary` and `tags` so it no longer presents
       as a joint ask. **Done when**: the doc reads as a Glassnode-only credential ask with the Kaiko history preserved
       as a closed record, and `check_frontmatter_schema.py` passes.
-- [ ] [DOCS] P3. **Archive this pair once the above are done**, via the standard 6-step ritual, repointing every corpus
-      referrer. **Done when**: both docs archived with banners and `check_reference_paths.py` no worse than baseline.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-10 — both docs archived to `plans/archive/2026_08/` in this commit.** Ritual step 1:
+      no deferred items to migrate (the Glassnode credential ask is already its own live doc). Steps 3-4: the durable
+      contract this pair established — the removed-vendor ban is FLEET-WIDE — already landed in
+      `/codex/04-architecture/defi-execution-overview.md` § "Removed vendors" and `cursor-configs/CLAUDE.md`'s always-on
+      section under `unified-trading-pm@026ed5ab52`, so no fact is orphaned by the move. Step 5: 4 corpus referrers
+      repointed (`defi-execution-overview.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_10.md`,
+      `glassnode_kaiko_credential_ask_2026_08_09.md`, `scripts/quality-gates-base/base-service.sh`); `INDEX.md`
+      regenerated rather than hand-edited. Step 6: no lock to clear; combined same-commit flip+`git mv` per the
+      single-repo (mode-1) sanctioned shape.
 
 ## Progress Log
 
 - **2026-08-10** — Authored alongside the removal plan. Gated via `depends_on` + `gate_on_depends: true`.
+- **2026-08-10 (archival)** — Archived the pair. Deliberately did NOT set `SDP_ISOLATED=0`: the deletion-propagation fix
+  `unified-trading-pm@18ae9a4312` is an ancestor of this checkout (verified with `git merge-base --is-ancestor`), so
+  isolated mode now stages the delete side correctly. That check is the one to repeat before any future archival — the
+  escape hatch is only needed on a checkout that predates the fix, and using it unnecessarily gives up the isolation
+  that protects a shared checkout from a peer session's dirty tree. Both sides of the rename were confirmed present in
+  the commit before moving on, per the ritual's post-commit verification.
