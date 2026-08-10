@@ -206,11 +206,16 @@ Two independent causes, both now fixed:
       remaining open item (its `[DATA] P2` relaunch item is already done). Confirmed 2026-08-10 as NOT covered by
       `defi_satellite_ao_dispatch_batch11_2026_08_09.md`. **Done when**: the timeout is raised to a value justified by
       measured per-date runtime at 10K+ instruments (state the measurement), and the change is shipped.
-- [ ] [REVIEW] P3. **Verify `instruments-service@62a8b1d8` actually covers parts 3a and 3b**, not just 3c, before anyone
-      treats `/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s fixture-pairing checkbox as
-      closable — 3a = registry-resolution, 3b = `mapped_sport_event_id` / `PredictionMarketCrossVenueMapping`
-      population, 3c = team-name canonicalisation (the only part the commit message claims). **Done when**: an explicit
-      per-part verdict against the real diff is written into that doc.
+- [x] ✅ [REVIEW] P3. **Verify `instruments-service@62a8b1d8` actually covers parts 3a and 3b**, not just 3c — verdict
+      written 2026-08-10 (slot 7, review) into `/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`
+      lines ~257-303. Per-part summary: **3a** PARTIALLY COVERED (local fixture-ID computation via
+      `build_fixture_id`/`build_team_id`, not the external api-football/odds-api registry resolution the plan text
+      describes — but same approach as the already-shipped Polymarket adapter; accepted by the existing partial-progress
+      note). **3b** COVERED (Kalshi half — stamps `canonical_instrument_id` so `_build_mapping()` UAC@1dddc680 can pair
+      Kalshi↔Polymarket; `mapped_sport_event_id` was separately found DEAD/unwired). **3c** NOT COVERED (correctly
+      excluded — team-name canonicaliser shipped separately 2026-08-05). **League scope**: ALL leagues structurally
+      (code is league-agnostic via `SPORTS_*` prefix), not MLB-only; test gap is coverage-only. Full diff confirmed:
+      `kalshi.py` +25L, test +34L.
 - [ ] [DOCS] P3. **Archive `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`**
       via the standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — all 3
       todos done, unlocked, and its own Progress Log already flags it archival-eligible. **Done when**: archived with
@@ -273,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-              open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-              extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-              extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-              Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+                  open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+                  extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+                  extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+                  Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
