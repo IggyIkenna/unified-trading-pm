@@ -121,9 +121,26 @@ and nothing on the server side catches the mismatch.
       `modelBadgeClass`/`MODEL_RANK` operate on the role registry (`RoleModel`) not slot telemetry; zero
       `model === "sonnet"` conditional comparisons found in dashboard TS files. No breaking consumers — the eb6a763 fix
       is safe to ship without dashboard changes (slot-9, 2026-08-08).
-- [ ] [SCRIPT] P3. Audit whether the SAME self-report-without-cross-check pattern exists for `effort`/`thinking` (both
-      self-reported per `req.effort`/`req.thinking` in the same `/boot` call) — those flags may be equally meaningless
-      for a non-Anthropic provider; scope only if todo 1 confirms the pattern generalizes.
+- [x] ✅ [SCRIPT] P3. **PATTERN CONFIRMED (slot-13, 2026-08-10)** — the SAME self-report-without-cross-check pattern
+      EXISTS for `effort`/`thinking`. `slots_worker.py:320-321` stores `effort=req.effort, thinking=req.thinking`
+      directly from the worker's `/boot` self-report with no provider-aware cross-check; `slot_boot` activity event
+      (lines 354-355) logs them identically. A companion gap in the spawn path: `--effort` and `--max-thinking-tokens`
+      CLI flags are NOT provider-gated (`tmux_spawn.py:_append_model_flags` only gates `--effort` on Haiku, not on
+      non-Anthropic providers) — unlike `--model`, which `model_flag_for_provider()` suppresses for non-Anthropic
+      spawns. Impact: lower severity than the `model` mislabel (effort/thinking are reasoning knobs, not identity), but
+      telemetry is equally misleading for non-Anthropic sessions and spawn flags are wasted/possibly erroneous.
+      Follow-up fix tracked as new todo 4. — agent-orchestrator@(audit-only, no code change).
+
+- [ ] [SCRIPT] P3. **NEW (slot-13 audit, 2026-08-10).** Fix the effort/thinking cross-check gap found by todo 3's audit:
+      either (a) add `effective_effort_for_telemetry()` / `effective_thinking_for_telemetry()` to `accounts.py`
+      mirroring `effective_model_for_telemetry()`, storing a provider-aware value (e.g. `null` or the provider's own
+      reasoning-tier label for non-Anthropic) in `SlotRow` + `slot_boot` activity events, AND/OR (b) provider-gate the
+      `--effort` and `--max-thinking-tokens` CLI flags in `tmux_spawn.py:_append_model_flags()` the same way
+      `model_flag_for_provider()` already suppresses `--model` — currently `--effort high` and
+      `--max-thinking-tokens 31999` are passed to DeepSeek spawns where they are at best ignored and at worst could
+      cause API errors. Done when: a unit test boots a `deepseek-v4-flash` account and asserts the persisted
+      `SlotRow.effort`/`SlotRow.thinking` are provider-corrected (NOT raw Anthropic labels), and non-Anthropic spawns
+      omit `--effort`/`--max-thinking-tokens` from the CLI flags. (repo: agent-orchestrator)
 
 ## Progress Log
 
@@ -153,3 +170,26 @@ and nothing on the server side catches the mismatch.
   `RoleModel = "opus"|"sonnet"|"haiku"` which is the role-registry type (static per role config), not slot telemetry.
   Zero `model === "sonnet"` conditional comparisons in dashboard TS. No code changes needed; todo -002 closed.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **slot-13 2026-08-10 (infra, todo -003, `ao_deepseek_provider_model_telemetry_mislabeled-003`)**: Audited whether the
+  same self-report-without-cross-check pattern exists for `effort`/`thinking` as the already-fixed `model` (todo 1,
+  `eb6a763` → `effective_model_for_telemetry()`). **Finding: PATTERN CONFIRMED for both fields, plus a companion gap in
+  the spawn path.**
+
+  **Telemetry gap** (`slots_worker.py:320-321`, `354-355`): `effort` and `thinking` are stored directly from
+  `req.effort`/`req.thinking` in the `/boot` handler (both `upsert_slot` and `slot_boot` activity event) with no
+  provider-aware cross-check — identical to the `model` mislabel before `effective_model_for_telemetry()`. A
+  `deepseek-v4-flash` session shows `effort: "high"`, `thinking: "on"` in telemetry — Anthropic-specific labels with no
+  defined meaning on DeepSeek.
+
+  **Spawn-path gap** (`tmux_spawn.py:_append_model_flags:1426-1432`): `--effort` is only Haiku-gated
+  (`model_supports_effort`), NOT provider-gated; `--max-thinking-tokens 31999` is only gated by the `thinking` boolean.
+  Unlike `--model` (suppressed by `model_flag_for_provider()` for non-Anthropic), these Anthropic-specific reasoning
+  flags are still passed to DeepSeek spawns — at best silently ignored, at worst causing API errors depending on the
+  compatibility layer.
+
+  **Severity assessment**: lower than the `model` mislabel (reasoning knobs, not identity), but the same class of bug:
+  Anthropic-specific concepts applied to non-Anthropic providers with no cross-check. A `needs_respawn()` at a task
+  boundary comparing effort-ladder indices of two DeepSeek sessions is comparing meaningless values. Read context_scope
+  files (`accounts.py`, `slots_worker.py`, `model_tier.py`, `tmux_spawn.py:_append_model_flags`). No code change made
+  (audit-only). Filed follow-up fix as new todo 4 (provider-corrected telemetry + provider-gated CLI flags, same
+  `effective_*_for_telemetry()` pattern as the `model` fix). Checkbox flipped; Progress Log entry written.
