@@ -293,12 +293,17 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
 
 ### C — condition-derived retirement (the general fix)
 
-- [ ] [BACKEND] P0. **Wire `resolved_drift` to actually close the rows it resolves.** `record_dispatch_result` already
-      computes it and discards it — close each matching open `doc_drift:<key>` `BlockedRow` with
+- [x] ✅ [BACKEND] P0. **Wire `resolved_drift` to actually close the rows it resolves.** `record_dispatch_result`
+      already computes it and discards it — close each matching open `doc_drift:<key>` `BlockedRow` with
       `answered_by="auto:condition_cleared"` and a citation naming the dispatch that cleared it. **Done when**: a run
       where key K drops out of the findings closes the open `doc_drift:K` row, `resolved_doc_drift_count` matches the
       number of rows actually closed, a test covers the open-then-clear cycle, and a Slack CLOSE bookend fires for any
-      row that had previously paged (per the alerting SSOT's OPEN/CLOSE contract). Repo: agent-orchestrator.
+      row that had previously paged (per the alerting SSOT's OPEN/CLOSE contract). Repo: agent-orchestrator. —
+      agent-orchestrator@04db4ee (QG green 3196 passed; record_result closes each open `doc_drift:<key>` row via
+      `answer_blocked(..., answered_by="auto:condition_cleared")` with an answer citing the clearing dispatch +
+      `doc_drift_cleared` activity; ✅ CLOSE bookend (`notify_slot_blocked_answered`, auto=True) for rows that had
+      paged; `resolved_doc_drift_count` now counts rows actually closed, not raw resolved keys; 3 new tests:
+      open-then-clear, paged→bookend, no-open-row→zero).
 - [ ] [BACKEND] P1. **Generalise it — add a `condition_key` column and a fourth `classify_retirement` exit that does not
       resolve a `TaskRow`.** Any detector-seeded row carrying a `condition_key` retires when its detector's latest run
       no longer reports that key. Route `doc_drift` through this generic path rather than keeping a bespoke closer.
@@ -379,3 +384,14 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   `git pull --rebase --autostash` conflict with the sibling `claude_session_id` BlockedView work
   (`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` -001/-002) was reconciled by keeping BOTH fields —
   upstream `claude_session_id` + this plan's `context` — in `BlockedView` and `_blocked_to_view`.
+- **2026-08-10 (C1, slot-16 worker)**: Wired `resolved_drift` (computed but discarded every run) to actually close the
+  `doc_drift:<key>` BlockedRows it resolves. Inside `record_result`'s session, for each key that dropped out of the
+  findings, every open row with `task_id == "doc_drift:<key>"` is closed via
+  `answer_blocked(..., answered_by="auto:condition_cleared")` with an answer naming the clearing dispatch, a
+  `doc_drift_cleared` activity fires, and a ✅ CLOSE bookend (`notify_slot_blocked_answered`, auto=True) posts for any
+  row that had already paged (per the alerting SSOT's OPEN/CLOSE contract — a never-paged row has no OPEN page to
+  bookend). `resolved_doc_drift_count` now equals the number of rows ACTUALLY closed (a resolved key with no open row
+  contributes zero). — agent-orchestrator@04db4ee (QG green 3196 passed; 3 new tests: open-then-clear cycle,
+  paged→bookend, no-open-row→zero). Note: C2 generalises this into a `condition_cleared` `classify_retirement` exit +
+  `condition_key` column and REPLACES this doc_drift-specific closer — C1 deliberately keeps the bespoke path until C2
+  lands.
