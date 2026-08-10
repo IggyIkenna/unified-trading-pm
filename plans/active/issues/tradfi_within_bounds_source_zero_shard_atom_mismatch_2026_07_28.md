@@ -59,6 +59,7 @@ related:
     /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-28
