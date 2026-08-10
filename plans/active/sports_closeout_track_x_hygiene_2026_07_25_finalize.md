@@ -34,6 +34,7 @@ supersedes:
 superseded_by:
 depends_on: [sports_closeout_track_x_hygiene_2026_07_25]
 gate_on_depends: true
+archive_exempt: true # bridge for the flip-then-mv two-commit shape (plan-completion-and-archival-discipline.md § archive_exempt); dropped in the immediately-following archival mv commit
 source: >-
   task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize plan,
   mirroring the sports_satellite_ao_dispatch_batch2-finalize precedent.
@@ -77,13 +78,16 @@ context_scope:
       `unified-trading-pm@69b8c3f7f3` (verified via `git show`), and the MERGED TRACKING section is confirmed present on
       origin in the issue doc (line 669). No Track V league_id todo still treats the mapping/gap-analysis as external.
       No follow-up needed.
-- [ ] [DOC] P1. **Archive `sports_closeout_track_x_hygiene_2026_07_25.md`** via the standard 6-step ritual: confirm todo
-      2 above resolved cleanly → add the archive banner → codex-alignment check (no new codex doc was created by this
-      extraction, so this is a no-op confirmation, not a skip) → grep the corpus for every referrer of
+- [x] ✅ [DOC] P1. **Archive `sports_closeout_track_x_hygiene_2026_07_25.md`** via the standard 6-step ritual: confirm
+      todo 2 above resolved cleanly → add the archive banner → codex-alignment check (no new codex doc was created by
+      this extraction, so this is a no-op confirmation, not a skip) → grep the corpus for every referrer of
       `sports_closeout_track_x_hygiene_2026_07_25` (including this finalize doc's own filename) and fix each path to the
       archived location → clear `locked_by` (already empty, confirm) → archive this finalize doc alongside it in the
       same commit. **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the
-      new path, and this finalize doc is archived in the same commit.
+      new path, and this finalize doc is archived in the same commit. — steps 1-3 done this commit (todo 2 confirmed
+      resolved cleanly; codex-alignment no-op confirmed; `locked_by` empty on both docs); steps 4-6 (banner + status +
+      referrer repoint + the `git mv` itself) land in the immediately-following commit, split out per the
+      never-combine-checkbox-flip-with-git-mv rule (RULES.md § 2) — see Progress Log entry below.
 
 ## Progress Log
 
@@ -91,3 +95,13 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added the merged `LEAGUE_ID_TO_TIER`/gap-analysis
   tracking issue todo 2 must confirm Track V cites, and the archival-ritual codex SSOT in place of the parent epic;
   code-free finalize gate, no source path applicable.
+- **2026-08-10 (slot-18, data_engineering)**: Todo 3 ([DOC] P1 archive), part 1/2: confirmed todo 2 above resolved
+  cleanly (its `✅ DONE 2026-08-10` note verified the Track V league_id section cites the merged issue doc); ran the
+  codex-alignment check — this extraction shipped no new contract (4 doc/code changes, all recorded in the parent
+  closeout + the peripheral-contamination issue doc), so no new codex doc is needed, a genuine no-op confirmation rather
+  than a skip; confirmed `locked_by` is empty on both this doc and the source plan. Corpus-wide referrer grep (beyond
+  this doc itself) found 17 referrer files, including the parent closeout, the `sports_master` epic, and archived issue
+  docs (see the immediately-following commit). Part 2/2 (banner + status flip + referrer repoint + the `git mv` to
+  `plans/archive/2026_07/`) lands in the immediately-following commit — a same-commit checkbox-flip + git-mv would make
+  the diff at this doc's still-active `plan_ref` path show only a file deletion, defeating the server's M3 plan-flip
+  verification (RULES.md § 2).
