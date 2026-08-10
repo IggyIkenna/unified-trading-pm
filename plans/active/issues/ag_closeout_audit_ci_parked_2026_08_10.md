@@ -242,6 +242,82 @@ work). Not this audit's to reclassify or archive — the next `ag_closeout_audit
 successor supersedes it, per the housekeeping precedent completed above (don't let this one go two rounds unarchived
 either).
 
+## Second dispatch delta (2026-08-10, ~4.5h later, slot 14, `agt-b99463`)
+
+A second same-day `ag_closeout_auditor` dispatch for `ci`. Per SKILL.md's iterative-drain step 1, re-checked this
+report's own state rather than re-deriving from scratch: regenerated the candidate list
+(`generate_ag_closeout_audit_candidates.py --tranche ci`, now 53 members / 40 never-cited / 13 self-dispatched-or-cited,
+up from 51/39/12), intersected the set of ci-tagged candidates against every file touched in `plans/active/` since this
+report's own authoring commit (`f56e450a55`), and gave a full fresh read to every genuinely new/changed hit. Result:
+**no new batch warranted; batch12 unchanged; corpus is measurably healthier than this morning's snapshot.**
+
+- **Batch12 re-verified untouched**: `status: draft`, 0/2 todos done, no commits touching either file since authored —
+  still correctly awaiting operator approval, per the autonomous-mode draft safety rail. No action taken (flipping
+  `draft`→`active` is an operator decision, not this run's).
+- **+2 members (51→53) — 1 explained by a genuine new addition, 1 unexplained by a 2-doc delta and not worth chasing
+  further** (no second retag-into-`[ci]` or newly-filed `ci`-tagged doc found in the full commit range; most plausibly a
+  small counting-methodology difference between this report's prose summary and the script's exact output, not a corpus
+  change). The one **confirmed real addition**:
+  `issues/deployment_service_basedpyright_ratchet_exceeded_sports_trigger_2026_08_08.md` — retagged `[cross-cutting]` →
+  `[ci]` by the `cross-cutting` tranche's own Orthogonality HARD CHECK run this morning (`ca9dd1cdac`, 10 mistags
+  retagged corpus-wide). Gave it a full fresh Phase-1 read:
+  - P1, `status: open` since 2026-08-08, 1 unchecked `[BACKEND]` todo (fix ~23 basedpyright errors across 4
+    `sports_trigger_*.py` files in `deployment-service`) — the doc's own text states this is a HARD ratchet gate
+    currently blocking **every** future quickmerge to that repo, not just the fix that originally surfaced it.
+  - Not self-dispatched (`assigned_vm: NA`), not cited by batch12/finalize or the archived
+    `ci_consolidated_closeout_2026_07_25.md` (predates this doc).
+  - Already conflict-checked once: `na-eligibility-audit`'s 2026-08-08 round-7 sweep considered it for RECLASSIFY and
+    **held** — a same-repo, same-file-family basedpyright fix in `sports_trigger_periodic.py` was shipped a week prior
+    by a DIFFERENT active plan (`issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
+    `parent_epic: sports_master`, `assigned_vm: planning`), which remains AO-dispatchable — a fresh worker on this doc's
+    todo risks racing that plan's own future edits to the identical file family under the same shared repo-wide
+    basedpyright counter.
+  - **Live-reverified today, not trusted blind**: `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` is still
+    `status: open` / `assigned_vm: planning`, and its own body (800+ lines) still actively references and edits the
+    identical 4 files (`sports_trigger_evaluation.py`/`_periodic.py`/`_scheduler.py`/`_state.py`) as of its current
+    content — the conflict has **not** cleared.
+  - **Verdict: `orphaned_never_touched` — not AO-eligible (conflict-gated)**, per the non-batchable taxonomy. Not
+    extracted into a new batch; re-confirms rather than overturns the existing na-eligibility-audit finding, now
+    formally in-scope for `ci`'s own tranche rather than `cross-cutting`'s. Flagged here for visibility given its P1 /
+    all-quickmerges-blocked framing, even though the underlying finding isn't new.
+- **7 other `ci`-tagged candidates were touched since this report was authored** — all checked, none change any verdict:
+  `pytest_timeout_60s_flaky_under_contention_2026_07_29.md` (routine monitoring-pass log appends, already tracked),
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md` and
+  `unified_trading_ci_lint_red_shellcheck_findings_2026_08_09.md` (both already self-dispatched/covered — the latter's
+  todo 3 genuinely shipped, `unified-trading-ci@14be063`, live-reverified via `gh run view`, no audit action needed),
+  `operator_action_items_consolidated_2026_08_08.md` and
+  `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` (append-only edits from other tranches'
+  concurrent audits, verdicts unchanged — the latter stays ao-owned per the primary-owner rule, exactly as this
+  morning's report already recorded), `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` (a linkage-citation
+  fix from the corpus-wide `all`-mode run, already self-dispatched regardless).
+- **Orthogonality HARD CHECK re-run properly** (this run used a comment-stripping parser after an initial naive-grep
+  pass produced false positives by matching retag audit-trail comments like `# ... was [cross-cutting]` as if they were
+  live tags — exactly the Phase-0.3 trap SKILL.md warns about). Both Finding 1 (`[ci, infrastructure]`, 4 docs) and
+  Finding 2 (`[ci, cross-cutting]` mistag shape, 1 doc:
+  `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`) are **byte-for-byte unchanged** from this
+  morning.
+- **`check_ag_closeout_linkage.py` re-run**: **0 orphans corpus-wide** (baseline also 0) — improved from this morning's
+  38-vs-49-baseline snapshot. A separate corpus-wide `/ag-closeout-audit all` run (`0a2b761511`, later this morning)
+  fixed the remaining 19 linkage-only orphans fleet-wide and ratcheted the baseline down to 0. The 3 `ci`-tagged linkage
+  nits Finding 3 named this morning are subsumed by that fix.
+- **`ui_build_warm_cache_2026_06_17.md` lock flag — superseded by a broader systemic finding, not a fresh decision
+  needed.** This morning's report flagged its `locked_by: live-defi-rollout` as a clean unlock-and-archive candidate
+  needing an operator decision. A `ui`-tranche `plan_reconciler` run this morning
+  (`issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, P1, `cross-cutting`-owned) traced
+  `locked_by: live-defi-rollout` to a hardcoded placeholder bug in
+  `scripts/plans/fix_epic_frontmatter_2026_05_21.py:133` affecting **96 docs corpus-wide** — not a genuine actor lock
+  claim at all (genuine locks in this corpus carry a real actor id, e.g. `plan_reconciler (agt-xxxxxx) since <ts>`).
+  `ui_build_warm_cache_2026_06_17.md` carries the identical placeholder value and is almost certainly one of the 96,
+  though it isn't yet named in that doc (0 grep hits) — noting the cross-reference here rather than editing that
+  `cross-cutting`-owned doc directly, per the primary-owner rule for shared/multi-tranche findings. No fresh `ci`-side
+  action needed; the systemic fix (once ruled) will cover this doc too.
+
+**Parked-findings reconciliation for this dispatch**: 1 new substantive finding (the conflict-gated basedpyright ratchet
+doc) + 4 re-confirmation notes (7-doc touch-check, Orthogonality, linkage, ui_build_warm_cache cross-reference) = **5
+entries written to this section, 5 parked findings generated this run — balanced.** 0 items escalated as
+`BLOCKED-OPERATOR-DECISION` (the basedpyright conflict was already surfaced by na-eligibility-audit on 2026-08-08; this
+run re-confirmed rather than newly escalated it).
+
 ## Progress Log
 
 - **2026-08-10 (scheduled `ag_closeout_auditor`, slot 27, `agt-d6ed2a`)**: Delta-only re-audit per the Method note
@@ -249,3 +325,10 @@ either).
   drafted `ci_satellite_ao_dispatch_batch12_2026_08_10.md` (`status: draft`) + gated finalize. Completed a flagged
   archival-housekeeping gap (2 stale report docs archived). 1 real state-change flagged (`ui_build_warm_cache`, needs an
   operator unlock decision, not a batch todo). All other carried-forward verdicts re-confirmed unchanged.
+- **2026-08-10 (scheduled `ag_closeout_auditor`, slot 14, `agt-b99463`, ~4.5h later)**: Second same-day dispatch.
+  Delta-checked against this doc's own prior entry rather than a fresh 53-agent sweep. Found 1 new tranche member (a
+  retag-in from `cross-cutting`), gave it a full fresh Phase-1 read, confirmed it's conflict-gated (not AO-eligible) via
+  live re-verification of the competing plan's still-active status. All other deltas (7 touched docs, Orthogonality,
+  linkage, the `ui_build_warm_cache` lock flag) checked and found unchanged-or-improved. No new batch drafted — batch12
+  remains the correct, sole pending artifact for this tranche, still awaiting operator approval. See "Second dispatch
+  delta" section above for full detail.
