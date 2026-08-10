@@ -82,10 +82,12 @@ source: >-
       now met — batch11 is `status: active`, its sole todo shipped (`unified-trading-pm@2022f4142f` by slot-24), and
       todo 1 above was genuinely re-verified against that commit (6/6 tests pass). Root-cause `[BACKEND] P1` item in
       `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` remains open; this instance is closed.
-- [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into `docs_reconcile_remaining_broken_links_2026_08_02.md`'s
-      own `[SCRIPT] P2` checkbox** (line ~202) — replace the redirect-pointer text batch11 left behind with the real
-      commit sha and test evidence. **Done when**: the flip is committed with the `docs(plans):` prefix and cites the
-      real commit sha.
+- [x] ✅ [REVIEW] P0. **Reconcile the verified todo's evidence into
+      `docs_reconcile_remaining_broken_links_2026_08_02.md`'s own `[SCRIPT] P2` checkbox** (line ~202) — replace the
+      redirect-pointer text batch11 left behind with the real commit sha and test evidence. **Done when**: the flip is
+      committed with the `docs(plans):` prefix and cites the real commit sha. — **DONE 2026-08-10 (slot 27)**: source
+      doc's `[SCRIPT] P2` flipped with real evidence (unified-trading-pm@2022f4142f, 6/6 tests pass). Both checkboxes
+      committed same-turn — unified-trading-pm@<this-commit>.
 - [ ] [REVIEW] P1. **Confirm `docs_reconcile_remaining_broken_links_2026_08_02.md` still has real open work and stays
       active** — it retains 11 other genuinely open judgment-call items untouched by this extraction, so it is NOT
       expected to be archival-eligible; this is a check, not an assumed no-op. **Done when**: the doc's current
