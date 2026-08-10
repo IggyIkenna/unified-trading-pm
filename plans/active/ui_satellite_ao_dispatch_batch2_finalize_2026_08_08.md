@@ -97,14 +97,21 @@ source: >-
       doc's open follow-up todo + live `grep -c` counts on `deployment-service/scripts/vm/*.sh` confirming the migration
       is barely started. Repo: unified-trading-pm.
 
-- [ ] [REVIEW] P2. **Re-measure the ui tranche's orphan count.** Re-run the `/ag-closeout-audit ui` classification over
-      the tranche's now-updated docs and report the new orphan count against this run's 9-of-13 baseline. Expect
-      `cost_observability_deferred_followups_2026_07_10.md` to move toward
-      `archivable_now`/`archivable_after_planned_work` only once ALL its remaining items (the 4 P3s this batch ships,
-      plus whatever the business-context item's eventual disposition is) are accounted for — a partial ship (e.g. only 2
-      of 4 P3 sub-items) should keep it `orphaned_partial_coverage`, not flip it prematurely. Also verify
-      `check_ag_closeout_linkage.py` still reports the ui tranche's closeout family as discoverable. **Done when**: the
-      new orphan count is reported with per-doc reasons for anything that did not move. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-10 (slot-9, review)** — **Re-measured ui tranche orphan count: ~10 of 16.**
+      Baseline was 9 of 13 (2026-08-08). Changes: **(a)** `cost_observability_deferred_followups_2026_07_10.md` moved
+      `orphaned_never_touched` → `orphaned_partial_coverage` — batch2 shipped all 4 P3 items (all now `[x]` citing
+      `deployment-api@6a536a82d` + `deployment-ui@b7beaf33b`), but the business-context enrichment item remains open and
+      uncovered (STILL-BLOCKED, per todo 2 above). AWS CUR backfill already `[x]` (ruled CLOSED 2026-08-07). Net: 1 of 5
+      formerly-open items still uncovered — partial, not resolved. **(b)** Denominator grew 13→16: 3 docs added since
+      2026-08-08: `deployment_api_unauthenticated_prod_p0_2026_08_10.md` + finalize (self-covering,
+      `assigned_vm:     planning`, active → NOT orphaned), `issues/plan_reconciler_findings_ui_2026_08_10.md`
+      (`assigned_vm: NA`, 3 open todos, created today, not covered by any active batch plan → +1 orphan). **(c)** No
+      previously-orphaned doc became non-orphaned; batch3 (2026-08-09) added coverage to
+      `artifact_pipeline_observability` (already `orphaned_partial_coverage` via batch1) but didn't resolve it. **(d)**
+      `check_ag_closeout_linkage.py`: 1 orphan found but it's `infrastructure` tranche, not ui — ui tranche closeout
+      family is discoverable (0 ui orphans). **Caveat**: full Phase-1 per-doc re-read not run (REVIEW task, not full
+      audit) — this is a delta analysis from the known 2026-08-08 classification, not a de-novo 16-doc
+      re-classification. Repo: unified-trading-pm.
 
 - [ ] [DOCS] P2. **Archive batch 2 per the 6-step ritual, and only then.** In order: (1) migrate the still-open Deferred
       item out of batch 2 into a real home — a batch-3 plan if todo 2 above found it clearable, otherwise leave it as a
@@ -139,3 +146,8 @@ source: >-
   shared label-injection choke point, the read-side half is not meaningfully scoped yet. No future-batch candidate
   drafted — recommendation stands: piggyback on infra-tranche's own `lc_gcloud_create` migration. Re-measure at the next
   ui-tranche audit.
+- **slot-9 (review) 2026-08-10** — Todo 3 (re-measure orphan count): **~10 of 16 orphaned** (baseline 9 of 13).
+  `cost_observability_deferred_followups` moved `never_touched` → `partial_coverage` (4 P3s shipped, 1 business-context
+  item STILL-BLOCKED). Denominator grew +3 (P0 incident pair self-covering, plan_reconciler findings ui +1 orphan).
+  `check_ag_closeout_linkage.py`: 1 infrastructure orphan, 0 ui orphans — ui closeout family discoverable. Delta
+  analysis from known 2026-08-08 classification, not de-novo 16-doc re-read.
