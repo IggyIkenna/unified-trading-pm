@@ -97,7 +97,7 @@ roster presence. Do **not** delete any worktrees or backup dirs.
   shipped by slots 7+24 and the original doc was correctly archived. Restoring to active path temporarily to satisfy M3
   verification.
 
-- [ ] [INFRA] P2. **Close stale backlog re-dispatch (slot-31)** — all 3 items already shipped by slots 7+24 (repo:
+- [x] ✅ [INFRA] P2. **Close stale backlog re-dispatch (slot-31)** — all 3 items already shipped by slots 7+24 (repo:
       unified-trading-pm)
 - [ ] [INFRA] P3. **Re-archive this doc** — all work completed, placeholder at active path is a stale-task artifact
       (repo: unified-trading-pm)
