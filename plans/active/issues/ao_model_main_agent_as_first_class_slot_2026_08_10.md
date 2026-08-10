@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [agent-orchestrator, main-agent, slots, architecture, context, worker-lifecycle, refactor]
 related:
   [
-    /plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
+    /plans/archive/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
     /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,

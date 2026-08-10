@@ -19,7 +19,7 @@ tags: [agent-orchestrator, context, compaction, review-agent, worker-lifecycle]
 related:
   [
     /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
-    /plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
+    /plans/archive/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 created: 2026-08-09

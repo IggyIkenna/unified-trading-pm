@@ -10,7 +10,7 @@ summary: >-
   guidance and Tier-2 recycle are sent exactly once per episode. Surfaced while root-causing the 2026-08-09 poisoned
   learned-window incident (fixed separately, agent-orchestrator@LDR): with the measurement corrected, main now reaches
   the 60% threshold and gets guidance, so whether the FORCE behind it can ever fire is now the live question.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -25,7 +25,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,7 +44,6 @@ source: >-
   Isolated 2026-08-09 (interactive session, slot 4) while diagnosing orch-agent-main pinned at 99% context. The
   measurement bug that masked this is fixed; this is the remaining structural gap underneath it.
 depends_on: []
-archive_exempt: true # flip-then-mv bridge (dropped in the immediately-following archival commit) — see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
 context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
@@ -52,6 +51,15 @@ context_scope:
     /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10** — `status: resolved`, all 7 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> The operator's 2026-08-10 ruling (keep main/review cooperative-first, gate the reversal on an objective >=6h/>=90%
+> data bar rather than a standing human ruling) is recorded at
+> [`/codex/04-architecture/agent-orchestrator-worker-liveness.md`](/codex/04-architecture/agent-orchestrator-worker-liveness.md)
+> § "main/review stay COOPERATIVE-first"; the machine guard proving it (`agent-orchestrator@9f8845e`,
+> `test_main_and_review_never_reach_force_compact_without_the_idle_verdict`) is live on `live-defi-rollout`. Moved by
+> the 2026-08-10 checkbox-flip + archive pass (slot 23).
 
 # main/review forced-compact is gated behind an unreachable idle verdict
 

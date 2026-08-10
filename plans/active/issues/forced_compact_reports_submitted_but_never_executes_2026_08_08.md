@@ -108,27 +108,29 @@ never executed". With forces now firing from 60, the two separate cleanly — an
   fix did not cause this — it uncovered it. Mitigated in the same session by `agent-orchestrator@989592628`, which stops
   a slot with headroom from being recycled over a compaction that will not run; that is a containment, not the fix.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
-- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. The 3 code-fix items
-  are already `KEEP-NA-STALE, citation-closed` (duplicated verbatim into `ao_satellite_ao_dispatch_batch12_2026_08_09.md`
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. The 3 code-fix items are
+  already `KEEP-NA-STALE, citation-closed` (duplicated verbatim into `ao_satellite_ao_dispatch_batch12_2026_08_09.md`
   todos 9-11 by a concurrent same-day pass). The sole remaining item (re-measure the wedge rate) is explicitly gated on
   those 3 landing plus a fresh multi-hour/day fleet-observation window — genuinely time-gated, not bounded today.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — checked
   `ao_satellite_ao_dispatch_batch12_2026_08_09.md` live: todo 9 (queued-message detection) is `[x]` done
-  (`agent-orchestrator@a1e2969`), but todos 10 (verify-by-effect) and 11 (deliberate repro) are still `[ ]` open there
-  — so this doc's own gate ("re-measure once the above lands") is not yet cleared. Still genuinely time-gated, not
-  bounded today.
+  (`agent-orchestrator@a1e2969`), but todos 10 (verify-by-effect) and 11 (deliberate repro) are still `[ ]` open there —
+  so this doc's own gate ("re-measure once the above lands") is not yet cleared. Still genuinely time-gated, not bounded
+  today.
 - **Measured 2026-08-09/10 (interactive session, slot 4)**, read-only via `GET /api/activity?limit=4000` over a 3.7h
-  window (19:50Z→23:30Z), while root-causing the separate main-agent poisoned-calibration incident:
-  `forced_precompact` 68 · `forced_compact` 65 · **`forced_compact_ineffective` 51** · `context_compact_observed` 48,
-  all `role=worker`. That is **51/65 = 78% of forced compactions producing no context reduction**, ~13.8
-  ineffective-force events/hr. Recorded here as a BASELINE for the still-open todo above ("Verify forced compaction by
-  its EFFECT, not its submission" — `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10, still
-  `- [ ]`), NOT as evidence of a regression: only todo 9 (queued-message latch) has landed, so the decisive
-  effect-verification fix has not been exercised yet. The figure is not directly comparable to this doc's
-  "~3.5 wedges/hr" baseline — that counts WEDGES, this counts ineffective-force EVENTS — so whoever closes the
-  re-measurement todo should state which metric they are reporting.
+  window (19:50Z→23:30Z), while root-causing the separate main-agent poisoned-calibration incident: `forced_precompact`
+  68 · `forced_compact` 65 · **`forced_compact_ineffective` 51** · `context_compact_observed` 48, all `role=worker`.
+  That is **51/65 = 78% of forced compactions producing no context reduction**, ~13.8 ineffective-force events/hr.
+  Recorded here as a BASELINE for the still-open todo above ("Verify forced compaction by its EFFECT, not its
+  submission" — `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10, still `- [ ]`), NOT as evidence
+  of a regression: only todo 9 (queued-message latch) has landed, so the decisive effect-verification fix has not been
+  exercised yet. The figure is not directly comparable to this doc's "~3.5 wedges/hr" baseline — that counts WEDGES,
+  this counts ineffective-force EVENTS — so whoever closes the re-measurement todo should state which metric they are
+  reporting.
   - Contrast in the same window, same fleet: `role=main` and `role=review` used the COOPERATIVE path and succeeded —
     main `proactive_compact_guidance` 1 → `context_compact_observed` 1 (idle gate blocked only once), review
-    `context_compact_observed` 16 with zero forces. The cooperative path was 100% effective on 17 compactions while
-    the forced path was 22% effective on 65; that asymmetry is direct evidence for the `[OPERATOR]` ruling pending in
-    `/plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md`.
+    `context_compact_observed` 16 with zero forces. The cooperative path was 100% effective on 17 compactions while the
+    forced path was 22% effective on 65; that asymmetry was direct evidence for the `[OPERATOR]` ruling made 2026-08-10
+    (keep main/review cooperative-first): see
+    `/plans/archive/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md` and
+    `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "main/review stay COOPERATIVE-first".
