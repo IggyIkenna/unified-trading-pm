@@ -25,7 +25,7 @@ scope: [engineer, admin]
 tags: [ao, ag-closeout-audit, parked-findings, linkage-fix, operator-gated]
 related:
   [
-    /plans/archive/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md,
+    /plans/active/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md,
     /plans/active/issues/context_scope_sufficiency_measurement_2026_08_08.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md,

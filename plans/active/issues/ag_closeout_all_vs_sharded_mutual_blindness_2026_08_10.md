@@ -61,10 +61,13 @@ structural — it would also affect any future job that legitimately runs both m
 
 ## Recommended fix
 
-- [ ] [BACKEND] P2. **Make `--list-done-tranches` also see `tranche=null` rows as blocking ALL tranches.** In
+- [x] ✅ [BACKEND] P2. **Make `--list-done-tranches` also see `tranche=null` rows as blocking ALL tranches.** In
       `scheduled_job_already_ran.py`, when `--list-done-tranches` is active, also scan for `tranche=null` rows for the
       same `job_name` on the same day with a blocking status. A completed `all`-mode run covers every tranche, so
       finding one should produce the FULL tranche list as "done" (blocking every per-tranche dispatch). **Done when**: a
       `tranche=null` row with `status=dispatched, agent_exit_reason=lifecycle-complete` causes `--list-done-tranches` to
       output all tranches (not just the truthy-tranche set), and an `agent-orchestrator` QG-green tree confirms no
-      regressions.
+      regressions. — agent-orchestrator@a876ec4 (2026-08-10): `--list-done-tranches` now unions the full tranche list
+      (`_FULL_TRANCHES`, mirroring the installers' `ALL_TRANCHES`) into the done-set when a blocking `tranche=null` row
+      exists for the job/day; a failed `all`-mode run (reaped-stale etc.) still does not block; +2 regression tests;
+      full `quality-gates.sh` green.

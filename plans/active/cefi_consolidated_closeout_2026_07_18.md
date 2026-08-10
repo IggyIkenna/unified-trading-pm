@@ -185,8 +185,7 @@ context_scope:
       entry to `["ohlcv_24h"]` only). The achievable 1d/`ohlcv_24h` leg verified ~98% complete since 2019-01-02 across
       all 3 symbols (2943/~2997 canonical-instrument-id shards captured), spot-checked against a real GCS parquet
       object. 2 adjacent manifest-integrity defects found + filed as follow-up todos. Full evidence:
-      `/plans/archive/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md` (archived
-      2026-08-10).
+      `/plans/active/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`.
 - [x] ✅ [UAC] P1. **DONE 2026-08-09 — `unified-api-contracts@92a418e5`** (dispatched via
       `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4). Measure the exact Databento L-floor boundary per level
       live + update the 3 named constants/functions. Source: Phase 5. Binary-searched `metadata.get_cost` live on
@@ -335,7 +334,7 @@ POST-BACKFILL pair does NOT (the backfill VM was preempted mid-run, see below) a
   ids ad hoc, so new writes can re-drift unless retrofitted. This is the durability half of "canonical everywhere."
 - **Close-out criterion**: adapters route through the shared builder (or a QG gate enforces canonical-id shape on
   write). ✅ **DONE 2026-08-04** — all 3 `*_native.py` files confirmed dead (zero production references), deleted
-  (`execution-service@93402a06`); QG baseline updated (`unified-trading-pm@f9523e16f`). Adjacent finding
+  (`execution-service@6c9645a5`); QG baseline updated (`unified-trading-pm@f9523e16f`). Adjacent finding
   (bitfinex/bitget native unreachable) filed as
   `/plans/archive/2026_08/issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`. Full evidence:
   `cefi_consolidated_native_ao_extract_2026_07_25.md` todo 1 Progress Log.

@@ -90,16 +90,13 @@ would silently drop the depth_of_book_10 topic/subscription that production curr
 
 ## Recommended decision
 
-- [x] ✅ [DATA] P2. **Reconcile SINK_MATRIX with the live depth_of_book_10 shard** — **DONE 2026-08-10,
-      `unified-api-contracts@f604c5f3` (verified ancestor of origin/live-defi-rollout)**. Option (a) chosen:
-      `depth_of_book_10` is a genuine live central-log shard, not exempt. Added
-      `("cefi", "depth_of_book_10"): SinkConfig(_R, cold_ttl_days=30)` to `unified_api_contracts/events/sink_matrix.py`
-      (mirrors `book_snapshot_5` — REPRODUCIBLE, 30d) + 2 resolver tests in `tests/unit/test_persist_envelope.py`.
-      Verified: `retention_class_for(("cefi","depth_of_book_10"))` and `sinks_for(("cefi","depth_of_book_10"))` resolve
-      without KeyError (direct live check + tests). `quality-gates.sh` green (422s, sentinel on HEAD); quickmerge landed
-      on LDR, ancestry-verified. Terraform (`deployment-service/.../live_event_log/{main.tf:481,warm_sink.tf:905}`)
-      already carries the topic/subscription; the SINK_MATRIX entry now makes future regens (and the "generated from
-      SINK_MATRIX" header claim) consistent — no committed regen script exists to re-run.
+- [ ] [DATA] P2. **Reconcile SINK_MATRIX with the live depth_of_book_10 shard** — either (a) add
+      `("cefi", "depth_of_book_10"): SinkConfig(REPRODUCIBLE, ...)` to `unified_api_contracts/events/sink_matrix.py` (+
+      any needed completeness-gate coverage), or (b) if the warm-sink subscription is intentionally exempt from
+      SINK_MATRIX, document the exemption in the module docstring + correct the Terraform headers' "generated from
+      SINK_MATRIX" claim. Verify: `retention_class_for(("cefi","depth_of_book_10"))` and
+      `sinks_for(("cefi","depth_of_book_10"))` resolve without KeyError, and the regenerated Terraform keeps the
+      production topic/subscription. Repos: unified-api-contracts + deployment-service (regen check only).
 - [ ] [DATA] P3. **Reconcile the missing `test_sink_matrix_completeness.py`** referenced by `sink_matrix.py`'s docstring
       as the shard-completeness gate — either locate/restore it, or correct the docstring to name the actual gate (or
       remove the claim if the gate was retired). Repo: unified-api-contracts.
@@ -110,9 +107,3 @@ would silently drop the depth_of_book_10 topic/subscription that production curr
   codex-alignment check. Direct reads: `sink_matrix.py` (no depth_of_book_10 entry; cefi block = 4 data_types),
   `deployment-service/terraform/gcp/live_event_log/main.tf:481` + `warm_sink.tf:905` (topic + subscription present),
   completeness-test path absent. Not fixed inline — bounded follow-ups above. Batch13 archived in the same session.
-- **slot-6 2026-08-10 (data_engineering, task `cefi_depth_of_book_10_sink_matrix_contract_gap-2e2bc1124b65`)**: Executed
-  the P2 todo (option a): added the `("cefi", "depth_of_book_10")` SINK_MATRIX entry (REPRODUCIBLE, 30d, mirroring
-  `book_snapshot_5`) + 2 resolver tests; verified `retention_class_for`/`sinks_for` resolve without KeyError; QG green
-  (422s); shipped `unified-api-contracts@f604c5f3` via quickmerge, ancestry-verified on LDR. P3 (missing
-  `test_sink_matrix_completeness.py` docstring reference) remains open — the actual gate lives in
-  `tests/unit/test_persist_envelope.py` (its `TestSinkMatrixResolver` + matrix-completeness check).

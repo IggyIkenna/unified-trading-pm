@@ -135,19 +135,13 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` (todo, line 141). Done when: a live manifest
       recount shows 0 remaining blank-instrument_id rows in this population, or each remaining row is explicitly
       justified non-resolvable in this doc's Progress Log.
-- [x] [DATA] P3. ✅ **Confirm the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate is genuinely dead**
-      — `unified-trading-pm@<sha>`. **CONFIRMED DEAD + PURGED.** Evidence: (1) Live manifest read (2026-08-10): 14,618
-      `.KS-USD` rows across 3 symbols (005930/005380/000660), all with `recent=0` (last `written_at=2026-07-22`, NOT
-      touched by today's consolidator runs) — no GCS shard parquets back these rows anymore. 0 captures ever across all
-      14,618 rows (all `empty_confirmed` or `expected_unattempted`). (2) No current writer emits `.KS-USD`: IS adapter
-      builds canonical `KRX:EQUITY:{symbol}` (bare numeric code), MTDS `derive_tradfi_row_instrument_id` produces
-      `KRX:EQUITY:{code}-USD`. (3) **PURGED**: 14,618 `.KS-USD` rows stream-filtered from `availability_index.parquet`
-      (10,411,924 → 10,397,306 rows). Backup at
-      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index_backup_krx_purge_20260810T182348.parquet`.
-      Verified: 0 `.KS-USD` rows remain in manifest. Canonical `KRX:EQUITY:{code}-USD` forms preserved
-      (5,578+5,586+5,597 rows, 981 captured each). Repos: market-tick-data-service, instruments-service. Source:
-      `plans/archive/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md` (todo 2, archived
-      2026-08-10).
+- [ ] [DATA] P3. **Confirm the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate (~8261 rows) is
+      genuinely dead**, then either exclude it from future enumeration or purge per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (a fresh soft-delete-retention check gates the purge
+      leg the same way as the todo above — do not execute a delete without it). Repos: market-tick-data-service,
+      instruments-service. Source: `issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`
+      (todo 2). Done when: the manifest carries only the canonical instrument_id form for KRX going forward,
+      `quality-gates.sh` green.
 - [x] [BACKEND] P2. ✅ **Diagnose + resolve the broken `instruments-service-daily` Workflow** —
       `unified-trading-pm@<sha>` (issue doc
       `plans/archive/issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md` with full resolution
@@ -348,10 +342,3 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   `mtds-live-tradfi-cme-trades-20260809-163443` (launched 2026-08-09 ~16:34 UTC, RUNNING as of today, labels
   `purpose=mtds-live, shard-slug=tradfi-cme-trades`). This VM replaced the deleted
   `mtds-live-tradfi-cme-trades-20260623-095619` (deleted 2026-06-30). No mis-tagging bug; no code change needed.
-- 2026-08-10 (slot-21, data_engineering craft): resolved todo #7 (KRX .KS-USD manifest duplicate purge). **Findings**:
-  (1) `.KS-USD` form CONFIRMED DEAD: 14,618 rows, 0 captures ever, last `written_at=2026-07-22` — no GCS shard parquets
-  backing them; IS adapter builds canonical `KRX:EQUITY:{symbol}`, MTDS `derive_tradfi_row_instrument_id` builds
-  `KRX:EQUITY:{code}-USD`. (2) PURGED: stream-filtered manifest 10,411,924 → 10,397,306 rows (14,618 dropped), backup at
-  `availability_index_backup_krx_purge_20260810T182348.parquet`, verified 0 `.KS-USD` rows remain. Note: bare `.KS`
-  ticker forms (`000660.KS` etc.) and blank-instrument_id (`:`) rows remain — these are separate issues (likely batch11
-  #6's domain).
