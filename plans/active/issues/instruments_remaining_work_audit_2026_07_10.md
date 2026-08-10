@@ -436,7 +436,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
     Option A vs B still open).
 
 11. **honest_coverage_smoke_harness — 4-AG live-run discrepancies**
-    `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` 3 of 4 shipped; 1 remains (re-run
+    `plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` 3 of 4 shipped; 1 remains (re-run
     `run_live_verify_tradfi.py` once `tradfi_v9_stage1_finish` tasks 2-11 land) — self-parked after 4 dispatch bounces.
 
 12. **manifest_consolidator_dtype_at_source_fix — RESOLVED + ARCHIVED 2026-07-25** (was: `status: draft`, "Both todos

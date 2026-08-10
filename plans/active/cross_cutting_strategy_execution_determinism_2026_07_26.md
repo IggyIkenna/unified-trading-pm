@@ -23,7 +23,7 @@ related:
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
-    /plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
+    /plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
     /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
@@ -71,7 +71,7 @@ context_scope:
   universe coverage-completion work)
 - [citadel_paper_batch_live_reconciliation_2026_06_19.md](/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md)
 - [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
-- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
+- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
   (the paper==batch-rerun==live determinism-spine family — finishing the ε=0 proof machinery + BLRS audit remediation +
   the 4-AG smoke-harness discrepancy set)
 - [defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
