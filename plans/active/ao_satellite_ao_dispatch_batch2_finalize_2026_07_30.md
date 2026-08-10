@@ -65,8 +65,8 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-2 done-claim against reality, not against its checkbox** — for each of the 8
-      todos in `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`, re-run `git show --stat <sha>` for every
+- [x] ✅ [REVIEW] P0. **Re-verify every batch-2 done-claim against reality, not against its checkbox** — for each of the
+      8 todos in `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`, re-run `git show --stat <sha>` for every
       cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
       own stated done-when check where it is a command (the na-eligibility-timer fire-completion read, the orch_token
       reporter-staleness read, the JWT-secret token-survives-restart + healthz check, the 4 orphan-commit dispositions,
@@ -76,6 +76,34 @@ context_scope:
       for those 2 specifically; check batch10's own evidence for them instead. **Done when**: all 8 verified, and any
       claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the
       discrepancy stated.
+
+      **VERIFIED 2026-08-10 (slot 30, review) — all 8 done-claims hold against reality, no discrepancies.** Re-ran
+          `git show --stat` + `git merge-base --is-ancestor` + content-diffs and re-ran the named tests directly:
+          (1) `ao_done_gate_no_carveout...` — `agent-orchestrator@22a14b1`/`@e1b30f5`/`@587c8db` all ancestors of
+          `origin/live-defi-rollout`; all 3 sub-item code paths live on HEAD (`_diff_blocks_checkbox`+`_ADDED_BLOCKED_LINE_RE`
+          +`todo_blocked_pending_other_owner`, `_marker_disposition_in_text`+`_mode1_fallback_disposition`+
+          `_mode2_no_recent_commit_disposition`, rename-following `_same_commit_added_path_matching_basename` +
+          `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename`); re-ran
+          `tests/test_done_gate_plan_flip_hard_reject.py` = **42 passed** (all 8 named regression tests present, pass).
+          (2) `branch_reset_to_origin...` — all 4 orphan commits confirmed NOT on origin (`features-service@207afd62`,
+          `@d1c1ad8a`, `unified-api-contracts@724bd9be`, `agent-orchestrator@559452e`), all 4 replacements ON origin
+          (`a90256f5`, `a9429cba`, `698b5b6f`, `09cda29`), `git diff 724bd9be 698b5b6f --stat` EMPTY (byte-identical), route +
+          test file for `09cda29` live. (3) `mtds_backfill_sequential_true...` — `agent-orchestrator@77769ab` on origin,
+          `current_task_ids_by_plan`+`_wire_sequential_prereqs` code live; re-ran `tests/test_regen_reconcile.py` = **19
+          passed** (regression test `test_sequential_reword_mid_flight_does_not_corrupt_chain` present at :324). (4)
+          na-timer (EXTRACTED → batch10 todo 1) — batch10's own evidence re-checked: `agent-orchestrator@17939c3`
+          (TimeoutStartSec 2450→21600) on origin; live `state.db` shows `agent_kind=na_eligibility_auditor`
+          `exit_reason=lifecycle-complete` rows incl. the exact cited `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`
+          (3 lifecycle-complete current; `reaped-stale` is a separately-tracked mode, out of this todo's scope). (5)
+          orch_token — source doc's own `[x]` MOOT verdict (2026-08-06 loopback-preference) present; live `/api/fleet/git-health`
+          confirms `ip-172-31-5-118` 34/34 slots `reporter_stale=false`. (6) JWT-secret — `/etc/systemd/system/
+          orchestrator.service.d/jwt-secret-gcs.conf` present (systemd env carries `ORCHESTRATOR_JWT_SECRET_GCS`), unit active.
+          (7) `dispatch_sequential_gate...` — `unified-trading-pm@41a51d9ff` on origin; both codex docs state the
+          gate-on-`sequential:true` behavior + cite `agent-orchestrator@867b1731e`. (8) wip-preserve (EXTRACTED → batch10
+          todo 2) — `git ls-remote origin 'refs/wip-preserve/*'` empty; `staging-lock-check.yml` byte-identical between
+          `a77eb6d1` and `strategy-service@400d3773` (ON origin); current HEAD file is the thin-caller stub. No claim failed
+          verification; no new todo required.
+
 - [ ] [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was an
       extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
       todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
@@ -141,3 +169,8 @@ context_scope:
   SSOT + batch-sibling set; no change needed. Gated finalize doc, no source path.
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate — genuine `*_finalize`
   gate, every todo points at other docs, no source path applies.
+- **2026-08-10 (slot 30, review)**: todo 1 done — re-verified all 8 batch-2 done-claims against reality (SHAs
+  ancestor-checked against `origin/live-defi-rollout`, content-diffs, live host/DB reads, and direct re-runs of the
+  named test files `tests/test_done_gate_plan_flip_hard_reject.py` = 42 passed + `tests/test_regen_reconcile.py` = 19
+  passed). Every claim holds; no discrepancy to re-open. The 2 EXTRACTED items (na-timer, wip-preserve) were checked
+  against batch10's own evidence per the plan_reconciler NOTE. Full per-claim evidence in the flipped todo.
