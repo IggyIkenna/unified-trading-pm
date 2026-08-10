@@ -33,9 +33,23 @@ on:
 # commit instead of collapsing to the latest — the group is already scoped per-ref (a PR's ref is
 # refs/pull/<n>/merge, unique per PR), so cancelling in-progress here can never cross-cancel a
 # different PR or a push to main.
+# PROMOTE PRs ARE EXEMPT FROM CANCELLATION (2026-08-10). The rationale above is BILLING — it was
+# written while PM was private and every superseded promote-PR run cost metered minutes. PM went
+# PUBLIC 2026-08-06, so ubuntu-latest is free/unmetered for it and that saving is now worth zero.
+# What the cancellation costs instead is the promotion itself: the tests leg needs 70-135 min (job
+# `timeout-minutes: 135`), while the promote bot refreshes the LDR->main PR's head every ~15 min, and
+# every refresh cancelled the in-flight run. A gate that takes longer than its own trigger interval
+# can NEVER report, so the required `quality-gates-v2` check stayed permanently un-reported and
+# `main` fell 1533 commits behind. Measured 2026-08-10: run 31387254830 (12:01Z, sha 41cf4ad)
+# `cancelled` the moment the 12:16Z run superseded it.
+# This was MASKED until today: while the checks leg was hard-failing in 4-5 min, every promote run
+# died long before any refresh could cancel it, so cancellation looked free. Fixing the checks leg
+# (the NA-corpus/promote-gate work) is what let runs live long enough to hit this.
+# Non-promote PRs and pushes keep the original collapse-to-latest behaviour — `github.head_ref` is
+# empty for a push, so that path still evaluates true and still cancels.
 concurrency:
   group: quality-gates-v2-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !startsWith(github.head_ref, 'promote/') }}
 
 permissions:
   contents: read
