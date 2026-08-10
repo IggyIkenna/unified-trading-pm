@@ -140,3 +140,12 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
   `lifecycle-catalogue-regen-sports-gg4kh` reached `Completed=True` ("Execution completed successfully in 15m37.77s"),
   and `prod/catalog.parquet` mtime advanced 2026-08-09T01:15:36Z → 2026-08-10T10:52:49Z (12,121,446 → 12,142,085 bytes,
   verified via `gsutil stat`). Matches slot-19's flip (8bac881309); DP-CATALOG-001 cleared.
+- **slot-10 (data_pipeline_failure escalation agt-0ab5b0, re-dispatch) 2026-08-10**: Confirmed the resolution holds on
+  the live estate (no code re-shipped — both fixes already on origin). Verified: `prod/catalog.parquet` mtime
+  `2026-08-10T10:52:49Z` (fresh, age ~0); live job `lifecycle-catalogue-regen-sports` reads `memory=16Gi/cpu=4`
+  (`gcloud run jobs describe --region=asia-northeast1`); the 08-10 01:00 run `k9jhf` shows `Completed=False` "configured
+  memory limit was reached" (the OOM this issue fixes) while the 16Gi manual run `gg4kh` is `Completed=True`
+  (15m37.77s); scheduler `lifecycle-catalogue-regen-sports-daily` ENABLED `0 1 * * *`; fix commits
+  `deployment-service@1218fad3` + `instruments-service@783b448a` both `git merge-base --is-ancestor`
+  origin/live-defi-rollout. No recurrence risk under the 16Gi provisioning (gg4kh proved the config at scale). P3
+  streaming-read follow-up left tracked below as the only remaining open item.
