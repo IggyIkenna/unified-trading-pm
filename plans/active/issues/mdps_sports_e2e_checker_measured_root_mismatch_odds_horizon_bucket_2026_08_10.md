@@ -209,3 +209,20 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
   against `origin/live-defi-rollout` post-push. **Did NOT run the todo's own stated from-scratch VM verification** (a
   real `--legs force,skip` run against `day=2026-04-14`) — that is a separate ~30-60min VM-launch action outside this
   CODE todo's scope; added a new DIAG todo above to track it.
+- **2026-08-10 (slot 29, data_engineering, DIAG todo IN PROGRESS)**: Launched from-scratch
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip` VM
+  check against `market-data-processing-service@f89112b`. **Dry-enumeration confirmed fix active**: 1 shard,
+  timeframes=[15m,1h], total=2 sub-shards, measured_root=`processed_candles/by_date/` (standard template). 4h/24h/1d no
+  longer enumerated for sports.
+
+  **VM**: `mdps-backfill-sports-pipelinecheck-20260810-082603-d0c755`, launched 08:26:03 UTC, force leg first (~30-37min
+  per prior runs), skip leg follows (~26min), timeout=3600s. Phase-0 consolidation OK. Heartbeat watchdog armed.
+
+  **Status at compaction**: VM still running (~08:30). `pipeline_e2e_check.py` polls internally via
+  `launch_vm_and_wait()`; on VM exit, reads per-VM manifest shard, verifies candle writes, writes report to
+  `plans/audit/results/data_pipeline_e2e_check_mdps_2026_04_14.md`.
+
+  **Resume**: check VM status
+  `gcloud compute instances describe mdps-backfill-sports-pipelinecheck-20260810-082603-d0c755 --zone=asia-northeast1-c`
+  or re-run (idempotent — fresh VM each run). If done, read report. Done-when: report shows `passed` for 15m/1h, total=2
+  (not 8).
