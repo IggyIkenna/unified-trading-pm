@@ -82,11 +82,13 @@ might come in handy."
 
 ## Todos
 
-- [ ] [DATA] P1. **Confirm `MultiLegOrchestrator`'s disposition** — re-verify the zero-production-callers finding from
-      the parity-gap issue doc is still current (grep fresh, don't trust a cached finding), check every strategy family
-      doc (`codex/09-strategy/architecture-v2/families/*.md`) for any stated intent to use order-book-liquidity-aware
-      CeFi leg routing that `AtomicLegExecutor` doesn't cover, and reach a DELETE or KEEP-AS-REFERENCE verdict with
-      cited evidence.
+- [x] ✅ [DATA] P1. **Confirm `MultiLegOrchestrator`'s disposition** — re-verify the zero-production-callers finding
+      from the parity-gap issue doc is still current (grep fresh, don't trust a cached finding), check every strategy
+      family doc (`codex/09-strategy/architecture-v2/families/*.md`) for any stated intent to use
+      order-book-liquidity-aware CeFi leg routing that `AtomicLegExecutor` doesn't cover, and reach a DELETE or
+      KEEP-AS-REFERENCE verdict with cited evidence. **VERDICT: DELETE** — zero production callers re-confirmed by fresh
+      grep (2026-08-10), and no strategy-family doc states any intent to use order-book-liquidity-aware CeFi leg
+      routing. Full cited evidence in the Progress Log below.
 - [ ] [DATA] P1. **Confirm `instruction_adapter.py`'s `_decompose_hedge_basis`/`HEDGE_BASIS` path disposition** — same
       treatment. Note this is a DIFFERENT dead system from `MultiLegOrchestrator` even though both are dead — don't
       conflate their verdicts if the evidence differs.
@@ -120,3 +122,32 @@ might come in handy."
 
 - 2026-08-10: Plan created following the same-day parity-gap investigation. Audit-forces-decision structure per operator
   direction, so the execution plan's todos require no further architectural judgment at dispatch time.
+- 2026-08-10 (todo 1, slot 11): **`MultiLegOrchestrator` disposition = DELETE**, with cited evidence:
+  - **Zero production callers (fresh grep, not cached):** `MultiLegOrchestrator(` is instantiated ONLY in
+    `tests/unit/engine/test_multi_leg_orchestrator.py`, `tests/unit/engine/test_multi_leg_orchestrator_new.py`,
+    `tests/integration/test_multi_leg_orchestrator_integration.py`. The module `multi_leg_orchestrator` is imported
+    nowhere outside its own file + tests. `execution_service/engine/__init__.py` (package public surface) does not
+    export it. Zero references in strategy-service, agent-orchestrator, trading-agent-service,
+    batch-live-reconciliation-service, e2e-testing (non-test). Its feeder `instruction_adapter.py`'s entry points
+    (`adapt_strategy_instruction`, `group_instructions_to_multi_leg`, `adapt_to_engine_instruction`) have zero callers
+    outside their own module + tests, and `StrategyInstructionType.HEDGE_BASIS` has zero emission sites in
+    strategy-service production code. (Sibling `execution_service/engine/concurrent.py` shares the `LegInstruction`
+    contract but likewise has zero production callers — no latent production consumer of the multi_leg contract exists.)
+  - **No strategy-family doc requests order-book-liquidity-aware CeFi leg routing:** all 9
+    `/codex/09-strategy/architecture-v2/families/*.md` (arbitrage-structural, carry-and-yield, event-driven,
+    market-making, ml-directional, portfolio, rules-directional, stat-arb-pairs, vol-trading) contain zero references to
+    `MultiLegOrchestrator`/`AtomicLegExecutor`/`LIQUIDITY_AWARE` and zero book-depth/thinner-side/illiquid-side
+    liquidity-driven leader-selection intent. The only codex doc describing `LIQUIDITY_AWARE` is the SUPERSEDED pre-v2
+    `/codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md` (`status: superseded`). The current
+    multi-leg execution model (`/codex/04-architecture/strategy-execution-protocol.md:259`) is
+    `execution_mode: ATOMIC | LEADER_HEDGE | SEQUENCED_WITH_PACING` with strategy-declared leader/hedge ("leader = X,
+    hedge = Y", arbitrage-structural.md) — the `AtomicLegExecutor`/`AtomicInstruction` model, not
+    `MultiLegOrchestrator`.
+  - **Capability-gap note (why not KEEP-AS-REFERENCE):** `AtomicLegExecutor` uses a fixed `leader_leg` index (default
+    0); `MultiLegOrchestrator`'s `LIQUIDITY_AWARE` (book-depth-based auto leader selection) is NOT replicated. But the
+    KEEP-AS-REFERENCE bar — a NAMED, currently-planned strategy family needing that capability — is unmet: no family doc
+    requests it. If such a need ever arises it should be added to `AtomicLegExecutor` as a leader-selection policy, not
+    by reviving `MultiLegOrchestrator`. DELETE per the workspace delete-deprecated-code HARD RULE (no shims). Actual
+    code removal is tracked by the gated execution plan `multi_leg_execution_systems_execution_2026_08_10.md` ("Retire
+    whichever system(s) the audit verdicted DELETE"). `instruction_adapter.py`'s HEDGE_BASIS path is a SEPARATE
+    disposition (todo 2).
