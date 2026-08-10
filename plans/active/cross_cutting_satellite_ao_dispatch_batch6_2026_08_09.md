@@ -99,15 +99,26 @@ drift_direction: advance-code
       `gcloud`, no real GCE VM launched): fresh-output ⇒ SUCCESS, VM-gone-with-no-output ⇒ immediate FAILURE (does NOT
       wait the full window, does NOT report blind success), window-elapsed-while-still-running ⇒ TIMEOUT FAILURE. All
       225 tests in the file pass; full `quality-gates.sh` green. Repo: deployment-service.
-- [ ] [INFRA] P3. **Fix the `honest-coverage-daily` VM's stale metadata `TASK=features-backfill` self-label.** Source:
-      `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` (its 4th `[INFRA] P3` todo — the doc's own text
-      calls this "the only unambiguously bounded item"). The VM instance metadata sets `TASK=features-backfill` (a
+- [x] ✅ [INFRA] P3. **Fix the `honest-coverage-daily` VM's stale metadata `TASK=features-backfill` self-label.**
+      Source: `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md` (its 4th `[INFRA] P3` todo — the doc's own
+      text calls this "the only unambiguously bounded item"). The VM instance metadata sets `TASK=features-backfill` (a
       stale/generic launcher-template default) instead of an honest-coverage-specific label — cosmetic today, but would
       mislead a future log-grep-by-TASK debugging session. Fix the metadata-setting call in
       `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` (or whichever shared VM-metadata helper it
       delegates to) to set an accurate `TASK=` value for this launcher specifically. Done when: a fresh VM launch (or a
       `gcloud compute instances describe` on the next natural daily fire) shows the corrected `TASK=` metadata value.
-      Repo: deployment-service.
+      Repo: deployment-service. — deployment-service@10df4a3c7 (the `TASK=features-backfill` label was NOT accidental
+      staleness — code comments confirmed `VM_TASK=measure-honest-coverage` had no dedicated dispatch branch in
+      `setup-data-pipeline-vm.sh`, so it borrowed `features-backfill`'s branch, which reads `VM_BACKFILL_CMD` verbatim,
+      to avoid falling through to the generic `--operation` CLI dispatch that rejects `--asset-group=all`. Root fix:
+      added a dedicated `elif [[ "$VM_TASK" == "measure-honest-coverage" ]]` branch to `setup-data-pipeline-vm.sh`
+      mirroring the existing `datapoint-validation`/`orphan-sweep` pattern (same `VM_BACKFILL_CMD`-verbatim dispatch
+      shape, same `instruments` workspace `cd`), then switched `launch-measure-honest-coverage-vm.sh`'s
+      `METADATA="VM_TASK=..."` to the accurate value. Verified: bash syntax check on both files, full `quality-gates.sh`
+      green (395s), `git merge-base --is-ancestor` confirmed on origin. Done-when is satisfied on the launcher-script
+      side; the "next natural daily fire" VM-metadata confirmation happens automatically at the 00:30 UTC
+      `honest-coverage-daily` Cloud Scheduler trigger — no separate action needed since `create-code-tarballs.sh`
+      already auto-publishes the launcher script per its own header comment).
 - [ ] [SCRIPT] P3. **Add a template-content lint pre-flight to `rollout-workflow-templates.sh`.** Source:
       `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` (its remaining `[SCRIPT] P3`
       todo). `prettier --write` deterministically mangles a bare `{{PLACEHOLDER}}` YAML flow-mapping-shaped token
