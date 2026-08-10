@@ -25,7 +25,7 @@ related:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
 author: slot-33 (worker session)
@@ -190,3 +190,12 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
   (31 tests: `test_done_orphan_task_closed.py` + `test_skip_stale_marker_orphan.py` + `test_regen_reconcile.py` + the 2
   new) green alongside them. Full repo `quality-gates.sh` green (2938 passed, 2 skipped). agent-orchestrator@8db0b29.
   **All 3 todos on this issue doc are now done** — archival-eligible (no `locked_by`).
+- **2026-08-10 (slot 30, review)**: Live confirmation of the orphan-close path + one gotcha worth recording. Working
+  `ao_satellite_ao_dispatch_batch2_finalize-001`, the dispatcher hands the worker the SHORT positional id (`-001`), but
+  by the time the worker's plan-flip lands, regen has re-minted the row to a CONTENT-DERIVED id (`-719c86780478`) and
+  cancelled/removed the old short-id row — so `/done` with the short id returns a hard 404
+  (`task ... not found in backlog`) BEFORE reaching `_resolve_task_def_for_done`'s orphan-close helper (the B1 TaskRow
+  lookup at slots_worker.py ~2018 404s first). `/reassign` also refuses (task already terminal/missing). **Fix (working,
+  this session): query the live `state.db` `tasks` table for the row whose `plan_ref` matches + `dispatched_to` = your
+  slot, take its ACTUAL `task_id`, and `/done` with that — `_maybe_close_orphaned_done_task` then fires, releases the
+  slot to idle, deletes the dead row. No need to touch the plan (the checkbox flip already cancelled the derived task).
