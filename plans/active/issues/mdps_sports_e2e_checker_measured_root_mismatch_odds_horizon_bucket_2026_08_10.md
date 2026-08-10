@@ -118,7 +118,7 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
       (`market-data-tick-sports-test-central-element-323112/_index/per_vm/     mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755.parquet`)
       for the 4h/24h capture_status rows and determine honest-absence vs genuine gap. **RESOLVED 2026-08-10 (slot 17):
       NEITHER — see Progress Log for full finding.** (repo: market-data-processing-service)
-- [ ] [CODE] P2. Fix `scripts/pipeline_e2e_check.py` so `odds_horizon_bucket` (and any other sports candle-shaped
+- [x] ✅ [CODE] P2. Fix `scripts/pipeline_e2e_check.py` so `odds_horizon_bucket` (and any other sports candle-shaped
       data_type) reports `passed`, not `skipped`/`failed`, for its actually-writable cells. Needs BOTH fixes, per the
       DIAG todo's finding: (a) `_measured_root()`/`_MEASURED_SPORTS_ROOT` so it only applies the horizon-bucketed-shape
       template to the sports data_type(s) that genuinely use it, routing `odds_horizon_bucket` through the standard
@@ -133,8 +133,18 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
       writer can never produce will always read `failed`/`no_candle_under`, forever — this is a checker defect, not a
       backfill gap. Done-when: a from-scratch
       `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS     --data-types odds_horizon_bucket` force run
-      reports `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. (repo:
-      market-data-processing-service)
+      reports `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. **SHIPPED 2026-08-10
+      (slot 32) — market-data-processing-service@f89112b, see Progress Log.** (repo: market-data-processing-service)
+- [ ] [DIAG] P2. Run a from-scratch
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types     odds_horizon_bucket --legs force,skip`
+      VM check against `market-data-processing-service@f89112b` (or later) to confirm the CODE todo's fix actually flips
+      the checker's own verdict to `passed` for 15m/1h and that 4h/24h/1d cells are no longer enumerated for sports
+      shards at all — the CODE todo above was verified via code-path tracing (confirmed zero live callers of the
+      legacy-shape writer) + `quality-gates.sh`'s `pipeline_e2e_check` driver smoke (`--help`/`--dry-enumerate` only),
+      NOT a real force/skip run against live data, since that is a separate ~30-60min VM-launch action beyond this CODE
+      todo's scope. Done-when: the checker's own written report
+      (`plans/audit/results/data_pipeline_e2e_check_mdps_<day>.md`) shows `passed` for the 15m/1h odds_horizon_bucket
+      cells with total=2 (not 8 — 4h/24h/1d no longer enumerated). (repo: market-data-processing-service)
 
 ## Progress Log
 
@@ -175,3 +185,27 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
     the CODE todo's done-when actually closes the checker's full false-negative surface for this shard family, not just
     the root-path half of it. No code changes made this turn — this Progress Log entry + the todo reword are the only
     changes.
+- **2026-08-10 (slot 32, data_engineering, CODE todo shipped)**: Shipped both fixes in
+  `market-data-processing-service@f89112b`. (a) Traced every `CandleAdapterRegistry.register(SPORTS, ...)` entry
+  (`odds_horizon_bucket`, `odds_movement`, `odds_snapshot` — `arbitrage_opportunity` is RETIRED) and confirmed ALL THREE
+  call the standard `process_to_candles`/`candle_write_mixin._build_candle_output_path` path (`processed_candles/`
+  root); the legacy horizon-bucketed writer, `SportsBucketAssignmentAdapter.process_to_bucketed_df`, has ZERO callers
+  anywhere in `market_data_processing_service/` (grepped the whole app tree) — it is dead code, never invoked in
+  production. So `_measured_root()` now always returns `_MEASURED_CANDLE_ROOT` (dropped the `_is_sports()` branch);
+  `_measured_root`'s legacy `_MEASURED_SPORTS_ROOT`/`_is_horizon_timeframe` machinery is KEPT (not deleted) as
+  `_other_roots`'s off-template regression detector, so a future reintroduction of that shape still reports
+  `skipped`/off-template instead of silently matching nothing. Deleted the now-dead `_measured_sports_violations()`
+  helper + `_MEASURED_SPORTS_LEAF`/`_MEASURED_SPORTS_REQUIRED_SEGMENTS` constants (no remaining callers). (b)
+  `_valid_timeframes()` now intersects UAC's `get_valid_timeframes_for_data_type()` result against
+  `market_data_processing_service.config._TIMEFRAME_CEILING_BY_ASSET_GROUP` — the SAME dict
+  `MarketDataProcessingServiceConfig.resolve_timeframes()` uses in production — mirroring its 24h/1d normalisation
+  exactly, rather than instantiating the full service config class (avoids a cloud-credential dependency in the
+  checker's pure-data timeframe-selection path). **Left `_declared_violations()`'s sports full-exemption UNCHANGED**
+  (still `return []` for sports) — it is now technically stale (sports DOES claim the standard declared template) but
+  not a false-failure risk (just a coarser check), and tightening it would be an unverified change to the SEPARATE §3B
+  canonical/declared leg this todo's done-when doesn't cover; left a `KNOWN GAP` code comment + flagged as a candidate
+  follow-up rather than shipping unverified. Verified via `quality-gates.sh` (ALL GATES PASSED, incl. the
+  `pipeline_e2e_check` driver smoke's `--dry-enumerate` UAC shard-enumeration check) + `git merge-base --is-ancestor`
+  against `origin/live-defi-rollout` post-push. **Did NOT run the todo's own stated from-scratch VM verification** (a
+  real `--legs force,skip` run against `day=2026-04-14`) — that is a separate ~30-60min VM-launch action outside this
+  CODE todo's scope; added a new DIAG todo above to track it.
