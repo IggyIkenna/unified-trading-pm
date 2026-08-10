@@ -930,3 +930,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   ruled out). Zero pytest-timeout (`Timeout (>150s)`) recurrence anywhere. Window NOT yet closed (day ~10 of ~14, closes
   ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
   slot-32's fix.
+- **slot-31 2026-08-10 ~16:49Z (twenty-fourth pass, same task)**: surveyed latest 3 `quality-gates-v2` runs across all
+  10 tracked repos (runs spanning ~15:22Z–16:45Z 2026-08-10). 9 service repos: 26/27 terminal runs `conclusion=success`
+  (unified-api-contracts `31408512917`/`31408056516`/`31407916884`; instruments-service
+  `31409583226`/`31409385092`/`31407875979`; features-service `31407857334`/`31404977924`/`31403495558`;
+  market-data-processing-service `31407882063`/`31403796297`/`31403502764`; unified-trading-api
+  `31407922034`/`31403813141`/`31403530000`; deployment-service `31409858783`/`31409402815`/`31408553213`; ml-service
+  `31408524429`/`31408231489`/`31408060998`; client-reporting-api `31407826273`/`31406920996`/`31406705035`;
+  market-tick-data-service `31403364020` success, `31407887524` failure — confirmed NOT pytest-timeout: genuine mock
+  assertion errors in `test_websocket_manager.py` (`TypeError` on `AsyncMock`,
+  `AssertionError: expected call not found`), `qg_red_reason=pytest` from real test failures, no scheduling timeout).
+  unified-trading-pm: all 3 runs `conclusion=success` (`31410617991`/`31409853271`/`31409454495`) — both slices green,
+  notable improvement over prior passes' consistent `checks`-slice ratchet failures. Zero `Timeout (>150s)` recurrence
+  anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via skip-current-task with
+  `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
