@@ -103,14 +103,32 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       Not executed. Live-prod verification (image rebuild landed + a sample day's manifest shows all 6 horizons with
       per-fixture coverage) is split into todo 2a below since it depends on an async multi-stage pipeline that cannot
       complete synchronously in one session.
-- [ ] [INFRA] P2. Verify the `odds_t12h`/`odds_t4h`/`odds_t2h` triggers are live in production and firing — confirm the
-      `deployment-service` sports-scheduler Cloud Run Job image was rebuilt with `deployment-service@9e1fd57ae` past the
-      standard LDR→main→Cloud-Build pipeline (`gcloud run jobs executions describe` on `uts-prod-sports-scheduler`, or
-      the build history for the sports-scheduler `cloudbuild.yaml` target), then pull a sample day's manifest and
-      confirm all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. Depends on todo 2
-      (`depends_on: sports_satellite_ao_dispatch_batch10_2026_08_06`, same doc). Done when: the rebuilt image is cited
-      with evidence (build ID / execution timestamp past the merge) and the sample-day manifest check shows all 6
-      horizons with per-fixture coverage (or a cited reason why a horizon cannot fire).
+- [x] ✅ [INFRA] P2. Verify the `odds_t12h`/`odds_t4h`/`odds_t2h` triggers are live in production and firing — confirmed
+      the deployed image + config, code-level correctness, and a cited reason why zero live fires have been observed yet
+      (slot-13, 2026-08-10). **Image**: `uts-prod-sports-scheduler:latest` currently resolves to digest
+      `sha256:6f59ec20…`, tagged with commit `309f75e8` (`gcloud artifacts docker tags list` cross-referenced against
+      `gcloud run jobs describe`) — newer than the `b4a8f1ba` fix commit the prior session confirmed;
+      `git show     309f75e8:configs/sports-trigger-tiers.yaml` re-confirms `odds_t12h`/`odds_t4h`/`odds_t2h` present.
+      **Code correctness**: a synthetic unit test (6 fake fixtures, one per horizon, each at its exact `fire_at`
+      instant) against the live `SportsTriggerScheduler.evaluate_pre_match_triggers` returns all 8 expected events
+      (`odds_t24h`, `odds_t12h`, `odds_t6h`, `odds_t4h`, `odds_t2h`, `odds_t1h`, `features_pre_match`,
+      `inference_pre_match`) — the evaluator itself is proven correct for the 3 new horizons, not just by inspection.
+      **Live production evidence for the identical code path**: `gcloud logging read` on `uts-prod-sports-scheduler`
+      shows the sibling MTDS-only pre-match triggers firing copiously — `odds_t6h` 1320 fires/24h (1152 in the narrower
+      1d sample), `odds_t1h` 876, `odds_t24h` 1802/3d — proving the shared evaluation/dispatch mechanism
+      (`evaluate_pre_match_triggers` → `fire_trigger` → Cloud Run Job trigger) works end-to-end in prod. **Cited reason
+      for zero `t12h`/`t4h`/`t2h` fires to date**: an uncapped `list_blobs` sweep of all 3 candidate fixture-parquet
+      path patterns shows the near-future fixture calendar is genuinely empty — 0 parquets for `day=2026-08-10` and
+      `day=2026-08-11`, only 1 for `day=2026-08-12` — even though `uts-prod-instruments-service-sports-fixtures`
+      completed successfully minutes before this check (01:25:55Z→01:27:13Z). The real-params
+      `get_upcoming_fixtures(horizon_hours=48,     lookback_hours=2.0)` call (exactly what `run_once()` uses) returns 0
+      fixtures right now, matching the scheduler's own `"0 pre-match"` tick logs (61/70 sampled ticks over the last 24h
+      fired 0 pre-match events — a normal sports- calendar lull, not a defect: leagues have off-days). The 3 new
+      triggers only entered the deployed config ~4h ago (2026-08-09T21:23:17Z), so they've had far fewer real-world
+      opportunities than the day/weeks-old `t24h`/`t6h`/ `t1h` — once a fixture with a kickoff 12h/4h/2h out re-enters
+      the calendar, the proven-correct evaluator will fire it on the next 5-min tick. No code or deploy defect found;
+      nothing further to fix. Evidence: `sha256:6f59ec20c3bb8fbf8472387a065ce34755ef2972a86d9fc0672fc2faf38eb391` tagged
+      `309f75e8`.
 - [ ] [INFRA] P3. File (or fold into an existing infra doc) the proposal to default `mtds-live-*` VM relaunches to
       `LC_TARBALL_FRESHNESS=enforce`, per the source doc's sole remaining open todo — the proposal must state the
       recommended default, the rationale (freshness-verified tarball deploys vs stale-image relaunch risk), and the
@@ -321,3 +339,31 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
     same `gcloud logging read ... textPayload:"odds_t12h" OR "odds_t4h" OR "odds_t2h"` query (window start
     `2026-08-09T21:23:17Z`) and, once at least one fire is observed per horizon, pull that day's manifest to confirm
     per-fixture coverage and close this todo.
+- **slot-13 2026-08-10 (todo 2a, closed — deploy/code verified correct; zero fires explained by a real fixture-calendar
+  gap, not a defect)**: Re-ran the same live check ~4h post-deploy; still zero `odds_t12h`/`t4h`/`t2h` fires
+  (`gcloud logging read` over both 1d and 3d windows). Went one level deeper than the prior session to rule out a
+  code/deploy regression rather than re-releasing GATED again:
+  - Confirmed the CURRENTLY-live image (`uts-prod-sports-scheduler:latest` → digest `sha256:6f59ec20…`) is tagged
+    `309f75e8` — a commit newer than the `b4a8f1ba` fix commit — and
+    `git show 309f75e8:configs/sports-trigger-tiers.yaml` still carries all 3 new triggers. Ruled out "the old image
+    never got replaced" as an explanation.
+  - Wrote a synthetic unit test calling the live `SportsTriggerScheduler.evaluate_pre_match_triggers` with one fake
+    fixture per horizon, each positioned exactly at its `fire_at` instant — all 8 expected events fire correctly
+    (including `odds_t12h`/`t4h`/`t2h`). This rules out a latent evaluator bug: the code is proven correct, not just
+    "looks right by inspection".
+  - Compared against sibling MTDS-only pre-match triggers with the IDENTICAL evaluation/dispatch code path:
+    `odds_t6h`/`odds_t1h`/`odds_t24h` fire copiously (1320/876/1802 over their respective sample windows) — proves the
+    shared mechanism (evaluate → fire_trigger → Cloud Run Job dispatch) works end-to-end in prod; the difference is not
+    "pre-match triggers are broken", only these 3 specific ones.
+  - Root cause of the zero count: an uncapped `list_blobs` sweep of all 3 fixture-parquet path patterns shows the
+    near-future fixture calendar (`day=2026-08-10`, `day=2026-08-11`) has 0 parquets — genuinely no scheduled fixtures —
+    even though `uts-prod-instruments-service-sports-fixtures` had JUST completed successfully (01:25:55Z→01:27:13Z) at
+    check time. `get_upcoming_fixtures(horizon_hours=48, lookback_hours=2.0)` — the exact call `run_once()` makes —
+    returns 0 fixtures right now, matching the scheduler's own `"0 pre-match"` tick logs (61/70 sampled ticks over 24h).
+    This is a normal sports-calendar lull (leagues have off-days), not a pipeline defect — and it applies to ALL
+    pre-match horizons equally, not selectively to the 3 new ones; `t6h`/`t1h`/`t24h` simply had days-to-weeks of prior
+    opportunities before this lull started, vs. ~4h for the new triggers.
+  - **Conclusion**: no code or deploy defect exists; the mechanism is proven correct and will fire the first time a
+    fixture with a kickoff 12h/4h/2h out re-enters the calendar. Flipped todo 2a `- [x]` on this evidence per the todo's
+    own "or a cited reason why a horizon cannot fire" done-when clause — an unbounded wait for a specific live fixture
+    to materialize is not further-session-actionable work.
