@@ -114,10 +114,14 @@ over-compaction for under-compaction, and neither is correct until the real numb
       2026-08-10 (slot-19)** — per-model lower bounds recorded in the Progress Log below: pro ≈ 325K (57 boundaries / 26
       sessions), flash ≈ 468K (266 boundaries / 117 sessions); zero boundaries ≥500K for either model (the 1M prior is
       unsupported by any observed compaction).
-- [ ] [BACKEND] P0. Give `model_tier.context_window()` a DeepSeek-specific prior from todo 1 instead of falling through
-      to the 1M default. The current fallback is a Claude number applied to a non-Claude model, and it is the value in
-      force right now. Done-when: a unit test asserts the DeepSeek prior is not the 1M default, and the live registry
-      resolves both models to it.
+- [x] ✅ [BACKEND] P0. Give `model_tier.context_window()` a DeepSeek-specific prior from todo 1 instead of falling
+      through to the 1M default. The current fallback is a Claude number applied to a non-Claude model, and it is the
+      value in force right now. Done-when: a unit test asserts the DeepSeek prior is not the 1M default, and the live
+      registry resolves both models to it. — agent-orchestrator@29526a4: `context_window()` now returns
+      DeepSeek-measured priors (pro 325K / flash 468K — todo 1's compact-boundary lower bounds) instead of the 1M Claude
+      default, and the live registry (`context_window_for()`) inherits them when unlearned. Tests:
+      `test_deepseek_prior_is_measured_not_the_1m_claude_default` +
+      `test_deepseek_models_resolve_to_prior_in_live_registry`. Verified QG-green on the merged LDR tree (slot-14).
 - [x] ✅ [BACKEND] P1. Decide whether a DeepSeek pane percentage may calibrate at all. If the CLI's denominator for a
       DeepSeek-backed session is not that model's real window, `derive_calibration_pct` is authoritative about the CLI,
       but the CLI is not authoritative about DeepSeek — in which case DeepSeek must be excluded from calibration and
