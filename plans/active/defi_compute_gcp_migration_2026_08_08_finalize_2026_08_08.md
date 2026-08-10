@@ -90,10 +90,10 @@ source: >-
 
 - [ ] [DOCS] P2. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
       `- [ ]` todos remain (all 18, post-verification above); (2) add the archival banner + set `status: complete`; (3)
-      confirm the codex doc updates the parent plan's own todos 14-15 already made (`cloud-agnostic-migration.md`,
+      confirm the codex doc updates the parent plan's own todos 15 and 17 already made (`cloud-agnostic-migration.md`,
       `dual-cloud-cost-ops-playbook.md`, `manifest-consolidator-ssot.md`) are live on `origin/live-defi-rollout`, not
       just committed locally; (4) confirm the `infrastructure_master` epic's two stale todos ("Operator sign-off on
-      dual-cloud parity", "GCP bucket decommission") were actually flipped/annotated per the parent plan's todo 15 —
+      dual-cloud parity", "GCP bucket decommission") were actually flipped/annotated per the parent plan's todo 16 —
       re-verify live, don't trust the parent's own claim; (5) update every referrer's path corpus-wide — grep for
       `defi_compute_gcp_migration_2026_08_08` and repoint each hit to the archived path (leading-slash,
       repo-root-relative); (6) clear the lock if any was set (confirm rather than assume). Then physically move the
