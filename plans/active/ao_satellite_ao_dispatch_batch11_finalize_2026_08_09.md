@@ -59,20 +59,19 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify batch11's done-claim against reality, not against its checkbox** — re-run
+- [x] ✅ [REVIEW] P0. **Re-verify batch11's done-claim against reality, not against its checkbox** — re-run
       `git show --stat <sha>` for the cited commit, re-run the named regression test, and confirm the full
       `scripts/plan-hygiene/` test suite is still green post-fix. **Done when**: the claim is verified, and any
-      discrepancy is re-opened as a new tracked todo here with the discrepancy stated. **DISCREPANCY FOUND 2026-08-09
-      (slot 5)**: there is no done-claim to verify — `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md` is
-      still `status: draft` (pending operator approval) with its sole `[SCRIPT] P2` todo `- [ ]` unchecked; no commit
-      has landed touching `fix_frontmatter.py`. This finalize task dispatched anyway
-      (`GET /api/backlog/ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1/blockers` → `"ready (no blockers)"`;
-      `GET /api/backlog` shows **zero** rows for the parent plan_ref — consistent with `status: draft` plans not being
-      ingested by design, per `PLAN_FORMAT.md`). See new todo below for the tracked discrepancy; this is the same
-      "zero-derived-parent-row" `gate_on_depends` wiring gap tracked in
-      `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (its still-open
-      `[BACKEND]     P1` root-cause item), now with a cleaner repro: a `status: draft` upstream, not a
-      markdown-formatting edge case. Not flipping this checkbox — the claim did not verify.
+      discrepancy is re-opened as a new tracked todo here with the discrepancy stated. **VERIFIED 2026-08-10 (slot 27,
+      review craft)**: commit `unified-trading-pm@2022f4142f` confirmed — diff replaces hard `result[:197] + "..."` with
+      sentence/word-boundary-aware truncation (sentence boundary → word boundary → hard-cut fallback), 6/6 regression
+      tests pass (`tests/unit/test_fix_frontmatter_summary_truncation.py` — sentence-boundary, word-boundary,
+      short/no-op, exactly-200, unbroken-token hard-cut, no-paragraph-returns-None). Slot-5's 2026-08-09 DISCREPANCY is
+      RESOLVED: batch11 (`ao_satellite_ao_dispatch_batch11_2026_08_09.md`) is now `status: active` with its sole
+      `[SCRIPT] P2` todo `[x]` ✅ flipped and shipped — the gate_on_depends wiring gap (zero-derived-parent-row) no
+      longer applies to this instance (parent plan now ingested + done), though the root-cause `[BACKEND] P1` item in
+      `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` remains open. —
+      unified-trading-pm@2022f4142f (verified, not authored — slot-24 shipped the fix)
 - [ ] [REVIEW] P0. **NEW — discrepancy from todo 1 above**: this finalize plan dispatched its todo 1 despite its
       `gate_on_depends: true` gate on `ao_satellite_ao_dispatch_batch11_2026_08_09.md` being genuinely unmet (that plan
       is `status: draft`, 0/1 todos done). Cross-referenced (not duplicated) in
