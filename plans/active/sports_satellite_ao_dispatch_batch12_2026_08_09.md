@@ -197,3 +197,41 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   written (each candidate needs a live GCS-existence check, not just a manifest read — slow at this row count).
   Proceeding to complete that scan, then the actual `--apply-prod --confirm-prod-write` execution + post-write
   verification per the todo's done-when.
+- **2026-08-10 (slot-29, todo 1 — fix shipped, apply-prod blocked by host resource contention)**: The
+  `market-tick-data-service@9678e160` fix (`kind="instruments-store"`) landed on `live-defi-rollout` as
+  `market-tick-data-service@286fa50e` (rebased onto 2 upstream commits during quickmerge's Not-Behind Gate; same diff
+  content) — `quality-gates.sh --no-fix` fully green (414s, `.qg_last_passed_sha` sentinel matched HEAD before ship),
+  post-push ancestry verified (`286fa50e` is an ancestor of `origin/live-defi-rollout`, ahead=0, working tree clean).
+  Attempting the actual `--apply-prod --confirm-prod-write` execution surfaced a **new, unrelated infra problem**: the
+  script's per-row live-GCS-existence-check loop (`_filter_to_actually_missing`, used by both `dry_run()` and `apply()`)
+  died with `SIGTERM`/exit 143 **four times in a row** — 3× on the 2018-2020 population's dry-run scan (plain, then
+  niced `-n 15`, both zero output), 1× on the 2025 population's `--apply-prod` pass (died immediately after writing the
+  pre-mutation safety snapshot, before the GCS-recheck loop printed even its first 500-row checkpoint). **No prod-data
+  risk**: in every apply death, the process was killed before reaching `_relabel`/`conditional_upload_bytes` — the live
+  index (`INDEX_BLOB`) was never written to; only a new, purely-additive snapshot blob was created
+  (`gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/pre_player_stats_missing_reconcile_2025_20260810T000326Z.parquet`),
+  which is harmless to leave in place (it's the designed recovery net, not a mutation). Root cause is **not confirmed**
+  (no `dmesg`/`journalctl` read permission on this host to see an OOM-killer log line), but circumstantial evidence
+  points at host-wide memory contention, not a script bug: `free -h` showed swap usage climbing 7.5Gi → 11Gi → 18Gi
+  across this session while 4-6 other slots (14, 15, 18, 27, 12 observed live via `ps -ef`) ran concurrent
+  `quality-gates.sh`/`pytest`/`quickmerge` passes on the same 30GB-RAM host — the 2025 population's _dry-run_ scan of
+  the identical 4,437-row candidate set had completed cleanly earlier in this same session before that contention built
+  up, which rules out a population-specific data issue. Per this workspace's retry-discipline rule (two+ identical
+  consecutive failures = a stable condition, not flapping — diagnose, don't blind-retry), stopped after the 4th
+  identical death rather than retrying a 5th time blind. **Both populations' `--apply-prod` runs are therefore blocked**
+  pending a quieter host window — see the Deferred table below. The fix itself is fully shipped and durable regardless
+  of this blocker.
+
+## Deferred work after 2026-08-10
+
+| Item                                                           | State / why deferred                                                                                                                                          | Blocked on                                                                                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | Not done. Dry-run fully validated (88/4,437 confirmed missing); the apply attempt died with SIGTERM/143 before any mutating write (snapshot-only, no risk).   | Infra/host resource contention (see Progress Log 2026-08-10) — retry when fewer concurrent slot QG/heavy-python runs are active. |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Not done. Dry-run itself never completed (3× identical SIGTERM/143, zero output each time) — confirmed-missing count for this population is still unmeasured. | Same infra/host contention.                                                                                                      |
+
+**Recommended next action**: re-run
+`uv run python scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py --population 2025 --apply-prod --confirm-prod-write`
+first (small, already-validated population, quick to finish once the host is quieter), then `--population 2018_2020` as
+a plain dry-run (no `--apply-prod`) to get its confirmed-missing count before attempting its apply. Check `free -h` swap
+usage and `ps -ef | grep quality-gates` for concurrent load before retrying — this is not new work, just re-running the
+same already-shipped script once the host has headroom.
