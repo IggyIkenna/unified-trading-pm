@@ -109,8 +109,8 @@ way).
       API in `unified_api_contracts/internal/paper_execution_targets.py`. **Done when**: no ACTIVE plan or codex doc
       references `paper_target_registry`; each points at the real symbol names. Source:
       `/plans/active/issues/operational_modes_antipatterns_not_actually_deleted_2026_08_09.md:147`. Repo:
-      unified-trading-pm. — unified-trading-pm@\<sha\> (both active docs fixed: `/plans/epics/defi_master.md:107,110` —
-      `paper_target_registry` SSOT/indexing renamed to `PAPER_EXECUTION_TARGETS` / `get_paper_target(chain)`;
+      unified-trading-pm. — unified-trading-pm@6390acba57 (both active docs fixed: `/plans/epics/defi_master.md:107,110`
+      — `paper_target_registry` SSOT/indexing renamed to `PAPER_EXECUTION_TARGETS` / `get_paper_target(chain)`;
       `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md:84,261` — renamed to
       `get_paper_target()` / `PAPER_EXECUTION_TARGETS`. The 3 archived plans left untouched per this todo's own
       instruction. `/codex/04-architecture/operational-modes.md` and
