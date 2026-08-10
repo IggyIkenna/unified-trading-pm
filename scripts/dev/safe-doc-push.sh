@@ -86,6 +86,21 @@
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md). The push itself already
 # landed -- inspect the listed patch file(s) before assuming loss (their content may already be
 # back in the working tree), do not delete them until confirmed safe. Added 2026-08-10.
+#
+# ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
+# safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
+# incident that motivated exit code 9 above was originally suspected to be a prek-level defect
+# -- patch restore wired only to the FIRST hook invocation of a `git commit` call, dropped on
+# an internal same-process retry. A deliberate reproduction (prek 0.4.12, a hook that fails
+# once then passes, an unrelated unstaged edit present throughout, run both with and without an
+# inter-attempt delay) could NOT reproduce that failure mode: prek printed a matching
+# save/restore pair around every sequential `git commit` invocation and the unrelated edit
+# survived intact every time. Do not file this upstream against prek -- there is no confirmed
+# defect to file. The actual risk is the cross-process race documented in
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md (a CONCURRENT process
+# sharing this checkout interleaves its own prek stash/restore window with this script's),
+# which is what the checksum safety net below (_prek_race_snapshot/_prek_race_check, inside
+# locked_git_commit) already guards against, independent of root cause.
 
 set -uo pipefail
 
