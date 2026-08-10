@@ -405,14 +405,17 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       when: the chosen codex SSOT carries this lesson as a named rule/heuristic with the cited precedent, and a grep for
       the lesson text returns a hit. — unified-trading-pm@aa4124c7a0: lesson codified as a HARD RULE in
       `/codex/05-infrastructure/vm-launcher-runbook.md` (grep "surgical column-filler" → hit; ~1,800x precedent cited).
-- [ ] [CODE] P2. Extend `emit_empty_gaps_for_entity` in
+- [x] ✅ [CODE] P2. Extend `emit_empty_gaps_for_entity` in
       `instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py` so its expected-league
       denominator for the 4 per-fixture enrichment entities (FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS)
-      branches by data_type: use the MVP-scoped `SPORTS_ENTITY_LEAGUE_COVERAGE` set for these 4 entities instead of the
-      full 383-league `get_expected_leagues_for_source("api_football")` set. Source:
-      `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. Done when: the 4 entities' honest-absence
-      gap emission uses the MVP-scoped denominator, a regression test pins the narrower expected-count for at least one
-      of the 4 entities, and quality-gates.sh is green.
+      branches by data_type — **ALREADY DONE 2026-07-28**: instruments-service@a95049d1 ("fix(sports): move MVP-league
+      filter from shared pre-filter to per-entity scope check") shipped the entity-scope-aware denominator
+      (`get_entity_league_coverage(data_type)` intersection at `sports_reference_core.py:339-341`), the UAC
+      `SPORTS_ENTITY_LEAGUE_COVERAGE` registry has the operator-approved values (FIXTURE_STATS/FIXTURE_LINEUPS=None=all
+      leagues, FIXTURE_EVENTS/PLAYER_STATS=MVP as the 2026-07-28 UAC SSOT at `provider_league_ids.py:851-861` codifies),
+      and regression tests cover the split (`TestPerEntityLeagueScopeForEnrichment` in
+      `test_orchestrator_sports_pipeline.py:940-1058`). QG was green at ship time. This batch9 todo was auto-extracted
+      from the pre-ruling (2026-07-26) state of the source doc.
 - [ ] [DIAG] P3. Re-measure whether the same static-default `expected_universe_start_date` pattern
       (`deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`) produces the same
       zero-`expected_unattempted`-before-window artifact for cefi/defi/tradfi/prediction that was confirmed for sports.
