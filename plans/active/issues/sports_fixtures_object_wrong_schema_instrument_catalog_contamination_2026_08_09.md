@@ -578,3 +578,37 @@ transcript available in that session's Progress Log entry on
   affected triples per the same canonical-twin-first logic the BOLIVIA_PRIMERA_DIVISION remediation used
   (quarantine-not-refetch when a canonical twin holds real data), and flip the todo-3 checkbox once the scoped check
   returns 0 schema-mismatched objects.
+
+- **2026-08-10T16:05Z (slot 17, data_engineering, dispatched on todo 3 again)**: re-checked the census VM + downloaded +
+  analyzed the current checkpoint report (same bounded single-object reads as prior sessions — no corpus walk).
+
+  **Census still genuinely running, healthy, ~12-20h out**:
+  `gcloud compute instances describe sports-schema-census-instruments-store-20260809-224053` → still `RUNNING`. Report
+  (10.1 MB, 882,500 rows, up from 698,000 at slot-13's 12:20Z check — monotonic growth, not a stall) covers `day`
+  `2019-01-01`→`2023-05-06` (1067 distinct days) across all expected entities. **0 `contamination_codes`-positive rows
+  in the entire scanned range** (all 26,661 `entity=fixtures` objects clean; the only known-contaminated object is at
+  `day=2026-04-14`, still ~3.1 years ahead of the frontier). At the observed ~60 distinct days/hour, the walk needs
+  ~12-20h more before terminal self-delete (genuine `NOT_FOUND`) — consistent with every prior session's estimate.
+
+  **NEW — 1 READ_ERROR row, root-caused as a phantom object, NOT contamination** (first one since prior sessions' "0
+  READ_ERROR"):
+  `day=2022-06-26/pipeline_mode=batch_api_football/entity=standings/league=SEGUNDA_DIVISION/ standings.parquet`,
+  `schema_failure_codes` = a **404** download error at walk time (`validated_at 10:47:38Z`), and the object also **404s
+  now** (fresh `gcloud storage objects describe` + `ls` under that exact prefix both no-match). I.e. it was listed by
+  `list_blobs` but never retrievable — a list-vs-read race, most plausibly a concurrent league-vocabulary migration
+  relocation of the path (the sibling migration's hardcoded map doesn't list SEGUNDA_DIVISION, so the exact actor isn't
+  pinned, but the 404-at-read evidence is definitive that this is not a wrong-schema object). **Nothing to remediate** —
+  no object exists at that path. **Note for the final-report consumer**: a `READ_ERROR` row means "object not
+  retrievable at walk time" (shard-level failure isolation per the script's design), NOT schema contamination — the
+  `contamination_codes` column is the only valid signal for this issue, and it is empty on every row so far. READ_ERROR
+  object paths enter the census's presence-skip set, so they won't re-appear on a resume.
+
+  **Todo 3 stays OPEN — same gating as prior sessions**: write-path half already resolved (todo 2's shipped
+  `_assert_not_cross_domain_contamination()` guard structurally covers `entity=fixtures`); the one confirmed object
+  already quarantined (`instruments-service@cfc3736b`); the corpus-wide done-when ("scoped check of affected triples
+  returns 0 schema-mismatched objects") cannot be evaluated until the census reaches terminal `NOT_FOUND` and its FINAL
+  report is folded into the per-entity/day/pipeline_mode count. Not busy-waiting on a 12-20h background walk — skipping
+  back to the queue (`reason_code=GATED`, `estimated_unblock_minutes=180`). **Next dispatch**: repeat this exact check
+  (VM `NOT_FOUND` + report row-count growth across two time points), and only once terminal, fold the final report's
+  `contamination_codes`-positive rows (expected: the 0 already observed, plus whatever the un-scanned
+  2023-05-06→2026-08-16 range surfaces) into the count and flip todo 3.
