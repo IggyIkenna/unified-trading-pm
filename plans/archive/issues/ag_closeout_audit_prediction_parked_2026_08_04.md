@@ -26,7 +26,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md,
-    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
     /plans/archive/issues/prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md,
   ]

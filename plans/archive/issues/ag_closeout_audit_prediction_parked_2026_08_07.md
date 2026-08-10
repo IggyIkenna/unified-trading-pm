@@ -31,8 +31,8 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_06.md,
-    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
-    /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
@@ -113,7 +113,7 @@ prediction-primary docs remain** — every one of the 13 never-cited candidates 
   says the fix "needs a design call this P3 mechanical-deletion todo didn't scope". Full agent reasoning in
   `wf_9ca4e6d6-e74`'s journal.
 - **1 freshly classified `exclude_cross_cutting` (first classification)** —
-  [`issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`](/plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md),
+  [`issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`](/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md),
   created 2026-08-06 (postdates the 08-06 audit's own candidate snapshot, so no prior round could have seen it). Tagged
   `[cefi, defi, tradfi, sports, prediction]`, `parent_epic: infrastructure_master`,
   `repos: [market-tick-data-service, unified-trading-library]`. A real Phase-1 Workflow agent (`wf_9ca4e6d6-e74`) read
@@ -151,7 +151,7 @@ re-confirmed unchanged today:
   `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` — each 1 open todo, `assigned_vm: NA`, still
   `status: open`, still cited nowhere in any active batch; the (A) delete vs (B) keep-and-document call remains unrulled
   by the operator. Non-batchable (operator-gated), tracked in
-  `/plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md`.
+  `/plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md`.
 - **`data_completion_prediction_2026_07_15.md` Phase-B OBJECT-layer CQG-bundle migration** — un-started, uncovered,
   re-triaged "needs its own dedicated plan" by four prior batch rounds; too-large-or-risky for a batch todo (batch6
   Deferred §5).

@@ -17,7 +17,7 @@ summary: >-
   finalize→depends_on resolution never reaches them — they are currently only caught as "covered" by incidental
   prose-text citation matching, not structurally. This did not corrupt today's count (the prose citations happen to
   hold), but it is fragile and cross-tranche (the script is `ao`/tooling-owned).
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -52,7 +52,7 @@ source:
     0-2 (+ a Phase-1 Workflow over the 2 genuinely-fresh candidates). Operator was not interactively present during the
     run, so both judgment-relevant items below are parked rather than guessed.",
   ]
-resolved_by:
+resolved_by: prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md todo 4 (2026-08-10)
 locked_by:
 locked_since:
 supersedes:
@@ -67,6 +67,17 @@ context_scope:
 ---
 
 # Prediction closeout-audit findings, 2026-07-31
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both todos done: Finding 1's
+> operator-gated judgment call resolved (both linked adapter dead-code docs
+> `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` +
+> `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` were operator-ruled DELETE 2026-08-07 and deleted
+> via `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todos 3/4 — instruments-service@4b55c57b +
+> market-tick-data-service@a0b4957e); Finding 2's `depends_on`-resolution fix shipped long ago
+> (unified-trading-pm@be7269449). Reconciled + archived by
+> `prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md` todo 4 (2026-08-10) per the 2026-08-09 parked-doc
+> Finding 2's explicit folding ("its own `[DOC] P3` todo should be flipped `[x]` once batch10 todos 3/4 land — folded
+> into batch10_finalize's reconciliation scope").
 
 > **Context.** Side-findings of today's `/ag-closeout-audit prediction` pass, beyond what this run already fixed
 > directly (see `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` for Findings 2/3's resolution).
@@ -151,9 +162,15 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 
 ## Todos
 
-- [ ] [DOC] P3. No action needed on Finding 1 unless/until an operator or the next worker touching either adapter file
-      picks (A) or (B) on the two named issue docs directly — this finding is informational (explains why neither was
-      batched), not itself an actionable task. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P3. No action needed on Finding 1 unless/until an operator or the next worker touching either adapter
+      file picks (A) or (B) on the two named issue docs directly — this finding is informational (explains why neither
+      was batched), not itself an actionable task. (repo: unified-trading-pm) — **RESOLVED 2026-08-10**: both linked
+      docs (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
+      `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`) were operator-ruled DELETE (option A)
+      2026-08-07, extracted to `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todos 3/4, and both deletions
+      shipped (`instruments-service@4b55c57b`, `market-tick-data-service@a0b4957e`) — wait-condition satisfied, per
+      2026-08-09 parked doc Finding 2 ("its own `[DOC] P3` todo should be flipped `[x]` once batch10 todos 3/4 land —
+      folded into batch10_finalize's reconciliation scope").
 - [x] ✅ [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to resolve the closeout hub
       doc's own frontmatter `depends_on:` (not just each discovered `_finalize` doc's) to real files, unioning them into
       the covering set — same pattern as the existing finalize→main resolution. **Done when**:
