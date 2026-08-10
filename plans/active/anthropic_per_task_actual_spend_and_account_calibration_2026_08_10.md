@@ -102,8 +102,8 @@ to quantify and quarantine ONE account, not to feed the main calibration.
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
-      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
+      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
@@ -450,6 +450,68 @@ multiplier carry its valuation date and rate set.
 (`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
 sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
 
+### 2026-08-10 — CONTROLLED MEASUREMENT: ~190x on a clean laptop-only window (best datapoint to date)
+
+Operator supplied a controlled experiment that removes every contamination problem above: a 4h25m window
+(`2026-08-10 10:02:35Z -> 14:27:34Z`) that was **strictly laptop, strictly `iggy2london@gmail.com` (`sub-b`), zero AO**,
+across which the weekly meter moved **57% -> 64% = 7%**. Actual money spent is therefore `0.07 x $45.16 = $3.16`.
+
+Measured from the laptop's own transcripts (tabs 1-4 + subagents), deduped by `requestId`:
+
+| model           | turns |    cache read |    output | documented cost |
+| --------------- | ----: | ------------: | --------: | --------------: |
+| claude-opus-5   | 1,998 |   745,335,541 | 1,617,949 |         $459.02 |
+| claude-sonnet-5 | 1,125 |   522,080,577 |   788,135 |         $137.82 |
+| **total**       | 3,123 | 1,267,416,118 | 2,406,084 |     **$598.71** |
+
+**Multiplier = $598.71 / $3.16 = ~190x at August promo rates (~212x at standard).** Against 15-32x from the contaminated
+AO-side attempts and 6-10x published — confirming the AO figures were understated exactly as the contamination analysis
+predicted.
+
+Notes that make this the reference measurement:
+
+- **Opus dominates cost, not turn count**: 77% of documented value off 64% of turns ($5/$25 vs Sonnet-5's promo $2/$10),
+  and Opus cache reads alone are $373. Model mix, not volume, drives equivalent value — a Sonnet-only window would value
+  at roughly a third.
+- **Compaction replay is real and large**: 3,270 replay lines were skipped against 3,123 genuinely billed turns — over
+  half of transcript lines re-write already-billed calls. Deduping on `requestId` (stable across replay) is what makes
+  the number trustworthy; naive counting roughly doubles it. Same mis-measurement class the pre-compact trigger hit.
+- AO touched `sub-b` only twice inside the window, both known mislabeled-telemetry rows (`deepseek-v4-pro` /
+  `<synthetic>` model strings), worth at most ~$37 — immaterial.
+- **Caveats**: 57->64 is integer-rounded, so the true delta is 6.5-7.5% and the range ~176-204x; and if heavy Opus use
+  draws on a scoped `seven_day_opus` bucket rather than `weekly_all`, the 7% understates consumption and would pull the
+  multiplier DOWN — the one open risk, already tracked as the per-model quota-weight todo.
+
+### 2026-08-10 — Cost structure: cache reads are 80% of the bill, and 90% of calls are un-batched
+
+Decomposition of the controlled window's $598.71 by token class, and where the reducible waste is.
+
+| class                   |    cost | share |
+| ----------------------- | ------: | ----: |
+| cache read              | $477.09 | 79.7% |
+| cache write             |    ~$73 | 12.2% |
+| output (incl. thinking) |  $48.33 |  8.1% |
+| input (uncached)        |  ~$0.04 |   ~0% |
+
+**Cache reads dominate four-to-one.** Mean cache read per API call is **405,833 tokens**, and within-session context
+growth is only **1.37x** (344k -> 471k first-vs-last quartile), so compaction is working and cost is **linear in CALL
+COUNT at a ~406k constant**, not quadratic in context. Every call re-reads the full prefix regardless of how small its
+work is.
+
+**89.9% of API calls make exactly one tool call; only 4.0% batch 2+.** Because cost is linear in calls, merging X% of
+calls saves X% of cache reads: 25% -> 317M tokens, 50% -> 634M tokens (~$239, ~40% of the total bill, i.e. roughly
+double the work per weekly quota window). Independent tool calls (multiple reads, parallel greps) batch at zero quality
+cost; genuinely dependent ones cannot. The second, equally linear lever is resident context size itself.
+
+**Thinking is 68.8% of output tokens** (Opus 66.9%, Sonnet 72.8%) but only ~$33 of $599 — **5.5% of cost**. Thinking
+depth is not the spend lever; cache reads are.
+
+**Method correction**: an earlier pass reported 89% thinking and claimed 71% of turns made no tool call. Both were
+artifacts of deduping transcript lines by `requestId` and keeping only the FIRST line — Claude Code writes one JSONL
+line per content block, all sharing a requestId, so `tool_use`/`thinking` blocks logged on later lines were dropped.
+Token totals were unaffected (usage is per API call and was correctly counted once); only the content statistics were
+wrong. Content must be UNIONED across all lines sharing a requestId.
+
 ### 2026-08-10 — RETRACTION: the laptop switches accounts, so no account is certifiably clean
 
 Operator correction: "we literally switched accounts today and we switch often." Investigated every account-history
@@ -478,26 +540,3 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
-
-### 2026-08-10 — Todo 1 shipped: account_usage_history table + snapshot on every UsagePoller tick
-
-**Shipped**: agent-orchestrator@ce3389fbe9
-
-**What was built**:
-
-- `AccountUsageHistoryRow` ORM model — composite PK `(account_id, sampled_at)`, stores `weekly_pct`,
-  `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`, `overage_status`,
-  `account_status`
-- `snapshot_account_usage_history()` in `state_store/account_usage.py` — copies every current `account_usage` row into
-  history, idempotent per `(account_id, sampled_at)`
-- Wired into `UsagePoller._tick_once()` after the per-account refresh loop — every 30-min tick snapshots all accounts
-  (~10x per 5-hour window, well above the "at least twice" floor)
-- `Base.metadata.create_all()` auto-creates the table on deploy — no manual migration needed
-- 4 unit tests: snapshot coverage, idempotency guard, multi-tick accumulation, table creation by bootstrap
-
-**What still needs to happen on the live VM** (the "done when" gate's live-verification clause — deploy + 2+ ticks):
-
-- Deploy this commit to the orchestrator VM (the standard LDR→main promote flow)
-- Wait ≥2 UsagePoller ticks (~60 min) for `account_usage_history` to accumulate ≥2 distinct `sampled_at` rows per active
-  account
-- Verify sampler survives an orchestrator restart (table created by `Base.metadata.create_all` on boot)
