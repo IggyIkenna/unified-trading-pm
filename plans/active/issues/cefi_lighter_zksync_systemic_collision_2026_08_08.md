@@ -252,6 +252,13 @@ pair (2026-07-03 `0G`):
       (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column compare tolerates the
       `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended. **Range-2 apply stays a
       follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run + apply sequence.**
+- [ ] [DATA] P2. **Decide + clear the single remaining LIGHTER-ZKSYNC collision (BTC 2026-05-01) that blocks the Range-2
+      apply: wire `LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` (208,486 rows, 15 cols, schema-newer w/ real `ts_event`) vs
+      canonical `...BTC-USDC@LIN.parquet` (416,972 unique rows, 13 cols, schema-OLDER; SAME timestamp set, 0/208,486
+      wire rows match a canonical row)** — repo: market-tick-data-service. Characterized (slot 18, 2026-08-10) as the
+      plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy call" → default leave-both.
+      Resolution: operator decides prefer-wire / prefer-canonical / leave-both; then re-run the Range-2 apply
+      (04-18..07-24) to 0 unhandled collisions. **Blocked on operator decision (see /blocked).**
 
 ## Progress Log
 
@@ -348,3 +355,20 @@ pair (2026-07-03 `0G`):
 - **context-scout 2026-08-09**: populated context_scope (4 entries) -- no prior context-scout marker existed on this
   doc; added the gating `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` (todo 2's explicit BLOCKED-on
   dependency) and the read-only audit script that produced the root-cause findings.
+- **2026-08-10 (slot 18, data_engineering, dispatched on the Range-2 apply todo)** — Ran the gate sequence with the
+  wire-superset content-upgrade fix (`335c94f1`, reconciled by slot 20). Dry-run #1
+  (`canonical-migration-cefi-late-renames-20260810-222949`, e2-standard-16, ON_DEMAND, `--venue LIGHTER-ZKSYNC`,
+  2026-04-18..2026-07-24): **collisions 11,151 → 396** —
+  `Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3678, would_upgrade: 10755, unresolved_wire: 19}` +
+  396 STOP-ON-SURPRISE. Root-caused the 396: an **int64-vs-float64 dtype split** in measurement columns (e.g.
+  `last_price`) — values identical, but `Series.equals` is dtype-strict and `pd.to_numeric` does NOT normalize dtype.
+  Shipped `market-tick-data-service@a8a29c8a1` (cast both sides to float64 after coercion) + regression test; QG-green;
+  tarball-republished. Dry-run #2 (`...-231600`): **collisions 396 → 1** — `would_upgrade: 11150`, 1 STOP-ON-SURPRISE
+  left: **BTC 2026-05-01** (`LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` vs `...BTC-USDC@LIN.parquet`) — wire 208,486 rows (15
+  cols, schema-newer, real `ts_event`) vs canonical 416,972 unique rows (13 cols, schema-OLDER), SAME timestamp set,
+  **0/208,486 wire rows match a canonical row** = a genuinely different capture (canonical ~2x events per timestamp),
+  NOT a comparison artifact. This is the plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy
+  call" → default leave-both. The apply is blocked on this ONE pair pending an operator decision (follow-up todo added).
+  Cron resumed + verified ENABLED (was paused for the apply). /blocked to operator for the decision. Both comparison
+  fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) shipped + tarball-republished — the comparison layer is
+  now correct for every non-divergent pair.
