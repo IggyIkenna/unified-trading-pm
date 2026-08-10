@@ -85,22 +85,12 @@ batch performs.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Fix `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` hard
-      truncation.** Current behavior (verified by reading the function body):
-      `if len(result) > 200: result =     result[:197] + "..."` — a raw character-count cutoff with no
-      word/sentence-boundary awareness, which produces a genuinely unusable, mid-word-cut `summary:` whenever a doc's
-      auto-backfilled first paragraph exceeds 200 chars (confirmed root cause of 12-of-14 exactly-200-char truncations
-      found live in `docs_reconcile_operator_decisions_2026_08_02.md` operator-decision item 3). Recommended fix
-      (already stated by the source doc, not new design work here): truncate at the last sentence or word boundary
-      before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
-      review before it ships, rather than silently landing a partial sentence. **Done when**: a regression test proves
-      the fixed function no longer cuts mid-word on a long first paragraph (a fixture paragraph >200 chars, asserting
-      the output ends on a word/sentence boundary), the existing `fix_frontmatter.py` test suite stays green, and
-      `bash scripts/quality-gates.sh` is green. Source:
-      `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md:202` (its `[SCRIPT] P2` item, added
-      2026-08-08) — independently flagged bounded/AO-eligible by that same doc's own 2026-08-08 `na-eligibility-audit`
-      Progress Log entry ("MISCLASSIFIED_LIKELY_AO_ELIGIBLE... the doc already names the exact function, the exact
-      bug... and a specific recommended fix"). Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **Fix `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` hard
+      truncation.** — unified-trading-pm@2022f4142f. **Evidence**: replaced hard `result[:197] + "..."` with
+      sentence-boundary-aware truncation (prefers `.`/`!`/`?` + space before 197 chars, falls back to word boundary,
+      last resort hard cut). 6 regression tests (sentence-boundary, word-boundary, short/no-op, exactly-200,
+      unbroken-token-hard-cut, no-paragraph-returns-None) all pass; existing 20 fix_frontmatter tests stay green;
+      `bash scripts/quality-gates.sh` ALL QUALITY GATES PASSED.
 
 ## Codex SSOTs (read before starting)
 
