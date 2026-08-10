@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the tradfi topic tranche, dispatch agt-642862 (slot 2). Records
   hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and coverage
   for this run. Also the progress journal for the run itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
@@ -26,9 +26,15 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-642862) since 2026-08-09T16:00:00Z
+locked_by:
 depends_on: []
 ---
+
+> **📦 ARCHIVED 2026-08-10 — complete.** `[unlock-plan]` was issued by operator ruling the same day (the lock was stale:
+> the run that set it had ended, and the doc carried 0 open todos). With the lock cleared and nothing open, this doc met
+> `check_archive_candidates.sh`'s gate exactly, so it is archived rather than left sitting in `plans/active/`. Any fresh
+> reconciliation work is tracked on `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 13,
+> not here.
 
 # plan_reconciler findings — tradfi tranche — 2026-08-09
 
@@ -175,6 +181,8 @@ _(pending STEP 7, if applicable)_
 - **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into 0 formal todos (0 already
   resolved). The one genuinely-actionable item in this doc (resume-or-abandon the stalled STEP-3→7 run / clear the
   impossible `locked_by`) is not orphaned prose — it is already a real `- [ ]` checkbox at
-  `ag_closeout_audit_tradfi_parked_2026_08_10.md` (`[OPERATOR] P1. Resume or explicitly abandon+unlock the stalled
-  plan_reconciler_findings_tradfi_2026_08_09.md...`), confirmed via direct grep of that doc. No `## Todos` section
-  added here to avoid duplicating that tracked item.
+  `ag_closeout_audit_tradfi_parked_2026_08_10.md`
+  (`[OPERATOR] P1. Resume or explicitly abandon+unlock the stalled plan_reconciler_findings_tradfi_2026_08_09.md...`),
+  confirmed via direct grep of that doc. No `## Todos` section added here to avoid duplicating that tracked item.
+- **UNLOCKED 2026-08-10 (operator ruling, [unlock-plan]) — run agt-642862 stalled after 2026-08-09T16:00:00Z; a fresh
+  /plan-reconcile tradfi pass is tracked as todo 13 of meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md.**

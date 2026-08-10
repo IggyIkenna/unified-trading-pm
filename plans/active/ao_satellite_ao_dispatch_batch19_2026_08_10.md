@@ -8,7 +8,7 @@ summary: >-
   verification (a Phase-1 Workflow's own ao_eligible:true calls on 2 OTHER docs were checked against those docs'
   extensive prior audit history and overridden to false — see this run's parked-findings append for detail; do not
   re-derive those two as candidates without re-reading that reasoning first).
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
