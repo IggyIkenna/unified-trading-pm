@@ -280,12 +280,16 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   named source chip so `NO_WORKER_SLOT_SENTINEL` never shows as `#-1` — MOVED to the gated companion plan, not dropped;
   still open there.
 
-- [ ] [BACKEND] P1. **Add a nullable `context` column to `BlockedRow` plus an idempotent migration**, mirroring
+- [x] ✅ [BACKEND] P1. **Add a nullable `context` column to `BlockedRow` plus an idempotent migration**, mirroring
       `_migrate_blocked_queue_claude_session_id`'s no-backfill pattern in `bootstrap.py`. Populate it on the `doc_drift`
       path with both sides' verbatim quotes, their `file:line` anchors, the worker's `description`, and first-detected /
       last-reconfirmed timestamps; expose it on `BlockedView`. **Done when**: column + migration + API field + a test
       proving an old row with `context IS NULL` still renders, and `quality-gates.sh` is green. Repo:
-      agent-orchestrator.
+      agent-orchestrator. — agent-orchestrator@13f4848 (QG green 3193 passed; nullable `context` Text column +
+      `_migrate_blocked_queue_context` no-backfill migration; `add_blocked(context=…)` param; `BlockedView.context`
+      parsed dict + `_blocked_to_view` NULL-safe; doc_drift path populates both sides' file:line anchors + description +
+      first/last-reconfirmed; 3 new tests incl. NULL-context-still-renders; reconciled a rebase conflict with the
+      sibling claude_session_id BlockedView work).
 
 ### C — condition-derived retirement (the general fix)
 
@@ -363,3 +367,15 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   mixed valid+malformed count tests. Along the way fixed a pre-existing live-host-only `test_working_spinner_not_kicked`
   flake (stale `context_used_pct` mock → the code's live `context_reading` call site, which reads a real slot-1 config
   dir on this host) that turned the first Pass-1 QG run red — agent-orchestrator@7bc9ed0.
+- **2026-08-10 (B1, slot-16 worker)**: Added the nullable `context` column to `BlockedRow` (JSON-encoded `Text`,
+  no-backfill) + idempotent `_migrate_blocked_queue_context` in `bootstrap.py` (registered in `create_all_tables`,
+  mirroring `_migrate_blocked_queue_claude_session_id`). `add_blocked()` gained an optional `context` param; worker
+  `/blocked` and `BLK-op-*` rows stay untouched (NULL). `BlockedView.context` (parsed `dict | None`) +
+  `_blocked_to_view` parse it NULL-safely — an old row with `context IS NULL` still renders. The `doc_drift` path in
+  `record_result` populates it with both sides' `file:line` anchors (doc quote = the `claim`; the plan side has no
+  verbatim quote in the contract, so `quote=None`), the worker's `description`, and equal
+  `first_detected_at`/`last_reconfirmed_at` (a later detector run re-stamps the latter). — agent-orchestrator@13f4848
+  (QG green 3193 passed; 3 new tests incl. NULL-context-still-renders). During the ship, a
+  `git pull --rebase --autostash` conflict with the sibling `claude_session_id` BlockedView work
+  (`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24` -001/-002) was reconciled by keeping BOTH fields —
+  upstream `claude_session_id` + this plan's `context` — in `BlockedView` and `_blocked_to_view`.
