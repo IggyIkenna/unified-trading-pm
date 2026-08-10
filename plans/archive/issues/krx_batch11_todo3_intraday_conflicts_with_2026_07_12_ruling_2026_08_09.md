@@ -14,7 +14,7 @@ summary: >-
   conflict-check only grepped plans/active/, so it missed this archived, governing decision. Separately, live-verified
   the achievable 1d/ohlcv_24h leg is already ~98% complete with real non-NaN data, and found 2 adjacent (non-blocking)
   manifest-integrity defects while verifying it.
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, tradfi]
 stage: [data]
@@ -44,6 +44,9 @@ assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
 ---
+
+> **ARCHIVED** — 2026-08-10 (slot-21). Both todos resolved: todo 1 (`row_count=0` bug → `MTDS@ca93d553`) and todo 2
+> (`.KS-USD` manifest duplicate confirmed dead + purged, 14,618 rows removed). No open todos remain.
 
 # KRX intraday Yahoo backfill (batch11 todo 3): SSOT conflict + 1d-leg verification
 
@@ -146,12 +149,11 @@ ever cover the trailing 28-730 days, never deep history) — not a re-litigation
       **Scope note**: this fixes the code path going forward (future rebuild-script runs); it does NOT repair the 2925
       already-written zero-`row_count` manifest rows in place — that would need a fresh `rebuild_tradfi_manifest.py`
       re-run over the affected range, a separate (larger, infra-scale) action out of this todo's 1-hour scope.
-- [ ] [DATA] P3. Clean up the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate (~8261 rows, 0 real
-      captures, predates the current `derive_tradfi_row_instrument_id`-based writer). Confirm it's genuinely dead (no
-      writer emits it anymore), then either exclude it from future enumeration or purge the manifest rows per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repos: market-tick-data-service, instruments-service
-      (enumerator). **Done when**: the manifest carries only the canonical instrument_id form for KRX going forward,
-      `quality-gates.sh` green.
+- [x] [DATA] P3. ✅ Clean up the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate — 2026-08-10
+      (slot-21). **CONFIRMED DEAD + PURGED.** 14,618 rows (all 0 captures, last `written_at=2026-07-22`),
+      stream-filtered from manifest. Manifest now carries only canonical `KRX:EQUITY:{code}-USD` form. Backup at
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index_backup_krx_purge_20260810T182348.parquet`.
+      See batch11 Progress Log for full evidence.
 
 ## Progress Log
 

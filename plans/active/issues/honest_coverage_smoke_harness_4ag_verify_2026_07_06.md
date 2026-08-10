@@ -206,19 +206,43 @@ numbering.)**
       re-run + prd/prod path reconciliation has not been done or evidenced.
 
       **round5-cross-cutting-audit 2026-08-08: option (d) resolved — amend the task text, do NOT wait for the operator
-              to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
-              pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
-              `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
-              writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
-              text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
-              marker for a re-run.
+                  to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
+                  pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
+                  `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
+                  writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
+                  text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
+                  marker for a re-run.
 
-          **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
-          BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
-          task**: re-run `run_live_verify_tradfi.py` against
-          `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
-          fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
-          matrix/smoke-set citation.
+              **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
+              BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
+              task**: re-run `run_live_verify_tradfi.py` against
+              `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
+              fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
+              matrix/smoke-set citation.
+
+              **STATUS 2026-08-10 (slot 2) — AMENDED `prod/` path VALIDATED, but the runner is pathologically slow on a real
+              catalogue (NEW finding).** Re-ran `run_live_verify_tradfi.py --output-dir <dir> --today 2026-08-10 --cloud gcp
+              --deployment-env prod` (bounded 10G via run-bounded-analysis.sh) against
+              `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the canonical long-env prefix
+              per the round5 finding). **The AMENDED path works — the catalogue loads: `tradfi catalogue loaded: 13
+              (venue, instrument_type) cells, 919184 total instruments`** (non-empty — this definitively resolves the
+              original 404-empty-matrix problem). **BUT the runner then burned 97% CPU for 1.5h with zero output** — root
+              cause is a harness scaling defect that was latent because no prior run ever had a real tradfi catalogue
+              (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`: a
+              **full-DataFrame linear-scan boolean mask per atom** over the cached manifest, so the run is O(atoms × rows);
+              tradfi's 919k instruments ⇒ millions of atoms × a ~1M-row manifest ⇒ estimated multi-hour total). Stopped the
+              run (unacceptable shared-host CPU for a smoke check) — matrix NOT yet published, done-when not met. Follow-up
+              tracked below: fix the per-atom lookup (indexed/pre-grouped manifest, or sample-based verification for large
+              catalogues), then re-run + publish.
+
+- [ ] [CODE] P2. Fix the honest-coverage smoke harness's per-atom manifest lookup
+      (`e2e-testing/scripts/build_smoke/     live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`): it does a
+      full-DataFrame linear-scan boolean mask per atom over the cached AG manifest, making any AG with a large catalogue
+      (tradfi: 919k instruments) O(atoms × rows) — measured 97% CPU for 1.5h with no output (2026-08-10, this doc's -004
+      run). Replace with an indexed / pre-grouped lookup (e.g. a dict keyed on the atom's (venue, instrument_type,
+      instrument_id, data_type) or a `groupby`-based projection) so the smoke matrix computes in seconds-minutes at
+      catalogue scale; add a regression test that asserts per-atom lookups do not rescan the whole manifest. (repo:
+      e2e-testing) Done when: the tradfi live-verify matrix completes in <10 min and the -004 re-run publishes it.
 
 ## Evidence
 

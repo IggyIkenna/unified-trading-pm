@@ -132,5 +132,52 @@ operations log (all times UTC):
       `2026-01-02 VIX ohlcv_1m captured row_count=4183 source=databento` in the per-VM manifest shard, 0 schema
       validation failures, parquet carries canonical `timestamp` + `ts_event`. Both fixes QG-green + quickmerged; mtds
       tarball rebuilt at e14f358b.
-- [ ] [DATA] P2. After relaunch, verify the manifest shows real captured VIX/CBOE rows (row_count>0) spanning 2020-01-01
-      through today — currently 2020 has zero real captured rows (300 phantom captured row_count=0).
+- [x] ✅ [DATA] P2. **DONE 2026-08-10 (slot-27, data_engineering).** After relaunch, verified the manifest shows real
+      captured VIX/CBOE rows (row_count>0). **Evidence**: all 7 VMs RUNNING (created 17:21-17:23 UTC, actively
+      processing); 2020 per-VM manifest has 28 unique dates (2020-06-01→2020-07-09 and counting) with 170K row_count,
+      source=databento — 2020 was the primary gap (previously 0 real rows, 300 phantom). Schema fix verified: parquet
+      files carry both canonical `timestamp` AND `ts_event` (not ts_event-only). Consolidated manifest
+      (`_index/availability_index.parquet`) shows 7,595 real captured rows (24.7M row_count) spanning 2020-06-01 (UAC
+      CBOE floor) to 2026-08-06; 2024 gap (only Jan-Feb in prior data) being filled by the currently-running 2024 VM.
+      Backfill is IN PROGRESS, not terminal — the 7 on-demand VMs are ~1h into a multi-hour full-history run. No code
+      shipped (verification-only task).
+
+- [ ] [DATA] P3. After all 7 VIX backfill VMs reach terminal completion (STOPPED/TERMINATED with EXIT_STATUS=0 or
+      self-deleted), re-verify the consolidated manifest covers the full 2020-06-01→today window with real captured rows
+      (row_count>0) across all years. Per-VM manifests already show data flowing; this is the terminal gate. (repo:
+      market-tick-data-service)
+- [x] ✅ [DATA] P0. **DONE 2026-08-10 (main, Claude Code session) — the `market-tick-data-service@e14f358b` source=
+      kwarg bug (todo above) is NOT VIX-specific: it hit 6 CME futures roots too, one of them still actively failing
+      live when found.** Checked every `tradfi-bf-cme-ohlcv-1m-*` VM launched today (19 total, all pre-fix, 12:07-15:07
+      UTC — the 20-min fix landed at 16:56 UTC) for the same
+      `Manifest write failed... Multi-source manifest write     missing required source= kwarg` warning: **6 affected**
+      — `BTC-2021` (18 occurrences), `GC-2020` (119, still RUNNING and actively re-hitting it when found), `HG-2020`
+      (12), `MET-2025` (47), `NG-2020` (10), `SI-2020` (28). 13 others clean (the bug is per-underlying nondeterministic
+      within the same shared code path, not universal). **Action taken**: killed the still-running `GC-2020` VM
+      (`gcloud compute instances delete`, stopping the waste immediately); relaunched all 6 via
+      `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year <YEAR>` (dry-run verified identical VM-name/date-range
+      targeting first). All 6 confirmed RUNNING with the fixed code — 0 manifest- write-failure occurrences on the
+      relaunches (checked `GC-2020`'s new run.log directly), real manifest rows landing
+      (`Manifest updated: date=2020-01-06 ... complete=True`). No separate "manifest rebuild" tool was needed —
+      relaunching with the fixed code IS the rebuild mechanism: the buggy writes left the affected dates' manifest rows
+      genuinely absent (not just stale), so the launcher's existing skip-if-captured pre-flight check correctly treats
+      them as real gaps needing a fetch, while dates that were never affected stay untouched. **Blast-radius check
+      across other asset groups (operator ask)**: sports and defi adapters have ZERO chain-bundle
+      (`futures_chain`/`options_chain`) manifest-write code path at all — architecturally cannot hit this bug, no
+      further action. CEFI's Tardis adapter (`tardis_cefi_shards.py`) DOES route through the same shared
+      `manifest_finalize._write_bundle_shard_row` function — checked all 4 `cefi-queue-heavy-binancefutu-*` backfill VMs
+      from the last 2 weeks (2026-07-27 through 2026-08-09): **0 occurrences** — CEFI's chain-bundle cells are
+      registered single-source in UAC SOURCE_PRIORITY, so they never hit the "must pass source=" requirement this bug is
+      gated on. No CEFI/sports/defi manifest rebuild needed. Repo: deployment-service (relaunch),
+      market-tick-data-service (bug already fixed by slot-16, this todo is the blast-radius sweep + CME remediation).
+
+## Progress Log
+
+- 2026-08-10 (slot-27, data_engineering): todo 4 (verify manifest after relaunch). Verified all 7 VMs RUNNING
+  (tradfi-bf-vix-light-{2020..2026}, created 17:21-17:23 UTC, ~1h in). 2020 per-VM manifest (28 chunks so far) shows 28
+  unique dates (2020-06-01→2020-07-09, 170K row_count, source=databento) — the primary gap (0 real 2020 rows
+  pre-relaunch) is closed. Schema fix confirmed: parquet carries both `timestamp` AND `ts_event`. Consolidated manifest
+  (`_index/availability_index.parquet`) has 7,595 real captured VIX/CBOE rows (24.7M row_count) from 2020-06-01 (UAC
+  CBOE floor) to 2026-08-06. 2024 was sparse in prior data (Jan-Feb only) — the 2024 VM is now running and filling it.
+  All data source=databento, pipeline_mode=batch_databento. No code changes needed (verification-only). Backfill is IN
+  PROGRESS — VMs will need several more hours to complete the full 7-year window.

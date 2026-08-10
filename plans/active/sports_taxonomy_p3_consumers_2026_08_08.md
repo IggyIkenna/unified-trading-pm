@@ -588,3 +588,19 @@ spelling variant survives, which is the entire point of the panel". It does not.
   (rmse/mae/r2-per-outcome-per-horizon) pending the runs' terminal state — will be reported here + the two issue docs.
   Checkbox stays unflipped until that lands. Full chain tracking:
   `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md` todo 2.
+
+- **2026-08-10 (slot 20, pre-compact)** — Session compacted while the 5th-attempt retrain run is mid-flight. Snapshot at
+  18:34Z (~2h elapsed): all 5 VMs still RUNNING (`ml-train-sports-model-2{a,b,c,d,e}-20260810-163407/16/23/33/41`),
+  model_2a emitting live `PIPELINE_HEARTBEAT` in run.log (18:34:52Z) — healthy progress through the feature-load/train
+  phase, no terminal transitions, no `Traceback`/`DEPLOYMENT_FAILED` in any run.log. Watchdog armed (6.5h cap, ~4.5h
+  remaining) keeps the slot alive + detects terminal; a fresh session can also direct-check each VM via
+  `gcloud compute instances describe <name> --zone=asia-northeast1-c --project=central-element-323112` (gone = terminal,
+  self-delete-on-completion). **Resume path**: on terminal, pull
+  `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the
+  `SportsEnsembleTrainingRunner(<model_id>) complete: train=N val=N test=N rows, K features, test_metrics={home:{rmse,mae,r2},draw:{...},away:{...}}`
+  line, report the rmse/mae/r2-per-outcome-per-horizon delta into this plan's Progress Log + the
+  `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md` todo 2 +
+  `sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` P1
+  - `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`, flip this checkbox with evidence
+    (coverage delta 0.0% → 5.7%/17.2%/15.6% non-null already measured; perf delta pending), and `/done`
+    (`sports_taxonomy_p3_consumers-cf4d5df0dd61`). Prior entry above (efca9c56bc) carries the tarball sha + VM names.

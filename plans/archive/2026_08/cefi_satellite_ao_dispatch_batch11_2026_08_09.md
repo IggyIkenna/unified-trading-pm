@@ -36,8 +36,8 @@ related:
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     /plans/active/cefi_ml_directional_continuous_live_2026_06_20.md,
     /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch14_2026_08_09.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -89,8 +89,8 @@ context_scope:
 > constants — was corrected to the measured values in the same session. Finalize plan
 > `cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` (source-doc reconciliation + this archival) completed and
 > archived alongside this doc. One deferred item (deployment-ui Barchart-label spot-check, never checked) migrated to a
-> tracked todo before archival: `/plans/active/issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`. Successor:
-> none.
+> tracked todo before archival: `/plans/archive/2026_08/deployment_ui_barchart_label_spotcheck_2026_08_09.md`.
+> Successor: none.
 >
 > **Status: ACTIVE (historical).** Conflict-checked against the live corpus 2026-08-09 (see Progress Log) — no overlap
 > found with any other active `assigned_vm: planning` plan in `parent_epic: cefi_master`,

@@ -158,7 +158,7 @@ _write_plan() {
     git -C "$repo" commit -q -m "base"
 
     # Edit an existing line (1 delete + 1 add)
-    sed -i 's/OLD MARKER/NEW MARKER/' "$plan"
+    sed -i.bak 's/OLD MARKER/NEW MARKER/' "$plan" && rm -f "$plan.bak"
     git -C "$repo" add "$plan"
     lines="$(wc -l < "$plan")"
 

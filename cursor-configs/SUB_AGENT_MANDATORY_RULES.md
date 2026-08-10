@@ -111,10 +111,11 @@ or `gh pr list --search "chore(promote)"`. SSOT: `/codex/12-agent-workflow/async
 
 ## When YOU spawn sub-agents
 
-**Max 10 parallel** (different repos ok, same file never). Paste THIS file at the TOP of every Task spawn (no inherited
-context); if impractical, prepend "read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and
-follow ALL rules" — injection failure means the agent MUST NOT proceed. Send all `Task` calls in ONE message; set
-`model=` explicitly. Finish-to-DONE → also paste `cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
+**Max 5 parallel** (different repos ok, same file never) — the host is SHARED by ~4 slots, so 10-per-slot oversubscribes
+a ~10-core box several times over (operator ruling 2026-08-10). Paste THIS file at the TOP of every Task spawn (no
+inherited context); if impractical, prepend "read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in
+full and follow ALL rules" — injection failure means the agent MUST NOT proceed. Send all `Task` calls in ONE message;
+set `model=` explicitly. Finish-to-DONE → also paste `cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
 ## When escalating a question to the operator (HARD RULE)
 

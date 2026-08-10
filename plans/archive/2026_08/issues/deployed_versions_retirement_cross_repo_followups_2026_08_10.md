@@ -20,21 +20,10 @@ source:
 related:
   - /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md
   - /plans/active/infra_consolidated_closeout_2026_07_25.md
-status: open
-repos: [deployment-api, deployment-ui, unified-api-contracts]
-nature: process
-asset_group: [infrastructure]
-stage: [meta]
-scope: [engineer, admin]
-tags: [deployed-versions, provenance, retirement, cross-repo, ci-cd]
-execution_scope: orchestrator-agent
-priority: P3
-drift_direction: advance-code
-depends_on: []
-resolved_by:
-locked_by:
-locked_since:
+status: resolved
 ---
+
+<!-- ARCHIVED 2026-08-10: all 3 todos done — deployed_versions phrase removed from all 4 openapi/docstring locations across deployment-api + unified-api-contracts; prior todos (dead read removal, UI mock update) already shipped. No remaining work. -->
 
 # `deployed_versions` retirement — cross-repo follow-ups
 
@@ -89,9 +78,9 @@ Clean up each in its own repo (all small, bounded, deterministic):
       (repo: deployment-ui) — deployment-ui@32a99e5. Rewrote the "Build provenance never recorded" health item: the
       manifest no longer carries `deployed_versions`/`deployed_versions_aws` (RETIRED 2026-08-10); provenance now read
       from Firestore `ci_status` / released-version registry, matching the deployment-api fix (fff55c6). QG green.
-- [ ] [INFRA] P3. Remove the "falls back to deployed_versions from the PM manifest" mock-mode phrase from the build-list
-      endpoint docstring in unified-api-contracts openapi + deployment-api openapi spec. (repos: unified-api-contracts,
-      deployment-api)
+- [x] ✅ [INFRA] P3. Remove the "falls back to deployed_versions from the PM manifest" mock-mode phrase from the
+      build-list endpoint docstring in unified-api-contracts openapi + deployment-api openapi spec. —
+      unified-api-contracts@ea9ca78b8f, deployment-api@c6267286be
 
 ## Progress Log
 
@@ -100,3 +89,8 @@ Clean up each in its own repo (all small, bounded, deterministic):
   `deployed_versions`/`deployed_versions_aws` as live manifest fields; now states the fields were RETIRED 2026-08-10 and
   provenance is sourced from Firestore `ci_status` / released-version registry (consistent with deployment-api fix
   `fff55c6`). Shipped `deployment-ui@32a99e5` via quickmerge (QG green, 51s, sentinel verified); verified on origin.
+- **2026-08-10 (slot-25, infra)**: Flipped todo 3 — removed "falls back to deployed_versions from the PM manifest"
+  phrase from build-list endpoint docstring in 4 files across 2 repos: `deployment-api` (`builds.py` docstring +
+  `docs/specs/openapi.json`) and `unified-api-contracts` (`openapi/unified-trading-system.openapi.{yaml,json}`).
+  Replaced with "returns mock build entries" since the `deployed_versions` manifest field no longer exists. Shipped
+  `unified-api-contracts@ea9ca78b8f` + `deployment-api@c6267286be` (both QG green, verified on origin).

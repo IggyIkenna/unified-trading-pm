@@ -237,7 +237,7 @@ outcome, so they belong on this list rather than in an audit report nobody owns.
       `/plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md` item 2. A judgment call, low
       urgency. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` 2026-08-10.
 - [ ] [OPERATOR] P3. **Resolve the aggregate-zero-path signal design fork** in
-      `/plans/active/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]` todo — a two-direction
+      `/plans/archive/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]` todo — a two-direction
       design choice with no evidence-based tiebreaker; its `[UI]` and `[BACKEND]` todos are both blocked behind it.
       Carried 2026-08-10.
 - [ ] [OPERATOR] P3. **Run `/plan-brainstorm` on

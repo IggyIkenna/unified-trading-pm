@@ -207,11 +207,12 @@ four now route through the one helper.
 
 - [x] [SCRIPT] P2. ✅ Fixed `_get_source_bucket` (data_loader.py) + `_assert_upstream_candles_fresh` (live_handler.py) —
       `features-service@306bef65`. 4/4 known call sites in `delta_one` now route through `_resolve_mdps_bucket`.
-- [x] ✅ [DATA] P3. `PREDICTION:delta_one` benchmark measurement: re-run attempted 2026-08-05 (slot-11) for
-      day=2026-08-04. Dependency check + lookback validation both PASS (bucket-naming fix verified). Compute progressed
-      through 613 instruments with 4,116 candle loads, but feature writes did not complete within the 40-min pipeline
-      timeout (large PREDICTION universe). Full benchmark measurement (throughput number) needs a longer-running VM or
-      dedicated benchmark leg. See Progress Log for full detail.
+- [x] ✅ [DATA] P3. `PREDICTION:delta_one` dependency/lookback verification re-run (2026-08-05, slot-11, day=2026-08-04)
+      — **full throughput benchmark measurement DEFERRED** (tracked in Follow-ups). Dependency check + lookback
+      validation both PASS (bucket-naming fix verified). Compute progressed through 613 instruments with 4,116 candle
+      loads, but feature writes did not complete within the 40-min pipeline timeout (large PREDICTION universe). Full
+      benchmark measurement (throughput number) needs a longer-running VM or dedicated benchmark leg. See Progress Log
+      for full detail.
 - [x] ✅ [SCRIPT] P3. Latent (currently unreachable, no live bug today) copy of the same bug pattern in
       `features_service/volatility/core/{dependency_checker,data_loader}.py` — both call
       `resolve_bucket_name(kind="market-data", asset_group=...)` directly on a variable `asset_group`, same shape as the

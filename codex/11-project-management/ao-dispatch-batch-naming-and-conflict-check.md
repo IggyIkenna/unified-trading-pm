@@ -59,8 +59,9 @@ Every `assigned_vm: planning` doc in the corpus was created one of two ways, and
 `{ag}_satellite_ao_dispatch_batch{N}_{date}.md` (or `_consolidated_native_ao_extract_`, `_closeout_track_{x}_`,
 `_track{N}_{topic}_` for the AG-specific variants), always shipped with a paired gated twin — same stem + `_finalize`
 (position varies: `{stem}_{date}_finalize.md` or `{stem}_finalize_{date}.md`, both seen live; the ordering is cosmetic)
-— carrying `depends_on: [<source-doc-slug>]` + `gate_on_depends: true`, `status: draft` until the source plan's todos
-are done.
+— carrying `depends_on: [<source-doc-slug>]` + `gate_on_depends: true`, authored `status: active` from the start per the
+2026-07-30 no-double-gate ruling — `gate_on_depends` alone machine-holds every task until the source plan's todos are
+done (a `status: draft` twin would double-gate).
 
 **(b) Retroactive reclassification (`/na-eligibility-audit` Phase 1).** An EXISTING doc (any name, any age) gets its own
 `assigned_vm` flipped `NA → planning` **in place — name unchanged** — and gets a bolt-on

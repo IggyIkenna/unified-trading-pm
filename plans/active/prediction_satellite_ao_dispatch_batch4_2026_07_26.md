@@ -74,12 +74,11 @@ context_scope:
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
 
-> **Status: draft — NOT dispatched.** This batch was drafted autonomously by the `/ag-closeout-audit prediction`
-> scheduled run (2026-07-26). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE and the
-> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped: flipping
-> `status: draft` → `active` to actually dispatch these todos is an operator decision. The three dispatched todos below
-> touch distinct files (IS-adapter-lifecycle / MDPS-retention-read-only / IS-cqg-catalogue) — safe to dispatch
-> concurrently once activated.
+> **Status: active — operator-dispatched (2026-07-28+).** Drafted autonomously by the `/ag-closeout-audit prediction`
+> scheduled run (2026-07-26) as a `status: draft` skill-drafted batch (never auto-shipped per CLAUDE.md's "Plan
+> destination — ASK BEFORE CREATING" HARD RULE); the operator flipped it to `active` and dispatched it (Progress Log
+> tasks `batch4-013/-017/-020/-023/-024`). All split items 4a/4b-i/4b-ii/4c are COMPLETE; one follow-on remains — 4b-iii
+> (shape #4 merge + delete), tracked as a todo below.
 
 ## Why this batch exists (the gap batch3 missed)
 
@@ -191,8 +190,8 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       the run's evidence recorded in the source doc's Progress Log.
 
 - **[CODE] P1. Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
-  population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b open; see below). Operator ruling 2026-07-25
-  (`unified-trading-pm@7dfcfe0ee`,
+  population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b, itself split into 4b-i/4b-ii COMPLETE + 4b-iii
+  open; see below). Operator ruling 2026-07-25 (`unified-trading-pm@7dfcfe0ee`,
   `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the
   canonical `data_type=trades` schema rather than drop the legacy metadata or permanently fork a separate canonical
   shape. Source: `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` todos 4-6 — batch3 deferred
@@ -694,11 +693,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   #4 → canonical shape #1 (shape #4 carries richer `title`/`slug`/`eventSlug` metadata, 24 cols vs canonical 22),
   mirroring 4b-i's alias-aware additive-only approach in `migrate_prediction_trades_legacy_bundle_2026_07_28.py`. Filed
   as a new sub-item below.
-- **[DATA] P2. 4b-iii — merge shape #4 into canonical + delete legacy objects.** Gated on 4b-i completing (both
-  migrations share the same canonical target; concurrent writes would race). Once 4b-i's enrichment+delete lands, apply
-  the same read-transform-write-per-cell pattern to enrich canonical shape #1 objects with `title`/`slug`/ `event_slug`
-  from their shape #4 twins (1,126,358 objects, 348 days, 100% twin coverage confirmed by 4b-ii's enumeration), then
-  delete the now-redundant shape #4 legacy objects after content verification. Repo: market-tick-data-service.
+- [ ] [DATA] P2. **4b-iii — merge shape #4 into canonical + delete legacy objects.** Gate cleared (4b-i COMPLETE
+      2026-08-06 — both migrations share the same canonical target; concurrent writes would race). Apply the same
+      read-transform-write-per-cell pattern as 4b-i to enrich canonical shape #1 objects with
+      `title`/`slug`/`event_slug` from their shape #4 twins (1,126,358 objects, 348 days, 100% twin coverage confirmed
+      by 4b-ii's enumeration), then delete the now-redundant shape #4 legacy objects after content verification.
+      **Delete safety**: mirror 4b-i's reversibility-qualified pattern — gate the delete on a FRESH
+      `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check before any object deletion (codex delete-safety §3a);
+      no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 - **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
   blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
   (`gcloud scheduler jobs describe`, `unified-trading-sa` account). `GET /api/backlog`:

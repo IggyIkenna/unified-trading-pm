@@ -4282,8 +4282,41 @@ if [ -f "$_QG_BASELINE" ] && command -v python3 >/dev/null 2>&1; then
     fi
 fi
 
+# ── BILLABLE TIME IS CPU-SECONDS, NOT WALL (2026-08-10) ──────────────────────
+# Subtracting the governor's queue-wait above is necessary but NOT sufficient: time spent
+# DESCHEDULED while peers saturate the host is still counted as work. Measured on a dev laptop,
+# the same PM gate reported 602s and then 611s of "work" under 11 concurrent quickmerges against
+# a 600s cap -- overshoots of 0.3% and 1.8% that were pure contention, surfaced to the agent as a
+# content failure, each retry costing another full gate and making the next trip likelier.
+#
+# CPU-seconds are invariant under contention: a gate burning 370 CPU-seconds burns 370 alone or
+# against eleven peers; only wall time moves. This also makes the codex's "organically outgrows
+# the budget ON A QUIET HOST" test measurable instead of a judgement about how busy the box was.
+#
+# `times`' second line is cumulative user+sys for waited-for children, and MUST be captured by
+# REDIRECTION -- inside $(...) the builtin runs in a subshell with its own accounting and reports
+# 0m0.000s, i.e. a zero budget that can never trip. Verified both ways (0.787s vs 0.000s).
+_qg_cpu_file="${TMPDIR:-/tmp}/qg-cpu-svc-$$"
+times > "$_qg_cpu_file" 2>/dev/null || true
+DUR_CPU=$(awk 'NR==2 { t=0; for (i=1;i<=NF;i++) { split($i,p,"m"); sub(/s$/,"",p[2]); t += p[1]*60 + p[2] } printf "%d", t }' "$_qg_cpu_file" 2>/dev/null)
+rm -f "$_qg_cpu_file"
+# Fall back to wall if CPU accounting is unavailable: a silent 0 would disable the cap entirely,
+# which is worse than the contention false-positive it replaces.
+if [ -n "${DUR_CPU:-}" ] && [ "${DUR_CPU:-0}" -gt 0 ] 2>/dev/null; then
+    DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU"
+else
+    _qg_dur_basis="wall(CPU unavailable)"
+fi
+# Wall kept ONLY as a hang detector, deliberately loose: a gate stuck on a lock or a dead network
+# call burns no CPU and would otherwise trip nothing.
+MAX_WALL=${MAX_WALL:-$(( MAX_DURATION * 4 ))}
+
 if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR_BILLABLE -gt $MAX_DURATION ]; then
-    log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR_BILLABLE}s work + ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait = ${DUR}s wall)"
+    log_fail "Quality gates must complete in <${MAX_DURATION}s (${DUR_BILLABLE}s ${_qg_dur_basis} work; ${DUR}s wall incl. ${QG_GOVERNOR_WAIT_SECONDS:-0}s governor queue-wait)"
+    exit 1
+fi
+if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_WALL ]; then
+    log_fail "Quality gates wall-clock ceiling ${MAX_WALL}s exceeded (${DUR}s wall, only ${DUR_BILLABLE}s ${_qg_dur_basis} work) -- suspected HANG, not load"
     exit 1
 fi
 

@@ -26,6 +26,7 @@ related:
   [
     /plans/archive/2026_08/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-09

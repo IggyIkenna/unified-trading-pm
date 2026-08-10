@@ -2,10 +2,13 @@
 doc_type: plan
 title: Prediction satellite AO batch 6 — finalize (reconcile source docs + re-check deferrals + archive)
 summary: >-
-  Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — machine-held via depends_on +
-  gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
-  of the 9 distinct source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded
-  population for cleared gates, then archive). `status: draft` until batch6 itself is approved and dispatched.
+  Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — `gate_on_depends: true` machine-holds this
+  finalize's tasks until that plan's todos are done (authored `status: active` per the 2026-07-30 no-double-gate ruling;
+  caveat: the known `gate_on_depends` wiring gap tracked in
+  plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md once released a task early, so
+  re-verify source-doc statuses before acting). Mirrors the batch4-finalize pattern (reconcile each of the 9 distinct
+  source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded population for cleared
+  gates, then archive).
 status: active
 nature: process
 asset_group: [prediction]
@@ -52,8 +55,11 @@ context_scope:
 # Prediction satellite AO batch 6 — finalize
 
 > **Machine-gated on `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`** (`depends_on` + `gate_on_depends: true`)
-> — the dispatcher will not queue any todo below until all 13 tasks in that plan are `done`. `sequential: true` because
-> todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
+> — the dispatcher will not queue any todo below until all of that plan's todos are `done`. `sequential: true` because
+> todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last. **Caveat**: the
+> `gate_on_depends` wiring gap (see Progress Log below;
+> `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`) once released a task early —
+> re-verify batch6's own todo statuses before starting; do not trust the gate alone.
 
 ## Todos
 

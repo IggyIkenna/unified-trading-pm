@@ -403,6 +403,19 @@ _sdp_fingerprint_named() {
 }
 _SDP_ENTRY_FINGERPRINT="$(_sdp_fingerprint_named)"
 
+# Whole-tree snapshot. The fingerprint above covers only the NAMED files -- the work being
+# shipped. An uncommitted edit elsewhere in the tree can still be eaten by the reconcile's
+# autostash and vanish silently (measured 2026-08-10, /codex/05-infrastructure/per-tab-worktrees.md
+# "When a ship eats work it was never asked to touch"). Isolated mode makes this a non-issue by
+# not touching the caller's tree at all, but the shared-index fallback and the AO VM (isolation
+# off by host gate) both still run through here.
+_SDP_WIP_SNAPSHOT=""
+if [ -f "${_SDP_SELF%/*}/tree-wip-guard.sh" ]; then
+  # shellcheck source=/dev/null
+  source "${_SDP_SELF%/*}/tree-wip-guard.sh" 2>/dev/null || true
+  declare -F wip_guard_snapshot >/dev/null 2>&1 && _SDP_WIP_SNAPSHOT="$(wip_guard_snapshot)"
+fi
+
 # Print a loud, actionable warning if the named files no longer match what the caller handed us.
 # Returns 1 when content changed (caller should NOT report a plain transient failure).
 _sdp_warn_if_content_vanished() {
@@ -1024,6 +1037,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
     if verify_pushed; then
       echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
+      if [ -n "${_SDP_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
+        wip_guard_report "$_SDP_WIP_SNAPSHOT" "${FILES[*]}" || true
+      fi
       final_ok=true
       break
     fi

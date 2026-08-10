@@ -94,16 +94,12 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
       Progress Log stating which specific closeout todo blocks which catalogue todo — do not skip the whole plan, gate
       only the affected todo(s). **Done when**: the current Track C/V/E state is recorded in the Progress Log with a
       go/no-go call on todo 2.
-- [ ] [DATA] P2. **Design the manifest schema extension for per-fixture capture tracking.** Today's sports manifest atom
-      is `(league_id, data_type, date)` — `build_sports_catalogue_from_manifest()` relies on this exact grain to seed
-      `expected_unattempted` without inflating the honest-coverage denominator. A fixture-grain catalogue needs the
-      manifest to also track presence at `(fixture_id, league_id, data_type, date)` grain. Design the extension (new
-      column(s)? separate index file? composite key?) without breaking the existing league-grain denominator for
-      in-flight consumers. Cite `availability-manifest-and-data-status.md` and `honest-coverage-model.md` — the design
-      must fit into the two-layer/two-view model, not bypass it. The catalogue plan's original P2 design todo
-      (calibrated at 3.6 AI-days) is the precedent for this being the largest single item. **Done when**: a design
-      decision is recorded in this plan's Progress Log (or a linked design note) covering the schema shape, the
-      back-compat guarantee for league-grain readers, and the honest-coverage denominator math.
+- [x] ✅ [DATA] P2. **Design the manifest schema extension for per-fixture capture tracking.** —
+      unified-trading-pm@<sha> Design decision recorded in Progress Log below (2026-08-10, slot 22). Key finding: no
+      schema migration needed — `fixture_id` is already in `_ROW_KEY_COLUMNS` and `AvailabilityRecord`. The extension is
+      a write convention: MTDS emits per-fixture rows (`fixture_id` populated) alongside league-grain rollup rows
+      (`fixture_id=""`). `build_sports_catalogue_from_manifest()` must filter `fixture_id == ""` for back-compat. Full
+      design covers schema shape, back-compat, and honest-coverage denominator math.
 - [ ] [CODE] P2. **Write `build_sports_fixture_catalogue_from_manifest()` in
       `instruments-service/scripts/build_instrument_catalogue.py`.** Gated on the manifest schema extension above (todo
       2). Model it on the existing `build_sports_catalogue_from_manifest()` — same "catalogue superset ⊇ manifest
@@ -188,3 +184,87 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
   11-step pipeline documenting the two-grain catalogue (league-grain from manifest + fixture/team/player-grain from
   observed by_date snapshots, shipped 2026-07-09) with the builder functions and real row counts.
   instruments-service@0f2a798c65.
+
+- **2026-08-10 (slot 22, todo 2 — manifest schema extension DESIGN DECISION)** — Code-inspection finding: the manifest
+  schema **already supports per-fixture rows with no migration.** `fixture_id` is in `_ROW_KEY_COLUMNS`
+  (`unified-trading-library/unified_trading_library/manifest_writer/_rows.py:238`) and the `AvailabilityRecord`
+  dataclass (`_rows.py:198`, `_rows.py:480`). A `fixture_id=""` row and a
+  `fixture_id="ENG_PREMIER_LEAGUE:ARSENAL_v_ CHELSEA:20260810"` row for the same `(league_id, data_type, date)` are
+  already distinct dedup keys — no schema change, no new column, no separate index file, no `_ROW_KEY_COLUMNS` edit is
+  required. The "extension" is a **write convention** for MTDS sports writers. The three required design dimensions:
+
+  ### 1. Schema shape — write convention (no DDL)
+
+  The manifest schema is v9 (`AvailabilityRecord`, 41 columns). No new column is added. The extension is entirely a
+  writer-side convention for **fixture-scoped sports data_types** (`ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE`,
+  `FIXTURE_STATS`, `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES` — the data_types whose GCS path
+  already carries `fixture_id={FIXTURE}`):
+
+  - **League-grain rollup row**: `fixture_id=""`, `instrument_count = total_rows_across_all_fixtures`. Same
+    `(league_id, data_type, date)` shard atom as today. `capture_status` = `captured` if ANY fixture produced rows,
+    `empty_confirmed` if ALL returned zero, `attempted_failed` if ALL failed. This row IS the existing league-grain
+    denominator — byte-identical to what today's single-row-per-shard writer emits.
+  - **Per-fixture rows**: one row per distinct `fixture_id` within the shard, `fixture_id=<canonical_fixture_id>` (UAC
+    `build_fixture_id()` shape: `LEAGUE:HOME_v_AWAY:DATE`), `instrument_count = rows_for_this_fixture`. Same
+    `(league_id, data_type, date)` parent shard.
+
+  For **league-scoped data_types** (`STANDINGS`, `LEAGUES`, `TEAMS`, `REFEREES`, `COACHES`, `ROUNDS`): unchanged.
+  `fixture_id=""` always. One row per `(league_id, data_type, date)`.
+
+  Both row types coexist in the same `_index/availability_index.parquet`. The consolidator's dedup key already includes
+  `fixture_id` (`_ROW_KEY_COLUMNS` → `_dedup_key_series` → manifest consolidator SQL), so the league-grain rollup and
+  per-fixture rows for the same `(league_id, data_type, date)` do NOT collide.
+
+  ### 2. Back-compat guarantee for league-grain readers
+
+  **Guarantee**: any reader that filters `fixture_id == ""` (or groups by the existing league-grain shard atom without
+  including `fixture_id` in the group-by) sees EXACTLY the same rows it sees today.
+
+  Specific consumers and their back-compat path:
+
+  | Consumer                                                  | Back-compat mechanism                                                                                                                                                                                                                                                                                                                                                                                             |
+  | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `build_sports_catalogue_from_manifest()`                  | Add `fixture_id == ""` filter BEFORE the `league_id` group-by. Without this filter, per-fixture rows would create duplicate league entries in the group-by output. One-line change.                                                                                                                                                                                                                               |
+  | `enumerate_expected_universe.py` `_enumerate_v2_sports()` | Already filters `instrument_type == "league"` — fixture-grain catalogue rows carry `instrument_type="fixture"`, so they are never treated as league lifecycle windows. No change needed.                                                                                                                                                                                                                          |
+  | `measure_honest_coverage.py`                              | Groups by the existing shard atom columns. Since `fixture_id` is NOT in today's group-by keys, per-fixture rows would be double-counted. Fix: filter `fixture_id == ""` for league-grain coverage views, or add `fixture_id` to the group-by for a new fixture-grain view. A separate fixture-grain coverage view (analogous to the MDPS timeframe-aware extension in the same module) is the intended follow-up. |
+  | `deployment-api` data-status readers                      | Read `capture_status` via `read_availability_index()`. Adding a `fixture_id == ""` filter to the existing league-grain queries preserves current behavior.                                                                                                                                                                                                                                                        |
+
+  ### 3. Honest-coverage denominator math
+
+  **League-grain denominator (unchanged)** — computed over `fixture_id == ""` rows only:
+
+  ```
+  reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)
+  ```
+
+  The league-grain rollup row's `capture_status` reflects the aggregate: `captured` if any fixture succeeded,
+  `empty_confirmed` if source returned zero for all fixtures, `attempted_failed` if all fixtures failed. This preserves
+  the existing league-grain denominator exactly — no inflation, no deflation.
+
+  **Fixture-grain denominator (new, independent)** — computed over `fixture_id != ""` rows:
+
+  ```
+  reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)
+  ```
+  - `expected_unattempted` for fixture-grain is seeded by the v2 enumerator reading the **fixture catalogue**
+    (`build_sports_fixture_catalogue_from_manifest()`, the todo-3 function), NOT the league catalogue. The fixture
+    catalogue carries `instrument_type="fixture"` — the enumerator's `_enumerate_v2_sports()` already filters to
+    `instrument_type="league"` only (per the 2026-07-09 fixture/team/player catalogue change), so fixture-grain rows
+    never inflate the league-grain denominator.
+  - The fixture-grain expected universe is the cross-product of: (a) fixture-scoped data_types × (b) fixtures known to
+    exist on that date (from the fixture reference data / fixture catalogue) × (c) the fixture's league's coverage
+    window. This is a larger denominator than league-grain (one row per fixture per data_type per day vs. one per league
+    per data_type per day), matching the honest-coverage model's principle that the denominator reflects the could-exist
+    universe at the grain being measured.
+  - **Two independent denominators, same formula, same two-layer model.** Layer 1 (instrument-denominator completeness)
+    gates Layer 2 (data-download coverage) for BOTH grains independently — a hole in the fixture-grain enumerator gates
+    fixture-grain download coverage, exactly as a hole in the league-grain enumerator gates league-grain coverage today.
+    No new mechanism is invented.
+
+  **Manifest row-count impact (order-of-magnitude estimate):** for a league with ~5 fixtures on a given matchday and ~8
+  fixture-scoped data_types captured, that's ~40 extra manifest rows per league per day — on the order of hundreds to
+  low thousands of additional rows per day across all 33 Prediction leagues, compared to the existing league-grain row
+  count of ~1 per league per data_type per day. Well within the manifest's existing scale (millions of rows). The
+  multi-axis correction banner's "10× manifest inflation" warning was about making `fixture_id` a FULL shard axis for
+  ALL data_types including league-scoped ones — this design scopes per-fixture rows to fixture-scoped data_types only,
+  where `fixture_id` is already the GCS path partition key.

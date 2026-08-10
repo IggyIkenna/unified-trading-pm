@@ -12,7 +12,7 @@ summary: >-
   `DEPLOYMENT_GUIDE.md`/`TESTING.md` against the S5.1 filename set via thin redirect stubs, mirroring the
   already-executed instruments-service precedent, per `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s dated DELETE
   classification for both files.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-15, tmpfs, docs-standards]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md,
     /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
     /plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
@@ -63,6 +63,13 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 15
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** Both todos done. Finalize plan
+> (`infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`) reconciled both distinct source docs the 2 todos cite
+> (`host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`'s 2 todos — P1 sizing/routing fix, P2 ownership audit; and
+> `s5_7_required_docs_gaps_2026_07_29.md`'s corrected todo — MOOT per operator ruling BLK-2b076fa9, DELETE wins), then
+> archived this plan via the standard 6-step ritual. Finalize archived alongside at
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`.
 
 ## Why this plan exists
 
@@ -193,3 +200,8 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
   already cover the real content, and the SSOT audit registry (`codex_vs_repo_docs_ssot_audit_2026_06_01.md` line 874)
   classifies both files DELETE. Escalated as BLK-e2c5b647; operator confirmed A. No redirect stubs created; `s5_7`
   corrected todo already `[x]`-CLOSED under the same ruling.
+- **2026-08-10 (slot-17, infra) — archived**. `git mv` to `plans/archive/2026_08/` via the standard 6-step ritual —
+  banner + `status: complete`, all corpus referrers repointed (incl.
+  `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated. Finalize plan archived alongside
+  (all 3 of its todos done). `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
+  `regenerate_active_plan_inventory.py` clean.

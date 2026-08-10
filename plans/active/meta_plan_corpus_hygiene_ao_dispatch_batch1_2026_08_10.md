@@ -190,12 +190,12 @@ Two independent causes, both now fixed:
       verify ongoing progress against a real progress metric, and record a terminal state. Preemption recovery resumes
       from measured PROGRESS, never replays `START_DATE`. **Done when**: relaunched and progressing, or a measured
       verdict on why it cannot be, in the Progress Log.
-- [ ] [REVIEW] P3. **Investigate why the `tradfi` tranche received THREE `/ag-closeout-audit` dispatches on 2026-08-10**
-      — slot 26 (`all`-mode, no `$TRANCHE`), slot 25 (sharded, `agt-022d39`), slot 22 (sharded, `agt-a19d1f`). No
-      content harm resulted, but triple-dispatch is wasted fleet capacity and suggests the `all`-mode and sharded
-      schedulers do not deconflict. **RETAGGED from `[OPERATOR]` per finding U**: a read-only diagnostic can never be
-      operator-gated regardless of subject. **Done when**: the dispatch path is identified from AO scheduled-job
-      config/logs and either a fix is filed as a follow-up todo or the overlap is shown to be intentional.
+- [x] ✅ [REVIEW] P3. **Investigate why the `tradfi` tranche received THREE `/ag-closeout-audit` dispatches on
+      2026-08-10** — slot 26 (`all`-mode, no `$TRANCHE`), slot 25 (sharded, `agt-022d39`), slot 22 (sharded,
+      `agt-a19d1f`). No content harm resulted, but triple-dispatch is wasted fleet capacity and suggests the `all`-mode
+      and sharded schedulers do not deconflict. **RETAGGED from `[OPERATOR]` per finding U**: a read-only diagnostic can
+      never be operator-gated regardless of subject. **Done when**: the dispatch path is identified from AO
+      scheduled-job config/logs and either a fix is filed as a follow-up todo or the overlap is shown to be intentional.
 - [ ] [SCRIPT] P3. **Dispatch a fresh `/plan-reconcile tradfi` pass** to complete the stalled
       `plan_reconciler_findings_tradfi_2026_08_09.md` run from STEP 4 onward and file its 5 named P0/P1 candidates.
       Scope note: this is the WORKER half only — clearing that doc's `locked_by` needs `[unlock-plan]`, which stays
@@ -206,11 +206,16 @@ Two independent causes, both now fixed:
       remaining open item (its `[DATA] P2` relaunch item is already done). Confirmed 2026-08-10 as NOT covered by
       `defi_satellite_ao_dispatch_batch11_2026_08_09.md`. **Done when**: the timeout is raised to a value justified by
       measured per-date runtime at 10K+ instruments (state the measurement), and the change is shipped.
-- [ ] [REVIEW] P3. **Verify `instruments-service@62a8b1d8` actually covers parts 3a and 3b**, not just 3c, before anyone
-      treats `/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s fixture-pairing checkbox as
-      closable — 3a = registry-resolution, 3b = `mapped_sport_event_id` / `PredictionMarketCrossVenueMapping`
-      population, 3c = team-name canonicalisation (the only part the commit message claims). **Done when**: an explicit
-      per-part verdict against the real diff is written into that doc.
+- [x] ✅ [REVIEW] P3. **Verify `instruments-service@62a8b1d8` actually covers parts 3a and 3b**, not just 3c — verdict
+      written 2026-08-10 (slot 7, review) into `/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`
+      lines ~257-303. Per-part summary: **3a** PARTIALLY COVERED (local fixture-ID computation via
+      `build_fixture_id`/`build_team_id`, not the external api-football/odds-api registry resolution the plan text
+      describes — but same approach as the already-shipped Polymarket adapter; accepted by the existing partial-progress
+      note). **3b** COVERED (Kalshi half — stamps `canonical_instrument_id` so `_build_mapping()` UAC@1dddc680 can pair
+      Kalshi↔Polymarket; `mapped_sport_event_id` was separately found DEAD/unwired). **3c** NOT COVERED (correctly
+      excluded — team-name canonicaliser shipped separately 2026-08-05). **League scope**: ALL leagues structurally
+      (code is league-agnostic via `SPORTS_*` prefix), not MLB-only; test gap is coverage-only. Full diff confirmed:
+      `kalshi.py` +25L, test +34L.
 - [ ] [DOCS] P3. **Archive `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`**
       via the standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — all 3
       todos done, unlocked, and its own Progress Log already flags it archival-eligible. **Done when**: archived with
@@ -273,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-              open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-              extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-              extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-              Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+                      open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+                      extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+                      extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+                      Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
@@ -322,3 +327,37 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   origin + DEDUPED markers in 08-04/06/08/09; cross-cutting 08-08 `deployment_api` copy DEDUPED; prediction 07-31/08-09
   - cross-cutting 08-10 continuity entries already prose). No finding subject appears in >1 parked doc; no actor-less
     `- [ ]` remains. Shipped via `safe-doc-push.sh`; `check_frontmatter_schema` 2013 docs zero violations.
+- **2026-08-10 (slot 11, review, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-916bce380a6e`) — todo 12 (tradfi
+  triple-dispatch investigation) executed.**
+
+  **Dispatch paths identified:**
+
+  1. **Sharded path** (`ag-closeout-auditor.timer`): systemd timer fires every 2h on even hours at :30 UTC, dispatches
+     all 10 tranches in batches of 4 via `POST /api/plan-health/dispatch` with `mode=ag_closeout, tranche=<name>`. Each
+     tranche = independent `dispatch()` call → independent slot pick → independent worker. The `tradfi` tranche
+     succeeded at 14:31 UTC (`lifecycle-complete`). Earlier fires at 02:30 (all `queued` — no capacity) and 10:31 (all
+     `quarantined` — slot state) never spawned workers.
+  2. **`all`-mode path** (slot 26): source unclear — left no `ag_closeout_auditor` scheduled-job row. The timer NEVER
+     dispatches `all` mode (it only fires per-tranche). Most likely a manual operator skill invocation or a direct
+     `/skill ag-closeout-audit` call without a tranche argument (which defaults to `all` per SKILL.md).
+
+  **Root cause — deconfliction gap in `scheduled_job_already_ran.py`:**
+
+  The `--list-done-tranches` guard (used by the sharded timer) filters on `row.get("tranche")` being truthy (line 174).
+  An `all`-mode row (`tranche=null`) is **invisible** to this check. Conversely, `--no-tranche` filters OUT rows with a
+  tranche value. The two scoping paths are **mutually blind** — neither sees the other's rows as blocking, so an
+  `all`-mode run and a sharded `tradfi` run on the same day would not deconflict.
+
+  **Whether the gap caused the triple dispatch:** the scheduled jobs data shows only ONE successful `tradfi` row on
+  2026-08-10 (14:31 UTC). No `tranche=null` row exists for `ag_closeout_auditor`. The claimed `all`-mode dispatch
+  (slot 26) must have bypassed the scheduled-job reporting entirely. If it did run, the gap would have let it through —
+  but the gap alone cannot explain the triple dispatch without the `all`-mode dispatch having actually fired from
+  outside the scheduled-job system.
+
+  **Recommendation — fix the gap regardless:** even if this specific incident's `all`-mode dispatch was manual, the gap
+  is real and would bite on any future day where both modes run. The fix: `--list-done-tranches` should also check for
+  `tranche=null` rows for the same job on the same day — a completed `all`-mode run covers ALL tranches, so it should
+  block every per-tranche dispatch. Filed as follow-up:
+  `/plans/active/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
+
+  No code shipped (read-only diagnostic). Plan flip only — unified-trading-pm@<this-commit>.

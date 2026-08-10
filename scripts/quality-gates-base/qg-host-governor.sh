@@ -84,13 +84,22 @@
 # Floor RAISED 1 → 2 (operator 2026-06-05): the host must be able to run 2 full QGs
 # at once, not just 1. RAM-safe by the documented sizing rule (per-VM RAM ≥ peak-RSS
 # × K): the UTL ceiling 5.27 GB × 2 = ~10.6 GB still fits a 16 GB worker; service
-# repos (~1.9 GB) are trivial. On the macOS operator host lscpu+nproc are both absent
-# → cores degrades to 4 → floor(4/4)=1 → the min-2 floor lifts it to exactly 2 (the
-# desired Mac cap); bigger boxes keep their higher floor(cores/4) (24-core → 6).
+# repos (~1.9 GB) are trivial.
+#
+# macOS core detection FIXED 2026-08-10 (operator). Previously `lscpu` and `nproc`
+# are BOTH absent on macOS, so `cores` fell through to the hardcoded 4 → floor(4/4)=1
+# → the min-2 floor produced K=2. That happened to be right on a 10-physical-core
+# operator laptop (floor(10/4)=2 — the same answer), which is why it went unnoticed,
+# but the old comment's claim that "bigger boxes keep their higher floor(cores/4)"
+# was FALSE on macOS specifically: every Mac got 2 regardless of size, so a 24-core
+# Mac Studio was capped at 2 instead of 6. `sysctl -n hw.physicalcpu` is the macOS
+# equivalent of `lscpu -p=core` (TRUE physical cores, not logical — `hw.ncpu` and
+# `hw.logicalcpu` would over-count on SMT Intel Macs).
 _qg_governor_default_k() {
     local cores
-    # physical cores if lscpu is available, else logical (nproc), else 4
+    # physical cores: lscpu (Linux) → sysctl (macOS) → logical nproc → 4
     cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
+    [[ "${cores:-0}" -ge 1 ]] || cores="$(sysctl -n hw.physicalcpu 2>/dev/null)"
     [[ "${cores:-0}" -ge 1 ]] || cores="$(nproc 2>/dev/null || echo 4)"
     local k=$(( cores / 4 ))
     (( k >= 2 )) || k=2
@@ -491,9 +500,23 @@ _qg_governor_deprioritise() {
     ionice -c2 -n7 -p "$$" >/dev/null 2>&1 || true
 }
 
-# ── RESERVATION-MODE ACQUIRE (Phase 3c — opt-in via QG_GOVERNOR_MODE=reservation) ─
-# Default mode is "token" (the legacy bucket below), so this path is INERT until the
-# flag is set — shipping it changes NO live behavior. When active, admission is the
+# ── RESERVATION-MODE ACQUIRE (Phase 3c) — NOW THE DEFAULT ────────────────────
+# DEFAULT FLIPPED token → reservation 2026-08-10 (operator decision, deferred six
+# times by successive na-eligibility audits as "operator-aware, not an autonomous
+# flip"). Evidence behind the flip: Phase 3c cutover (PM@6e818079a), Phase 4
+# abort-monitor + trap-release (PM@aca6a2fcf), Phase 5 fleet rollout via
+# bootstrap_vm.sh (AO@91808dfeb5), live on the orchestrator VM since 2026-07-22, a
+# 93-minute soak (42 runs, maxconc=3, 0 OOM), cross-host tests at 16/24/61/96/128 GB,
+# and an independent re-verification 2026-08-10 (all 8 governor suites green; 6
+# simultaneous acquirers on one heavy repo admit exactly 3, no over-admit).
+#
+# WHAT CHANGES: hosts that were ALREADY overridden to reservation (the AO VM, CI
+# glue-runners — set durably by bootstrap_vm.sh/.env.local) are UNAFFECTED. What
+# changes is un-bootstrapped hosts — notably operator laptops, which silently ran the
+# legacy fixed-K token bucket (measured: K=2 on a 24 GB/10-core Mac that the ledger
+# admits 8 concurrent service-repo runs on, i.e. a 4x throughput loss purely from an
+# unset env var). `QG_GOVERNOR_MODE=token` still selects the legacy bucket if a host
+# needs to fall back. When active, admission is the
 # ATOMIC check-and-reserve: sweep + read + decide + reserve all under ONE ledger lock,
 # so N simultaneous acquirers serialize and can never over-admit past the RAM budget.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
@@ -624,7 +647,7 @@ _qg_watchdog_loop() {
 # Start the watchdog for the CURRENT process ($$), in the background. Reservation mode
 # only (token mode has no live ledger/pressure math to hook into). Idempotent.
 _qg_watchdog_start() {
-    [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]] || return 0
+    [[ "${QG_GOVERNOR_MODE:-reservation}" == "reservation" ]] || return 0
     [[ "${QG_GOVERNOR_WATCHDOG_DISABLE:-}" == "true" ]] && return 0
     [[ -n "${_QG_WATCHDOG_PID:-}" ]] && return 0   # already running
     local repo="${1:-${QG_GOVERNOR_REPO:-${SERVICE_NAME:-unknown}}}"
@@ -652,7 +675,7 @@ _qg_watchdog_stop() {
 # (qg_host_governor_severe_contention_2026_07_13.md).
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
-    [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]] && { _qg_governor_acquire_reservation; return; }
+    [[ "${QG_GOVERNOR_MODE:-reservation}" == "reservation" ]] && { _qg_governor_acquire_reservation; return; }
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
     [[ -n "${_QG_GOV_FD:-}" ]] && return 0   # already holding a token (idempotent)
 
@@ -689,7 +712,7 @@ qg_governor_acquire() {
 # Release the held token/reservation (also released automatically when the process exits —
 # reservations by PID-liveness sweep, tokens by flock auto-drop on close).
 qg_governor_release() {
-    if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
+    if [[ "${QG_GOVERNOR_MODE:-reservation}" == "reservation" ]]; then
         _qg_watchdog_stop
         [[ -n "${_QG_RESERVED_PID:-}" ]] || return 0
         _qg_ledger_remove "$_QG_RESERVED_PID"
@@ -826,7 +849,7 @@ _qg_total_status_line() {
 
 _qg_governor_status() {
     # Reservation mode: show live capacity, the dual-gate budgets, and current reservations.
-    if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
+    if [[ "${QG_GOVERNOR_MODE:-reservation}" == "reservation" ]]; then
         local mt ma cores frac_pct cpu_pct budget avail slots reserved running f pid repo mb ts
         mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"; cores="$(_qg_physical_cores)"
         frac_pct="$(awk -v x="${QG_MEM_SAFETY_FRAC:-0.70}" 'BEGIN{printf "%d", x*100}')"

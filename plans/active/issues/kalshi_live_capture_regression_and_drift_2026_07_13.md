@@ -19,6 +19,7 @@ summary:
   that has grown from 11 to 23 failing endpoints since May."
 status: open
 nature: notes
+archive_exempt: true # resolved incident record — 0 open todos as of 2026-08-10 (plan_reconciler); archive deferred until the grace-window referrers are re-pointable (see Progress Log)
 asset_group: [prediction]
 stage: [data]
 repos: [e2e-testing, market-tick-data-service, unified-api-contracts, execution-service]
@@ -26,11 +27,11 @@ scope: [engineer, admin]
 tags: [kalshi, prediction, regression, live-capture, schema-drift, data-correctness, e2e-testing, big-finding]
 related:
   [
-    ../../epics/predictions_master.md,
+    /plans/epics/predictions_master.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
-    ../../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
-    ../../archive/2026_07/work_split_2026_05_22_ikenna.md,
+    /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    /plans/archive/2026_07/work_split_2026_05_22_ikenna.md,
   ]
 created: 2026-07-13
 author: unknown
@@ -248,12 +249,11 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
 
 ## Todos
 
-- [ ] [DATA] P2. **Verify the Kalshi execution-service paper-order flow end-to-end** — still genuinely open: only the
-      elections-subdomain URL swap shipped; no test/log/commit confirms the paper-order flow was ever actually verified
-      end-to-end. **KEEP-NA-STALE-DUPLICATE (na-eligibility-audit 2026-08-04)**: this exact deliverable is owned by
-      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 (routed via
-      `issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `[DATA] P1` todo, itself
-      `BLOCKED-OPERATOR-DECISION`) — not independently dispatchable here; do not reclassify this doc on this checkbox.
+- [x] ✅ [DATA] P2. **Verify the Kalshi execution-service paper-order flow end-to-end** — verified by plan_reconciler
+      2026-08-10: the owning deliverable (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5) shipped
+      2026-08-09 — `execution-service@577b9a884` (Kalshi execution credential reshape + live paper-order verify;
+      non-live mocked verification per the operator's 2026-08-06 ruling), a verified ancestor of
+      `origin/live-defi-rollout`. Was duplicate-tracked here (KEEP-NA-STALE-DUPLICATE); no longer open.
 
 ## Progress Log
 
@@ -292,3 +292,12 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   paper-order-flow end-to-end verification) remains correctly duplicate-tracked at
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5, itself gated on
   `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `BLOCKED-OPERATOR-DECISION` item. Doc stays NA.
+- **plan_reconciler 2026-08-10 (prediction tranche)**: the above KEEP-NA-STALE-DUPLICATE markers were correct at the
+  time, but the owning deliverable (batch6 todo 5) flipped `[x]` the same day (2026-08-09,
+  `execution-service@577b9a884`). This doc's open todo is closed as verified-via-owner; `status` left as-is.
+- **plan_reconciler 2026-08-10 (prediction tranche, archive_exempt)**: with the last open todo closed, this doc is now
+  0-open + unlocked, but it is NOT archived this run — 5+ active referrers (`prediction_consolidated_closeout`,
+  `prediction_phase_ab_residuals`, `prediction_satellite_ao_dispatch_batch6`, `ag_closeout_audit_prediction_parked`,
+  `ag_closeout_audit_rollout`) are inside the 12h grace window and cannot be re-pointed to `plans/archive/` yet.
+  `archive_exempt: true` set to keep the resolved incident record in `plans/active/issues/` until a future `all` pass
+  (or post-grace run) can archive it with a clean referrer sweep.

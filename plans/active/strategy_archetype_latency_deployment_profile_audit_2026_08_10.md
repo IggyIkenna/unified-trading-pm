@@ -181,11 +181,15 @@ collapsing them into one number the way the archived doc did.
       Medium/High→`distributed` deployment implication, and the `### Decision latency vs. inter-leg execution gap`
       subsection. Same commit fixed 2 pre-existing bare-filename `related:` frontmatter refs (`market-making.md` /
       `ml-directional.md` → leading-slash paths) flagged by plan-hygiene.
-- [ ] [DATA] P2. **Derive each archetype's required `deployment_profile`** (`co_located_vm` vs `distributed`) from the
-      now-populated latency categories per the Low→co_located_vm / Medium+High→distributed rubric above. Record this as
-      a table in a new section of `runtime-topology.yaml`'s SSOT decisions doc
-      (`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` — read it first, follow its existing format) — **decision
-      artifact only, do not modify `runtime-topology.yaml` itself from this plan** (that's the execution plan's job).
+- [x] ✅ [DATA] P2. **Derive each archetype's required `deployment_profile`** (`co_located_vm` vs `distributed`) from
+      the now-populated latency categories per the Low→co_located_vm / Medium+High→distributed rubric above — **Done**:
+      `unified-trading-pm@41d6947e9c` — complete per-archetype deployment_profile derivation table written to
+      `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (57 archetypes across 9 families); 7 INCONSISTENT §6 rows
+      identified (all currently co-loc no → should be yes, SLA standard/basic → should be premium), ~37 MISSING rows
+      flagged, 2 intra-family edge cases noted (VOL_MARKET_MAKING, VOL_0DTE_GAMMA_SCALPING), SLA-tier implication
+      documented (all Low→co_located_vm require min SLA premium), decision-latency-vs-inter-leg-gap distinction per the
+      2026-08-10 operator ruling at `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
+      frontmatter `source:`.
 - [ ] [DATA] P2. **Check whether `isolation_policies.strategy-service`'s existing SLA-tier framework already accounts
       for `Low`-category archetypes needing more than the `premium` tier's 40ms budget provides** — some archived-doc
       figures (MM <100ms total E2E) fit inside 40ms; verify the others (arb <200-300ms, and the newly ms-realm-ruled
