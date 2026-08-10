@@ -730,3 +730,66 @@ Infrastructure armed:
 **Where to resume**: Pipeline PID 2612622, heartbeat + monitors all re-armed. VM RUNNING. 04-28 book_snapshot_5 at
 250/352 (71%, ETA ~16:24). Deadline 16:31:56 → 04-29 spawn ~16:32. Full completion ETA ~17:30 UTC. On VM stop: pipeline
 auto-triggers manifest merge → verify candle counts → flip Todo 5.
+
+---
+
+### Session continuation (post-compact #14, ~16:27 UTC)
+
+Compaction kill #14 — pipeline (2612622) + heartbeat both dead at session start. Monitors `bi2imn9d2` + `bp3cla76i`
+survived this compaction (first time monitors outlived a kill — they were Monitor-based, not Bash-based). Re-armed:
+pipeline PID 3100523, heartbeat PID 3102177.
+
+**04-28 outcome** (child spawned 16:01:56, deadline 16:31:56):
+
+- book_snapshot_5: ✅ 352/352 (349✅ 3❌, 1215s, 0.3/s) — **FIRST date where book_snapshot_5 completes fully**
+- futures_chain: ✅
+- liquidations: ✅ 200/200 (all STALE_DATA, 9s, 22.8/s)
+- options_chain: ✅
+- trades: 🔄 50/203 (25%, 163s elapsed, 0.3/s, started 16:24:26)
+
+**Trades anomaly — 0.3/s rate**: Previous dates had trades at 6-20/s. 04-28 trades at 0.3/s, matching book_snapshot_5
+speed. 203 files suggests ~65% of normal volume (378→203). At 0.3/s with 153 remaining → ETA ~16:33, past the 16:31:56
+deadline. Likely root cause: cascaded residuals from 04-25/04-26/04-27 creating manifest contention, OR residual
+book_snapshot_5 files mixed into the trades queue slowing per-file throughput.
+
+**04-28 1h candles**: COMPLETE (derivative_ticker ✅ + trades 50✅ so far — 904 candles already written).
+
+**Stale manifest errors**: 3 more on 04-28 (age=3-7s) — same inverted-comparison bug, already tracked in issue doc.
+
+**1h candle completeness across 11 dates**:
+
+| Date  | derivative_ticker  | trades    | 1h candles |
+| ----- | ------------------ | --------- | ---------- |
+| 04-20 | ✅ (completed)     | ✅        | COMPLETE   |
+| 04-21 | ❌ (timed out)     | ✅        | PARTIAL    |
+| 04-22 | ❌ (timed out)     | ❌        | NONE       |
+| 04-23 | ✅ (completed)     | ❌ (TO)   | PARTIAL    |
+| 04-24 | ✅ (completed)     | ❌ (TO)   | PARTIAL    |
+| 04-25 | ✅ (completed)     | ❌ (TO)   | PARTIAL    |
+| 04-26 | ✅ (completed)     | ✅        | COMPLETE   |
+| 04-27 | ❌ (never reached) | ❌ (TO)   | NONE       |
+| 04-28 | ✅ (394/394)       | 🔄 50/203 | COMPLETE   |
+
+**3 of 9 processed dates have complete 1h candles** (04-20, 04-26, 04-28). 04-29 + 04-30 still to process.
+
+**Lessons reinforced**:
+
+- Monitors using the `Monitor` tool can survive compaction; Bash-based `run_in_background` processes always die
+- 0.3/s is the universal floor rate for book_snapshot_5 AND cascaded trades — suggesting a common bottleneck (likely
+  manifest writes or API rate limiting, not per-data-type-specific)
+- 04-28 was the first date where book_snapshot_5 completed within the 1800s budget, enabled by smaller load (352 vs
+  04-27's 357)
+
+Infrastructure armed:
+
+- Pipeline: PID 3100523 (PROD bucket, all 3 steps)
+- Heartbeat: PID 3102177, 120s interval
+- Monitors: `bi2imn9d2` (60s VM status), `bp3cla76i` (90s log polls) — NOTE: these timed out ~16:29, need re-arm
+- Legacy monitor `bey4720hh` still active (120s polls)
+
+**Where to resume**: Pipeline PID 3100523, heartbeat PID 3102177. VM RUNNING. 04-28 trades 50/203 at 0.3/s — deadline
+16:31:56, likely to timeout. 04-29 spawn ~16:32 with 3× cascade load. 04-30 spawn ~17:02. Full completion ETA ~17:30
+UTC. On VM stop: pipeline auto-triggers manifest merge → verify candle counts → flip Todo 5.
+
+Check pipeline alive: `ps aux | grep post_mdps_pipeline`. Re-arm monitors if needed. Check 04-28 outcome:
+`grep -E '(TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -4`.
