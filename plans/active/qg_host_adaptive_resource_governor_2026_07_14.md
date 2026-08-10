@@ -431,6 +431,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       "count physical cores" logic with diverging correctness — likely fix: have `_qg_governor_default_k()` call
       `_qg_physical_cores()` instead of its own inline `lscpu` invocation (DRY + inherits the existing dedup). Not fixed
       here — flagging only, per the reporting agent's own request.
+- [ ] [INFRA] P2. NEW FINDING (2026-08-10, slot-1, measured on a real blocked ship): **the `<600s` completion gate
+      counts the governor's own queue-wait, so the governor queues you and then the gate fails you for having been
+      queued.** A PM quickmerge was rejected with
+      `❌ Quality gates must complete in <600s (took 724s work + 814s governor queue-wait = 1538s wall)` — the run's own
+      work was over budget too on that pass, but the 814s was time the governor deliberately made it wait for a token,
+      which is admission control working correctly, not a slow gate. The two numbers measure different things and only
+      one of them is the gate's business. Under multi-slot load (measured: load 21.9 on 10 cores, both tokens held) the
+      queue-wait alone can exceed the entire budget, so a correct, fast run can be failed purely for having been
+      throttled — and the retry re-queues into the same contention. Note the same run also logged
+      `⚠️ Resource drift: wall 1538s > 2× baseline 80.2s`, i.e. the drift warning double-counts the queue-wait as
+      "drift" as well. **Done when**: the completion gate (and the resource-drift baseline comparison) measure work time
+      excluding governor queue-wait, with the wait still reported separately for visibility. Cross-ref: the same session
+      saw bats parallelization (`unified-trading-pm@974dfc2de9`, 663s→115s) bring the WORK side back under budget, which
+      is why the retry passed — that fix masks this one rather than resolving it.
 
 ## Progress Log
 

@@ -18,7 +18,7 @@ answer yourself or with common sense, I want to come back to a working <thing>, 
 
 **The `/autonomous` skill is the explicit trigger.** Ending a prompt with `/autonomous` (or typing `/autonomous`) means
 exactly the dispatch above: _apply these rules + `SUB_AGENT_MANDATORY_RULES.md`, and drive the task to completion on a
-loop_ (rule 12). The skill (`cursor-configs/skills/autonomous/SKILL.md`, symlinked into `.claude/skills/`) is the
+loop_ (rule 13). The skill (`cursor-configs/skills/autonomous/SKILL.md`, symlinked into `.claude/skills/`) is the
 canonical entry point — it reads this file, arms the loop, and runs to a verified done-state.
 
 ## The rules
@@ -106,7 +106,14 @@ canonical entry point — it reads this file, arms the loop, and runs to a verif
       verify it on a consumer + across branches, you didn't finish it — you just moved the failure to whoever pulls
       next.
 
-12. **Drive to completion on a loop — the loop is the _mechanism_ for "keep going", not a new authority.** Every rule
+12. **Batch independent tool calls — a long autonomous run is where this compounds hardest.** Calls that do not depend
+    on each other's results go in ONE call: compound `&&`/`;` Bash, several `tool_use` blocks per message, `replace_all`
+    over serial Edits, never re-read a file you already read. Each extra call re-reads the whole cached prefix (~406k
+    tokens measured) AND costs a round-trip; 57.3% of measured calls were collapsible, so this is roughly a 2x
+    throughput change per quota window, not a tidiness preference. Genuinely result-dependent calls — and any check that
+    authorises a destructive act — stay sequential. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+
+13. **Drive to completion on a loop — the loop is the _mechanism_ for "keep going", not a new authority.** Every rule
     above answers _"finish without coming back"_; a **loop** is the timer that makes you come back to **your own**
     unfinished work — tick after tick — instead of stopping at _"done, what's next?"_. This is what lets one dispatch
     run for many hours / dozens of iterations and actually converge. Use the `/loop` skill mechanics (a background
@@ -162,7 +169,7 @@ canonical entry point — it reads this file, arms the loop, and runs to a verif
 > "green where it runs." Tightening a gate or rolling fleet-wide is only done once proven across the fleet + all
 > promotion branches.
 >
-> **Third anti-pattern (rule 12) — the agent that stops at the first natural break:** dispatched to "execute these N
+> **Third anti-pattern (rule 13) — the agent that stops at the first natural break:** dispatched to "execute these N
 > plans to done," it implements one, ships it, writes "ready for next agent," and stops — because nothing _re-asked_ it
 > to continue. The fix is a **loop**: re-feed yourself the task on a self-paced tick so you pick up the next item
 > yourself, journal each tick to the plan's Progress Log, and only stop the loop when the success criteria are met. The

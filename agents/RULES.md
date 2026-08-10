@@ -369,6 +369,10 @@ restated here:
   discipline + shipping pipeline" + § "CI verification after every push".
 - **Findings triage** + "pre-existing is not a triage criterion" + capture discoveries as plan todos → CLAUDE.md §
   "Governance + safety HARD RULES".
+- **Tool-call batching** — independent calls go in ONE call (compound `&&`/`;` Bash, several `tool_use` blocks per
+  message, `replace_all` over serial Edits); only genuinely result-dependent calls stay sequential. Each extra call
+  re-reads the whole cached prefix (~406k tokens measured) AND costs a round-trip, and 57.3% of measured calls were
+  collapsible → `/codex/06-coding-standards/tool-call-batching.md`.
 
 Deeper SSOTs (read on demand only if your task brief points at one):
 

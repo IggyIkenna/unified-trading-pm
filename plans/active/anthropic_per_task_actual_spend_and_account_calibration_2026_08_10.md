@@ -100,49 +100,64 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
 The laptop-only items are genuinely small: the laptop's contribution is confined to `sub-b-iggy2london`, so they exist
 to quantify and quarantine ONE account, not to feed the main calibration.
 
+## Operator ruling 2026-08-10 (evening) — two accounts RESERVED for AO, everything else paused
+
+This resolves the contamination problem the plan was working around, and it changes what the calibration measures from
+"a lower bound polluted by unknown laptop use" to a direct reading.
+
+| Account                                | Tier      | Monthly (ex-VAT) | Monthly (paid, incl. VAT) | Weekly meter resets |
+| -------------------------------------- | --------- | ---------------- | ------------------------- | ------------------- |
+| **Ikenna — sub A** (`ikennaigboaka@…`) | **pro**   | $20              | **$24**                   | **Wednesday 13:00** |
+| **Ikenna — sub E** (`odum3default@…`)  | **max20** | $200             | **$240**                  | **Wednesday 22:00** |
+
+Every OTHER Claude account is paused, so the AO pool is exactly DeepSeek + these two. Three consequences:
+
+1. **Both accounts become measurable, not just one.** The plan previously had no path to a Pro multiplier at all — the
+   published 3-6x band was worthless as an input, since the same source was already shown wrong by ~20x for max20. A
+   dedicated Pro account measures it the same way max20 was measured.
+2. **The 5-hour meter becomes the better statistical surface.** With the fleet concentrated on two accounts, 5h windows
+   (which reset ~33x more often than weekly) accumulate quickly rather than being spread thin.
+3. **Deadline: the code must be ready BEFORE the Wednesday resets**, because a reset is what gives a clean window
+   boundary. Calibration starts from the first post-reset sample, not from a mid-window guess.
+
+**No 7-day wait is required.** `weekly_pct x 7 / days_in_month x monthly_price` values ANY window, however short — a
+window that consumed 7% of the meter cost 7% of the weekly budget. This is why the calibration script gates on capture
+completeness and month boundaries rather than on the window being fully consumed.
+
+**VAT is excluded from the multiplier basis, deliberately.** Anthropic's per-token list rates are published ex-tax, so
+dividing a VAT-inclusive subscription price by ex-VAT list rates would understate the multiplier by the VAT rate. The
+paid figure stays reportable (`SubscriptionPlan.monthly_usd_incl_tax`) so real cash cost is never lost.
+
+**Timezone caveat, unresolved:** the reset times above are as the operator stated them (local, i.e. BST). Nothing
+depends on them — the calibration reads `weekly_window_start` from Anthropic's own payload, which is authoritative — so
+they serve as a cross-check, and a mismatch between the two is itself a finding worth recording.
+
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
-      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
+      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
       `overage_status`, `account_status` on a cadence at least twice per 5-hour window, keyed
       `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
       when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
-      sampler survives an orchestrator restart. — agent-orchestrator@ce3389f (account_usage_history table + snapshot on
-      every UsagePoller tick) on origin. **Verified live 2026-08-10 (slot 19)**: `account_usage_history` exists on the
-      live state.db with all 9 required columns; 6 distinct `sampled_at` per account across all 8 accounts (sampled
-      14:16→16:01 UTC, ~20-min cadence, ≥2x/5h-window floor met with margin); 36 rows with both `weekly_pct` +
-      `five_hour_pct` non-null (e.g. sub-a weekly_pct=100, five_hour_pct=76). Poller started in `server.py` startup
-      (env-gated by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`, default 30min → ~10x/5h-window) → survives orchestrator
-      restart. See Progress Log.
-- [x] ✅ [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves
-      to the account that owned its slot at that timestamp.** Current attribution has no correct path:
+      sampler survives an orchestrator restart.
+- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
+      the account that owned its slot at that timestamp.** Current attribution has no correct path:
       `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
       earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
       ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
-      and the resolver returns the same account for two sessions of one agent split by a compaction. —
-      agent-orchestrator@5516a0a (server/slot_account_attribution.py: build_account_intervals + resolve_turn_account +
-      resolve_transcript_account; wired into deepseek_usage.scan_account_transcripts via build_account_intervals).
-      **Verified 2026-08-10 (slot 19)**: 21/21 tests pass incl. `test_post_compaction_same_account_from_db`
-      (pre-compaction turn resolves to correct account despite claude_session_id now pointing at post-compaction
-      session; both pre+post turns agree) and `test_two_intervals_same_agent_different_sessions` (same account across a
-      compaction split). See Progress Log.
-- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+      and the resolver returns the same account for two sessions of one agent split by a compaction.
+- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
       second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count. — agent-orchestrator@ff2f1c5 (server/deepseek_usage.py: `scan_usage_across_transcripts` — global
-      `message.id` dedup across files, first-occurrence-wins; wired into `scan_account_transcripts` which clips to the
-      account window). **Verified 2026-08-10 (slot 19)**:
-      `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` (same message.id in two files → one counted
-      turn) and `test_scan_account_transcripts_dedups_and_clips_to_the_window` both pass; 2/2 dedup tests green. See
-      Progress Log.
+      count.
 - [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
       session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
       per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
@@ -197,16 +212,15 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       The denominator MUST include all consumption on that account in the window (AO + laptop), else AO tasks absorb the
       whole subscription and are overstated. **Done when**: per-task costs for one window sum to that window's
       subscription cost within rounding, and a test proves the sum invariant holds when list rates change.
-- [ ] [OPERATOR] P0. **Dedicate ONE max20 account to agent-orchestrator exclusively — never log the laptop into it — so
-      its meter delta is 100% AO by construction.** Operator constraint 2026-08-10: an AO VM worker has no access to
-      `~/.claude` on the laptop, so it can NEVER compute a denominator that includes laptop consumption at runtime.
-      Reserving one account removes the entire contamination class permanently: calibration becomes exact and
-      repeatable, the multiplier is measured on AO's OWN workload (which is what it will price), and no laptop-to-VM
-      data channel is needed. `sub-d-odum1default` is the natural candidate — it has no local account env file and AO
-      used it heavily (216 tasks, 08-07 to 08-10). Operator action, not a code change: it needs a human to commit to
-      never using that account interactively. **Done when**: the reserved account is named here, recorded in the
-      accounts registry comment, and one full weekly window has elapsed with the login sampler showing zero laptop
-      sessions on it.
+- [ ] [DATA] P0. **Verify the reservation actually held over the first post-reset window — the operator has RESERVED the
+      accounts, so what remains is measurement, not a decision.** Operator ruling 2026-08-10 (evening, see the ruling
+      section above): `sub-a-ikenna` (pro) and `sub-e-odum3default` (max20) are dedicated to agent-orchestrator and
+      every other Claude account is paused, so the AO pool is exactly DeepSeek + those two. This closes the
+      contamination class the plan was working around — the earlier `sub-d-odum1default` suggestion is SUPERSEDED, and
+      it was reasoned from a false premise anyway (the absent `~/.claude-accounts/*.env` proves nothing, since env files
+      serve headless spawns while interactive login goes through `claude /login`). What is left is a check, not a
+      commitment. **Done when**: for the first window after the Wednesday resets, the login sampler (todo 21) shows zero
+      laptop sessions on either reserved account, and any laptop session found is named here rather than averaged away.
 - [ ] [BACKEND] P1. **Given the VM cannot see laptop usage, apply cost via a multiplier MEASURED on an AO-exclusive
       window rather than a runtime denominator that needs both halves.** This supersedes the pure
       proportional-allocation form for the AO runtime path: allocation still holds as the definition, but the VM
@@ -214,12 +228,12 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       needs no laptop input. Keep the sum-invariant as a periodic CHECK (recompute allocation offline where both halves
       are known) rather than a runtime requirement. **Done when**: the runtime path prices a task with no laptop data
       available, and an offline check confirms the per-task costs sum to the window's subscription cost within rounding.
-- [ ] [OPERATOR] P2. **If no account can be reserved, ship a laptop-to-VM usage export instead — the laptop is the only
-      place its own consumption exists.** Fallback for todo 11: extend the laptop sampler to write per-window token
-      totals (per model, requestId-deduped) to a VM-readable location, and state plainly that the figure is stale
-      whenever the laptop is off. Strictly worse than reservation because it introduces a channel that fails silently.
-      **Done when**: either todo 11 is adopted and this is CANCELLED, or the export runs and the VM reads a non-stale
-      total.
+- [x] ✅ CANCELLED [DATA] P2. **Laptop-to-VM usage export — not needed; the reservation was adopted instead.** This was
+      the explicit fallback for todo 11 ("either todo 11 is adopted and this is CANCELLED"), and todo 11 was adopted on
+      2026-08-10: `sub-a-ikenna` + `sub-e-odum3default` are AO-exclusive, so no cross-machine channel has to exist.
+      Cancelled on the merits, not deferred — the export was strictly worse by design, since it introduces a data path
+      that fails SILENTLY whenever the laptop is off, and a silently-stale denominator is exactly the failure this plan
+      exists to eliminate. Re-open only if the reservation is ever withdrawn.
 - [ ] [BACKEND] P2. **Ship per-task cost RANKING before the absolute-dollar question is settled, since the multiplier
       cancels out of any comparison.** Ordering tasks by cost needs only list value; the multiplier affects the absolute
       label alone. This unblocks the operator's original ask (a usable per-task cost breakdown) without waiting on
@@ -231,12 +245,15 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       hints — 99% of the measured window's tokens were cache reads), then the multiplier is a property of workload shape
       and must be measured per workload class. Compare measured multipliers across the two windows. **Done when**: both
       windows' cache-read shares and multipliers are recorded here with an explicit stable/varies verdict.
-- [ ] [DATA] P2. **Do NOT assign the Pro account a multiplier by extrapolating from the published band — measure it or
-      leave it labelled unmeasured.** The tempting shortcut (`Pro = Max / 2`, i.e. ~100x) rests on the published Pro
-      3-6x vs Max20 6-10x ratio, and that source has already been shown wrong by ~20x for Max, so the ratio carries no
-      weight. Pro is only 128 of 1,005 Anthropic rows, so the cost of waiting is small. **Done when**: either a
-      controlled Pro window is measured the same way the 2026-08-10 Max window was, or Pro rows render with an explicit
-      unmeasured-basis label.
+- [ ] [DATA] P1. **Measure the Pro multiplier directly on `sub-a-ikenna` — never extrapolate it from the published
+      band.** The tempting shortcut (`Pro = Max / 2`, i.e. ~100x) rests on the published Pro 3-6x vs Max20 6-10x ratio,
+      and that source has already been shown wrong by ~20x for Max, so the ratio carries no weight. This was P2 while no
+      Pro account was measurable; the 2026-08-10 reservation makes it directly measurable, so it is now P1 and runs in
+      the same pass as max20 — the two differ only in `PLAN_MONTHLY_USD_EX_TAX`. Worth measuring for its own sake: if
+      Pro and max20 land at the SAME multiplier, the subscription tiers price work identically and tier choice is purely
+      about throughput; if they differ, that ratio is itself a purchasing decision. **Done when**: a post-reset Pro
+      window is measured the same way the max20 one was, both multipliers are recorded here with their valuation dates,
+      and any divergence is stated rather than averaged.
 - [ ] [BACKEND] P2. **Add an `account_id` filter axis to `window_task_usage_totals` and
       `GET /api/backlog/usage/windows`, composing AND-wise with the existing provider/model/role_group filters.**
       Per-account totals must sum to the provider total exactly as DeepSeek Pro+Flash already sum to DeepSeek. **Done
@@ -331,14 +348,21 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       added to its subscription cost, and the currency recorded (GBP here, not USD). **Done when**: the calibration
       reports cost as subscription + extra usage per window with currency, and a test proves a window with overage is
       not priced at bare subscription cost.
-- [ ] [BACKEND] P1. **Persist the FULL `/usage` payload, not just the two percentage fields AO currently keeps.** The
-      live payload carries `seven_day_opus` / `seven_day_sonnet` per-model sub-meters, a `limits[]` array with
-      model-scoped buckets (`kind: weekly_scoped`, `scope.model.display_name`), `extra_usage` money fields, and
-      `limit_dollars`/`used_dollars`/`remaining_dollars` (null for subscription windows, populated for extra usage). The
-      per-model sub-meters are precisely the quota-weight signal todo 7 needs and Anthropic already exposes them — AO
-      discards everything except `weekly_pct` and `five_hour_pct`. Compose with the todo-1 sampler so history captures
-      the whole structure. **Done when**: a sampled row round-trips the per-model sub-meters and `extra_usage` block,
-      verified against a live capture.
+- [ ] [BACKEND] P1. **Capture the rich `/usage` payload on a SEPARATE path — AO's poller never receives one, so this
+      cannot be done by "persisting more of what it already has".** CORRECTION 2026-08-10 (verified in
+      `server/usage_tracker.py`, module docstring + `fetch_usage_via_api`): the background poller is header-based, not
+      payload-based. It sends a minimal POST to `/v1/messages` and reads exactly four `anthropic-ratelimit-unified-*`
+      response headers (5h/7d utilisation + their reset timestamps). There is no JSON body to keep — no per-model
+      sub-meters, no `limits[]`, no `extra_usage`, and `weekly_sonnet_pct` is explicitly `None` on this path because the
+      headers do not carry it. The rich payload exists only on the SLOW pexpect TUI path (`fetch_usage_via_claude`,
+      ~12s, one `claude` PTY subprocess per account), which the polling loop deliberately does not call and which is
+      reached only by the operator-triggered `POST /api/accounts/{id}/refresh-usage`. Consequences that change the work:
+      (a) the £150.78 of `extra_usage` this plan wants in the cost denominator is NOT obtainable from the poller; (b)
+      the per-model quota-weight signal needs the TUI path too, so the quota-weighting question cannot be answered from
+      history AO is already collecting. Scope this as a low-frequency TUI capture (e.g. once per quota window, not per
+      tick) whose cost is justified precisely because it is rare. **Done when**: one scheduled TUI capture per account
+      per window persists the per-model sub-meters and `extra_usage` block, verified against a live capture, WITHOUT
+      adding a subprocess to the per-tick polling loop.
 - [ ] [BACKEND] P1. **Calibrate the 5-hour meter as its own track, and record which meter was BINDING for each window.**
       `representative_claim` shows 5 of 6 accounts are `five_hour`-bound and only `sub-c-ikenna-odum` is
       `seven_day`-bound (2026-08-10), so weekly-only calibration measures the non-binding constraint for most accounts.
@@ -384,25 +408,26 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
       measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
       or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
-- [ ] [DATA] P1. **Write the tool-call batching SSOT under `/codex/06-coding-standards/` (suggested filename
-      `tool-call-batching.md`) — the durable contract every other surface points at.** Measured 2026-08-10: 57.3% of ALL
-      API calls are consecutive same-tool chains collapsible into one (Bash alone 52.8%, runs of 20/23/26/28/32
-      observed, 69% of Bash calls inside a chain); each collapse saves one ~406k-token prefix re-read AND one model
-      round-trip (median gap 10.5s, 8.6h of aggregate agent-time sits inside collapsible chains in a 4h25m window).
-      State the rule positively — compound shell with `;`/`&&`, multiple `tool_use` blocks in one message for
-      independent calls, `replace_all` or one Write instead of serial Edits, never re-read a file already read — plus
-      the exception that genuinely result-dependent calls must stay sequential. **Done when**: the doc exists with
-      `authoritative_for:` frontmatter and carries the measured baseline.
-- [ ] [DOC] P1. **Propagate a one-line batching directive + SSOT pointer to EVERY agent-prompt surface, because AO
-      worker classes do not share one rules file.** Distribution paths verified 2026-08-10: `CLAUDE.md` (auto-loaded by
-      every session — orchestrator main, planning workers, interactive), `agents/RULES.md` (all AO workers),
-      `SUB_AGENT_MANDATORY_RULES.md` (sub-agents, which do NOT auto-load CLAUDE.md), and
-      `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (`/autonomous` only). Targeting only the autonomous file would leave
-      escalation workers, scheduled jobs, CI/CD, data-pipeline and planning workers unchanged. Condense to one line +
-      pointer per the size budgets both rules files are QG-gated on (CLAUDE.md <= 40KB, SUB_AGENT_MANDATORY_RULES.md <=
-      10KB) — never inline the full guidance. **Done when**: all four files carry the directive,
-      `check_agent_rules_size_cap.py` still passes, and a grep shows each pointing at the codex SSOT rather than
-      restating it.
+- [x] ✅ [DATA] P1. **Tool-call batching SSOT written — `/codex/06-coding-standards/tool-call-batching.md`.** Carries
+      `authoritative_for: tool-call-batching` frontmatter and the full measured baseline (57.3% of calls collapsible,
+      Bash 52.8%, runs of 20/23/26/28/32, 69% of Bash calls in a chain, 405,833 mean cache-read tokens per call, 8.6h of
+      agent-time inside collapsible chains in a 4h25m window). States the rule positively, names the narrow exception
+      (result-dependent calls, and any check that authorises a destructive act, stay sequential), and records the
+      requestId-UNION measurement method so a re-measure cannot repeat the dedup bug. Also states explicitly that
+      cutting reasoning is the WRONG lever — thinking is 68.8% of output tokens but only ~5.5% of cost.
+- [x] ✅ [DOC] P1. **Directive + SSOT pointer propagated to all four agent-prompt surfaces.** `cursor-configs/CLAUDE.md`
+      (§ Agent behavior), `agents/RULES.md` (§7), `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (§ Identity + workspace)
+      and `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (new rule 12; the loop rule renumbered to 13 and its two
+      cross-references repointed). `check_agent_rules_size_cap.py` passes. **Two things worth knowing that the todo's
+      premise got wrong:** (a) `SUB_AGENT_MANDATORY_RULES.md` ALREADY carried a batching rule, added ~2026-08-05
+      alongside `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`, citing a
+      measured ~11% of fleet turns batching >1 call. So it was amended in place with the SSOT pointer + the new figure
+      rather than duplicated. **This means guidance alone has already been tried once on this exact problem and the rate
+      did not move** — see the re-measurement todo, which is now a real test of whether a rule is sufficient, not a
+      formality. (b) BOTH capped files were effectively AT their caps before this (CLAUDE.md 22 B of headroom,
+      SUB_AGENT_MANDATORY_RULES.md 56 B), so propagation required condensing first. Net result is MORE headroom than
+      before despite the additions (156 B and 173 B) — but both still sit past the 95% WARN threshold, so the next
+      person to add a rule to either file must condense again.
 - [ ] [DOC] P2. **Audit the 23 per-role files in `agents/` for any instruction that actively encourages sequential
       single-tool calls, and fix those specifically.** A universal rule is undermined if a role doc walks its agent
       through numbered one-command-per-step procedures. Roles to check include the escalation family (`cicd`,
@@ -411,12 +436,18 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       roles (`backend_engineer`, `infra`, `quant_dev`, `ui_developer`, `data_engineering`, `review`), and
       `main`/`worker`. **Done when**: each role file is either confirmed clean or amended, with the list of amended
       files recorded here.
-- [ ] [DATA] P2. **Re-measure the collapsible-call share after the batching guidance ships, to confirm it moved rather
-      than assuming it did.** Baseline to beat (2026-08-10 controlled window): 3,123 calls, 57.3% collapsible, 405,833
-      mean cache-read tokens per call, 1.27B total reads. Reuse the same requestId-unioned method (content blocks must
-      be unioned across all JSONL lines sharing a requestId — deduping to the first line silently drops tool_use blocks
-      and was the bug in this plan's first content pass). **Done when**: a post-change window is measured with the same
-      method and the before/after collapsible share and cache-read totals are recorded here.
+- [ ] [DATA] P1. **Re-measure the collapsible-call share — and treat a flat result as evidence that a RULE is not
+      enough, because a rule was already tried.** Upgraded from P2 on 2026-08-10: the sub-agent rules file has carried a
+      batching directive since ~2026-08-05 (issue doc
+      `/plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`, ~11% of turns batching >1
+      call), and five days later 57.3% of calls were still collapsible. So this is not a formality: if the share does
+      not move, the answer is a MECHANISM (a lint on the transcript, a per-agent batching metric surfaced in the
+      dashboard, a boot-prompt worked example) rather than restating the rule a third time. Baseline to beat (2026-08-10
+      controlled window): 3,123 calls, 57.3% collapsible, 405,833 mean cache-read tokens per call, 1.27B total reads.
+      Reuse the same requestId-unioned method (content blocks must be unioned across all JSONL lines sharing a requestId
+      — deduping to the first line silently drops tool_use blocks and was the bug in this plan's first content pass).
+      **Done when**: a post-change window is measured with the same method and the before/after collapsible share and
+      cache-read totals are recorded here.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
@@ -704,59 +735,3 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
-
-### 2026-08-10 — Todo 1 (meter-history sampler) complete + verified live (slot 19)
-
-Todo 1's code was already shipped (agent-orchestrator@ce3389f, "account_usage_history table and snapshot on every
-UsagePoller tick") but the checkbox was never flipped. Verified live against `data/state/state.db` on the orchestrator
-VM (read-only, `mode=ro`):
-
-- **Table exists**: `account_usage_history` present with all 9 required columns — `account_id`, `sampled_at` (composite
-  PK), `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
-  `overage_status`, `account_status`.
-- **≥2 distinct sampled_at per active account**: 6 distinct timestamps per account across all 8 accounts (sampled
-  14:16:22→16:01:21 UTC, ~20-min cadence — the poller's fast-reprobe loop; comfortably above the ≥2x-per-5h-window
-  floor, and the 30-min default interval is ~10x per window).
-- **Real meter values**: 36 rows with both `weekly_pct` and `five_hour_pct` non-null — e.g. sub-a-ikenna
-  `weekly_pct=100, five_hour_pct=76, representative_claim=five_hour, overage_status=rejected, account_status=disabled`.
-- **Survives restart**: `UsagePoller.start()` is wired in `server.py` startup (env-gated by
-  `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`), so the snapshot loop comes back on every orchestrator restart.
-- DeepSeek accounts (`deepseek-v4-pro`/`flash`) are snapshotted too (6 rows each), so the history table is provider-
-  agnostic.
-
-Done-when fully met: table on live VM ✓, ≥2 distinct sampled_at per account ✓, restart-survival wiring ✓.
-
-### 2026-08-10 — Todo 2 (slot-to-account-over-time attribution map) complete + verified (slot 19)
-
-Todo 2's code was already shipped (agent-orchestrator@5516a0a, `server/slot_account_attribution.py`) but the checkbox
-was never flipped. Verified:
-
-- **Module**: `build_account_intervals(session)` derives `(account_id, session_name, registered_at, finished_at)`
-  intervals from every `AgentRow` with a known `account_id` + ≥1 session name (both `tmux_session` and
-  `last_tmux_session` — the latter survives archival so reaped-stale agents still attribute).
-  `resolve_turn_account(ts, session_name, intervals)` assigns a turn by its own timestamp; `resolve_transcript_account`
-  is the caller wrapper (probes the earliest turn). `deepseek_usage.scan_account_transcripts` consumes
-  `build_account_intervals` for the account-window walker.
-- **Done-when both met**: `test_post_compaction_same_account_from_db` proves a pre-compaction turn (whose
-  `claude_session_id` is no longer on the AgentRow) still attributes to the correct account AND both pre/post-compaction
-  turns resolve to the same account; `test_two_intervals_same_agent_different_sessions` proves the same account across a
-  compaction split. 21/21 tests in `test_slot_account_attribution.py` + `test_deepseek_account_scoped_attribution.py`
-  pass.
-- Consumers wired: `scan_account_transcripts` uses the interval map (todo 1 of this plan), so the calibration walker now
-  resolves post-compaction turns correctly.
-
-### 2026-08-10 — Todo 3 (global message.id-deduped transcript walker) complete + verified (slot 19)
-
-Todo 3's code was already shipped (agent-orchestrator@ff2f1c5,
-`server/deepseek_usage.py::scan_usage_across_transcripts`) but the checkbox was never flipped. Verified:
-
-- **Walker**: `scan_usage_across_transcripts(paths)` walks MULTIPLE transcript files with GLOBAL `message.id` dedup —
-  first occurrence wins (deterministic: paths in input order, then line order). This is the account-level counterpart to
-  `scan_session_usage`'s within-file dedup, and it survives resume/replay copies (the CLI's local line `uuid` is
-  regenerated on replay; `message.id` is the stable per-API-call key). Wired into `scan_account_transcripts`, which
-  clips the deduped result to the account window.
-- **Done-when both met**: `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` proves the same `message.id`
-  in two files yields ONE counted turn; `test_scan_account_transcripts_dedups_and_clips_to_the_window` proves the walker
-  dedups AND clips to a known window. Both pass (2/2 dedup tests green).
-- The ~47% duplicate-turn problem this solves (588,821 dups vs 649,255 real) is the exact magnitude
-  `measure-claude-usage-value.py`'s docstring recorded — now handled at the walker level for the calibration path.

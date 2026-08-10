@@ -793,3 +793,73 @@ UTC. On VM stop: pipeline auto-triggers manifest merge → verify candle counts 
 
 Check pipeline alive: `ps aux | grep post_mdps_pipeline`. Re-arm monitors if needed. Check 04-28 outcome:
 `grep -E '(TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -4`.
+
+---
+
+### Session continuation (post-compact #15, ~16:47 UTC)
+
+Compaction kill #15 — pipeline (3100523) + heartbeat (3102177) dead at session start. Pipeline re-armed as PID 115154
+(PROD bucket, all 3 steps). Monitors `bi2imn9d2` + `bp3cla76i` had timed out ~16:29 — not re-armed (Monitor-based
+approach re-evaluated; opted for direct SSH checks + pipeline script instead). Heartbeat PID 3231770 as 30-min watchdog.
+
+**04-28 outcome** (child spawned 16:01:56, deadline 16:31:56):
+
+- book_snapshot_5: ✅ 352/352 (349✅ 3❌, 1215s)
+- derivative_ticker: ✅ 394/394
+- trades: 🔄 100/203 (25%) at 0.3/s anomaly — TIMED OUT at 16:31:56. Residual 103 trades cascade to 04-29.
+
+**04-29** (child spawned 16:31:56, deadline 17:01:56):
+
+- book_snapshot_5: ✅ 375/375 (100%), 8,987 candles, 1369s elapsed — BUT all 375 were STALE_DATA skips (cascaded from
+  04-28 partial completion). 0 new writes, 0 errors.
+- liquidations: ✅ 329/329 (14s), 0 candles — ALL 329 FAILED with SCHEMA_VALIDATION_FAILED (NaN in non-nullable columns
+  open/high/low/close). Consistent across all dates.
+- options_chain: ✅ 0 files (instant).
+- trades: 🔄 at 16:55:20 — 391 listed, 172 skipped (existing outputs from cascade), 219 to process. Started at 16:55:20.
+  Deadline 17:01:56 → ~6.5 min for 219 files.
+- futures_chain: ⏳ (0 files, instant when reached).
+- derivative_ticker: ⏳ (395 files). If trades completes with ~2 min margin, derivative_ticker at ~1/s (395s) would
+  barely timeout. 04-29 deadline 17:01:56.
+
+**04-30**: Pending (spawn ~17:02 after 04-29 timeout).
+
+**Progress at 16:56 UTC**:
+
+| Date  | trades             | deriv_ticker | book_snapshot_5    | 1h candles |
+| ----- | ------------------ | ------------ | ------------------ | ---------- |
+| 04-20 | ✅                 | ✅           | various            | COMPLETE   |
+| 04-21 | ✅                 | ❌ timeout   | various            | PARTIAL    |
+| 04-22 | ❌                 | ❌ timeout   | various            | NONE       |
+| 04-23 | ✅                 | ❌ timeout   | various            | PARTIAL    |
+| 04-24 | ✅                 | ❌ timeout   | various            | PARTIAL    |
+| 04-25 | ✅                 | ❌ timeout   | various            | PARTIAL    |
+| 04-26 | ✅                 | ✅           | 200/339 (TO)       | COMPLETE   |
+| 04-27 | ❌ (never reached) | ✅           | 300/357 (TO)       | PARTIAL    |
+| 04-28 | 🔄 100/203 (TO)    | ✅           | ✅ 352/352         | COMPLETE   |
+| 04-29 | 🔄 219 remain      | ⏳ queued    | ✅ 375/375 (STALE) | RUNNING    |
+| 04-30 | ⏳                 | ⏳           | ⏳                 | PENDING    |
+
+**Pipeline bucket fix**: All 3 steps use `PROD_BUCKET` — verified (`grep -n 'BUCKET'` shows only `PROD_BUCKET`). Bug
+history: original script had `TEST_BUCKET` from Todo 7 template → fixed to `PROD_BUCKET` definition (session 13) → usage
+sites also fixed (session 14).
+
+**Infrastructure armed**:
+
+- Pipeline: PID 535127 (re-armed at 16:56 after this compaction kill #16), polls VM every 30s, PROD bucket all 3 steps
+- Heartbeat: PID 3231770, 30-min watchdog (survived this compaction — background process, not harness-tracked)
+
+**Lessons — compaction survival**:
+
+- `Monitor` tool watches CAN survive compaction (confirmed #14) — but the JSON polling overhead makes them less
+  practical than direct SSH for log inspection. Pipeline scripts are still the primary automation.
+- 16 compactions across this Todo 5 monitoring chain — each kill requires re-arming the pipeline. A `systemd` timer or a
+  VM-side callback would eliminate this failure mode.
+- book_snapshot_5 all-STALE_DATA for 04-29 (375/375) — when cascaded residuals cover 100% of a date's instruments,
+  book_snapshot_5 effectively becomes a fast no-op (1369s scanning 375 STALE markers at ~0.27/s, 0 actual writes). The
+  slow 0.27/s STALE_DATA rate suggests the staleness check itself is per-file expensive (manifest read per instrument).
+
+**Where to resume**: `ps aux | grep post_mdps_pipeline` → if dead, re-arm from `.tabs/14/post_mdps_pipeline.sh`. Check
+VM:
+`gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
+Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
+Next milestones: 04-29 deadline 17:01:56 → 04-30 spawn ~17:02 → 04-30 deadline ~17:32. Full completion ETA ~17:30 UTC.
