@@ -8,7 +8,7 @@ summary: >-
   Deferred item's gate has since cleared (the time-gated item in particular — its 2026-08-02 date will likely have
   passed by the time this finalize runs), archives the source docs that reach zero open todos, and runs the standard
   6-step archival ritual on the batch plan itself.
-status: active
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -37,9 +37,9 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [ao_satellite_ao_dispatch_batch2_2026_07_30]
-gate_on_depends: true
-sequential: true
+resolved_by: >-
+  All 5 todos completed 2026-08-10. Batch2 plan archived; source docs reconciled; Deferred gates re-checked. Executed by
+  slots 30 (todo 1), 17 (todo 3), 23 (todos 4-5).
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
   the same turn as its batch by the /ag-closeout-audit ao skill run of 2026-07-30.
@@ -55,9 +55,8 @@ context_scope:
 
 # AO satellite AO batch 2 — finalize
 
-> **Gate OPEN — batch2 archived 2026-08-10.** `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md` has
-> 0 open todos and is now resolved. This finalize plan executed todos 1-4; todo 5 (archive batch plan) in progress (slot
-> 23, review, 2026-08-10).
+> **ARCHIVED 2026-08-10.** All 5 todos completed. Batch2 plan archived at `plans/archive/2026_07/`. Referrers repointed
+> corpus-wide. Executed by slots 30 (todo 1), 17 (todo 3), 23 (todos 4-5, slot-23 review).
 
 ## Todos
 
@@ -74,31 +73,31 @@ context_scope:
       tracked todo in this doc's Progress Log with the discrepancy stated.
 
       **VERIFIED 2026-08-10 (slot 30, review) — all 8 done-claims hold against reality, no discrepancies.** Re-ran
-                              `git show --stat` + `git merge-base --is-ancestor` + content-diffs and re-ran the named tests directly:
-                              (1) `ao_done_gate_no_carveout...` — `agent-orchestrator@22a14b1`/`@e1b30f5`/`@587c8db` all ancestors of
-                              `origin/live-defi-rollout`; all 3 sub-item code paths live on HEAD (`_diff_blocks_checkbox`+`_ADDED_BLOCKED_LINE_RE`
-                              +`todo_blocked_pending_other_owner`, `_marker_disposition_in_text`+`_mode1_fallback_disposition`+
-                              `_mode2_no_recent_commit_disposition`, rename-following `_same_commit_added_path_matching_basename` +
-                              `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename`); re-ran
-                              `tests/test_done_gate_plan_flip_hard_reject.py` = **42 passed** (all 8 named regression tests present, pass).
-                              (2) `branch_reset_to_origin...` — all 4 orphan commits confirmed NOT on origin (`features-service@207afd62`,
-                              `@d1c1ad8a`, `unified-api-contracts@724bd9be`, `agent-orchestrator@559452e`), all 4 replacements ON origin
-                              (`a90256f5`, `a9429cba`, `698b5b6f`, `09cda29`), `git diff 724bd9be 698b5b6f --stat` EMPTY (byte-identical), route +
-                              test file for `09cda29` live. (3) `mtds_backfill_sequential_true...` — `agent-orchestrator@77769ab` on origin,
-                              `current_task_ids_by_plan`+`_wire_sequential_prereqs` code live; re-ran `tests/test_regen_reconcile.py` = **19
-                              passed** (regression test `test_sequential_reword_mid_flight_does_not_corrupt_chain` present at :324). (4)
-                              na-timer (EXTRACTED → batch10 todo 1) — batch10's own evidence re-checked: `agent-orchestrator@17939c3`
-                              (TimeoutStartSec 2450→21600) on origin; live `state.db` shows `agent_kind=na_eligibility_auditor`
-                              `exit_reason=lifecycle-complete` rows incl. the exact cited `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`
-                              (3 lifecycle-complete current; `reaped-stale` is a separately-tracked mode, out of this todo's scope). (5)
-                              orch_token — source doc's own `[x]` MOOT verdict (2026-08-06 loopback-preference) present; live `/api/fleet/git-health`
-                              confirms `ip-172-31-5-118` 34/34 slots `reporter_stale=false`. (6) JWT-secret — `/etc/systemd/system/
-                              orchestrator.service.d/jwt-secret-gcs.conf` present (systemd env carries `ORCHESTRATOR_JWT_SECRET_GCS`), unit active.
-                              (7) `dispatch_sequential_gate...` — `unified-trading-pm@41a51d9ff` on origin; both codex docs state the
-                              gate-on-`sequential:true` behavior + cite `agent-orchestrator@867b1731e`. (8) wip-preserve (EXTRACTED → batch10
-                              todo 2) — `git ls-remote origin 'refs/wip-preserve/*'` empty; `staging-lock-check.yml` byte-identical between
-                              `a77eb6d1` and `strategy-service@400d3773` (ON origin); current HEAD file is the thin-caller stub. No claim failed
-                              verification; no new todo required.
+                                      `git show --stat` + `git merge-base --is-ancestor` + content-diffs and re-ran the named tests directly:
+                                      (1) `ao_done_gate_no_carveout...` — `agent-orchestrator@22a14b1`/`@e1b30f5`/`@587c8db` all ancestors of
+                                      `origin/live-defi-rollout`; all 3 sub-item code paths live on HEAD (`_diff_blocks_checkbox`+`_ADDED_BLOCKED_LINE_RE`
+                                      +`todo_blocked_pending_other_owner`, `_marker_disposition_in_text`+`_mode1_fallback_disposition`+
+                                      `_mode2_no_recent_commit_disposition`, rename-following `_same_commit_added_path_matching_basename` +
+                                      `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename`); re-ran
+                                      `tests/test_done_gate_plan_flip_hard_reject.py` = **42 passed** (all 8 named regression tests present, pass).
+                                      (2) `branch_reset_to_origin...` — all 4 orphan commits confirmed NOT on origin (`features-service@207afd62`,
+                                      `@d1c1ad8a`, `unified-api-contracts@724bd9be`, `agent-orchestrator@559452e`), all 4 replacements ON origin
+                                      (`a90256f5`, `a9429cba`, `698b5b6f`, `09cda29`), `git diff 724bd9be 698b5b6f --stat` EMPTY (byte-identical), route +
+                                      test file for `09cda29` live. (3) `mtds_backfill_sequential_true...` — `agent-orchestrator@77769ab` on origin,
+                                      `current_task_ids_by_plan`+`_wire_sequential_prereqs` code live; re-ran `tests/test_regen_reconcile.py` = **19
+                                      passed** (regression test `test_sequential_reword_mid_flight_does_not_corrupt_chain` present at :324). (4)
+                                      na-timer (EXTRACTED → batch10 todo 1) — batch10's own evidence re-checked: `agent-orchestrator@17939c3`
+                                      (TimeoutStartSec 2450→21600) on origin; live `state.db` shows `agent_kind=na_eligibility_auditor`
+                                      `exit_reason=lifecycle-complete` rows incl. the exact cited `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`
+                                      (3 lifecycle-complete current; `reaped-stale` is a separately-tracked mode, out of this todo's scope). (5)
+                                      orch_token — source doc's own `[x]` MOOT verdict (2026-08-06 loopback-preference) present; live `/api/fleet/git-health`
+                                      confirms `ip-172-31-5-118` 34/34 slots `reporter_stale=false`. (6) JWT-secret — `/etc/systemd/system/
+                                      orchestrator.service.d/jwt-secret-gcs.conf` present (systemd env carries `ORCHESTRATOR_JWT_SECRET_GCS`), unit active.
+                                      (7) `dispatch_sequential_gate...` — `unified-trading-pm@41a51d9ff` on origin; both codex docs state the
+                                      gate-on-`sequential:true` behavior + cite `agent-orchestrator@867b1731e`. (8) wip-preserve (EXTRACTED → batch10
+                                      todo 2) — `git ls-remote origin 'refs/wip-preserve/*'` empty; `staging-lock-check.yml` byte-identical between
+                                      `a77eb6d1` and `strategy-service@400d3773` (ON origin); current HEAD file is the thin-caller stub. No claim failed
+                                      verification; no new todo required.
 
 - [x] ✅ [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was
       an extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
@@ -136,53 +135,53 @@ context_scope:
       (naming the new batch-3 plan and todo) or still-gated with the current reason — no entry left unstated.
 
       **DONE 2026-08-10 (slot 17, infra) — walked all 11 entries across the batch plan's THREE Deferred sections (the
-                      9 design/judgment forks in section A, the 1 cross-tranche item in section B, the 1 time-gated item in section C);
-                      every gate re-checked against its current source doc. Result: 9/11 gates CLEARED and the items fully resolved in
-                      their own source docs — NONE retain dispatchable work, so NO new todo is added to `ao_satellite_ao_dispatch_batch3`
-                      (batch 3 = `plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, already active with its own todo set); the
-                      2 remaining are genuinely still-gated (operator-held, corroborated by batch12's own 2026-08-09 "Declined, zero
-                      extraction" verdict). Per-entry disposition:**
+                              9 design/judgment forks in section A, the 1 cross-tranche item in section B, the 1 time-gated item in section C);
+                              every gate re-checked against its current source doc. Result: 9/11 gates CLEARED and the items fully resolved in
+                              their own source docs — NONE retain dispatchable work, so NO new todo is added to `ao_satellite_ao_dispatch_batch3`
+                              (batch 3 = `plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, already active with its own todo set); the
+                              2 remaining are genuinely still-gated (operator-held, corroborated by batch12's own 2026-08-09 "Declined, zero
+                              extraction" verdict). Per-entry disposition:**
 
-                      **Section A — design/judgment forks (9):**
-                      (1) `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md` — **STILL GATED**. Doc `status: open`, 3 open todos.
-                      The named gate (DATA P3's "prefer (b) if it proves reliable enough" two-direction call) has NOT been operator-ruled
-                      and the doc has not committed to one path; UI P2 depends on it and BACKEND P3 is upstream-CLI-gated. batch12
-                      (2026-08-09) independently lists it operator-gated (22). (2) `ao_self_pull_stalled_by_untracked_backup_files` —
-                      **CLEARED/MOOT** — resolved + archived 2026-07-30 (`agent-orchestrator@61b7a4f` time-gated `_track_dirty_tick`
-                      alert, verified; `@b5fb9fc`), 0 open. (3) `external_promote_gated_task_redispatch_churn_no_durable_park` —
-                      **CLEARED** — fork operator-ruled (Option A) 2026-07-31, resolved + archived 2026-08-06, 0 open. (4)
-                      `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch` — **CLEARED** — sole open todo closed by
-                      operator ruling 2026-08-06, archived 2026-08-07, 0 open. (5) `two_agents_slot3_collision_and_yahoo_finance_red_tree`
-                      — **CLEARED** — fork operator-ruled (ao round-5 item 15, collision-warning mechanism + hunk-scope staging)
-                      2026-08-08, archived, 0 open. (6) `unified_trading_pm_stash_pile_accumulation` — **STILL GATED**. Doc `status:
-                      open`, 2 open `[OPERATOR] P3` mechanical-drop todos — the judgment-call review IS done (all 188 entries audited
-                      2026-08-08/09), but `git stash drop`/`clear` is categorically agent-blocked by `block_destructive_commands.py`, so
-                      the drop loops must be run by the operator directly; batch12 (2026-08-09) concurs. (7)
-                      `prediction_trades_migration_concurrent_dispatch` — **CLEARED** — fork resolved: convention written + dispatcher
-                      `in_flight_elsewhere` check shipped `agent-orchestrator@9e28a36` (2026-08-06), operator ruling recorded 2026-08-09,
-                      archived, 0 open. (8) `na_eligibility_auditor_timer` P2 timeout-retune — **CLEARED** — "bump vs diagnose" fork
-                      resolved via bump: `agent-orchestrator@17939c3` (2026-08-04) raised `--max-time` 2400→7200s + `TimeoutStartSec`
-                      2450→21600s (also applied to sibling `ag-closeout-auditor` timer); doc archived 2026-08-06, 0 open. (9)
-                      `wip_preserve_refs_silently_unrecovered` two SCRIPT P3 items — **CLEARED** — both forks operator-ruled 2026-08-06 and
-                      shipped as P1: daily fleet-wide sweep (`agent-orchestrator@d36219c` `WipPreserveSweepWatchdog`), local-only-tier
-                      rescue (`unified-trading-pm@f60d3caa9`), quickmerge post-push verification FAIL-not-warn
-                      (`unified-trading-pm@98b99afa2`); doc archived, 0 open.
+                              **Section A — design/judgment forks (9):**
+                              (1) `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md` — **STILL GATED**. Doc `status: open`, 3 open todos.
+                              The named gate (DATA P3's "prefer (b) if it proves reliable enough" two-direction call) has NOT been operator-ruled
+                              and the doc has not committed to one path; UI P2 depends on it and BACKEND P3 is upstream-CLI-gated. batch12
+                              (2026-08-09) independently lists it operator-gated (22). (2) `ao_self_pull_stalled_by_untracked_backup_files` —
+                              **CLEARED/MOOT** — resolved + archived 2026-07-30 (`agent-orchestrator@61b7a4f` time-gated `_track_dirty_tick`
+                              alert, verified; `@b5fb9fc`), 0 open. (3) `external_promote_gated_task_redispatch_churn_no_durable_park` —
+                              **CLEARED** — fork operator-ruled (Option A) 2026-07-31, resolved + archived 2026-08-06, 0 open. (4)
+                              `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch` — **CLEARED** — sole open todo closed by
+                              operator ruling 2026-08-06, archived 2026-08-07, 0 open. (5) `two_agents_slot3_collision_and_yahoo_finance_red_tree`
+                              — **CLEARED** — fork operator-ruled (ao round-5 item 15, collision-warning mechanism + hunk-scope staging)
+                              2026-08-08, archived, 0 open. (6) `unified_trading_pm_stash_pile_accumulation` — **STILL GATED**. Doc `status:
+                              open`, 2 open `[OPERATOR] P3` mechanical-drop todos — the judgment-call review IS done (all 188 entries audited
+                              2026-08-08/09), but `git stash drop`/`clear` is categorically agent-blocked by `block_destructive_commands.py`, so
+                              the drop loops must be run by the operator directly; batch12 (2026-08-09) concurs. (7)
+                              `prediction_trades_migration_concurrent_dispatch` — **CLEARED** — fork resolved: convention written + dispatcher
+                              `in_flight_elsewhere` check shipped `agent-orchestrator@9e28a36` (2026-08-06), operator ruling recorded 2026-08-09,
+                              archived, 0 open. (8) `na_eligibility_auditor_timer` P2 timeout-retune — **CLEARED** — "bump vs diagnose" fork
+                              resolved via bump: `agent-orchestrator@17939c3` (2026-08-04) raised `--max-time` 2400→7200s + `TimeoutStartSec`
+                              2450→21600s (also applied to sibling `ag-closeout-auditor` timer); doc archived 2026-08-06, 0 open. (9)
+                              `wip_preserve_refs_silently_unrecovered` two SCRIPT P3 items — **CLEARED** — both forks operator-ruled 2026-08-06 and
+                              shipped as P1: daily fleet-wide sweep (`agent-orchestrator@d36219c` `WipPreserveSweepWatchdog`), local-only-tier
+                              rescue (`unified-trading-pm@f60d3caa9`), quickmerge post-push verification FAIL-not-warn
+                              (`unified-trading-pm@98b99afa2`); doc archived, 0 open.
 
-                      **Section B — cross-tranche-claimed (1):** (10) `blank_assigned_vm_dispatch_classification_gap` — **CLEARED** —
-                      the conflict-check todo batch2 flagged as claimed by `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` HAS
-                      LANDED: the source doc's own `[REVIEW] P2` (DONE 2026-07-30 slot-15, zero conflict-check hits over the 30 flipped
-                      docs) AND `na_docs_validity`'s folded-in copy (line 178 `[x]`) are both done. Per this todo's own framing the item
-                      resolves to **archivable** — the check found no genuine conflicts, and the doc is itself `status: resolved` +
-                      archived 2026-07-30 (57-file classification + `docspec.py` `Req.R` gate fix `unified-trading-pm@e88c41727`).
+                              **Section B — cross-tranche-claimed (1):** (10) `blank_assigned_vm_dispatch_classification_gap` — **CLEARED** —
+                              the conflict-check todo batch2 flagged as claimed by `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` HAS
+                              LANDED: the source doc's own `[REVIEW] P2` (DONE 2026-07-30 slot-15, zero conflict-check hits over the 30 flipped
+                              docs) AND `na_docs_validity`'s folded-in copy (line 178 `[x]`) are both done. Per this todo's own framing the item
+                              resolves to **archivable** — the check found no genuine conflicts, and the doc is itself `status: resolved` +
+                              archived 2026-07-30 (57-file classification + `docspec.py` `Req.R` gate fix `unified-trading-pm@e88c41727`).
 
-                      **Section C — time-gated (1):** (11) `ao_done_require_origin_not_enforced` — **CLEARED** — the `on_origin=False`
-                      rate WAS re-measured over the now-fuller window: 0/151, 0/52, 0/222 (all 0.0%) after the `_sha_on_origin`
-                      fallback-fetch fix (`25d497f`); operator explicitly ruled 2 days sufficient and flipped `done_require_origin=true`
-                      default (`agent-orchestrator@cf7cd35`, re-verified an ancestor of `origin/live-defi-rollout` today); doc resolved +
-                      archived, 0 open.
+                              **Section C — time-gated (1):** (11) `ao_done_require_origin_not_enforced` — **CLEARED** — the `on_origin=False`
+                              rate WAS re-measured over the now-fuller window: 0/151, 0/52, 0/222 (all 0.0%) after the `_sha_on_origin`
+                              fallback-fetch fix (`25d497f`); operator explicitly ruled 2 days sufficient and flipped `done_require_origin=true`
+                              default (`agent-orchestrator@cf7cd35`, re-verified an ancestor of `origin/live-defi-rollout` today); doc resolved +
+                              archived, 0 open.
 
-                      **Net: 9/11 cleared (all resolved/archived in-source, nothing left to dispatch — no batch-3 todo added);
-                      2/11 still-gated (`ao_context_pct_0`, `stash_pile`), both operator-held; every entry stated.**
+                              **Net: 9/11 cleared (all resolved/archived in-source, nothing left to dispatch — no batch-3 todo added);
+                              2/11 still-gated (`ao_context_pct_0`, `stash_pile`), both operator-held; every entry stated.**
 
 - [x] ✅ [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** —
       unified-trading-pm@256642bddf. **7 of 8 source docs from batch 2 were already archived by prior workers:**
@@ -202,13 +201,16 @@ context_scope:
       record. Hygiene sweep: 4 pre-existing hard failures (identical to clean-tree baseline), zero regressions from this
       change. **Done when: satisfied** — `grep -rl "plans/active/issues/<slug>" plans/ codex/` for all 7 archived slugs
       returns only the `plan_reconciler` historical documentation (non-referrer); all live referrers repointed.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md`, migrate any still-Deferred item into batch
-      3 (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to
-      `plans/archive/2026_07/`, fix every corpus-wide referrer including this finalize plan's own
-      `related:`/`depends_on:`, then run `.venv/bin/python scripts/plan-hygiene/regenerate_active_plan_inventory.py`.
-      **Done when**: the batch plan is archived with a banner, the inventory regenerates with an orphan count of 0, and
-      `check_finalize_plan_coverage.py` no longer names this pair.
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** —
+      unified-trading-pm@3c30c4a3eb. **Banner** added to batch plan with resolved status + archival date. **git mv** →
+      `plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md`. **Referrers repointed** in 13 files (12
+      path-prefixed + 1 bare reference), all `plans/active/` → `plans/archive/2026_07/` across the corpus. **6
+      pre-existing dangling refs** in `ao_consolidated_closeout_2026_07_25.md` +
+      `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26.md` also fixed (3
+      ci_consolidated_closeout/ao_done_gate_tag/na_and_ag_closeout → corrected archive paths; 3 sports_clv_target_pit →
+      `plans/archive/2026_08/`). **Inventory**: 309 plans, 0 orphans. **check_finalize_plan_coverage.py**: no longer
+      names this pair. Deferred items: none to migrate — all 3 sections resolved in-source by todo 3. **Done when:
+      satisfied.** `check_finalize_plan_coverage.py` no longer names this pair.
 
 ## Codex SSOTs
 
@@ -239,6 +241,10 @@ context_scope:
   workers, `git_status_reporter_stale` stays active (1 open todo, ghost-host-rows P3). Repointed 3 stale `wip_preserve`
   referrers in `orphaned_commit_recovery` from `plans/active/issues/` → `plans/archive/2026_08/`. Hygiene sweep
   pre-existing failures unchanged. Shipped at unified-trading-pm@256642bddf.
+- **2026-08-10 (slot 23, review)**: todo 5 done — archived batch2 plan with banner + git mv + 13 referrers repointed + 6
+  pre-existing dangling refs fixed. Inventory: 309 plans, 0 orphans. check_finalize_plan_coverage clean. Shipped at
+  unified-trading-pm@3c30c4a3eb. ALL FIVE TODOS COMPLETE — finalize plan is now fully done, ready for its own archival
+  via the standard process.
 - **2026-08-10 (slot 17, infra)**: todo 3 done — walked all 11 Deferred entries across the batch plan's three Deferred
   sections and re-checked every gate against its live source doc. 9/11 cleared and fully resolved in-source (all three
   batch2 Deferred sections), 2/11 still gated (both operator-held; batch12's 2026-08-09 zero-extraction verdict
