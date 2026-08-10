@@ -61,13 +61,13 @@ context_scope:
 ## Todos
 
 - [x] ✅ [REVIEW] P3. **Reconcile the source doc.** batch8's one todo cites
-      `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`. Confirm that doc's own remaining todo
-      (the Progress-Log extraction) was actually updated with batch8's verdict + commit citation, per batch8's own
-      Done-when clause: `wc -l` on `prediction_cross_venue_arb_and_coverage_2026_07_24.md` back under 500,
-      `check_line_caps.sh` green, all 3 pre-extraction open checkboxes verbatim-preserved. Confirm the source issue
-      doc's checkbox is flipped and its `status` moves toward `resolved` (0 open todos remaining). **Done when**: the
-      reconciliation is recorded in this plan's own Progress Log with the exact commit citation. — DONE 2026-08-09,
-      `unified-trading-pm@02ba8ea6c`.
+      `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`. Confirm that
+      doc's own remaining todo (the Progress-Log extraction) was actually updated with batch8's verdict + commit
+      citation, per batch8's own Done-when clause: `wc -l` on `prediction_cross_venue_arb_and_coverage_2026_07_24.md`
+      back under 500, `check_line_caps.sh` green, all 3 pre-extraction open checkboxes verbatim-preserved. Confirm the
+      source issue doc's checkbox is flipped and its `status` moves toward `resolved` (0 open todos remaining). **Done
+      when**: the reconciliation is recorded in this plan's own Progress Log with the exact commit citation. — DONE
+      2026-08-09, `unified-trading-pm@02ba8ea6c`.
 
 - [ ] [DOC] P3. **Archive batch8 + this finalize plan.** Once the source doc is confirmed reconciled and batch8's one
       todo + this plan's todo 1 are both done, archive both `prediction_satellite_ao_dispatch_batch8_2026_08_08.md` and
