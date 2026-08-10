@@ -184,7 +184,7 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       longer be absorbed by a peer. Keep the cheaper belt-and-braces fix in scope either way — swapping the `git add` +
       bare `git commit` for an explicit `git commit -- <files>` pathspec, which ignores the rest of the index and
       protects the non-isolated path (incl. the AO VM, where isolation is auto-OFF).
-- [ ] [BACKEND] P1. Isolated-worktree mode is UNUSABLE from a slot clone — it deadlocks against the
+- [x] [BACKEND] P1. Isolated-worktree mode is UNUSABLE from a slot clone — it deadlocks against the
       `fix-commit-identity` pre-commit hook. Measured 2026-08-10, 3/3 attempts: `safe-doc-push.sh` (isolation always-on
       per CLAUDE.md) builds its worktree under `$TMPDIR/sdp-iso-$$`, whose path yields the identity
       `ikennaigboaka [main·laptop]`, but the worktree inherits `user.name = ikennaigboaka [slot-4·laptop]` from the slot
@@ -194,14 +194,22 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `git config`). Only `SDP_ISOLATED=0` got this session's doc pushed — i.e. the newly-MANDATED protection had to be
       switched off to ship, which also silently reopens the contamination window this doc's other todo is about. Fix the
       hook to derive identity from the CALLER's repo (`SDP_CALLER_REPO` is already exported for exactly this kind of
-      need) or seed the isolated worktree's `user.name` at creation.
-- [ ] [BACKEND] P1. `quickmerge.sh --isolated` is ALSO unusable from a slot clone, by a DIFFERENT mechanism than the
+      need) or seed the isolated worktree's `user.name` at creation. — RESOLVED BY A PEER, same day: `safe-doc-push.sh`
+      now derives the expected label via `scripts/hooks/slot-identity-lib.sh` and seeds it into the isolated worktree
+      (`git config --worktree user.name "$SLOT_ID_EXPECTED_NAME"`) BEFORE the first commit, so the hook no longer has
+      anything to correct and the re-run loop cannot form. Verified by reading the shipped script, not re-run here.
+- [x] [BACKEND] P1. `quickmerge.sh --isolated` is ALSO unusable from a slot clone, by a DIFFERENT mechanism than the
       safe-doc-push one above — do not assume fixing one fixes the other. It does NOT hit the identity hook (it got all
       the way to a green in-isolation quality gate), but then dies at STAGE 5 with
       `fatal: 'live-defi-rollout' is already used by worktree at <slot clone>`: `git worktree add` refuses a branch that
       is already checked out in the caller's own worktree, which is ALWAYS true for a slot clone sitting on the
       integration branch. Measured 2026-08-10, exit 128. Use `--detach` (safe-doc-push already does exactly this:
-      `git worktree add --detach -q "$wt" "origin/$BRANCH"`) instead of checking the branch out by name.
+      `git worktree add --detach -q "$wt" "origin/$BRANCH"`) instead of checking the branch out by name. — RESOLVED BY A
+      PEER, same day, AND this todo's own diagnosis was partly wrong: `git worktree add` already passed `--detach`
+      (quickmerge.sh:551); the fatal came from a LATER `git checkout "$BRANCH"` at STAGE 5. The shipped fix is
+      `_qm_checkout_ship_branch`, which returns early under `QM_IN_ISOLATION` and pushes an explicit `HEAD:$BRANCH`
+      refspec — the same mechanism safe-doc-push always used. Recording the mis-diagnosis deliberately: the todo would
+      have sent the next reader to a line that was already correct.
 - [ ] [BACKEND] P0. The NON-isolated `quickmerge --files` path can drop the caller's staged files AND commit an
       unrelated untracked file under the caller's message. Measured 2026-08-10, agent-orchestrator@62649fb: invoked with
       `--files "server/state_store/agents.py tests/test_reap_orphan_agents.py"`, the resulting pushed commit carried
@@ -237,16 +245,31 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       mattered: a defensive `(req.context_used_pct or 0) >= gate` would have "worked" while letting a saturated worker
       collect a fresh task simply by OMITTING the field — turning a crash into a silent bypass of the gate that exists
       to stop a 90%-context worker being handed more work.
-- [ ] [BACKEND] P2. Make main actually self-report `context_used_pct`, closing defect (A) at source for the one role the
+- [x] [BACKEND] P2. Make main actually self-report `context_used_pct`, closing defect (A) at source for the one role the
       slot-mirror cannot cover (main is not on an `orch-slot-N` session). `agents/main.md:293` already instructs
       `"context_used_pct": <0-100, your /usage estimate>` on every `/poll`, yet the live row read 0 with a fresh ping —
       so either the CLI estimate is not being substituted or the field is being dropped. Determine which, then fix the
-      role file or the poll contract. Until then main's reading comes solely from `_read_pct`'s probe ratchet.
-- [ ] [DATA] P3. Decide the cheapest way to represent "never sampled": either (a) a schema migration adding a nullable
+      role file or the poll contract. — RESOLVED agent-orchestrator@a798a25, at the SERVER end rather than the role
+      file, because the damage was not the missing report but what the default did with it:
+      `AgentPollRequest.context_used_pct` defaulted to `0`, so every main poll that omitted the field actively ERASED
+      main's stored reading (`update_agent_ping` had no way to tell 'silent' from 'empty' — it already skips a None).
+      That erasure is what fed `_sync_main_slot_row` the 0 it clobbered main's SlotRow with. Now `int | None` = silence
+      preserves the last known value. Main SHOULD still self-report per `agents/main.md:293`; if it resumes, the value
+      simply becomes fresher rather than load-bearing.
+- [x] [DATA] P3. Decide the cheapest way to represent "never sampled": either (a) a schema migration adding a nullable
       `context_used_pct_sampled_at: datetime | None` column, or (b) reuse an existing signal (e.g. `last_ping` age vs
       `context_used_pct == 0`) as a heuristic without a schema change. Prefer (b) if it proves reliable enough —
       smaller, safer, no migration risk. NOTE 2026-08-10: materially less urgent now the slot-mirror fills the common
-      case; the residual is a genuinely slot-less agent (cloud `review`) that has never reported.
+      case; the residual is a genuinely slot-less agent (cloud `review`) that has never reported. — RESOLVED
+      agent-orchestrator@a798a25 via option (b), NO migration: the sentinel lives at the API EDGE instead of in the
+      column. `BootRequest`/`ProgressRequest`/`DoneRequest`/`HeartbeatRequest`/`AgentPollRequest` all type
+      `context_used_pct` as `int | None` (None = 'alive, not reporting'), and `_effective_context_pct()` in
+      `routes/slots_worker.py` resolves it against the slot's OWN last known reading before anything acts on it. That
+      closes all three failure modes of this bug family at once — silence can no longer erase a reading, fabricate a
+      compaction via `update_slot_ping`'s drop detection, or read as headroom at a context gate. The DB column stays
+      `nullable=False, default=0`; nothing downstream ever sees a None, so no live-prod migration was needed. Covered by
+      `test_every_worker_request_model_defaults_to_not_reporting` and
+      `test_effective_pct_treats_silence_as_the_last_known_value_not_as_headroom`.
 - [ ] [UI] P1. Fleet Task cell surfaces a typed agent's real work — CODE SHIPPED agent-orchestrator@dd4b18f, but this
       stays UNTICKED: the `pw:L2` gate is NOT satisfied and the workspace rule is explicit that no UI item ticks without
       it. Operator ask 2026-08-10: a slot running a cicd escalation showed only a bare "cicd" badge while the Agents
@@ -327,6 +350,17 @@ healthy main, and it parks a 0 in the row `_read_pct` consults, which cannot cro
   Corrected the "purely a display gap" triage framing — (B) writes state and drives premature recycles. NOTE: this doc
   is no longer whole-doc NA — the two remaining BACKEND/DATA todos are bounded, but the `[UI] P3` still carries the
   pw:L2 gate, so the prior non-parallelizable finding stands for the UI item alone.
+
+- **CLOSE-OUT 2026-08-10 (operator: "do these too") — the sentinel landed, and two todos were already dead.** Shipped
+  agent-orchestrator@a798a25: the never-sampled sentinel at every worker ingress (the `[DATA]` item, via the
+  no-migration option) which also resolved the `[BACKEND] P2` main-self-report item as a side effect — the two turned
+  out to be the same defect seen from different ends, since `AgentPollRequest`'s `0` default was ERASING main's reading
+  rather than merely failing to set it. Separately, BOTH ship-tooling todos filed earlier today were found ALREADY FIXED
+  by a peer within hours, and one of them recorded a wrong line number — corrected in place rather than silently ticked,
+  because a stale todo that points at already-correct code costs the next reader more than no todo at all. Remaining
+  open: the `[UI]` pair (code shipped @dd4b18f, pw:L2 still unmet — see the harness todo, half-diagnosed and half-fixed
+  this session) and quickmerge's non-isolated bare-commit scoping, deliberately NOT rushed because quickmerge stages
+  paths of its own in some branches and a blanket pathspec would silently drop them.
 
 - **ROOT-CAUSE PATTERN 2026-08-10 — "0" meaning two different things has now produced THREE bugs in this doc.** It is
   worth stating as the family, because each was found separately and fixed separately: (1) main's SlotRow clobbered to 0
