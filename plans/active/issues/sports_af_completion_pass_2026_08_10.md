@@ -316,11 +316,19 @@ depends_on: []
           continues — later years will be denser. Run now ~4h old.
         - No code shipped — pure monitoring.
 
-## Deferred work after 2026-08-10 ~20:38Z
+      - **2026-08-10 (slot 28, data_engineering, ~20:42Z–~20:45Z)** — STANDINGS VM continued monitoring:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-05-31` (earlier check) → `2021-06-01` (GCS tee, ~20:42Z). Monotonic, forward progress. Heartbeat alive
+          at ~20:43Z. No `exit_code=` yet. VM confirmed RUNNING.
+        - Stall watchdog reported progress resumed: `2021-05-30` → `2021-06-01` — no stall, normal progression through
+          2021 season-start dates. Pace continues at ~1-2 season-start-dates/min. Run now ~4.2h old.
+        - No code shipped — pure monitoring.
+
+## Deferred work after 2026-08-10 ~20:45Z
 
 | Item                                                             | State / why deferred                                  | Blocked on                         |
 | ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-05-30`, pace ~1.4 dates/min non-linear | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-06-01`, pace ~1-2 dates/min non-linear | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
