@@ -293,8 +293,10 @@ context_scope:
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
   against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
-  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
-  webhooks) — none clear the `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`
-  gate; re-confirmed live the prerequisite still has 7 open todos, Phase-B `--apply` still hasn't started. The
-  already-incorporated `--day` ruling (2026-08-05, fallback 2026-06-28) is not new round-11 information. No
-  reclassification.
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
+  none clear the `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` gate; re-confirmed
+  live the prerequisite still has 7 open todos, Phase-B `--apply` still hasn't started. The already-incorporated `--day`
+  ruling (2026-08-05, fallback 2026-06-28) is not new round-11 information. No reclassification.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 5 open, unchanged.
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` still open (prerequisite still
+  status:active, 7 open todos, Phase-B `--apply` not started). Doc stays NA.

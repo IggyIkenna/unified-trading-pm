@@ -246,3 +246,8 @@ covers 3a+3b before treating the residual as fully closed.
   `batch10_finalize`), 1 is a genuine bounded verification task (Finding 5: confirm `instruments-service@62a8b1d8`
   covers fixture-pairing parts 3a/3b). The mix of externally-gated items means the whole-doc RECLASSIFY bar is not
   cleared — one bounded item among several genuinely-gated ones does not flip a whole doc. Doc stays NA.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified, 5 open, unchanged since the
+  2026-08-09 marker (no new content). Same mix as before: 3 externally-gated watch-items, 1 closeable-once-dependent
+  bookkeeping note (Finding 2, still folds into `batch10_finalize` — batch10 confirmed still active/in-flight, 1/5 todos
+  done), 1 bounded verification task (Finding 5) not yet independently re-verified this pass. Whole-doc RECLASSIFY bar
+  still not cleared. Doc stays NA.

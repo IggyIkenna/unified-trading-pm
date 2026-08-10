@@ -307,3 +307,6 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   on the 2 linked adapter dead-code docs is now satisfied (both operator-ruled DELETE 2026-08-07, extracted to
   `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todos 3/4) but folds the reconciliation into
   `batch10_finalize` rather than this doc directly. Doc stays NA.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified, 1 open, unchanged since the
+  2026-08-09 marker. Finding 1's `[DOC] P3` informational item remains an explicit wait-for-a-human-or-next-worker
+  judgment call, not bounded/deterministic. Doc stays NA.

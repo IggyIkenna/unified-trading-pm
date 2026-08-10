@@ -783,3 +783,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
   (`archive_exempt: true`, `gate_on_depends: false` coordination hub; `depends_on` lists the 4 Phase A-E children, all
   still open under their own docs — this parent has nothing of its own to reclassify). Nothing to reclassify.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
+  (`archive_exempt: true` coordination hub; 4 Phase A-E children still open under their own docs, plus its own 0-todo
+  status is by design, not a moot/ARCHIVE candidate — `archive_exempt: true` is the correct standing marker). Doc stays
+  NA.

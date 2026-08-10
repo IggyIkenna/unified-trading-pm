@@ -139,6 +139,9 @@ context_scope:
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
   against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
-  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
-  webhooks) — none of these clear a `depends_on`+`gate_on_depends: true` mechanical gate; re-confirmed live that
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
+  none of these clear a `depends_on`+`gate_on_depends: true` mechanical gate; re-confirmed live that
   `prediction_phase_ab_residuals_2026_07_24` still carries 7 open todos. Gate not cleared. No reclassification.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 2 open, unchanged.
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` still open (prerequisite still
+  status:active, 7 open todos). Doc stays NA.
