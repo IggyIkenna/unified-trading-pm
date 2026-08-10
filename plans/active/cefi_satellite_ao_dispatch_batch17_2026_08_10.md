@@ -9,7 +9,7 @@ summary: >-
   closes `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s standing recurrence-watch
   condition (a stale-tarball incident that had already self-resolved by the time it was filed, pending one future
   audit-pass check).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
