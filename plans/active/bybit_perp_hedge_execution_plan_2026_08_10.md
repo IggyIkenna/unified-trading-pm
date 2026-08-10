@@ -119,14 +119,14 @@ context_scope:
       fetch_positions filters zero-qty, fetch_balance returns USDC free, adapter not-initialized raises clean);
       `quality-gates.sh` green.
 
-- [ ] [BACKEND] P2. Extend `PerpHedgeConsumer._rebalance_guard()` to route `PerpVenueId.BYBIT` through a wired
+- [x] ✅ [BACKEND] P2. Extend `PerpHedgeConsumer._rebalance_guard()` to route `PerpVenueId.BYBIT` through a wired
       `BybitPerpHedgeConnector` (single designated path — no second instruction sink). Remove the current
       `UNSUPPORTED_VENUE` block for Bybit. Extend `dispatch_rebalance()` to accept `BybitPerpHedgeConnector | None`
       alongside the existing `HyperliquidConnector | None` and dispatch to the correct connector by venue. UAC
       `classify_venue_error` classification applies identically (shard-level failure isolation — never raised). Repo:
       execution-service. Done-when: unit tests (Bybit SHORT routes to Bybit connector, Bybit COVER routes to Bybit
       connector, unwired Bybit connector returns NOT_WIRED, mixed HL+Bybit dispatch routes to correct connector);
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. — execution-service@133ac40e30, QG green (7945 passed, 21 skipped, 174s).
 
 - [ ] [BACKEND] P2. Build Bybit credential hot-reloader + wiring module at
       `execution_service/defi_execution/wiring/bybit_wiring.py` (mirrors `hyperliquid_wiring.py`'s pattern).
