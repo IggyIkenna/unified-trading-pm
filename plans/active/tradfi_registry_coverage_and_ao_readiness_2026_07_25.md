@@ -255,19 +255,19 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       non-zero count). (repo: instruments-service)
 
       **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
-                                                                      (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                                                                      scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
-                                                                      manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
-                                                                      `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
-                                                                      to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
-                                                                      and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
-                                                                      slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
-                                                                      thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
-                                                                      the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
-                                                                      this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
-                                                                      `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
-                                                                      scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
-                                                                      host. No `--apply` was ever reached; nothing was mutated.
+                                                                          (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                                                                          scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+                                                                          manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+                                                                          `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+                                                                          to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+                                                                          and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+                                                                          slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+                                                                          thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+                                                                          the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+                                                                          this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+                                                                          `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+                                                                          scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+                                                                          host. No `--apply` was ever reached; nothing was mutated.
 
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —
@@ -287,14 +287,16 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       market-tick-data-service, deployment-api.
 - [ ] [DATA] P0. **NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to completion (now-mandatory
       precondition ahead of the "Certify tradfi Layer-1" todo + its catalogue rebuild+promote step, immediately
-      below).** Operator-ruled 2026-07-29 (interactive decision session): run the full Databento re-feed chain to
-      completion FIRST — tradfi's `by_date` capture is confirmed still degraded (~10-15 writes/day vs the historical
-      16-18K/day baseline) since Massive removal (root cause + measurement already corroborated in
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s "Folded-in tradfi residuals" section and
-      `data_completion_tradfi_2026_07_15.md`'s G1.run gate-(b)) — the pending catalogue rebuild+promote alone is not
-      sufficient to certify Layer-1 while the underlying `by_date` capture stays this degraded. Sub-steps, in order: (1)
-      re-feed tradfi `by_date/` to completion via the Databento IS reference-data adapter
-      (`instruments_service/reference_data/router.py::_route_databento`, `DatabentoReferenceDataAdapter`,
+      below).** **DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved
+      (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH` pulls both succeeded); this todo is the exact re-feed
+      work that gate would have blocked in practice — now genuinely runnable. Operator-ruled 2026-07-29 (interactive
+      decision session): run the full Databento re-feed chain to completion FIRST — tradfi's `by_date` capture is
+      confirmed still degraded (~10-15 writes/day vs the historical 16-18K/day baseline) since Massive removal (root
+      cause + measurement already corroborated in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s "Folded-in
+      tradfi residuals" section and `data_completion_tradfi_2026_07_15.md`'s G1.run gate-(b)) — the pending catalogue
+      rebuild+promote alone is not sufficient to certify Layer-1 while the underlying `by_date` capture stays this
+      degraded. Sub-steps, in order: (1) re-feed tradfi `by_date/` to completion via the Databento IS reference-data
+      adapter (`instruments_service/reference_data/router.py::_route_databento`, `DatabentoReferenceDataAdapter`,
       `--source databento`) — confirm the write-rate recovers toward the historical 16-18K/day range, not merely
       non-zero; (2) regenerate the tradfi instrument catalogue from the re-fed corpus; (3) re-check tradfi
       catalogue/data-status liveness (confirm the rebuilt catalogue reflects the re-fed data, not the stale
