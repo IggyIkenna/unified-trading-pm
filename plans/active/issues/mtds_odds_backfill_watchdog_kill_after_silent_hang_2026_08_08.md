@@ -1,11 +1,11 @@
 ---
 doc_type: issue
 title:
-  "MTDS sports-odds backfill VMs die repeatedly (9x so far) — total silence for ~16-24 min then correctly killed by the
+  "MTDS sports-odds backfill VMs die repeatedly (10x so far) — total silence for ~16-24 min then correctly killed by the
   vm-zombie-watchdog, root cause of the silence itself unconfirmed"
 summary: >-
-  NINE consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`,
-  `smallchunk8`, `smallchunk10`, `smallchunk12`, `smallchunk13`, `smallchunk14`) died mid-run with the identical
+  TEN consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`, `smallchunk8`,
+  `smallchunk10`, `smallchunk12`, `smallchunk13`, `smallchunk14`, `smallchunk15`) died mid-run with the identical
   signature: `run.log` and the heartbeat blob both go completely silent (no new lines, no heartbeat refresh) for ~16-24
   minutes, then `gcloud compute operations list` shows a `delete` operation. Neither death has a terminal `exit_code=`
   line, a `Traceback`, a `CHUNK_FAILED`, or any other error marker in the persisted `run.log` — just an ordinary
@@ -58,7 +58,7 @@ context_scope:
   ]
 ---
 
-## Timeline (nine occurrences now)
+## Timeline (ten occurrences now)
 
 | VM                                         | Last real log line                                                             | Heartbeat blob last update                                               | Delete op timestamp       | Silent gap |
 | ------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------- | ---------- |
@@ -71,6 +71,7 @@ context_scope:
 | `mtds-backfill-odds-smallchunk12-20260809` | `2026-08-09T17:43:08Z` (mid-chunk-18, RSS=15.9GiB)                             | `17:43:30Z` (confirmed via `gcloud storage ls -L`)                       | `18:02:08Z`               | ~19 min    |
 | `mtds-backfill-odds-smallchunk13-20260809` | `2026-08-09T20:08:14Z` (mid-chunk-18, SERIE_A, RSS=17.8GiB)                    | `20:08:26Z` (confirmed via `gcloud storage ls -L`)                       | `20:26:02Z`               | ~17.6 min  |
 | `mtds-backfill-odds-smallchunk14-20260809` | `2026-08-09T22:56:06Z` (mid-chunk-18, LIGUE_1, RSS=17.3GiB)                    | `22:56:26Z` (confirmed via `gcloud storage ls -L`)                       | `23:13:38Z`               | ~17.3 min  |
+| `mtds-backfill-odds-smallchunk15-20260810` | `2026-08-10T01:11:36Z` (mid-chunk-18, EPL, RSS=22.8GiB)                        | `01:11:53Z` (confirmed via `gcloud storage ls -L`)                       | `01:27:22Z`               | ~15.5 min  |
 
 **New pattern confirmation from occurrence 4**: this one died at **chunk 26**, not chunk 18 — the second time chunk 26
 specifically has been the death site (smallchunk2 also died there), further weakening any "chunk 18 is special" framing.
@@ -413,3 +414,22 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   confirmed genuinely created and RUNNING via the launcher's own output (tarball fresh, guard passed); boot-health
   verification via run.log pending as of this entry (background poll in progress, not yet trusted on exit_code alone).
   Todo 1's blocker (no working SSH to catch a live hang) remains unchanged.
+
+- **2026-08-10T01:28Z (autonomous session) — TENTH occurrence, `smallchunk15`, clean 3-signal evidence, chunk 18 yet
+  again (6/10 now) — for the first time this session, the STOPPING transition was caught live before full deletion,
+  confirming the watchdog kill mechanism goes through an intermediate STOPPING state.** All 3 signals (run.log,
+  heartbeat blob, `WATCHDOG_TRACE.log`) went silent together `01:11:36Z`-`01:12:33Z`; a background poll caught the
+  instance in `status=STOPPING` at `01:27:33Z` (first time observed live rather than post-mortem), fully gone by
+  `01:28:47Z`; delete op confirms `23:13:38Z`→`01:27:22Z` timestamp, standard `1060025368044-compute@...` watchdog
+  account, ~15.5 min gap — matches the established pattern. Died mid-chunk-18, EPL (the same league smallchunk13 died
+  on), RSS 22.8GiB (not OOM range). Chunk 18 is now the clear majority death site at 6/10 occurrences vs 4/10 at
+  chunk 26. Relaunched immediately as `mtds-backfill-odds-smallchunk16-20260810` (timestamp-suffixed) — confirmed
+  genuinely created and RUNNING via the launcher's own output (tarball fresh, guard passed); boot-health verification
+  via run.log pending as of this entry (background poll in progress, not yet trusted on exit_code alone). Todo 1's
+  blocker (no working SSH to catch a live hang) remains unchanged — though the STOPPING-state catch above is a small
+  step toward "catching it before it's gone," even without SSH access to diagnose the hang itself. **Separately
+  discovered while diagnosing an apparent INJURIES census stall this same tick**: the sports manifest consolidator for
+  this bucket showed a static `rows_out` across >=5 real merges spanning 1h+, plus a `error=locked`-only streak across a
+  15min sample — filed as `sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md` (P1), NOT specific to
+  this odds/hang investigation but noting here since it affects how future ticks should interpret any census reading
+  taken during a similar stall window (cross-check a VM's own progress marker, don't trust the canonical census alone).
