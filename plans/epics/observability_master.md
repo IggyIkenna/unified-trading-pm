@@ -46,7 +46,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  - ../archive/2026_08/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md
+  - ../active/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md
   - ../active/artifact_pipeline_observability_2026_07_17.md
   - ../active/consolidator_throughput_backlog_monitor_2026_07_09.md
   - ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
@@ -160,7 +160,7 @@ Residual Actuator Wiring (forked from the hardening/self-monitoring plan)
 
 ## P3 — backlog; revisit quarterly
 
-### [`alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09`](../archive/2026_08/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md)
+### [`alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09`](../active/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md)
 
 **status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 

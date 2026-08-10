@@ -23,24 +23,14 @@
 # Run all: bats tests/
 
 FF_CRON="unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh"
-# Boundary is found by MARKER, never hardcoded. It WAS hardcoded (712); the script grew past
-# 1000 lines and that cut landed mid-function, so the extracted prefix stopped parsing and all
-# 6 tests here failed as though the dirty-gate logic were broken. A line number silently rots;
-# a marker fails loudly if someone removes it.
-FN_DEFS_MARKER="=== END OF FUNCTION DEFINITIONS"
+FN_DEFS_END_LINE=712
 
 setup() {
     WS_ROOT="$(git rev-parse --show-toplevel)/.."
     cd "${WS_ROOT}" || cd ..
     FF_CRON_ABS="$(cd "$(dirname "${FF_CRON}")" && pwd)/$(basename "${FF_CRON}")"
     FN_DEFS="${BATS_TEST_TMPDIR}/ff_cron_fn_defs_$$_${RANDOM}.sh"
-    FN_DEFS_END_LINE="$(grep -n "${FN_DEFS_MARKER}" "${FF_CRON_ABS}" | head -1 | cut -d: -f1)"
-    [ -n "${FN_DEFS_END_LINE}" ] || {
-        echo "marker '${FN_DEFS_MARKER}' not found in ${FF_CRON_ABS} — restore it rather than" >&2
-        echo "reverting to a hardcoded line number; see the comment at the marker." >&2
-        return 1
-    }
-    sed -n "1,$((FN_DEFS_END_LINE - 1))p" "${FF_CRON_ABS}" > "${FN_DEFS}"
+    sed -n "1,${FN_DEFS_END_LINE}p" "${FF_CRON_ABS}" > "${FN_DEFS}"
     LOCK_PATH="${BATS_TEST_TMPDIR}/lock_$$_${RANDOM}.lock"
     RESULT_PATH="${BATS_TEST_TMPDIR}/result_$$_${RANDOM}.json"
 }
@@ -75,7 +65,7 @@ _run_ff_one() {
     local repo="$1"
     SLOT_FF_PULL_LOCK_FILE="${LOCK_PATH}" SLOT_FF_PULL_RESULT_FILE="${RESULT_PATH}" \
         bash -c '
-            SLOT_CRON_FF_PULL_LIB_ONLY=1 source "'"${FN_DEFS}"'" --quiet
+            source "'"${FN_DEFS}"'" --quiet
             ff_one "'"${repo}"'" 0
             _write_ff_result
             cat "'"${RESULT_PATH}"'"
@@ -91,7 +81,7 @@ _run_ff_one() {
 _run_ff_multi() {
     SLOT_FF_PULL_LOCK_FILE="${LOCK_PATH}" SLOT_FF_PULL_RESULT_FILE="${RESULT_PATH}" \
         bash -c '
-            SLOT_CRON_FF_PULL_LIB_ONLY=1 source "'"${FN_DEFS}"'" --quiet
+            source "'"${FN_DEFS}"'" --quiet
             for repo in "$@"; do
                 ff_one "${repo}" 0
             done
@@ -110,7 +100,7 @@ _run_ff_multi() {
     # capture that is byte-non-empty (a stray blank/whitespace line) must never read
     # as real dirt once filtered.
     run bash -c '
-        SLOT_CRON_FF_PULL_LIB_ONLY=1 source "'"${FN_DEFS}"'" --quiet
+        source "'"${FN_DEFS}"'" --quiet
         out="$(_filter_nonblank_porcelain "$(printf "\n")")"
         printf "[%s]" "$out"
     '
@@ -120,7 +110,7 @@ _run_ff_multi() {
 
 @test "_filter_nonblank_porcelain: real porcelain line -> kept verbatim" {
     run bash -c '
-        SLOT_CRON_FF_PULL_LIB_ONLY=1 source "'"${FN_DEFS}"'" --quiet
+        source "'"${FN_DEFS}"'" --quiet
         _filter_nonblank_porcelain "$(printf "M  tracked.txt")"
     '
     [ "$status" -eq 0 ]

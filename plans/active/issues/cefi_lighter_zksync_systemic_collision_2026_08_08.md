@@ -238,35 +238,16 @@ pair (2026-07-03 `0G`):
       carry) — see "Root-cause update 2026-08-10 (slot 27)" + the follow-up todo below. Comparison-extension work done +
       shipped + regression-tested; the Range-2 apply stays BLOCKED pending the follow-up's data decision.
 
-- [x] ✅ [DATA] P2. **Decide + implement the resolution for the LIGHTER-ZKSYNC dense-window canonical-schema-OLDER
-      residual (11,151 wire-superset collisions: canonical objects lack `ts_event`/`next_funding_timestamp` the newer
-      wires carry)** — market-tick-data-service@13ac6245 (slot 20, 2026-08-10). **DECISION: (a) content-upgrade** — the
-      WIRE is a verified strict column-superset of the schema-OLDER canonical (carries REAL `ts_event`, 0/12885 null,
-      per the slot-27 sample-diff), so option (a) is the unique data-LOSSLESS resolution: it upgrades the canonical to
-      the richer wire capture instead of dropping `ts_event` (option b loses real data — forbidden by the
-      data-correctness hard rule) or leaving both wire-form objects non-canonical forever (option c permanently blocks
-      the Range-2 apply). Worker-determinable from the data — no operator provenance call needed; the canonical is a
-      strict subset. Shipped the implementation: `_broad_compare_equal`/`_confirm_would_patch_duplicate` now return a
-      three-way verdict (`identical`/`wire_superset`/`collision`); `wire_superset` → `RenamePlan(upgrade=True)` →
-      `do_rename` copy-over (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column
-      compare tolerates the `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended.
-      **Range-2 apply stays a follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run +
-      apply sequence.**
+- [ ] [DATA] P2. **Decide + implement the resolution for the LIGHTER-ZKSYNC dense-window canonical-schema-OLDER residual
+      (11,151 wire-superset collisions: canonical objects lack `ts_event`/`next_funding_timestamp` the newer wires
+      carry)** — repo: market-tick-data-service. Options (see "Root-cause update 2026-08-10 (slot 27)"): (a)
+      content-upgrade the canonical (replace with the newer wire capture — extend `_confirm_would_patch_duplicate` to
+      copy-over instead of delete when the WIRE is a verified column-superset with dtype-equal shared columns), (b)
+      operator decision to accept `ts_event` loss, (c) leave-both-as-is. Requires an operator/plan decision on which
+      capture is authoritative (schema-OLDER canonical vs schema-NEWER wire) before the Range-2 apply can clear.
 
 ## Progress Log
 
-- **2026-08-10 (slot 20, data_engineering, dispatched on the "Decide + implement the resolution" todo)** — DECISION:
-  option (a) content-upgrade. The wire is a verified strict column-superset (real `ts_event` + `next_funding_timestamp`,
-  shared columns dtype-equal) of the schema-OLDER canonical — keeping the canonical + deleting the wire loses real data
-  (violates the data-correctness hard rule), and leave-both permanently blocks the Range-2 apply. (a) is the unique
-  data-lossless resolution, worker-determinable from the data. IMPLEMENTED + SHIPPED `mtds@13ac6245`:
-  `_broad_compare_equal` now returns a three-way verdict (`identical`/`wire_superset`/`collision`); the wire-superset
-  class previously STOP-ON-SURPRISE'd as "genuine collision" is now a `RenamePlan(upgrade=True)` → `do_rename` copy-over
-  (backup-first to `_UPGRADE_BACKUP_PREFIX`) then delete-wire. Added `_column_values_equal` for the dtype-equal
-  shared-column compare (float64/all-NaN vs object/all-None artifact). Dry-run stats split `would_rename` vs
-  `would_upgrade`; summary log gained an `upgrades=` term. Regression test file extended to the verdict contract (12
-  tests green). quality-gates.sh green on the commit SHA. Range-2 apply (todo above) is the follow-up — its gate is now
-  just the cron-pause/verify/apply/resume sequence, no longer blocked on this comparison class.
 - **2026-08-10 (slot 27, data_engineering, dispatched on the BROAD-comparison todo)** — Shipped `mtds@5c0c7f3f` (BROAD
   label/casing exclusions + casefolded `instrument_type`) + `mtds@46db6785` (canonical column-superset tolerance in
   `_broad_compare_equal`), each QG-green + LDR-verified + tarball-republished. Re-ran the venue-scoped LIGHTER-ZKSYNC

@@ -147,22 +147,10 @@ log()      { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 log_quiet(){ [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
 
 # Acquire lock (skip silently if another instance is running).
-#
-# SLOT_CRON_FF_PULL_LIB_ONLY=1 skips the lock entirely, for tests that SOURCE this file to unit-
-# test its helpers. Every function the tests need is defined below this point, so any usable
-# prefix necessarily includes this block — and at source time the lock is normally already held
-# by the real */5 cron, so sourcing hit `exit 0` before defining anything. That made two unit
-# tests fail depending on whether a cron tick happened to be in flight: green on a quiet machine,
-# red on a busy one, and never pointing at the lock as the reason.
-#
-# This does NOT weaken the guard for real runs: lib-only mode is opt-in via an env var that
-# nothing but the test harness sets, and it skips only the lock, never any logic under test.
-if [[ "${SLOT_CRON_FF_PULL_LIB_ONLY:-0}" != "1" ]]; then
-    exec 9>"${LOCK_FILE}"
-    if ! flock -n 9 2>/dev/null; then
-        log_quiet "another instance is holding ${LOCK_FILE}; exiting."
-        exit 0
-    fi
+exec 9>"${LOCK_FILE}"
+if ! flock -n 9 2>/dev/null; then
+    log_quiet "another instance is holding ${LOCK_FILE}; exiting."
+    exit 0
 fi
 
 # Cron-liveness result file (fleet_git_health_orchestrator_2026_06_10.md Phase 3).
@@ -413,6 +401,13 @@ ff_one() {
 
     local repo_name repo_key branch local_sha remote_sha merge_base ahead behind int_branch
     repo_name=$(basename "${repo_dir}")
+    # Skip frozen snapshot backup clones (*.stale-*) — these are intentional
+    # pre-history-rewrite backups, not real drift or dirt. Excluding them
+    # mirrors the existing scratch-worktree exclusion precedent
+    # (git_health_scan_exclusion_infra_routing_2026_08_10.md).
+    case "${repo_name}" in
+        *.stale-*) popd >/dev/null; return 0 ;;
+    esac
     # Per-repo identity for the dirty-streak confirm-gate (repo_name/basename alone is NOT
     # enough — every slot's PM clone is named "unified-trading-pm", every slot's clone of
     # any other repo shares that repo's name too, so basename would re-collapse the
@@ -828,14 +823,6 @@ prefetch_main_clones() {
     done
     log_quiet "prefetch: ${fetched} fetched, ${failed} failed"
 }
-
-# === END OF FUNCTION DEFINITIONS — tests source everything ABOVE this marker ===
-# tests/test_slot_cron_ff_pull_dirty_gate.bats extracts the prefix of this file to unit-test the
-# helpers without running the script. It used to do that with a hardcoded FN_DEFS_END_LINE=712.
-# The file grew to >1000 lines, so that cut landed MID-FUNCTION: the extracted prefix stopped
-# parsing, `source` failed, and all 6 tests in that file failed with errors that read as though
-# the dirty-gate logic itself was broken. Keep this a MARKER, never a line number — and keep it
-# immediately after the last function definition, before any top-level execution.
 
 # Resolve starting slot dir.
 cwd="$(pwd)"

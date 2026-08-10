@@ -715,13 +715,12 @@ pairs stay honest-unresolved (reported, never guessed).
   follow-up cleanup to a clearer default (`false`) so a future reader doesn't waste time investigating it as a suspected
   bug the way this session briefly did.
 
-- [x] ✅ [SCRIPT] P3. **deployment-service** — fix the confusing `FORCE="${FORCE:-250}"` default in
+- [ ] [SCRIPT] P3. **deployment-service** — fix the confusing `FORCE="${FORCE:-250}"` default in
       `scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (line ~61) to `FORCE="${FORCE:-false}"`. Harmless today
       (only the literal string `"true"` triggers `VM_FORCE=true` downstream) but reads as a bug — likely copy-pasted
       from the adjacent `DRY_RUN="${DRY_RUN:-250}"` line. **Done when**: default reads `false`, existing dry-run/force
       tests (if any target this script) still pass, `quality-gates.sh --no-fix` green. Source: this doc, slot-5
-      checkbox. **DONE 2026-08-10 (slot-29)**: default reads `FORCE="${FORCE:-false}"`; QG `--no-fix` green (exit 0);
-      shipped via quickmerge. Evidence: deployment-service@7b4c69d72 (verified ancestor of origin/live-defi-rollout).
+      checkbox.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries an operator-gated corpus-wide
   (~4.5M file) content `--apply`, a features schema-shape gap the doc says needs a real decision, and a 586-row

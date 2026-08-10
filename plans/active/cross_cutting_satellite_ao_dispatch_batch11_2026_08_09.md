@@ -73,16 +73,15 @@ drift_direction: advance-code
 
 ## Todos
 
-- [x] ✅ [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket — STALE PREMISE on
-      the named path + ADJACENT FIX in `_run_reprocess_shards`.** Source:
-      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. The named `_run_coverage_status` status-path bug
-      was already fixed at `instruments-service@086eeffe` (2026-08-03 — 6 days before this plan was authored): line 79
-      already routes through `get_instruments_bucket_for_asset_group`, the prediction-aware resolver. The ADJACENT
-      same-class bug in `_run_reprocess_shards` (line 295, still used
-      `get_write_bucket_name("instruments", asset_group)` — same BucketNamingError for prediction) was fixed in this
-      same commit. Done when: `--operation status --asset-group prediction` AND
-      `--operation reprocess-shards --asset-group prediction` both resolve the flat bucket. Repo:
-      instruments-service@c8e3686ca4.
+- [ ] [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket.** Source:
+      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. `_run_coverage_status` calls
+      `get_write_bucket_name("instruments", "prediction")` which raises `BucketNamingError` (the per-asset_group
+      instruments-store dict has no PREDICTION entry; prediction resolves via the FLAT
+      `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
+      `_get_instruments_bucket_for_asset_group` (the same resolver the write path already uses) so prediction status
+      renders. Display-only gap — the backfill WRITE path already works. Done when:
+      `--operation status --asset-group     prediction` runs without raising and renders coverage. Repo:
+      instruments-service.
 - [x] ✅ [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain — STALE
       PREMISE, already shipped (verification only).** Source: same doc. This exact fix landed on
       `instruments-service@6b7fbadf`/`ec73983e` (2026-08-05,
@@ -310,9 +309,3 @@ drift_direction: advance-code
   deliberately NOT extracted despite being named in the source doc's own audit list — on full read it is a
   multi-service, one-commit closed-set schema extension (UAC + MTDS + features-service + every OHLCV write-callsite),
   too broad a blast radius for a single bounded AO todo; left as-is in the source doc.
-- **2026-08-10**: Prediction flat-kind bucket item (P3, todo 1) flipped — STALE PREMISE on the named code path
-  (`_run_coverage_status` was already fixed at `instruments-service@086eeffe`, 2026-08-03, 6 days before this plan was
-  authored) + ADJACENT FIX for the same-class bug in `_run_reprocess_shards` (line 295 still used
-  `get_write_bucket_name("instruments", asset_group)` — same `BucketNamingError` for prediction). Route both through
-  `_get_instruments_bucket_for_asset_group`, the prediction-aware flat-kind resolver. Repo:
-  instruments-service@c8e3686ca4.

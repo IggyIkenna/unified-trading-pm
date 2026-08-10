@@ -44,7 +44,7 @@ summary: >-
   let in-flight executions drain naturally, and consolidate all lifecycle-events-sub consumption onto
   `dp-alerting-subscriber` — plus fix the stale base-image UAC dependency so the mirror_live gate works once
   dp-alerting-subscriber is the sole consumer.
-status: resolved
+status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -69,7 +69,7 @@ related:
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
   ]
 created: 2026-08-07
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 author: unknown
 priority: P3
 parent_epic: observability_master
@@ -96,13 +96,6 @@ context_scope:
     alerting-service/Dockerfile,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by slot 23 (infra) via the
-> standard 6-step ritual. The legacy `uts-prod-alerting-paging` Cloud Run Job + `uts-prod-alerting-paging-cron` Cloud
-> Scheduler trigger are deleted (confirmed NOT FOUND 2026-08-10); `dp-alerting-subscriber` is the sole
-> `lifecycle-events-sub` consumer. Successor/pointer:
-> `alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md` (now archived
-> alongside).
 
 ## Todos
 
@@ -151,10 +144,3 @@ context_scope:
   `issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`, both read-only context references, not
   trackers). Finalize twin authored:
   `alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md`.
-- **2026-08-10 (slot 23, infra)**: All todos `[x]`, no lock → doc archived via the standard 6-step ritual (this commit
-  adds the ARCHIVED banner + sets `status: resolved`; the `git mv` to `plans/archive/2026_08/issues/` follows as part of
-  the same archival). Codex-alignment check (`/codex/05-infrastructure/data-pipeline-alerts.md`): the doc references
-  `lifecycle-events-sub` only as the subscription dp-alerting-subscriber consumes — no live reference to the deleted
-  legacy Job — so no codex update needed. Referrers repointed: finalize plan `related`, observability_master epic,
-  `infra_health_audit_alert_coverage_gaps_2026_08_07.md`,
-  `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`.

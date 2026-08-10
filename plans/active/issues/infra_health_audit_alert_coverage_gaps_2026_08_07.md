@@ -58,7 +58,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md,
     /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,
-    /plans/archive/2026_08/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
+    /plans/active/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
     /plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md,
   ]
 created: 2026-08-07

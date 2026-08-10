@@ -10,7 +10,7 @@ summary: >-
   the standard 6-step ritual. Authored 2026-08-09 as part of the round-9 combined RECLASSIFY + satellite-extraction
   sweep, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning doc needs a companion gated
   finalize plan).
-status: complete
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -19,12 +19,12 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, alerting, dead-infra-cleanup]
 related:
   [
-    /plans/archive/2026_08/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
+    /plans/active/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -58,10 +58,6 @@ context_scope:
 
 # alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07 — finalize
 
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE** (status: complete, all todos `[x]`, unlocked). Archived by slot 23 (infra). Both
-> the source doc and this finalize plan are archived; the legacy `uts-prod-alerting-paging` Job + `-cron` scheduler are
-> deleted and `dp-alerting-subscriber` is the sole `lifecycle-events-sub` consumer.
-
 ## Todos
 
 - [x] ✅ [DATA] P3. **Reconcile.** Confirm `uts-prod-alerting-paging` (Cloud Run Job) and
@@ -70,24 +66,15 @@ context_scope:
       prematurely checked); now deleted via
       `gcloud scheduler jobs delete uts-prod-alerting-paging-cron --location=asia-northeast1`, confirmed NOT_FOUND. Both
       resources verified gone. Source doc checkbox already `[x]`.
-- [x] ✅ [DOC] P3. **Archive** `issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md` via
+- [ ] [DOC] P3. **Archive** `issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md` via
       the standard 6-step ritual (per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm
       todo 1's verification is recorded, add the archived-banner cross-reference, run the post-phase codex audit
       (`/codex/05-infrastructure/data-pipeline-alerts.md` — confirm it doesn't still reference the deleted legacy Job as
       a live consumer), update every corpus referrer, `git mv` to `plans/archive/2026_08/issues/`. Repo:
       unified-trading-pm. Done when: the source doc is at its archived path with every referrer updated and this
-      finalize plan's own todos all `[x]`. **Done**: source doc archived (status resolved, ARCHIVED banner added,
-      `git     mv`'d to `plans/archive/2026_08/issues/`); codex-alignment check clean (data-pipeline-alerts.md
-      references `lifecycle-events-sub` only as dp-alerting-subscriber's subscription, no live reference to the deleted
-      legacy Job); referrers repointed (observability_master epic, bats test, infra_health_audit, defi_consolidator);
-      this finalize plan set `status: complete` and archived alongside.
+      finalize plan's own todos all `[x]`.
 
 ## Progress Log
 
 - 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep): drafted alongside the source doc's
   `assigned_vm: NA -> planning` reclassification.
-- 2026-08-10 (slot 23, infra): todo 1's verification already recorded (slot 7, 2026-08-10 — both
-  `uts-prod-alerting-paging` and `-cron` deleted, confirmed NOT FOUND). Completed todo 2 (archive source doc) via the
-  standard 6-step ritual — source doc `status: resolved` + ARCHIVED banner, codex-alignment check clean, all referrers
-  repointed, `git mv`'d to `plans/archive/2026_08/issues/`. This finalize plan set `status: complete` + ARCHIVED banner
-  and archived alongside.
