@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                      (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                      #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                      walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                      pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                      content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                      then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                      re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                      273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                      build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                      verification.
+                          (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                          #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                          walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                          pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                          content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                          then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                          re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                          273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                          build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                          verification.
 
 - [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -898,3 +898,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-prediction-shape4-merge-20260810-200603/`
   (run.log = migration progress; EXIT_STATUS + VM auto-shutdown = terminal). 4b-iii checkbox stays OPEN until the VM run
   completes (expected many-hours; same multi-session pattern as 4b-i).
+
+- **2026-08-10T20:09Z (slot 25, data_engineering, 4b-iii continuation)**: **VM STARTED VERIFIED (not fire-and-forget).**
+  Serial console (20:08:20): setup completed exit 0 (UAC OK 390 leagues, MTDS OK, deps installed); migration launched
+  PID 4983/4997
+  `python -u scripts/migrate_prediction_trades_shape4_2026_08_10.py --start-date 2025-03-14 --end-date 2026-04-14 --apply --delete-legacy`,
+  `VM_MODE=full`, `VM_ASSET_GROUP=PREDICTION`; python process still running after startup-scripts.service detached; GCS
+  run.log appeared (migration teeing progress). Migration now runs (many hours, day-by-day; deletes only
+  content-verified cells, keeps + flags the subset-divergent cells). **Resume when the VM completes** (EXIT_STATUS +
+  auto-shutdown): read the migration report from the GCS vm-logs run.log, verify 0-loss + post-delete counts, then flip
+  4b-iii. Separately: deployment-service QG (e25dcfb3) still QUEUED on the saturated host — quickmerge when green (does
+  NOT block the VM).
