@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Glassnode + Kaiko on-chain analytics — no credential provisioned (BLOCKED-CREDENTIALS)
+title:
+  "Glassnode on-chain analytics — no credential provisioned (BLOCKED-CREDENTIALS). Kaiko half CLOSED 2026-08-10 (removed
+  vendor)"
 summary: >-
   Neither `glassnode-api-key` nor `kaiko-api-key` exists in GCP Secret Manager (central-element-323112) as of 2026-08-09
   (confirmed: `gcloud secrets list` returns no match for either name or any obvious variant). Glassnode's adapter code
@@ -17,7 +19,8 @@ asset_group: [cross-cutting]
 stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: [credential-ask, glassnode, kaiko, on-chain-analytics, blocked-credentials, external-data-always-available]
+tags:
+  [credential-ask, glassnode, on-chain-analytics, blocked-credentials, external-data-always-available, kaiko-removed]
 related:
   [
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
@@ -48,13 +51,13 @@ source:
   ]
 ---
 
-> **🔴 2026-08-10 OPERATOR RULING — the KAIKO half of this ask is CLOSED. Do NOT provision `kaiko-api-key`.** Kaiko is a
-> removed provider workspace-wide, not just in DeFi execution. This ask was written in good faith: CLAUDE.md's
-> removed-providers list sits under its "Working on DeFi EXECUTION?" conditional bullet, so it did not obviously bind an
-> MTDS on-chain-**analytics** adapter. The operator ruled on 2026-08-10 that the ban is fleet-wide. The scaffolded
-> `kaiko.py` adapter, its test, its `PLANNED_VENUES` entry and its UAC `SourceCapability` are all being deleted under
-> `/plans/active/kaiko_provider_removal_2026_08_10.md` (no shim — CLAUDE.md's delete-deprecated-code rule), and the
-> CLAUDE.md wording is being fixed there so the ambiguity cannot recur.
+> **✅ 2026-08-10 — RESCOPED TO GLASSNODE ONLY. The Kaiko half is CLOSED and its scaffold is DELETED.** Do NOT provision
+> `kaiko-api-key`. Kaiko is a removed provider workspace-wide, not just in DeFi execution. This ask was written in good
+> faith: CLAUDE.md's removed-providers list sits under its "Working on DeFi EXECUTION?" conditional bullet, so it did
+> not obviously bind an MTDS on-chain-**analytics** adapter. The operator ruled on 2026-08-10 that the ban is
+> fleet-wide. The scaffolded `kaiko.py` adapter, its test, its `PLANNED_VENUES` entry and its UAC `SourceCapability` are
+> all being deleted under `/plans/active/kaiko_provider_removal_2026_08_10.md` (no shim — CLAUDE.md's
+> delete-deprecated-code rule), and the CLAUDE.md wording is being fixed there so the ambiguity cannot recur.
 >
 > **The GLASSNODE half of this ask remains OPEN and live** — Glassnode is not a removed provider, `glassnode-api-key` is
 > still unprovisioned in Secret Manager, and per `/codex/02-data/external-data-always-available-rule.md` exhausting the
@@ -118,3 +121,16 @@ each depending on plan). Once provisioned:
   resolved), Helius/Alchemy/Databento/Odds-API all carry live secrets already. Scaffolded `KaikoAdapter` + 18 mocked
   unit tests (`market-tick-data-service@<see plan-flip commit>`); Glassnode's existing scaffold (370-line adapter + 26
   unit tests, already shipped 2026-05-21) re-verified still green, no changes needed.
+
+## Kaiko removal COMPLETE (2026-08-10)
+
+The Kaiko scaffold this ask was filed for no longer exists anywhere: `unified-api-contracts@c48238266b` (capability +
+base URL + registry membership) and `market-tick-data-service@da86db197e` (adapter, test, `PLANNED_VENUES` entry,
+docstring) — both QG-green and ancestry-verified on LDR. `rg -il kaiko` across the workspace returns zero integration
+references; the only survivors are prose records of the ban and two investor-relations lines naming Kaiko as a market
+COMPETITOR.
+
+**What remains open on this doc is the GLASSNODE half only**: `glassnode-api-key` is still unprovisioned in Secret
+Manager, Glassnode is NOT a removed vendor, and per `/codex/02-data/external-data-always-available-rule.md` exhausting
+the free path is a credential ask rather than a descope. Tracked for the operator on
+`/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.

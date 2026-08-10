@@ -92,22 +92,36 @@ have.
       from `unified_api_contracts/registry/capability_declarations/_altdata.py` and its re-export from that package's
       `__init__.py`. **Done when**: `rg -ci kaiko` returns 0 across `unified-api-contracts/` (excluding `.venv`), and
       `bash scripts/quality-gates.sh` is green in that repo. Ship via quickmerge.
-- [ ] [DATA] P2. **Remove the MTDS adapter and its wiring.** Delete
-      `market_tick_data_service/market_interface/adapters/onchain/kaiko.py` and `tests/unit/test_kaiko_adapter.py`
-      outright (no shim, no deprecation stub — CLAUDE.md's delete-deprecated-code rule), remove the export from
-      `adapters/onchain/__init__.py`, and remove the `"kaiko": "analytics"` entry from `market_interface/factory.py`'s
-      `PLANNED_VENUES`. Kaiko was parked in `PLANNED_VENUES` and never wired into `get_adapter()`, so no runtime
-      resolution path changes — state that explicitly in the commit. **Done when**: `rg -ci kaiko` returns 0 across
-      `market-tick-data-service/` (excluding `.venv`), and `bash scripts/quality-gates.sh` is green. Ship via
-      quickmerge.
-- [ ] [DATA] P3. **Update the PM QG carve-out comment.** `scripts/quality-gates-base/base-service.sh` (~line 3877)
+- [x] ✅ [DATA] P2. **DONE 2026-08-10 — `market-tick-data-service@da86db197e`** (QG ALL PASSED 1177s, sentinel
+      36df62e78; post-push ancestry verified on LDR). Deletions confirmed to have actually LANDED on origin —
+      `git cat-file -e FETCH_HEAD:...kaiko.py` and the test both absent, `PLANNED_VENUES` kaiko count 0 — rather than
+      trusting the ship report, because the same session proved a ship script can land a create-only commit. **Remove
+      the MTDS adapter and its wiring.** Delete `market_tick_data_service/market_interface/adapters/onchain/kaiko.py`
+      and `tests/unit/test_kaiko_adapter.py` outright (no shim, no deprecation stub — CLAUDE.md's delete-deprecated-code
+      rule), remove the export from `adapters/onchain/__init__.py`, and remove the `"kaiko": "analytics"` entry from
+      `market_interface/factory.py`'s `PLANNED_VENUES`. Kaiko was parked in `PLANNED_VENUES` and never wired into
+      `get_adapter()`, so no runtime resolution path changes — state that explicitly in the commit. **Done when**:
+      `rg -ci kaiko` returns 0 across `market-tick-data-service/` (excluding `.venv`), and
+      `bash scripts/quality-gates.sh` is green. Ship via quickmerge.
+- [x] ✅ [DATA] P3. **DONE 2026-08-10 — `unified-trading-pm@026ed5ab52`.** Dropped `kaiko` from the
+      `onchain/{glassnode,helius_solana,kaiko}.py` carve-out prose AND lowered `_RETRY_SAFE_DEFAULT_BASELINE` 3 → 2,
+      since the 3 existed solely for `kaiko.py` and baselines only ever go DOWN — leaving it would bake in a permanent
+      slack whitelist slot. Rule 11(a) blast-radius proof done FIRST: the `_RSD_PATTERN` has exactly 2 CODE sites
+      fleet-wide, both MTDS (`glassnode.py:238`, `helius_solana.py:261`); every other repo has 0, so baseline 2 cannot
+      fail any repo. **Update the PM QG carve-out comment.** `scripts/quality-gates-base/base-service.sh` (~line 3877)
       documents a 2026-08-09 carve-out naming `onchain/{glassnode,helius_solana,kaiko}.py`. Drop `kaiko` from that list
       and from the surrounding prose so the comment does not describe a file that no longer exists. Do NOT weaken the
       carve-out for the two remaining adapters. **Done when**: the comment names only the surviving adapters and PM QG
       is green. `scripts/**` reaches main via the D16 carve-out, not quickmerge.
-- [ ] [DOCS] P2. **Fix the CLAUDE.md ambiguity that caused this.** The removed-providers list lives under the "Working
-      on DeFi EXECUTION?" conditional bullet, which made a workspace-wide ban look execution-scoped. Move or restate it
-      so the ban reads as fleet-wide regardless of the touching subsystem, honouring the file's ≤40 KB budget
+- [x] ✅ [DOCS] P2. **DONE 2026-08-10 — `unified-trading-pm@026ed5ab52`.** The removed-vendor ban moved out of the
+      conditional "Working on DeFi EXECUTION?" bullet into the **always-on** coding-standards section, worded
+      fleet-wide. Size budget honoured throughout: a concurrent peer edit pushed the file 113 B OVER the 40,960 B hard
+      cap mid-session; condensed (and reclaimed the now-redundant DeFi-bullet pointer) to land at 40,936 B rather than
+      raising the cap. The rationale + the generalisable lesson went to
+      `/codex/04-architecture/defi-execution-overview.md` § "Removed vendors", not into CLAUDE.md — SSOT direction.
+      **Fix the CLAUDE.md ambiguity that caused this.** The removed-providers list lives under the "Working on DeFi
+      EXECUTION?" conditional bullet, which made a workspace-wide ban look execution-scoped. Move or restate it so the
+      ban reads as fleet-wide regardless of the touching subsystem, honouring the file's ≤40 KB budget
       (`check_agent_rules_size_cap.py`) — condense elsewhere rather than growing the file, and never raise the cap.
       **Done when**: a worker reading only the always-on section would know not to scaffold a Kaiko adapter, and the
       size cap still passes.
@@ -123,3 +137,61 @@ have.
 - **2026-08-10** — Authored after flagging the CLAUDE.md scope ambiguity to the operator, who ruled Kaiko banned
   outright. Consumer set enumerated live (7 files, ~70 refs). Confirmed Kaiko sits in `PLANNED_VENUES` only and is not
   reachable through `get_adapter()`, so removal carries no runtime behaviour change.
+
+- **2026-08-10 — AO backlog VERIFIED live (not inferred).** Queried the running orchestrator read-only via SSM
+  (`check-ao-backlog-status.sh <filter>`; TOTAL_TASKS=3154). All four plans authored/fixed this session are ingested:
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1` **22** tasks, `deployment_api_unauthenticated_prod_p0` **9** (one
+  already `status=dispatched dispatched_to=9` — a worker is on the unauthenticated-prod P0), `kaiko_provider_removal`
+  **6**, `ao_satellite_ao_dispatch_batch19` **5**. batch19 contributing at all is the proof its dispatch-enablement fix
+  was needed: at the `assigned_vm: NA` + `execution_scope: local-only` it was authored with, it would have contributed
+  zero and the operator's approval would have been silently inert. **Method note for the next agent**: an unfiltered run
+  truncates its listing, so absence there is a DISPLAY artifact, not evidence — always re-query with the plan-name
+  filter (`$1`) before concluding a plan is missing, and never run it with `2>/dev/null` (a wrong cwd fails silently and
+  looks identical to "no matching tasks").
+
+## FINAL REPORT (rule 9) — 2026-08-10 autonomous close-out
+
+**All 4 todos done and shipped.** `unified-api-contracts@c48238266b` → `market-tick-data-service@da86db197e` (UAC first,
+dependency order) → `unified-trading-pm@026ed5ab52` (QG carve-out + CLAUDE.md + codex). Zero live Kaiko integration
+references remain workspace-wide; the two surviving `.ts` hits name Kaiko as a market COMPETITOR in investor-relations
+copy, which this plan's scope note explicitly excludes.
+
+### Forced tradeoffs decided under rule 1 (no operator asked)
+
+1. **Lowered `_RETRY_SAFE_DEFAULT_BASELINE` 3 → 2** rather than leaving slack. The 3 existed solely for `kaiko.py`;
+   baselines only ever go DOWN, so leaving it would have permanently widened a whitelist. Lowering it makes the gate
+   STRICTER, so rule 11(a) required proving the whole fleet passes first — counted the pattern across every repo:
+   exactly 2 code sites, both MTDS. Every other repo has 0.
+2. **Condensed CLAUDE.md instead of raising its cap.** A concurrent peer edit pushed it 113 B over the 40,960 B hard cap
+   mid-session. The size-budget rule says condense and migrate to codex, never raise — so the rule was tightened to 156
+   B and its rationale moved to the codex SSOT. Final 40,936 B.
+3. **Filed the `safe-doc-push` defect rather than fixing it inline** —
+   `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`, P1, 5 todos. It touches a
+   fleet-wide ship script every repo and agent depends on; under rule 11 that wants its own regression test and
+   blast-radius check, not a patch buried in a docs close-out. This is the ONE thing consciously not completed here.
+
+### Defects introduced by this session and caught before hand-off
+
+- **Create-only archive commit.** `8ac88720e6` landed 17 adds and zero deletes, duplicating every archived doc at its
+  old `plans/active/` path where the AO backlog still read it as open. Root cause: isolated-worktree mode syncs by
+  COPYING named files, and a deleted file has nothing to copy. Recovered in `1653006e52` via `SDP_ISOLATED=0` after
+  confirming all 17 pairs were byte-identical (no divergence). Caught only by diffing origin, not by any exit code.
+- **The batch19 approval was inert.** `status: draft → active` was flipped as its source doc instructed, but the doc was
+  authored `assigned_vm: NA` + `execution_scope: local-only` — both rejected by `_plan_contributes_briefs`. Corrected to
+  match its peers; it now contributes 5 backlog tasks where it would have contributed 0.
+
+### Standing lesson for the next agent
+
+**A ship script's exit code is not evidence of what reached origin.** Three separate times this session a script
+returned 0 (or a truncated log implied success) while landing nothing or landing a partial commit. Verify with
+`git log`/`git ls-tree`/`git cat-file` against `FETCH_HEAD` every time, and never pipe a ship script through `tail`.
+
+### Verified end-state
+
+| Surface                          | Result                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| ag-closeout parked corpus        | 28 → 10 docs · 62 → 17 open todos · 18 → 0 `[OPERATOR]` · 0 duplicates               |
+| PM commits on origin             | 9                                                                                    |
+| Code shipped                     | UAC `c48238266b`, MTDS `da86db197e` — both QG-green, ancestry-verified               |
+| AO backlog (live, SSM read-only) | batch1 **22** tasks · P0 **9** (one `dispatched_to=9`) · kaiko **6** · batch19 **5** |
+| Operator residue                 | 6 genuine items + 6 design calls, consolidated onto ONE list, none left scattered    |
