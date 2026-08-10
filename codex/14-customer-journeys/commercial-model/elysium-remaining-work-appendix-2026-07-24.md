@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
 title: Elysium — Phase 2 remaining-work appendix (2026-07-24)
-summary:
-  Companion appendix to the 2026-07-20 delay letter — plain-English breakdown of what's left before the staked-basis and
-  perp-basis carry strategies go live for Elysium (OKX, Bybit, Binance, Deribit, Lido) — historical backfill,
-  staking/funding-rate completeness, instrument-naming standardisation cutover, and live-collection resume, plus broader
-  estate work that doesn't gate the client's strategies.
+summary: >-
+  Companion appendix to the Phase-2 delay letter, sent to Elysium as `ODUM_Elysium_Remaining_Work_Appendix.docx` — a
+  formatted programme-status report carrying a ten-row percentage-complete table (Strategy Research 100% down to
+  Production Rollout 50%), a six-step critical path to production, and a ten-row "scope delivered beyond original
+  specification" table. Replaces the prose "critical path / broader estate work" draft that previously occupied this
+  file and was never sent to the client.
 status: current
 nature: record
 asset_group: [meta]
@@ -18,52 +19,79 @@ related:
     /codex/14-customer-journeys/commercial-model/elysium-delay-letter-2026-07-20.md,
     /codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md,
     /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
   ]
 created: 2026-07-24
-authoritative_for: [exact wording of the Elysium Phase-2 remaining-work appendix sent 2026-07-24]
+last_updated: "2026-08-10"
+authoritative_for: [exact content of the Elysium Phase-2 remaining-work appendix as sent to the client]
 referenced_by: []
 owner:
-last_reviewed:
+last_reviewed: 2026-08-10
 code_refs: []
 ---
 
-# Appendix: Remaining work to production (high level)
+> **Provenance (2026-08-10 reconciliation).** This file records the appendix **as actually sent**, extracted from
+> `~/Downloads/ODUM_Elysium_Remaining_Work_Appendix.docx` (mtime 2026-07-29 18:56). The prose "critical path / broader
+> estate work" narrative previously held here was a draft that was **never sent**; it remains in git history at the
+> commit prior to this one. Do not re-cite the prose version as client-facing wording.
+>
+> **Send-date caveat.** Both client attachments carry mtime 2026-07-29, and the sent covering letter opens with wording
+> absent from the 2026-07-20 draft — so the real send was likely ~29 July, not the 24th in this filename. Confirming and
+> redating is a tracked todo on
+> [`elysium_sla_v4_support_period_and_stale_dates_2026_08_08`](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
 
-_Companion to the Phase 2 update. This is the honest, plain-English view of what is left before the two strategies
-(staked-basis carry and perp-basis carry, across OKX, Bybit, Binance, Deribit and Lido) are running live. Most of it is
-completing and hardening the underlying market-data pipeline; the strategy logic and execution machinery are
-substantially built._
+# ODUM Research
 
-**Critical path to your two strategies going live**
+## Appendix: Remaining Work to Production
 
-- **Historical market-data backfill.** Filling the complete trade, price and funding history for your venues. A
-  bottleneck that had been capping our fetch throughput has been found and fixed; the remaining gap is now on the order
-  of a day or two of compute rather than the much longer ceiling we'd feared. _In progress, tail remaining._
+**Programme Status | July 2026**
 
-- **Staking- and funding-rate completeness.** Making sure the specific inputs these carry strategies live on (staking
-  and exchange rates for assets like Lido stETH, and perpetual funding rates on each exchange) are complete and
-  continuous rather than patchy. _In progress._
+## Executive summary
 
-- **Instrument-naming standardisation.** A large, mostly mechanical migration that gives every instrument one consistent
-  identity across storage, records and indexes, so the same contract is never mislabelled or double-counted. The
-  migration code is written and validated in dry-runs; the production cutover is staged and waiting on a maintenance
-  window. _Substantially built, cutover pending. Gates your venues specifically; the rest is estate-wide._
+Core strategy engineering is substantially complete. Remaining work is focused on data completion, production
+integration and operational validation before live deployment. Current target is production readiness during September
+2026, with formal acceptance during October 2026.
 
-- **Live-collection resume and execution wiring (final mile).** Restarting the live data collectors we paused during the
-  migration, and completing the exchange-execution credentials for the trade venues. The very last step, moving onto a
-  live wallet, is a deliberate human sign-off rather than anything automated. _Queued behind the backfill._
+## Overall Programme Status
 
-**Broader estate work (does not gate your strategies)**
+| Area                | Progress        | Status        |
+| ------------------- | --------------- | ------------- |
+| Strategy Research   | 🟩🟩🟩🟩🟩 100% | Complete      |
+| Execution Engine    | 🟩🟩🟩🟩⬜ 90%  | Final wiring  |
+| Risk Management     | 🟩🟩🟩🟩⬜ 90%  | Core complete |
+| Monitoring          | 🟩🟩🟩🟩⬜ 90%  | Core complete |
+| Accounting          | 🟩🟩🟩🟩⬜ 90%  | Core complete |
+| Capital Allocation  | 🟩🟩🟩🟨⬜ 85%  | Live wiring   |
+| Venue Integration   | 🟩🟩🟩🟨⬜ 85%  | Final wiring  |
+| Canonical Data      | 🟩🟩🟩🟨⬜ 85%  | Validation    |
+| Historical Backfill | 🟩🟩🟩🟨⬜ 75%  | Compute       |
+| Production Rollout  | 🟩🟩🟨⬜⬜ 50%  | Remaining     |
 
-- **Honest completeness accounting.** Making our data-completeness figures count genuine gaps honestly rather than
-  flattering themselves, and restoring a clean internal view of exactly what data exists. _In progress._
+## Critical Path to Production
 
-- **Pipeline verification and quality gating.** End-to-end checks that derived data (candles, features) matches its
-  source, plus tidying a few internal coverage registries. _In progress._
+1. Complete historical market-data backfill
+2. Complete funding & staking validation
+3. Production cutover for canonical instrument naming
+4. Exchange credentials and live execution wiring
+5. End-to-end production validation
+6. Shadow production followed by live deployment
 
-- **Estate cleanup.** Removing decommissioned venues, legacy storage and orphaned files. _In progress, cosmetic to you._
+## Scope Delivered Beyond Original Specification
 
-**Bottom line:** most of what's left is data-pipeline completion and hardening. The strategy models, the execution
-engine, the risk controls and the monitoring are already built; the remaining effort is getting the full, clean data
-behind them and completing the final live wiring. We'll walk through any of this in as much depth as you'd like on a
-call.
+| Capability                             | Included |
+| -------------------------------------- | -------- |
+| Per-client fund isolation              | ✓        |
+| Automated capital allocation           | ✓        |
+| 24/7 monitoring & recovery             | ✓        |
+| Canonical market-data platform (>30TB) | ✓        |
+| Deterministic replay                   | ✓        |
+| Registry-driven venue architecture     | ✓        |
+| CI/CD & deployment automation          | ✓        |
+| Agent-assisted engineering             | ✓        |
+| Deribit integration                    | ✓        |
+| 30-day support period                  | ✓        |
+
+## Bottom Line
+
+The difficult engineering is largely behind us. The remaining work is primarily data completion, production integration
+and validation rather than research or architectural redesign.
