@@ -91,16 +91,10 @@ collapsing them into one number the way the archived doc did.
 
 ## Todos
 
-- [x] ✅ [DOC] P2. **Populate `/codex/09-strategy/architecture-v2/families/market-making.md`** with a formal Latency
+- [ ] [DOC] P2. **Populate `/codex/09-strategy/architecture-v2/families/market-making.md`** with a formal Latency
       Requirements section (tick-to-signal / signal-to-order / order-to-fill / total E2E / category = `Low`), citing the
       archived `_archived_pre_v2/cross-cutting/latency-profiles.md` table as the baseline, confirming or correcting its
-      numbers against this doc's own existing (informal) latency mentions. **Done**: `unified-trading-pm@aa2a89a2d9` —
-      formal `## Latency Requirements` section added (tick-to-signal <50ms / signal-to-order <50ms / order-to-fill
-      venue-dep. / total E2E <100ms / category `Low`, archived baseline confirmed + cited with venue baselines), plus a
-      `### Decision latency vs. inter-leg execution gap` subsection (options-MM delta-hedge + cross-venue quote legs at
-      ms timing per the 2026-08-10 operator ruling,
-      `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`) and the
-      Low→`co_located_vm` deployment implication referencing `runtime-topology.yaml` + the SLA-tier doc.
+      numbers against this doc's own existing (informal) latency mentions.
 - [ ] [DOC] P2. **Populate `arbitrage-structural.md`** with the same section, category `Low`, distinguishing stat-arb
       vs. cross-exchange arb's inter-leg execution gap explicitly (two legs on two different venues — the gap is the
       real risk surface).
@@ -149,11 +143,3 @@ collapsing them into one number the way the archived doc did.
   ml-directional/rules-directional/arbitrage as needing the same treatment, distinguishing inter-leg execution timing
   from decision latency. AO-dispatchable per operator direction; this audit phase is gated to produce a forced,
   unambiguous decision so the execution phase requires no further architectural judgment.
-- **quant_dev (slot 9) 2026-08-10T13:45Z**: Todo 1 done. Added formal `## Latency Requirements` to `market-making.md`
-  (`unified-trading-pm@aa2a89a2d9`): category `Low`, tick-to-signal <50ms / signal-to-order <50ms / order-to-fill
-  venue-dep. (with archived CeFi venue baselines cited) / total E2E <100ms — archived `latency-profiles.md` Market
-  Making row confirmed, not corrected (consistent with the doc's existing sub-ms shadow + delta-proxy fast path +
-  latency-spike kill switch). Includes the `### Decision latency vs. inter-leg execution gap` subsection (options-MM
-  delta-hedge + cross-venue quote legs must track at ms timing per the 2026-08-10 operator ruling) and the
-  Low→`co_located_vm` deployment implication cross-referencing `runtime-topology.yaml` and
-  `client-isolation-sla-and-runtime-profiles.md` § 6 (MM = exec+strategy co-located, min SLA premium).
