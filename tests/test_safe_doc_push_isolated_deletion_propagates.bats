@@ -10,7 +10,8 @@
 # operation, so this misfired quietly every time anyone did it from isolated mode.
 #
 # The distinction that makes the fix safe: absent-and-tracked-on-origin is a DELETION; absent-and-
-# untracked is a caller typo, and must still warn rather than silently do nothing.
+# untracked is a caller typo, and must fail loudly (exit non-zero naming the path) rather than
+# silently skip it.
 #
 # Replicates the loop's exact decision (mirrors the established pattern in
 # test_quickmerge_stage5_no_regression_guard.bats), exercised against REAL local git repos
@@ -21,7 +22,7 @@
 # ── helper: the loop's decision, replicated verbatim from safe-doc-push.sh ─────
 
 # Args: $1=caller repo dir  $2=worktree dir  $3=BRANCH  $4=path
-# Echoes the branch taken: "deleted" | "copied" | "skipped".
+# Echoes the branch taken: "deleted" | "copied" — or exits 2 on the caller-error case.
 _run_iso_copy_decision() {
     local caller="$1" wt="$2" branch="$3" f="$4"
     (
@@ -32,8 +33,8 @@ _run_iso_copy_decision() {
                 echo "deleted"
                 exit 0
             fi
-            echo "skipped"
-            exit 0
+            echo "failed: named path exists in neither the caller tree nor origin/$branch: $f" >&2
+            exit 2
         fi
         mkdir -p "$wt/$(dirname "$f")" 2>/dev/null || true
         cp "$f" "$wt/$f"
@@ -83,10 +84,10 @@ teardown() {
     [[ "$output" == D*"plans/active/issues/thing.md" ]]
 }
 
-@test "a path absent AND untracked is still a caller typo, not a deletion" {
+@test "a path absent AND untracked is a caller error — fails loudly, naming the path" {
     run _run_iso_copy_decision "$TEST_ROOT/caller" "$TEST_ROOT/wt" "$BRANCH" "plans/active/issues/never_existed.md"
-    [ "$status" -eq 0 ]
-    [ "$output" = "skipped" ]
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"never_existed.md"* ]]
 }
 
 @test "an ordinary present file is still copied, not touched by the deletion path" {
