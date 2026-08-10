@@ -242,3 +242,29 @@ the VM-scale run:
   batches, both already gone) the same way — `gcloud compute instances describe` (gone = terminal) +
   `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the result line — before assuming a
   re-launch is needed.
+
+  Promoted the scratch relaunch script into a permanent launcher (no dedicated launcher existed for this
+  `--model-id`-driven CLI shape — `launch-ml-training-vm.sh` only covers the `--instruments`/`--target-types` shape) —
+  `deployment-service@64f4cb9c`, `scripts/vm/launch-sports-ensemble-train-vm.sh`, bakes in both CLI footguns
+  (`--mode batch`, `--asset-group SPORTS`) so a future relaunch doesn't rediscover them. `bash -n` + dry-run +
+  shellcheck + full `quality-gates.sh` all green before shipping.
+
+  As of 2026-08-10T~01:22Z (~2h20m after the ~23:00-23:01 UTC 2026-08-09 launch), all 5 third-attempt VMs are still
+  `RUNNING` with only `PIPELINE_HEARTBEAT` lines in `run.log` (no `CLVTargetBuilder: built ... non-null` result line yet
+  for any of them) — consistent with a multi-hour real GCS feature load + ensemble train per model, not a stall. Session
+  is compacting here; todo 2 stays unchecked (genuinely not done — needs elapsed wall-clock time on GCE, not more code
+  or a decision). See `## Deferred work after 2026-08-10` below for what the next session should do.
+
+## Deferred work after 2026-08-10
+
+| Item                                                                                                                                                | State / why deferred                                                                                                                                 | Blocked on                              |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Monitor the 5 third-attempt VMs to terminal, extract each `run.log` result line                                                                     | Cannot be done yet — needs real elapsed time on GCE (multi-year GCS feature load + ensemble train per model); all 5 still `RUNNING` as of last check | Elapsed time / GCE compute              |
+| Write measured coverage + rmse/mae/r2-per-outcome delta into this doc AND `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` | Not done — depends on the item above                                                                                                                 | The item above                          |
+| Flip todo 2's checkbox with evidence (`ml-service@68a4b82` + 5 result lines)                                                                        | Not done — depends on the two items above                                                                                                            | The two items above                     |
+| If any model still honest-absence-aborts even with the `merge_clv_target_columns` fix                                                               | Not started — would be a NEW finding requiring its own issue doc per findings-closure rules, not a silent retry                                      | Depends on what the VMs actually report |
+
+**Recommended next item**: check `gcloud compute instances list --filter="name~ml-train-sports-model"` — once a VM
+disappears (self-deleted, `VM_SHUTDOWN_ON_COMPLETION=true`) it's terminal; pull its `run.log` first since it's the most
+informative one to have resolved. Do not re-launch anything unless a `run.log` shows a genuine new failure (not "still
+running").
