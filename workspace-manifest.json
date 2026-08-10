@@ -1531,7 +1531,7 @@
         "large_file_count": 19,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
     },
     "unified-trading-ci": {
