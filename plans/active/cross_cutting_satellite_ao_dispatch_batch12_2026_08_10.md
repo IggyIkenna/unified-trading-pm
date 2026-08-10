@@ -137,3 +137,28 @@ drift_direction: advance-code
       the evidence either way.
 
 ## Progress Log
+
+### 2026-08-10 — Slot 14 (infra worker, task `cross_cutting_satellite_ao_dispatch_batch12-c5f4926839b9`)
+
+**Todo 7 — Phase B CeFi MDPS top-up + delta_one funding_oi/realized_vol verification (first re-check).**
+
+Re-check verdict: **MDPS top-up IS needed.** `derivative_ticker` processed candles are completely missing for all CeFi
+perp venues at all timeframes in the prod bucket. Raw `derivative_ticker` data exists (BINANCE-FUTURES perpetual,
+HYPERLIQUID perpetual, etc.) but MDPS has never generated the processed candles. `trades` candles exist (can compute
+`realized_vol`). `funding_oi` needs `derivative_ticker` per the UAC SSOT
+(`FEATURE_GROUP_DATA_TYPES["funding_oi"] = "derivative_ticker"`).
+
+**IAM self-fix**: `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` lacked `storage.objects.create` on the
+test bucket `market-data-tick-cefi-test-central-element-323112`. Granted `roles/storage.objectCreator` (least-privilege
+— write-only, no delete). The first MDPS VM wrote zero candles (403 on every object) before this was caught.
+
+**MDPS launch 1** (SPOT, `mdps-backfill-cefi-20260810-111849`): `derivative_ticker` only, `1h` timeframe,
+`cefi 2026-08-01..08-03`, writing to `gs://market-data-tick-cefi-test-central-element-323112`. Completed Aug 1 (4,298
+instruments, 3 pipeline modes: batch_aster, batch_extended, batch_hyperliquid) then SPOT-preempted before Aug 2.
+
+**MDPS launch 2** (ON-DEMAND, non-SPOT, relaunched ~11:31 UTC): same scope. Aug 1 already written → should be skipped
+(MDPS incremental mode). Expected to complete Aug 2-3 within ~20 min.
+
+**Next**: wait for MDPS completion →
+`IS_TEST_RUN=true PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112 features-service --feature-family delta_one --operation compute --mode batch --asset-group CEFI --start-date 2026-08-01 --end-date 2026-08-03 --feature-group funding_oi --timeframe 1h`
+(and same for `returns`) → read-back verify → flip checkbox.
