@@ -186,3 +186,10 @@ as this update.
   doc's main question was resolved via an explicit 2026-08-02 operator ruling (`BLK-5aa3ce78`), the sole remaining item
   is a self-described non-actionable standing tripwire for a future connector change, kept open (not archived) per the
   doc's own Progress Log.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks) — none apply. The sole open item has "no current trigger condition" by its own explicit wording (a
+  standing tripwire for a future connector change that does not exist today) — not worker-determinable. No
+  reclassification.

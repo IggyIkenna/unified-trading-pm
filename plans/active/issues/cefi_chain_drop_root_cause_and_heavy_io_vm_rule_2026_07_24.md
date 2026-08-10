@@ -461,6 +461,83 @@ original 6-date pattern plus a recurring, mislabel-driven DERIBIT trickle across
   range (venue scoping fully isolates a run from other venues' collisions, so this sidesteps the whole "which of the 6
   dates is safe" question cleanly). Next step, still under the same cron-pause drain gate.
 
+## Finding 11 (2026-08-09) — sample-compare of the HYPERLIQUID/ASTER collisions: NOT genuinely-different content — the "collision" is entirely a label/metadata-convention artifact; a safe zero-data-loss resolution path exists
+
+**Dispatched investigation** (`cefi_satellite_ao_dispatch_batch10_2026_08_08.md` P2 todo, per Finding 8's 2026-07-28
+UPDATE — bounded, read-only, audit only, no rename/delete/merge executed). Answers the queued operator question's option
+(b): sample-compared row counts / capture-time ranges / actual tick content for a representative sample of the
+HYPERLIQUID/ASTER collision population to determine whether one capture is a strict subset of the other.
+
+**Live-corpus recheck first (methodology note)**: re-ran the shipped script's OWN discovery + collision-classification
+logic (`discover_scope_pairs` / `discover_day_scope` / `plan_rename`, imported not reimplemented), scoped to exactly the
+6 flagged dates + HYPERLIQUID/ASTER — a cheap listing-only pass (no parquet downloads, single-walk-safe, no whole-corpus
+scan). **Current live population is 522 candidate pairs, not 1104/1114**: `HYPERLIQUID: 18, ASTER: 504` across
+`2026-01-01/02/03` + 2 on `2026-07-11`; **`2025-11-01`/`2025-11-02` now show ZERO candidates** even though objects still
+exist there (712/711 HYPERLIQUID objects, 244/246 ASTER objects on those two dates) — those objects now resolve without
+a collision (already_canonical / unresolved_wire / no pre-existing distinct target), i.e. the population measured on
+2026-07-25 has partially changed in the intervening 2 weeks. Did not investigate why (out of this todo's scope);
+flagging as a fact for whoever next touches this residual.
+
+**Bounded sample-compare** (26 pairs, ~3 per (venue, date, data_type) group spanning every date/venue/data_type
+combination present in the current 522-pair population — each pair fully downloaded and compared, nothing beyond this
+sample was downloaded): compared row counts, capture-time (`timestamp`) ranges, and full tick content two ways —
+**STRICT** (excludes only `instrument_id`, byte-for-byte identical to the shipped script's own
+`_confirm_would_patch_duplicate` definition) and **BROAD** (also excludes `available_at`/`symbol`/`underlying` as
+ingest-time/label-convention columns, and case-normalizes `instrument_type` — while still requiring an EXACT type match
+after casefold, so a genuine spot-vs-perpetual mislabel, the DERIBIT pattern elsewhere in this doc, would still fail
+this check).
+
+**Result: 0/26 sampled pairs are genuinely-distinct content under the BROAD comparison** — `23 identical_content` (exact
+row-for-row match, including the full 9/9 HYPERLIQUID sample) + `3 subset_confirmed_old_subset_of_new` (all
+`ASTER … data_type=trades`). The STRICT comparison, by contrast, shows `11 genuinely_distinct_content_no_overlap` —
+entirely explained by the two metadata differences below, confirmed via full-column diff on one representative
+HYPERLIQUID pair then verified identical across all 9 HYPERLIQUID samples:
+
+- **HYPERLIQUID (9/9 sampled, all `data_type=derivative_ticker`, 1440 rows/day each — exactly one wire/canonical pair
+  per date for each of the SAME 6 "k"-prefixed instruments: kBONK/kFLOKI/kLUNC/kNEIRO/kPEPE/kSHIB, repeating across all
+  3 dates)**: `mark_price` / `index_price` / `mid_price` / `open_interest` / `funding_rate` / `predicted_funding_rate` /
+  `day_volume` / `coin` / `timestamp` are **byte-identical at all 1440 timestamps, 0 diffs**, confirmed via a full
+  per-column diff (not just a spot-check). The only differences are `instrument_type` (`'PERPETUAL'` wire-form vs
+  `'perpetual'` canonical — casing only, same semantic value) and `symbol` (`'kBONK-PERP'` HL-native wire form vs
+  `'kBONK-USD@LIN'` canonical display form — a label convention change, not different data). Example pair:
+  `.../venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/HYPERLIQUID:PERPETUAL:kBONK-USD@LIN.parquet`
+  (wire, `instrument_type='PERPETUAL'`, `symbol='kBONK-PERP'`) vs the canonically-named object right next to it
+  (`instrument_type='perpetual'`, `symbol='kBONK-USD@LIN'`) — both cover `2026-01-01 00:00:00Z..23:59:00Z`.
+- **ASTER `data_type=trades` (3/3 sampled with differing row counts)**: the wire-form object is **hard-truncated at
+  exactly 1000 rows** in every sampled case (a round number strongly suggestive of an old capture-path page/row cap)
+  while the canonical object continues to the full trading day — e.g. `venue=ASTER/.../trades/BTC-USDT@LIN.parquet`
+  (wire, 1000 rows, `2026-07-11 00:00:00.100Z..00:25:34.950Z`) vs `ASTER:PERPETUAL:BTC-USDT@LIN.parquet` (canonical,
+  54,125 rows, `...00:00:00.100Z..23:59:59.500Z`) — **the wire object's first 1000 rows are byte-identical
+  (timestamp+price+size+side, excluding only `instrument_id`/`symbol`) to the canonical object's first 1000 rows** — a
+  strict, verified subset, not a divergent second capture. Every `data_type=derivative_ticker`/small-row-count ASTER
+  pair sampled (14/14, both `2026-01-01/02/03` and the single `2026-07-11` case) was an exact content match once the
+  same two metadata columns are normalized.
+
+**Conclusion — revises the Finding 8/10 root-cause hypothesis**: the original hypothesis ("two REAL, DIFFERENT-CONTENT
+captures... no way to prefer one without a policy call") does not hold for this sample. What actually happened: a
+writer-version transition changed `instrument_type` casing + `symbol` format (HYPERLIQUID) and/or a capture-path
+row-count cap was lifted in a later run (ASTER trades) — producing a byte-identical-or-strict-superset RE-capture of the
+same (day, venue, instrument) slot, not a second independent capture with different market data. **A safe,
+zero-data-loss automated resolution path DOES exist for this population**: keep the canonical-named object (it is always
+the superset/identical copy in every one of the 26 samples) and delete the wire-form duplicate — this loses no data,
+unlike a blind rename-and-clobber. This is NOT the same as `_confirm_would_patch_duplicate`'s existing
+duplicate-detection (which only excludes `instrument_id` and would still classify all 11 STRICT-distinct pairs above as
+"genuine" collisions, exactly as it currently does) — extending that function's exclusion set (or adding a
+casefold-aware comparison for `instrument_type` specifically) would let the shipped migration script itself auto-resolve
+this entire population safely, without a separate merge/backup step.
+
+**Not executed (audit only, per this todo's explicit scope)**: no rename/delete/merge was performed. **Escalating**:
+this sample is a bounded, not exhaustive, check of the current 522-pair population (was 1104/1114/1292 as of 2026-07-25
+— see the live-corpus-recheck note above) — recommend a follow-up AO todo to (a) extend
+`_DUP_COMPARE_EXCLUDE_COLS`/`_confirm_would_patch_duplicate` with a casefold-aware `instrument_type` check (+ keep
+`symbol`/`underlying`/`available_at` excluded, matching this sample's BROAD definition), then (b) re-run the
+`cefi-late-renames` dry-run scoped to just these 2 venues on these dates to confirm the full population — not just this
+sample — resolves to `renamed`/`deleted_dup_source` outcomes with zero remaining STOP-ON-SURPRISE. Operator options from
+Finding 8/10 are updated: **(a) leave as-is** no longer needs to be indefinite — a scoped, low-risk automated fix is now
+identified; **(b) investigate further** is DONE for this sample (this Finding); **(c) operator provenance call** is
+likely unnecessary given the 0/26 genuinely-distinct result, but the full population re-run in (b) above should confirm
+before closing this residual permanently.
+
 ## What's left (current as of Finding 10, 2026-07-25 ~05:30Z — table below is STALE, see Finding 8/9/10 for current state)
 
 Item 2b DONE via Range A/B/C 504,280 renamed; 2,962 safe renames still pending across EXTENDED-STARKNET/
@@ -635,3 +712,17 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   `cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`) are already machine-linked via this doc's own
   `depends_on` frontmatter field rather than context_scope, and are each independently context-scouted in their own
   right.
+- **2026-08-10T12:25Z (slot 13, data_engineering, dispatched on the sole open todo — "re-run verify + archive")**:
+  blocker state re-checked. **Blocker 2 (pre-2025-11 duplicate residual) is now RESOLVED** — both fix todos `[x]` and
+  the doc is archived (`plans/archive/2026_08/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`,
+  `status: resolved`). **Blocker 1 (LIGHTER-ZKSYNC collision) remains OPEN** — root-cause todo `[x]` but the Range-2
+  apply todo is still `[ ]`, gated on `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s forward
+  backfill; live-checked the gating VM today: `cefi-fwd-daily-cron-20260809-110236` confirmed still `RUNNING` (created
+  2026-08-09T11:02Z), i.e. the frontier has still not reached the Range-2 window end (2026-07-24) — blocker 1 is
+  genuinely not ready, not stale. So the "once the 2 blockers above resolve" condition for this todo is still NOT met (1
+  of 2 cleared); re-running `verify_cefi_canonical_4surface_2026_07_20.py` now would be premature while the
+  LIGHTER-ZKSYNC wire/canonical dual-write is still live. No work done on the todo itself. Skipping
+  (`reason_code=GATED`, `estimated_unblock_minutes=180`) — genuinely new information (blocker 2 cleared + fwd VM
+  confirmed live), but the todo remains gated on blocker 1's Range-2 apply. **Next dispatch**: re-check blocker 1's
+  Range-2 apply todo / the fwd VM's terminal state; once BOTH blockers are resolved, run the verify → clean-PASS →
+  archive sequence.

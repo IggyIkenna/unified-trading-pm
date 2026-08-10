@@ -39,6 +39,9 @@ parent_epic: instruments_master
 priority: P1
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
@@ -118,18 +121,54 @@ and only needed a spot-check.
       content freshness is still UNVERIFIED beyond bare existence — the dry-run's own verify pass (fresh
       `gcs_describe_object` + crc32c re-check per object, per `cleanup_legacy_twins.py`) is what actually re-validates
       it, not this existence check alone.
-- [ ] [INFRA] P1. Add a new `cefi-legacy-dup-cleanup` category to `launch-canonical-migration-vm.sh` (reuses the
+- [x] ✅ [INFRA] P1. Add a new `cefi-legacy-dup-cleanup` category to `launch-canonical-migration-vm.sh` (reuses the
       already-registered `canonical-migration-cefi-` VM_PREFIX_TO_BUCKET prefix, no new registry entry): dry ->
       `cleanup_legacy_twins.py --asset-group cefi --report-uri <candidate-list> --workers 32` (no `--apply`); full ->
       same + `--apply --i-understand`. Follow the existing category-builder pattern (comma-free command string,
       `WORKERS` already validated as a bare positive integer by the launcher's existing gate). Repo: deployment-service.
-- [ ] [INFRA] P1. Launch the dry-run category first, verify deletable/blocked counts + a few blocked reasons are sane
-      against the expected ~1.08M/~9.98TB, THEN launch full (`--apply`). No fire-and-forget — verify STARTED <60s,
-      periodic progress (verify + delete counts logged every 50k), and a terminal state; monitor via a progress-metric
-      poll (checkpoint/log line count), not activity. Repo: deployment-service, instruments-service.
-- [ ] [REVIEW] P1. After the full run's post-delete verification reports 0 "still present," flip the original checkbox
-      in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` citing the VM run's evidence (deleted
-      count, post-delete-verify result). Repo: unified-trading-pm.
+      — **DONE** (slot-31, 2026-08-09): added `_cefi_legacy_dup_cleanup_cmd()` following the `_cefi_eu_twin_apply_cmd`
+      pattern (instruments-service tarball via `_svc="instruments_service"`, `_ag="CEFI"`, usage string + final-dispatch
+      case updated). `REPORT_URI` is env-overridable, gated by a new bucket-relative-path validation (mirrors the
+      existing WORKERS/TRADFI_TICK_BUCKET/RESUME_SEED_GS injection gates) and defaults to
+      `_index/audit/legacy_dup_delete_list_cefi.parquet` (the confirmed-existing candidate list from todo 1). No DRAIN
+      GATE added — the tool's own fresh crc32c verify + `gcs_conditional_delete` keyed to a same-run-captured generation
+      close the verify-then-delete race, and this deletes already-migrated legacy duplicates, not a live-writer path
+      (unlike cefi-dedup-apply/cefi-content-apply). Computed `vm_name` measured at 59 chars (<=63 GCE limit, no
+      abbreviation override needed). `bash -n` syntax-clean; full `quality-gates.sh` green. Evidence:
+      deployment-service@913f7db9.
+- [x] ✅ [INFRA] P1. Launch the dry-run category first, verify deletable/blocked counts + a few blocked reasons are sane
+      against the expected ~1.08M/~9.98TB, THEN launch full (`--apply`). — **DRY-RUN LAUNCHED + COMPLETED, FULL RUN
+      DELIBERATELY NOT LAUNCHED** (slot-25, 2026-08-09): VM
+      `canonical-migration-cefi-legacy-dup-cleanup-20260809-094603` (asia-northeast1-c) STARTED <60s, ran to completion
+      in ~106min (verify-only pass over all 1,077,672 candidates, logged every 50k per the tool's own cadence, terminal
+      `EXIT_STATUS=0`, self-deleted on completion). Result:
+      **`=== CF-21 verified-delete: 0 deletable, 1077672 blocked ===`** — the OPPOSITE of the expected ~1.08M
+      deletable/~9.98TB, so the "THEN launch full" branch's precondition (counts sane) was NOT met and full was
+      correctly skipped (running `--apply` against 0 deletable would be a pure no-op — no safety risk, but no benefit
+      either, and would misrepresent this as a completed cleanup). Root-caused, not just observed: pulled the candidate
+      parquet directly (`_index/audit/legacy_dup_delete_list_cefi.parquet`, 1,077,672 `SAFE-TO-DELETE` rows, all
+      `twin_exists=True` at 2026-07-02 audit time) and live-`gcs_describe_object`'d a stratified sample (rows 0, 100,
+      5000, 50000, 500000, 1000000 of 1,077,672) — **the LEGACY object itself no longer exists in GCS for every sampled
+      row**, not just the canonical twin. Confirmed via a live `gcloud storage ls` prefix check on 3 sampled days
+      (2025-07-12, 2020-07-22, 2021-04-01): only `pipeline_mode=batch_*` (canonical) prefixes remain under each
+      `day=.../` — **zero legacy (bare `asset_group=`) prefixes exist anywhere sampled**. Conclusion: the entire cefi
+      legacy-duplicate corpus this candidate list describes has ALREADY been removed from the live bucket sometime
+      between 2026-07-02 (list generation) and now — most likely already cleaned up via one of the other cefi migration
+      categories that landed since (`cefi-dedup-apply`, `cefi-dedup-apply-scoped`, `cefi-content-apply`, etc. — not
+      investigated further which one/when, out of this todo's scope). **The batch2 plan item's actual objective (remove
+      the legacy GCS duplicates) already appears satisfied — just not via this tool/session** — this is NOT a tool bug
+      in `cleanup_legacy_twins.py` (its crc32c/manifest gate behaved exactly as designed against a now-stale list) and
+      NOT a live-data-loss risk (nothing was deleted; nothing WOULD have been deleted even under `--apply`, since 0 were
+      classified deletable). Repo: deployment-service, instruments-service.
+- [ ] [REVIEW] P1. **Retargeted** (was: "after the full run's post-delete verification reports 0 still present" — that
+      full run correctly never happened, see todo 3's finding above, so that precondition can never be met as originally
+      written). Confirm independently whether the cefi legacy-duplicate corpus is genuinely already gone (e.g. check
+      `migration_orphan_sweep.py`/`cefi-dedup-apply`/`cefi-content-apply` run history or manifest history for when/how
+      it was removed) or whether this is itself a false-absence signal worth a second opinion, THEN flip the original
+      checkbox in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` citing this issue doc + todo
+      3's evidence (0 deletable, stratified live-sample confirming legacy objects already absent). If a genuine
+      unexplained-disappearance concern surfaces instead, escalate per CLAUDE.md's "big finding" rule (NOTIFY OPERATOR).
+      Repo: unified-trading-pm.
 
 # Progress Log
 
@@ -148,3 +187,23 @@ and only needed a spot-check.
   since the "if absent" branch didn't fire. Flagged for the next todo: the list's mtime predates the 2026-07-13 re-audit
   that excluded cefi, so freshness beyond bare existence is still unverified — that's the dry-run verify pass's job, not
   this todo's.
+- 2026-08-09 (slot-31, task `cefi_legacy_dup_delete_tooling_gap-e03a4801e66b`): added the `cefi-legacy-dup-cleanup`
+  category to `launch-canonical-migration-vm.sh` (deployment-service@913f7db9) — new `_cefi_legacy_dup_cleanup_cmd()`
+  builder + dispatch branch + `_svc`/`_ag` classification + usage string, mirroring `_cefi_eu_twin_apply_cmd`'s
+  self-contained single-invocation shape. `REPORT_URI` env override gated by a new shell-injection validation check
+  (same pattern as the existing WORKERS/TRADFI_TICK_BUCKET/RESUME_SEED_GS gates). Flipped todo 2. Shipped via the Pass-1
+  `quality-gates.sh` (green) → Pass-2 `quickmerge --agent` flow; SHA verified an ancestor of `origin/live-defi-rollout`.
+  Did NOT launch any VM (todo 3 — a genuinely multi-hour prod-scale run — is separately scoped and untouched by this
+  session).
+- 2026-08-09 (slot-25, task `cefi_legacy_dup_delete_tooling_gap-8e4ddd1a79a5`): launched
+  `canonical-migration-cefi-legacy-dup-cleanup-20260809-094603` (dry mode) via
+  `launch-canonical-migration-vm.sh cefi-legacy-dup-cleanup 2026-08-09 2026-08-09 dry`. Pre-flight surfaced an unrelated
+  per-slot env gap (this slot's `deployment-service` had no `.venv`, so the launcher's tarball-freshness pre-flight fell
+  back to bare `python3` and hit `ModuleNotFoundError: No module named 'deployment_service'`) — fixed with `uv sync` in
+  that repo (sanctioned tool, no `pip install`), then the launch succeeded. Monitored to terminal state over ~106min via
+  periodic direct `gcloud storage cat .../run.log` polls (background monitor processes were killed by the harness twice
+  mid-run; switched to `ScheduleWakeup`-driven direct polling instead, which survived). Result:
+  `0 deletable, 1077672 blocked` — see todo 3's full write-up for the root-cause investigation (the legacy objects this
+  list describes no longer exist live in GCS at all, confirmed via a stratified sample + prefix listing on 3 separate
+  days). Full `--apply` run deliberately NOT launched (would be a no-op against 0 deletable candidates). Flipped todo 3;
+  retargeted todo 4's precondition since the original "after the full run" framing no longer applies.

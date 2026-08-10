@@ -19,9 +19,9 @@ tags: [ci-cd, testing, pytest, selective-execution, test-impact-analysis, cost, 
 related:
   [
     /plans/archive/issues/test_impact_selective_execution_design_2026_08_03.md,
-    /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
+    /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
 last_updated: 2026-08-03
@@ -489,3 +489,11 @@ valid — confirms the 2026-08-07 verdict, unchanged. The `[SCRIPT] P2` divergen
 under the plan-level `sequential: true` + whole-plan `assigned_vm: planning` flip-trigger (not a partial dispatch); the
 `[REVIEW] P2` fleet-wide evidence-sufficiency item remains an explicit human/reviewer judgment call. No `assigned_vm`
 change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:d395b5b23a626eb9]: KEEP-NA,
+valid — Doc-level frontmatter carries sequential: true (confirmed, line 38) plus an explicit dated operator-stated
+intent (source: field + 2026-08-03 Progress Log) that the WHOLE plan flips to assigned_vm: planning as one dispatch
+action once the operator completes their own /pre-compact checkpoint -- not a partial/cherry-picked extraction. Read the
+full doc (492 lines) end to end. This exact structural reasoning was established by this same skill's own 2026-08-03
+audit pass, which explicitly identified the divergence-analysis-tool item as 'individually
+bounded/deterministic-shaped...

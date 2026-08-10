@@ -441,6 +441,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   `related:` as the todo asked. No new investigation performed into Problem 1 (out of this bookkeeping-only dispatch's
   scope) — the Follow-ups guard and its `[AO] P0` todo stand as the reason this doc stays open and un-archived.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is
+  the Follow-ups § `[AO] P0` DO-NOT-ARCHIVE guard (resolve the SQLite `database is locked` storm, Problem 1). This
+  remains genuine live-incident investigation, not bounded/mechanical work: the doc's own open question ("genuine
+  SECOND undiagnosed bug, or genuine extreme concurrent-write contention... not yet distinguished") is still
+  unresolved, and the item is cross-referenced by 2 other still-open docs
+  (`orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`, `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`)
+  touching the same live contention surface — a diagnosis-under-real-load question, not a scoped code change with a
+  stated done-when.
 
 ## Follow-ups
 

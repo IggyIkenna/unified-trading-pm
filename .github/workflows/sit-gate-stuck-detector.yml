@@ -17,7 +17,7 @@ name: sit-gate-stuck-detector
 # SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
 # Source: plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
 #         ([DEVOPS] P3), tracked to completion via
-#         plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md ([INFRA] P3).
+#         plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md ([INFRA] P3).
 
 on:
   schedule:

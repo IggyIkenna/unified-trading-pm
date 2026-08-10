@@ -40,7 +40,7 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     features-service/features_service/delta_one/app/features/registry.py,
     instruments-service/instruments_service/engine/orchestrator/,
   ]
@@ -579,7 +579,10 @@ unchanged:
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Drive deployment-api's codex violations from 5 to 0" todo
       (DONE 2026-07-26) shipped this exact work: `deployment-api@4c4b007` cleared all 3 remaining classes
       (imports-inside-functions, direct-cloud-SDK, broad-except) to `V=0`, `CODEX_MAX_VIOLATIONS` ratcheted 3→0, full
-      `quality-gates.sh` green (5077 passed). Ratcheted **6→5** on 2026-06-19 (cleared the deep-UAC-import in
+      `quality-gates.sh` green (5077 passed). Same-commit ruff ratchet-down also verified:
+      `unified-trading-pm@a674e1ff3` ("flip deployment-api codex-violations item (deployment-api@4c4b007)") lowers
+      `scripts/quality_gates/ruff_rule_ratchet_baseline.yaml`'s deployment-api row `dtz` 11→10 and `tid251` 20→19,
+      confirmed ancestor of `origin/live-defi-rollout`. Ratcheted **6→5** on 2026-06-19 (cleared the deep-UAC-import in
       `utils/pipeline_mode_paths.py` → facade `from unified_api_contracts import Mode`). Remaining 5, all
       pre-existing/foreign (surfaced when the version-alignment lag unblocked the QG during the dep-order-surface ship):
       (1) **imports-inside-functions** (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py` — some

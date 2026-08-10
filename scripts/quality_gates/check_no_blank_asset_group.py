@@ -28,6 +28,23 @@ from pathlib import Path
 
 import yaml  # pyyaml -- available in the QG venv
 
+
+def _pm_root_or_legacy(workspace_root):
+    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
+
+    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
+    named checkout; fixes resolution when running from a git worktree."""
+    import pathlib as _pathlib
+    import sys as _sys
+
+    _d = str(_pathlib.Path(__file__).resolve().parent)
+    if _d not in _sys.path:
+        _sys.path.insert(0, _d)
+    from _pm_root import pm_root_or_legacy as _impl
+
+    return _impl(workspace_root)
+
+
 BASELINE_FILENAME = "no_blank_asset_group_baseline.yaml"
 NOQA_MARKER = "noqa: blank-asset-group"
 
@@ -125,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: source root does not exist: {source_root}", file=sys.stderr)
         return 2
 
-    baseline_path = workspace_root / "unified-trading-pm" / "scripts" / "quality_gates" / BASELINE_FILENAME
+    baseline_path = (_pm_root_or_legacy(workspace_root)) / "scripts" / "quality_gates" / BASELINE_FILENAME
 
     baselines = _load_baseline(baseline_path)
     baseline_count = baselines.get(scope, 0)

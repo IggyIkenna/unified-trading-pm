@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [tradfi, vm, backfill, premature-deletion, databento, vm-task-routing, data-pipeline]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -132,8 +132,8 @@ with every observed death landing at 15-23 min post-last-log-line. **Not yet con
 this can't be verified post-hoc for this run) — this is the best-fit hypothesis from timing alone, not a traced code
 path. If confirmed, this is a genuine **false-positive zombie classification**: the watchdog can't distinguish
 "legitimately silent mid-fetch" from "actually dead," and kills real, live, in-progress work — the same class of bug as
-`issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md` (a different subsystem, same
-underlying pattern: liveness-by-log-silence is not liveness).
+`/plans/archive/2026_08/issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md`
+(archived, resolved — a different subsystem, same underlying pattern: liveness-by-log-silence is not liveness).
 
 ## Third finding (2026-08-09T~08:38-09:15Z, slot-22) — manifest count-check query was itself broken (false 0-row absence), true current coverage is far better than "all 5 died" implies
 
@@ -190,39 +190,108 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 ## Action items
 
-- [ ] [DATA] P1. **NARROWED 2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%),
-      NOT all 5 years.** The manifest count-check query itself was broken (false 0-row absence, fixed
-      `deployment-service@be6d4669`) — 2020-2024 are already 94.8-100% complete via a combination of earlier captures
-      and the concurrent in-scope CME root campaign's incidental options capture, confirmed via the corrected query
-      against a live manifest pull. Once the singleton lock is next clear (currently held, `wave_launcher.py`
-      out-of-scope cron recurring on top of the in-scope CME campaign — see
+- [ ] [DATA] P1. BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09 **NARROWED
+      2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%), NOT all 5 years.** Real,
+      still-open work — temporarily blocked on the singleton lock clearing, which is itself blocked on the sibling issue
+      doc's own unfixed root cause (`wave_launcher.py`'s out-of-scope cron continuing to hold/refresh the lock — a
+      different owner's in-flight P1). Not CANCELLED, not DEFERRED-BY-DESIGN: this is live, real work with a corrected,
+      re-armed watcher (`es-opt-backfill-watcher.sh`, PID 1962373 at time of writing, see Progress Log) already polling
+      for the lock to clear and will complete autonomously once it does. The manifest count-check query itself was
+      broken (false 0-row absence, fixed `deployment-service@be6d4669`) — 2020-2024 are already 94.8-100% complete via a
+      combination of earlier captures and the concurrent in-scope CME root campaign's incidental options capture,
+      confirmed via the corrected query against a live manifest pull. Once the singleton lock is next clear (currently
+      held, `wave_launcher.py` out-of-scope cron recurring on top of the in-scope CME campaign — see
       `issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`), retry the launcher
       (idempotent) — but expect 2022-2024 to mostly skip-refetch and watch specifically for 2025/2026 progress, not a
       full 5-year restart. Retrying alone will likely still hit the zombie-watchdog reaper again (next action item,
       unfixed) for whichever year is actively fetching when the lock clears. Re-run the CORRECTED manifest count-check
       (`underlying in (SP500, ES)`, not the old 11-id filter) after any retry to measure the actual delta. Repo:
       unified-trading-pm (progress tracked in `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, not duplicated here).
-- [ ] [INFRA] P1. **Confirm + fix the zombie-watchdog false-positive on a legitimately-slow ES_OPT fetch** (see
-      corrected hypothesis above) — first CONFIRM `vm_zombie_watchdog.py` is the actual actor (check its own audit trail
-      / logs for a kill event matching one of these VM names + timestamps, don't just trust the timing match), then
-      either raise its `--min-age` for `mtds-backfill`+`VM_ASSET_GROUP=TRADFI`+options-chain launches specifically, or
-      add incremental progress logging inside the per-date Databento fetch so liveness is visible during a legitimately
-      slow (not hung) call. Repo: deployment-service (`vm_zombie_watchdog.py` + `vm-exec-with-gcs-tee.sh`) +
-      market-tick-data-service (Databento adapter fetch path, if adding progress logging there).
-- [ ] [INFRA] P2. **PARTIALLY DONE (2026-08-09, separate session, deployment-service@391ff7f5)** — confirmed
-      `_tradfi-ohlcv-launcher-lib.sh` (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired
-      (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not affected). A different agent independently found + fixed the SAME bug
-      in `launch-targeted-options-chain-backfill.sh` (CME-OPTIONS/CBOE-VIX-OPTIONS shards,
-      `deployment-service@acf965d9`) concurrently with this doc's own fix — both landed together after resolving a real
-      git stash conflict (identical fix, different comments). Remaining, NOT done: the historical-manifest-provenance
-      cross-check (did any already-"captured" ES/BTC/ETH row actually come through this broken launcher). Repo:
-      deployment-service + market-tick-data-service (manifest cross-check).
+- [x] [DATA] P2. ✅ **2026-08-09, slot 3** — fixed the committed watcher's over-broad launch scope + ungated
+      checkbox-flip bug found while re-arming it for this P1 item. Was unconditionally relaunching all 5 ES_OPT years
+      (2022-2026) every run and flipping the plan checkbox the moment any VM ran once, regardless of measured coverage.
+      Fixed `deployment-service@77a95833` (QG green, quickmerge landed + ancestry-verified on
+      `origin/live-defi-rollout`): launch loop now targets only `YEARS_TO_LAUNCH` (2025, 2026) sequentially, manifest
+      query reports per-year coverage, and the plan-checkbox flip (both this doc's P1 item above and batch6 todo #2) is
+      now GATED on measured coverage (2025>=90% AND 2026>=95%) instead of firing unconditionally. Re-armed the corrected
+      watcher (PID 1962373, verified PGID=SID=PID isolated). This item is the concrete, verifiable deliverable of this
+      session — the P1 item above stays open since the actual retry (singleton lock clearing + the 2025/2026 launches
+      completing) has not happened yet. Repo: deployment-service.
+- [x] [INFRA] P1. ✅ **RE-INVESTIGATED 2026-08-09 (slot 9, infra) — "false-positive" hypothesis does NOT hold; this was
+      a genuine hang on the pre-fix undersized machine type, already root-caused by `deployment-service@391ff7f5`; no
+      watchdog-side change is evidenced as needed.** Confirmed `vm_zombie_watchdog.py` IS the actual actor for the
+      relevant wave (5 ES_OPT VMs inserted 2026-08-09T03:08-03:09Z, deleted 03:30-03:51Z) — NOT via timing alone: the
+      delete audit-log entries' principal (`1060025368044-compute@developer.gserviceaccount.com`) and `callerIp`
+      (`35.221.90.79`) match, exactly, the currently-running watchdog VM's own attached service account and external IP
+      (`gcloud compute instances describe vm-zombie-watchdog-20260807-075242` → same SA, same NAT IP), and — distinctly
+      from a self-delete pattern — all 5 kills share that ONE IP rather than each VM's own unique IP (the self-delete
+      wave from this doc's first finding, by contrast, shows 5 DIFFERENT callerIps, one per VM, confirmed via a separate
+      `gcloud logging read` pull). But the premise that these 5 were "legitimately slow (not hung)" is contradicted by
+      their own `run.log` + heartbeat-blob evidence: all 5 show the SAME signature — RSS climbing from ~500MiB to
+      8.4-10.3GiB within ~30-90s of the fetch starting, cpu pinned at ~100%, and then BOTH `run.log` (the
+      `ResourceProfiler`/`PIPELINE_HEARTBEAT` emitters) AND the separate heartbeat-sidecar blob (`vm-heartbeat/<vm>.txt`
+      — created once at ts, never updated again, confirmed via `gsutil stat`) go silent in lockstep at the same moment,
+      not just the main fetch process. A live, merely-slow-but-alive process would not also freeze its own independent
+      60s-interval heartbeat subprocess. This is the same OOM/thrash-hang class the doc's own third finding already
+      flagged ("MACHINE_TYPE was still the undersized e2-standard-4 default... live-reproduced a 9.2GB RSS climb").
+      Confirmed via `git log`: these 5 launches (03:08-03:09Z) predate `deployment-service@391ff7f5` (07:38:54Z same
+      day), the commit that bumped `launch-tradfi-backfill-vm.sh`'s `MACHINE_TYPE` default from a hardcoded undersized
+      value to `${MACHINE_TYPE:-e2-highmem-4}` specifically so a same-machine OOM relaunch doesn't just re-OOM — so this
+      wave ran on the OLD, undersized machine type, not the fixed one. No ES_OPT VM has launched since 07:38Z (checked
+      live fleet + `gcloud logging read` for post-fix deletes — zero), so there is no post-fix evidence either way;
+      deliberately did NOT relaunch ES_OPT myself to test this (a fresh 5-VM launch here would risk colliding with the
+      concurrent in-scope CME root-campaign fleet + singleton-lock activity this same doc's own dual-watcher caution
+      warns about, and is out of this action item's narrow scope). Leaving unchecked — narrowed to a real,
+      evidence-gated remaining step below — rather than inventing a watchdog `--min-age`/progress-logging change the
+      evidence doesn't support. Repo: deployment-service (`vm_zombie_watchdog.py`, investigated only; no code changed).
+      **CLOSED 2026-08-09 (slot-31, infra)**: this item's own literal question — is this a false-positive
+      zombie-watchdog kill needing a watchdog-side fix — is conclusively answered NO by the evidence above; no code
+      change is needed. The residual post-fix recurrence check is split out below as its own standalone follow-up (it
+      was previously embedded mid-paragraph here as an unparseable inline checkbox that the backlog regen could never
+      have picked up as a separate task — fixed by giving it a real top-level bullet).
+- [ ] [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (`deployment-service@391ff7f5`, 2025+2026
+      gap per the third finding above), check whether the same RSS-spike/heartbeat-freeze signature recurs. If it does
+      NOT recur, this confirms "machine-type fix was sufficient, no watchdog change needed" (the working hypothesis as
+      of 2026-08-09). If it DOES recur (even on the bigger machine), THEN implement one of the two original remedies
+      (raise `--min-age` for this launcher class, or add incremental per-date progress logging) against real post-fix
+      evidence. As of 2026-08-09T~09:53Z no ES_OPT VM has launched since the fix landed (07:38:54Z) — slot-22 is
+      actively mid-retry on the sibling P1 action item above; this check should piggyback on that retry (or a subsequent
+      one) rather than triggering a dedicated launch. Repo: deployment-service.
+- [x] [INFRA] P2. ✅ **2026-08-09, slot-12 (infra)** — **historical-manifest-provenance cross-check DONE: structurally
+      impossible for the broken launcher to have ever written a "captured" row.** `_tradfi-ohlcv-launcher-lib.sh`
+      (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not
+      affected). A different agent independently found + fixed the SAME bug in
+      `launch-targeted-options-chain-backfill.sh` (CME-OPTIONS/CBOE-VIX-OPTIONS shards, `deployment-service@acf965d9`)
+      concurrently with this doc's own fix — both landed together after resolving a real git stash conflict (identical
+      fix, different comments). Traced the MTDS CLI code path
+      (`market_tick_data_service/cli/handlers/tick_data_handler.py`): `TickDataHandler.process()` (per-date entry point)
+      calls `_resolve_fetch_params()` → `_resolve_source()` at line 252, which raises
+      `ValueError: --source databento is REQUIRED...` synchronously for any TRADFI OHLCV run missing `--source` — this
+      happens BEFORE `process_ticks()` (the actual fetch+write path, line 217) is ever invoked. Since `--source` is a
+      fixed CLI arg for the whole VM invocation (not per-date), the very FIRST date processed already raises, so 0 rows
+      can ever be written for the entire run — confirms the incident's own run.log evidence ("0 results collected") is
+      not a coincidence but a structural guarantee. For the CEFI/BTC/ETH shards in
+      `launch-targeted-options-chain-backfill.sh` (DERIBIT/DERIBIT-COMBO/OKX): the `acf965d9` fix commit message itself
+      confirms these were "Tardis-sourced -- fine through the generic fallback" — i.e. this launcher's
+      `VM_TASK=cefi-backfill` misroute never actually broke the CEFI dispatch path (Tardis doesn't consult `--source`),
+      only the TRADFI shards it shared `_launch_shard()` with. **Conclusion: no manifest-provenance risk exists for ES,
+      BTC, or ETH** — TRADFI rows structurally could not have been written by a broken-launcher run
+      (hard-fail-before-any-write), and CEFI/BTC/ETH rows were never on a broken path in the first place. No code change
+      needed (pure investigation, confirming no remediation is required). Repo: deployment-service +
+      market-tick-data-service (manifest cross-check) — investigated only, no code shipped.
 - [ ] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch** (or document why it's intentionally scoped
       only to the generic fallback) — currently silently ignored for every `mtds-backfill`-routed launch, including this
       one. Repo: deployment-service, `scripts/vm/setup-data-pipeline-vm.sh`.
 
 ## Progress Log
 
+- **2026-08-09, slot-9 (infra)**: Worked the zombie-watchdog P1 action item. Confirmed `vm_zombie_watchdog.py` is the
+  actor (SA + callerIp match against the live watchdog VM), but found the "legitimately-slow, not hung" premise is wrong
+  for this wave — all 5 ES_OPT VMs show an RSS-spike-to-8-10GiB/cpu-100% signature followed by BOTH run.log and the
+  independent heartbeat sidecar going silent together, and the wave predates `deployment-service@391ff7f5`'s
+  `e2-highmem-4` machine-type fix. No watchdog-side code change is evidenced as necessary; narrowed the action item to a
+  post-fix re-observation step instead of shipping an unsupported change. No code shipped this pass (investigation + doc
+  update only). Did not relaunch ES_OPT (out of scope, singleton-lock collision risk with concurrent fleet work).
 - **2026-08-09, slot-28**: Discovered + root-caused + fixed live while executing batch6 todo #2. Fix committed
   `deployment-service@6b1057cc`; re-launch in progress, VMs surviving past the previous failure window at time of
   filing.
@@ -260,3 +329,115 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   all 5 years") is not yet true (2025 is still 0%), and I didn't personally trigger or observe a fresh retry completing.
   Leaving open with the corrected, narrower scope documented for whoever picks this up next (retry should now target
   2025+2026 specifically, not assume a from-scratch 5-year run).
+- **2026-08-09T~09:53Z, slot-31 (infra)**: Worked the `[INFRA] P1` "RE-INVESTIGATED... false-positive hypothesis does
+  NOT hold" action item (slot-9's watchdog investigation). Confirmed live: (1) `gcloud compute operations list` — zero
+  `tradfi-bf-es-opt-*` insert ops since 2026-08-08T20:40:43-07:00 (03:40Z 08-09), i.e. still nothing post-fix
+  (`deployment-service@391ff7f5`, landed 07:38:54Z); (2) `gcloud compute instances list` — 12 `tradfi-bf-*` VMs RUNNING
+  (CME/NASDAQ/NYSE campaigns), zero ES_OPT, singleton lock (`_check_singleton_lock()`,
+  `launch-tradfi-backfill-vm.sh:161-193` — a live `status=RUNNING name~"^tradfi-bf-"` gcloud check, not a GCS/lockfile)
+  still held; (3) slot-22 has a LIVE tmux session (pts/9, ~1h16m elapsed at check time) actively mid-retry on the
+  sibling `[DATA] P1` action item right now — 3 backgrounded watcher attempts today, the latest (PID 3629269) found dead
+  mid-session, slot-22 re-arming. Per the dual-watcher double-launch race this doc's earlier entries already flag, did
+  NOT trigger a competing launch — would collide with that in-flight work. **Checked this item's box**: its own literal
+  question (is this a false-positive zombie-watchdog kill needing a watchdog-side fix) is conclusively answered NO by
+  slot-9's evidence chain, and no code change is evidenced as needed — that investigation is genuinely complete. The
+  residual post-fix recurrence check was previously embedded as an unparseable inline `- [ ] [DATA] P2.` mid-paragraph
+  (never its own top-level bullet, so backlog regen could never have dispatched it as a separate task) — split it out
+  into a real standalone `[DATA] P2` bullet below this item so it stays tracked and dispatchable once slot-22's (or a
+  subsequent) retry produces the post-fix evidence, instead of silently riding on this now-closed item's coattails. No
+  code shipped (none evidenced as needed, confirming slot-9's original conclusion). Also confirmed the
+  `wave_launcher.py` out-of-scope cron issue
+  (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) is still open/unfixed at the root
+  (only reactively killed twice so far) — it is the recurring cause of the singleton lock staying held; whoever next has
+  bandwidth on that P1 should prioritize the actual fix (pause/fix the cron), not another reactive kill, since it's
+  what's blocking every downstream ES_OPT retry attempt.
+- **2026-08-09T~10:19-10:33Z, slot 3 (data_engineering)**: Picked up this `[DATA] P1` action item fresh
+  (`tradfi_year_shard_backfill_launcher_missing_source_self_deletes-cd3da5ea17a9`). Live state at pickup: singleton lock
+  still held (7-8 `tradfi-bf-*` VMs, mix of in-scope CME `g01` shards + leftover out-of-scope NYSE-2023 VMs from the
+  9:00Z `wave_launcher.py` recurrence — no `wave_launcher.py` process currently alive, confirmed via `ps aux`), no
+  `tradfi-bf-es-opt-*` VM running, no live watcher process (`es-opt-backfill-watcher.sh`, `wait_and_launch_es_opt*` —
+  none found via `ps -ef`).
+
+  **Found and fixed a real bug in the committed watcher** (`deployment-service/scripts/vm/es-opt-backfill-watcher.sh`):
+  its Phase 2 launch call (`launch-tradfi-backfill-vm.sh --root-symbol ES_OPT`, no `--year`) unconditionally launches
+  ALL 5 default years (2022-2026) every time it fires — even though this doc's own third finding (above) already
+  established 2020-2024 are 94.8-100% complete and only 2025 (0%) + 2026 (73%) have a real gap. Relaunching all 5 wastes
+  VM-minutes + Databento API calls on already-complete years, working directly against the exact shared-account
+  rate-limit concern that is the stated reason `--force` is banned here (operator ruling,
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` "What this todo is waiting on"). Also found the watcher's Phase 5
+  flipped the batch6 plan's checkbox **unconditionally** the moment any ES_OPT VM ran to completion once — not gated on
+  actual measured coverage, contradicting the plan's own "Done when... not just 'ran once'" text, and it never touched
+  this issue doc's own P1 item at all.
+
+  **Fixed** (`deployment-service@77a95833`, QG green 275s, quickmerge landed + ancestry-verified on
+  `origin/live-defi-rollout`): (1) launch loop now targets only `YEARS_TO_LAUNCH` (2025, 2026), sequentially — each
+  year's VM must fully complete before the next launches (they share the singleton lock) — with `--no-force-window`
+  passed for forward-compat (currently a no-op for this launch path per the doc's own known P3 gap: `VM_FORCE_WINDOW`
+  isn't wired into the `mtds-backfill` branch — not fixed here, out of this item's narrow scope); (2) the manifest query
+  now reports a per-year coverage breakdown, not just an aggregate; (3) the plan-checkbox flip is now GATED on measured
+  coverage (2025 coverage >= 90% AND 2026 coverage >= 95%) instead of firing unconditionally; (4) the watcher now also
+  flips/annotates THIS issue doc's P1 item (previously only touched batch6), via a regex verified locally against both
+  docs' real checkbox text before shipping; (5) re-parameterized `SLOT_ID`/`TASK_ID`/`SCRATCHPAD`/`PYTHON` for this
+  session instead of the stale hardcoded slot-11/`batch6-002` defaults.
+
+  **Re-armed the corrected watcher** for this session:
+  `setsid nohup bash scripts/vm/es-opt-backfill-watcher.sh & disown`, `YEARS_TO_LAUNCH="2025 2026"`,
+  `SCRATCHPAD=/home/ubuntu/es-opt-watcher-slot3-20260809T103236Z`. Verified PID 1962373 isolated
+  (`PGID=SID=1962373=PID`, `PPID=1`) and confirmed live in Phase 1 (polling singleton lock, 7 VMs held at last poll).
+  Did NOT flip this item's checkbox — the watcher hasn't reached its gate yet (lock not clear, 2025/2026 launches
+  haven't happened this session). Per this saga's own accumulated lesson (batch6 plan, lesson #6): expect this specific
+  watcher instance may die silently at an unpredictable interval regardless of correct setsid/PGID isolation — **NEXT
+  ACTION for whoever picks this up next**: check this item's checkbox first; if still `[ ]`, check `kill -0 1962373`; if
+  dead, re-arm per the USAGE block at the top of `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (now
+  correctly scoped to 2025+2026 by default — no manual re-narrowing needed). Did not touch `wave_launcher.py`
+  (out-of-scope for this craft/item, tracked separately) or any live VM (no delete, per the staleness-check rule).
+
+- **2026-08-09T~12:46Z, slot 30 (data_engineering)**: Picked up the `[DATA] P2` action item ("once the next ES_OPT
+  launch happens post-`e2-highmem-4` fix, check whether the same RSS-spike/heartbeat-freeze signature recurs").
+  **Precondition still not met — nothing to check yet.** Verified live: (1) `gcloud compute operations list` filtered on
+  `targetLink~"tradfi-bf-es-opt"` — the most recent ES_OPT insert/delete pair is
+  `tradfi-bf-es-opt-light-2025-20260809-034037` at 2026-08-08T20:40:43/20:43:38-07:00 (03:40Z/03:43Z 08-09), i.e. still
+  BEFORE the `e2-highmem-4` fix (`deployment-service@391ff7f5`, landed 07:38:54Z) — zero ES_OPT operations of any kind
+  since the fix, confirmed against the full operations history (last 20 entries), not just a time-filtered slice; (2)
+  `gcloud compute instances list --filter='name~"^tradfi-bf-es-opt"'` — zero running; (3) slot-3's re-armed watcher (PID
+  1962373, per its own Progress Log entry above) is dead (`kill -0 1962373` → no such process), confirming this saga's
+  own documented fragility ("watchers still die silently at unpredictable intervals... re-arming on death is EXPECTED");
+  (4) singleton lock is currently held by 27 `tradfi-bf-*` VMs, all legitimate in-scope CME/NASDAQ/NYSE campaign shards
+  (checked names/creation timestamps — no `tradfi-bf-es-opt-*`, no obvious `wave_launcher.py` leftover pattern); (5)
+  `wave_launcher.py` is NOT currently running (`ps -ef` clean) and not present in either the operator's or root crontab
+  — the out-of-scope recurrence tracked in the sibling doc has not recurred a 3rd time as of this check. **Did not
+  trigger a dedicated ES_OPT launch** — this item's own text explicitly scopes that to "piggyback on that retry...
+  rather than triggering a dedicated launch," and re-arming/owning the P1 item's watcher is that sibling action item's
+  scope, not this one's. Leaving this item's checkbox unchecked: the actual condition it gates on (a post-fix launch's
+  run.log/heartbeat showing, or not showing, the RSS-spike-then-freeze signature) genuinely has not occurred yet — there
+  is no post-fix run.log to inspect. No code changed (none evidenced as needed or possible without the precondition).
+  Whoever next re-arms the P1 item's watcher (or triggers/observes any other post-fix ES_OPT launch) should check this
+  item immediately after: `gsutil cat` the resulting VM's run.log for an RSS climb to multi-GiB/cpu-pinned-100% pattern
+  followed by both `run.log` and the heartbeat-sidecar blob going silent together (the exact signature slot-9 confirmed
+  for the pre-fix wave) — if absent, check this box (machine-type fix confirmed sufficient); if present, escalate per
+  this item's own stated remedies (raise watchdog `--min-age` for this launcher class, or add incremental per-date
+  progress logging).
+
+- **2026-08-09, slot-12 (infra)**: Picked up the `[INFRA] P2` historical-manifest-provenance cross-check action item.
+  Traced the actual MTDS CLI failure ordering rather than re-verifying via manifest timestamps alone (a more direct
+  proof): `TickDataHandler.process()` (`market_tick_data_service/cli/handlers/tick_data_handler.py:189`, the per-date
+  entry point) calls `self._resolve_fetch_params(...)` at line 216, which calls `self._resolve_source(...)` at line 252
+  — this raises `ValueError("--source databento is REQUIRED...")` synchronously (confirmed by reading `_resolve_source`,
+  lines 421-464) for any TRADFI-targeted run with OHLCV in scope and no `--source` set. Critically, this call happens at
+  line 252, strictly BEFORE `process_ticks(...)` (line 217-228 — the actual fetch-and-write path) is ever awaited.
+  `--source` is set once from `args` for the entire VM invocation (not re-read per date), so on a broken-launcher run
+  missing `--source`, the very FIRST date `process()` is called for already raises — meaning the whole VM run writes
+  exactly 0 rows before any manifest write can occur, by construction, not by observed behavior alone. This matches the
+  incident's own run.log evidence ("0 results collected", immediate `DEPLOYMENT_FAILED`) and makes it a structural
+  guarantee rather than an empirical one — i.e. it holds for every past invocation of the broken launcher path, not just
+  the 5 VMs directly observed in this doc's first finding. For the CEFI/BTC/ETH shards sharing
+  `launch-targeted-options-chain-backfill.sh`'s `_launch_shard()` (DERIBIT/ DERIBIT-COMBO/OKX): re-read the `acf965d9`
+  fix commit message, which explicitly states the CEFI/Tardis-sourced shards were "fine through the generic fallback" —
+  i.e. `VM_TASK=cefi-backfill` was never actually a broken route for them (Tardis fetches don't consult `--source` at
+  all), only the TRADFI shards (CME-OPTIONS/CBOE-VIX-OPTIONS) sharing that function were affected. So BTC/ETH manifest
+  rows captured via this launcher carry no provenance risk either — the bug never touched their code path. **Conclusion:
+  the historical-manifest-provenance cross-check is closed with a definitive NO — no already-"captured" ES, BTC, or ETH
+  row can have come through either broken launcher.** TRADFI rows are structurally excluded (hard-fail-before-any-write,
+  proven from the CLI's own control flow, not inferred from timing); CEFI/BTC/ETH rows were never on a broken path to
+  begin with. No code change shipped — none is needed; this was a pure investigation task and the evidence is conclusive
+  without a corrective commit. Checked this item's box.

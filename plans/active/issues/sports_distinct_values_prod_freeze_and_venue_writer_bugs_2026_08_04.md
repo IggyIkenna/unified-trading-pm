@@ -405,3 +405,33 @@ that doesn't block or affect anything here; pick it up whenever, no urgency.
   correction names is owned end-to-end by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "The panel"
   section, not by this doc. No new open work here, no reclassification.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — reconfirmed
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md` is still `status: active` / `assigned_vm: planning` with its todo
+  3 (`LC_TARBALL_FRESHNESS=enforce` proposal, line ~98) still open — genuinely in-flight, not stalled. No change.
+
+- **2026-08-10 (slot-7, data_engineering, dispatched on `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s
+  `/data-status/distinct-values/sports` verification todo)**: Verified the 2026-08-04 sports honest-coverage rollup
+  completed + re-read the live panel. **(1) Rollup completed** —
+  `gs://central-element-323112-honest-coverage/2026-08-04/coverage.json` exists with
+  `generated_at: 2026-08-04T13:16:32Z`, advanced past the `09:38:21Z` baseline; `partial: false`; sports block
+  `coverage_pct 98.38%` (captured 613,681 / empty_confirmed 21,922 / attempted_failed 10,094 / total 645,697,
+  `instrument_gates_download: true`). Measurement VM `measure-honest-coverage-20260804-110554` already torn down
+  (expected for a completed measurement VM). **(2) Live endpoint re-read**
+  (`GET https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app/api/data-status/distinct-values/sports`, 2026-08-10):
+  `source_date: 2026-08-10` (rollup pipeline healthy — serving the freshest rollup, newer than the 2026-08-04 target),
+  `generated_at: 2026-08-10T00:37:52Z`, **`non_canonical_count`: venues 2 / instrument_types 1 / data_types 2 / chains
+  1**. **(3) Deviation vs expected** (todo's expected: venues 3/13 non-canonical or fewer if FOOTBALL cleared;
+  instrument_types 0/37; data_types 0/10): venues 2 — **consistent with the "or fewer if FOOTBALL already cleared"
+  branch: FOOTBALL is confirmed CLEARED (no longer appears anywhere in the venues axis)**; the 2 residual (a `<blank>`
+  venue and `ODDS_API`), the 1 `<blank>` instrument_type, the 2 lowercase non-canonical data_types
+  (`odds_movement`/`odds_snapshot`) and the `<blank>` chain are the badge-not-hide-surfaced genuine non-canonical set
+  per this doc's own 2026-08-08 CORRECTION banner — the old 0/37 + 0/10 expectations were the hide-accepted-exceptions
+  semantics, now superseded. instrument_types 1 vs expected 0 and data_types 2 vs expected 0 are **deviations under the
+  old expected counts**, each explained by the post-correction semantics: the `<blank>` sentinel rows (a 2,490-shard
+  blank venue already tracked as a finding in `sports_taxonomy_p3_consumers_2026_08_08.md` lines 81/95) and the
+  lowercase `odds_movement`/`odds_snapshot` data_types
+  - `ODDS_API` venue now surfaced because the panel badges-not-hides. The taxonomy chain (`sports_taxonomy_p2_migration`
+    / `p3_consumers` / `p4_backfill`, all `status: active`) owns working these to empty ("success bar = exception sets
+    reaching empty"). No code change; read-only verification. **Evidence**: coverage.json
+    `generated_at 2026-08-04T13:16:32Z` + live endpoint
+    `non_canonical_count {venues: 2, instrument_types: 1, data_types: 2, chains: 1}`.

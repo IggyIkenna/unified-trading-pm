@@ -262,9 +262,10 @@ scope on every run. Fix belongs with Finding 3's script todo.
       is `status: active` + `assigned_vm: planning`; its todo 1 shows
       `[x] ✅ [CODE] P0. DONE 2026-07-30 —     instruments-service@94f3ee11` (repointed 2026-08-06 — original sha
       orphaned by the 2026-08-05 history rewrite; content verified identical) (the CQG mis-bucketing fix); the
-      batch4/batch6 duplicate (todo 7) was resolved via that doc's own
-      `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section, citing an explicit 2026-07-30 operator
-      ruling. (repo: unified-trading-pm, instruments-service)
+      batch4/batch6 duplicate (todo 7) was resolved via that section's explicit 2026-07-30 operator ruling, recorded in
+      `/plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s own
+      `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section. (repo: unified-trading-pm,
+      instruments-service)
 - [ ] [SCRIPT] P2. Resolve Finding 3: pick ONE canonical verdict-marker format, state it explicitly in
       `/cursor-configs/skills/na-eligibility-audit/SKILL.md` Phase 0/3 (recommend the name-then-date form
       `**na-eligibility-audit YYYY-MM-DD (<tranche> tranche)**:`, which also carries the tranche needed by Finding 1's

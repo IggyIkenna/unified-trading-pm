@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         path = PM / rel
         try:
             verdict = resolve_file(path)
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, StopIteration, IndexError) as e:
             verdict = f"ERROR: {e}"
         print(f"{rel}: {verdict}")
         if verdict.startswith("MANUAL") or verdict.startswith("ERROR"):

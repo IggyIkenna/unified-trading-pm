@@ -992,3 +992,12 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
   all 5 AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer-
   produced, not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped
   sweep's authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement [confirmed unrelated — a different PM-reconciler/
+  semver-agent scope entirely], GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none of these touch the
+  sole open todo's actual blocker, which is structural (a stale "mass-flip all 5 AGs" framing) not credential/IAM/
+  tiering-shaped. Reaffirms round7's own verdict: this is a 6-asset_group cross-cutting doc explicitly flagged as
+  out of a single-tranche sweep's authority — not actioned here, still recommend a dedicated cross-cutting close +
+  archive pass. Doc stays NA.

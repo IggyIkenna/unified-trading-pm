@@ -250,3 +250,11 @@ depend on.
   points; existing list still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 open items remain, all dependency-blocked corroborating data
   points feeding the sibling shard-16 investigation.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement [confirmed unrelated], GSM secret
+  `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none apply. All 3 remaining items are P3 corroborating
+  freeze-moment data points explicitly deferred to the sibling shard-16 investigation
+  (`cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s own P2 todo), not independently dispatchable. No
+  reclassification.

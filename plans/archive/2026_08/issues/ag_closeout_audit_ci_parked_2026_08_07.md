@@ -21,9 +21,9 @@ tags: [ag-closeout-audit, parked, ci, orphan, mistag, interim]
 related:
   [
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-08-07

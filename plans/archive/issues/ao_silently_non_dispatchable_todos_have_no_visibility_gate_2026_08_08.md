@@ -146,6 +146,6 @@ gated on an upstream whose remaining todos are all silently excluded will read t
   (`server.py:239` cadence comment) was already corrected in a prior session (verified live: the comment now correctly
   states 30min/`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS`, not "every 6h"). The 27 accidental exclusions are filed, not
   hand-fixed here (same precedent this issue's own filing set) —
-  `/plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_08.md`, one todo per doc. Evidence:
-  agent-orchestrator@d4f4947d0 (report module + tests), unified-trading-pm@fb70812a8 (gate + baseline + quality-gates.sh
-  wiring, both landed on live-defi-rollout).
+  `/plans/archive/2026_08/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_08.md` (archived 2026-08-09,
+  all 27 todos resolved), one todo per doc. Evidence: agent-orchestrator@d4f4947d0 (report module + tests),
+  unified-trading-pm@fb70812a8 (gate + baseline + quality-gates.sh wiring, both landed on live-defi-rollout).

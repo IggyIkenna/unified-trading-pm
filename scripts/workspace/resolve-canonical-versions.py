@@ -34,6 +34,13 @@ WORKSPACE_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MANIFEST_PATH = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-manifest.json"
 CONSTRAINTS_FILE = WORKSPACE_ROOT / "unified-trading-pm" / "workspace-constraints.toml"
 
+# Single canonical uv version pin (lockfile determinism — uv.lock's `revision = 3` serialization is
+# tied to this version; an unpinned uv reformats the lock on any `uv lock` run, even with identical
+# deps). This is the ONE place the literal is defined workspace-wide. Shell/YAML consumers that can't
+# import this module extract it via: grep -oP '^UV_VERSION = "\K[^"]+' resolve-canonical-versions.py
+# SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md.
+UV_VERSION = "0.10.8"
+
 
 def load_manifest() -> TomlDict:
     with open(MANIFEST_PATH) as f:

@@ -31,8 +31,8 @@ tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-4, plan-hygi
 related:
   [
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,

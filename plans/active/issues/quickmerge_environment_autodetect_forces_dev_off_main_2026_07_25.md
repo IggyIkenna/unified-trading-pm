@@ -157,18 +157,20 @@ change needs a caller audit across the repo before touching it — out of scope 
 ## Suggested next steps
 
 1. [INFRA] P1. ✅ DONE 2026-07-25 — see Resolution above.
-2. [INFRA] P2. Align `UnifiedCloudServicesConfig.environment`'s alias with `BaseConfig.environment`'s (add
-   `populate_by_name` and the bare `"environment"` entry to `AliasChoices`) so the real constructor's `environment=`
-   kwarg isn't silently dropped in favour of ambient env — confirmed root cause in Resolution above, not yet fixed
-   (needs a caller audit: anywhere in the repo passing `environment=` to `UnifiedCloudServicesConfig(...)` expecting it
-   to win is currently silently getting the ambient value instead, which is worth auditing FOR before changing the
-   precedence).
+2. [INFRA] P2. ✅ **DONE — corrected 2026-08-07, this item was stale.** Align `UnifiedCloudServicesConfig.environment`'s
+   alias with `BaseConfig.environment`'s (add `populate_by_name` and the bare `"environment"` entry to `AliasChoices`)
+   so the real constructor's `environment=` kwarg isn't silently dropped in favour of ambient env — confirmed root cause
+   in Resolution above. Per the Todos section below (corrected 2026-08-07 by na-eligibility-audit): shipped
+   `unified-trading-library@dc1dc7df`. This numbered list was not updated at the time; the Todos section is
+   authoritative — see there for the evidence citation.
 3. [INFRA] P2. ONLY once (2) is done (or confirmed non-breaking): revisit whether `scripts/quickmerge.sh`'s branch check
    should ALSO be broadened to recognise `live-defi-rollout`/`staging` — blast radius is now safer for the 7 sites fixed
    here, but (2) is a separate latent risk the broadening would still expose if any other in-repo caller relies on the
    silently-dropped-kwarg behavior in a way this issue didn't probe.
-4. [INFRA] P3. Grep the other ~20 repos for the same ambient-default-reliant test pattern before assuming this is unique
-   to `unified-trading-library` — not done this session.
+4. [INFRA] P3. ✅ **DONE — corrected 2026-08-07, this item was stale.** Grep the other ~20 repos for the same
+   ambient-default-reliant test pattern before assuming this is unique to `unified-trading-library`. Per the Todos
+   section below: fleet grep result was "none found — fleet is clean." This numbered list was not updated at the time;
+   the Todos section is authoritative — see there for the evidence citation.
 
 ## Todos
 
@@ -203,11 +205,12 @@ confirm this is the same stale artifact (and clear it per the cited precedent) o
 **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA-STALE (already-duplicated) —
 citation correction. The 2026-07-30/08-01 citation to archived `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred
 E5 is now stale (batch2 is archived/superseded). Verified live: steps 2+4 are now extracted verbatim as todo 2 in
-`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines 143-167, `Source:` cites this doc's Suggested next
-steps 2+4), with step 3 tracked there as Deferred **D4-1** (still gated on todo 2 landing + `quickmerge.sh` being free).
-Batch4 is `status: draft` — not yet dispatched — so this is a citation fix, not a reclassification; flipping this doc
-directly would race/duplicate-dispatch onto the same `unified-trading-library` config files batch4 already owns once
-activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned pending operator.
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines 143-167, `Source:` cites this doc's
+Suggested next steps 2+4), with step 3 tracked there as Deferred **D4-1** (still gated on todo 2 landing +
+`quickmerge.sh` being free). Batch4 is `status: draft` — not yet dispatched — so this is a citation fix, not a
+reclassification; flipping this doc directly would race/duplicate-dispatch onto the same `unified-trading-library`
+config files batch4 already owns once activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned
+pending operator.
 
 ## Progress Log
 
@@ -249,3 +252,11 @@ call — no `assigned_vm` change. `locked_by` anomaly (flagged 2026-08-01, still
 valid — the sole open item (step 3, quickmerge.sh branch-check broadening, D4-1) remains a genuine design/judgment call,
 gated on `scripts/quickmerge.sh` ownership contention. `locked_by: live-defi-rollout` anomaly (flagged 2026-08-01, still
 unactioned) unchanged — not this run's to clear autonomously. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:003eb4f7e5a28a06]: KEEP-NA,
+valid — Steps 2 and 4 of the suggested-next-steps are done (shipped unified-trading-library@dc1dc7df + fleet grep found
+no other repo carries the risky pattern). The sole remaining open sub-item is step 3: revisit whether quickmerge.sh's
+branch check should broaden to recognise live-defi-rollout/staging as production. The doc's own body documents a
+same-repo TRIAL FIX that was built, applied, and locally re-gated -- it eliminated the 5 originally-failing tests but
+immediately surfaced 2 DIFFERENT failures elsewhere in the same repo, because a second config surface
+(UnifiedCloudServicesConfig) has the OPPOSITE documented default from the first (resolve_bucket_name).

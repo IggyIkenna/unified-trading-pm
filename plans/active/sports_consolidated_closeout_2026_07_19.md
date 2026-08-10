@@ -45,7 +45,7 @@ related:
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
     /plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
-    /plans/active/sports_closeout_track_x_hygiene_2026_07_25.md,
+    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/active/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
@@ -88,7 +88,7 @@ supersedes:
 superseded_by: # recounted 2026-07-25 (plan-reconcile + consolidated-plan split pass) — 37 open/27 done post-split
   # (was 51 open/11 done as of 2026-07-21; this doc's own Track content was substantially relocated into 3 new child
   # plans on 2026-07-25, `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
-  # `sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`, so the lower
+  # `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`, so the lower
   # count reflects relocation, not just fresh unexecuted work draining down) — real unexecuted work (canonical-honesty
   # fixes, ODDS-LEAK cleanup, honest-coverage backfill tracks). sports_master_closeout_2026_07_21.md
   # is an entry-point redirect only ("that plan + the audit remain the detailed backing" — its own words), not a
@@ -145,9 +145,9 @@ context_scope:
 >
 > - Track C's EXCHANGE_ODDS/FIXED_ODDS fork block → `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`
 >   (`sequential: true`, 11 todos) — see the short pointer left in Track C below.
-> - Track X (plan/doc hygiene + orphan-satellite reconciliation) → `sports_closeout_track_x_hygiene_2026_07_25.md` (4
->   todos, after excluding 3 items `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted from the same
->   Track).
+> - Track X (plan/doc hygiene + orphan-satellite reconciliation) →
+>   `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos, after excluding 3 items
+>   `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted from the same Track).
 > - Track S2 (fold-in absorption from the 3 archived plans) → `sports_closeout_track_s2_foldin_2026_07_25.md` (after
 >   excluding 7 items/sub-parts `sports_consolidated_native_ao_extract_2026_07_25.md` already drafted, and correcting 4
 >   items that turned out to already be resolved — see that child's own staleness-correction note).
@@ -205,7 +205,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   are still open — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of
   07-17) and `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
   `entity={fixtures,teams, injuries}/` under a different namespace) — tracked via Track S/E's todos below. **SECOND
-  CROSS-LINK (2026-07-25, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
+  CROSS-LINK (2026-07-25, `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 1):** that same
   `sports_catalog_league_grain_only_scope_2026_07_08.md` also independently designs a manifest-schema extension for
   per-fixture-grain capture tracking (its own todos), a parallel, independently-designed fixture-grain redesign running
   alongside this closeout's own fixture-grain entity-split work (Track E), with neither doc aware of the other until
@@ -722,7 +722,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       for `"odds_movement"`/`"odds_snapshot"`/`"arbitrage_opportunity"` (as a `data_type` value/path/adapter class)
       returns 0 hits in both — the `odds_movement_home/_draw/_away` hits in `features-service` are a different,
       unrelated FEATURE COLUMN concept, confirmed false-positive by the exact-literal check. Per the operator ruling
-      this todo cites: nothing downstream needs them, so retirement (out of this todo's scope) is unblocked.
+      cited in `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` todo 17: nothing downstream needs
+      them, so retirement (out of this todo's scope) is unblocked.
 - [x] ✅ [CODE] P1. **RESTORED 2026-07-24, SHIPPED 2026-07-27 — `unified-api-contracts@804858c9`** (batch7 todo 3). 25
       leagues double-keyed (358/1129 pairs); `canonicalize_odds_api_league_id()` + 10 regression tests; JSON regenerated
       1129→771 deduped.
@@ -744,7 +745,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track V — COVERAGE: backfill to honest-100% · P1 (operator-gated where noted)
 
-> **league_id-migration tracking merge (2026-07-27, `sports_closeout_track_x_hygiene_2026_07_25.md` todo 2)**:
+> **league_id-migration tracking merge (2026-07-27,
+> `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 2)**:
 > `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`'s open `LEAGUE_ID_TO_TIER` mapping +
 > 28-unmapped-`league_id` gap-analysis (its own P1 "gap-analysis follow-ups" todos 1-2) are now merged into
 > `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" — that section, not this
@@ -880,14 +882,17 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 Fully closed (both items `[x]`) — extracted to
 `/plans/archive/2026_07/sports_consolidated_closeout_track_d_history_2026_07_23.md` (line-cap remediation).
 
-## Track X — CLEANUP + plan reconciliation · P2 (MOSTLY MOVED 2026-07-25)
+## Track X — CLEANUP + plan reconciliation · P2 (✅ DONE 2026-08-10)
 
-Open work forked to `sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos: the
-`sports_catalog_league_grain_only_scope` cross-link, the `sports_odds_bookmaker_coverage_enumeration` league_id fold-in,
-the peripheral-bucket league-vocabulary contamination fix, and shipping the 2 parked worktree changes) — see the Split
-notice near the top of this doc. 3 further items (the issue-doc index fix, the adapter dead-code/fallback audit, the
-`data_completion_sports_history_2026_07_24.md` aggregated-sources index entry) were independently extracted by
-`sports_consolidated_native_ao_extract_2026_07_25.md` before this split ran, so are not duplicated in the new child
+All open work shipped via `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos + the
+split-out migration sub-todo): the `sports_catalog_league_grain_only_scope` cross-link
+(`unified-trading-pm@dc8b142a4e`), the `sports_odds_bookmaker_coverage_enumeration` league_id fold-in merge
+(`unified-trading-pm@69b8c3f7f3`), the peripheral-bucket league-vocabulary contamination fix
+(`unified-api-contracts@f3f1bbe0` write-path fix + the 9,733-object migration `market-tick-data-service@b37b8553`), and
+the 2 parked worktree changes (`market-tick-data-service@03b9ffd6` + `deployment-service` no-op clean). All cited
+commits verified via `git log` (2026-08-10). 3 further items (the issue-doc index fix, the adapter dead-code/fallback
+audit, the `data_completion_sports_history_2026_07_24.md` aggregated-sources index entry) were independently extracted
+by `sports_consolidated_native_ao_extract_2026_07_25.md` before this split ran, so are not duplicated in the new child
 either. Every item that was already `[x]` done at split time is preserved verbatim in
 `/plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md`'s "2026-07-25 — Track X + Track S2 line-cap
 split" section.
@@ -913,8 +918,9 @@ split" section.
 > the source of truth on the rest). The "Aggregated source docs" discoverability index moved verbatim to
 > `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`. Nothing was dropped or
 > summarized — see those two docs for full content. **Correction (2026-07-25, 3rd trim pass)**: Track X and Track S2 are
-> no longer fully retained here either — both were mostly forked out to `sports_closeout_track_x_hygiene_2026_07_25.md`
-> / `sports_closeout_track_s2_foldin_2026_07_25.md` (see the Split notice near the top of this doc); this parent now
+> no longer fully retained here either — both were mostly forked out to
+> `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` /
+> `sports_closeout_track_s2_foldin_2026_07_25.md` (see the Split notice near the top of this doc); this parent now
 > retains Tracks F/C(remainder)/S/E/O/H/V/K/D in full, plus short pointers for X/S2, the Codex SSOTs, and the still-open
 > "Operator decisions needed (blocking)" section.
 
@@ -966,35 +972,15 @@ section above, which conflated answered and open items):
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sports tranche's flagship multi-track
-  closeout (30 open todos across Tracks C/E/F/H/S/V). Stays NA: it carries operator-gated prod GCS DELETEs (Track V
-  raw-keyed league_id objects), the CF-8 maintenance-window item under the same `BLK-d9137d48` STOP, and several
-  cross-track design calls. One stale item WAS closed in this pass — the `[DATA] P0` PURGE of the fabricated post-floor
-  `derived_features` remainder, provably a verified no-op per
-  `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (2400/2400 days, 26,891
-  objects, `total_delete=0`). Its sibling `[DATA] P0` census-re-verify checkbox is satisfied by the same artifact but
-  was left open and filed as a P3 follow-up rather than closed on an unnamed inference
-- **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
-- **na-eligibility-audit 2026-08-02**: re-read (in scope again — `5fb83f4ea` 07-31 and `b710bbd40` 08-02 both landed
-  after the 07-30 marker). **KEEP-NA, valid — verdict UNCHANGED, and now citation-locked twice over.** Not re-litigated:
-  this doc's own `assigned_vm:` field carries the standing ⛔ operator ruling (2026-07-23) against a direct flip, plus
-  `gate_on_depends: true` on 3 forked children — per the skill's "never re-litigate an established ruling" rule that is
-  KEEP-NA on the citation alone (citation grep-verified in the frontmatter, still present). The 08-02 `/plan-reconcile`
-  commit strengthens it: two Track C/S todos were bannered as P0 delete-safety hazards (`UNIBET_UK/EU` is NOT an alias
-  fold — distinct live bookmaker feeds; `SMARKETS` is NOT deleted-venue residue — 1.1-1.65M live rows), and the
-  `sports_reference_v2/by_date/` cull was retagged `[OPERATOR]` because its reader-check-only gate does not cover
-  twin-existence for 1,492 sole-surviving-copy rows. All 28 open todos read this pass; no newly-stale item found beyond
-  what that same-day run already corrected. RECLASSIFY would be actively unsafe here — naive concurrent dispatch is
-  exactly what the ⛔ note and the prose-only sequencing warnings guard against
-- **na-eligibility-audit 2026-08-03**: re-read (in scope again — 2 more referrer-path fixes landed since the 08-02
-  marker, pointing to docs archived since; no todo-content change). **KEEP-NA, valid — verdict UNCHANGED, citation-
-  locked a third time.** Re-confirmed the ⛔ 2026-07-23 operator-ruling citation against a direct `assigned_vm` flip is
-  still present in the frontmatter, plus `gate_on_depends: true` on 3 forked children. Also noted in passing (not this
-  audit's to resolve): the new `sports_reference_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md` issue directly
-  bears on this doc's own `sports_reference_v2/by_date/` cull-todo framing — see that doc for the live SSOT-conflict
-  finding.
-- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- added the native-extract child plan + the Track C
-  root-cause source file (canonical_writer_shaping.py).
-- **context-scout 2026-08-06**: restored both entries above (silently missing despite the 08-03 marker). 5 entries.
-- **na-eligibility-audit 2026-08-08**: re-read in full, 25/25 todos. **KEEP-NA valid, citation-locked 4th time** (⛔
-  07-23 ruling holds). 1 stale-prose fix above; 9 todos flagged satellite-batch-eligible (chat report).
+> **Line-cap remediation (2026-08-10)**: entries from the 2026-07-30 na-eligibility-audit marker through the 2026-08-08
+> na-eligibility-audit marker were extracted verbatim to
+> `/plans/archive/2026_08/sports_consolidated_closeout_progress_log_history_2026_08_10.md` to bring this doc back under
+> the 1000-line hard cap. New entries append below the kept 2026-08-09 (round11) entry.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-confirmed the standing ⛔ 2026-07-23 operator
+  ruling against a direct `assigned_vm` flip still holds (naive concurrent dispatch would corrupt this plan's own
+  prose-only cross-track sequencing; citation + `gate_on_depends: true` on 3 forked children still present in the
+  frontmatter). This closeout continues to be fed by the established per-item satellite-extraction cadence (batches
+  1-12, most recently `sports_satellite_ao_dispatch_batch11_2026_08_09.md`/`batch12` today, both of which reference this
+  doc's Tracks without duplicating them) rather than a whole-doc flip — consistent with every prior audit pass. No new
+  extractable item found beyond what batch9-12 already claimed. No flip.

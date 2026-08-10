@@ -54,7 +54,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md,
     /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     scripts/deploy/trading-kill-switch.sh,
     scripts/cicd/reconcile_release_tags.py,
   ]
@@ -423,14 +423,13 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 ## Docs (P2)
 
-`/codex/08-workflows/ci-cd-flow.md` carries a correct dormancy banner but the branch-model narrative below it is stale:
-**L75-109** still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron and labels direct-to-main
-as "PM only"; **L763**, **L777-786**, **L1183** still describe `quickmerge → staging → main` as canonical.
-
-**Gap that bites on re-entry:** nothing in `codex/` documents that the staging triggers were commented out 2026-07-23
-and must be **uncommented** as part of re-entry — that fact lives only in inline YAML comments and
-`staging_workflow_shutdown_2026_07_23.md` (a plan, which archives). Per CLAUDE.md's SSOT-direction rule this belongs in
-codex, or a future staging re-entry gets a dead pipeline.
+**RESOLVED — DONE 2026-07-26 (`unified-trading-pm@97970974e`), this section is stale, corrected 2026-08-10
+(plan_reconciler, ci tranche).** This prose was never struck after the matching `[DOC] P2` resolution-checklist item
+below shipped — it described already-fixed content as still open. Both gaps this section named are independently
+re-verified fixed as of this correction: `/codex/08-workflows/ci-cd-flow.md`'s branch-model narrative now correctly
+describes the LDR→main model ("Exactly three things gate a repo's LDR→main promotion", not the old 15-min staging-cron
+narrative), and a "Staging re-entry procedure" section (with explicit uncomment-the-disabled-triggers guidance) now
+exists in codex. See the `[DOC] P2` item under Resolution checklist for the full citation.
 
 ---
 
@@ -550,13 +549,16 @@ codex, or a future staging re-entry gets a dead pipeline.
       mutation). Evidence: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` ("Verify the released Docker version tag is
       no longer re-pointed at new content") tracked completion here per its own citation.
 - [x] ✅ [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
-      instruments-service@7d005520. DONE via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Confirm
-      instruments-service's publish path can no longer emit 0.0.0.dev0" todo (full evidence there): the repo's installed
-      `publish-package.yml` was stale pre-migration legacy content (no `fetch-depth: 0`, not even the AR-dispatch
-      pattern) — replaced with the canonical `scripts/propagation/templates/publish-package.yml` (byte-identical to the
-      working `unified-api-contracts`/`unified-trading-library` copies), which now dispatches to PM's
-      already-fail-closed receiver. Bad wheel disposition recorded (still present, single 2026-07-03 occurrence, left in
-      place per the operator-gated AR-delete rule).
+      instruments-service@79b7d5b4 (rewritten from the orphaned `7d005520` during the 2026-08-05 slot-5 diverged-branch
+      reconciliation — content identical, confirmed ancestor of `origin/live-defi-rollout`; the original `7d005520` sha
+      only survives on `origin/wip-preserve/slot-5-instruments-service-diverged-20260805T111826Z`, not LDR). DONE via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Confirm instruments-service's publish path can no longer emit
+      0.0.0.dev0" todo (full evidence there): the repo's installed `publish-package.yml` was stale pre-migration legacy
+      content (no `fetch-depth: 0`, not even the AR-dispatch pattern) — replaced with the canonical
+      `scripts/propagation/templates/publish-package.yml` (byte-identical to the working
+      `unified-api-contracts`/`unified-trading-library` copies), which now dispatches to PM's already-fail-closed
+      receiver. Bad wheel disposition recorded (still present, single 2026-07-03 occurrence, left in place per the
+      operator-gated AR-delete rule).
 - [x] ✅ [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
       fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently. — **DONE, closed via
       `autonomous_session_operator_decisions_2026_07_25.md` entry #33** (operator ruled option 1, the dormancy-aware
@@ -690,8 +692,8 @@ active batch — flagged again as the standing carve-out candidate. Doc stays NA
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
-  `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout the
-  Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
+  `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout
+  the Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — SUPERSEDED banners on 6 items, time-gated kill-switch, extraction
@@ -739,3 +741,20 @@ vacuous-crons item bundles a plausibly-bounded sub-part (disable 4 named no-op c
 sub-part (`digest-drift-sweep`'s non-convergence, itself gated on the dormant- cascade investigation) — not split out or
 reclassified here. The `sit_validated_workspace_digest` item ("close the gap, or document why safe to drop") is a
 genuine design call, not a checkable fact. No `assigned_vm` change.
+
+**round-9 combined RECLASSIFY + satellite-extraction sweep, 2026-08-09** (ci tranche): KEEP-NA, valid — re-read all 5
+open items end-to-end, verdict unchanged from 2026-08-08. F1 (kill-switch) stays time-gated per its own re-affirmed
+operator ruling; the ~4-weeks-of-missing-tags reconciliation is explicitly NOT a backfill by design (deliberately scoped
+away from a bulk-write); the F3 success-reporting item's PM-owned half was already extracted
+(`ci_satellite_ ao_dispatch_batch5_2026_08_02.md` todo 6, shipped) — the remaining scope is the non-PM-owned dispatch
+sites, still genuinely open but not newly bounded; F4 stays the bundled bounded+open-ended pair described above; the
+digest-gap item stays a design call. No new facts from today's round-9 cheat sheet (GSM secrets, Slack webhooks) apply
+to this doc's content. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:2f1897ab7a615737]: KEEP-NA,
+valid — Large audit doc, 5 open checkboxes (matches phase0=5 and my grep). Six prior na-eligibility-audit passes
+(2026-07-30, 08-01, 08-06, 08-07, 08-08 round7, 08-09 round-9) all verdicted KEEP-NA valid; independently re-read all 5
+items end-to-end rather than rubber-stamping: (1) F1 kill-switch (L439) -- TIME-GATED per an explicit dated 2026-07-28
+operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserved... KEEP TRACKED, DO NOT FIX YET'; gate
+= execution-service handling live order flow, not yet true pre-live-trading) -- honored per the never-re-litigate rule;
+citation verified real by reading it in place. Tag: DEPENDENCY_BLOCKED.

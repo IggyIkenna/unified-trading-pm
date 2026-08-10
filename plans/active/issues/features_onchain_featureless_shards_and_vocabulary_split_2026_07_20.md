@@ -325,3 +325,12 @@ build-MTDS-collectors → recompute), not a new one.
   `defi_satellite_ao_dispatch_ batch3_2026_07_26.md`'s Deferred/non-batchable list) against their live source files
   rather than trusting the prior audit's word — both still accurate. Only change since the 2026-08-03 marker was a
   context-scout metadata-only touch. Doc stays `assigned_vm: NA`.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (1 open
+  `[DATA] P0` item at entry: build the missing MTDS chain-field collectors for the 5 featureless on-chain feature
+  groups, then recompute). Checked against every accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1
+  tiering, plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified deletes, Option B
+  retired, GSM secret + 5 Slack webhooks now existing) — none apply: the remaining scope is building 5
+  protocol-specific on-chain data collectors from scratch (which on-chain source per protocol/field), a genuine human
+  sizing/scoping decision per the doc's own author note and `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s
+  Deferred/non-batchable classification — not a bare mechanical build. No satellite-extraction candidate found. Doc
+  stays `assigned_vm: NA` (KEEP-NA valid, round11).

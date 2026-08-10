@@ -121,3 +121,12 @@ stating that the allow-list and error type do not exist and that the instrument 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-01 (unchanged): sole remaining todo is an
   [OPERATOR] 3-way design call on live-trading position-state safety.
+- **round11 RECLASSIFY sweep 2026-08-09**: NOT reclassified — found the sole todo's own opening text ("RULED 2026-08-06
+  (operator), option A: implement the documented guard") directly contradicts its own closing text ("Rule between A / B
+  / C — specifically, confirm whether a live instrument-universe swap is position-state-safe") and this SAME doc's own
+  2026-08-06 audit entry immediately above, which still calls it an undecided `[OPERATOR]` call. No Progress Log entry
+  anywhere records an actual ruling. Filed
+  `issues/two_issue_docs_claim_2026_08_06_operator_ruling_with_no_corroborating_evidence_2026_08_09.md` (a sibling doc,
+  `order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`, has the identical malformed pattern) rather than acting
+  on the unverified "RULED" text — this is a live-trading-safety decision, too consequential to dispatch on
+  contradictory self-reported text. Doc stays `assigned_vm: NA`.

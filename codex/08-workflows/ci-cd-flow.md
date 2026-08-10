@@ -183,14 +183,18 @@ steps below are required when flipping a repo off `ldr_main`:
    TEMPLATE + re-run `rollout-workflow-templates.sh` (never hand-edit a per-repo rendered copy), then ship each affected
    repo via its own `quickmerge.sh --agent --files`. The other four are PM-only drivers, edited directly:
 
-   | File                                                       | Owner                     | Uncomment                                                                                  |
-   | ---------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
-   | `scripts/workflow-templates/staging-backmerge-to-ldr.yml`  | fleet template (24 repos) | `schedule: - cron: "10 * * * *"` (hourly convergence safety-net)                           |
-   | `scripts/workflow-templates/staging-lock-check.yml`        | fleet template (24 repos) | `repository_dispatch: types: [staging-locked, staging-unlocked]`                           |
-   | `.github/workflows/staging-to-main.yml`                    | PM                        | `schedule: - cron: "0 * * * *"` (hourly drain)                                             |
-   | `.github/workflows/staging-conflict-ldr-main-fallback.yml` | PM                        | `schedule: - cron: "47 * * * *"`                                                           |
-   | `.github/workflows/reconcile-staging-versions.yml`         | PM                        | `schedule: - cron: "35 * * * *"`                                                           |
-   | `.github/workflows/ldr-to-staging-promote.yml`             | PM                        | `schedule: - cron: "2,17,32,47 * * * *"` AND `repository_dispatch: types: [tier-ab-green]` |
+   **CORRECTED 2026-08-10** (plan_reconciler infra shard, agt-716973): the first two rows' PM template paths were
+   deleted 2026-08-06/08 — both reusable workflows now live in `unified-trading-ci` (live-verified: neither path exists
+   in PM anymore).
+
+   | File                                                                | Owner                     | Uncomment                                                                                  |
+   | ------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ |
+   | `unified-trading-ci/.github/workflows/staging-backmerge-to-ldr.yml` | fleet template (24 repos) | `schedule: - cron: "10 * * * *"` (hourly convergence safety-net)                           |
+   | `unified-trading-ci/.github/workflows/staging-lock-check.yml`       | fleet template (24 repos) | `repository_dispatch: types: [staging-locked, staging-unlocked]`                           |
+   | `.github/workflows/staging-to-main.yml`                             | PM                        | `schedule: - cron: "0 * * * *"` (hourly drain)                                             |
+   | `.github/workflows/staging-conflict-ldr-main-fallback.yml`          | PM                        | `schedule: - cron: "47 * * * *"`                                                           |
+   | `.github/workflows/reconcile-staging-versions.yml`                  | PM                        | `schedule: - cron: "35 * * * *"`                                                           |
+   | `.github/workflows/ldr-to-staging-promote.yml`                      | PM                        | `schedule: - cron: "2,17,32,47 * * * *"` AND `repository_dispatch: types: [tier-ab-green]` |
 
 **Default-branch gotcha**: a `schedule:` trigger fires only from the DEFAULT branch (`main`) — landing the uncomment on
 LDR alone does NOT restart a cron; it takes effect only once promoted to `main`.
@@ -811,6 +815,40 @@ service-specific auto-repin/side-effect step belongs in THAT service's own `clou
 shared file, verify end-to-end which live trigger reaches it before declaring the wiring "CONFIG DONE" — "the step
 exists in a file with the right guard" is not evidence it ever executes).
 
+### Empty-tag / `$SHORT_SHA` guard — `cloudbuild.yaml` must fall back when the build source has no SHA (codified 2026-08-06)
+
+A `cloudbuild.yaml` step that tags a Docker image `:$SHORT_SHA` dies with `invalid reference format` (exit 125) whenever
+the build is triggered from a **storageSource** (a tarball/manual submit) rather than a real GitHub-connected commit —
+`$SHORT_SHA` resolves EMPTY in that path, producing `image:` (a bare colon, no tag). Every image-building consumer's
+`cloudbuild.yaml` (17/19 CI-tranche consumers as of 2026-08-06; `e2e-testing` and `system-integration-tests` are
+legitimate N/A — test-harness repos with no Docker image / no push step) MUST guard the build-tag substitution with a
+fallback: extract a `VERSION` (or similar) value and set `SAFE_SHA=${SHORT_SHA:-$VERSION}` (or equivalent), with a FATAL
+diagnostic if BOTH resolve empty rather than silently building an untagged/`:latest` -shadowing image. Verified
+end-to-end via a real `gcloud builds submit` storageSource dispatch with `SHORT_SHA` empty (execution-service, build
+`4d265c51-5ca0-4349-b48f-80d4f7179430`, 2026-08-06) — recovered via `VERSION=0.0.0.dev0` fallback instead of dying.
+Rollout tracked at `/plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`;
+the drift-baseline ratchet this guard interacts with is `scripts/quality_gates/check_cloudbuild_template_drift.py` /
+`cloudbuild_template_drift_baseline.yaml` (shrinking-ratchet, never raised).
+
+**Two-step rollout when a template-drift baseline exists**: do NOT roll a new/changed template step out to
+already-drifted consumers in the same pass that also tries to shrink the baseline — resolve the existing per-repo drift
+FIRST (bring every consumer to at-or-below its ratcheted baseline), THEN apply the new guard/step as its own separate
+rollout. Combining both in one pass makes it impossible to tell whether a post-rollout drift-count increase is the new
+step or pre-existing debt.
+
+### `quality-gates-v2` CI-status dispatch must be outage-aware — a 0-job billing/startup-kill run is not a genuine FAILING status (codified 2026-08-07)
+
+The "Record CI status" step (`if: always()`) in `quality-gates-v2` dispatches a `STATUS=FAILING` Firestore write on ANY
+non-success conclusion — including a 0-job account-level billing-wall/quota kill (`jobs: []`,
+`conclusion: startup_failure`), which no worker can fix and which generated `ldr_qg_failure` escalation spam fleet-wide
+during the 2026-07-29 billing-wall incident. **Detect the infrastructure-kill pattern** (`CONTENT_GATE_RESULT=failure`
+AND `SLICES_RESULT=failure` → treat as `BILLING_KILL=true`) and skip the FAILING dispatch, emitting only a `::notice::`
+annotation instead — a genuine failing run (content-gate succeeds, slices fails) still dispatches normally. Implemented
+in `unified-trading-ci`'s shared `python-quality-gates-v2.yml` (the reusable workflow was extracted there per
+`shared_ci_workflow_repo_extraction_2026_08_06.md` — this is the single source now, not a per-repo `.tmpl` +
+`rollout-workflow-templates.sh` rollout). Source:
+`/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
+
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
 CODE reaches the integration branch ONLY via `quickmerge --agent --files`. A direct `git push` of code to
@@ -895,21 +933,25 @@ wheels published. Incident history: MVP plan Phase 4 Progress Log +
 
 **What it does per repo:**
 
-| Field                                                                        | Behaviour                                                                                                                                                                                                                                 |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Baseline** (git-tag repos, `version_source=git-tag` — all 23 Python repos) | Derived from `git describe --tags --abbrev=0 --match 'v*'` reachable from main HEAD — NOT the stale `staging_versions` map (which was 13 versions behind for UTL and would have scanned ancient history → a spurious breaking over-bump). |
-| **Baseline** (legacy `pyproject.toml` repos)                                 | Read from the manifest `versions` map (the `main`-side key under `ldr_main`).                                                                                                                                                             |
-| **Compute**                                                                  | AST-differ verdict (`is_breaking`) + commit labels → next semver. Pre-1.0.0: `feat!`/`feat` → MINOR, `fix` → PATCH, `chore`/`docs` → skip (never auto-cross to 1.0.0).                                                                    |
-| **Apply — git-tag repos**                                                    | `git tag -a "vX.Y.Z" -m "vX.Y.Z"` + `git push origin "vX.Y.Z"` on main HEAD — **zero pyproject commits** (the tag IS the version via hatch-vcs). Idempotent: skips if `vX.Y.Z` already exists.                                            |
-| **Apply — legacy repos**                                                     | `sed` the `version = "X.Y.Z"` line in `pyproject.toml` + `chore(release):` commit to main (no `[skip ci]` — the metadata-only diff short-circuits `quality-gates-v2` to green in seconds).                                                |
-| **Dispatch**                                                                 | A `version-bump` `repository_dispatch` to `unified-trading-pm` (`update-repo-version.yml`), payload `{repo, version, branch:main, commit_sha, is_breaking}`; PM records it under `versions{}`.                                            |
+| Field                                                                        | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Baseline** (git-tag repos, `version_source=git-tag` — all 23 Python repos) | Derived from `git describe --tags --abbrev=0 --match 'v*'` reachable from main HEAD — NOT the stale `staging_versions` map (which was 13 versions behind for UTL and would have scanned ancient history → a spurious breaking over-bump).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Baseline** (legacy `pyproject.toml` repos)                                 | Read from the manifest `versions` map (the `main`-side key under `ldr_main`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Compute**                                                                  | Content-based, NOT commit-label-driven (corrected 2026-08-09 — see fix below): message-prefix regex scan (`feat:`/`fix:`/`breaking`) runs first but structurally matches ZERO commits under squash-promote (every commit reaching `main` is `chore(promote): LDR → main ...`, carrying no original conventional-commit message) — so in practice the bump tier is decided by content: the AST content differ (`detect_breaking_change.py`) computes `is_breaking` over the cumulative `DIFF_BASE..HEAD` window → MINOR if a public export was removed/renamed (or an incompatible signature/schema change) — an added export alone does NOT trigger it, see the `feat:` row below; else, if `CHANGED_FILES` in that same window includes at least one file under the repo's own `SOURCE_DIR/`, defaults to PATCH (the content-based patch-level fallback, `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`, shipped 2026-08-07 18:33-20:59Z); else (only CI/workflow/docs/lockfile files changed) stays unbumped/skip. Pre-1.0.0, never auto-crosses to 1.0.0. |
+| **Apply — git-tag repos**                                                    | `git tag -a "vX.Y.Z" -m "vX.Y.Z"` + `git push origin "vX.Y.Z"` on main HEAD — **zero pyproject commits** (the tag IS the version via hatch-vcs). Idempotent: skips if `vX.Y.Z` already exists.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Apply — legacy repos**                                                     | `sed` the `version = "X.Y.Z"` line in `pyproject.toml` + `chore(release):` commit to main (no `[skip ci]` — the metadata-only diff short-circuits `quality-gates-v2` to green in seconds).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Dispatch**                                                                 | A `version-bump` `repository_dispatch` to `unified-trading-pm` (`update-repo-version.yml`), payload `{repo, version, branch:main, commit_sha, is_breaking}`; PM records it under `versions{}`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
-| Commit prefix                                  | Result (pre-1.0.0)                                |
-| ---------------------------------------------- | ------------------------------------------------- |
-| `feat:`                                        | MINOR bump (0.1.0 → 0.2.0)                        |
-| `fix:` / internal change                       | PATCH bump (0.1.0 → 0.1.1)                        |
-| `feat!:` / `BREAKING CHANGE:` / removed export | MINOR bump on `0.x.x` (never auto-cross to 1.0.0) |
-| `chore:` / `docs:`                             | no bump (skip)                                    |
+**CORRECTED 2026-08-09** — the table below described a pure commit-prefix scheme that predates squash-promote; kept for
+the human-readable "what does a `fix:`/`feat:`-labeled LDR commit eventually produce" intuition (still broadly true in
+spirit), but the actual live signal per bump tier is content-based, not label-based, per the "Compute" row above.
+
+| Commit prefix (LDR-side intent) / content signal | Result (pre-1.0.0)                                | Live signal actually used under squash-promote                                                                                                                                                                              |
+| ------------------------------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feat!:` / `BREAKING CHANGE:` / removed export   | MINOR bump on `0.x.x` (never auto-cross to 1.0.0) | AST differ `is_breaking=true` (content-based, works under squash)                                                                                                                                                           |
+| `feat:`                                          | MINOR bump (0.1.0 → 0.2.0)                        | Same AST differ signal — a non-breaking added export does not itself trigger a MINOR bump; see the "Compute" row above                                                                                                      |
+| `fix:` / internal change                         | PATCH bump (0.1.0 → 0.1.1)                        | Content-based fallback: any `SOURCE_DIR/` file changed in the diff window, no breaking export delta (fixed 2026-08-07 — previously dead under squash; see `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`) |
+| `chore:` / `docs:`                               | no bump (skip)                                    | No `SOURCE_DIR/` file changed in the diff window (only CI/workflow/docs/lockfile)                                                                                                                                           |
 
 **The `semver-agent/label-check` status is ADVISORY only** (posted on main HEAD for visibility; NOT a required check —
 MVP Phase 1). It never blocks promotion. Retargeting its trigger cannot regress promotion safety, only versioning
@@ -1127,6 +1169,30 @@ distinguishes **two** classes of stuck promotion PR so it never hands a code-fix
 `scripts/cicd/promotion_lag_monitor.py` (`branch-health.yml`, `*/30`) pages time-based LDR↔main lag (oldest
 un-propagated commit > 60 min), the diff that matters under Path-B.
 
+**Shared recovery-bookend helper for GHA standing-condition monitors (`scripts/cicd/alert_recovery.py`, added
+2026-08-09).** A standing-condition PM workflow (paging via `notify-slack.yml`'s `dedup_key`+`cooldown_min`) needs a
+prev-tick-vs-this-tick diff to announce a RESOLVED bookend once the condition clears — rather than each workflow
+re-deriving that diff inline in bash, one tested CLI (`--state-file <path> --current true|false`, backed by an
+`actions/cache`-persisted JSON state file, mirrors `branch-health.yml`'s `.lag-state.json` pattern) computes
+`recovered = prev_alert and not current_alert` and prints it for `$GITHUB_OUTPUT`. Wired into 6 previously-silent
+standing-condition monitors: `fix-approval-timeout.yml`, `ldr-docs-gate.yml`, `freeze-deferred-build-replay.yml`,
+`promote-fleet-startup-failure-monitor.yml`, `ruleset-drift-alert.yml`, `sit-gate-stuck-detector.yml`. A missing/corrupt
+state file reads as "no prior alert" (never a false recovery post). Not every schedule-active monitor needs this — a
+one-shot liveness check (e.g. `overnight-dead-man-switch.yml`) isn't a re-nagging standing condition and is correctly
+excluded.
+
+**Escalation-dispatch redispatch cooldown (`agent-orchestrator/server/ci_reconcile.py`, operator-DEFAULT-RULED
+2026-08-06 option (a), shipped 2026-08-08).** `CIReconcileLoop._dispatch_failures` calls `escalation.escalate()`
+directly, bypassing `enqueue()`'s existing AF-1b context-snapshot cooldown — and once an escalation goes TERMINAL
+(unresolved cap-hit / abandoned), a restart wiped the in-process `_last_dispatch` cooldown and a still-red wall
+re-dispatched a brand-new escalation from scratch (the "9 dispatches in one day for the identical unchanged state"
+pattern). Fix: a disk-persisted `RedispatchState` (`ci_reconcile_redispatch_cooldown.json`) keyed by `repo:wall_type` →
+`(head_sha, dispatched_at)`, gated by the pure `should_suppress_redispatch()` — suppresses ONLY when the target-branch
+HEAD is unchanged since the last dispatch AND still inside the cooldown window; a genuinely new HEAD or a fresh failure
+always dispatches immediately regardless of cooldown. This is a distinct mechanism from the Slack-page-level dedup in
+`agent-orchestrator-alerting.md`'s "Repeat-page hardening" section — that one suppresses the NOTIFICATION for a repeat
+unresolved-page; this one suppresses the escalation DISPATCH itself.
+
 ### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
 
 The `sit-gate.yml` `harness-lint` job runs **in parallel with** the SIT work and NEVER gates promotion. On configuration
@@ -1190,17 +1256,20 @@ precedent**: `major-bump-issue-handler.yml`, `request-major-bump.yml`, and `semv
 block), not stale duplicates. Once every repo's local caller of `notify-slack.yml` was gone (i.e. once
 `main-backmerge-to-ldr.yml`/`semver-agent.yml` became thin stubs), the local `notify-slack.yml` copy itself became dead
 weight in 22 of 23 fleet repos and was deleted (kept: PM's own canonical copy, and `deployment-service`, which still has
-an unrelated live local caller). The 7 now-redundant template sources were deleted from `scripts/workflow-templates/` in
-PM — **`rollout-workflow-templates.sh`'s role is now limited to what remains genuinely templated**:
-`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` (both already thin caller stubs, rolled out so each repo's local
-file matches), `notify-slack.yml` (still full content, canonical, never migrated), and `staging-lock-check.yml` (still
-full content — deliberately NOT yet converted, see todo 11 in
-`plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`: its `check-staging-lock` job is a
-literal required-status-check context on 16 repos' branch-protection rulesets, and a naive stub conversion would
-silently rename the reported check to `"check-staging-lock / check-staging-lock"`, permanently failing that context).
-Full migration history + the two real bugs found while converting (a dropped `env:` block in the conversion tooling, and
-an SSOT-drift gap where a same-day squash-promote fix had landed on 21 repos' rendered copies but never reached the
-canonical template): `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (once archived,
+an unrelated live local caller). The 9 now-redundant template sources (incl. `staging-lock-check.yml`, converted +
+deleted 2026-08-08, see todo 11 below) were deleted from `scripts/workflow-templates/` in PM — **CORRECTED 2026-08-10
+(plan_reconciler infra shard, agt-716973, mechanical codex-staleness carve-out): `rollout-workflow-templates.sh`'s role
+is now limited to `image-build-gate.yml` + `quality-gates-v2.yml.tmpl`** (both thin caller stubs, rolled out so each
+repo's local file matches) **and `notify-slack.yml`** (still full content, canonical, never migrated).
+`staging-lock-check.yml` was ALSO converted + its template source deleted 2026-08-08 (todo 11 in
+`plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` — a landmine discovered after this
+paragraph was first written: its `check-staging-lock` job is a literal required-status-check context on 16 repos'
+branch-protection rulesets, so the 16 rulesets' check-names were updated FIRST, then the file converted, THEN the
+template source deleted — live-verified 2026-08-10: `scripts/workflow-templates/staging-lock-check.yml` no longer exists
+in PM; the reusable workflow now lives at `unified-trading-ci/.github/workflows/staging-lock-check.yml`). Full migration
+history + the two real bugs found while converting (a dropped `env:` block in the conversion tooling, and an SSOT-drift
+gap where a same-day squash-promote fix had landed on 21 repos' rendered copies but never reached the canonical
+template): `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (once archived,
 `plans/archive/`).
 
 **SSOT template**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl`. **Roll-forward** a workflow change: (1) edit

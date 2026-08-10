@@ -84,7 +84,8 @@ depends_on: []
 > [/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)),
 > _"closing/resolving is an operator-scope call, not a mechanical doc-sync"_.
 >
-> **✅ EVIDENCED 2026-08-02**: this doc's own "Negative test that must pass after the fix" is now covered —
+> **✅ EVIDENCED 2026-08-02** (`unified-api-contracts@7450e744`, confirmed ancestor of `origin/live-defi-rollout`): this
+> doc's own "Negative test that must pass after the fix" is now covered —
 > `unified-api-contracts/tests/unit/test_detect_cassette_drift.py` exercises `detect_cassette_drift.main()` directly for
 > the three states the workflow's `case "${rc}" in 0) … 1) … *) …` branches on: a genuinely-empty cassette dir exits 0,
 > a fabricated genuine-schema-drift cassette exits 1, and a nonexistent `--cassette-dir` (the broken-invocation case

@@ -1,9 +1,10 @@
 ---
 doc_type: issue
 title: Capability wizard — gap discovery tracker
-summary:
-  "**Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much
-  as possible scripted; issues found get tests built around them; agents only when..."
+summary: >-
+  Running pool of gaps surfaced while building the capability wizard/manifest — items are UNACKED scope that graduate
+  into todos on the parent plan, taxonomized as missing_registry / missing_extraction / needs_code_scan /
+  logical_dead_end; companion to the analysis-findings doc (which tracks bugs/conflicts).
 status: open
 nature: process
 asset_group: [cross-cutting]

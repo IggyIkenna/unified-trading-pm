@@ -24,6 +24,7 @@ related:
     /plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md,
     /plans/archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 last_updated: 2026-07-30
@@ -121,9 +122,14 @@ surfacing of this data (a separate, later consumer-side concern).
       next/last-week JSON URL is found and cited with a real HTTP 200, or the negative is confirmed (only `thisweek`
       exists) and the build-scraper todo's forward-poll design accounts for that (e.g. poll `thisweek` daily and diff
       against the prior capture, rather than relying on a `nextweek` pre-announcement). Repo: features-service.
-- [ ] [DATA] P1. **CORRECTED SCOPE 2026-07-30 (see Progress Log) — target `MacroResultRecord`, not `EconomicResultItem`,
-      as the primary schema change.** A dedicated investigation found `features_service/calendar/` IS the real,
-      already-built "features-calendar-service" `MacroResultRecord`'s docstring refers to — and `MacroResultRecord`
+- [x] ✅ [DATA] P1. **SHIPPED 2026-08-09 — `unified-api-contracts@cbb3e2b33`.** `consensus_value: Decimal | None` added
+      to `MacroResultRecord` + `to_dict()`; new `forexfactory_scrape` `EventCalendarSource` entry registered
+      (`source_type=MACRO_CONSENSUS`), distinct from the zero-client-code `bloomberg_macro`/`trading_economics_macro`
+      placeholders. `economic_results_calculator.py`'s empty-DataFrame column list updated to match (FRED records always
+      carry `consensus_value=None`, since FRED has no consensus concept). QG green. **CORRECTED SCOPE 2026-07-30 (see
+      Progress Log) — target `MacroResultRecord`, not `EconomicResultItem`, as the primary schema change.** A dedicated
+      investigation found `features_service/calendar/` IS the real, already-built "features-calendar-service"
+      `MacroResultRecord`'s docstring refers to — and `MacroResultRecord`
       (`unified_api_contracts/internal/reference/economic_calendar.py`, fields: `event_type`, `series_id`,
       `release_date`, `actual_value`, `previous_value`, `revision`, `unit`, `source`, `fetched_at`) is the schema its
       REAL, GCS-writing production path (`economic_results_calculator.py`/`economic_results_handler.py`) actually uses
@@ -139,10 +145,30 @@ surfacing of this data (a separate, later consumer-side concern).
       this is a genuinely different, free source and should be labeled as such, not folded into them).
       `quality-gates.sh` green in unified-api-contracts. Done when: `MacroResultRecord` carries the new field and
       round-trips in `to_dict()`, covered by a schema test, with no breaking change to its existing 8 fields.
-- [ ] [DATA] P1. **CORRECTED ARCHITECTURE 2026-07-30 (see Progress Log) — this is a new SIBLING data source inside the
-      EXISTING `features_service/calendar/` module, not new standalone orchestration.** A dedicated investigation found
-      this module already has a working, precedented pattern for adding exactly this kind of external source: the
-      archived plan `plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md` (2026-03-24) built
+- [x] ✅ [DATA] P1. **SHIPPED 2026-08-09 — `features-service@b6809756`.** The Cloudflare blocker is RESOLVED, not just
+      worked around: tested live against the actual site, Playwright AND `patchright` (a purpose-built anti-detection
+      fork) are BOTH blocked (403 "Just a moment...", confirmed from a residential dev IP AND the real GCP backfill
+      region `asia-northeast1-c`). The combination that passes: `nodriver` + a real Google Chrome binary (not a
+      CI/testing Chromium build) + headed mode + a residential IP — Cloudflare weighs IP reputation as a distinct signal
+      from browser fingerprint quality, so a GCP datacenter IP fails regardless of tooling. New
+      `calendar/adapters/forexfactory_adapter.py` (nodriver-based) +
+      `calendar/engine/calculators/     forexfactory_calculator.py` + `calendar/cli/handlers/forexfactory_handler.py`
+      (`--operation forexfactory`, registered in `ServiceBootstrap` in the SAME commit — the orphan-registration mistake
+      this todo warned about was NOT repeated). **Premise correction vs. this todo's own text below**: the page does NOT
+      need HTML-table parsing at all — it embeds a clean, structured JSON state (`window.calendarComponentStates`) with
+      `ebaseId` (stable cross-week event-type id), `dateline` (epoch), and `actual`/`forecast`/`previous`/`revision` as
+      direct fields — far more robust than the HTML-table approach this todo originally scoped. Verified end-to-end
+      against the live site: 55 real records for the 2007-01-01 week, including the correct historical NFP release
+      (`actual=167K forecast=115K previous=132K`) and 2 bond-auction events with a compound `"yield|bid-to-cover"` value
+      format the parser explicitly handles. **NOT yet done**: production runs need
+      `CalendarFeaturesConfig.forexfactory_proxy_url` (Secret Manager, a residential-proxy egress) — BLOCKED-CREDENTIALS
+      pending operator provisioning (recommended: a pay-as-you-go residential proxy like IPRoyal, ~$7/1GB, no
+      subscription — the full 2007-2026 historical backfill is ~330MB, comfortably under 1GB). Without it the adapter
+      works today only from a residential-IP dev machine. **CORRECTED ARCHITECTURE 2026-07-30 (see Progress Log) — this
+      is a new SIBLING data source inside the EXISTING `features_service/calendar/` module, not new standalone
+      orchestration.** A dedicated investigation found this module already has a working, precedented pattern for adding
+      exactly this kind of external source: the archived plan
+      `plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md` (2026-03-24) built
       `corporate_actions_handler.py`/`polygon_corporate_actions_adapter.py` and `yfinance_earnings_adapter.py` as
       siblings within this same module — new adapter in `calendar/adapters/`, new calculator in
       `calendar/engine/calculators/`, new `--operation <name>` CLI handler, GCS path
@@ -176,6 +202,12 @@ surfacing of this data (a separate, later consumer-side concern).
       calendar-family write needs. Done when: a real invocation against ForexFactory returns correctly typed, non-empty
       `MacroResultRecord` results — including a real `actual_value` — for both a rolling-window and a historical-week
       request, AND the new `--operation` is confirmed registered + reachable via `python -m features_service.calendar`.
+- [ ] [DATA] P1. **BLOCKED-CREDENTIALS — provision a residential-proxy account, then wire it into
+      `CalendarFeaturesConfig.forexfactory_proxy_url` (Secret Manager, `forexfactory-residential-proxy-url` by
+      default).** The code path is ready (`ForexFactoryAdapter.__init__(proxy_url=...)` passes it straight through to
+      `--proxy-server=` on the launched Chrome); nothing to build here, just an operator account signup. Recommended
+      2026-08-09: a pay-as-you-go residential proxy (e.g. IPRoyal, ~$7/1GB, no subscription/expiry) — the full backfill
+      (~1030 weeks × ~330KB) is ~330MB, comfortably under a single 1GB pack.
 - [ ] [DATA] P2. **Wire the historical backfill launcher + forward-poll cron.** Mirror
       `deployment-service/scripts/vm/launch-tradfi-bf-fred.sh`'s single-VM, non-sharded pattern (rationale: a shared
       rate-limited external source, not a per-IP-scalable one — fanning out multiple VMs would just multiply request
@@ -184,24 +216,27 @@ surfacing of this data (a separate, later consumer-side concern).
       (the corporate-actions/earnings precedent runs `time_throttled_medium`, ~15min) is the right cadence to extend,
       rather than building a wholly separate cron. Explicitly clamp the backfill start floor to the REAL measured floor
       confirmed by todo 1 — **2007-01-01** (never default to "as far back as possible" without that confirmed number —
-      this plan exists partly because FRED's launcher got exactly this wrong); the launcher's HTTP client needs the same
-      Cloudflare-bypass tooling as the build-scraper todo above, since the historical walk hits the identical
-      challenge-gated HTML path. Done when: `--dry-run` shows the correct 2007-01-01..today window, and a real
-      `--year 2007` smoke-test capture returns real events with `quality-gates.sh` green.
-- [ ] [DATA] P2. **Tests: HTML/JSON fixtures, no live network in CI.** Real response fixtures from the research pass are
-      ALREADY promoted into the repo — `features-service/tests/fixtures/forexfactory/` (README there documents
-      provenance): `json_feed_thisweek_sample_2026_07_30.json` (real 92-event feed),
-      `html_calendar_2007_01_01_floor_real_data.html` (real historical week at the floor, verified real event names),
-      `html_calendar_pre_floor_empty_state_2006_01_01.html` (the ~13,904-byte "No results found." signature),
-      `html_calendar_boundary_clamp_2006_12_31.html` (the clamp-forward edge case), and
-      `html_calendar_cloudflare_challenge_blocked.html` (the 403 challenge page) — use these rather than re-fetching
-      (re-fetching risks the same Cloudflare rate-limit the research hit). Regression tests: assert the new
-      `consensus_value` field parses correctly, `release_time_utc` is present and correctly timezone-normalized
-      (ForexFactory's calendar is ET-based; verify the conversion), a malformed/missing-field event fails closed
-      (recorded as `empty_confirmed`/error, never silently dropped), the pre-floor empty-state fixture is detected as
-      "before floor" (not a zero-event week), the boundary-clamp fixture is detected correctly, and the
-      Cloudflare-challenge fixture is detected as "blocked" (not misparsed as an empty calendar). Done when:
-      `quality-gates.sh` is green in features-service and the new tests pass with zero live HTTP calls.
+      this plan exists partly because FRED's launcher got exactly this wrong); NEEDS the residential-proxy todo above
+      first (a VM launch runs on GCP, so it needs the proxy to clear Cloudflare). The CLI handler
+      (`--operation forexfactory --mode batch --start-date 2007-01-01 --end-date <today>`) already iterates the full
+      week range via `iter_historical_weeks` — this todo is specifically about the VM launcher wrapper + Cloud Scheduler
+      wiring, the actual fetch/write logic is done. Done when: `--dry-run` shows the correct 2007-01-01..today window,
+      and a real `--year 2007` smoke-test capture returns real events with `quality-gates.sh` green.
+- [x] ✅ [DATA] P2. **SHIPPED 2026-08-09 — `features-service@b6809756`, 28 tests, `quality-gates.sh` green, zero live
+      HTTP calls.** The 2026-07-30 fixtures (`json_feed_thisweek_sample_2026_07_30.json`,
+      `html_calendar_2007_01_01_floor_real_data.html`, etc.) turned out NOT to be the shape the shipped adapter consumes
+      — it reads the embedded JSON state directly (`window.calendarComponentStates`), not HTML tables, so new fixtures
+      were captured and promoted instead: `calendar_component_state_2007_01_01_real_data.json` (the real state for the
+      NFP week, 72 events) and `calendar_component_state_2006_01_01_pre_floor_empty.json` (the real pre-floor state,
+      `days=[]`). **`release_time_utc` was NOT added** — out of the corrected schema scope (only `consensus_value` per
+      the todo above); `dateline` (unix epoch) is used internally to derive `release_date` but is not exposed on
+      `MacroResultRecord`. **Empty-state detection redesigned from what this todo assumed**: a text-marker check ("No
+      results found.") was tried and REJECTED — that string is generic search-select-widget boilerplate present on EVERY
+      page (a dropdown's own empty-search placeholder), confirmed via a live test that it false-positived on the real
+      2007-01-01 week. The correct signal, now what's actually implemented: the parsed JSON state's own `days` array is
+      genuinely empty for a pre-floor week vs. populated for a real week — no HTML/byte-length heuristics needed at all.
+      The old sibling HTML fixtures remain in the repo as reference material (they establish the real historical floor +
+      boundary-clamp behavior) but are no longer what the shipped code's tests assert against.
 - [ ] [DATA] P3. Once the above ships and a real backfill has run, do a first honest-coverage check: what fraction of
       expected calendar events (per ForexFactory's own historical week count) actually landed with a real
       `consensus_value`, vs. how many are `actual`-only (older weeks where ForexFactory itself may not have retained the
@@ -313,3 +348,15 @@ generalizing (e.g. "how to safely integrate a scraped, rate-limited third-party 
   decision" section, never a `- [ ]` item) rather than duplicating it here. Promoted the research fixtures from
   scratchpad into `features-service/tests/fixtures/forexfactory/` in the same pass (real HTTP evidence is otherwise
   session-ephemeral and expensive to re-capture given Cloudflare's rate limiting).
+- **2026-08-09 (Cloudflare blocker resolved + adapter shipped)**: operator asked to actually tackle the Cloudflare
+  blocker rather than leave it parked. Tested empirically, not assumed: plain Playwright and `patchright` (a
+  purpose-built anti-detection fork) are BOTH blocked by the site's Managed Challenge, from both a residential dev IP
+  and the real GCP backfill region (`asia-northeast1-c`) — ruling out "it's just this sandbox's IP." The working
+  combination: `nodriver` + a real Google Chrome binary + headed mode + a residential IP (this machine's genuine UK
+  residential ISP). Verified end-to-end against the live site with real historical data (2007-01-01 week, 55 records
+  including the correct NFP release). Shipped: `unified-api-contracts@cbb3e2b33` (schema + registry),
+  `features-service@b6809756` (adapter + calculator + CLI handler + 28 tests). Also fixed 3 unrelated pre-existing
+  empty-string-fallback ratchet violations that were blocking the push (confirmed via git-stash to predate this change)
+  — `unified-trading-pm@533c2fa3fc` ratchets the baseline down. Remaining: a residential-proxy account
+  (BLOCKED-CREDENTIALS, recommended IPRoyal PAYG ~$7 total) for the actual GCP-hosted historical backfill + the VM
+  launcher wrapper itself — both now separately tracked todos above, not re-blocked on any open design question.

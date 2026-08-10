@@ -116,6 +116,20 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > > alive-no-data `expected_unattempted` cells (reason="") AND the lifecycle-boundary
 > > `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` `empty_confirmed` cells the v1 venue-grain pass did not reach.
 > >
+> > **The bounded window's `--start-date` default was a frozen literal, not actually rolling, until 2026-08-03 (found +
+> > fixed, `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`, archived
+> > `plans/archive/2026_08/`).** `expected_universe_v2_scheduler.tf`'s `expected_universe_start_date` variable shipped
+> > with a STATIC default (`"2026-02-20"`) that never advanced without a fresh `terraform apply` — every date before it
+> > (e.g. all of a prior calendar half-year) structurally never received `expected_unattempted` seeding, silently
+> > comparing two different denominator regimes across that boundary. Fixed (`deployment-service@1d8ede9`): the default
+> > now computes `today - 120d` at apply time via a `locals` block (Terraform disallows `timestamp()` in a variable's
+> > own default). **A per-asset-group historical floor backfill is a separate, one-time, gated job** — sports ran it
+> > first (`deployment-service@e903189`, floored at the sports 2020-06-06 data floor per `sports-2020-06-data-floor.md`,
+> > 7 sequential calendar-year VM chunks) and confirmed via a post-run cell-seeding ratio re-check that the H1
+> > year-over-year cell-seeding ratio moved from 3.13x to 0.95x. defi/tradfi are confirmed to share the same
+> > static-default pattern (not yet fixed as of this writing) — cefi/prediction do NOT (their elevated ratios are
+> > genuine growth, a different root cause) — see the archived doc for the full cross-AG measurement.
+> >
 > > **Seed and capture must canonicalize identically, or dedup silently breaks (found 2026-08-04,
 > > `tradfi_combo_casing_direction_ssot_contradiction_2026_08_03.md`).** The manifest consolidator's dedup key
 > > (`unified_trading_library.manifest_consolidator._dedup_key_sql`) is a plain equality match on every dedup column
@@ -1791,7 +1805,7 @@ the gate does not apply.
 `FetchEvidence` from the actual response and pass it to `record_empty`/`record_zero_rows`. An error branch that
 previously fell through to `SOURCE_RETURNED_ZERO` now sets the matching `FetchErrorSignal` → routes to `record_failed`.
 The per-AG adapter threading is tracked in
-[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](../../plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 (Phase 1, per-AG dispatch). Until an adapter is threaded it raises at runtime — that break is intentional (operator
 2026-06-22): it is the mechanism that stops the "ran for hours, marked everything empty, just needed a code fix" class.
 

@@ -55,7 +55,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
@@ -147,12 +147,13 @@ unified-trading-system-ui clone) found the failing CI run (30896404779) this iss
 commit (`633abcf4`, an LDR→main promote from 2026-08-03 — a full day before the fix existed);
 `git show 633abcf4:lib/architecture-v2/block-list.ts` genuinely has only 10 `BL-` entries, confirming the reported
 failure was real at that commit. But a same-day, differently-scoped `defi`-tagged issue doc's "Fifth pass"
-GMX-venue-removal work added the missing `BL-12` entry to BOTH `block-list.ts` and `codex/.../block-list.md` (shipped
-`unified-trading-system-ui@3c2efb2c`) with zero awareness of this parity-test issue. Current `origin/main` (2026-08-05
-21:07 UTC promote) has the identical 11-id set `{BL-1..BL-10, BL-12}` in both files — exactly the pass condition for all
-4 assertions in `block-list-parity.test.ts` (read directly, not assumed). `vitest` itself was not executed (would
-require a worktree/npm-install detour on a shared slot clone, out of scope for a read-only classification task), so this
-is strong git-content-level evidence, not a runtime-verified close.
+GMX-venue-removal work added the missing `BL-12` entry to BOTH `block-list.ts` and
+`/codex/09-strategy/architecture-v2/block-list.md` (shipped `unified-trading-system-ui@3c2efb2c`) with zero awareness of
+this parity-test issue. Current `origin/main` (2026-08-05 21:07 UTC promote) has the identical 11-id set
+`{BL-1..BL-10, BL-12}` in both files — exactly the pass condition for all 4 assertions in `block-list-parity.test.ts`
+(read directly, not assumed). `vitest` itself was not executed (would require a worktree/npm-install detour on a shared
+slot clone, out of scope for a read-only classification task), so this is strong git-content-level evidence, not a
+runtime-verified close.
 
 **Recommendation [WORKER REC]**: retag `asset_group: [cross-cutting]` → `[ui]`. Whoever picks this up (ui tranche or
 operator) should VERIFY (`vitest run block-list-parity.test.ts`) and ARCHIVE citing the `3c2efb2c` evidence, not
@@ -215,7 +216,18 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
+- [x] ✅ [DOCS] P3. **MOOT 2026-08-10 — target already archived** at
+      `/plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`; the todo's own
+      text already pointed at the archive path. Verified live. Original text preserved for record. Was: Retag
       `plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`'s `asset_group`
       `[cross-cutting]` → `[ui]` (finding 1) — owning-tranche fix, leave to the `ui` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ui_consolidated_closeout_2026_07_30.md`'s membership, and its 3

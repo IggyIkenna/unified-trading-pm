@@ -131,5 +131,5 @@ context_scope:
 
 - **Deferral (b)** (POLYMARKET re-enum + `book_snapshot_5` backfill, `DEFERRED-CROSS-DEP` on
   `prediction_live_clob_depth_capture_2026_07_24.md`'s own checkbox) — migrated to:
-  `plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1, drafted 2026-08-09 (2026-08-09,
+  `plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1, drafted 2026-08-09 (2026-08-09,
   ag_closeout_auditor).

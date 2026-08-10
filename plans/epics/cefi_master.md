@@ -33,10 +33,21 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/cefi_4surface_migration_execution_log_2026_07_24.md
+  - ../active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md
   - ../active/cefi_consolidated_closeout_2026_07_18.md
+  - ../active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
+  - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
+  - ../active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md
+  - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md
+  - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md
+  - ../active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md
+  - ../active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md
+  - ../active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
+  - ../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md
   - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
+  - ../active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -628,22 +639,10 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_16 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
-
-### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi DERIBIT + BINANCE-FUTURES bundle
-backfill verification + phantom-residual triage
-
-### [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md)
-
-**status**: active · **estimate**: 12 cal AI-days (class: brand-new) **title**: CeFi ML_DIRECTIONAL_CONTINUOUS — live
-archetype end-to-end (OKX + Binance + Bybit)
-
-## P1 — important; post-current-gate
 
 ### [`cefi_4surface_migration_execution_log_2026_07_24`](../active/cefi_4surface_migration_execution_log_2026_07_24.md)
 
@@ -655,16 +654,79 @@ execution log (extracted from cefi_consolidated_closeout)
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra) **title**: CeFi consolidated close-out — track + close
 every remaining cefi workstream once and for all
 
-## P2 — useful; opportunistic
+### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi DERIBIT + BINANCE-FUTURES bundle
+backfill verification + phantom-residual triage
+
+### [`cefi_ml_directional_continuous_live_2026_06_20`](../active/cefi_ml_directional_continuous_live_2026_06_20.md)
+
+**status**: active · **estimate**: 12 cal AI-days (class: brand-new) **title**: CeFi ML_DIRECTIONAL_CONTINUOUS — live
+archetype end-to-end (OKX + Binance + Bybit)
+
+### [`cefi_track2_coverage_backfill_checkpoints_2026_07_25`](../active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: CeFi Track-2 coverage backfill — resume +
+MID/POST checkpoints
+
+### [`tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08`](../active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Tardis impossible-combinations
+vendor-catalog gate + apply-purge — finalize (reconcile + archive)
+
+## P1 — important; post-current-gate
+
+### [`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08`](../active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: CeFi Surface-C chain-drop residual —
+finalize (verify resume sequence + archive)
+
+### [`cefi_satellite_ao_dispatch_batch10_2026_08_08`](../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md)
+
+**status**: active · **estimate**: 0.96 cal AI-days (class: infra) **title**: CeFi satellite AO batch 10 — full-corpus
+closeout-completeness re-audit
+
+### [`cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize`](../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi satellite AO batch 10 — finalize
+(reconcile source docs + re-check deferrals + archive)
+
+### [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](../active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
+
+**status**: active · **estimate**: 0.64 cal AI-days (class: infra) **title**: CeFi satellite AO batch 9 —
+iterative-drain extraction over the batch8 residual
+
+### [`cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize`](../active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi satellite AO batch 9 — finalize
+(reconcile source docs + re-check deferrals + archive)
+
+### [`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25`](../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi Track-2 coverage backfill checkpoints
+— finalize (reconcile checkboxes + archive)
 
 ### [`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`](../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md)
 
 **status**: active · **estimate**: 6 cal AI-days (class: brand-new) **title**: Crypto-venue single-stock perps +
 tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 
+## P2 — useful; opportunistic
+
+### [`cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27`](../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
+### [`cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08`](../active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`cefi_consolidated_closeout_aggregated_sources_2026_07_24`](../active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi consolidated close-out — aggregated
+source docs (discoverability index)
 
 ## Cross-references
 

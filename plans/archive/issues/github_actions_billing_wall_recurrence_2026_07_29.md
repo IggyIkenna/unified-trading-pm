@@ -378,3 +378,26 @@ return to a normal (non-zero-job) run.
   `status` to `resolved`. The 3 remaining `[BACKEND]` P2/P3 todos (spend-telemetry self-detection, outage-aware v2
   status dispatch, the `authoring_slot="ci-reconcile"` 400) are genuine standing hygiene follow-ups, independent of the
   wall itself clearing — left open, not part of this resolution.
+- **2026-08-09 (`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md` todo 2 — source-doc reconciliation)**: the 3
+  prevention todos this doc originally carried were already migrated to
+  `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated prevention todos from resolved incidents" section
+  2026-08-02 (per this doc's own `2026-08-02` migration note above the Todos list), so there is no live checkbox left
+  here to flip for batch5 todos 3/4 — but batch5 shipped genuinely NEW work beyond what batch1's migrated items
+  recorded, cited here for traceability since this doc is the `Source:` batch5 named:
+  - **batch5 todo 3** (authoring_slot fix) — batch1's migrated item (line ~708) only covers the original `cicd.md` guard
+    (`unified-trading-pm@41f193405`). batch5 todo 3 extended the identical guard to the two remaining
+    authoring-slot-pinging worker docs, `agents/conflict_resolver.md` + `agents/data_pipeline_failure.md` — shipped
+    `unified-trading-pm@ba675a148` ("fix(agents): guard non-numeric authoring-slot completion pings — flip batch5 todo
+    3"), verified `git merge-base --is-ancestor ba675a148 origin/live-defi-rollout` ✅.
+  - **batch5 todo 4** (outage-aware `quality-gates-v2` status dispatch) — batch1's migrated items (lines ~658, ~692)
+    confirmed the "Record CI status" step itself never fires during a billing-wall signature and separately taught
+    `agent-orchestrator/server/ci_reconcile.py` to skip escalation on the billing-wall-partial signature — a DIFFERENT
+    mechanism from batch5 todo 4's fix. batch5 todo 4 verified + landed the actual outage-aware suppression inside
+    `quality-gates-v2` itself (extracted to `unified-trading-ci` per
+    `shared_ci_workflow_repo_extraction_2026_08_06.md`): `unified-trading-ci@0afd236` ("feat(ci): add billing-wall /
+    startup_failure guard to quality-gates-v2", 2026-08-07 04:38Z), verified
+    `git merge-base --is-ancestor 0afd236 origin/live-defi-rollout` (in the `unified-trading-ci` repo) ✅. Together with
+    batch1's ci_reconcile.py fix, the billing-wall class is now suppressed at both the workflow's own status-dispatch
+    AND the scheduler's independent poll path.
+  - This doc's own Todos section is unaffected (already fully `[x]`, `status: resolved` since 2026-07-31) — this entry
+    is a pointer, not a reopen.

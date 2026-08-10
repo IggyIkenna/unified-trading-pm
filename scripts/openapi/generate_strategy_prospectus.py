@@ -91,21 +91,21 @@ from unified_api_contracts.internal.architecture_v2.enums import (
 # ---------------------------------------------------------------------------
 _CAPABILITY_REGISTRY_DICT: dict = {}  # type: ignore[type-arg]
 _REGISTRY_AVAILABLE = False
-try:
+try:  # noqa: fallback-import — optional UAC registry import, degrades to empty dict, not a dependency-hiding shim
     from unified_api_contracts.internal.architecture_v2.archetype_capability import (
         ARCHETYPE_CAPABILITY_REGISTRY as _RAW_REGISTRY,
     )
 
     _CAPABILITY_REGISTRY_DICT = {item.archetype_id: item for item in _RAW_REGISTRY}
     _REGISTRY_AVAILABLE = True
-except Exception as _reg_exc:
+except (ImportError, AttributeError) as _reg_exc:
     logger.warning("ARCHETYPE_CAPABILITY_REGISTRY unavailable: %s", _reg_exc)
 
 # ---------------------------------------------------------------------------
 # Performance metrics (best-effort import)
 # ---------------------------------------------------------------------------
 _PERF_METRIC_NAMES: list[str] = []
-try:
+try:  # noqa: fallback-import — optional performance_metrics import, degrades to empty list, not a dependency-hiding shim
     import importlib
 
     _pm_spec = importlib.util.find_spec("unified_trading_library.performance_metrics")  # type: ignore[attr-defined]
@@ -114,7 +114,7 @@ try:
         # Collect any exported metric names (class attrs, constants, or __all__)
         _all = getattr(_pm_mod, "__all__", None) or dir(_pm_mod)
         _PERF_METRIC_NAMES = sorted(name for name in _all if not name.startswith("_") and name == name.upper())
-except Exception as _perf_exc:
+except (ImportError, AttributeError) as _perf_exc:
     logger.debug("performance_metrics not importable: %s", _perf_exc)
 
 # ---------------------------------------------------------------------------

@@ -111,6 +111,32 @@ if [ -f "$PIN_GATE" ]; then
   fi
 fi
 
+# ── Pre-flight: template-content YAML lint ────────────────────────────────────
+# Beyond pin resolution, verify each template still PARSEs as valid YAML after
+# the prettier pass the pre-commit hook applies — a bare `{{PLACEHOLDER}}` token
+# is deterministically reformatted by prettier into the invalid `{ { PLACEHOLDER } }`
+# (a nested flow-mapping key), which GitHub silently refuses to schedule (2026-08-05
+# runs-on incident, workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md).
+# This gate simulates prettier on a scratch copy then yaml.safe_loads the result, so
+# a future mangled placeholder fails HERE at rollout time instead of shipping broken
+# to every consuming repo. `.tmpl` templates get their known substitution tokens
+# replaced with representative values first (unknown `{{...}}` tokens survive and are
+# caught). Prettier-unavailable fallback is parse-only (still catches an
+# already-mangled committed template) — never blocks an offline rollout, mirroring
+# check-action-pins.py's convention.
+YAML_GATE="$SCRIPT_DIR/../validation/check-template-yaml.py"
+if [ -f "$YAML_GATE" ]; then
+  echo "Pre-flight: verifying template content parses as YAML after prettier..."
+  if ! python3 "$YAML_GATE" --dir "$TEMPLATE_DIR"; then
+    echo "ABORT: a workflow template fails to parse as YAML after prettier — fix the template before rollout." >&2
+    exit 1
+  fi
+  if [ -d "$UI_TEMPLATE_DIR" ] && ! python3 "$YAML_GATE" --dir "$UI_TEMPLATE_DIR"; then
+    echo "ABORT: a UI workflow template fails to parse as YAML after prettier — fix the template before rollout." >&2
+    exit 1
+  fi
+fi
+
 # ── RETIRED-workflow guard ────────────────────────────────────────────────────
 # A blanket rollout (no --template) iterates EVERY file in the template dir and
 # creates-if-missing in every repo. A stale template for a RETIRED workflow would
@@ -154,6 +180,97 @@ _write_target() {
     fi
   fi
   printf '%s\n' "$content" > "$target"
+  return 0
+}
+
+# ── Post-rollout main<->live-defi-rollout parity check ────────────────────────
+# (rollout-process gap flagged by agent_orchestrator_stale_pm_workflow_ref_blocks_
+# promotion_2026_08_06.md todo 4; operator ruling 2026-08-08, NA-corpus blocker
+# digest round 5, id=54.)
+#
+# This script only ever writes into whichever branch happens to be checked out
+# locally per repo (see the file header) — it never verifies that a repo's `main`
+# and `live-defi-rollout` branches actually carry the SAME content for the
+# workflow files it manages. When a shared-CI-repo-extraction/rollout event lands
+# a new/moved workflow file on `live-defi-rollout` without that repo's `main`
+# picking it up too (main only receives it via the SEPARATE
+# `main-backmerge-to-ldr.yml` mechanism, which this script never triggers), the
+# gap sits silent until the repo's next LDR->main promotion attempt discovers it
+# as a dangling/missing workflow reference.
+#
+# PARITY_PAIRS is populated during the rollout loops below with every (repo,
+# rendered-filename) pair the rollout genuinely targets (i.e. survived the
+# missing-.github/workflows-dir and UI-gates-repo skip checks) — including files
+# this run left "already current" locally, since main/LDR drift is a fact about
+# the REMOTE branches, independent of what this pass just wrote on disk.
+PARITY_PAIRS=()
+
+check_main_ldr_parity() {
+  local n="${#PARITY_PAIRS[@]}"
+  if [ "$n" -eq 0 ]; then
+    return 0
+  fi
+  echo "=== Post-rollout parity check: origin/main vs origin/live-defi-rollout (${n} file(s)) ==="
+  local mismatches=0 pair repo tname repo_dir path
+  local main_content ldr_content main_rc ldr_rc
+  # Group by repo so each repo is fetched exactly once, however many workflow
+  # files the rollout touched there.
+  local -A fetch_ok=()
+  for pair in "${PARITY_PAIRS[@]}"; do
+    repo="${pair%%|*}"
+    tname="${pair#*|}"
+    repo_dir="$WORKSPACE_ROOT/$repo"
+    path=".github/workflows/$tname"
+
+    if [ -z "${fetch_ok[$repo]+x}" ]; then
+      # Network-graceful (mirrors check-action-pins.py's own convention): a repo
+      # whose fetch fails (offline, no network) is WARNED and skipped, never
+      # hard-failed, so an offline rollout run is not blocked by this check.
+      if git -C "$repo_dir" fetch origin main live-defi-rollout --quiet 2>/dev/null; then
+        fetch_ok[$repo]=1
+      else
+        fetch_ok[$repo]=0
+        echo "  [WARN — fetch failed for $repo; skipping parity check for this repo] " >&2
+      fi
+    fi
+    [ "${fetch_ok[$repo]}" = "1" ] || continue
+
+    if main_content=$(git -C "$repo_dir" show "origin/main:$path" 2>/dev/null); then
+      main_rc=0
+    else
+      main_rc=$?
+    fi
+    if ldr_content=$(git -C "$repo_dir" show "origin/live-defi-rollout:$path" 2>/dev/null); then
+      ldr_rc=0
+    else
+      ldr_rc=$?
+    fi
+
+    # Neither branch carries this file yet (e.g. a brand-new template not pushed
+    # anywhere) — nothing to compare, not a parity gap.
+    if [ "$main_rc" -ne 0 ] && [ "$ldr_rc" -ne 0 ]; then
+      continue
+    fi
+    if [ "$main_rc" -eq 0 ] && [ "$ldr_rc" -eq 0 ] && [ "$main_content" = "$ldr_content" ]; then
+      continue
+    fi
+
+    mismatches=$((mismatches + 1))
+    echo "  [MISMATCH] $repo: $path"
+    [ "$main_rc" -ne 0 ] && echo "    main: MISSING"
+    [ "$ldr_rc" -ne 0 ] && echo "    live-defi-rollout: MISSING"
+    if [ "$main_rc" -eq 0 ] && [ "$ldr_rc" -eq 0 ]; then
+      diff <(printf '%s\n' "$main_content") <(printf '%s\n' "$ldr_content") | head -10 | sed 's/^/    /'
+    fi
+  done
+  echo ""
+  if [ "$mismatches" -gt 0 ]; then
+    echo "PARITY CHECK FAILED: $mismatches file(s) differ between origin/main and origin/live-defi-rollout." >&2
+    echo "main-backmerge-to-ldr.yml will not deliver these automatically -- reconcile the drift (usually a direct" >&2
+    echo "push or a manual backmerge PR) before the next LDR->main promotion attempt hits it as a dangling ref." >&2
+    return 1
+  fi
+  echo "Parity check: ${n} file(s) across the rollout's target set, 0 mismatches."
   return 0
 }
 
@@ -363,6 +480,11 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       continue
     fi
 
+    # Track (repo, file) for the post-rollout main<->live-defi-rollout parity
+    # check — every repo this template genuinely targets, regardless of whether
+    # this run's local write changes anything (see check_main_ldr_parity above).
+    PARITY_PAIRS+=("$repo|$tname")
+
     # For .tmpl files: perform substitution; for .yml files: direct copy
     if [ "$is_tmpl" = true ]; then
       dep_repos=$(get_dep_repos "$repo")
@@ -456,6 +578,7 @@ if [ -d "$UI_TEMPLATE_DIR" ] && [ -z "$REPO_FILTER" -o "$REPO_FILTER" = "$UI_TAR
         continue
       fi
       echo "=== UI Template: $tname → $UI_TARGET_REPO ==="
+      PARITY_PAIRS+=("$UI_TARGET_REPO|$tname")
       target="$ui_target_dir/$tname"
       if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then
         skipped=$((skipped + 1))
@@ -485,9 +608,19 @@ echo "  Refused (would shrink an existing file >50%): $refused"
 if [ "$DRY_RUN" = true ]; then
   echo "  (dry-run mode -- no files were modified)"
 fi
+echo ""
+
+parity_failed=false
+if ! check_main_ldr_parity; then
+  parity_failed=true
+fi
+
 if [ "$refused" -gt 0 ]; then
   echo "REFUSED $refused write(s) -- see [REFUSED -- ...] lines above. Investigate before re-running (a legitimate" >&2
   echo "template change never shrinks a file by more than half; this is the size-sanity guard added after the" >&2
   echo "2026-08-07 workflow-truncation incident)." >&2
+fi
+
+if [ "$refused" -gt 0 ] || [ "$parity_failed" = true ]; then
   exit 1
 fi

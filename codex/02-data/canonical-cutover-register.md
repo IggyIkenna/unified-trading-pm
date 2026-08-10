@@ -419,6 +419,14 @@ writeup + todos (writer fix, target-shape ruling, tool extension, content_mismat
 `market=` shape):
 [`../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md).
 
+**Prediction's two migration-tool-extended shapes — APPLIED 2026-08-09 (`instruments-service@aaa0866c` tool, this
+todo):** fresh dry-run confirmed 13,282 flat candidates across the two shapes (`canonical_question_group=/day=/venue=` +
+`market_lifecycle`'s `day=/group=/venue=`), matching the 2026-08-03 sizing. `--apply-prod --confirm-prod-write`
+copy-and-verify completed **0 failed**: 13,280 `already_present_verified` + 2 `content_mismatch` (left in place pending
+an operator authoritative-source decision, not deleted — same policy as the 2026-08-03 cefi/defi/tradfi run). The
+residual 12,463 `unrecognized` count for prediction is entirely the THIRD, still-pending `market=` shape (gated on the
+sibling issue doc's todo 8) — the two named shapes' own unrecognized count is 0.
+
 Full detail:
 [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
 (todos 1-8, all closed). Non-canonical-path-inventory row #16 updated in lockstep.

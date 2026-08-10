@@ -13,7 +13,7 @@ summary: >-
   market-tick-data-service dropped both fixes. The template is now forward-ported so a rollout is safe; the remaining
   gap is that NOTHING detects template-vs-repo drift, so the same trap can reopen the moment a repo fixes something the
   template does not learn.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
   [
     /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
-    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
   ]
 created: 2026-07-20
 author: unknown
@@ -46,13 +46,14 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+  ci_satellite_ao_dispatch_batch5_2026_08_02.md todo 1 (end-to-end proof build 4d265c51-5ca0-4349-b48f-80d4f7179430)
 context_scope:
   [
     scripts/propagation/rollout-cloudbuild.py,
     configs/cloudbuild-service-template.yaml,
     scripts/quality_gates/check_cloudbuild_template_drift.py,
     scripts/quality_gates/cloudbuild_template_drift_baseline.yaml,
-    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 ---
@@ -111,9 +112,9 @@ silently regresses the fleet again.
       uses, with a shrinking-ratchet baseline (`cloudbuild_template_drift_baseline.yaml`, seeded 2026-07-28 at the
       fleet's real per-repo counts). **Deliberately NOT wired into `scripts/quality-gates.sh`** — that wiring is its own
       gated finalize-plan todo (`ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`), same pattern as the
-      `check_no_swallowed_credential_fetch.py` checker shipped alongside it. unified-trading-pm@(this commit — see
-      plan). `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case
-      fails at a seeded baseline, plus the API-template path (not just SERVICE).
+      `check_no_swallowed_credential_fetch.py` checker shipped alongside it. unified-trading-pm@8f15ff124.
+      `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case fails
+      at a seeded baseline, plus the API-template path (not just SERVICE).
 - [x] ✅ [DEVOPS] P2. **DONE 2026-07-28 (slot-9, infra)** — `rollout-cloudbuild.py` refuses to write a file whose live
       content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
       `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
@@ -122,12 +123,13 @@ silently regresses the fleet again.
       2026-08-06 Progress Log entry for the full classification + evidence (template forward-ports landed in
       `configs/cloudbuild-*-template.yaml`; empty-tag guard hand-applied to all 17 image-building consumers; drift
       baseline ratcheted down to the residual category-(b) set; drift checker GREEN). **Roll the empty-tag guard out to
-      the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling into two explicit, ordered steps.** The original
-      one-line wording ("roll the guard out once the drift check exists") assumed a clean
-      `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the would-drop-content guard shipped
-      2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so an `--apply` sweep
-      would simply decline most of the fleet. Do the steps in order — step 2 is not startable for a repo until step 1
-      has cleared that repo.
+      the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling (source:
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md` frontmatter `source:` field) into two
+      explicit, ordered steps.** The original one-line wording ("roll the guard out once the drift check exists")
+      assumed a clean `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the would-drop-content
+      guard shipped 2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so an
+      `--apply` sweep would simply decline most of the fleet. Do the steps in order — step 2 is not startable for a repo
+      until step 1 has cleared that repo.
   1. **Resolve the per-repo drift first.** Ground truth is
      `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` (seeded 2026-07-28): **15 of 19 consumers carry
      content their mapped template does not** — `deployment-api` (26), `strategy-service` (13), `features-service` (12),
@@ -154,12 +156,13 @@ silently regresses the fleet again.
   Still not urgent in the original sense (the per-repo copies already carry the important fixes, and the guard only
   changes behaviour for manual `gcloud builds submit`), but step 1 is now the real work and it is worth doing on its own
   merits: 15 repos silently diverging from their template is the exact condition this issue exists to prevent recurring.
-  The AO-dispatchable copy of this todo lives in `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` (todo 1)
-  — this doc stays `assigned_vm: NA`; flip this checkbox from there.
+  The AO-dispatchable copy of this todo lives in `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md`
+  (todo 1) — this doc stays `assigned_vm: NA`; flip this checkbox from there.
 
 - [x] ✅ [DEVOPS] P3. **DONE 2026-07-28 (slot-13, infra)** — the new drift checker covers ALL FIVE templates, not just
       SERVICE (see the per-template measurement in the Progress Log below): `-api-`, `-ui-`, `-infra-`, `-sit-` are now
       all measured, matching the checker's default scope (every consumer `rollout-cloudbuild.py --apply` would touch).
+      unified-trading-pm@8f15ff124 (same commit as the P1 item above — one delivery covers both).
 
 ## Progress Log
 
@@ -203,7 +206,7 @@ silently regresses the fleet again.
   the re-scope the 2026-07-30 na-eligibility-audit verdict below asked for ("Re-scope the todo to name the mechanism and
   it becomes a clean RECLASSIFY") — the mechanism is now named, so the todo is bounded and worker-determinable. **This
   doc deliberately stays `assigned_vm: NA`**: rather than flipping this issue doc's own dispatch target, the bounded
-  work was extracted into `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 (the standard
+  work was extracted into `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 (the standard
   `/ag-closeout-audit` extraction pattern — source doc stays NA, the batch plan carries the dispatchable copy). No code
   shipped in this change; the 15/19 drift figures quoted in the re-scoped todo were re-verified against
   `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml` at the time of writing (19 consumers listed, 15 with a
@@ -329,9 +332,9 @@ alone as currently written. **Re-scope the todo to name the mechanism and it bec
 **na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **KEEP-NA, valid — the 2026-07-30 verdict's own
 condition was met, and it resolved AWAY from a reclassification, not toward one.** The re-scope that verdict asked for
 landed the same day (the operator-ruled two-ordered-step rewrite recorded in this doc's Progress Log), but the bounded
-work was extracted into `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 rather than by flipping
-this doc's own `assigned_vm`. Verified live: that batch plan exists, carries `assigned_vm: planning`, and its todo 1 is
-the re-scoped guard rollout. This doc's sole open checkbox already cites the extraction in its own text ("The
+work was extracted into `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1 rather than by
+flipping this doc's own `assigned_vm`. Verified live: that batch plan exists, carries `assigned_vm: planning`, and its
+todo 1 is the re-scoped guard rollout. This doc's sole open checkbox already cites the extraction in its own text ("The
 AO-dispatchable copy of this todo lives in … — this doc stays `assigned_vm: NA`; flip this checkbox from there"), so the
 citation is correct and no hygiene fix is needed. Flipping `assigned_vm` here now would open a SECOND dispatch path to
 the identical fleet-wide rollout — Phase-1 citation class (a), a body sentence redirecting work to a different doc.
@@ -361,3 +364,10 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
 > **2026-08-07 note**: the 2026-08-06 archive-candidate audit's caution above (step-2 done-when "remains outstanding")
 > was already stale at the time it was written — it predates the Follow-up checkbox directly above it, which closes that
 > exact done-when with the cited build `4d265c51-5ca0-4349-b48f-80d4f7179430`. Removed superseded note.
+
+- **2026-08-09 (`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md` todo 2 — source-doc reconciliation)**: verified
+  every todo above + the Follow-ups checkbox are `[x]` and the archive banner's RESOLVED claim is accurate — this doc
+  genuinely reaches zero open work. Corrected a stale frontmatter mismatch: `status:` had stayed `open` despite the
+  2026-08-07 archival banner; flipped to `resolved` and populated `resolved_by` with the end-to-end proof citation
+  (build `4d265c51-5ca0-4349-b48f-80d4f7179430`). No further action needed — this doc is the reconciled record for
+  batch5 todo 1.

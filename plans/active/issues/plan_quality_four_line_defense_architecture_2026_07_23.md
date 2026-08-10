@@ -170,20 +170,20 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       live as of this update — see the acceptance-test todo below for the one remaining verification step. Original todo
       text preserved below for the historical record.
 - [x] [SCRIPT] P1. ✅ **[HISTORICAL DETAIL for the DONE todo above — not a separate open item]** Operator ruling
-      2026-07-23: hard-fail on EVERY check (not the hard/soft split), gated on a prerequisite** — wire the full
-      `run_hygiene_sweep.sh` into `quality-gates.sh` for `unified-trading-pm` with ALL checks (including the
-      currently-"soft" ones: line caps, estimate sanity, superseded-in-active, codex refs, parent-epic alignment,
-      CLAUDE↔SUB_AGENT parity) blocking the commit, matching the sweep's `--ci` exit-1 behavior but extended past just
-      the 7 currently-hard checks. **Prerequisite, NOT done here**: the sweep scans the WHOLE `plans/active/` corpus,
-      not just a commit's touched files — measured 2026-07-23, 30 pre-existing plans already violate
-      `check_line_caps.sh`'s own internal hard threshold (23 non-umbrella >1000L, 7 umbrella >2000L, e.g.
-      `sports_manifest_canonicalisation_2026_06_01.md` at 4733L; full list via
-      `bash scripts/plan-hygiene/check_line_caps.sh`), plus 19 more in the 500-1000L soft range — a blanket flip today
-      would immediately block every future plan-touching commit workspace-wide on debt nobody just created. **Operator
-      chose to fix all 30 first, then flip** (not the ratchet-baseline alternative, and not scoping the gate to
-      touched-files-only) — this prerequisite is its own separate body of work (each of the 7 umbrella plans has 100+
-      todos and needs a real split, not a trim) and should be tracked as its own plan before this todo can ship. All 6
-      other currently-soft checks are already at 0 corpus-wide violations (verified 2026-07-23,
+      2026-07-23, recorded here in `plan_quality_four_line_defense_architecture_2026_07_23.md`: hard-fail on EVERY check
+      (not the hard/soft split), gated on a prerequisite** — wire the full `run_hygiene_sweep.sh` into
+      `quality-gates.sh` for `unified-trading-pm` with ALL checks (including the currently-"soft" ones: line caps,
+      estimate sanity, superseded-in-active, codex refs, parent-epic alignment, CLAUDE↔SUB_AGENT parity) blocking the
+      commit, matching the sweep's `--ci` exit-1 behavior but extended past just the 7 currently-hard checks.
+      **Prerequisite, NOT done here**: the sweep scans the WHOLE `plans/active/` corpus, not just a commit's touched
+      files — measured 2026-07-23, 30 pre-existing plans already violate `check_line_caps.sh`'s own internal hard
+      threshold (23 non-umbrella >1000L, 7 umbrella >2000L, e.g. `sports_manifest_canonicalisation_2026_06_01.md` at
+      4733L; full list via `bash scripts/plan-hygiene/check_line_caps.sh`), plus 19 more in the 500-1000L soft range — a
+      blanket flip today would immediately block every future plan-touching commit workspace-wide on debt nobody just
+      created. **Operator chose to fix all 30 first, then flip** (not the ratchet-baseline alternative, and not scoping
+      the gate to touched-files-only) — this prerequisite is its own separate body of work (each of the 7 umbrella plans
+      has 100+ todos and needs a real split, not a trim) and should be tracked as its own plan before this todo can
+      ship. All 6 other currently-soft checks are already at 0 corpus-wide violations (verified 2026-07-23,
       `run_hygiene_sweep.sh --ci --no-regen`) and can flip to hard-fail immediately, independent of the line-caps
       prerequisite. **Progress check 2026-07-24 (slot 2)**: re-ran `bash scripts/plan-hygiene/check_line_caps.sh` — down
       to **13 plans still HARD** (from 30), so `plan_line_cap_remediation_2026_07_23.md` (still `status: open`) has made
@@ -288,36 +288,36 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       ruling that the prek hard-gate satisfies line 2 and rewrite item 2's definition to match.
 
       **2026-08-02**: `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 26 asked
-              whether the already-shipped prek hard gates satisfy this acceptance test. Per this doc's OWN more recent,
-              repeatedly re-measured findings directly above and below (2026-07-26, 2026-07-30) — prek-only wiring is
-              explicitly insufficient against line 2's own definition, and a blanket full-sweep wire-in would currently be
-              actively harmful (see the 2026-07-30 entry). The operator-recommendation premise in that day's consolidated
-              report was stale relative to this doc's own tracked findings; NOT closing this item on that basis. Left open,
-              unchanged, per this doc's own most current evidence.
+                  whether the already-shipped prek hard gates satisfy this acceptance test. Per this doc's OWN more recent,
+                  repeatedly re-measured findings directly above and below (2026-07-26, 2026-07-30) — prek-only wiring is
+                  explicitly insufficient against line 2's own definition, and a blanket full-sweep wire-in would currently be
+                  actively harmful (see the 2026-07-30 entry). The operator-recommendation premise in that day's consolidated
+                  report was stale relative to this doc's own tracked findings; NOT closing this item on that basis. Left open,
+                  unchanged, per this doc's own most current evidence.
 
-              **RE-CHECKED 2026-07-30 (slot 10) — still not live, PLUS a new reason a blanket wire-in would be actively harmful
-              right now, not just incomplete.** `grep -n run_hygiene_sweep scripts/quality-gates.sh` still returns nothing —
-              4th consecutive session (07-24, 07-24-later, 07-26, now 07-30) to re-find the same unmet precondition. New this
-              session: ran `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` live — it now FAILS with 1 hard
-              failure that did NOT exist at the 2026-07-26 check (which recorded "0 hard failures / 1 soft warning, line-caps
-              is the sole blocker"): **Reference path convention (ratchet)** — `check_reference_paths.py` shows 168 format
-              violations (baseline 161) and 906 dangling-reference violations (baseline 901), both past their own
-              shrinking-ratchet baseline. This is ordinary corpus drift from the fleet's normal commit velocity (already
-              tracked, `status: open`, at `/plans/active/issues/reference_path_convention_2026_07_23.md` — not duplicating
-              it, not fixing it inline here, it's a large multi-file corpus backlog outside this todo's scope). The
-              consequence: wiring the full sweep into `quality-gates.sh` TODAY would immediately hard-fail QG for every
-              future plan/codex-touching commit workspace-wide, on debt this todo did not create — the exact failure mode the
-              original 2026-07-23 line-caps prerequisite analysis was designed to avoid. Given the corpus's own commit
-              velocity (18-26/hr per other codex docs), a "fix all pre-existing violations, then wire it in" strategy is
-              chasing a moving target that has now regressed past its ratchet baseline at least once already since the
-              caps-only prerequisite cleared. **Recommendation to the operator** (raised via `/blocked` this session, not
-              unilaterally decided — this is a repo-wide CI-policy call, not a bounded/deterministic todo per
-              `task_template.md`'s dispatch-scope-eligibility rule): take the SECOND fork explicitly offered above — rule
-              that the already-shipped hard gates (`check_line_caps.sh` in prek `--precommit`, plus the other 6 checks already
-              at 0 corpus violations) satisfy line 2's INTENT (an automated, every-commit structural backstop), and rewrite
-              this doc's item 2 definition to match reality instead of continuing to chase a full-corpus-sweep wire-in that
-              corpus drift keeps re-blocking session after session. Not flipping this checkbox — the acceptance-test
-              precondition is still unmet either way until the ruling lands.
+                  **RE-CHECKED 2026-07-30 (slot 10) — still not live, PLUS a new reason a blanket wire-in would be actively harmful
+                  right now, not just incomplete.** `grep -n run_hygiene_sweep scripts/quality-gates.sh` still returns nothing —
+                  4th consecutive session (07-24, 07-24-later, 07-26, now 07-30) to re-find the same unmet precondition. New this
+                  session: ran `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` live — it now FAILS with 1 hard
+                  failure that did NOT exist at the 2026-07-26 check (which recorded "0 hard failures / 1 soft warning, line-caps
+                  is the sole blocker"): **Reference path convention (ratchet)** — `check_reference_paths.py` shows 168 format
+                  violations (baseline 161) and 906 dangling-reference violations (baseline 901), both past their own
+                  shrinking-ratchet baseline. This is ordinary corpus drift from the fleet's normal commit velocity (already
+                  tracked, `status: open`, at `/plans/active/issues/reference_path_convention_2026_07_23.md` — not duplicating
+                  it, not fixing it inline here, it's a large multi-file corpus backlog outside this todo's scope). The
+                  consequence: wiring the full sweep into `quality-gates.sh` TODAY would immediately hard-fail QG for every
+                  future plan/codex-touching commit workspace-wide, on debt this todo did not create — the exact failure mode the
+                  original 2026-07-23 line-caps prerequisite analysis was designed to avoid. Given the corpus's own commit
+                  velocity (18-26/hr per other codex docs), a "fix all pre-existing violations, then wire it in" strategy is
+                  chasing a moving target that has now regressed past its ratchet baseline at least once already since the
+                  caps-only prerequisite cleared. **Recommendation to the operator** (raised via `/blocked` this session, not
+                  unilaterally decided — this is a repo-wide CI-policy call, not a bounded/deterministic todo per
+                  `task_template.md`'s dispatch-scope-eligibility rule): take the SECOND fork explicitly offered above — rule
+                  that the already-shipped hard gates (`check_line_caps.sh` in prek `--precommit`, plus the other 6 checks already
+                  at 0 corpus violations) satisfy line 2's INTENT (an automated, every-commit structural backstop), and rewrite
+                  this doc's item 2 definition to match reality instead of continuing to chase a full-corpus-sweep wire-in that
+                  corpus drift keeps re-blocking session after session. Not flipping this checkbox — the acceptance-test
+                  precondition is still unmet either way until the ruling lands.
 
 ## Codex SSOTs
 
@@ -367,12 +367,18 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
     immediately hard-fail QG for every future plan/codex-touching commit workspace-wide, on this specific ratchet
     regression (tracked separately, not duplicated here: `reference_path_convention_2026_07_23.md`).
   - `check_reference_paths` (existence): PASS -- 84 dangling refs vs baseline 86 (improved, not a regression).
-  - The full sweep run timed out before reaching the remaining soft checks (estimate sanity, superseded-in-active,
-    codex refs, parent-epic alignment, CLAUDE/SUB_AGENT parity) -- not independently re-measured this pass; no prior
-    entry in this doc's history reports them as failing, so no reason to suspect regression there specifically.
-  **Bottom line for the operator's decision**: the corpus-drift picture has SHIFTED since the 2026-07-30 recommendation
-  (line-caps cleared, reference-paths format newly regressed by 3) -- the underlying fork (rule the already-shipped
-  prek hard gates satisfy line 2's intent, vs. actually wire the full sweep in) is STILL live either way: option (a)
-  needs nothing further (already true today); option (b) would need the reference-paths ratchet regression fixed
-  first (small, 3-count) before it could ship clean. Reporting this back per the operator's own stated precondition;
-  not resolving the actual policy fork myself -- that remains the operator's call this round didn't make.
+  - The full sweep run timed out before reaching the remaining soft checks (estimate sanity, superseded-in-active, codex
+    refs, parent-epic alignment, CLAUDE/SUB_AGENT parity) -- not independently re-measured this pass; no prior entry in
+    this doc's history reports them as failing, so no reason to suspect regression there specifically. **Bottom line for
+    the operator's decision**: the corpus-drift picture has SHIFTED since the 2026-07-30 recommendation (line-caps
+    cleared, reference-paths format newly regressed by 3) -- the underlying fork (rule the already-shipped prek hard
+    gates satisfy line 2's intent, vs. actually wire the full sweep in) is STILL live either way: option (a) needs
+    nothing further (already true today); option (b) would need the reference-paths ratchet regression fixed first
+    (small, 3-count) before it could ship clean. Reporting this back per the operator's own stated precondition; not
+    resolving the actual policy fork myself -- that remains the operator's call this round didn't make.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. Both remain explicit, repeatedly-re-measured repo-wide CI-policy calls the doc's own text
+  self-labels "not a bounded/deterministic todo per task_template.md's dispatch-scope-eligibility rule" (item 2's
+  acceptance test) and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs.
+  proseWrap). No new evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.

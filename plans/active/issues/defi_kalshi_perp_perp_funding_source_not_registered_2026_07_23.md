@@ -183,6 +183,16 @@ concrete, currently-failing symptom; the classification question is the census a
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added
   `/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`, the doc holding the blocked-prerequisite todo
   (`-011`) the open `[DATA] P1` re-emit todo unblocks once shipped.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (1 open
+  `[DATA] P1` re-emit todo at entry). Re-verified the duplicate-claim citation live: `defi_satellite_ao_dispatch_batch2_2026_07_26.md`
+  line ~307 still carries the identical open `[DATA] P2` re-emit todo (unchecked, same 567-row scope, explicit `Source:`
+  citation to this doc) — not stale, genuinely still in-flight there. Checked whole-doc RECLASSIFY against every
+  accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM
+  secret + 5 Slack webhooks now existing) — none apply; this doc's sole open item is a pure duplicate of an
+  already-dispatched `assigned_vm: planning` todo, not a fresh RECLASSIFY signal. No satellite-extraction candidate
+  (flipping this doc's `assigned_vm` would open a second dispatch path for the identical fix, exactly the risk the
+  doc's own text warns against). Doc stays `assigned_vm: NA` (KEEP-NA-STALE-DUPLICATE, round11).
 
 ## Follow-ups
 

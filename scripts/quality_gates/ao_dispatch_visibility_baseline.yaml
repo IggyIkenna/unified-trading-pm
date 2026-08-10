@@ -22,9 +22,9 @@
 # doesn't need re-baselining every few minutes during busy windows. Tune the buffer here
 # directly if the observed noise band changes; it does NOT relax "never hand-raise the
 # baseline" -- a spike past the buffer still needs an explicit, reviewed --update-baseline.
-max_accidental_exclusions: 28
+max_accidental_exclusions: 0
 accidental_exclusions_buffer: 5
-max_zero_dispatchable_docs: 25
+max_zero_dispatchable_docs: 9
 zero_dispatchable_docs_buffer: 3
 max_ineffective_declarations: 4
 ineffective_declarations_buffer: 2

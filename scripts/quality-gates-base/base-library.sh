@@ -262,13 +262,21 @@ _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scr
 WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
-    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    # sed -E, not `grep -oP` (2026-08-09, quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md):
+    # -P is a GNU/PCRE extension; the /usr/bin/grep a bare subprocess resolves to on macOS (BSD grep,
+    # no PCRE) exits 2 on it, which this file's own `set -e` turns into a silent whole-script abort.
+    # sed -E is POSIX-portable across BSD and GNU sed alike. See scripts/setup.sh's sibling fix for
+    # the full incident writeup (same pattern, same root cause, copy-pasted into both files).
+    _uv_pm_root="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}"
+    _uv_pin="$(sed -nE 's/^UV_VERSION = "([^"]+)"/\1/p' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+    command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (mirrors base-service.sh; same rationale + SSOT).
     _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
-    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
-        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    if [[ -n "$_uv_pin" && -n "$_uv_ver" && "$_uv_ver" != "$_uv_pin" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is $_uv_pin — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/${_uv_pin}/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
     fi
-    unset _uv_ver
+    unset _uv_ver _uv_pin _uv_pm_root
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
@@ -996,6 +1004,10 @@ PIP_SH=$(codex_rg " pip install " --glob "**/*.sh" --glob "!unified-trading-pm/*
 _be_extra_globs=()
 for _excl in "${BROAD_EXCEPT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _be_extra_globs+=("--glob" "!${_excl}"); done
 BE=$(codex_rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+# AST-filter out matches that only occur inside a string/comment (e.g. a generated-code
+# template literal) — the raw regex above can't tell source code from a string containing
+# similar text; this narrows to real ExceptHandler nodes before counting a violation.
+[[ -n "$BE" ]] && BE=$(echo "$BE" | python3 "$(dirname "${BASH_SOURCE[0]}")/filter_broad_except_string_literals.py" 2>/dev/null || echo "$BE")
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
 SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" -A 2 2>/dev/null \

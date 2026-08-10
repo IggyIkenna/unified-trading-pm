@@ -172,9 +172,12 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Phase 3 — live CLOB depth (shared with the prediction-perps plan's Phase 3)
 
-- **[SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 6 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Live BBO+depth recording for
-  these equity perps, reusing the CeFi live-ws book connectors. Repo: market-tick-data-service.)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 — NO CODE CHANGE NEEDED, live-verified** (batch11 todo 6). Live BBO+depth for
+      these equity perps, reusing the CeFi live-ws book connectors. Repo: market-tick-data-service. Every capture-path
+      layer (per-venue `book_snapshot_5` connectors, base-token derivation, canonical-id builders,
+      `_resolve_is_universe`) is already symbol-generic — proved live: ran the real websocket-streaming CLI
+      (test-bucket-routed) against a live `AAPL` equity-perp on all 3 venues; all 3 wrote a genuine `captured` manifest
+      row (13/9/18 rows), same shard-atom shape as any other live book capture.
 
 ## Phase 4 — arb wiring
 
@@ -253,6 +256,106 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
 
 ## Progress Log
+
+### 2026-08-09 — NET-basis backtest re-run with dividend yield priced in (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 8)
+
+> **Header corrected 2026-08-09**: was mislabeled "todo 6" (that's the BBO+depth live-ws extension, Phase 3 above) —
+> this content is batch11's todo 8. Label fixed to match content, not re-derived.
+
+Dispatched via AO batch11. **Databento DBEQ.BASIC has no dividends/corporate-actions schema** (confirmed by grepping
+every Databento adapter in market-tick-data-service and instruments-service for "dividend" — zero hits; matches the
+codex `tradfi-databento-sourcing-ssot.md` gap and the 2026-05-23 instruments-service ledger audit's own note that a
+dividend calendar would need an external source). Used **yfinance** instead, mirroring the already-established pattern
+elsewhere in this workspace (market-tick-data-service's `yahoo_finance_adapter.py`, features-service's
+`yfinance_earnings_adapter.py`, e2e-testing's own `scripts/common/backfill_vix_yahoo.py`) rather than the heavier
+Polygon corporate-actions adapter (features-service, requires a separate `polygon-api-key` secret + cross-repo import).
+
+Implementation: `e2e-testing/scripts/cefi/net_basis_scan.py` extended with `fetch_ttm_dividend_yield_pct()`
+(trailing-12mo dividend sum ÷ last close, computed directly from yfinance's raw `Ticker.dividends` history — NOT the
+`info["dividendYield"]` field, which has a documented stale/pre-split bug: it read 0.45% for NVDA vs. the
+raw-history-derived 0.125%), `dividend_adjusted_net_basis()`, and a `run_dividend_adjusted_backtest()` driver. Live-run
+2026-08-09, holding the original 2026-06-20 backtest's Gross%/Borrow% columns fixed (same 11mo Databento-roll +
+Binance-funding window) so the comparison isolates exactly the one variable this todo asks to add — dividend yield —
+rather than conflating it with funding-rate drift (funding is highly time-varying; a supplementary live-Binance-funding
+sanity check the same day showed funding has compressed materially fleet-wide since 06-20, several pairs now
+NET-negative on today's live rates — that's a SEPARATE, already-tracked concern, the doc's own DYNAMIC-universe-ranking
+follow-up a few lines below, not folded into this dividend-only delta):
+
+| Pair  | Gross% | Borrow% | Div yield% (TTM) | Hedge cost% | NET% (w/ div) | Δ vs 06-20 NET% |
+| ----- | ------ | ------- | ---------------- | ----------- | ------------- | --------------- |
+| NVDA  | +22.1% | +0.50%  | +0.125%          | +0.375%     | +21.73%       | +0.13pp         |
+| MSFT  | +15.7% | +0.30%  | +0.712%          | -0.412%     | +16.11%       | +0.71pp         |
+| CRCL  | +23.8% | +2.50%  | +0.000%          | +2.500%     | +21.30%       | +0.00pp         |
+| INTC  | +18.2% | +0.50%  | +0.000%          | +0.500%     | +17.70%       | +0.00pp         |
+| GOOGL | +18.0% | +0.30%  | +0.240%          | +0.060%     | +17.94%       | +0.24pp         |
+| AMD   | +24.4% | +0.50%  | +0.000%          | +0.500%     | +23.90%       | +0.00pp         |
+| TSLA  | +9.4%  | +0.50%  | +0.000%          | +0.500%     | +8.90%        | +0.00pp         |
+| AMZN  | +5.7%  | +0.30%  | +0.000%          | +0.300%     | +5.40%        | +0.00pp         |
+| META  | +11.7% | +0.30%  | +0.355%          | -0.055%     | +11.75%       | +0.35pp         |
+| HOOD  | +9.1%  | +2.00%  | +0.000%          | +2.000%     | +7.10%        | +0.00pp         |
+| AAPL  | +6.8%  | +0.30%  | +0.335%          | -0.035%     | +6.84%        | +0.34pp         |
+| BABA  | +6.2%  | +1.00%  | +0.818%          | +0.182%     | +6.02%        | +0.82pp         |
+
+**Result**: dividends confirm the operator's framing — the 06-20 figures WERE a floor, every pair's NET is flat-to-up
+(+0.00 to +0.82pp) with dividends priced in, no pair flips verdict (all 12 remain TRADEABLE). Biggest beneficiaries are
+the higher-yielding names (BABA +0.82pp, MSFT +0.71pp); 6 of the 12 (CRCL/INTC/AMD/TSLA/AMZN/HOOD) pay no dividend today
+so are unchanged. Evidence: `e2e-testing@12d1f3c` (this commit), script output reproduced above, run via
+`python3 scripts/cefi/net_basis_scan.py` (credential-free, public Yahoo endpoints only).
+
+### 2026-08-09 — Todo 9 (Binance listing/history-length vs regime-window cross-reference) DISPATCHED + DONE (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9)
+
+Live-queried Binance USDT-margined futures `fapi/v1/exchangeInfo` (`onboardDate`) +
+`fapi/v1/klines?interval=1d&startTime=0` (first real daily candle) for every symbol in the requested set
+(XAU/XAG/COPPER/SPX/SPY/NDX), then cross-referenced each listing date/history-length against this doc's own NET-basis
+backtest regime window (~11-12mo, 2025-07-01→2026-06-30, Databento GLBX front-next roll-carry table above). **No
+universe add/remove decision made** — per this todo's explicit scope.
+
+| Symbol | Binance perp | Listed (UTC) | History as of 2026-08-09 | Overlap w/ 2025-07-01→2026-06-30 window | Coverage % |
+| ------ | ------------ | ------------ | ------------------------ | --------------------------------------- | ---------- |
+| XAU    | XAUUSDT      | 2025-12-11   | 241d (~7.9mo)            | 201d                                    | 55%        |
+| XAG    | XAGUSDT      | 2026-01-07   | 214d (~7.0mo)            | 174d                                    | 48%        |
+| COPPER | COPPERUSDT   | 2026-03-06   | 156d (~5.1mo)            | 116d                                    | 32%        |
+| SPX    | SPXUSDT      | 2024-12-10   | 607d (~20.0mo)           | 364d (full window)                      | 100%\*     |
+| SPY    | SPYUSDT      | 2026-04-06   | 125d (~4.1mo)            | 85d                                     | 23%        |
+| NDX    | _(none)_     | N/A          | N/A                      | N/A                                     | N/A\*\*    |
+
+\*SPX coverage is a false positive — see caveat below. \*\*NDX never had a real Binance perp or a NET-basis row in this
+doc's own table (only XAU/XAG/COPPER/SPX/SPY were ever measured — line ~772-780 above); it was only ever an aspirational
+mapping target in the "Map the index perps" todo, not a measured verdict.
+
+**Is the SLIM/NEGATIVE verdict regime-conditional or permanent?**
+
+- **XAU/XAG/COPPER (SLIM/NEGATIVE; GC/SI/HG contango over the observed window)**: each perp's trading history covers
+  only 32-55% of the 11-12mo regime window the futures-side contango reading spans, starting 4-8 months after the window
+  opened — we have zero Binance funding data from the pre-listing portion of the window, so we cannot say the contango
+  regime (and hence the NET reading) held there too. CL's own -20% backwardation reading in the SAME table, SAME window,
+  is this doc's own proof that a commodity future can sit in a materially different regime than gold/silver/copper's
+  contango — a partial-window contango reading is not proof of permanence. **Verdict: regime-conditional, not proven
+  permanent.**
+- **SPY (NEGATIVE; ES contango)**: shortest real history (125d/23% coverage) — SPYUSDT didn't exist for the first ~9
+  months of the window. The -9.8% NET reading rests on barely 4 months of live funding data. **Verdict:
+  regime-conditional, weakly supported** (smallest sample of the set).
+- **SPX (NEGATIVE; ES contango; nominal 100% coverage)**: the long history is a false signal — Binance's `SPXUSDT` is
+  confirmed live (`underlyingType=COIN`, `underlyingSubType=['Meme']`, matching batch11 todo 2's independent finding) to
+  be the **SPX6900 meme coin, not an S&P-500-linked instrument**. Its 20-month history is irrelevant to the S&P-500
+  carry regime — the doc's original "SPX" NET-basis row compares a meme-coin's funding rate against an S&P-500 future's
+  carry, a mismatched pair, not a regime read on the real index. Not a new finding (todo 2 already flagged the symbol
+  mismatch) — restated here because it directly undermines this row's own "100% coverage" cell: full history of the
+  WRONG instrument doesn't resolve the regime question, because no genuine SPX perp exists on Binance. **Verdict: not
+  assessable as a regime question — the underlying data doesn't measure what the table implies.**
+- **NDX**: no Binance perp exists (independently re-confirmed via a full-symbol-list grep of `exchangeInfo` for
+  NAS100/NDX — zero matches) and no NET-basis row for it was ever produced. Nothing to cross-reference.
+
+**Bottom line**: of the 4 symbols with both a real Binance perp AND a real NET-basis verdict (XAU/XAG/COPPER/SPY), every
+one has <60% overlap with the observed regime window and none has traded through a regime shift the way CL demonstrably
+has — their SLIM/NEGATIVE calls should be read as "negative under the one contango regime observed so far," not as
+structurally permanent. SPX's case is a category mismatch, not a regime question. NDX was never measured. No
+universe/backtest change made by this todo.
+
+Evidence: Binance `fapi/v1/exchangeInfo` `onboardDate` + `fapi/v1/klines?interval=1d&startTime=0` first-candle open time
+(live-queried 2026-08-09) for XAUUSDT/XAGUSDT/COPPERUSDT/SPYUSDT/SPXUSDT; full `exchangeInfo` symbol-list grep for
+NAS100/NDX confirms none exists. Checkbox flipped in `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9 in the
+same commit.
 
 ### 2026-08-09 — Propagation ops (B1/B3/B4) verified DONE on live prod state (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1)
 
@@ -828,9 +931,13 @@ funding.
       adapter — is resolved; what remains is the build itself). Genuinely multi-day, cross-repo build (new
       execution-service adapter + `ibkr-gateway-infra` wiring); not a single-worker bounded-outcome task, so
       `assigned_vm` stays `NA` pending its own scoped build plan rather than blind AO dispatch on this umbrella doc.
-- **[RESEARCH] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 7 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Check OKX/Bybit/Hyperliquid for
-  a WTI/Brent oil perp; add if found. Repo: instruments-service.)
+- [x] ✅ [RESEARCH] P1. **DONE 2026-08-09 — `unified-api-contracts@89de6766`** (batch11 todo 7). Check
+      OKX/Bybit/Hyperliquid for a WTI/Brent oil perp; add if found. Repo: instruments-service. Live-queried all 4
+      venues' listing endpoints: **FOUND** on OKX (`CL-USDT-SWAP` WTI since 2026-03-04, `BZ-USDT-SWAP` Brent since
+      2026-03-24 — ICE data-partnership index) and Bybit (`CLUSDT`, `BZUSDT`); **NOT FOUND** on Hyperliquid (no
+      commodity perps at all today). `CL`/`BZ` were already members of `CEFI_EQUITY_PERP_BASE_UNIVERSE`, so no
+      universe-membership change was needed. Recorded the per-venue found/not-found result with cited evidence in new
+      module `oil_perp_venue_coverage.py` + 13 unit tests. `quality-gates.sh` green (381s).
 - [ ] [DESIGN] P1. strategy-service — single-stock basis archetype on the 12 net-profitable names: short Binance
       stock-perp (collect funding) + long IBKR cash stock; low-turnover (held; the winners had 0–2 sign-flips/90); entry
       restricted to US hours (UAC venue_session_hours), hold through off-hours. Edge = NET basis, sized continuously by
@@ -853,13 +960,14 @@ strictly biggest; the set CHURNS over quarters. The 12 added in 0fe9067e are a s
       (universe) + strategy-service (ranking). **APPROVED (operator, 2026-08-08)**: "Approve, build it" — retagged
       `[DESIGN]`→`[BACKEND]`. Genuinely multi-repo build (UAC universe schema + strategy-service ranking logic); not a
       single-worker bounded-outcome task, so `assigned_vm` stays `NA` pending its own scoped build plan.
-- **[SCRIPT] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 8 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Re-run the NET-basis backtest
-  with dividends priced into the long cash-stock leg, all 12 net-profitable pairs. Repo: e2e-testing.)
-- **[RESEARCH] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Check Binance perp
-  listing/history length per NET-negative/-slim symbol against known regime shifts, to determine whether the
-  net-negative verdict is regime-conditional. Repo: instruments-service.)
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-09 — `e2e-testing@12d1f3c`** (batch11 todo 8). Re-run the NET-basis backtest with
+      dividends priced into the long cash-stock leg, all 12 pairs. Repo: e2e-testing. Full table: this doc's Progress
+      Log, "NET-basis backtest re-run with dividend yield" entry above. Result: all 12 remain TRADEABLE, NET +0.00 to
+      +0.82pp vs. the 06-20 floor.
+- [x] ✅ [RESEARCH] P1. **DONE 2026-08-09** (batch11 todo 9, read-only research, no code shipped). Check Binance perp
+      listing/history length per NET-negative/-slim symbol against known regime shifts, to determine whether the
+      net-negative verdict is regime-conditional. Repo: instruments-service. Full table: this doc's Progress Log, "Todo
+      9" entry below.
 - [ ] [DESIGN] P2. strategy-service — note: XAU (gold) perp is the deepest non-crypto leg ($327M) → if gold carry flips
       to backwardation (or for non-basis gold strategies), it's the most size-able crypto-venue commodity. Repo:
       strategy-service.
@@ -885,3 +993,7 @@ answer rather than a paid tick vendor. This note is kept for historical record, 
   ("not a single-worker bounded-outcome task... pending its own scoped build plan"). Whole-doc flip is blocked per the
   HARD RULE. Closed 1 stale item (the KRX BLOCKED-DATA checkbox, above) with evidence from this doc's own recorded
   2026-08-07 ruling.
+- **batch11-finalize 2026-08-09 (slot-17, review)**: batch11's todos 6-9 (this doc's 4 EXTRACTED items) all landed DONE
+  — pointers above replaced with real evidence (SHAs verified reachable on origin), 1 mislabeled Progress Log header
+  fixed (todo 8's entry was headed "todo 6"). **Doc-wide open count: 15/36, unchanged** (already checked at
+  batch11-drafting; this pass only added evidence) — see the 2026-08-08 audit entry above for the breakdown.

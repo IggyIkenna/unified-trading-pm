@@ -17,10 +17,10 @@ scope: [engineer, admin]
 tags: [infra, quality-gates, host-contention, governor, resource-admission, cross-host]
 related:
   [
-    plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-14"
 last_updated: 2026-08-03
@@ -39,7 +39,10 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md, scripts/quality-gates-base/qg-host-governor.sh]
+  [
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+  ]
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
@@ -63,8 +66,8 @@ context_scope:
   around the heavy phases; `QG_PROFILE` handling; the `MAX_DURATION` meta-gate.
 - `scripts/quality_gates/profile_qg_resources.py` + `scripts/dev/measure-qg-baseline.sh` — the tree-RSS profiler and
   baseline recorder that feed per-repo costs; `scripts/dev/qg_resource_baseline.json` is the data file.
-- `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — the open issue whose 4 todos this plan
-  resolves (K-floor policy, MAX_DURATION counts queue-as-work, light-slice queues needlessly, fairness/starvation gap).
+- `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` — the issue whose 4 todos this plan resolves
+  (K-floor policy, MAX_DURATION counts queue-as-work, light-slice queues needlessly, fairness/starvation gap).
 
 ## Problem
 
@@ -335,8 +338,8 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       `/codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
       instruments → execution → …; the stale "execution/features = #2" fixed).
 - [x] [INFRA] P2. ✅ PM@6402f6cd8 (`status: resolved` + `resolved_by:` + ✅ banner; all 4 issue todos were already
-      `[x]`) — Close the 4 todos in `issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan resolves all
-      four) and banner the issue resolved.
+      `[x]`) — Close the 4 todos in `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan
+      resolves all four) and banner the issue resolved.
 
 ### Phase 6 — Cross-host verification
 
@@ -414,6 +417,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       already-open escalation, not deferred as its own new ticket. There was never an open ticket-system record waiting
       on the ledger fix; the prior "needs operator API access to close it" framing was itself the error, not a genuine
       gap.
+- [ ] [INFRA] P3. NEW FINDING (2026-08-09, relayed via a review-agent resource-contention investigation): the
+      HEAVY-PHASE `K` governor's own core count is inflated on a hyperthreaded host — `_qg_governor_default_k()`
+      (`scripts/quality-gates-base/qg-host-governor.sh:81-89`) computes `cores` via
+      `lscpu -p=core 2>/dev/null | grep -vc '^#'`, which counts one line per LOGICAL cpu (`lscpu -p=core` emits a row
+      per hyperthread sibling, with the physical core id repeating) — no dedup. On a HT host this returns the logical
+      CPU count (e.g. 16) instead of the true physical core count (e.g. 8), so `K = cores/4` (floored, min 2) comes out
+      up to 2x too permissive there. **Correction to the relayed finding**: the report named `_qg_physical_cores()` as
+      the buggy function, but that function (same file, line 185-196, "Physical core count (not logical/HT)") already
+      dedupes correctly via `sort -u` — verified by direct read, it is NOT the source of the bug. `_qg_physical_cores()`
+      was added later (additively, per its own header comment) for the newer TOTAL-INSTANCE cap
+      (`_qg_total_default_cap`, line 106-111) and is unaffected. The two functions independently re-implement the same
+      "count physical cores" logic with diverging correctness — likely fix: have `_qg_governor_default_k()` call
+      `_qg_physical_cores()` instead of its own inline `lscpu` invocation (DRY + inherits the existing dedup). Not fixed
+      here — flagging only, per the reporting agent's own request.
 
 ## Progress Log
 
@@ -778,3 +795,14 @@ valid — 10 open items now (was 9; today's new `[INFRA] P3` MAX_DURATION-drift 
 same class as the other 9 — a real, well-specified engineering follow-on under the standing top-of-doc 2026-07-14
 "LOCAL/operator-driven, human-driven" ruling, not defaulted-and-never-assessed). No duplicate found in any active
 `assigned_vm: planning` sibling. No RECLASSIFY, no ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:26b8b937ea93491b]: KEEP-NA,
+valid — Doc opens with an explicit dated operator-ruling banner (confirmed real by direct read): 'LOCAL /
+operator-driven plan (assigned_vm: NA) -- not AO-ingested. Operator decision 2026-07-14: human-driven, and raise K on
+current hosts as an interim quick-win before the full governor.' Frontmatter confirms assigned_vm: NA / execution_scope:
+local-only; the 2026-07-14 Progress Log entry independently corroborates ('Operator decisions (2026-07-14): human-driven
+plan...'). This doc has been through FIVE prior na-eligibility-audit passes (2026-07-30 KEEP-NA-STALE citation-cleanup,
+2026-08-03/08-04/08-06/08-09 all CONFIRMS-KEEP-NA-valid), each re-verifying open items against this same standing ruling
+and finding none clear the whole-doc RECLASSIFY bar.

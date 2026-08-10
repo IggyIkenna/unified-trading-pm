@@ -122,9 +122,12 @@ content-hash SCRIPT ships):** when a doc enters scope only because condition (b)
 frontmatter-only commit is not a substantive re-assessment trigger and is the confirmed false-positive class documented
 in `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`. A real body edit
 (new or changed todo text, Progress Log entry, verdict section update, or any prose change) keeps the doc in scope
-normally. This manual check is unnecessary once the content-hash SCRIPT is live. **A full unscoped run** (no incremental
-filter) is still the right call after a long gap or before a `--update-baseline` on the ratchet — just expect it to look
-like the proven plan's own first session (dozens of sub-agents, multi-hour).
+normally. This manual check is unnecessary once the content-hash SCRIPT is live. **`/context-scout`-only sub-case**: a
+body-level `/context-scout` Progress Log line (not frontmatter, not a verdict marker) previously produced the same
+false-positive class — fixed by generalizing `body_content_hash()`'s marker-stripping to a sibling-marker family; see
+`issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`. **A full unscoped run** (no
+incremental filter) is still the right call after a long gap or before a `--update-baseline` on the ratchet — just
+expect it to look like the proven plan's own first session (dozens of sub-agents, multi-hour).
 
 Report the Phase-0 split up front: total in-tranche docs, already-verdicted-and-unchanged (skipped), in scope this run.
 

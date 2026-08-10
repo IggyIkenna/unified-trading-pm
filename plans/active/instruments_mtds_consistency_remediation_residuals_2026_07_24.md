@@ -93,7 +93,7 @@ context_scope:
 
 # Instruments ↔ MTDS subset + consistency remediation
 
-> **ð´ PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry
+> **🔴 PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry
 > these defects, and a reconcile `--apply` over uncovered path shapes flips real `captured`→`attempted_failed`
 > (CLAUDE.md hard rule). **Do NOT `--apply` until these are fixed + the projection regenerated + re-eyeballed:** (1)
 > **prefix_tpls coverage** — prove `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers ALL coexisting shapes
@@ -106,7 +106,7 @@ context_scope:
 
 Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md`.
 
-> **ð¢ SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
+> **🟢 SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
 > rebuild scripts ARE the migration: fix the gap → regenerate the dry-run projection → improved beta → `--apply`
 > (path-schema) → backfills. Per finding: **prefix_tpls** ✅ `canonical_path_templates(ag)` covers all shapes (sports
 > `[""]` — verify only); **N3** ⚠ï¸ `rebuild_sports_manifest_v9` never extracts `league_id`/`league` from the MTDS
@@ -121,7 +121,7 @@ Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_co
 > DONE; Phase-2 (file-level cross-year manifest-vs-reality sampling) is IN PROGRESS via per-AG sub-agents — findings
 > fold back into the audit doc + new todos here.
 
-> **ð´ð´ GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).** **The
+> **🔴🔴 GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).** **The
 > manifest migration RELABELLED nothing — it is a CELL-KEYED rewrite (`_index` rows keyed by
 > `(date,venue,data_type,instrument_type,instrument_id,underlying)`, NOT by GCS path); the v9 data was physically COPIED
 > to canonical paths by `migrate_*_v9_canonical` (COPY not MOVE → the legacy bare `asset_group=`/`category=`/top-level
@@ -182,7 +182,7 @@ before/after numbers. Order:
    `DefiManifestRecorder.record_zero_rows` (venue-launch-date-aware) instead of presence⇒captured. Verify: no
    token-pairs in chain, single-case instrument_type, no pre-launch captured-0-row vault cells.
 4. **Instruments enumerator** (instruments-service) — **N2** CME/TradFi weekend carry-forward = honest carry-forward
-   (not `SOURCE_RETURNED_ZERO`); de-dup 2Ã-per-cell index rows.
+   (not `SOURCE_RETURNED_ZERO`); de-dup 2×-per-cell index rows.
 5. **prefix_tpls VERIFY** (`reconcile_phantom_manifest_rows_all.py` `ASSET_GROUP_CONFIG`) — prove
    `canonical_path_templates(ag)` enumerates EVERY coexisting shape per AG
    (`category=`/`asset_group=`/bare/`pipeline_mode=`) against real GCS prefixes; replace the sports `[""]` with real
@@ -208,7 +208,7 @@ before/after numbers. Order:
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
 
-## ð¢ AUTONOMOUS COMPLETION PLAN (2026-06-18) — drive ALL to verified-working, EXCEPT the delete (operator-gated)
+## 🟢 AUTONOMOUS COMPLETION PLAN (2026-06-18) — drive ALL to verified-working, EXCEPT the delete (operator-gated)
 
 > Operator `/autonomous` 2026-06-18: complete everything (~1-2h, parallelise) to a working+verified state; **the ONLY
 > thing NOT to do is DELETE the old data** — but size it all up so the delete is ready. Loop until done; journal each
@@ -235,7 +235,7 @@ canonicalized + reconciled (cell-keyed, correct).
 5. **Orphan check** — per AG, every captured cell has a canonical object (twin-audit migrate-first→0). THE gate for
    delete-safe.
 6. **data_type + schema checking** — the migrated canonical objects carry the right data_type partition + parquet schema
-   (sample-open per AGÃdata_type; confirm canonical objects == legacy content/schema, not just present).
+   (sample-open per AG×data_type; confirm canonical objects == legacy content/schema, not just present).
 7. **Reader cutover** — repoint deployment-api drilldown + MTDS readers to canonical `pipeline_mode=` ONLY, remove ALL
    legacy fallbacks / multiple-SSOT (safe once 5/6 complete per AG). cefi can cut over now.
 8. **SIZE UP the final delete for ALL AGs** — re-run the twin-audit → per-AG SAFE-TO-DELETE delete-lists (legacy objs
@@ -645,7 +645,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       reconciling `attempted_failed` 1.40M→782,005, genuine `VENUE_FETCH_FAILED`(83,975)+ `HTTP_429`(3,652) preserved
       for backfill. Do not re-diagnose this figure — see "F3 (reframed)" for current state. Original open-todo text
       preserved below for audit-trail purposes:
-- [x] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the
+- [x] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venue×data_type; diagnose the
       failing adapters/venues; backfill. (Data-pipeline-correctness heartbeat — no deferral.) — market-tick-data-service
       -- CLOSED (na-eligibility-audit 2026-08-01): this checkbox sits directly under its own SUPERSEDED [x] entry above
       ("SUPERSEDED by 'F3 (reframed)' below — FIXED mtds@aaeada9 ... Original open-todo text preserved below for
@@ -687,7 +687,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       by a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010
       shadows suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33
       unit tests (6 new). — market-tick-data-service
-- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2Ã-per-cell dup** — FIXED instruments-service@7b7d3a3.
+- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2×-per-cell dup** — FIXED instruments-service@7b7d3a3.
       ROOT CAUSE: the v8/v9 re-emit APPENDED a row per cell instead of replacing the stale `schema_version=4` legacy row
       → every cell carried captured v8/v9 + a blank-status v4 shadow (`instrument_id=None` vs `""` hid the dup). New
       `canonicalize_instruments_store_index.py` does grain-aware de-dup + classify (count>0→captured incl CME
@@ -715,19 +715,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       canonicalize_mtds_index@d7b04b2 APPLIED). venue-spelling dedup CODE shipped (mtds@cf63cf6: `_canonical_defi_venue`
       replicates the migrator so manifest venue==object-path venue — SAFE only in the per-object rebuild, NOT the
       index-walk). **Residual N6r below.** — market-tick-data-service
-- [ ] [SCRIPT] P2. **RULED 2026-08-09 (operator): APPROVED — N5r/N6r — DEFI rebuild-for-real-replace to land
-      venue-dedup + VAULT-0-row + 496 chain-pollution on LIVE**. Was `[OPERATOR]`, sign-off required before AO dispatch
-      (round5-cross-cutting-audit 2026-08-08) — wholesale LIVE index replace-not-merge, not object/prefix-scoped, so it
-      does NOT qualify for the reversibility downgrade the tradfi-stragglers sibling item used; cite
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. The per-object rebuild (mtds@3f5cc6e/cf63cf6)
-      normalizes venue + detects 0-row vaults + would clean the 496 `chain`-pollution rows (token-pairs
-      ETH-USDC/1INCH-ETH in `chain`, all attempted_failed UNISWAP_V4 swaps_ohlcv), but reaching LIVE needs a WHOLESALE
-      replace of the defi `_index` (the consolidator merge leaves stale un-normalized rows; the index-walk can't
-      normalize venue without desyncing from object paths). Run the rebuild to produce the full v9 index + write it as
-      the live `_index` (replace, not merge). NOT a double-count/data-loss (P2 grouping hygiene). **ALSO picks up the
-      31,773 newly-migrated canonical UNISWAP_V4 `pool_id` cells (3.24M rows) the content-aware fan-out wrote
-      2026-06-18** — the rebuild walks all canonical objects, so these get their `availability_index` rows on this same
-      wholesale-replace run (no separate V4 manifest pass needed). — market-tick-data-service
+- [x] ✅ [SCRIPT] P2. **EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** N5r/N6r —
+      DeFi rebuild-for-real-replace (venue-dedup + VAULT-0-row + 496 chain-pollution wholesale live-index replace,
+      operator APPROVED 2026-08-09). A same-day design investigation found the naive rebuild+upsert does NOT achieve
+      replace-not-merge (stale legacy-spelled rows survive an upsert); a properly-scoped ADD+REMOVE swap tool (mirroring
+      the sports K1K2 precedent, never a bucket-wide replace — that would delete co-located MDPS candle rows) is
+      required. See the batch doc for the full scoped todo + design; do not duplicate-dispatch from here. —
+      market-tick-data-service
 - [x] ✅ [DATA] P0. **F3 (reframed) — CEFI re-classify legacy-recon `attempted_failed`** — FIXED mtds@aaeada9.
       `_rebuild_cefi_cf11.py`: shadow legacy rows (covered by a real object) suppressed (part of the 371,010 shadows);
       non-shadow `LEGACY_THIRDKEY_DRIFT_RECON_2026_05_07` dropped as un-keyable drift duplicates (**243,828 dropped**);
@@ -755,18 +749,95 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       label), `prediction_canonical_question_group` 89,276 rows (CQG aggregate), `book_snapshot_5` 1,167,347,
       `market_lifecycle` 2,280. No label mismatch — both data_types are valid UAC-registered prediction categories. —
       market-tick-data-service
-- [ ] [DATA] P1. **RULED 2026-08-09 (operator): APPROVED — N1b — CEFI: reconcile the ~698k `UNCLASSIFIED_ADAPTER_ERROR`
-      (ex-`LegacyBlankErrorReasonError`, blank-itype) attempted_failed cells against the IS expected-universe (Step 4
-      enumerator) + reconcile (Step 8)**. Was `[OPERATOR]`, sign-off required before AO dispatch
-      (round5-cross-cutting-audit 2026-08-08) — a ~698k-row live-manifest reclassify-apply, same non-qualification as
-      N5r/N6r above. **Still DEPENDS on Step 4** (the "Instruments enumerator" step in the Execution sequence above) —
-      N2's CME/TradFi-specific slice of Step 4 is done, but this needs the general IS expected-universe enumerator
-      confirmed ready for CEFI before running; verify that first, do not treat operator sign-off alone as unblocking
-      execution. Cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. cells the enumerator marks
-      `expected_unattempted` (instrument not listed / pre-coverage) should drop the stale failed row; genuine
-      in-coverage listed-instrument gaps stay attempted_failed → backfill (Step 9). DEPENDS on Step 4. (Provenance:
-      Step-1 fix kept them visible rather than hide a gap; final fate is enumerator+reconcile-driven.) —
-      market-tick-data-service
+- [x] ✅ [DATA] P1. **RULED 2026-08-09 (operator): APPROVED — N1b — CEFI: reconcile the (now-verified ~1,550, NOT ~698k
+      — see 2026-08-09 verification note below) `UNCLASSIFIED_ADAPTER_ERROR` (ex-`LegacyBlankErrorReasonError`,
+      blank-itype) attempted_failed cells against the IS expected-universe (Step 4 enumerator) + reconcile (Step 8)**.
+      Was `[OPERATOR]`, sign-off required before AO dispatch (round5-cross-cutting-audit 2026-08-08) — a live-manifest
+      reclassify-apply, same non-qualification as N5r/N6r above. **Still DEPENDS on Step 4** (the "Instruments
+      enumerator" step in the Execution sequence above) — N2's CME/TradFi-specific slice of Step 4 is done, but this
+      needs the general IS expected-universe enumerator confirmed ready for CEFI before running; verify that first, do
+      not treat operator sign-off alone as unblocking execution. Cite
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. cells the enumerator marks `expected_unattempted`
+      (instrument not listed / pre-coverage) should drop the stale failed row; genuine in-coverage listed-instrument
+      gaps stay attempted_failed → backfill (Step 9). DEPENDS on Step 4. (Provenance: Step-1 fix kept them visible
+      rather than hide a gap; final fate is enumerator+reconcile-driven.) — market-tick-data-service
+
+      **2026-08-09 Step-4 verification (slot 6).** (1) **The ~698k figure (F3-reframed 2026-06-18) is STALE**: live
+                      cefi `_index` (10,532,576 rows, 807,871 `attempted_failed`) shows only **1,550** rows carrying
+                      `UNCLASSIFIED_ADAPTER_ERROR` today — the bulk of `attempted_failed` is now typed venue-fetch errors
+                      (`UNCLASSIFIED:Tardis HTTP 403` 337,797; `VENUE_FETCH_FAILED` 218,038; etc.), none in N1b's scope. No
+                      commit/todo explains the drop over ~2 months (process-hygiene gap, operator FYI — direction is improvement, not
+                      regression). (2) **Step 4's catalog cross-ref was genuinely NOT ready** — `read_instruments_catalog_bounds`
+                      needs `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet`
+                      (`build_instrument_catalogue.py`'s roll-up), which did not exist (confirmed via dry-run warning). This is a
+                      DIFFERENT artifact from `enumerate_expected_universe.py`'s v2 scheduler (separately confirmed deployed) — the
+                      latter's "CeFi: FULL (v2)" status does not imply the former exists. (3) **Fixed + shipped 2 bugs in the
+                      corrector regardless** (`instruments-service@097e230b`, QG-green, 19 tests incl. 3 new): (a) hardcoded bucket
+                      name missing the `-prd-` env-tier segment (404 on every call since authoring, `last_executed: NEVER`) → now
+                      `resolve_bucket_name`; (b) candidate mask only matched the retired `LegacyBlankErrorReasonError` label → widened
+                      to also match the current `UNCLASSIFIED_ADAPTER_ERROR`. See the completion update + catalogue-build todo below
+                      for how this was carried to actual completion.
+
+                      **2026-08-09 completion update (slot 6).** Real root cause (slot 9's parallel RSS-kill note below was the SAME
+                      underlying slowness, mis-attributed to the manifest load): `read_instruments_catalog_bounds()` (UTL) re-scanned
+                      the full 432,887-row catalog on EVERY call, no per-lookup cache despite the docstring's claim — classify never
+                      finished even for 1,550 rows. Fixed: per-(asset_group,venue,instrument_id) memoization,
+                      `unified-trading-library@a35819ee` (QG-green, 49/49 tests). Post-fix the corrector completes in 33.5s total
+                      (manifest download alone ~15-20s) — the column-projection todo below is downgraded, no longer N1b-blocking.
+                      **Dry-run + apply ran successfully**: 1,550 candidates, 7 applied (`HYPERLIQUID:PERPETUAL:IP-USD@LIN`/2026-06-29,
+                      → `empty_confirmed`/`EXPECTED_INSTRUMENT_DELISTED`, genuinely delisted per catalog), 1,543 correctly left
+                      `attempted_failed` (Step-9 backfill population, not N1b's scope). Per-VM shard confirmed uploaded:
+                      `gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/slot6-n1b-corrector-cefi-1786273499.parquet`.
+                      **NOT checkbox-complete yet — waiting on elapsed time, not work.** Re-verified 25+min post-apply: still
+                      unmerged; the script's "~5min" merge-ETA log claim is stale — the cefi consolidator cron is `0 * * * *` (hourly,
+                      last run 11:00:04Z, before this apply; next ~12:00Z), not 5-minutely (new doc-fix todo below). **Re-verify after
+                      ~12:00 UTC**: confirm the 7 rows + shard-consumed, then flip citing instruments-service@097e230b +
+                      unified-trading-library@a35819ee. Do NOT re-run the corrector meanwhile (already durably staged, idempotent).
+
+                      **2026-08-09 re-verification (slot 6): the 12:00Z re-check found the prior apply never merged — 2 real
+                      corrector bugs, not elapsed time.** (1) Canonical still `attempted_failed` post-consolidator-run
+                      (`rows_added=0`); shard's `attempted_at`/`written_at` were byte-identical to the canonical row's, so the
+                      dedup tie-break (`attempted_at -> written_at DESC NULLS LAST`) resolved the exact tie by scan order, not
+                      "correction wins". Fixed: `instruments-service@8cf44c665` (stamps a fresh timestamp; also fixed the stale
+                      "~5min" consolidator-ETA log line). (2) Re-applied — new shard carried only the bulk-scan's column-pruned
+                      10/42 cols, missing `service_name` (part of the dedup key base) → would NULL-pad-mismatch and land as a
+                      **duplicate row, not an overwrite**. Caught + deleted the broken shard live via the SDK
+                      (`blob.delete()`) at 12:00:05Z, seconds before the hourly cron. Fixed: apply path now re-fetches full
+                      columns for corrected rows via DuckDB (same pattern the consolidator's own merge uses). Shipped
+                      `instruments-service@d2bdec62` (21/21 tests green). **Systemic-risk issue filed** — defi's sibling corrector
+                      has the same tie-break defect via a different mechanism (`attempted_at=None`), NOT verified live for defi:
+                      `plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md`.
+                      **Verified merged (slot 14): 7/7 empty_confirmed.** — instruments-service
+
+- [x] ✅ [SCRIPT] P1. **N1b prerequisite — build the missing CEFI IS lifecycle catalogue** — DONE 2026-08-09 (slot 9).
+      The background `build_instrument_catalogue.py --asset-group cefi --mode full` run already in flight from the prior
+      session (slot 6, PID 1361140) was monitored to completion rather than duplicated (idempotent monotonic-guard
+      promotion; re-launch would have been redundant). Landed: `EVENT CATALOGUE_PROMOTED rows=432887` →
+      `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet` (confirmed via `gsutil stat`,
+      generation 1786272122791820). **(1) Verified**:
+      `read_instruments_catalog_bounds("cefi", "BINANCE-DELIVERY", "BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926")`
+      returns non-None (`CatalogBounds(available_from=2020-07-20, available_to=2020-09-26)`) — catalog cross-ref is live
+      for cefi. **(2) Attempted N1b's corrector dry-run — BLOCKED by a separate, now-tracked defect** (see new todo
+      immediately below): `reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py --asset-group cefi` bulk-loads the
+      full 10,532,576-row / 42-column manifest into pandas (~10GB RSS) to find only 1,550 candidate rows — this shared
+      host's `resource-watchdog.sh` (4GB RSS cap under the current high-pressure cgroup state, confirmed via
+      `/var/log/resource-watchdog.log` KILL #15-17) SIGTERM'd the process 3x in a row at the same point (after catalog
+      load, before classification), independent of `run-bounded-analysis.sh` wrapping — this is a genuine
+      unfiltered-full-manifest-load inefficiency in the corrector, not a fluke. N1b itself (the reconcile-and-apply
+      checkbox above) is NOT completed by this task — it remains blocked until the corrector is fixed or dispatched to a
+      dedicated VM. — instruments-service
+- [x] ✅ [SCRIPT] P3. **DOWNGRADED 2026-08-09 from P2-blocker to P3 (N1b unblocked via a different fix — see above),
+      then DONE anyway** — slot 14 (`instruments-service@0e884a7f`) shipped exactly this column-projection fix before
+      the downgrade note above landed (harmless parallel-work overlap, not wasted: it independently stopped the
+      `resource-watchdog.sh` kills slot 6/9 hit before slot 6 found the separate UTL catalog-caching root cause).
+      `_download_manifest` now reads only the ~8 needed columns (`pd.read_parquet(..., columns=[...])`, schema-probed),
+      row count/index preserved for the apply-flips write-back path. QG-green, 20 tests incl. 1 new regression test. —
+      instruments-service
+- [ ] [DOC] P3. **Fix the stale "Consolidator merges within ~5min" log line** in the same corrector script (found
+      2026-08-09 — see completion note above). The cefi consolidator cron is actually `0 * * * *` (hourly). Update the
+      log/docstring to point at `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-cefi-cron`
+      instead of a hardcoded guess; grep sibling per-VM-shard scripts for the same copy-pasted claim. —
+      instruments-service (+ siblings if found)
 - [x] ✅ [DATA] P2. **N3a — SPORTS: 32,707 captured cells genuinely NULL-league in the LIVE index** — DONE 2026-06-19
       (mtds@ba21ee5, APPLIED+verified live). Per-date GCS day-map scan of BOTH `raw_tick_data/` (per-bookmaker
       `venue/league_id/data_type`) AND `processed/` (the ODDS_API `odds_horizon_bucket` aggregate,
@@ -806,7 +877,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       `pipeline_mode=batch_tardis/` with zero dupes; the legacy bare twin is NOT read → no double-count, no post-delete
       orphan. — deployment-api@d956a6e (audit verify; the cutover itself @0e267be/@c003271)
 
-  > **ð¢ RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
+  > **🟢 RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
   > (`e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`@a294b2c; per-AG maps at
   > `_index/audit/legacy_dup_delete_list_{ag}.parquet`; findings PM PR #403). **CRITICAL: only cefi is actually
   > migrated.** cefi = 1,077,672 SAFE-TO-DELETE (~9.98 TB, byte-identical `pipeline_mode=` twins — I spot-verified 5/5
@@ -847,7 +918,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       audit 2026-07-13 (operator-ordered)" section (~L473-524): defi/tradfi/pred (+ sports, separately documented
       2026-06-19) SAFE-TO-DELETE bulk is confirmed GONE from live GCS as of 2026-07-13. cefi's OWN residual (1,077,672
       objs / ~9.98 TB, the Phase-D-below procedure) was NOT in this session's audit scope
-      (`--ag     defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not
+      (`--ag defi,tradfi,sports,pred` only, per operator instruction) — its status is UNCONFIRMED by this run, not
       re-asserted as pending or done; re-audit cefi separately before assuming either.]**
 - **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Phase D — delete
   legacy GCS dupes (cefi-only, ~1.08M objects/~9.98TB), reversibility-verified (604800s GCS soft-delete confirmed,
@@ -870,13 +941,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              AG. — market-tick-data-service
+                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                      AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
@@ -915,3 +986,14 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
   na-eligibility-audit passes (2026-08-06/07/08) — reclassifying to `planning` below so the AO fleet can dispatch with
   its proper pre-migration drain-gate/snapshot/per-AG-sequencing machinery, rather than either being hand-run from an
   interactive session.
+- **2026-08-09 (slot 6, N1b Step-4 verification)**: ran the verification the todo demanded before applying — found the
+  ~698k figure stale (live count 1,550) and the IS lifecycle catalogue Step-4 needs genuinely missing in prod for cefi.
+  Fixed 2 real bugs in the corrector script (bucket-name 404, retired label match) and shipped
+  (instruments-service@097e230b, QG-green). Did NOT apply the reconcile — prerequisite not met. New todo added for the
+  catalogue build (in flight, background). Full detail inline on the N1b item above.
+- **2026-08-09 (slot 7, N5r/N6r)**: investigated the operator-approved rebuild-for-real-replace item — found no existing
+  tool achieves "replace, not merge" safely (plain rebuild upserts, leaving stale rows; UTL's bucket-wide replace
+  primitive would delete co-located MDPS candle rows). EXTRACTED to
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` with the correct scoped ADD+REMOVE swap design (mirrors the
+  sports K1K2 precedent) rather than risk a rushed live write against a 1h-estimated task that is actually a multi-day
+  migration. No live changes made.

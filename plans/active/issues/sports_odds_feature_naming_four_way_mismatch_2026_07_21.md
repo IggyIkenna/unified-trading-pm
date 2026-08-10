@@ -32,8 +32,12 @@ assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [sports_predictions_live_mode_and_backtest_execution_orphaned-003]
-resolved_by:
+resolved_by: >-
+  unified-api-contracts@689efa54, features-service@0ded2449, features-service@e240eca2, ml-service@91f031a,
+  ml-service@07976ae, ml-service@10e219f, strategy-service@4c55438c, features-service@36fb7b88 (via
+  sports_odds_feature_naming_canonicalization_2026_07_21.md, same archival sweep)
 locked_by:
+archive_exempt: true # bridge field, flip-only commit ahead of the immediately-following git mv (RULED 2026-08-09, see plan-completion-and-archival-discipline.md); dropped in the mv commit
 depends_on: []
 context_scope:
   [
@@ -128,16 +132,27 @@ scope a design decision first, then a real parity test becomes possible against 
       correctly gated behind that plan's naming-decision + 3-repo migration todos (it cannot be written until those land
       — there is still no real contract to test parity against). Flipping this duplicate closed instead of leaving it
       open prevents the backlog dispatcher from re-queuing a currently-unactionable duplicate of the same work here.
-- [ ] [SCRIPT] P1. The actual four-way naming migration has not started — the two `[x]` todos above only covered the
+- [x] ✅ [SCRIPT] P1. The actual four-way naming migration has not started — the two `[x]` todos above only covered the
       decision/scoping step (operator ruling BLK-a1ce4719 + authoring the migration plan); re-grepped
       `SportsFeatureVector` across features-service/ml-service/strategy-service on 2026-07-23 and found zero hits,
       confirming the real 3-repo migration (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8 of 9 todos
-      still `[ ]`) is unstarted.
+      still `[ ]`) is unstarted. **STALE, now CLOSED (na-eligibility-audit 2026-08-10)**: the migration this checkbox
+      describes as unstarted is now 100% shipped. Directly re-verified
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s own todos 1-8: all `[x]` —
+      `unified-api-contracts@689efa54` (UAC schema rename), `features-service@0ded2449`+`@e240eca2` (139-column FSS
+      migration), `ml-service@07976ae` (loud schema validation, closes the silent-agnostic gap this doc's own "Why it
+      matters" section flagged), `ml-service@91f031a`+`@10e219f` (loader + 4-file gap-fix), `strategy-service@4c55438c`
+      (v2 engines + legacy subscriber). The naming-parity test (todo 9 there) also shipped, `features-service@36fb7b88`,
+      10/10 tests passing. This doc's Progress Log entries citing "8/9 todos still open" (round11, 2026-08-09) were
+      themselves one day stale by the time of this audit — the migration doc's own round-9 sweep the same day had
+      already found todos 1-8 done; only the archival trigger (todo 10 there) remained, and that has now cleared too
+      (same sweep, see the migration doc's own closing entry).
 
 ## Codex SSOTs
 
-No existing codex SSOT names sports odds-feature naming specifically; `codex/09-strategy/architecture-v2/archetypes/`
-(archetype-level docs) would be the natural home for whichever convention gets canonicalized, once decided.
+The canonical sports odds-feature naming scheme now lives at `/codex/02-data/sports-odds-feature-naming-ssot.md` (added
+2026-08-10 as part of this doc's + the migration plan's joint archival — see that plan's Progress Log for the full
+per-commit trail).
 
 ## RE-TRIAGE (2026-07-23)
 
@@ -171,3 +186,16 @@ should be tracked via the (still all-open) canonicalization plan.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-08-01; sole
   open todo remains a status pointer at the sibling `sports_odds_feature_naming_canonicalization_2026_07_21.md`
   migration plan (itself correctly `assigned_vm: NA`), no independent dispatchable content here.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked against
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s explicit "Time-gated"/"Too-large-or-risky-for-a-batch-todo"
+  classification of this exact doc: the sole open todo is a status pointer at the real 3-repo migration
+  (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8/9 todos still open) — a cross-repo schema change with
+  real blast radius (UAC schema + features-service producer + ml-service loader + strategy-service consumers), needing
+  its own dedicated migration plan, not a bounded satellite-batch item. No flip, no extraction.
+- **na-eligibility-audit 2026-08-10 (sports tranche)**: KEEP-NA, stale items — the prior entry's "8/9 todos still open"
+  citation was one day stale (the migration plan's own round-9 sweep, same day, had already closed todos 1-8; only its
+  archival trigger remained). Closed this doc's sole open checkbox with hard evidence (shipped commits, re-verified
+  live) — see the todo above. Doc now has ZERO open checkboxes and no lock; ran the 6-step archival ritual (codex SSOT
+  authored, banner added, `status: resolved`, referrer paths fixed) alongside the migration plan's own archival in the
+  same sweep. `git mv` to `plans/archive/2026_08/` follows as a separate commit per the checkbox-flip/git-mv split rule.

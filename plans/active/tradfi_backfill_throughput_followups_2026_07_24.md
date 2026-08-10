@@ -728,3 +728,8 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   above -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:dc0b82dc402b9bb2]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed.** Fresh full read. Sole open todo bundles the rc137 leg
+  (discharged/archived, struck inline) with 2 independently-owned legs: `tradfi_backfill_oom_remediation_2026_06_24.md`
+  (now `assigned_vm: planning`, actively AO-dispatched) and `consolidator_throughput_backlog_monitor_2026_07_09.md`
+  (`status: active` with its own open todos) -- both cited inline in the checkbox's own note. `assigned_vm` unchanged.

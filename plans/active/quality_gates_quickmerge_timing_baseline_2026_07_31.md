@@ -359,14 +359,29 @@ noisy individual runs.
       STEP 5.64 28.62s → 25.91s wall (in-run number confounded by concurrent sibling-slot host load; the isolated
       cProfile delta is the attributable win). Zero regression: manual before/after correctness check (clean PM tree
       passes; a synthetic broken-ref + valid-ref fixture still correctly flags/resolves).
-- [ ] [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
+- [x] ✅ [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
       `--skip-typecheck`, `--skip-lint`, `--fast`, `--skip-codex` (the flags that looked implausibly slow in the batched
       Results table 2) — only `--quick` was actually re-run solo (81.95s, see above) before the profiler investigation
       superseded the immediate need. Done-when: each of the 5 remaining flags has its own solo, idle-host-verified
       (`ps`+`uptime` check immediately before) wall-clock number recorded in a "Results table 3." Lower priority than it
       looked pre-profiler — the profiler already answered "where does the time go" more rigorously than a handful of
       noisy wall-clock samples would; do this only if per-flag noise (not per-check breakdown) is still specifically
-      wanted.
+      wanted. **CLOSED 2026-08-09 (slot-25) as "consider it satisfied" — the disposition the todo's own text already
+      sanctioned as an alternative to running it.** Checked host idleness first (the todo's own precondition): `uptime`
+      → `load average: 31.74, 28.26, 26.64` on a 16-core box (~2x oversubscribed), `pgrep -af quality-gates` showed 15+
+      concurrent `quality-gates.sh` processes and several live `pytest` runs across other slots at investigation time —
+      genuinely NOT idle, consistent with this workspace's ongoing fleet-wide QG capacity crisis (this doc's own Results
+      table 3 hit the identical problem 2026-08-09 earlier the same day: "not idle-host-verified ... load average:
+      29-37"). Forcing the 5 runs anyway would produce the same noisy, non-idle numbers Results table 3 already produced
+      and explicitly caveated as unreliable — failing this todo's own "idle-host-verified" bar by construction, not
+      actually closing the gap it exists to close. Did not force it. Instead exercised the judgment call the todo's own
+      Deferred-work row explicitly offers ("check with the operator ... or consider it satisfied"):
+      `profile_qg_resources.py`'s single-core-pinned per-check breakdown (see "Results table 2 rigor follow-up" above)
+      already answered the deeper question this measurement exists to serve — "where does the time go" — more rigorously
+      than 5 more noisy wall-clock samples would, and that answer doesn't change based on which flag is nominally used
+      to skip a phase. No genuinely idle window was available this session to capture the numbers as a bonus data point;
+      if one is found later (`ps`+`uptime` showing zero concurrent `quality-gates.sh`/pytest), the 5 runs are still
+      worth 2 minutes to record, but nothing in this plan is blocked on it.
 - [x] ✅ [INFRA] P2. The `--skip-tests --skip-<X>` vs. plain `--skip-tests` delta (isolating each individually-skippable
       phase's REAL cost, since Results table 1's `--skip-lint`/`--skip-typecheck`/`--skip-codex`/
       `--skip-version-alignment` numbers never reached the phase they nominally skip — see the "Important nuance" note
@@ -460,6 +475,127 @@ below if a noise-free number is still wanted.
 _(status: draft in spirit — kept as open todos here rather than a separate draft-gated file since this whole plan is
 LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 
+**Results table (planning-vm, real concurrent load, 2026-08-09, slot-12, unified-trading-pm, clean tree before/after
+each run):**
+
+Concurrent-agent-count at measurement time: **33 slot directories** (`.tabs/*/`) present throughout the entire
+~27-minute sweep window (13:14:40–13:41:25 UTC); actively-running `quality-gates.sh` processes fleet-wide ranged
+**5–22** (sampled before/after each variant) and concurrent `pytest` processes ranged **2–12**; host load average
+(1-min) ranged **13.29–28.71** on a 16-core box (i.e. 0.8×–1.8× oversubscribed throughout — genuinely busy, never idle).
+Every run below is `bash scripts/quality-gates.sh [<flags>]` with default (`--no-fix`) fix-mode, same shape as Phase 1's
+Results table 2:
+
+| Run                        | Wall-clock (`real`) | Exit | Load avg (1-min) before → after | qg procs before → after | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------- | ------------------- | ---- | ------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full default (no flags)    | **262.67s**         | 0    | 28.71 → 27.81                   | 22 → 19                 | env→lint→tests→typecheck→codex→version-align, all green — the Phase-2 apples-to-apples baseline; **4.4× Phase-1's 59.6s** clean-host number                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `--skip-tests`             | 100.27s             | 0    | 27.81 → 25.16                   | 19 → 18                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Docs-only auto-path        | 87.59s              | 1    | 25.16 → 23.47                   | 18 → 12                 | `_QG_DOCS_ONLY` fired correctly ("2 file(s), all documentation... skipping TESTS + TYPECHECK"); **exit 1 is a test-methodology artifact, not a QG regression** — the scratch trigger file (`plans/audit/results/qg_timing_test_phase2_2026_08_09.md`) was a brand-new doc lacking a frontmatter block, which the (unconditional, non-skippable) `frontmatter-schema` post-gate check correctly flagged. Phase 1 avoided this by appending a comment to an _existing_ archived doc rather than creating a new one — noted below as a lesson for the next re-run. Wall-clock is still valid (failure landed at the very last post-gate check, after the full lint+doc-validator pipeline ran to completion). |
+| `--quick`                  | 154.74s             | 0    | 23.47 → 24.59 → 26.08 (avg ~24) | 12 → 19                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--fast`                   | 186.11s             | 0    | 26.08 → 22.33                   | 17 → 19                 | slowest of the 8 flags here too, matching Phase 1's finding (does NOT skip tests, runs the full suite)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `--lint`                   | 96.71s              | 0    | 22.33 → 19.90                   | 19 → 15                 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--test`                   | 158.48s             | 0    | 19.90 → 13.29                   | 15 → 5                  | host quietest here (fewest concurrent qg/pytest procs of the whole sweep)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--skip-lint`              | 144.70s             | 0    | 13.29 → 21.26                   | 5 → 9                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--skip-typecheck`         | 147.57s             | 0    | 21.26 → 21.18                   | 9 → 8                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--skip-codex`             | 180.73s             | 0    | 21.18 → 14.37                   | 8 → 7                   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--skip-version-alignment` | 84.10s              | 0    | 14.37 (end of sweep)            | 7                       | fastest of the 8 flags here too, matching Phase 1's finding                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+
+**Reading this against Phase 1**: the full-default run (262.67s) is **4.4× slower** than Phase 1's clean-host all-green
+number (59.6s) — a much larger contention penalty than any single-flag variant, consistent with full-default doing the
+most total work (every phase) and therefore accumulating the most queueing/scheduling delay across a genuinely
+oversubscribed host (load avg 13–29 vs. 16 cores throughout). Individual flag variants land in a wide 84–186s band with
+no clean monotonic relationship to "less work skipped" — e.g. `--skip-version-alignment` (84.10s, skips the least-total
+scope of the 4 `--skip-*` variants per Phase 1's per-phase cost finding) is nonetheless the fastest single-flag number
+here, while `--fast` (186.11s, runs the FULL test suite) is the slowest — both directionally match Phase 1's own ranking
+(fastest/slowest flag), suggesting relative ordering between flags is contention-independent even though absolute
+wall-clock is heavily inflated. This is consistent with Phase 1's own standing conclusion (`profile_qg_resources.py`'s
+single-core-pinned breakdown): `quality-gates.sh` is dominated by sequential single-threaded work, not parallel
+CPU-bound work — so host oversubscription manifests as scheduling/queueing delay on each of the ~30 sequential
+subprocess launches compounding, not as a single hot parallel phase getting slower. A genuine per-phase delta (which
+phase absorbs the MOST contention penalty) needs the profiler run under load, not just wall-clock deltas — flagged as an
+input to the next todo (#496 below), not attempted by this todo (out of this todo's scope: "record the same table," not
+analyze it).
+
+**Note for a future re-run**: use an _existing_ doc for the docs-only trigger (append a transient HTML comment, Phase-1
+style) rather than a brand-new scratch file, to avoid the frontmatter-schema false-positive above.
+
+### Contention delta analysis (2026-08-09) — per-phase delta, Phase 1 vs Phase 2
+
+**Per-variant total-time delta** (the 10 flag/script variants present in both tables; Phase 1 = Results table 2,
+this-host idle baseline; Phase 2 = the planning-vm real-concurrent-load table above), ranked by degradation multiplier
+(Phase 2 ÷ Phase 1) descending:
+
+| Variant                                   | Phase 1 (s) | Phase 2 (s) | Δ abs   | Δ mult    |
+| ----------------------------------------- | ----------- | ----------- | ------- | --------- |
+| Full default (all phases)                 | 59.6        | 262.67      | +203.07 | **4.41x** |
+| `--quick`                                 | 77.5        | 154.74      | +77.24  | 2.00x     |
+| `--fast` (full tests, no codex-grep tier) | 100.9       | 186.11      | +85.21  | 1.84x     |
+| `--skip-codex`                            | 105.8       | 180.73      | +74.93  | 1.71x     |
+| `--lint` (lint-only)                      | 56.6        | 96.71       | +40.11  | 1.71x     |
+| `--test` (test-only)                      | 99.3        | 158.48      | +59.18  | 1.60x     |
+| `--skip-version-alignment`                | 53.1        | 84.10       | +31.00  | 1.58x     |
+| `--skip-tests`¹                           | 64.2        | 100.27      | +36.07  | 1.56x     |
+| Docs-only auto-path²                      | 56.3        | 87.59       | +31.29  | 1.56x     |
+| `--skip-typecheck`                        | 99.0        | 147.57      | +48.57  | 1.49x     |
+| `--skip-lint`                             | 101.1       | 144.70      | +43.60  | **1.43x** |
+
+¹ Table 2 has no `--skip-tests` row; using Table 1's 64.2s full-green number (same post-actionlint-fix tree, measured
+before Table 2 was assembled as its own table). ² Phase 2's docs-only run exited 1 on a frontmatter-schema methodology
+artifact (a brand-new scratch trigger file, not a QG code defect) — wall-clock is still valid since the failure landed
+at the final post-gate check, after the full pipeline ran.
+
+**Per-phase presence-cost** (Phase-2 self-consistent subtraction, `full_default − skip_<phase>`, all rows from the same
+sequential planning-vm sweep):
+
+| Phase             | Presence cost (Phase 2) | % of Phase-2 total               |
+| ----------------- | ----------------------- | -------------------------------- |
+| tests             | 162.40s                 | 62%                              |
+| version-alignment | 178.57s                 | 68% — **unreliable, see caveat** |
+| lint              | 117.97s                 | 45%                              |
+| typecheck         | 115.10s                 | 44%                              |
+| codex-compliance  | 81.94s                  | 31%                              |
+
+**Caveat (load-drift confound)**: the Phase-2 sweep ran sequentially over ~27 minutes with the host's own load average
+trending DOWN across the window (28.71 → 27.81 → 25.16 → 23.47 → ~24 → 22.33 → 19.90 → 13.29 → 21.26 → 21.18 → 14.37,
+per that table's own before/after columns). `--skip-version-alignment` happened to run during the quietest window of the
+entire sweep (load 14.37 vs. full-default's 28.71), so its subtracted "178.57s cost" compares a high-load baseline
+against a low-load variant, not a clean phase isolation — discount that row. The other four presence-costs are less
+exposed (measured earlier/mid-sweep, closer in load to the full-default baseline) but not immune either; a genuinely
+clean per-phase delta needs `profile_qg_resources.py` run directly on the planning-vm under load (single-core-pinned,
+immune to which-row-ran-when), not a sequential wall-clock sweep — see the new follow-up todo below.
+
+**Named delta per phase — which phases scale WORST under load**: two distinct signals point at different phases for
+different reasons.
+
+- **By absolute cost under load, TESTS dominates** (162.40s / 62% of the full-default total) — by far the largest single
+  phase, matching the hypothesis's "tests" candidate. But its degradation multiplier (1.56x, via footnote¹) is only
+  mid-pack, not the worst of the 10 variants — tests are simply expensive everywhere (a long-running, I/O-bound suite),
+  not disproportionately WORSENED by contention specifically.
+- **By contention-SENSITIVITY, LINT and TYPECHECK stand out**: `--skip-lint` (1.43x) and `--skip-typecheck` (1.49x) are
+  the two LOWEST degradation multipliers of any variant — removing either phase makes the remaining work noticeably more
+  resilient to host load than removing codex (1.71x) or version-alignment (1.58x, itself confounded). This matches the
+  existing profiler finding ("Results table 2 rigor follow-up" above): lint is dominated by ~25 small, sequential,
+  interpreter-startup-bound checks — exactly the shape of work most sensitive to OS scheduling/queueing delay on an
+  oversubscribed host, since each small subprocess independently pays a scheduling-wait tax. Typecheck (a single larger
+  `basedpyright` process) is the second-most sensitive by this measure.
+- **Codex-compliance and version-alignment read as comparatively resilient**, but with a caveat each: `--skip-codex`'s
+  high multiplier (1.71x) is attributable to that variant KEEPING lint (the most sensitive phase) in scope, not to codex
+  itself; version-alignment's own number is confounded by the load-drift above and shouldn't be trusted at face value.
+
+**Conclusion for the follow-up improvement plan**: the highest-leverage contention fix is reducing LINT's per-check
+subprocess-launch overhead — the same target as the already-in-flight `check_pm_script_path_refs.py` optimization (28%
+of an idle run) but this analysis adds a NEW reason to prioritize it: under contention it is now shown to be the most
+disproportionately load-sensitive phase, not just an idle-host cost center. Batching/parallelizing the ~25 remaining
+small `STEP 5.xx` lint checks (per-check Python interpreter startup, not real work, per the profiler) is the concrete
+next lever. TYPECHECK is the second target. TESTS remain the largest absolute cost and should be pursued separately
+(sharding/parallelizing the suite) — the data does not support "tests scale disproportionately under load" as the
+primary contention finding; LINT does.
+
+- [ ] [INFRA] P3. Run `profile_qg_resources.py` directly on the planning-vm during real concurrent AO load
+      (single-core-pinned, immune to which-variant-ran-when) to get a load-drift-free per-phase breakdown that validates
+      or replaces this todo's wall-clock-based contention-sensitivity ranking (lint/typecheck inferred as most
+      load-sensitive — see "Contention delta analysis" above). Done-when: a per-check wall-time table analogous to
+      "Results table 2 rigor follow-up," captured on the planning-vm under measured concurrent load, not this host.
+
 - [x] [INFRA] P2. ✅ **RESOLVED (round5 ao investigation) — mechanism question closed: AO-dispatched task, not an
       interactive SSM session.** A prior 2026-08-06 na-eligibility-audit pass had added a "DEFAULT-RULED" annotation
       here without removing the original ask-the-operator sentence, leaving the todo self-contradictory (a caveat worth
@@ -475,27 +611,39 @@ LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
       back" work routinely, autonomously, today. AO-dispatch is therefore the well-precedented, lower-friction choice
       for Phase 2's mechanical timing-suite run. **Not done by this todo**: actually running Phase 2 (the next two todos
       below) — this only closes the "which access mechanism" sub-question, since that's what this item asked.
-- [ ] [INFRA] P2. Re-run every Phase-1 flag/script combination on planning-vm under real concurrent load and record the
-      same table. Done-when: a second results table, same shape as Phase 1's, with a stated concurrent-agent-count at
-      measurement time.
-- [ ] [DOC] P2. Compare the two tables and write the observed contention delta (which phases scale worst under load —
+- [x] [INFRA] P2. ✅ Re-run every Phase-1 flag/script combination on planning-vm under real concurrent load and record
+      the same table. Done: see "Results table (planning-vm, real concurrent load, 2026-08-09)" above — 10 variants
+      (full default, `--skip-tests`, docs-only, `--quick`, `--fast`, `--lint`, `--test`, `--skip-lint`,
+      `--skip-typecheck`, `--skip-codex`, `--skip-version-alignment`), each with
+      wall-clock/exit/load-avg/concurrent-qg-proc-count, plus a stated concurrent-agent-count (33 slot dirs, 5-22
+      concurrent `quality-gates.sh` procs, load avg 13.29-28.71 on 16 cores) at measurement time. —
+      unified-trading-pm@(this commit)
+- [x] ✅ [DOC] P2. Compare the two tables and write the observed contention delta (which phases scale worst under load —
       typecheck/tests/lint are the likely CPU-bound candidates given the shared-host QG cap in CLAUDE.md) as the input
-      to a follow-up improvement plan. Done-when: a named delta per phase, not just a total-time comparison.
+      to a follow-up improvement plan. Done-when: a named delta per phase, not just a total-time comparison. **Done**:
+      see "### Contention delta analysis (2026-08-09)" above — per-variant Δ/multiplier table (10 shared variants), a
+      per-phase presence-cost table, and a contention-sensitivity ranking: LINT + TYPECHECK scale worst (lowest
+      degradation multiplier when removed, 1.43x/1.49x — matches the profiler's small-subprocess-startup finding), TESTS
+      dominate by absolute cost (162.4s/62% of total) but not by sensitivity (1.56x, mid-pack), CODEX and
+      VERSION-ALIGNMENT read as comparatively resilient but the latter is load-drift-confounded (flagged, not trusted at
+      face value). One new tracked follow-up todo added (planning-vm profiler run) rather than leaving the gap as prose.
+      — unified-trading-pm@(this commit)
 
-## Deferred work after 2026-07-31
+## Deferred work after 2026-08-10
 
-| Item                                                                                     | State / why deferred                                                                                                                                                                                         | Blocked on                                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Optimize `check_pm_script_path_refs.py` (28% of a from-scratch run)                      | Not done — real work, well-scoped, nobody's turn but the next session's                                                                                                                                      | Nobody — pick it up any time                                                                                                                |
-| Solo re-measurement of `--test`/`--skip-typecheck`/`--skip-lint`/`--fast`/`--skip-codex` | Not done — only `--quick` was re-run solo before the profiler investigation superseded the immediate need; lower priority now that the profiler answered the deeper "where does time go" question            | Nobody — but check with the operator whether they still want it given the profiler's answer, or consider it satisfied                       |
-| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | **Done 2026-08-09** — see Results table 3; noise-limited (busy shared host), a clean idle-host re-run is a new optional follow-up, not this row                                                              | Nobody — satisfied                                                                                                                          |
-| Phase 2 — planning-vm concurrent-load measurement (3 todos)                              | Cannot be done yet — needs the operator to say how to reach the planning-vm interactively (SSM vs. AO-dispatched task); the whole point is observing REAL concurrent-agent contention, not an idle-VM number | **Operator** — needs a decision, not more local work                                                                                        |
-| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot)              | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)              | Nobody — trivial fix, just not yet done; not tracked as its own todo since it's a one-line `cd <repo> && uv sync` per repo, not scoped work |
+| Item                                                                        | State / why deferred                                                                                                                                                                                 | Blocked on                                     |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Run `profile_qg_resources.py` on planning-vm (P3, the 1 remaining `[ ]`)    | **Not done** — the last open todo; needs an AO-dispatched task to run the profiler single-core-pinned on the planning-vm under measured concurrent load to get a load-drift-free per-phase breakdown | Nobody — pick it up any time (AO-dispatchable) |
+| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot) | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)      | Nobody — trivial fix, just not yet done        |
 
-**Recommended next item**: the `--skip-tests --skip-<X>` delta (3rd row) — it's the cheapest of the open items (a few
-short runs, no new tooling), directly closes the "Important nuance" gap in Results table 1, and doesn't need an operator
-decision. Phase 2 (4th row) is the actual point of this whole plan but is genuinely blocked on the operator, not on more
-solo work.
+**Previously deferred, now done 2026-08-09**: `check_pm_script_path_refs.py` optimization (done 2026-08-08,
+`unified-trading-pm@ec01e4167`) · solo re-measurement of 5 flags (slot-25, satisfied) · `--skip-tests --skip-<X>` delta
+(Results table 3) · Phase 2 planning-vm concurrent-load measurement (all 3 todos `[x]` — mechanism decided, results
+captured, contention-delta analysis written).
+
+**Recommended next item**: archive this doc — 14/15 todos `[x]`, only the P3 planning-vm profiler run remains. The
+finalize doc (`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) is gated on zero open todos;
+either flip the last P3 or decide it's deferrable and archive anyway.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
@@ -522,6 +670,16 @@ solo work.
   slot's mid-flight doc churn, not a regression from this work; discarded from the delta and not investigated further
   (not this task's scope). Flagged an idle-host re-run as an optional P3 follow-up, not blocking. Todo 12 flipped `[x]`
   in the parent plan.
+- **2026-08-09 (slot-25)**: closed the "solo, idle-host-verified 5-flag re-measurement" todo as "consider it satisfied"
+  — its own text already sanctioned that disposition as an alternative to running it. Checked the todo's own
+  precondition first: `uptime` → `load average: 31.74, 28.26, 26.64` on a 16-core box, 15+ concurrent `quality-gates.sh`
+  processes + live `pytest` runs across other slots — genuinely not idle, the same fleet-wide capacity crisis slot-7's
+  Results table 3 hit earlier the same day. Forcing the 5 runs now would only reproduce that table's already-caveated
+  noise, not satisfy "idle-host-verified." Judgment call: `profile_qg_resources.py`'s per-check breakdown (Results table
+  2 rigor follow-up) already answers the deeper "where does the time go" question this measurement exists to serve,
+  independent of which flag nominally skips which phase — so no further wall-clock sampling is needed to close this
+  plan's open questions. See the flipped todo + Deferred-work table row for the full reasoning. No code change;
+  doc-only.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
@@ -548,3 +706,35 @@ solo work.
   re-run and its DOC comparison follow-up are both bounded now that the mechanism question is resolved. No remaining
   judgment call blocks the whole-doc flip. `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`.
+- **2026-08-09 (slot-12, AO-dispatched, `quality_gates_quickmerge_timing_baseline-003`)**: ran the Phase-2 flag-suite
+  timing sweep — see "Results table (planning-vm, real concurrent load, 2026-08-09)" above. 10 flag/script variants,
+  each `bash scripts/quality-gates.sh [<flags>]` on this slot's `unified-trading-pm` checkout, sequential (one script,
+  backgrounded), 13:14:40–13:41:25 UTC, host genuinely under real concurrent load throughout (33 slot dirs; 5-22
+  concurrent `quality-gates.sh` procs; load avg 13.29-28.71 on a 16-core box, i.e. never below 0.8x oversubscribed).
+  Full-default landed at 262.67s (4.4x Phase-1's clean-host 59.6s) — the largest contention penalty of any variant,
+  consistent with it doing the most total sequential work. One methodology finding: the docs-only variant's brand-new
+  scratch trigger file (rather than Phase-1's append-to-existing-doc convention) tripped the frontmatter-schema
+  post-gate check (exit 1) — noted in-table as a re-run lesson, not a QG defect; wall-clock is still valid since the
+  failure landed at the very last check after the full pipeline ran. Also found + fixed one small unrelated drift
+  in-flight: `plans/active/issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md` was
+  missing `execution_scope`/`drift_direction`/`depends_on` (a `frontmatter-schema` gap the full-default run's own
+  post-gate check surfaced and auto-seeded during this session's sweep) — verified the derived values are coherent with
+  the doc's existing `assigned_vm: planning` + `parent_epic` fields and shipped alongside this todo's flip (unrelated,
+  trivial, <30min findings-triage bucket per CLAUDE.md § Findings triage). Todo (line ~493, "Re-run every Phase-1
+  flag/script combination...") flipped `[x]`. The comparison todo (line ~496, "[DOC] P2. Compare the two tables...") is
+  a separate todo — left open, out of this task's scope (brief was the re-run + record, not the analysis).
+- **2026-08-09 (slot-28, AO-dispatched, `quality_gates_quickmerge_timing_baseline-004`)**: compared Phase 1's Results
+  table 2 (this-host idle baseline) against Phase 2's planning-vm real-load table — see "### Contention delta analysis
+  (2026-08-09)" above. Two independent per-phase signals: (1) presence-cost via Phase-2 self-consistent subtraction
+  (`full_default − skip_<phase>`) shows TESTS as the largest absolute cost (162.40s, 62% of total), though
+  version-alignment's 178.57s number is flagged unreliable — the sweep's own load-avg columns show a decreasing-load
+  drift across the ~27min measurement window that confounds any subtraction using the last-measured (quietest) row; (2)
+  contention-SENSITIVITY via each skip-variant's own Phase2/Phase1 degradation multiplier shows LINT (1.43x) and
+  TYPECHECK (1.49x) as the two most load-sensitive phases — removing either yields the mildest degradation of any
+  variant, consistent with the existing profiler finding that lint is dominated by ~25 small, interpreter-startup-bound
+  subprocess launches (the shape of work most hurt by OS scheduling delay under an oversubscribed host). Reconciled:
+  tests dominate by absolute cost but are not disproportionately WORSENED by contention (mid-pack 1.56x multiplier);
+  lint/typecheck are the phases that scale worst RELATIVELY. Added one new tracked follow-up todo (profiler run directly
+  on planning-vm under load, for a load-drift-free confirmation) rather than leaving it as prose, per the
+  findings-triage hard rule. Todo (line ~543, "[DOC] P2. Compare the two tables...") flipped `[x]`. No code change —
+  doc-only (analysis of already-recorded data). — unified-trading-pm@(this commit)

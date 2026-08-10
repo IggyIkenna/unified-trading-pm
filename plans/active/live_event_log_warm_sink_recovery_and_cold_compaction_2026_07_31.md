@@ -40,7 +40,7 @@ context_scope:
   [
     /codex/02-data/live-data-persistence-and-event-log.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
     deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
   ]
@@ -178,7 +178,7 @@ determinism needs.
 - [ ] [DATA] P1.2. **⏸ PARKED 2026-07-31 (main, Option A — gated behind false prereq `p1-2-preconditions-met`,
       priority:999).** Doubly-blocked and NOT worker-satisfiable: unpark only once BOTH (a) ≥24h since the P1.1 redeploy
       (`2026-07-31T21:14Z`, i.e. ~`2026-08-01T21:14Z`) have elapsed AND (b) a paper run trading these 3 venues is
-      confirmed (see `/plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`).
+      confirmed (see `/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`).
       **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
       `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real warm+cold data is
       confirmed flowing (P1.1). DoD: epsilon=0 match cited with the test run's report path (per
@@ -292,7 +292,7 @@ determinism needs.
   meaningful accumulation window; (2) `gcloud compute instances list --filter="name~paper OR name~colocated"` still
   returns zero results (same finding as slot-14's same-day check). Per the todo's own instruction to escalate the
   paper-run gap as its own finding if unresolved, filed
-  `/plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md` — this gap is potentially
+  `/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md` — this gap is potentially
   permanent (not just time-gated), since no active paper deployment trades these 3 venues under any name this search
   matched. Leaving P1.2 open/unflipped; the time-gate alone means today is genuinely too early regardless of the
   paper-run question.

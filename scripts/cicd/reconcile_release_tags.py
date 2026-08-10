@@ -81,6 +81,18 @@ _VCS_SOURCE_RE = re.compile(r"^\s*source\s*=\s*[\"']vcs[\"']", re.MULTILINE)
 # is in the exact silent-stall state that went unnoticed 2026-06-27..07-23 (~4 weeks).
 _STALL_DAYS = 3
 
+# Mirrors detect_breaking_change.py's _NON_FUNCTIONAL_PATH_RE exactly (2026-08-09) — the two
+# scripts run in different execution contexts (this one has no local clone of every fleet
+# repo, so it uses the GitHub compare API's file list instead of `git diff`) and so cannot
+# literally share the function, but the RULE — what counts as "nothing shippable changed" —
+# must not silently diverge between semver-agent's bump decision and this stall-alert
+# decision, or exactly the false-positive-STALL / silent-non-bump split measured 2026-08-09
+# (7 repos, one alert) recurs in a new shape. If you change one, change both.
+_NON_FUNCTIONAL_PATH_RE = re.compile(
+    r"^(\.github/|docs/|\.gitleaks\.toml$|\.gitignore$|README\.md$|CHANGELOG\.md$|"
+    r"uv\.lock$|poetry\.lock$|package-lock\.json$|pyproject\.toml$)"
+)
+
 Version = tuple[int, int, int]
 
 
@@ -141,6 +153,76 @@ def _commits_ahead_of_tag(owner: str, repo: str, tag: str) -> int | None:
         return None
     raw = out.strip()
     return int(raw) if raw.isdigit() else None
+
+
+def _reconcile_dynamic_repo(owner: str, repo: str) -> tuple[str, str, str]:
+    """Classify one tag-derived (hatch-vcs) repo. Returns ``(bucket, tag_ref, detail)``:
+
+    * ``bucket="unresolved"`` — ``highest``/``ahead``/``age`` unmeasurable this run (API miss);
+      ``tag_ref`` is the ref used in the diagnostic print, ``detail`` unused.
+    * ``bucket="stalled"`` — genuinely stale; ``detail`` is the alarm message.
+    * ``bucket="quiet"`` — ahead + old tag, but confirmed nothing non-metadata changed; ``detail``
+      is the summary line.
+    * ``bucket="ok"`` — releasing normally; ``detail`` is the ``repo:tag`` summary.
+
+    Extracted from ``reconcile()`` (2026-08-09) purely to keep that function's own branch count
+    under the complexity ceiling — no behavior change from inlining it back would occur.
+    """
+    highest = _highest_existing_tag(owner, repo)
+    if highest is None:
+        return "stalled", "", "dynamic versioning but NO v* tag exists at all"
+    tag = f"v{'.'.join(map(str, highest))}"
+    ahead = _commits_ahead_of_tag(owner, repo, tag)
+    age = _newest_tag_age_days(owner, repo, tag)
+    if ahead is None or age is None:
+        return "unresolved", tag, ""
+    if ahead > 0 and age > _STALL_DAYS:
+        # Content-check before alarming (2026-08-09): measured live — 6 of 7 repos flagged by
+        # this exact condition on 2026-08-09 had zero non-metadata files changed (a fleet-wide
+        # workflow-template rollout window), always correctly non-release, never a broken
+        # minter, yet paged CRITICAL regardless. See `_stall_message`'s docstring for the
+        # fail-toward-paging bias on an API miss.
+        msg = _stall_message(owner, repo, tag, ahead, age)
+        if msg is None:
+            return "quiet", tag, f"{repo}:{tag} ({ahead} commit(s), all CI/docs/lockfile-only)"
+        return "stalled", tag, msg
+    return "ok", tag, f"{repo}:{tag}"
+
+
+def _stall_message(owner: str, repo: str, tag: str, ahead: int, age: float) -> str | None:
+    """Verdict for a tag-derived repo that's ahead of its tag past ``_STALL_DAYS``.
+
+    Returns a stall message, or None if a content-check confirms nothing beyond CI/docs/
+    lockfile noise changed (correctly not a stall — see ``_source_touched``'s docstring for
+    why "commits ahead + tag is old" alone is not sufficient). ``touched=None`` (API miss)
+    still returns a message — fail toward paging, same bias as the caller's ahead/age None
+    check; only a CONFIRMED ``touched is False`` clears it.
+    """
+    if _source_touched(owner, repo, tag) is False:
+        return None
+    return f"{ahead} unreleased commit(s) on main; newest tag {tag} is {age:.1f}d old"
+
+
+def _source_touched(owner: str, repo: str, tag: str) -> bool | None:
+    """True if ``main`` changed anything past ``tag`` beyond pure CI/docs/lockfile noise.
+
+    Same compare endpoint as ``_commits_ahead_of_tag`` (one extra `--jq` field, no extra
+    call) — GitHub's compare API caps ``files`` at 300 entries; a repo genuinely batching
+    more file-level changes than that past a single tag is not the case this exists to
+    catch, so an over-cap response is treated as touched (fail toward alerting, never
+    toward silently clearing a real stall). Returns None only on an unresolvable API call
+    (never on an empty/over-cap file list), so the caller can distinguish "checked, nothing
+    real changed" from "could not check" the same way the other _-prefixed helpers do.
+    """
+    rc, out = _gh([f"repos/{owner}/{repo}/compare/{tag}...main", "--jq", "[.files[]?.filename]"])
+    if rc != 0:
+        return None
+    try:
+        files = cast("list[object]", _loads(out.strip() or "[]"))
+    except (json.JSONDecodeError, ValueError):
+        return None
+    names = [f for f in files if isinstance(f, str)]
+    return any(not _NON_FUNCTIONAL_PATH_RE.match(n) for n in names)
 
 
 def _newest_tag_age_days(owner: str, repo: str, tag: str) -> float | None:
@@ -379,6 +461,7 @@ def reconcile(
     created: list[str] = []
     repo_versions: dict[str, str] = {}  # repo -> latest resolvable main version (for the Firestore write-through)
     dynamic_ok: list[str] = []  # tag-derived repos that are releasing normally
+    dynamic_quiet: list[str] = []  # ahead + old tag, but confirmed nothing non-metadata changed — not a stall
     stalled: dict[str, str] = {}  # tag-derived repo -> message — the silent-stall alarm (keyed for clear-diffing)
     unresolved: set[str] = set()  # repos whose stall verdict couldn't be measured this run (API miss) — carried
     # forward across runs (never counted as newly-cleared) rather than silently dropped.
@@ -400,21 +483,16 @@ def reconcile(
         # condition that silently held for ~4 weeks (semver-agent orphaned on dormant staging)
         # while this script reported a clean "created 0 tag(s)" 246 times.
         if _is_dynamic_versioned(pyproject):
-            highest = _highest_existing_tag(owner, repo)
-            if highest is None:
-                stalled[repo] = "dynamic versioning but NO v* tag exists at all"
-                continue
-            tag = f"v{'.'.join(map(str, highest))}"
-            ahead = _commits_ahead_of_tag(owner, repo, tag)
-            age = _newest_tag_age_days(owner, repo, tag)
-            if ahead is None or age is None:
-                print(f"  UNKNOWN {repo}: cannot compare main against {tag} (API miss) — not asserting healthy")
+            bucket, tag_ref, detail = _reconcile_dynamic_repo(owner, repo)
+            if bucket == "unresolved":
+                print(f"  UNKNOWN {repo}: cannot compare main against {tag_ref} (API miss) — not asserting healthy")
                 unresolved.add(repo)
-                continue
-            if ahead > 0 and age > _STALL_DAYS:
-                stalled[repo] = f"{ahead} unreleased commit(s) on main; newest tag {tag} is {age:.1f}d old"
+            elif bucket == "stalled":
+                stalled[repo] = detail
+            elif bucket == "quiet":
+                dynamic_quiet.append(detail)
             else:
-                dynamic_ok.append(f"{repo}:{tag}")
+                dynamic_ok.append(detail)
             continue
 
         # ── Legacy static-version repos: the original read-version → mint-matching-tag path.
@@ -451,13 +529,19 @@ def reconcile(
     verb = "would create" if dry_run else "created"
     print(
         f"\nRelease-tag reconcile: {verb} {len(created)} tag(s) [legacy static-version path]; "
-        f"{len(dynamic_ok)} tag-derived repo(s) healthy; {len(stalled)} STALLED; "
+        f"{len(dynamic_ok)} tag-derived repo(s) healthy; {len(dynamic_quiet)} ahead-but-benign "
+        f"(no non-metadata change); {len(stalled)} STALLED; "
         f"{unreadable} repo(s) with no readable main pyproject."
     )
     if created:
         print("  created: " + ", ".join(created))
     if dynamic_ok:
         print("  tag-derived (nothing to reconcile — the tag IS the version): " + ", ".join(dynamic_ok))
+    if dynamic_quiet:
+        print(
+            "  ahead-but-benign (commits accumulated, none non-metadata — correctly not stalled): "
+            + ", ".join(dynamic_quiet)
+        )
 
     # Self-audit (applying the source doc's silent-failure lesson post-repurpose,
     # issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md § "Also fix the

@@ -196,3 +196,17 @@ function.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — explicit dated operator ruling 2026-07-16 (Option B, re-home the
   producer, deliberately sequenced LAST after AO dispatch-correctness work) re-confirmed present and current; sole open
   todo is that deferred rewire, not re-litigated.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked whether "Option B formally retired" (round7-10
+  precedent) applies here: verified it does NOT — that ruling is
+  `/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`'s unrelated semver-reconciler-mint "Option
+  B" (CI/CD release tooling), a same-label coincidence, not the same decision. THIS doc's own Option B (re-home the
+  recovery-audit-signoff producer) remains the live, un-retired, operator-chosen path, still deferred pending AO
+  dispatch-correctness work. Also re-confirmed: this doc's sole todo is fully claimed by
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s Phase-LAST `[BACKEND] P0` todo (operator-sequenced),
+  consistent with `/ag-closeout-audit ao` batch12's same-day "Covered by an existing active plan (2) — not orphaned"
+  verdict for this doc.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Explicit, dated operator ruling 2026-07-16 (Option B, re-home the recovery-audit-signoff producer,
+  deliberately sequenced LAST after AO dispatch-correctness work) remains current and un-retired — confirmed distinct
+  from the unrelated same-label "Option B" semver-reconciler retirement (round11 already ruled this out). Sole todo
+  remains fully claimed by `ao_open_issues_consolidated_close_out_2026_07_17.md`'s Phase-LAST todo. Not re-litigated.

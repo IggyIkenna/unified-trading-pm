@@ -28,7 +28,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-06-03
+last_updated: 2026-08-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-25
 supersedes:
@@ -69,8 +69,13 @@ drift_direction: advance-code
 >
 > **Track-1 todo reconciliation (2026-07-27):**
 >
-> 1. features-onchain staked-basis e2e dry-run + `IS_TEST_RUN` validation — **still genuinely open**, no successor plan
->    owns it. Dispatchable as-is.
+> 1. features-onchain staked-basis e2e dry-run + `IS_TEST_RUN` validation — **DONE via batch 5 (2026-08-09, slot 22),
+>    ops-only (no code changed).** Dry-run smoke + `IS_TEST_RUN=true` run completed for `lst_yields`/`lst_native_rates`/
+>    `perp_funding_rates`; `health_factor` honestly `attempted_failed(calculator_produced_base_columns_only)`
+>    (architecturally live-Aave-RPC-only, not a bug). Read-back confirmed `lst_native_rate` plausible; `staking_apy_bps`
+>    had 7/60 implausible rows filed as `issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md`
+>    (quant_dev-scoped methodology issue, not fixed here). See
+>    `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 1 for full evidence.
 > 2. Short CeFi MDPS top-up + delta_one `funding_oi`/`realized_vol` — **likely superseded**: broader CeFi
 >    candle-completion work (`data_completion_cefi_2026_07_15.md`) now delivers ~2x the original ask (1,238
 >    processed_candles files/day across BITGET-FUTURES/SPOT/BITFINEX/KRAKEN), but the `delta_one`-specific
@@ -85,9 +90,17 @@ drift_direction: advance-code
 > 5. Perf/resource instrumentation — **superseded**: `data_pipeline_check_mdps_features_2026_07_20.md` (active) builds a
 >    strict superset of this ask (RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL
 >    asset_groups). Do not re-dispatch.
-> 6. DEFERRED-fan-out MDPS 1h backfill 2026-04-14..04-30 + BITGET-SPOT 4h/24h candles — **unconfirmed**: broad CeFi
->    candle-completion work landed since, but this exact date-range/timeframe ask wasn't independently verified closed.
->    Was already self-labeled DEFERRED in the original plan — re-verify before dispatching.
+> 6. DEFERRED-fan-out MDPS 1h backfill 2026-04-14..04-30 + BITGET-SPOT 4h/24h candles — **AUDITED via batch 5
+>    (2026-08-09, slot 22): confirmed genuine gap, backfill dispatched-but-blocked upstream (tracked, not silently
+>    absorbed).** MDPS-closable portion (BITGET-FUTURES 1h 04-20..04-30) launched after shipping a `--timeframes`
+>    scoping fix (deployment-service@8f1feb4eb9e4); was blocked on a fleet-wide P0 VM-launch bug
+>    (`/plans/archive/2026_08/issues/vm_tarball_setuptools_scm_pretend_version_below_uac_floor_breaks_all_vm_launches_2026_08_09.md`)
+>    — **RESOLVED + verified live 2026-08-09** (deployment-service@49b50814 bumped `SETUPTOOLS_SCM_PRETEND_VERSION`
+>    0.99.0→0.199.0 fleet-wide; a real `launch-mdps-backfill-vm.sh` verification run reached `EXIT_STATUS=0`). The
+>    BITGET-FUTURES 1h retry itself is a fresh open todo below (P2 §"Phase B" area), not yet re-launched. The remaining
+>    BITGET-SPOT window is a separate upstream MTDS raw-tick gap
+>    (`issues/mdps_1h_candle_backfill_blocked_upstream_mtds_raw_tick_gap_bitget_2026_08_09.md`). See
+>    `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2 for full evidence.
 > 7. `usdc_idle_yield_apy_bps` stub disposition — **round5-cross-cutting-audit 2026-08-08: RESOLVED, already on
 >    record.** Leave-as-0-floor is the standing disposition per
 >    `codex/09-strategy/architecture-v2/archetypes/ carry-staked-basis.md:148-150` (landed unified-trading-pm@817e5186
@@ -688,14 +701,23 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 
 ### Open Track-1 todos (narrowed 2-strategy validation — the actual goal)
 
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** Phase A —
-  features-onchain staked-basis slice e2e run. See the batch doc for the full scoped todo; do not duplicate-dispatch
-  from here. Repo: features-service.
-- [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
-      the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
-      `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
-      Repos: market-data-processing-service + features-service. **Re-check before dispatch (2026-07-27):**
-      `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
+- [x] ✅ DONE via batch 5 (2026-08-09, slot 22) — [SCRIPT] P0. Phase A — features-onchain staked-basis slice e2e run,
+      ops-only (no code changed). Dry-run smoke + `IS_TEST_RUN=true` write completed for
+      `lst_yields`/`lst_native_rates`/ `perp_funding_rates` (correctly routed to
+      `gs://features-defi-test-central-element-323112`); `health_factor` honestly `attempted_failed` (live-Aave-RPC-only
+      feature, not a bug). Read-back plausibility pass, with a single-day-annualization noise issue filed separately
+      (see banner item 1 above). Full evidence: `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 1. Repo:
+      features-service.
+- [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** — E2E verification completed
+      2026-08-10 by slot 14. MDPS VM processed 8 days (Jul 27–Aug 03) `derivative_ticker`@1h → manifest merge (65,761
+      entries) → `funding_oi`@1h: 1 instrument (ZBT-USDT@OKX-SWAP) produced valid 64KB/134-column parquet, remainder
+      below 48-candle threshold. `returns`/`realized_vol_20`@1h: 0 instruments — NO `trades` data in test bucket (MDPS
+      VM only ran `derivative_ticker`). Full evidence:
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` todo 7 + Progress Log sessions 1-6. Run
+      MDPS for ~2–3 days over the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles
+      to a `-test` bucket via `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h →
+      `-test` → read-back. Repos: market-data-processing-service + features-service. **Re-check before dispatch
+      (2026-07-27):** `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
       `funding_oi`/`realized_vol` fields specifically weren't independently re-verified — confirm still needed.
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Basis-perp DeFi leg — confirm Drift/Orca coverage.** DRIFT was
       purged workspace-wide (operator ruling 2026-07-16,
@@ -709,11 +731,23 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Perf/resource instrumentation.**
       `data_pipeline_check_mdps_features_2026_07_20.md` (active, finalize 2026-07-27) builds a strict superset:
       RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL asset_groups.
-- **[DATA] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** DEFERRED fan-out —
-  audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles. See the batch doc for the
-  full scoped todo; do not duplicate-dispatch from here. Repo: MDPS.
-- [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
-      upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
+- [x] ✅ AUDIT COMPLETE, BACKFILL DISPATCHED-BUT-BLOCKED (upstream, tracked) via batch 5 (2026-08-09, slot 22) — [DATA]
+      P2. DEFERRED fan-out — audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles.
+      Confirmed genuine gap; MDPS-closable portion (BITGET-FUTURES 1h 04-20..04-30) launched after shipping a
+      `--timeframes` scoping fix (deployment-service@8f1feb4eb9e4), was blocked on a fleet-wide P0 VM-launch bug —
+      **RESOLVED 2026-08-09 (deployment-service@49b50814)**, see banner item 6 above. The retry itself is now a fresh
+      open todo directly below. Remaining BITGET-SPOT window is a separate upstream MTDS raw-tick gap. Full evidence:
+      `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2; see banner item 6 above for the issue-doc
+      cites. Repo: MDPS.
+- [ ] [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30)** now that the
+      VM-launch bug above is fixed — relaunch via `launch-mdps-backfill-vm.sh` (the `--timeframes`-scoped fix
+      deployment-service@8f1feb4eb9e4 is already live) and confirm it runs to completion this time. Repo:
+      market-data-processing-service.
+- [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub — wiring half only** (confirm-half RESOLVED, round5-cross-cutting-
+      audit 2026-08-08: leave-as-0-floor is the standing disposition — see banner item 7 above; corrects the
+      confirm-vs-wire framing this checkbox previously carried). Remaining: wire `venue_funding_yield` once
+      features-onchain ships it (not yet shipped) — gated, not yet dispatchable. Repo: features-service onchain +
+      delta_one.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -767,3 +801,10 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   the `usdc_idle_yield_apy_bps` disposition question (leave-as-0-floor is standing) but the actual wiring half stays
   gated on a not-yet-shipped upstream feature (`venue_funding_yield`), so that item is not yet actionable either.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **review reconciliation 2026-08-09 (slot 22)**: flipped the 2 "Open Track-1 todos" checkboxes whose work landed via
+  `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` (Phase A staked-basis e2e — DONE ops-only; DEFERRED-fan-out
+  MDPS 1h/BITGET-SPOT audit — audit complete, backfill dispatched-but-blocked upstream), updated the corresponding
+  2026-07-27 banner items 1 + 6 to match, and corrected the stale `usdc_idle_yield_apy_bps` checkbox (line 715) whose
+  text still framed the confirm-half as open when the 2026-08-08 round5-cross-cutting-audit had already settled it — now
+  scoped to the genuinely-open wiring half only. 2 genuinely open items remain (Phase B MDPS top-up; the yield-stub
+  wiring half) so `status` stays `active`, not `resolved`.

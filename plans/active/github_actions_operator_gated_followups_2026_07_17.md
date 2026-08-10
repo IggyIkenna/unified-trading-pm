@@ -195,11 +195,23 @@ drift_direction: advance-code
       the container pass**; it closes only when a real bare VM runs it. The upcoming planning-VM deploy proves the
       systemd/registration legs; the bare-VM leg stays open until we genuinely rebuild a host.
 
-- [ ] [VERIFY] P0. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
-      what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped jobs
-      are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed minutes
-      (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
-      `MemoryCurrent` < 8G, orchestrator load unaffected). (tracked in `ci_satellite_ao_dispatch_batch1_2026_07_26.md`)
+- [x] ✅ [VERIFY] P0. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it
+      is what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped
+      jobs are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed
+      minutes (ledger); confirm the moved workflows bill
+      ~$0 and the VM absorbed the load without contention (slice
+      `MemoryCurrent` < 8G, orchestrator load unaffected). **DONE 2026-08-09 (slot 31)** via
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[VERIFY] P1` todo: `DAYS=23 scripts/cicd/measure-billed-notify-cost.sh`
+      measured `DEDUP_BILLED_23D=2019` (~$12/23d
+      dedup-only subtotal) across `sit-debounce-trigger`=778, `branch-health`=447, `escalate-to-orchestrator`=356,
+      `ci-health`=275, `cloud-build-failure-watcher`=97, `cascade-qg-ordering`=63, `ruleset-drift-alert`=3.
+      **Superseding finding**: the deeper premise (self-hosted glue absorbing load, hence the `MemoryCurrent`/contention
+      half of this done-when) is moot — the self-hosted glue deployment was retired (51 orphaned units archived
+      2026-08-08T13:05Z, per `/plans/archive/issues/ao_observability_and_deploy_hygiene_gaps_2026_08_08.md`) and PM's
+      workflows were separately reverted to `ubuntu-latest`
+      (`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — PM is now public, so GH-hosted
+      billing is unmetered, $0 for a different reason than self-hosting. Not credentials-blocked; moot, not unreachable.
+      Re-measure fresh only if the glue deployment is ever actually completed.
 
 - [x] ✅ [VERIFY] P0. **DONE 2026-08-09 (slot-28)** — representative QG run ~10 billed min (features-service PR run,
       real /jobs pull); identical-tree sentinel skip ~5% (PM, 1/20) / 0% (features-service, 0/20). Full numbers: batch4
@@ -225,12 +237,12 @@ prove on ONE caller → only then fan out._
 
 ### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
 
-| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                                                                                                         |
-| ------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                                                                                                            |
-| **D2** | **Event ledger loses rows** — fix vs accept                                         | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.                                                                             |
-| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **`reconcile-release-tags` RESOLVED 2026-08-08** — repurposed into the fleet's release-stall alarm (see the retired-todo entry above), not deleted; its part of D3 is closed. `digest-drift-sweep` still unfixed and **STEP 2d is still held** for it (its design depends on this remaining undecided item). |
-| **D4** | ✅ **RESOLVED 2026-08-08** — close 52 false issues? fix the UAC matching?           | Not false positives — 20 real recurring issues, consolidated to 1 (#880), root cause diagnosed (checker/cassette bug, not live schema drift), fix specified pending shipment in `unified-api-contracts`. See the matching planning todo above.                                                               |
+| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                                                                                                                                                                                                                                                                       |
+| **D2** | **Event ledger loses rows** — fix vs accept                                         | ✅ **RESOLVED 2026-08-02** — consumer confirmed: `deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()` prefix-walks `cicd/events/`, feeding `unified_alerts.py`/`repo_ci.py`/`health_overview.py` → `deployment-ui`'s Alerts page. Option 1 (one-object-per-event) already shipped, `unified-trading-pm@4cbf2006d` (confirmed ancestor of `origin/live-defi-rollout`). SSOT: `plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`. |
+| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **`reconcile-release-tags` RESOLVED 2026-08-08** — repurposed into the fleet's release-stall alarm (see the retired-todo entry above), not deleted; its part of D3 is closed. `digest-drift-sweep` still unfixed and **STEP 2d is still held** for it (its design depends on this remaining undecided item).                                                                                                                                                            |
+| **D4** | ✅ **RESOLVED 2026-08-08** — close 52 false issues? fix the UAC matching?           | Not false positives — 20 real recurring issues, consolidated to 1 (#880), root cause diagnosed (checker/cassette bug, not live schema drift), fix specified pending shipment in `unified-api-contracts`. See the matching planning todo above.                                                                                                                                                                                                                          |
 
 ### Not done — blocked on nobody, real work
 
@@ -247,7 +259,7 @@ prove on ONE caller → only then fan out._
 
 | #   | Item                                                               | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | --- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 6   | Re-measure billed minutes (`measure-billed-notify-cost.sh`)        | the calendar — the flip landed **2026-07-17**; needs 3-5 days ⇒ earliest **~2026-07-20/22**. Nothing to measure yet.                                                                                                                                                                                                                                                                                                                                                                                          |
+| 6   | ~~Re-measure billed minutes (`measure-billed-notify-cost.sh`)~~    | ✅ **RESOLVED 2026-08-09** — see the `[VERIFY] P0` item above, now flipped `[x]`. `DEDUP_BILLED_23D=2019` (~$12/23d); self-hosted-glue premise moot (retired), PM reverted to `ubuntu-latest` (public repo, unmetered).                                                                                                                                                                                                                                                                                       |
 | 7   | Two-week billing-ledger comparison vs the Phase-0 baseline         | the calendar — earliest **~2026-07-31**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 8   | **Bootstrap on a bare host** (`PARTIAL`)                           | a genuine VM rebuild — systemd / IMDS / GCP ADC / runner registration **structurally cannot** run in a container.                                                                                                                                                                                                                                                                                                                                                                                             |
 | 14  | ~~**Verify `ldr-docs-gate`'s hourly `schedule:` actually fires**~~ | ✅ **RECONCILED 2026-08-09 (`ci_satellite_ao_dispatch_batch6_finalize` todo 1) — already done, stale row.** **CONFIRMED FIRING** via `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s `[VERIFY] P2` todo, DONE 2026-07-26 (slot 6): `gh run list -R IggyIkenna/unified-trading-pm --workflow=ldr-docs-gate.yml --limit 20` showed 20 consecutive `event=schedule` runs, all `conclusion=success`, spanning 2026-07-26T03:02:59Z–23:19:47Z. This row was simply never flipped after that verification landed. |
@@ -269,7 +281,7 @@ prove on ONE caller → only then fan out._
 | `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17`   | **RESOLVED 2026-08-08 — repurposed, not deleted.** The original "DELETE, do not fix" verdict here was superseded 2026-07-23 by `unified-trading-pm@6c4ee4d0c`: the script now splits tag-derived (hard-refused for minting, STALL-checked) vs legacy static-version (original mint path) repos, and is the fleet's release-stall alarm. See the retired planning todo above for the full re-confirmed behaviour. |
 | `d13_orphaned_version_readers_and_manifest_drift_2026_07_17`           | D13 migrated SOME version-readers. `sync-manifest-versions.py` still reads the deleted field; `versions{}` lags the tags for 9/24 repos; `assert_version_coherence.py` exits 1 with 24 violations while QG passes EXIT=0.                                                                                                                                                                                        |
 | `cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17` | **FIXED + FLIPPED.** Residual: the UAC detector's model-matching is a lottery (finding #4) + 52 false issues to close (finding #5).                                                                                                                                                                                                                                                                              |
-| `persist_cicd_event_ledger_read_modify_write_race_2026_07_17`          | **NEW (D2).** The event ledger is written with an unlocked read-modify-write ⇒ concurrent writers silently drop each other's rows, and every writer reports success. **Loss rate NOT measured** (the doc says how). Find the CONSUMER before choosing a fix.                                                                                                                                                     |
+| `persist_cicd_event_ledger_read_modify_write_race_2026_07_17`          | ✅ **RESOLVED 2026-08-02 (D2).** Consumer found (`deployment-api/_repo_ci_alerts.py::_read_ledgers_sync()`); Option 1 fix shipped, `unified-trading-pm@4cbf2006d`, confirmed ancestor of `origin/live-defi-rollout`. See D2 row above.                                                                                                                                                                           |
 
 ### Hard-won context the next session should inherit rather than rediscover
 
@@ -804,8 +816,8 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       canary to the remaining 23 repos.** Per-repo: register a `POOL_TAG=<repo-slug>` runner pool (capacity-plan against
       the 16 vCPU box — agent-orchestrator's canary used 2 glue + 1 writer; 23× that is NOT a straight multiply, size
       down for low-traffic repos), roll out the 7 already-edited templates via
-      `rollout-workflow-templates.sh --repo     <name>`, add its own `quality-gates-v2.yml` override (ideally replacing
-      the hand-set canary pattern with a real per-repo templated substitution — a new `rollout-workflow-templates.sh`
+      `rollout-workflow-templates.sh --repo <name>`, add its own `quality-gates-v2.yml` override (ideally replacing the
+      hand-set canary pattern with a real per-repo templated substitution — a new `rollout-workflow-templates.sh`
       placeholder + allowlist, not 23 more hand-edits), verify a live trigger, ratchet the drift baseline down as each
       repo lands. — **✅ DONE 2026-07-27/28; closed 2026-07-30 by `/na-eligibility-audit ci` as STALE.** This doc's own
       dated "Final report" below supersedes the original "NOT started / paused for an operator scope-pacing" wording:
@@ -984,3 +996,14 @@ BigQuery `resource_samples` utilization: measured avg_cpu_pct=50.6%, within the 
 checkbox at ~line 685. (2) Test-impact design scoping: MOOT, already `[x]` at ~line 861 (extracted 2026-08-03, now fully
 shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — no fresh design needed.
 `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 is done.
+
+**round-9 sweep, 2026-08-09**: KEEP-NA, valid — unchanged from round7; no round-9 new-facts apply here.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:058d1b97f5f905f2]: KEEP-NA,
+valid — Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4. (1) line 106 STEP 2d
+assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still unfixed and STEP 2d is still held for it
+(its design depends on this remaining undecided item)' -- dependency-blocked on the still-open
+/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md investigation. (2) line 188
+bare-host bootstrap PROVE: container leg done, but IMDS/EC2-role, GCP ADC (doc's own text flags this leg 'interactive'),
+systemd, and real GH runner registration 'structurally cannot' run in a container -- doc ties this explicitly to 'the
+upcoming planning-VM deploy,' a genuine host rebuild.

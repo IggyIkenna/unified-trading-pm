@@ -24,6 +24,10 @@ priority: P1
 estimate_class: brand-new
 source: discovered live while running the round-derivation residual census (sports_closeout_batch1_ao_ready-008)
 resolved_by:
+archive_exempt: true
+# 2026-08-09 — 0 open todos as of this commit, but the checkbox-flip and the git-mv archival must
+# land as separate commits (plan-completion-and-archival-discipline.md's "never combine" rule) — this is a transient
+# exemption for the flip commit only, meant to be cleared by the very next archival commit (see Progress Log).
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -197,28 +201,28 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       data_type.
 
       **FULL CAUSAL CHAIN TRACED (2026-07-24, slot 11)**: `unified-api-contracts/registry/venue_adapter_keys.py:191`
-                                                                                                                                      registers `"API_FOOTBALL": "api_football"` in the SAME generic venue→adapter-key registry crypto/defi/tradfi
-                                                                                                                                      venues use — `api_football` is not a sports-only special case, it's a first-class generic venue. Top-down:
-                                                                                                                                      `process.py:150` computes `active_venues = [v for v in venues if is_venue_available(v, date)]` from the
-                                                                                                                                      top-level `venues` param → `process_fetch.py`'s fetch stage splits `active_venues` into `defi_active`
-                                                                                                                                      (`v in defi_venue_names`) vs. `non_defi_active` (**everything else, unconditionally** — line 125, no
-                                                                                                                                      sports/prediction exclusion) → `non_defi_active` (line 172) calls `fetch_instruments_for_all_venues(...)` →
-                                                                                                                                      `urdi_reference_provider.py` resolves the adapter via `get_adapter_for_canonical_venue()` and calls
-                                                                                                                                      `.get_instruments()` → for `api_football` this is `ApiFootballReferenceDataAdapter.get_instruments()`, returning
-                                                                                                                                      `InstrumentRecord`s built by `_canonical_fixture_to_instrument()` (item 3 above) → these records flow back into
-                                                                                                                                      `process_fetch.py`'s generic instrument pipeline and eventually reach `_write_venue`/`_gated_sink_write`, which
-                                                                                                                                      (item 4 above) maps `venue=="API_FOOTBALL"` to `data_type=FIXTURES_SCHEDULE` — landing exactly at the corrupted
-                                                                                                                                      path. **The bug is structural, not a one-off typo**: if the top-level `venues` list for ANY run ever includes
-                                                                                                                                      `"api_football"` (or `"API_FOOTBALL"`) OUTSIDE the dedicated sports fixture flow
-                                                                                                                                      (`_orch._fetch_sports_reference_data`, the CORRECT writer confirmed in `process_fetch.py:253` — takes its own
-                                                                                                                                      separate `api_football_key` path and writes via `record_captured_from_counts`, never touching `_write_venue`),
-                                                                                                                                      this exact corruption reproduces. **Still not pinned down**: which specific CLI invocation / cron / script
-                                                                                                                                      populated the top-level `venues` param with `api_football` on 2026-07-16 (and 07-12 for the 118th file) — that
-                                                                                                                                      requires either historical run logs (already confirmed unavailable — no GCS Data Access audit logging on this
-                                                                                                                                      bucket, per slot 12's finding) or finding a config/registry state where `api_football` was reachable from a
-                                                                                                                                      non-sports-scoped `--asset-group` selection at that time. The regression guard shipped for the CODE todo below
-                                                                                                                                      (`_assert_not_cross_domain_contamination`) makes this class of mix-up impossible going forward regardless of
-                                                                                                                                      which exact caller triggered it historically — closing the loop even without the historical "who".
+                                                                                                                                                  registers `"API_FOOTBALL": "api_football"` in the SAME generic venue→adapter-key registry crypto/defi/tradfi
+                                                                                                                                                  venues use — `api_football` is not a sports-only special case, it's a first-class generic venue. Top-down:
+                                                                                                                                                  `process.py:150` computes `active_venues = [v for v in venues if is_venue_available(v, date)]` from the
+                                                                                                                                                  top-level `venues` param → `process_fetch.py`'s fetch stage splits `active_venues` into `defi_active`
+                                                                                                                                                  (`v in defi_venue_names`) vs. `non_defi_active` (**everything else, unconditionally** — line 125, no
+                                                                                                                                                  sports/prediction exclusion) → `non_defi_active` (line 172) calls `fetch_instruments_for_all_venues(...)` →
+                                                                                                                                                  `urdi_reference_provider.py` resolves the adapter via `get_adapter_for_canonical_venue()` and calls
+                                                                                                                                                  `.get_instruments()` → for `api_football` this is `ApiFootballReferenceDataAdapter.get_instruments()`, returning
+                                                                                                                                                  `InstrumentRecord`s built by `_canonical_fixture_to_instrument()` (item 3 above) → these records flow back into
+                                                                                                                                                  `process_fetch.py`'s generic instrument pipeline and eventually reach `_write_venue`/`_gated_sink_write`, which
+                                                                                                                                                  (item 4 above) maps `venue=="API_FOOTBALL"` to `data_type=FIXTURES_SCHEDULE` — landing exactly at the corrupted
+                                                                                                                                                  path. **The bug is structural, not a one-off typo**: if the top-level `venues` list for ANY run ever includes
+                                                                                                                                                  `"api_football"` (or `"API_FOOTBALL"`) OUTSIDE the dedicated sports fixture flow
+                                                                                                                                                  (`_orch._fetch_sports_reference_data`, the CORRECT writer confirmed in `process_fetch.py:253` — takes its own
+                                                                                                                                                  separate `api_football_key` path and writes via `record_captured_from_counts`, never touching `_write_venue`),
+                                                                                                                                                  this exact corruption reproduces. **Still not pinned down**: which specific CLI invocation / cron / script
+                                                                                                                                                  populated the top-level `venues` param with `api_football` on 2026-07-16 (and 07-12 for the 118th file) — that
+                                                                                                                                                  requires either historical run logs (already confirmed unavailable — no GCS Data Access audit logging on this
+                                                                                                                                                  bucket, per slot 12's finding) or finding a config/registry state where `api_football` was reachable from a
+                                                                                                                                                  non-sports-scoped `--asset-group` selection at that time. The regression guard shipped for the CODE todo below
+                                                                                                                                                  (`_assert_not_cross_domain_contamination`) makes this class of mix-up impossible going forward regardless of
+                                                                                                                                                  which exact caller triggered it historically — closing the loop even without the historical "who".
 
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
@@ -254,82 +258,82 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       2026-07-31); shipped once `instruments-service@8df301f4` genuinely fixed it).
 
       Original blocked-status notes (superseded, kept for history): **BLOCKED — new finding (2026-07-24, slot 4), see
-                                                                                                      below; NOT attempted against PROD.** — **🟡 RE-CHECKED 2026-07-25T05:00Z (slot 2)**: main's `BLK-7e0a3faa` ruling gates this on 3
-                                                                                                      conditions. (a) burst-write root cause — **NOW RESOLVED**, the DIAG P1 todo above is `[x]` with the full causal
-                                                                                                      chain traced (the generic `venue=="API_FOOTBALL"` → `data_type=FIXTURES_SCHEDULE` mapping in `_write_venue`, exact
-                                                                                                      mechanism confirmed by code read). (b) the authoritative alias→canonical mapping and (c) whether canonical-folder
-                                                                                                      data already exists for all 85+ leagues — **STILL genuinely open**: the DIAG section confirms only 11 of the 85+
-                                                                                                      contaminated leagues have a confirmed correctly-shaped canonical-folder counterpart (written later, 2026-07-19);
-                                                                                                      the remaining ~75 were not checked. Per main's own ruling, ALL THREE gates must clear before any write/delete —
-                                                                                                      with (b)/(c) still open for the majority of leagues, this todo remains correctly BLOCKED. Did not attempt the
-                                                                                                      write. A future dispatch's fastest useful step: extend the existing 11-league canonical-folder check to all 85+ (a
-                                                                                                      bounded GCS listing, no corpus walk) — that alone would close gate (c) and leave only (b) (deriving the
-                                                                                                      alias→canonical mapping, likely via `build_league_id()` reproduced against each UAC-registered league's raw vendor
-                                                                                                      name) before the actual remediation can run. — **GATES (b) AND (c) FULLY CLOSED 2026-07-25T05:45Z (slot 11,
-                                                                                                      data_engineering); write NOT attempted — see rationale + exact handoff below.**
+                                                                                                                  below; NOT attempted against PROD.** — **🟡 RE-CHECKED 2026-07-25T05:00Z (slot 2)**: main's `BLK-7e0a3faa` ruling gates this on 3
+                                                                                                                  conditions. (a) burst-write root cause — **NOW RESOLVED**, the DIAG P1 todo above is `[x]` with the full causal
+                                                                                                                  chain traced (the generic `venue=="API_FOOTBALL"` → `data_type=FIXTURES_SCHEDULE` mapping in `_write_venue`, exact
+                                                                                                                  mechanism confirmed by code read). (b) the authoritative alias→canonical mapping and (c) whether canonical-folder
+                                                                                                                  data already exists for all 85+ leagues — **STILL genuinely open**: the DIAG section confirms only 11 of the 85+
+                                                                                                                  contaminated leagues have a confirmed correctly-shaped canonical-folder counterpart (written later, 2026-07-19);
+                                                                                                                  the remaining ~75 were not checked. Per main's own ruling, ALL THREE gates must clear before any write/delete —
+                                                                                                                  with (b)/(c) still open for the majority of leagues, this todo remains correctly BLOCKED. Did not attempt the
+                                                                                                                  write. A future dispatch's fastest useful step: extend the existing 11-league canonical-folder check to all 85+ (a
+                                                                                                                  bounded GCS listing, no corpus walk) — that alone would close gate (c) and leave only (b) (deriving the
+                                                                                                                  alias→canonical mapping, likely via `build_league_id()` reproduced against each UAC-registered league's raw vendor
+                                                                                                                  name) before the actual remediation can run. — **GATES (b) AND (c) FULLY CLOSED 2026-07-25T05:45Z (slot 11,
+                                                                                                                  data_engineering); write NOT attempted — see rationale + exact handoff below.**
 
-                                                                                                      **Gate (b) — alias→canonical mapping (deterministic, not guessed)**: downloaded the real API-Football
-                                                                                                          `leagues.parquet` catalog (the same one used for the sports curated-universe batches this session) and computed
-                                                                                                          `build_league_id(row.country, row.name)` for all 1,228 rows. **All 85 of the raw folder names matched exactly
-                                                                                                          one catalog row — 0 unmatched.** This is a mechanical reverse-derivation, not a guess: each of the 85 IS the
-                                                                                                          literal, deterministic output of `build_league_id()` fed that row's raw vendor `country`+`name`, confirming
-                                                                                                          slot 11's earlier mechanism finding end-to-end.
+                                                                                                                  **Gate (b) — alias→canonical mapping (deterministic, not guessed)**: downloaded the real API-Football
+                                                                                                                      `leagues.parquet` catalog (the same one used for the sports curated-universe batches this session) and computed
+                                                                                                                      `build_league_id(row.country, row.name)` for all 1,228 rows. **All 85 of the raw folder names matched exactly
+                                                                                                                      one catalog row — 0 unmatched.** This is a mechanical reverse-derivation, not a guess: each of the 85 IS the
+                                                                                                                      literal, deterministic output of `build_league_id()` fed that row's raw vendor `country`+`name`, confirming
+                                                                                                                      slot 11's earlier mechanism finding end-to-end.
 
-                                                                                                          **Gate (c) — canonical-folder existence + content shape for ALL 85 (not just 11)**: cross-referenced the 85
-                                                                                                          matched `api_football_id`s against `LEAGUE_REGISTRY` (which of them are ACTUALLY UAC-registered under some
-                                                                                                          canonical id), then did a bounded (single-day-prefix, not corpus-wide) GCS listing of every
-                                                                                                          `day=2026-04-14/.../entity=fixtures_schedule/league=<canonical>/` folder for the registered ones, then
-                                                                                                          downloaded + schema-checked each folder that exists. Full breakdown of the 85:
+                                                                                                                      **Gate (c) — canonical-folder existence + content shape for ALL 85 (not just 11)**: cross-referenced the 85
+                                                                                                                      matched `api_football_id`s against `LEAGUE_REGISTRY` (which of them are ACTUALLY UAC-registered under some
+                                                                                                                      canonical id), then did a bounded (single-day-prefix, not corpus-wide) GCS listing of every
+                                                                                                                      `day=2026-04-14/.../entity=fixtures_schedule/league=<canonical>/` folder for the registered ones, then
+                                                                                                                      downloaded + schema-checked each folder that exists. Full breakdown of the 85:
 
-                                                                                                          - **35 of 85 have NO canonical UAC registry entry at all** (mostly reserve/U18-U19-U20/regional-tier/
-                                                                                                            friendlies leagues never registered as `LeagueDefinition`s): `ARGENTINA_PRIMERA_B_METROPOLITANA`,
-                                                                                                            `ARGENTINA_RESERVE_LEAGUE`, `AUSTRIA_REGIONALLIGA_OST`, `BRAZIL_BRASILEIRO_U20_A`,
-                                                                                                            `BULGARIA_THIRD_LEAGUE_SOUTHEAST`, `CHINA_LEAGUE_TWO`, `CONGO_DR_LIGUE_1`, `CZECH_REPUBLIC_4_LIGA_DIVIZIE_D`,
-                                                                                                            `ENGLAND_NATIONAL_LEAGUE_NORTH`, `ENGLAND_NATIONAL_LEAGUE_SOUTH`, `ENGLAND_NON_LEAGUE_PREMIER_ISTHMIAN`,
-                                                                                                            `ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_CENTRAL`, `ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_SOUTH`,
-                                                                                                            `ENGLAND_PROFESSIONAL_DEVELOPMENT_LEAGUE`, `ENGLAND_U18_PREMIER_LEAGUE_NORTH`,
-                                                                                                            `ENGLAND_U18_PREMIER_LEAGUE_SOUTH`, `GERMANY_OBERLIGA_BAYERN_NORD`, `GERMANY_OBERLIGA_BAYERN_SUD`,
-                                                                                                            `GERMANY_OBERLIGA_BREMEN`, `GERMANY_OBERLIGA_HAMBURG`, `GERMANY_REGIONALLIGA_BAYERN`,
-                                                                                                            `GERMANY_REGIONALLIGA_NORDOST`, `INDIA_I_LEAGUE_2ND_DIVISION`, `NETHERLANDS_U19_DIVISIE_1`,
-                                                                                                            `NORWAY_3_DIVISION_GIRONE_5`, `POLAND_III_LIGA_GROUP_3`, `PORTUGAL_LIGA_REVELACAO_U23`,
-                                                                                                            `SCOTLAND_LEAGUE_ONE`, `SPAIN_SEGUNDA_DIVISION_RFEF_GROUP_5`, `UKRAINE_U19_LEAGUE`,
-                                                                                                            `WORLD_CONMEBOL_NATIONS_LEAGUE_WOMEN`, `WORLD_FRIENDLIES_WOMEN`, `WORLD_OFC_PRO_LEAGUE`,
-                                                                                                            `WORLD_WORLD_CUP_WOMEN_QUALIFICATION_CONCACAF`, `WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE`. **Structurally
-                                                                                                            unrecoverable to a canonical folder as scoped — there is no canonical id to write real fixtures under.** A
-                                                                                                            future decision (out of this todo's scope) would need to register these as `LeagueDefinition`s first,
-                                                                                                            mirroring the curated-universe expansion pattern shipped elsewhere this session, before any fixtures for them
-                                                                                                            could land anywhere legitimate.
-                                                                                                          - **Of the 50 that ARE registered**, canonical-folder GCS existence split further: **11 MISSING entirely**
-                                                                                                            (`AFC_CHAMPIONS_LEAGUE_ELITE`, `BOLIVIA_PRIMERA`, `CYPRUS_FIRST_DIVISION`, `ECUADOR_CUP`, `IRAQ_LEAGUE`,
-                                                                                                            `KENYA_PREMIER_LEAGUE`, `LIBERIA_FIRST_DIVISION`, `PANAMA_LPF`, `PERU_PRIMERA`, `SLOVENIA_PRVALIGA`,
-                                                                                                            `TANZANIA_LIGI_KUU`) — need a fresh write. Of the remaining **39 that DO have a canonical folder**,
-                                                                                                            downloading + schema-checking each found: **14 genuinely correct** (real `af_league_id`/`af_fixture_id`
-                                                                                                            columns — `ARGENTINA_PRIMERA`, `CHILE_PRIMERA`, `COPA_LIBERTADORES`, `COPA_SUDAMERICANA`, `ENG_CHAMPIONSHIP`,
-                                                                                                            `ENG_LEAGUE_ONE`, `ENG_LEAGUE_TWO`, `ENG_NATIONAL_LEAGUE`, `PRIMERA_RFEF`, `SCOTTISH_CHAMPIONSHIP`,
-                                                                                                            `SERIE_B`, `SUPERETTAN`, `UCL`, `US_OPEN_CUP` — nothing to do for these) — but **25 of the 39 are ALSO
-                                                                                                            contaminated with the exact same instrument-catalogue schema** (a materially WORSE finding than the prior
-                                                                                                            "only 11 checked, all correct" assumption): `ARMENIA_FIRST_LEAGUE`, `ARMENIA_PREMIER_LEAGUE`,
-                                                                                                            `ARUBA_DIVISION_DI_HONOR`, `BANGLADESH_FEDERATION_CUP`, `BARBADOS_PREMIER_LEAGUE`, `BULGARIA_FIRST_LEAGUE`,
-                                                                                                            `COLOMBIA_PRIMERA_B`, `EGYPT_PREMIER_LEAGUE`, `ETHIOPIA_PREMIER_LEAGUE`, `FINLAND_SUOMEN_CUP`,
-                                                                                                            `HONDURAS_LIGA_NACIONAL`, `HUNGARY_NB_I`, `ISRAEL_LIGA_LEUMIT`, `JORDAN_LEAGUE`, `KENYA_SUPER_LEAGUE`,
-                                                                                                            `LATVIA_VIRSLIGA`, `LIECHTENSTEIN_CUP`, `MACEDONIA_FIRST_LEAGUE`, `MALTA_PREMIER_LEAGUE`, `NIGERIA_NPFL`,
-                                                                                                            `ROMANIA_LIGA_II`, `SAUDI_ARABIA_DIVISION_1`, `SAUDI_ARABIA_PRO_LEAGUE`, `SLOVAKIA_CUP`,
-                                                                                                            `UZBEKISTAN_SUPER_LEAGUE`.
+                                                                                                                      - **35 of 85 have NO canonical UAC registry entry at all** (mostly reserve/U18-U19-U20/regional-tier/
+                                                                                                                        friendlies leagues never registered as `LeagueDefinition`s): `ARGENTINA_PRIMERA_B_METROPOLITANA`,
+                                                                                                                        `ARGENTINA_RESERVE_LEAGUE`, `AUSTRIA_REGIONALLIGA_OST`, `BRAZIL_BRASILEIRO_U20_A`,
+                                                                                                                        `BULGARIA_THIRD_LEAGUE_SOUTHEAST`, `CHINA_LEAGUE_TWO`, `CONGO_DR_LIGUE_1`, `CZECH_REPUBLIC_4_LIGA_DIVIZIE_D`,
+                                                                                                                        `ENGLAND_NATIONAL_LEAGUE_NORTH`, `ENGLAND_NATIONAL_LEAGUE_SOUTH`, `ENGLAND_NON_LEAGUE_PREMIER_ISTHMIAN`,
+                                                                                                                        `ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_CENTRAL`, `ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_SOUTH`,
+                                                                                                                        `ENGLAND_PROFESSIONAL_DEVELOPMENT_LEAGUE`, `ENGLAND_U18_PREMIER_LEAGUE_NORTH`,
+                                                                                                                        `ENGLAND_U18_PREMIER_LEAGUE_SOUTH`, `GERMANY_OBERLIGA_BAYERN_NORD`, `GERMANY_OBERLIGA_BAYERN_SUD`,
+                                                                                                                        `GERMANY_OBERLIGA_BREMEN`, `GERMANY_OBERLIGA_HAMBURG`, `GERMANY_REGIONALLIGA_BAYERN`,
+                                                                                                                        `GERMANY_REGIONALLIGA_NORDOST`, `INDIA_I_LEAGUE_2ND_DIVISION`, `NETHERLANDS_U19_DIVISIE_1`,
+                                                                                                                        `NORWAY_3_DIVISION_GIRONE_5`, `POLAND_III_LIGA_GROUP_3`, `PORTUGAL_LIGA_REVELACAO_U23`,
+                                                                                                                        `SCOTLAND_LEAGUE_ONE`, `SPAIN_SEGUNDA_DIVISION_RFEF_GROUP_5`, `UKRAINE_U19_LEAGUE`,
+                                                                                                                        `WORLD_CONMEBOL_NATIONS_LEAGUE_WOMEN`, `WORLD_FRIENDLIES_WOMEN`, `WORLD_OFC_PRO_LEAGUE`,
+                                                                                                                        `WORLD_WORLD_CUP_WOMEN_QUALIFICATION_CONCACAF`, `WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE`. **Structurally
+                                                                                                                        unrecoverable to a canonical folder as scoped — there is no canonical id to write real fixtures under.** A
+                                                                                                                        future decision (out of this todo's scope) would need to register these as `LeagueDefinition`s first,
+                                                                                                                        mirroring the curated-universe expansion pattern shipped elsewhere this session, before any fixtures for them
+                                                                                                                        could land anywhere legitimate.
+                                                                                                                      - **Of the 50 that ARE registered**, canonical-folder GCS existence split further: **11 MISSING entirely**
+                                                                                                                        (`AFC_CHAMPIONS_LEAGUE_ELITE`, `BOLIVIA_PRIMERA`, `CYPRUS_FIRST_DIVISION`, `ECUADOR_CUP`, `IRAQ_LEAGUE`,
+                                                                                                                        `KENYA_PREMIER_LEAGUE`, `LIBERIA_FIRST_DIVISION`, `PANAMA_LPF`, `PERU_PRIMERA`, `SLOVENIA_PRVALIGA`,
+                                                                                                                        `TANZANIA_LIGI_KUU`) — need a fresh write. Of the remaining **39 that DO have a canonical folder**,
+                                                                                                                        downloading + schema-checking each found: **14 genuinely correct** (real `af_league_id`/`af_fixture_id`
+                                                                                                                        columns — `ARGENTINA_PRIMERA`, `CHILE_PRIMERA`, `COPA_LIBERTADORES`, `COPA_SUDAMERICANA`, `ENG_CHAMPIONSHIP`,
+                                                                                                                        `ENG_LEAGUE_ONE`, `ENG_LEAGUE_TWO`, `ENG_NATIONAL_LEAGUE`, `PRIMERA_RFEF`, `SCOTTISH_CHAMPIONSHIP`,
+                                                                                                                        `SERIE_B`, `SUPERETTAN`, `UCL`, `US_OPEN_CUP` — nothing to do for these) — but **25 of the 39 are ALSO
+                                                                                                                        contaminated with the exact same instrument-catalogue schema** (a materially WORSE finding than the prior
+                                                                                                                        "only 11 checked, all correct" assumption): `ARMENIA_FIRST_LEAGUE`, `ARMENIA_PREMIER_LEAGUE`,
+                                                                                                                        `ARUBA_DIVISION_DI_HONOR`, `BANGLADESH_FEDERATION_CUP`, `BARBADOS_PREMIER_LEAGUE`, `BULGARIA_FIRST_LEAGUE`,
+                                                                                                                        `COLOMBIA_PRIMERA_B`, `EGYPT_PREMIER_LEAGUE`, `ETHIOPIA_PREMIER_LEAGUE`, `FINLAND_SUOMEN_CUP`,
+                                                                                                                        `HONDURAS_LIGA_NACIONAL`, `HUNGARY_NB_I`, `ISRAEL_LIGA_LEUMIT`, `JORDAN_LEAGUE`, `KENYA_SUPER_LEAGUE`,
+                                                                                                                        `LATVIA_VIRSLIGA`, `LIECHTENSTEIN_CUP`, `MACEDONIA_FIRST_LEAGUE`, `MALTA_PREMIER_LEAGUE`, `NIGERIA_NPFL`,
+                                                                                                                        `ROMANIA_LIGA_II`, `SAUDI_ARABIA_DIVISION_1`, `SAUDI_ARABIA_PRO_LEAGUE`, `SLOVAKIA_CUP`,
+                                                                                                                        `UZBEKISTAN_SUPER_LEAGUE`.
 
-                                                                                                          **Net actionable target for the actual remediation (not this todo's scope to execute — see below)**: 36
-                                                                                                          canonical league folders need a real snapshot+re-fetch+write (11 missing + 25 also-contaminated), using the
-                                                                                                          NOW-CORRECT canonical ids listed above (never the raw 85 names); the 85 raw-named contaminated folders
-                                                                                                          themselves are all pure garbage to delete (snapshot-first) once their canonical counterpart is confirmed good;
-                                                                                                          35 raw names have no legitimate target at all and are out of scope pending a separate registry decision.
+                                                                                                                      **Net actionable target for the actual remediation (not this todo's scope to execute — see below)**: 36
+                                                                                                                      canonical league folders need a real snapshot+re-fetch+write (11 missing + 25 also-contaminated), using the
+                                                                                                                      NOW-CORRECT canonical ids listed above (never the raw 85 names); the 85 raw-named contaminated folders
+                                                                                                                      themselves are all pure garbage to delete (snapshot-first) once their canonical counterpart is confirmed good;
+                                                                                                                      35 raw names have no legitimate target at all and are out of scope pending a separate registry decision.
 
-                                                                                                          **Why the write itself was NOT attempted this turn**: this is a real PROD data-correctness write (re-fetching
-                                                                                                          live API-Football data + writing 36 league-folders), and the investigation above alone was substantial —
-                                                                                                          rushing the actual execution at the end of an already long session risked a lower-quality write/verify cycle on
-                                                                                                          genuine production data. `scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py` already has the
-                                                                                                          right skeleton (snapshot → single day-level fetch → filter → write via the now-guarded `_write_fixtures_per_league`
-                                                                                                          → verify) — it needs `_AFFECTED_LEAGUES` repointed from the raw 85-name literal set to the 36-item canonical
-                                                                                                          target list above (11 missing + 25 also-contaminated) before its next `--dry-run`/`--apply`. The 14
-                                                                                                          already-correct and 35 unregistered leagues should be excluded from its target set entirely.
+                                                                                                                      **Why the write itself was NOT attempted this turn**: this is a real PROD data-correctness write (re-fetching
+                                                                                                                      live API-Football data + writing 36 league-folders), and the investigation above alone was substantial —
+                                                                                                                      rushing the actual execution at the end of an already long session risked a lower-quality write/verify cycle on
+                                                                                                                      genuine production data. `scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py` already has the
+                                                                                                                      right skeleton (snapshot → single day-level fetch → filter → write via the now-guarded `_write_fixtures_per_league`
+                                                                                                                      → verify) — it needs `_AFFECTED_LEAGUES` repointed from the raw 85-name literal set to the 36-item canonical
+                                                                                                                      target list above (11 missing + 25 also-contaminated) before its next `--dry-run`/`--apply`. The 14
+                                                                                                                      already-correct and 35 unregistered leagues should be excluded from its target set entirely.
 
 ## New finding — the 85 "affected league" folder names are not registered UAC canonical league_ids at all (2026-07-24, slot 4)
 
@@ -456,8 +460,8 @@ correct schema (verified live, this pass). No PROD GCS object was written, moved
       `day=2026-04-14` raw-named shards stay untouched (harmless, no canonical folder exists to recover them into). Was
       `[OPERATOR]` P3 register-vs-leave-unmapped. **Done when** (per this todo's own original text): flip `status` to
       `resolved` noting the explicit non-registration decision — done below.
-- [ ] [DATA] P2. **NEW FINDING 2026-08-09 (follow-up investigation, not stale): the manifest is currently lying about 30
-      of these 35 leagues.** Bounded read of
+- [x] ✅ [DATA] P2. **NEW FINDING 2026-08-09 (follow-up investigation, not stale): the manifest is currently lying about
+      30 of these 35 leagues.** Bounded read of
       `gs://instruments-store-sports-prd-central-element-323112/_index/     availability_index.parquet` filtered to
       `date=2026-04-14` (no corpus walk) found 30 of the 35 raw league names DO have manifest rows — 90 total
       (`FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES`/`FIXTURES` ×30 each), **100% `capture_status=captured`**, despite the
@@ -480,6 +484,19 @@ correct schema (verified live, this pass). No PROD GCS object was written, moved
       coverage, OR (b) if reclassifying is out of scope for now, at minimum add a one-line pointer in
       `honest-coverage-model.md` naming this doc as the explanation, so a future reconciliation pass greps straight to
       the answer instead of re-discovering and re-investigating this exact same thing from scratch.
+
+      **DONE via option (b) (2026-08-09, slot 17, data_engineering) — `unified-trading-pm@<pending>`.** Chose (b) over
+                  (a) deliberately, not just as the cheaper fallback: neither existing non-`captured` state actually fits these 90
+                  rows — `attempted_failed` means "attempt raised before producing rows" and these rows genuinely WERE produced
+                  (wrong content, not a failed attempt), so reclassifying to it would trade one dishonest label for another.
+                  Introducing a genuine "honest-corruption" 5th `capture_status` state is a real schema change (new
+                  `CaptureStatus`/`EmptyConfirmedReason`-shaped enum member, a write-contract change in UTL, a Layer-2
+                  coverage-formula update in `measure_honest_coverage.py`, and a QG ratchet) — correctly out of scope for a bounded
+                  1-hour DATA todo and not something to improvise ad hoc against a live coverage model without design review. Added
+                  the pointer note to `honest-coverage-model.md` (right after the 4-state `capture_status` table, where a future
+                  reader checking "is `captured` always genuine?" will land) naming this doc, the 90-row count, and why no existing
+                  state fits — so a future reconciliation pass greps straight to the answer instead of re-investigating from
+                  scratch. No manifest rows were touched; no GCS write/delete of any kind this session.
 
 ## 2026-07-31 — archive-location correction (found while reconciling sports batch3 finalize todo 2)
 
@@ -510,3 +527,16 @@ leagues structurally unmapped, pending an operator decision) stands as-is.
   per this todo's own done-when. Flagged separately (this session) for a manifest/honest-coverage awareness check (does
   the coverage denominator already safely exclude these 35, and does any future reconciliation pass need a pointer here
   to avoid re-discovering this as a "new" finding) — tracked as its own follow-up, not blocking this doc's resolution.
+- **2026-08-09 (slot 17, data_engineering)**: closed the flagged follow-up above — the manifest/honest-coverage
+  awareness check. Confirmed Layer-1 is safe (hard `LEAGUE_REGISTRY` gate) but Layer-2 was NOT (90 known-corrupted rows
+  counted as `captured`). Resolved via option (b): added a pointer note to `honest-coverage-model.md` explaining why
+  (see the `[DATA] P2` todo's resolution note above for the full reasoning on why option (a) reclassification was
+  correctly out of scope). **Every todo in this doc is now `[x]`.** Note on the prior entry's "`status` flipped to
+  `resolved`" claim: frontmatter `status` still read `open` on this session's fresh pull, so that flip evidently never
+  landed (or was lost). Tried flipping it here too, but `plan-hygiene`'s pre-commit gate
+  (`check_terminal_status_archived` / `check_archive_candidates`) correctly refuses a `resolved`-status, 0-open-todo doc
+  that isn't archived in the SAME commit — and the archival-discipline HARD RULE just as correctly forbids bundling a
+  checkbox-flip commit with the `git mv` archival commit. Left `status: open` for now (an honest, gate-passable state)
+  rather than force either side of that tension; the full archival ritual (status flip + banner + `git mv` + referrer
+  sweep, as its own commit) is correctly-scoped follow-up work for the normal archive-candidates sweep
+  (`/archive-candidates-audit`), not this todo.

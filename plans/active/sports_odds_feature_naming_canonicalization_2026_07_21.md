@@ -38,6 +38,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true # bridge field, flip-only commit ahead of the immediately-following git mv (RULED 2026-08-09, see plan-completion-and-archival-discipline.md); dropped in the mv commit
 context_scope:
   [
     /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
@@ -113,10 +114,12 @@ evidence. Summary of what each site currently uses:
 ## Todos
 
 - [x] [DATA] P1. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already decided, `[OPERATOR]` never removed). DECIDED
-      2026-07-23 — new deliberate naming, not adopted from any single existing convention.** Operator ruling: design
-      fresh, and migrate the underlying data + manifest (not just rename call sites) so every one of the 3 real
-      consumers' actual needs is satisfied, including the per-venue decimal-odds shape `SportsArbDutchingEngine` needs
-      that **features-service does not currently compute at all** (FSS's `ODDS_COLUMNS` — read in full, 180 fields,
+      2026-07-23 — new deliberate naming, not adopted from any single existing convention.** Operator ruling
+      (BLK-a1ce4719, see this doc's own "## Operator ruling" section above and
+      `/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`): design fresh, and migrate the
+      underlying data + manifest (not just rename call sites) so every one of the 3 real consumers' actual needs is
+      satisfied, including the per-venue decimal-odds shape `SportsArbDutchingEngine` needs that **features-service does
+      not currently compute at all** (FSS's `ODDS_COLUMNS` — read in full, 180 fields,
       `features_service/sports/calculators/odds_columns.py:11-190` — has only cross-book aggregates like
       `best_odds_home/draw/away`, never a per-bookmaker raw decimal-odds column; this is NEW feature-engineering work,
       not a rename). Full scheme + representative before/after mapping + the new- computation gap are recorded in the
@@ -195,17 +198,43 @@ evidence. Summary of what each site currently uses:
       `quality-gates.sh` full run green. Re-verified `10e219f` is a real, current commit in `ml-service` before this
       flip (`git show --no-patch` confirms).
 - **[REVIEW] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (2026-08-09,
-      satellite-batch-extraction pass) — todos 1-6 above are all `[x]` shipped, so the FSS-output ↔ ml-service-input ↔
-      strategy-service-input naming-parity test originally requested by
-      `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` is now unblocked. Tracked there
-      (`assigned_vm: planning`), not duplicated here; that batch's finalize sibling reconciles this checkbox once it
-      lands. `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated section had held this exact item
-      back citing "the still-unshipped migration" — that premise is now stale (see this doc's own 2026-08-08
-      Progress Log entry below, which independently flagged the same staleness).**
-- [ ] [REVIEW] P3. Cross-reference this migration against whichever plan ends up doing the "wire sports end-to-end" work
-      (`sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`'s remaining todos) — per the
+  satellite-batch-extraction pass) — todos 1-6 above are all `[x]` shipped, so the FSS-output ↔ ml-service-input ↔
+  strategy-service-input naming-parity test originally requested by
+  `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` is now unblocked. Tracked there
+  (`assigned_vm: planning`), not duplicated here; that batch's finalize sibling reconciles this checkbox once it lands.
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated section had held this exact item back citing
+  "the still-unshipped migration" — that premise is now stale (see this doc's own 2026-08-08 Progress Log entry below,
+  which independently flagged the same staleness).**
+- [x] ✅ [REVIEW] P3. Cross-reference this migration against whichever plan ends up doing the "wire sports end-to-end"
+      work (`sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`'s remaining todos) — per the
       operator's sequencing note, this migration should land BEFORE or ALONGSIDE that wiring, never after (a live
-      pipeline hitting the old 4-way mismatch is the exact landmine this plan exists to defuse).
+      pipeline hitting the old 4-way mismatch is the exact landmine this plan exists to defuse). — **RESOLVED BY
+      CITATION (round-9 sweep, 2026-08-09)**:
+      `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` is `status: resolved`, archived
+      2026-07-25 (`resolved_by: strategy-service@9a7de7f8,     unified-trading-system-ui@35137c88`) — there is no longer
+      an active plan doing the "wire sports end-to-end" work to cross-reference against. The sequencing concern is
+      satisfied in substance: this doc's own consumer-migration commits (ml-service/strategy-service via
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`, 2026-07-23..07-24) landed at or before the wiring doc's
+      2026-07-25 resolution, and the final residual (`ml-service@10e219f`, 2026-07-26) closed a narrow 4-file gap the
+      orphaned doc's own resolved commits never touched (mock-data/target-generator/test fixtures, not the live consumer
+      path). No live pipeline is known to have hit the old 4-way mismatch. Nothing left to cross-reference.
+- [x] ✅ [REVIEW] P3. Archive this doc once `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2
+      (the extracted FSS↔ml-service↔strategy-service naming-parity test) lands — full 6-step archival ritual (status
+      flip, banner, `git mv`, referrer sweep), not before (per the 2026-08-09 round-9 sweep's own note: the extraction
+      is still in flight, archiving now would be premature). **DONE (na-eligibility-audit 2026-08-10)**: verified
+      `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 is `[x]` ✅ "ALREADY SHIPPED (round-11 sweep,
+      2026-08-09)" — the parity test landed even earlier via `features-service@36fb7b88` (2026-08-04), re-run fresh
+      2026-08-09 with 10/10 tests passing. Gate cleared. Ran the 6-step ritual: (1) the one deferred-prose item (Codex
+      SSOTs section below, "add a short SSOT note... once todo 1's decision lands") migrated to a real artifact —
+      `/codex/02-data/sports-odds-feature-naming-ssot.md`; (2) archived banner + `status: resolved` added above; (3)
+      codex-alignment check — the new SSOT doc above is the only contract this plan's completion establishes; (4) no
+      CLAUDE.md change warranted (narrow single-repo-family convention, not a cross-cutting HARD RULE); (5) every
+      active-corpus referrer's path fixed to the archive location (`plans/epics/sports_master.md`'s `related_plans:` +
+      per-plan detail block, `sports_consolidated_closeout_2026_07_19.md`,
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
+      `sports_satellite_ao_dispatch_batch{6,9,10,11}`-family docs, `prediction_consolidated_closeout_2026_07_18.md`;
+      `plans/active/INDEX.md` left untouched, auto-generated, self-corrects on next regen); (6) `git mv` to
+      `plans/archive/2026_08/` as a separate follow-up commit per the checkbox-flip/git-mv split rule. No `locked_by`.
 
 ## Codex SSOTs
 
@@ -293,11 +322,20 @@ work doesn't reintroduce a 5th convention.
   explicitly sequenced after the (per that batch's text) "still-unshipped 3-repo four-way naming migration" — but this
   doc's own Todos show that migration (todos 1-6) is now fully `[x]` shipped, so batch10's premise for holding it back
   is stale and the parity test may be ripe for extraction into the next sports satellite batch. Flagging for the next
-  `/ag-closeout-audit sports` or batch-drafting pass rather than reclassifying here — this skill's scope is
-  in-place verdicts on existing docs, not drafting new satellite-batch content. Doc stays NA, unchanged this pass.
+  `/ag-closeout-audit sports` or batch-drafting pass rather than reclassifying here — this skill's scope is in-place
+  verdicts on existing docs, not drafting new satellite-batch content. Doc stays NA, unchanged this pass.
 - **satellite-batch-extraction 2026-08-09 (sports tranche)**: this is exactly that flagged next pass — extracted todo 9
   (`[REVIEW] P3`, FSS↔ml-service↔strategy-service naming-parity test) into
   `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (`assigned_vm: planning`), conflict-checked
   against `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated entry for this same item (its holding
   premise — "the still-unshipped migration" — confirmed stale: todos 1-6 above are all `[x]`). Todo 10 (`[REVIEW] P3`,
   cross-reference against the wire-sports-end-to-end plan) stays open here, untouched. Doc stays `assigned_vm: NA`.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: todo 10 (the last remaining open checkbox) resolved by citation —
+  its cross-reference target, `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`, is
+  `status: resolved`/archived (2026-07-25), so there is nothing active left to cross-reference; the sequencing concern
+  it guarded against is satisfied in substance (this doc's consumer-migration commits landed at/before that resolution).
+  **This doc now has ZERO open `- [ ]` checkboxes** — the one remaining tracked item (naming-parity test) is prose-cited
+  to `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2, not a checkbox here. Flagging for a future
+  `/archive-candidates-audit` pass rather than archiving in this sweep (archival's referrer-sweep ritual is out of scope
+  for a citation-fix pass, and batch11's extracted todo hasn't landed yet — premature to archive while the extraction is
+  still in flight).

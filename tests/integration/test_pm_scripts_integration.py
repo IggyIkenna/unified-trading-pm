@@ -43,7 +43,56 @@ def _get_pm_root(repo_path: Path) -> Path:
 
 
 def _get_repo_name(repo_path: Path) -> str:
-    return repo_path.name
+    """Derive the canonical repo name from the git remote origin URL.
+
+    A worktree checkout's directory basename need not match its canonical
+    manifest-registered name (e.g. an ad hoc `git worktree add` under a
+    scratch dir name). Deriving identity from the remote URL instead of
+    `repo_path.name` makes this check invariant to directory naming, which
+    removes the only reason an operator previously needed to override
+    PROJECT_ROOT to a different tree than the actual invoking worktree to
+    satisfy this test (see
+    utl_shared_clone_commits_repeatedly_reset_2026_07_22.md todo 5 — that
+    override was also silently redirecting where QG's sentinel files got
+    written and what tree they verified, since PROJECT_ROOT drives both).
+    Falls back to the directory basename if there is no git remote
+    (e.g. a bare/non-git path) or git is unavailable.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return repo_path.name
+    if result.returncode != 0 or not result.stdout.strip():
+        return repo_path.name
+    url = result.stdout.strip()
+    name = url.rstrip("/").removesuffix(".git").rsplit("/", 1)[-1]
+    return name or repo_path.name
+
+
+def test_get_repo_name_uses_remote_url_not_directory_basename(tmp_path: Path) -> None:
+    """A worktree checked out under a mismatched dir name must still resolve
+    to its canonical repo name via the git remote, not the dir basename."""
+    repo_dir = tmp_path / "some-repo-scratch-worktree-dir"
+    repo_dir.mkdir()
+    subprocess.run(["git", "init", "--quiet"], cwd=str(repo_dir), check=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "git@github.com:org/instruments-service.git"],
+        cwd=str(repo_dir),
+        check=True,
+    )
+    assert _get_repo_name(repo_dir) == "instruments-service"
+
+
+def test_get_repo_name_falls_back_to_basename_without_remote(tmp_path: Path) -> None:
+    repo_dir = tmp_path / "no-remote-repo"
+    repo_dir.mkdir()
+    subprocess.run(["git", "init", "--quiet"], cwd=str(repo_dir), check=True)
+    assert _get_repo_name(repo_dir) == "no-remote-repo"
 
 
 @pytest.fixture

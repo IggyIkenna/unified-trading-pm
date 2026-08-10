@@ -29,6 +29,7 @@ related:
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
   ]
 created: "2026-08-08"
 author: slot-17
@@ -202,7 +203,7 @@ before launch.
       estimate: **~18-24h was too optimistic** — actual measured throughput at 25h elapsed is ~0.68 days/hour (17 days
       written / 25h), giving a **revised total of ~90h** (~3.75 days, ~65h remaining as of 2026-08-09T13:45Z). GCS tee
       heartbeats (gcloud scopes firing every ~60s on the serial port) confirmed no stall at 17:06Z. VM is **RUNNING**.
-- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
+- [x] ✅ [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
       estimated based on 0.68 days/hour throughput measured at 25h elapsed). Only then re-dispatch task `-011` (corpus
       recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage. **GCS spot-check prefix** (for
       mid-run progress only, NOT the final gate): bucket=`market-data-tick-cefi-prd-central-element-323112` (via
@@ -215,12 +216,40 @@ before launch.
       are 0 across ALL venues (VM has now processed through 06-23 and returned full coverage at 06-21 → 06-19/06-20 are
       genuine Tardis data absences, NOT a processing order artifact). Also 06-18: OKX-SWAP=0 and KRAKEN=0 only (other 4
       venues have data) — Tardis gap for those two venues on that day. Pre-existing remnants on 06-25 (BYBIT/OKX/KRAKEN
-      ~3 objects each) are NOT from this VM.
-- [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
+      ~3 objects each) are NOT from this VM. — **FINAL GATE CONFIRMED 2026-08-09T21:3XZ (slot 27, data_engineering)**:
+      ran `probe_cefi_perp_funding_raw_coverage.py --start 2026-06-05 --end 2026-08-09` (the canonical, list-only,
+      reader-exact-path script per this todo's own instruction). Result: **06-05→08-05 is FULLY covered for all 6
+      CARRY_BASIS_PERP venues** (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES),
+      confirming the already-known 06-19/06-20 Tardis archive gaps and nothing else missing. **08-06→08-09 is 0 across
+      all 6 venues** — this is the ALREADY-TRACKED, separate forward-poll cron gap (the `[INFRA] P1` todo above), not a
+      new finding. **Residual curiosity, not investigated further (out of this todo's scope)**:
+      `gcloud compute operations list --filter='targetLink~cefi-fwd-20260808-123230'` shows this VM was deleted by
+      `uts-prd-sa` at 2026-08-09T02:13:58Z — only ~13h41m after its 12:32:36Z launch, well before the many later
+      Progress Log entries above (25h/28h/30h+/38h "elapsed, VM confirmed alive") and well short of the ~90h the
+      0.68-days/hour throughput estimate implied would be needed to reach 08-05. Yet the GCS data is verified genuinely
+      complete through 08-05 — so either the real throughput was ~6x faster than estimated (all real work landing within
+      VM-4's true ~13.7h lifetime) or the "elapsed" timestamps in the later progress entries are miscalibrated (this doc
+      already flags one confirmed worker-clock-skew note above, '24h behind' — plausibly the same root cause recurring,
+      not a fresh incident). Data ground-truth is what matters for this gate and it is now directly verified, not merely
+      inferred from VM-liveness claims — not chasing the clock-math discrepancy further here. Also corroborates the
+      already-flagged, still-unresolved `uts-prd-sa`-deletes-VM-well-after-launch pattern (2nd confirmed instance after
+      `cefi-fwd-20260806-065837` @ 26h47m, per the P0 diagnosis entry below) — worth a future investigator's attention,
+      not re-opened as a new doc. **Task `-011` (corpus recompute, in
+      `/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`) is now unblocked** — did not run it
+      myself (different repo/script, out of this specific todo's scope).
+- [x] ✅ [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
       instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
-      `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
+      `_apply_preflight_skip_filter` to disable skip when no instrument filter is active). —
+      market-tick-data-service@a31126b8. Added `_fetch_instrument_ids_from_is()` (preflight.py) + wired it through the
+      orchestrator facade; extracted the preflight instrument-resolution block into `_resolve_venue_instrument_ids()`
+      (venue_fetch.py) to stay under the function-size gate. Updated the 5 test fixtures mocking
+      `_check_instruments_available=True` to also mock the new collaborator (avoids live GCS calls in unit tests) and
+      fixed `test_preflight_lookup_skips_already_captured` (its coarse venue-level captured_index row no longer
+      satisfies genuine per-instrument atom coverage — that WAS this bug). Added a focused unit test
+      (`test_fetch_instrument_ids_from_is.py`). Full unit suite (8,256 tests) + quality-gates.sh green; landed +
+      ancestry-verified on live-defi-rollout.
 - [x] ✅ [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence**
       (repo: deployment-service) — deployment-service@bc48b09b. Removed the raw, directly-executable
       `gcloud compute instances delete ... --quiet` line from the singleton-lock/collision refusal message in
@@ -230,6 +259,59 @@ before launch.
       pointer to `infra.md` STEP 0.65's 3-signal staleness check ("construct the delete command by hand — this refusal
       intentionally does not print one to copy-paste"). Verified via `bash -n` on all 62 changed files + full
       `quality-gates.sh` green (sentinel bc48b09b) + quickmerge landed on live-defi-rollout, ancestry-verified.
+- [x] ✅ [INFRA] P1. **NEW 2026-08-09 (found while re-checking the contamination-doc gate for task -014).** The DAILY
+      `launch-cefi-forward-poll.sh` cron (separate from the one-off VM-4 backfill above, which correctly stopped at its
+      target end-date 2026-08-05) appears to have STOPPED FIRING as of 2026-08-06 — a live, still-open gap, not
+      historical. Evidence: (1) `probe_cefi_perp_funding_raw_coverage.py --start 2026-05-16 --end 2026-08-09` (fresh
+      run, 2026-08-09T10:xxZ) shows ALL 6 CARRY_BASIS_PERP venues at exactly 0 objects for 2026-08-06/07/08/09, a hard
+      cliff immediately after VM-4's 08-05 backfill cutoff — the historical window itself (05-16→08-05) is fully
+      populated, only the FORWARD days are empty. (2) The recurring `cefi-fwd-daily-cron-*` HOST VM (which installs a
+      `0 9 * * *` crontab firing `launch-cefi-forward-poll.sh`, then sleeps) has a launch gap: hosts exist for 08-04 and
+      08-06 but NONE for 08-07 or 08-08 (`gsutil ls .../vm-logs/ | grep cefi-fwd-daily-cron`); the current host
+      (`cefi-fwd-daily-cron-20260809-084100`, launched 08:42Z today) is RUNNING and its crontab installed correctly, but
+      by 10:20Z — 80 min past its own `0 9 * * *` fire time — its own heartbeat log still reads "no fires yet" and no
+      new `cefi-fwd-*` data-capture VM has been launched (`gsutil ls .../vm-logs/ | grep cefi-fwd-20260809` = empty).
+      **Root cause diagnosed + fixed (slot-18, 2026-08-09) — deployment-service@0395764a.** The 08-06/08-07/08-08
+      host-relaunch gap is the zombie watchdog, not a crond/cron-host reliability bug: `cefi-fwd-daily-cron-*` boots a
+      long-lived host that installs the crontab then sleeps forever (`VM_LIFECYCLE_CLASS=SCHEDULED_RECURRING`, confirmed
+      via `gcloud logging read` audit trail) but its startup script never writes a `vm-heartbeat/<vm_name>.txt` blob —
+      it only logs to `run.log` hourly. `vm_zombie_watchdog.py`'s `PREFIX_IDLE_THRESHOLDS` has no entry more specific
+      than `"cefi-fwd-"` (30min heartbeat window, sized for the WORKER VM's continuous heartbeat sidecar), so the
+      longest-prefix match applies that window to the cron HOST too; with the heartbeat blob permanently absent, the
+      watchdog's own `zombie_no_heartbeat` verdict fires once VM age passes `min_age` (15min) and it deletes the host
+      via its own GCE default compute SA identity — confirmed by the audit log: the 2026-08-06 05:42Z host was deleted
+      05:58Z (16min later) by `1060025368044-compute@developer.gserviceaccount.com` (the watchdog's own principal, not
+      `unified-trading-sa`/ `uts-prd-sa`), and nobody manually relaunched it until this session found the gap 08-09.
+      **Same latent bug confirmed in 3 sibling launchers** (`launch-tradfi-fwd-daily-cron-vm.sh`,
+      `launch-cefi-onchain-fwd-daily-cron-vm.sh`, `launch-cefi-perp-funding-daily-cron-vm.sh` — all share the identical
+      sleep-forever/no-heartbeat/ `SCHEDULED_RECURRING` pattern; the two other `*-cron-vm.sh` launchers,
+      `batch-live-recon-cron` and `funding-ensemble-paper-cron`, do NOT share this pattern —
+      one-shot/`EPHEMERAL_EXPERIMENT`, not persistent hosts — and were left alone). **Fix**: added the watchdog's own
+      documented opt-out label, `tier=daemon` (`vm_zombie_watchdog.py`'s `DAEMON_TIER_LABELS`/`_is_daemon()` —
+      "canonical: long-lived poll loops with no fixed deadline"), to all 4 launchers' `LABELS=`. Shipped
+      `quality-gates.sh` green (sentinel 0395764a) + `quickmerge --agent`, ancestry-verified on `live-defi-rollout`.
+      Also applied `tier=daemon` directly ( `gcloud compute instances add-labels`) to the currently-RUNNING
+      `cefi-fwd-daily-cron-20260809-110236` host (launched 11:02Z by another session applying the separate MTDS-script
+      fix `a779b475` — pre-dates this label fix, so it needed the label added live) so it survives to fire tomorrow
+      08-10T09:00Z and every day after. **Verification of "fresh VM lands 08-06→today data" is DEFERRED — new todo
+      below**: attempted `launch-cefi-forward-poll.sh --data-types derivative_ticker 2026-08-06 2026-08-09`, refused by
+      `tardis-concurrency-guard.sh` (hard cap 1 concurrent Tardis VM, correctly enforced) —
+      `cefi-queue-heavy-binancefutu-x17-20260809-083733` (VM_TASK=cefi-coverage-backfill, VM_START_DATE=2019-01-01,
+      VM_END_DATE=2026-08-08, VM_DATA_TYPES=trades;book_snapshot_5 — an unrelated multi-year historical backfill, NOT
+      `derivative_ticker`, so it does not itself close this gap) currently holds the single slot. Did not `FORCE=1`
+      override — that is the exact 403-storm/false-`attempted_failed`-row failure mode the cap exists to prevent, not a
+      judgment call this task should make unilaterally.
+- [ ] [INFRA] P1. **NEW 2026-08-09 (blocked follow-up from the todo above).** Backfill the live `derivative_ticker`
+      forward gap for CARRY_BASIS_PERP venues, 2026-06-05→2026-08-05 confirmed complete but 2026-08-06→today still 0
+      objects across all 6 venues (`probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end <today>`). Once
+      `cefi-queue-heavy-binancefutu-x17-20260809-083733` (or whichever Tardis-consuming VM holds the slot at check time
+      —
+      `gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-"' --zones=asia-northeast1-c --project=central-element-323112'`)
+      finishes/frees the single Tardis slot, run
+      `bash deployment-service/scripts/vm/launch-cefi-forward-poll.sh --data-types derivative_ticker 2026-08-06 <today>`
+      (adjust the end date to whatever "today" is at run time — the daily cron's own 08-10+ fires will have already
+      covered any days ≥08-10 via the `tier=daemon` fix above, so only re-check the specific still-empty days first).
+      Verify via `probe_cefi_perp_funding_raw_coverage.py` before flipping this todo — do not flip on VM-STOPPED alone.
 
 ## Progress Log
 
@@ -411,3 +493,71 @@ before launch.
   partial (OKX=0, KRA=0).** GCS probe gate MET — proceeding to corpus recompute + `funding_window()` verification to
   flip contamination plan -011.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
+- **slot-2 2026-08-09 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-014`)**: re-checked task -014's
+  own step-1 gate (corpus recompute confirmed fresh/current) before touching its own sequenced cleanup steps. Confirmed
+  VM-4's historical window (05-16→08-09 re-probed fresh, superset of the tracked 06-05→08-05) is fully landed — matches
+  the prior entry's PASSED verdict, independently re-derived. **New finding, not previously tracked**: 2026-08-06 onward
+  is a hard cliff to 0 objects for all 6 CARRY_BASIS_PERP venues — the recurring daily forward-poll cron
+  (`cefi-fwd-daily-cron-*` host → `launch-cefi-forward-poll.sh`) has a live gap (missing host launches 08-07/08-08;
+  today's host up since 08:42Z has not fired its `0 9 * * *` crontab by 10:20Z, 80min overdue). Filed as new `[INFRA]`
+  todo above (deployment-service scope, out of this craft's remit — diagnosis only, no fix attempted). **Consequence for
+  -014**: even once -011's corpus recompute runs over the now-complete historical window, task -014's own step-1 text
+  ("`funding_window()` returns non-empty CURRENT observations, not just historically-backfilled ones") will still NOT be
+  met until this forward-cron gap closes — recompute would honest-skip 08-06→today. -014's checkbox correctly stays
+  unflipped this session; no code shipped (investigation + doc-tracked finding only, per this workspace's findings-
+  triage rule). Full gate-check detail + probe evidence cross-referenced in
+  `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s own Progress Log, same timestamp.
+- **slot-18 (infra) 2026-08-09**: root-caused + fixed the daily-cron host-relaunch gap (see the flipped todo above for
+  full evidence): the zombie watchdog's `"cefi-fwd-"` heartbeat-threshold prefix match applies the WORKER VM's 30min
+  heartbeat window to the cron HOST too, which never writes a heartbeat blob — so the host is reliably zombie-killed
+  once past `min_age`, confirmed via the audit log (2026-08-06 host deleted 16min after launch by the watchdog's own GCE
+  default compute SA identity). Fixed by adding the watchdog's documented `tier=daemon` opt-out label to all 4 affected
+  persistent-cron-host launchers (`cefi-fwd`, `tradfi-fwd`, `cefi-onchain-fwd`, `cefi-perp-funding`) —
+  `deployment-service@0395764a`, `quality-gates.sh` green + `quickmerge --agent`, ancestry-verified on
+  `live-defi-rollout`. Also live-labelled the currently-running `cefi-fwd-daily-cron-20260809-110236` host so it
+  survives to its 08-10T09:00Z fire without waiting for a relaunch. The immediate 08-06→08-09 `derivative_ticker` gap
+  backfill is a separate, now-tracked follow-up todo (added above) — blocked on the Tardis single-VM concurrency cap,
+  currently held by an unrelated multi-year `cefi-queue-heavy-binancefutu-x17` historical backfill; did not `FORCE=1`
+  past the cap (that bypasses the exact 403-storm protection the cap exists for).
+- **slot-13 2026-08-09 (cross-reference, appended — not replacing anything above)**: this doc's cron-reliability gap
+  (root-caused + fixed above by slot-18) and its still-open `venue_fetch.py:526-552` preflight bug (open `[CODE]` P2
+  todo above) are BOTH data-type-agnostic — `launch-cefi-forward-poll.sh` covers ALL 6 CeFi Tardis venues × ALL
+  data_types in one daily run, and `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT` (`preflight.py:294-297`) includes every Tardis
+  CeFi venue. Confirmed both are root-cause contributors (among a 4-cause cluster, see that doc's own writeup) to a
+  SEPARATE, higher-priority P0 finding: `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md` item
+  1 — trailing-90d `trades`/`book_snapshot_5` coverage for OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT
+  measuring WORSE (24.70%) than the 2024-2026 full-window average (48.90%), which is itself the blocking prerequisite
+  for `cefi_ml_directional_continuous_live_2026_06_20.md`'s live-capital backtest-fidelity gate. Also independently
+  confirmed live (2026-08-09): the Tardis single-IP concurrency slot this doc's own backfill-verification todo is
+  blocked on is currently held by `cefi-queue-heavy-binancefutu-x17-20260809-083733`
+  (`VM_DATA_TYPES=trades;book_snapshot_5`) — the SAME chronological historical backfill the P0 doc's item 3 already
+  cross-references, so both docs are watching the same VM for the same reason. Raises the priority/blast-radius of the
+  still-open `[CODE]` P2 preflight-bug todo above beyond its original `defi_cefi_venue_chain_axis_contamination-014`
+  scope — no new todo added here (it's already correctly scoped + open), this is visibility only.
+- **slot-25 (infra) 2026-08-09**: picked up the final open `[INFRA]` P1 todo above. Confirmed baseline via
+  `probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end 2026-08-09`: all 6 CARRY_BASIS_PERP venues still 0
+  objects across the whole gap (matches the todo's premise). Tardis single-VM slot still held by
+  `cefi-queue-heavy-binancefutu-x17-20260809-083733` (unrelated multi-year trades/book_snapshot_5 historical backfill,
+  `VM_START_DATE=2019-01-01`/`VM_END_DATE=2026-08-08`, launched 08:37Z). Measured its own `PROGRESS.json` twice (11:07Z:
+  2020-05-11 done, ~158 days/hr; 12:11Z: 2020-05-18 done, ~141 days/hr) → **ETA to free the slot ~14-16h from launch,
+  i.e. roughly 2026-08-10T00:00-02:00Z**, not close. **Operational finding, not a code bug**: attempted to hold this
+  wait via a `run_in_background` Bash watchdog (poll every 10min + heartbeat every ~4.5min, per this workspace's own
+  async-wait-discipline SSOT) intending to launch `launch-cefi-forward-poll.sh` the moment the slot frees — the
+  background process was killed by the harness twice, at wildly different elapsed times (~20min the first time, ~1min
+  the second), well short of the ~14-16h needed. A single worker session cannot reliably hold a wait this long in this
+  environment; repeatedly re-arming a short-lived background loop across many turns would itself be the exact busy-poll
+  anti-pattern the async-wait SSOT warns against. Did not flip the todo (not done — nothing has been launched yet).
+  Filed a `/blocked` (not a judgment call in the classic sense, but the operator/main should decide how a >12h
+  external-resource wait should be routed given no existing AO mechanism covers it) recommending the todo stay queued
+  as-is so a future dispatch — closer to the ETA — completes the launch+verify in one shorter session, per the
+  `/blocked` response for the exact options considered.
+- **slot-17 (infra) 2026-08-09, re-check**: re-dispatched the same final open `[INFRA]` P1 todo ~20min after slot-25's
+  check above. State materially unchanged: `PROGRESS.json` for `cefi-queue-heavy-binancefutu-x17-20260809-083733` still
+  reads `last_completed_date: 2020-05-18` at 12:11Z (same value slot-25 measured), confirmed via a fresh read at 12:31Z
+  — no new checkpoint since, consistent with the ~141 days/hr rate (ETA still ~14-16h out from 08:37Z launch, i.e.
+  ~2026-08-10T02:00-04:30Z). VM still `RUNNING`, still sole occupant of the Tardis single-VM slot. Did not attempt
+  another `run_in_background` hold — slot-25 already proved this doesn't survive the needed duration in this
+  environment, and repeating it would be the exact busy-poll anti-pattern the async-wait SSOT warns against. Not
+  re-filing a duplicate `/blocked` since slot-25's is presumably still open and nothing new to add. Releasing this task
+  via `/skip-current-task` so this slot drains other queued work instead of sitting idle/blocked on an unchanged ~14-16h
+  external wait; task stays queued for a slot dispatched closer to the ETA.

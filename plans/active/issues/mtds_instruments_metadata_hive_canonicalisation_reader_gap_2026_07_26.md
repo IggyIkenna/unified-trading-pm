@@ -61,6 +61,7 @@ depends_on: []
 sequential: true
 resolved_by:
 locked_by:
+archive_exempt: true # 2026-08-10 (slot-30): all 9 todos done, eligible for archive — exempted to avoid combining flip+archive in one commit per RULES.md §2. Will archive in immediate follow-up.
 context_scope:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
@@ -359,12 +360,66 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   suppression header from `lending_rewards_handler.py`. Smoke-fetch verification deferred to next capture cycle per todo
   9(b-c).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- 2026-08-09 (slot-28, `data_engineering`): Closed the deferred Follow-up (todo 9(b-c)). Part (b) verified PASS via a
+  direct in-process smoke-fetch (no code changed, read-only). Part (c) still fails in the live manifest, but traced to
+  an already-tracked deploy-lag cause (canonical-venue fix `bd153821` + this doc's own `d5882379` both landed in git
+  2026-08-05 but the risk_params daily capture path — `uts-prod-mtds-collect-risk-params-cron` /
+  `uts-prod-mtds-collect-risk-params` Cloud Run Job — was only (re)provisioned 2026-08-09T14:06 UTC and its deployed
+  `:latest` image only picked up both fixes as of the 2026-08-09T22:28 UTC image push) rather than a new mystery. Filed
+  a new dated P2 follow-up gated on the next real cron cycle (2026-08-10T00:50 UTC) instead of re-opening this as an
+  unexplained blocker. Full evidence in the Follow-ups section below.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Verify solend/marginfi risk_params in the next capture cycle: live smoke-fetch through the fixed
-      reader + confirm manifest rows appear (todo 9(b-c), deferred 2026-08-05 slot-4).
+- [x] ✅ [DATA] P3. **DONE 2026-08-09 (slot-28, data_engineering)** — Verify solend/marginfi risk_params in the next
+      capture cycle: live smoke-fetch through the fixed reader + confirm manifest rows appear (todo 9(b-c), deferred
+      2026-08-05 slot-4). **Part (b) PASSED**: direct in-process smoke-fetch of `load_pool_metadata_for_date` +
+      `risk_params_from_catalogue` for `solend`/`marginfi` chain=SOLANA, dates 2026-08-04 through 2026-08-09, returns
+      54-56 real non-empty risk rows per protocol per day against the live `instruments-store-defi` bucket — the
+      reader + catalogue-fallback mechanism works end-to-end. **Part (c) NOT YET — root cause identified, not a new
+      mystery**: `read_availability_index` on the live DeFi market-data manifest shows `MARGINFI` `risk_params` stuck at
+      `capture_status=empty_confirmed`/`row_count=0` every day 2026-08-01 through 2026-08-09, and `SOLEND` `risk_params`
+      has ZERO manifest rows at all since 2026-07-01 (not even a zero-row stamp) — confirmed under both the canonical
+      (`SOLEND-SOLANA`/`MARGINFI-SOLANA`) and legacy bare (`SOLEND`/`MARGINFI`) venue vocabularies (the latter per the
+      venue-naming bug documented in `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row
+      7, `market-tick-data-service@bd153821`). This is explained by deploy lag, not a regression: (1)
+      `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 7 already documents `bd153821` (the
+      canonical-venue fix, also covering solend/marginfi) stuck behind a CI capacity backlog on the LDR→main promote as
+      of 2026-08-05; (2) the daily risk_params capture path (`uts-prod-mtds-collect-risk-params-cron` →
+      `uts-prod-mtds-collect-risk-params` Cloud Run Job) was found to be a **brand-new Terraform-provisioned resource,
+      created 2026-08-09T14:06 UTC** (`gcloud run jobs describe` / audit log `creationTimestamp`) — this matches todo
+      8's original 2026-08-05 finding that no Cloud Scheduler/reliable mechanism existed for risk_params capture at all;
+      every `empty_confirmed` stamp observed 2026-08-01 through 2026-08-09 predates this job's existence and came from
+      whatever legacy/ad-hoc mechanism preceded it. (3) The deployed `:latest` image (`market-tick-data-service:latest`,
+      pushed 2026-08-09T22:28 UTC, resolves to commit `b63200a7`) DOES have both fixes as ancestors
+      (`git merge-base --is-ancestor d5882379 b63200a` and `...bd153821 b63200a` both confirm YES) — so the first
+      cron-triggered execution under the properly-provisioned job + fully-fixed code has not happened yet as of this
+      check (next fire: 2026-08-10T00:50 UTC). New follow-up filed below rather than treating this as a fresh blocking
+      finding, since the cause is already tracked + explained, not unknown. Repo: market-tick-data-service (read-only
+      verification, no code changed).
+
+- [x] ✅ [DATA] P2. **Re-check `read_availability_index` for `risk_params`/venue in [SOLEND, MARGINFI]** — VERIFIED
+      2026-08-10 (slot 30): FAIL — the cron DID fire (attempted_at 2026-08-10T01:37:28 UTC) but ALL 12 risk_params
+      venues (not just SOLEND/MARGINFI) have `row_count=0`. MORPHO/FLUID (previously verified working by todo 8's manual
+      VM) are now also `empty_confirmed`/`row_count=0`. This is a fleet-wide Cloud Run Job regression, not a
+      SOLEND/MARGINFI-specific issue. Escalated per data-correctness HARD RULE → new P0 issue doc:
+      `/plans/active/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md`. Repo:
+      market-tick-data-service.
 
 > **2026-08-06 archive-candidate audit**: Progress Log (slot-4, 2026-08-05): 'Smoke-fetch verification deferred to next
 > capture cycle per todo 9(b-c)' — todo 9's own stated done-when (b)/(c) was deferred in prose and never turned into a
 > tracked `- [ ]` todo.
+
+- **2026-08-10 (slot 30, data_engineering)**: Closed the follow-up P2 re-check todo. Re-verified
+  `read_availability_index` on `market-data-tick-defi-prd-central-element-323112` for
+  `data_type=risk_params`/`date=2026-08-10`. The cron DID fire (`attempted_at=2026-08-10T01:37:28 UTC`) — deploy-lag is
+  ruled out. But ALL 12 risk_params venues have `row_count=0`: SOLEND (zero rows at all under any venue form), MARGINFI
+  (56 rows, all `empty_confirmed`/`row_count=0`), and — critically — MORPHO/FLUID/KAMINO (previously verified
+  `captured`/`row_count>0` by todo 8's manual VM run on Aug 3-5) are now also `empty_confirmed`/`row_count=0`. This is a
+  fleet-wide Cloud Run Job regression, not a SOLEND/MARGINFI-specific issue. The deployed `:latest` image (commit
+  `b63200a7`) was confirmed (slot-28) to have both `d5882379` and `bd153821` as ancestors, so the failure is in the
+  Job's execution path (image resolution, entrypoint, permissions, config), not a missing code fix. Escalated per
+  CLAUDE.md's data-correctness HARD RULE → filed new P0 issue doc
+  `/plans/active/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md` with 3 diagnostic + fix +
+  re-verify todos. All 9 original todos in this doc are now ✅; the Cloud Run regression is tracked in the new P0 doc.
+  This doc is now eligible for archive (all todos done, no lock).

@@ -308,6 +308,83 @@ def test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering(monkeypa
     )
 
 
+def test_cross_cutting_membership_not_gated_on_data_epic_or_citation(monkeypatch, tmp_path):
+    """Process finding 2, issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md: the
+    cross-cutting membership test used to be
+    `"cross-cutting" in asset_group and (parent_epic in DATA_EPICS or basename in cited)` -- a bare
+    `[cross-cutting]` doc with a non-data `parent_epic` (e.g. `plan_hygiene_master`) that had NEVER
+    been cited anywhere failed the member test entirely, so it was invisible to both the "cited" and
+    "never cited" buckets, not just the latter. Membership must now be plain tag membership, matching
+    every other tranche -- citation status still drives the cited/never-cited split, not membership."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cross_cutting_non_data_epic_never_cited_2026_07_01.md",
+        title="cross-cutting doc with a non-data parent_epic, never cited anywhere",
+        status="open",
+        asset_group="cross-cutting",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cross-cutting dispatch batch 1",
+        status="active",
+        asset_group="cross-cutting",
+    )
+    # override the fixture's default parent_epic (infrastructure_master, a DATA_EPICS member) with a
+    # non-data epic -- the exact class the old test silently excluded.
+    doc = tmp_path / "plans/active/issues/cross_cutting_non_data_epic_never_cited_2026_07_01.md"
+    doc.write_text(
+        doc.read_text(encoding="utf-8").replace(
+            "parent_epic: infrastructure_master", "parent_epic: plan_hygiene_master"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    result = json.loads(_run_json("cross-cutting"))
+    assert result["total_members"] == 1, (
+        "a non-data-parent_epic, never-cited cross-cutting doc must now count as a member at all"
+    )
+    never_cited_paths = {c["path"] for c in result["never_cited"]}
+    assert "plans/active/issues/cross_cutting_non_data_epic_never_cited_2026_07_01.md" in never_cited_paths, (
+        "it must surface in the never_cited bucket, not vanish from candidates entirely"
+    )
+
+
+def test_issue_doc_title_merely_mentioning_closeout_is_not_excluded_as_a_hub_doc(monkeypatch, tmp_path):
+    """2026-08-10 (ag-closeout-audit, tradfi tranche): the hub-doc exclusion used to be an unanchored
+    `re.search(r"_consolidated_closeout", basename)`, which also matched any issue doc whose own (longer,
+    more specific) title merely CONTAINS that substring while describing a problem WITH the hub doc,
+    e.g. `tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md`. That doc carries
+    genuine open tradfi-scoped work and was silently invisible to the candidate list for EVERY tranche
+    (the substring match fires regardless of which tranche is being audited). Fixed by anchoring the
+    exclusion to the real hub-doc filename shape via `re.fullmatch`."""
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cefi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md",
+        title="cefi_consolidated_closeout is over the line cap",
+        status="open",
+        asset_group="cefi",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cefi dispatch batch 1",
+        status="active",
+        asset_group="cefi",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    result = json.loads(_run_json("cefi"))
+    assert result["total_members"] == 1, (
+        "an issue doc whose title merely mentions the closeout doc must still count as a real member, "
+        "not be silently excluded as if it were the hub doc itself"
+    )
+    all_paths = {c["path"] for c in result["candidates"]}
+    target = "plans/active/issues/cefi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md"
+    assert target in all_paths
+
+
 def test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair(monkeypatch, tmp_path):
     """2026-08-01 (ag-closeout-audit, tradfi tranche): a line-cap-split fork that never got its OWN
     `*_finalize*` doc (e.g. tradfi_backfill_throughput_followups_2026_07_24.md,

@@ -17,18 +17,30 @@ created: 2026-05-21
 name: deployment_and_user_management_master
 tier: L3
 priority: P0
-assigned_vm: vm-operator-ops
+assigned_vm:
+  vm-operator-ops # REVERTED 2026-08-10 (plan_reconciler) -- my own 2026-08-10 edit to NA was WRONG, self-caught same
+  # run: `instruments_master.md`/`sports_master.md` carry an explicit, on-the-record ruling
+  # (finding 123/262, 2026-07-12, §A2 B-queue) that legacy vm-<id> epic values are RETAINED WORKSPACE-WIDE, no value
+  # change, migration out of scope -- distinct from the "was: planning" pattern the 2026-08-02/06 § 2e fixes actually
+  # addressed (agent_operating_framework_master/orchestrator_master/plan_hygiene_master all had the MISLEADING
+  # `planning` value, not a legacy vm-id). PLAN_FORMAT.md's "a legacy vm-<id> still validates... archaeology, never
+  # dispatch-resolved" already covers this value as sanctioned, not stale.
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
   - ../active/data_status_catalogue_true_source_phase2_2026_07_24.md
   - ../active/data_status_cell_grid_rearchitecture_2026_07_18.md
-  - ../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md
   - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
   - ../active/github_actions_operator_gated_followups_2026_07_17.md
   - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
   - ../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md
+  - ../active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md
+  - ../active/ui_consolidated_closeout_2026_07_30.md
+  - ../active/ui_satellite_ao_dispatch_batch1_2026_08_06.md
+  - ../active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md
+  - ../active/ui_satellite_ao_dispatch_batch2_2026_08_08.md
+  - ../active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md
 last_updated: 2026-07-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -95,7 +107,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_12 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -117,10 +129,22 @@ operator-gated followups (D2/D3/D4 decisions, verification-pending items)
 **status**: active · **estimate**: 1.8 cal AI-days (class: design) **title**: Data-status catalogue explorer — Phase 2
 true-catalogue (expected-universe) source
 
-### [`data_status_page_ux_and_canonicalisation_2026_07_16`](../archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+### [`test_impact_fleet_wide_measurement_and_rollout_2026_08_03`](../active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md)
 
-**status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
-(shipped) + UX & canonicalisation follow-ups (P1–P8)
+**status**: active · **estimate**: 2.4 cal AI-days (class: research) **title**: Test-impact / selective execution —
+fleet-wide eligibility measurement, then staged rollout
+
+### [`ui_consolidated_closeout_2026_07_30`](../active/ui_consolidated_closeout_2026_07_30.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
+
+### [`ui_satellite_ao_dispatch_batch1_2026_08_06`](../active/ui_satellite_ao_dispatch_batch1_2026_08_06.md)
+
+**status**: active · **estimate**: 0.9 cal AI-days (class: infra)
+
+### [`ui_satellite_ao_dispatch_batch1_finalize_2026_08_06`](../active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md)
+
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 
@@ -138,6 +162,14 @@ single-file catalogue source (P10-B backend + follow-ups)
 
 **status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports/prediction MVP write-time
 precompute — manifest schema v9→10 stamp + historical backfill
+
+### [`ui_satellite_ao_dispatch_batch2_2026_08_08`](../active/ui_satellite_ao_dispatch_batch2_2026_08_08.md)
+
+**status**: active · **estimate**: 1.1 cal AI-days (class: infra)
+
+### [`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08`](../active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 

@@ -59,7 +59,9 @@ related:
     /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 author: unknown
@@ -378,3 +380,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   context-scout line directly above -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh
   full re-read; see `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying
   false-positive class this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:356c0c266c6ce296]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed.** Fresh full read (9th consecutive audit pass to confirm this
+  verdict). Todo 1 (migration/purge pass) is duplicated verbatim + `--apply`-ready in
+  `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (status: active) -- the actual dispatch vehicle. Independently
+  cross-checked against `tradfi_databento_account_billing_suspended_2026_08_09.md`, which explicitly lists this doc as
+  "left ungated" (reads already-captured data, no live Databento dependency). `assigned_vm` unchanged.

@@ -182,7 +182,7 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   the entire 2025 H1 window structurally never gets `expected_unattempted` seeded at all (a bounded-window design
   artifact, not a live over-seeding regression). Full measurement + root-cause + 2 follow-up todos (1 `[OPERATOR]`
   window-policy decision, 1 `[DATA]` league-count-growth investigation) filed:
-  `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`.
+  `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`.
 
 ### Execution strategy + blocker resolutions (operator 2026-06-23): 3-MONTH GOLDEN WINDOW
 
@@ -411,8 +411,8 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       instruments-service `base.py` (`_reserve_utc_window_slot` + `set_window_quota`, ~line 312 `_throttle`) +
       `api_football.py:154` (900→1200/0.05s) + deployment-service `launch_budget_registry.py`
       (`RateBudgetAllocation.per_vm_daily_quota`)
-- [ ] [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** ("blast from an IP, see when
-      banned — one-time test"). Harness SHIPPED: `instruments-service/scripts/calibrate_source_rate_limit.py`
+- [x] ✅ [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** ("blast from an IP, see
+      when banned — one-time test"). Harness SHIPPED: `instruments-service/scripts/calibrate_source_rate_limit.py`
       (lifecycle: campaign). It ramps request rate from a single IP until 429/ban for **understat / transfermarkt /
       open_meteo / soccer_football_info** (Part 2) + **polymarket_clob / polymarket_gamma_api** (Part 3, per-IP) and
       measures (break-rate, safe-rate=0.8×break, recovery window). **MUST run from a throwaway VM IP** (a temporary ban
@@ -425,7 +425,13 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       exceptions (disaster-drill / DR-cutover / live-strategy-with-wallet-key) — the runbook's default posture is
       AO-dispatchable. The script's own docstring already carries the operator's 2026-06-23 approval of the approach
       ("operator-sanctioned" ban on the probe VM's own throwaway IP; never a production egress IP), so no further human
-      step is needed to fire it. (instruments-service + deployment-service)
+      step is needed to fire it. (instruments-service + deployment-service) — **DONE 2026-08-06, via
+      `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 1** (`deployment-service@0eb9c36` + instruments-service
+      secret-fix): probe ran for all 6 sources from 2 throwaway VMs (`uts-rate-calibration-probe-20260806-195143`,
+      `...-probe2-20260806-195923`); measured table recorded in that plan's Progress Log ("2026-08-06 — P1 ramp-to-429
+      calibration"); `launch_budget_registry.py` now carries `calibrated=True` for all 6. Checkbox reconciled here
+      2026-08-09 (round-9 sweep) — batch9's own finalize is machine-gated on all 30 of its todos, not yet reachable, so
+      this citation closes the gap in the interim.
 - [x] ✅ [CODE] P1. **PART 3 — model databento + polymarket as PER-IP in the registry** (not a shared fleet ceiling).
       Added `SOURCE_PER_IP_LIMITS` (`PerIpLimit{rpm,calibrated,note}`) + `per_ip_rate_for_source()`: databento
       (`rpm=None` — usage-billed, per-IP transport, scale via more IPs) + polymarket_clob / polymarket_gamma_api
@@ -483,16 +489,30 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #5 (2026-07-25): dispatch this
       narrow relaunch now regardless of P2b's timeline, since P2b's smart-skip logic will simply no-op these cells once
       it eventually runs — no correctness conflict, only a handful of redundant re-attempts at worst.
-      (instruments-service + deployment-service)
-- [ ] [DATA] P2. **Re-measure the golden-window (2025-09-01→2025-11-30) ODDS+PREDICTIONS blank-reason `empty_confirmed`
-      residual** (~3,062/3,078 as of the 2026-06-24 measurement above, later ~3,255 combined per the 2026-06-24 DONE
-      entry below) against the live manifest, and file (not implement) a scoped issue doc capturing the root cause + fix
-      options. Read-only/diagnosis-only — no code or manifest change. **Cleared for dispatch 2026-07-30**: was
-      conflict-gated against `sports_consolidated_closeout_2026_07_19.md`'s open "FINAL full-history zero-missing
-      (R1/R2/R3)" gate (still `[ ]`, BLOCKED-PREREQUISITES) — operator ruled (option A) in
+      (instruments-service + deployment-service) — **NOT DONE, already tracked with more current detail —
+      `[BLOCKED-UPSTREAM-OUTAGE]` (round-9 sweep, 2026-08-09, doc-hygiene note, no checkbox flip):**
+      `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2 picked up this exact item ("Source:
+      `data_completion_sports_2026_07_24.md`") and its 2026-08-08 update found the scoped relaunch VM
+      (`tm-backfill-20260807-233040`) was already running from an earlier unrelated dispatch, then killed after
+      confirming zero progress against a durable vendor outage (`transfermarkt-football-data-api.p.rapidapi.com` HTTP
+      502 continuously since 2026-08-07T10:17Z) — tracked live in
+      `plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (still 502 as of its latest
+      2026-08-08 entry, no recovery signal). **Do not relaunch blind** — verify the endpoint returns 200 first (see that
+      doc's probe recipe). Not a fresh satellite-extraction candidate while the outage stands.
+- [x] ✅ [DATA] P2. **Re-measure the golden-window (2025-09-01→2025-11-30) ODDS+PREDICTIONS blank-reason
+      `empty_confirmed` residual** (~3,062/3,078 as of the 2026-06-24 measurement above, later ~3,255 combined per the
+      2026-06-24 DONE entry below) against the live manifest, and file (not implement) a scoped issue doc capturing the
+      root cause + fix options. Read-only/diagnosis-only — no code or manifest change. **Cleared for dispatch
+      2026-07-30**: was conflict-gated against `sports_consolidated_closeout_2026_07_19.md`'s open "FINAL full-history
+      zero-missing (R1/R2/R3)" gate (still `[ ]`, BLOCKED-PREREQUISITES) — operator ruled (option A) in
       `autonomous_session_operator_decisions_2026_07_25.md` entry #6 (2026-07-25): dispatch now since it's a strict
-      superset of useful input for whoever eventually re-runs R1/R2/R3, cannot regress or race that gate.
-      (instruments-service)
+      superset of useful input for whoever eventually re-runs R1/R2/R3, cannot regress or race that gate. — **DONE
+      2026-08-09, via `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 3** (slot-20): live-manifest
+      re-measurement found **0 blank-reason cells remain** (already resolved by prior shipped typing work); the scoped
+      issue doc was filed then immediately archived same-day —
+      `plans/archive/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_2026_08_09.md`. Checkbox
+      reconciled here 2026-08-09 (round-9 sweep) — batch9's own finalize is machine-gated on all 30 of its todos, not
+      yet reachable, so this citation closes the gap in the interim. (instruments-service)
 - [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
@@ -914,3 +934,16 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items: 1 operator question, 3 dispatch-cleared but parked
   pending plan-authoring (not this pass's to execute).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — of the 3 "dispatch-cleared, parked for
+  plan-authoring" candidates flagged repeatedly since 2026-08-02, 2 turned out to already be claimed AND completed by
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md` (todos 1 + 3, both citing this doc as `Source:`) — checkboxes
+  reconciled here in place (ramp-to-429 probe line ~414, ODDS+PREDICTIONS re-measure line ~496) rather than
+  re-extracted, since re-extracting already-done work would be a duplicate batch todo. The 3rd (Transfermarkt
+  PLAYER_VALUES relaunch, line ~483) is also already claimed by batch9 todo 2, which found the item
+  `BLOCKED-UPSTREAM-OUTAGE` (Transfermarkt API durably HTTP 502 since 2026-08-07, still down per
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s latest 2026-08-08 entry) — doc-hygiene note added in
+  place, not extracted (would duplicate live tracking + risk a blind relaunch against a confirmed-down vendor). The
+  remaining open item (enrichment-ceiling, line ~857) is unchanged — still a genuine operator spend/credential decision
+  (1.5M/day quota bump vs. accept the account-tier downgrade), no new information this pass. Whole-doc RECLASSIFY not
+  warranted: 1 of the now-2 open items is upstream-outage-blocked, the other is an operator spend call — neither is a
+  bounded, worker-determinable AO-dispatch outcome today. Doc stays `assigned_vm: NA`.

@@ -37,7 +37,7 @@ code_refs:
 # Data-Status UI Surface — Honest Coverage
 
 > Codex SSOT for the per-asset-group honest-coverage % UI surface in the deployment-ui data-status tab. Created:
-> 2026-05-12 · Plan: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2F.
+> 2026-05-12 · Plan: `plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2F.
 
 ## What is this
 
@@ -92,7 +92,9 @@ GET /api/data-status/honest-coverage?date=YYYY-MM-DD
 - 404 when the blob hasn't been written yet for the requested date.
 - 500 if the blob exists but contains malformed JSON.
 
-Source: `deployment-api/deployment_api/routes/data_status.py` → `get_honest_coverage()`.
+Source: `deployment-api/deployment_api/routes/data_status/_live_coverage_honest.py` → `get_honest_coverage()` (path
+corrected 2026-08-10, plan_reconciler — the flat `data_status.py` module was split into a package 2026-06-10 and further
+2026-07-31; function name unchanged).
 
 ## UI component
 
@@ -124,6 +126,6 @@ Source: `deployment-api/deployment_api/routes/data_status.py` → `get_honest_co
 - `/codex/02-data/availability-manifest-and-data-status.md` § "Honest-coverage measurement script + UI surface"
 - `instruments-service/scripts/measure_honest_coverage.py` — the measurement script
 - `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` — cron VM launcher
-- `deployment-api/deployment_api/routes/data_status.py` → `get_honest_coverage()`
+- `deployment-api/deployment_api/routes/data_status/_live_coverage_honest.py` → `get_honest_coverage()`
 - `deployment-ui/src/components/HonestCoverageCard.tsx` — UI component
 - `deployment-ui/src/api/client.ts` → `getHonestCoverage()`

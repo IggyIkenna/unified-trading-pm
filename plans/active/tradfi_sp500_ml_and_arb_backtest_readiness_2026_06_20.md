@@ -273,3 +273,9 @@ here.
   todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:3058e612d8cf6fce]: **KEEP-NA,
+  valid -- fresh full read, all 7 todos re-verified.** Todo 3 (realized_vol wiring) again reads as more bounded than its
+  siblings on its face and is again flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE, but not promoted -- the established
+  reasoning (landing even ONE single-day smoke on this doc's sibling tracker required finding+fixing 9 distinct bugs
+  across 2 repos, evidencing real multi-file engineering risk on live-dispatch-adjacent ML machinery) is not overridden
+  by this pass either. `assigned_vm` unchanged.

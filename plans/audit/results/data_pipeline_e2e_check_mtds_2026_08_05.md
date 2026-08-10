@@ -18,7 +18,7 @@ tags: [pipeline-e2e-check, data_pipeline_e2e_check_mtds, cefi, smoke-test, proce
 related:
   [
     plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
-    plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
   ]
 created: 2026-08-06
 audited_scope:
@@ -139,7 +139,7 @@ freshness pre-flight check is wired correctly, or whether this specific fallback
    `report.write_report()` — the entire deliverable this tool exists to produce — silently failed all 3 times. This is
    almost certainly why every historical `data_pipeline_e2e_check_mtds_*.md` report found in this directory covers a
    small (1-20 shard) scope rather than a real full sweep.
-   `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
+   `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
 3. **DEFI's force/skip matrix could not be proven at all this run** (0/3 attempts, including a narrowly-scoped single
    real cell) — every attempt died even before Phase-2's leg-agnostic ~300-330s mark, during Phase-0
    precheck/enumeration. Phase 2's live leg proved DEFI's connectivity path fine (2 real cells), so this looks specific

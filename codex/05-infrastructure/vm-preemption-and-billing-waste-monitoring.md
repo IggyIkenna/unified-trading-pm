@@ -32,7 +32,7 @@ referenced_by:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 owner:
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-09
 code_refs:
 type: infrastructure
 execution:
@@ -82,6 +82,21 @@ before this doc (2026-07-24 gap analysis, `data_pipeline_e2e_milestones_gate_202
   silently missing from that classifier again, that guard test should already be failing CI — treat a live repeat of
   this finding as evidence the guard itself regressed, not just the prefix list.
 
+**Forward-registration closed-loop contract (codified 2026-08-09,
+`issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` follow-up).** The 2026-08-04 fix +
+its guard test close the loop for an EXISTING `launcher_registry` entry that silently drops out of `DATA_VM_PREFIXES` —
+they do not catch a **brand-new** one-off/ad hoc launcher whose `VM_NAME=`/`VM_PREFIX=` was never registered in ANY of
+the three registries (`vm_classification.DATA_VM_PREFIXES`, `launcher_registry.LAUNCHER_FOR_VM_PREFIX`,
+`vm_prefix_registry.VM_PREFIX_TO_BUCKET`) in the first place — exactly how `af-backfill-` went unnoticed for ~9 days
+before that fix. **A new `scripts/vm/launch-*.sh` MUST register its `VM_NAME`/`VM_PREFIX` in all three registries in the
+SAME commit that adds the launcher**, or mark it `# non-relaunchable: <reason>` in the launcher script if it is
+deliberately not a fleet-monitored data VM (a fan-out wrapper, a read-only audit, a live-service singleton). Enforced by
+`deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (wired into
+`deployment-service/scripts/quality-gates.sh`): it derives each launcher's VM-name prefix from the launcher FILE SET
+itself (not the registries' own keys, so a launcher registered nowhere is caught) and fails on a prefix that is new
+relative to a per-repo shrinking baseline (`vm_launcher_prefix_registration_baseline.yaml`, seeded 2026-08-09 with the
+pre-existing fleet).
+
 ### 2. attempted_failed billing-waste audit
 
 - For any VM class showing an elevated `attempted_failed` count (see `deployment-observability.md`'s existing
@@ -109,9 +124,20 @@ evidence nothing was wrong.
 
 - It does not invent a new retry-classification taxonomy — `classify_venue_error()` is the SSOT for retriable vs.
   non-retriable; this contract only says "consult it and act on stale FAIL verdicts," not "reclassify anything."
-- It does not (yet) wire an automated pre-flight gate that blocks a future wave from re-attempting a known-dead shard —
-  that's a separate, larger design (see the gate doc's point 4, last todo). Until it ships, this is a MANUAL audit
-  contract: run the skill, read the findings, escalate.
+
+**Update 2026-08-09 — the automated pre-flight gate now exists.** A shard `classify_venue_error()` FAIL-classifies (or
+that hits `CONSECUTIVE_WAVE_FAIL_THRESHOLD` waves of the identical `error_reason`) is written to a GCS-persisted
+side-table (`market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py`, `KnownDeadShardGate`) instead of
+silently re-attempted forever via `record_failed()`'s default. Write side wired into `sentinels.py`'s Tier-2 failure
+branch; read side wired into `_apply_preflight_skip_filter`, which every launcher family funneling through
+`venue_fetch.py`'s `_process_venue` pre-flight check consults before dispatching a shard (currently MTDS only —
+`tradfi-bf-*`, `mtds-backfill-tradfi-pipelinecheck`, `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`,
+`cefi-queue-heavy-binancefutu-x17`; other services' launcher families are NOT yet wired). Design rationale (side-table
+over a manifest-schema field) + full schema:
+`/plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. This contract's own
+manual-audit posture (run the skill, read the findings, escalate) is UNCHANGED and still the right tool for launcher
+families the automated gate doesn't cover yet, or for the preemption-scan half of this contract (§1), which the gate
+does not touch.
 
 ## Related skill
 

@@ -184,6 +184,13 @@ recorded; the Group-F gate decision is made from the real AUC/calibration number
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added 3 source paths (Model 2A acceptance metrics,
   FSS `arb_calculator`, and the MTDS manifest-finalize orchestrator the open `[DIAG]` zero-manifest-rows todo targets),
   previously codex+epic only.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
+  none apply. All 4 remaining open items are chained/blocked on the still-open cross-plan `sports_master:Group E` gate
+  (re-confirmed `plans/epics/sports_master.md` line 629 unchecked live), a cross-asset-group prerequisite none of
+  round-11's criteria touch. No reclassification.
 
 ### 2026-08-05 (slot 15, data_engineering, dispatch `prediction_satellite_ao_dispatch_batch6-010`) — [DIAG] P2 verdict
 
@@ -227,3 +234,5 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   blocked on the still-open cross-plan `sports_master:Group E` gate (`plans/epics/sports_master.md` line 629, verified
   unchecked live, plus its own upstream FSS-run/feature-matrix-verification prerequisites also still unchecked). No
   reclassify/archive/duplicate candidates. Agrees with the 2026-07-30 audit's verdict.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 4 open, unchanged.
+  `sports_master.md`'s Group E gate checkbox still `[ ]` unchecked. Doc stays NA.

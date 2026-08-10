@@ -110,7 +110,8 @@ def main() -> None:
             upload_to_storage(bucket_name, blob_path, parquet_bytes, "application/octet-stream")
             print(f"OK  {repo} → gs://{bucket_name}/{blob_path}")
             uploaded += 1
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — per-repo isolation: one repo's upload
+            # failure must not abort the batch upload for the remaining repos
             print(f"ERR {repo} upload failed: {exc}", file=sys.stderr)
             failed += 1
 

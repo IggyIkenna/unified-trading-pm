@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [sports, migration, canonicalisation, gcs, manifest, re-stamp, delete-safety, reversibility-qualified]
 related:
   [
-    /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
     /plans/active/issues/sports_af_full_entity_completion_2026_08_03.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -31,6 +31,7 @@ last_updated: 2026-08-08
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
+sequential: true
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
@@ -60,7 +61,7 @@ locked_since:
 # Sports taxonomy P2 — the data migration
 
 > **🔴 DOUBLE-GATED.** `gate_on_depends: true` on BOTH
-> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts must exist first) AND
+> `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts must exist first) AND
 > `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` (the in-flight API-Football campaign must
 > converge first). That second gate is not optional — see below.
 

@@ -86,16 +86,29 @@ context_scope:
       uses the ambient profile; only needed at deploy time. **Shipped** `deployment-api@d8add54` (`aws_wif.py`;
       corrected 2026-07-15, plan-reconcile: already resolved per
       plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md, not still-open).
-- [ ] [BACKEND] P3. **Provisional flag: make the AWS cutoff month-aware.** The provisional flag is trailing-2-days for
-      BOTH clouds, but AWS re-trues the whole current month (6th–7th). Early-current-month AWS days render as final
-      though they are not — make the AWS cutoff month-aware.
-- [ ] [UI] [BACKEND] P3. **Credits/discounts as a first-class view.** We already fetch GCP credits; surface gross →
-      credits → net + the effective discount rate (how much promo/CUD/SUD is saving).
-- [ ] [BACKEND] P3. **Usage quantity + unit → unit economics.** GCP `usage.amount/unit`; AWS
-      `line_item_usage_amount/pricing_unit` → $/GB-month, $/vCPU-hour, and GB-stored vs GB-egress for buckets.
-- [ ] [UI] P3. **"Other resources" leaf table.** Cloud Run Jobs is ~$2.9k/30d (CPU $2,047 + Mem $882), bigger than any
-      single VM, but only vm+bucket leaf tables exist; it surfaces only in the "By resource" breakdown. Add an "other
-      resources" leaf.
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-10 (slot-32, `ui_satellite_ao_dispatch_batch2-001`)** — **Provisional flag: make
+      the AWS cutoff month-aware.** AWS provisional cutoff is now the FIRST of the current month (AWS re-trues the whole
+      current month on the 6th–7th), threaded as a per-cloud `(gcp_cutoff, aws_cutoff)` pair through every row builder's
+      provisional fold + the summary provisional-day count; GCP keeps trailing-2-days untouched. **Shipped**
+      `deployment-api@6a536a82d` (QG green; tests: `test_aws_provisional_cutoff_is_first_of_current_month` +
+      `test_summary_provisional_days_are_cloud_aware`).
+- [x] ✅ [UI] [BACKEND] P3. **DONE 2026-08-10 (slot-32, `ui_satellite_ao_dispatch_batch2-001`)** — **Credits/discounts
+      as a first-class view.** `CloudSummary`/`SummaryResponse` carry `discount_rate_pct` (|credit|/gross); the UI's
+      gross → credits → net derivation now renders an "≈ X% off" chip (total + per-cloud cards). **Shipped**
+      `deployment-api@6a536a82d` + `deployment-ui@b7beaf33b` (pw:L2 ✓ — spec
+      `shows the effective discount rate chip next to the gross − credits derivation`).
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-10 (slot-32, `ui_satellite_ao_dispatch_batch2-001`)** — **Usage quantity + unit →
+      unit economics.** `BreakdownRow` gains `usage_amount`/`usage_unit`/`cost_per_unit`, populated on sku-dimension
+      rows ($/GB-month, $/vCPU-hour — net / summed usage where the group bills in ONE unit); the UI renders sortable
+      Usage +
+      $/unit columns under "By SKU". (GB-stored vs GB-egress for buckets was already covered by
+      `storage_gb`/`cost_per_gb` + `cost_by_component`.) **Shipped** `deployment-api@6a536a82d` +
+      `deployment-ui@b7beaf33b` (pw:L2 ✓ — spec `surfaces usage quantity + $/unit
+      under the sku dimension`).
+- [x] ✅ [UI] P3. **DONE 2026-08-10 (slot-32, `ui_satellite_ao_dispatch_batch2-001`)** — **"Other resources" leaf
+      table.** Third leaf panel pinned to `resource_kind=other` (Cloud Run Jobs, build workers, …) alongside the
+      vm/bucket leaves. **Shipped** `deployment-ui@b7beaf33b` (pw:L2 ✓ — spec
+      `renders the Other resources leaf table with non-vm/non-bucket resources`).
 
 ## Codex SSOTs
 
@@ -140,3 +153,12 @@ context_scope:
   fix yet (batch2 hasn't shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation
   instead of leaving them open.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read this doc end to end (5 open items).
+  Stale-note correction: `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (which carries the 4 unscheduled P3 items as
+  its 1 combined todo) is no longer "pending operator approval" — its own Progress Log shows it was approved and flipped
+  `status: active` the same day it was drafted (2026-08-08). These 4 items are KEEP-NA-STALE (already-duplicated in an
+  active AO plan, not yet shipped) — batch2's own finalize plan
+  (`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md` todo 1) already owns flipping these 4 checkboxes with a
+  shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The business-context
+  enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176 launcher scripts, ~9
+  through the shared choke point) — no change. Doc stays NA as a whole.

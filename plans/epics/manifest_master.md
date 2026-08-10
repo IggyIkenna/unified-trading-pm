@@ -34,22 +34,21 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md
   - ../active/data_completion_cefi_2026_07_15.md
+  - ../active/data_completion_cefi_2026_07_15_finalize_2026_07_27.md
   - ../active/data_completion_defi_2026_07_15.md
   - ../active/data_completion_prediction_2026_07_15.md
   - ../active/data_completion_sports_2026_07_24.md
   - ../active/data_completion_tradfi_2026_07_15.md
   - ../active/data_pipeline_reconciliation_skill_2026_07_20.md
+  - ../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md
+  - ../active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md
   - ../active/defi_migration_audit_log_2026_07_24.md
   - ../active/defi_venue_lst_rates_residual_2026_07_24.md
-  - /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md
   - ../active/infra_ops_residual_migration_verification_2026_07_24.md
   - ../active/is_catalogue_g1_root_audit_log_2026_07_24.md
   - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-  - ../active/migration_verification_orphan_safety_2026_06_10.md
-  - ../active/mtds_available_at_cross_asset_backfill_2026_07_13.md
-  - ../active/prediction_cqg_residual_2026_07_24.md
-  - ../active/sports_prelaunch_cf5_verify_residual_2026_07_24.md
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -124,10 +123,15 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_16 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+_15 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
+
+### [`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28`](../active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi E4→E8 orphan-sweep + legacy gap-fill +
+manifest rebuild — VM execution chain
 
 ### [`data_completion_cefi_2026_07_15`](../active/data_completion_cefi_2026_07_15.md)
 
@@ -181,40 +185,23 @@ migration_verification_orphan_safety_2026_06_10
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: design)
 
-### [`migration_verification_orphan_safety_2026_06_10`](../active/migration_verification_orphan_safety_2026_06_10.md)
-
-**status**: active · **estimate**: 6.6 cal AI-days (class: design)
-
-### [`prediction_cqg_residual_2026_07_24`](../active/prediction_cqg_residual_2026_07_24.md)
-
-**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Prediction cqg-classifier coverage
-residual — forked from migration_verification_orphan_safety_2026_06_10
-
-### [`sports_prelaunch_cf5_verify_residual_2026_07_24`](../active/sports_prelaunch_cf5_verify_residual_2026_07_24.md)
-
-**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports pre-launch-window + CF-5 relabel
-residual — forked from migration_verification_orphan_safety_2026_06_10
-
 ## P1 — important; post-current-gate
 
-### [`distinct_values_noncanonical_audit_2026_07_20`](/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md)
+### [`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04`](../active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md)
 
-**status**: ✅ ARCHIVED 2026-07-28 (was: active) · **estimate**: 2.4 cal AI-days (class: infra) · **title**:
-Distinct-Values non-canonical audit — all asset_groups × all axes — verified zero open todos; forked-out follow-on work
-tracked in other still-active docs (see the archived plan's "Deferred work" section).
-
-### [`mtds_available_at_cross_asset_backfill_2026_07_13`](../active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
-
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Cross-asset-group available_at manifest
-backfill (market-data-tick — prediction, tradfi, defi)
+**status**: active · **estimate**: 3.6 cal AI-days (class: refactor) **title**: >-
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`data_completion_cefi_2026_07_15_finalize_2026_07_27`](../active/data_completion_cefi_2026_07_15_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09`](../active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 
 ## Archived plans
 

@@ -6,7 +6,7 @@ summary: >-
   supply-borrow loop on Aave/Morpho + a USDC-margined CeFi perp short sized to E_actual for delta neutrality. Yield =
   R_lend + R_fund + R_usdc - gas - slippage; perp venue Hyperliquid PRIMARY / Bybit <=50% SECONDARY; recursion amplifies
   the spread, not the delta.
-implementation_status: design
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -173,6 +173,19 @@ Two-phase opening per `LegController.update(slot, tick, execution_mode=LEADER_HE
 2. CeFi perp short (hedge): fires after on-chain finalization within `hedge_deadline_ms`
 
 `CLOSE_LEADER_IF_HEDGE_FAILS` triggers flash-unwind of the on-chain loop if the perp fails.
+
+**Translation-layer status (2026-08-09):** SHIPPED — `CarryRecursiveStakedEngine.on_tick()` in
+`strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py` now builds a real
+`AtomicInstruction` for this archetype (previously an unconditional `return []` stub): the Family-1 lending-loop legs
+plus one CeFi perp-hedge `AtomicLeg` sized via `unified_trading_library.risk.net_delta.residual_hedge_size()`
+(strategy-service@f2ac7fdf). Execution-service's `execution_service/algo_library/recursive_loop_runner.py` gives
+`RecursiveLoopOrchestrator` its first real production caller, including `PerpLegConfig` reconstruction
+(execution-service@2352a17e). **`PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` (its own 5-min poll-cycle
+design, `perp_hedge_sizer.py:60-63`) still has NO live-reachable caller** — a 2026-08-09 audit of execution-service
+confirmed no suitable existing poller/scheduler mechanism exists (`HealthFactorMonitor` is a structurally-matching
+primitive but itself has zero production callers; no Cloud-Scheduler endpoint exists). The rebalance mechanism is
+tracked as an open `[DESIGN]` decision: `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`. Full
+build plan: `/plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`.
 
 ## Funding-regime degradation policy
 

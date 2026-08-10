@@ -214,15 +214,16 @@ context_scope:
       dedup plan's conversion for an unrelated required-check-name reason, todo 11) was independently confirmed live on
       `instruments-service` to already resolve `runs-on: ubuntu-latest` correctly (its source template already carries
       the fixed `__RUNS_ON__` token this doc's own summary describes shipping) — not broken either.
-- [ ] [SCRIPT] P3. Consider adding a template-content lint to `check-action-pins.py`'s pre-flight pass (or a new
-      lightweight pre-flight check in `rollout-workflow-templates.sh`) that `yaml.safe_load`s each flat-copy template
-      after prettier would run on it, so a future prettier-mangled placeholder fails the ROLLOUT script's own pre-flight
-      instead of silently propagating to 26 repos again. **Scale note (na-eligibility-audit 2026-08-08)**: the "26
-      repos" framing is now stale — `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` removed 7 of the
-      9 templates that used to flow through this rollout mechanism, so the residual blast radius for THIS specific check
-      is now `image-build-gate.yml` + `notify-slack.yml` + `staging-lock-check.yml` + `quality-gates-v2.yml.tmpl` only —
-      still real (any of these could suffer the same prettier-mangling class), just smaller than originally stated. Not
-      resolved by the dedup plan; still open, genuine engineering work.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-10 — shipped via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todo 3
+      (`unified-trading-pm@92ab939583`, verified on origin; CORRECTED from the batch doc's mis-cited `8a7b1860a0`, which
+      is an unrelated pm_root QG test-fix commit).** Add a template-content lint to `check-action-pins.py`'s pre-flight
+      pass (or a new lightweight pre-flight check in `rollout-workflow-templates.sh`) that `yaml.safe_load`s each
+      flat-copy template after prettier would run on it, so a future prettier-mangled placeholder fails the ROLLOUT
+      script's own pre-flight instead of silently propagating fleet-wide again. **Scale note (na-eligibility-audit
+      2026-08-08)**: the residual blast radius for THIS specific check is now `image-build-gate.yml` +
+      `notify-slack.yml` + `staging-lock-check.yml` + `quality-gates-v2.yml.tmpl` only (7 of the original 9 templates
+      were converted to `unified-trading-ci`-hosted `workflow_call` stubs by a separate dedup effort). (repo:
+      unified-trading-pm)
 - [ ] [DEVOPS] P2. Investigate: after `greeks-service@f5a63a8` landed on LDR (content/TIER-A/SIT/LABEL-CHECK all PASS
       per `scripts/cicd/ldr_to_main_fleet_promote.sh --repo greeks-service` re-runs 31156978197 + 31157072912), the
       stale promotion PR #420 (head=`promote/greeks-service/49b92a1a7ca0`, the pre-fix SHA) was NOT superseded by a
@@ -269,3 +270,12 @@ context_scope:
   resolve the judgment call interactively first, per the eligibility SSOT's own prescribed path) — once that's done,
   this doc's remaining open item (the P3 lint todo) would likely clear the bar on its own.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the bounded `[SCRIPT] P3` lint todo into
+  `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md`. Whole-doc RECLASSIFY not applied — the remaining
+  `[DEVOPS] P2` "investigate the promote-PR non-supersession" item is still genuinely open-ended per the 2026-08-08
+  na-eligibility-audit entry's own reasoning (2 unconfirmed candidate hypotheses, no stated done-when).
+- **finalize reconciliation 2026-08-10 (slot 7, review)**: flipped the EXTRACTED `[SCRIPT] P3` item to done — shipped
+  via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todo 3 (`unified-trading-pm@92ab939583`, verified on
+  origin). NOTE: the batch doc's cited `8a7b1860a0` was a mis-citation (that SHA is an unrelated pm_root QG test-fix);
+  the actual template-lint commit is `92ab939583` — corrected in the flipped checkbox above. Doc stays open —
+  `[DEVOPS] P2` (investigate promote-PR non-supersession) remains genuinely open-ended.

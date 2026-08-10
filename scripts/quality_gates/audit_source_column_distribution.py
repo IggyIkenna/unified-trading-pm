@@ -44,9 +44,9 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-try:
+try:  # noqa: fallback-import — optional UAC import; unavailable means the audit cannot run at all, so it exits 0
     from unified_api_contracts import external_sources_for, has_source_priority
-except Exception as exc:
+except ImportError as exc:
     print(
         f"[audit_source_column_distribution] unified_api_contracts not importable: {exc} — cannot audit.",
         file=sys.stderr,

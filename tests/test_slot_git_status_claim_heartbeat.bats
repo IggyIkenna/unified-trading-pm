@@ -35,6 +35,14 @@ teardown() {
     tmux kill-session -t "=${TMUX_SESSION}" 2>/dev/null || true
 }
 
+# Portable mtime-as-epoch-seconds (2026-08-09: `stat -c %Y` is GNU-only and fails with
+# "illegal option -- c" on macOS BSD stat -- the production script under test here
+# (slot-git-status-report.sh) already has this exact fallback as stat_mtime_epoch(); this
+# test-local copy mirrors it rather than sourcing the reporter script for just this helper).
+_stat_mtime_epoch() {
+    stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || true
+}
+
 _write_claim() {
     local session="$1"
     cat > "${SLOT_DIR}.agent-claim" <<EOF
@@ -61,35 +69,35 @@ _heartbeat() {
     _write_claim "${TMUX_SESSION}"
     # Force an old mtime so a later touch is unambiguously detectable.
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
-    before=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
     run _heartbeat
     [ "$status" -eq 0 ]
     [[ "$output" == *"[claim-heartbeat]"* ]]
-    after=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
     [ "${after}" -gt "${before}" ]
 }
 
 @test "claim present, tmux session dead -> mtime untouched" {
     _write_claim "no-such-session-${RANDOM}"
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
-    before=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
     run _heartbeat
     [ "$status" -eq 0 ]
     [[ "$output" == *"[claim-heartbeat:stale]"* ]]
-    after=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
     [ "${after}" -eq "${before}" ]
 }
 
 @test "claim present, malformed JSON -> no-op, no crash" {
     printf 'not json at all' > "${SLOT_DIR}.agent-claim"
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
-    before=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
     run _heartbeat
     [ "$status" -eq 0 ]
-    after=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
     [ "${after}" -eq "${before}" ]
 }
 
@@ -101,12 +109,12 @@ _heartbeat() {
     tmux new-session -d -s "${LONG_SESSION}" 2>/dev/null
     _write_claim "${TMUX_SESSION}"
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
-    before=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
 
     run _heartbeat
     [ "$status" -eq 0 ]
     [[ "$output" == *"[claim-heartbeat:stale]"* ]]
-    after=$(stat -c %Y "${SLOT_DIR}.agent-claim")
+    after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
     [ "${after}" -eq "${before}" ]
 
     tmux kill-session -t "=${LONG_SESSION}" 2>/dev/null || true

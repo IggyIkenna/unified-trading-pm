@@ -2982,6 +2982,38 @@ flags any `tests/<family>/unit/` directory with zero overlap with the resolved s
 `execution-service`'s `tests/sports_execution/unit/`, not fixed by this checker's introduction). New repos/families must
 close any real gap the checker finds rather than widen the baseline.
 
+### CI-hardening post-gates (dispatch listeners · cloudbuild-template drift · swallowed-credential-fetch) — SHIPPED 2026-08-09
+
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md` (archived; see
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`) delivered three standalone checkers as
+proven-but-unwired standalone tools; its gated finalize plan's todo 1
+(`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `unified-trading-pm@3ee5039ff`) wired
+all three into PM's own `scripts/quality-gates.sh` as blocking, baseline-ratcheted post-gates (same shrinking-ratchet
+family as the checks above — count <= baseline passes, a NEW violation fails):
+
+- **Dispatch-listener orphan scanner** — `scripts/quality_gates/check_dispatch_listeners.py`. Every
+  `repository_dispatch` POST (`repos/{o}/{r}/dispatches` calls across `.github/workflows/*.yml` / `cloudbuild*.yaml` /
+  `buildspec*.yaml` / `scripts/**/*.sh`) must resolve to a listener (`on: repository_dispatch: types: [...]`) in its
+  resolved target repo — a 204 response says nothing about whether anyone is actually subscribed. Baseline:
+  `scripts/quality_gates/check_dispatch_listeners_baseline.yaml`.
+- **Cloud Build template-vs-consumer drift ratchet** — `scripts/quality_gates/check_cloudbuild_template_drift.py`.
+  Renders every `configs/cloudbuild-*-template.yaml` (reusing `rollout-cloudbuild.py`'s own
+  `generate_cloudbuild()`/`find_dropped_markers()`, never re-implemented) and diffs it against each consumer's committed
+  `cloudbuild.yaml` — catches a consumer that has locally grown content (e.g. a guard step) the shared template hasn't
+  caught up to, before the next `rollout-cloudbuild.py --apply` would regress it. Per-repo baseline:
+  `scripts/quality_gates/cloudbuild_template_drift_baseline.yaml`.
+- **Swallowed-credential-fetch idiom ban** — `scripts/quality_gates/check_no_swallowed_credential_fetch.py`. Bans the
+  discarded-stderr-then-truthy-fallback idiom (`... 2>/dev/null || true`-shaped) around a credential fetch in any repo's
+  `scripts/` dir — that idiom degrades a real credential failure into a silent empty string instead of failing loud.
+  Per-line opt-out: `# noqa: swallowed-credential-fetch` + reason. Per-repo baseline:
+  `scripts/quality_gates/no_swallowed_credential_fetch_baseline.yaml`.
+
+All three are wired as unnumbered PM-only post-gates — no `STEP 5.X` id, enforced inline in `scripts/quality-gates.sh`
+rather than `base-service.sh`/`base-library.sh`, so they don't appear in the per-repo STEP table. Each has a dedicated
+unit-test suite proving a synthetic new violation fails at the seeded baseline. Re-baseline (`--baseline-write` /
+`--update-baseline`, per-checker flag) only for genuinely intentional/tracked debt — never to silence a real new
+regression.
+
 ---
 
 ## STEP 5.94 + 5.95 — grep-able-rule ratchets (fallback-imports · DTZ · TID251) — SHIPPED 2026-06-10
@@ -3263,6 +3295,21 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > direct host introspection confirmed ≥6 real concurrent repos already sharing one ledger correctly, with admission
 > gating (CPU slots) actually binding. SSOT:
 > `plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
+
+> **🟢 2026-08-09/10 — TOTAL-INSTANCE gate added, then tightened.** The reservation gate above only ever brackets the
+> heavy TESTS+TYPECHECK phase — BOOTSTRAP/AUTO-FIX/LINT/CODEX-COMPLIANCE ran fully ungated, so a host could carry far
+> more live `quality-gates.sh` PROCESSES than the heavy-phase gate ever capped (12-19 observed against a live K≤6,
+> `plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`). Fix:
+> `qg_governor_acquire_total_ instance` / `qg_governor_release_total_instance` wrap the WHOLE run (nesting around the
+> heavy-phase gate, not replacing it) and bound TOTAL concurrent script instances host-wide via a separate flock token
+> bucket, plus a per-repo sub-cap (unified-trading-pm gets 4 concurrent, every other repo gets 1 — the two caps
+> compose). Default cap was a flat `physical cores` (floored at 6); **tightened 2026-08-10** to
+> `floor(physical cores × 0.75)` (still floored at 6) once the CI-glue-runner and interactive-slot reservation ledgers
+> were unified into one shared root (same day, `_qg_shared_root()`) — combined demand from both topologies is now
+> visible to the same admission gates for the first time, so the cap needed headroom for that, not just interactive-slot
+> load alone. Same tightening lowered `QG_HOST_RAM_ABORT_PCT` (runtime abort-monitor trip point) 80 → 75. Override via
+> `QG_TOTAL_INSTANCE_CAP` / `QG_REPO_INSTANCE_CAP` / `QG_HOST_RAM_ABORT_PCT`. SSOT:
+> `plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md` (todos 1, 2, 4).
 
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a

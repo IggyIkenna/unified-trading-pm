@@ -27,7 +27,7 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci-cd, workflow-templates, drift, phase-7, self-hosted-runners, coordination]
-related: [/codex/08-workflows/ci-cd-flow.md, /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md]
+related: [/codex/08-workflows/ci-cd-flow.md, /plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-07-27
 author: unknown
 priority: P2
@@ -178,3 +178,15 @@ correctly used the docs-only carve-out rather than fixing code). No `assigned_vm
 valid — confirms the 2026-08-07 verdict, unchanged. Item 1 remains an open-ended design question with no decided
 mechanism; item 2 remains a standing conditional runbook (last actually exercised 2026-08-06 by a tradfi-tranche
 auditor, per its own documented usage). No `assigned_vm` change.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:79fe015bf644fd6a]: KEEP-NA,
+valid — Full read confirms 2 open items, with 6 independent prior audit passes (2026-08-01, 2026-08-02, 2026-08-06 x2,
+2026-08-07, 2026-08-09) all agreeing KEEP-NA, most recently yesterday. Item 1 (P3 SCRIPT, atomic fleet-wide rollout
+mechanism): an open-ended design question by its own first word ('Consider whether rollout-workflow-templates.sh...
+could roll out to EVERY repo in one atomic pass'), no decided target mechanism -- correctly not bounded. Item 2 (P3
+DATA, git-log-first diagnostic runbook for future recurrences): a standing conditional procedure, not itself a startable
+one-off task -- and it is demonstrably still live and correct: the 2026-08-06 Progress Log entry documents a DIFFERENT
+(tradfi-tranche) auditor actually following this exact step during a real recurrence of the underlying
+stale-drift-vs-active-migration pattern, and correctly used the doc's own prescribed carve-out.

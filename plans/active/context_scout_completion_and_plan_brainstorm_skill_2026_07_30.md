@@ -204,3 +204,12 @@ choice (human-executed, not AO-dispatched).
   context_scope corpus backfill) remains the same item tracked verbatim as todo 1 of
   `ao_satellite_ao_dispatch_batch3_2026_07_31.md` (still open there, `assigned_vm: planning`, real incremental
   progress). Citation unchanged from the 2026-08-01/08-06 markers.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid (still KEEP-NA-STALE/already-duplicated) — re-checked
+  against the round7-10 precedent set; none apply (this doc's gap is pure duplication, not a credential or design-fork
+  question). Independently corroborated same-day: the 2026-08-09 `/ag-closeout-audit ao` batch12 run lists this doc
+  under "Covered by an existing active plan (2) — not orphaned, no extraction needed." No action.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA (KEEP-NA-STALE, already-duplicated) —
+  the sole open item is the same work item verbatim as `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own todo 1
+  (itself confirmed KEEP-NA this same sweep, above). Citation well-established across 4 prior audits; no new facts
+  found.

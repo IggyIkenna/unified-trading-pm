@@ -59,11 +59,42 @@ mention", never "raise the baseline").
 
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
+precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
+time of writing) — a docs(plans) commit had zero enforcement at commit time, same
+fast-path-blind-to-full-gate pattern as the other checks migrated this evening. Scoping
+naively to "does the TOTAL orphan count among just the staged files exceed the corpus-wide
+baseline" would be wrong for the same reason as check_prosewrap_padding.sh: a handful of
+staged files' orphan count would essentially never approach a corpus-wide baseline of 49.
+
+This check is ALSO cross-file like check_depends_on_graph.py — a doc's orphan status
+depends on the `related:` graph (which can path through OTHER docs, undirected, up to 3
+hops) and the closeout family's own body text (a DIFFERENT file). So `--only` builds the
+FULL corpus graph/closeout-family/body-blob (cheap: local reads only) exactly like the
+full-sweep mode — never a staged-only subgraph, which could miss a real reachability path
+through an unstaged intermediate doc. It then asks, PER STAGED FILE: is it currently an
+orphan? If not, nothing to flag. If it IS currently an orphan, was it ALSO an orphan when
+evaluated with its OWN `git show HEAD:<path>` content substituted into today's otherwise
+current corpus (rest of the graph/bodies held as-is)? If yes, this is pre-existing debt in
+a file the commit merely touches — skip it (same never-block-on-debt-you-didn't-create
+contract as check_effort_signal_ratchet.py --only). If the file was NOT an orphan at HEAD
+content but IS now (e.g. this edit removed a `related:` link, or changed the doc's
+`asset_group` from multi-value/meta to a single covered value), that is a violation this
+commit genuinely introduced — flag it. A brand-new file (absent at HEAD) has no baseline
+exemption, so its current orphan status determines the flag directly, matching the
+check_effort_signal_ratchet.py convention for new files. Deliberately does NOT try to
+reconstruct the ENTIRE corpus's state at HEAD (expensive, requires walking every file's
+history) — only the staged file's OWN content is swapped; everything else stays at its
+current on-disk state, which is a safe, cheap approximation since this check only needs to
+answer "did editing THIS file make IT worse", not "did the whole corpus's graph shift".
 """
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from collections import deque
 from pathlib import Path
@@ -197,35 +228,49 @@ def mentions_stem(text: str, stem: str) -> bool:
     return stem in text
 
 
-def main() -> int:
-    quiet = "--quiet" in sys.argv
-    update = "--update-baseline" in sys.argv
-
-    files = target_files()
+def _scan_current() -> tuple[dict[Path, dict], dict[Path, str]]:
+    """Read every candidate doc's frontmatter + body from the CURRENT working-tree content."""
     all_docs: dict[Path, dict] = {}
     all_bodies: dict[Path, str] = {}
-    for p in files:
+    for p in target_files():
         text = p.read_text(encoding="utf-8")
         fm, body = docspec.parse_frontmatter(text)
         if fm is None:
             continue
         all_docs[p] = fm
         all_bodies[p] = body
+    return all_docs, all_bodies
 
-    search_paths = closeout_search_paths()
-    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in COVERED_ASSET_GROUPS}
 
-    empty_families = sorted(ag for ag, fam in closeout_family.items() if not fam)
-    if empty_families:
-        # LOUD by design, printed unconditionally (even under --quiet, run_hygiene_sweep.sh's
-        # invocation mode) — a family of zero must never read as "nothing to check" for that
-        # tranche. See closeout_search_paths()'s docstring for why archived-only families
-        # (ao/ci today) are still expected to resolve non-empty here.
-        print(
-            f"⚠️  check_ag_closeout_linkage: EMPTY closeout family (UNENFORCED): {', '.join(empty_families)}",
-            file=sys.stderr,
-        )
+def _with_override(
+    all_docs: dict[Path, dict], all_bodies: dict[Path, str], path: Path, text: str | None
+) -> tuple[dict[Path, dict], dict[Path, str]]:
+    """Return a COPY of (all_docs, all_bodies) with `path`'s entry replaced by parsing `text`
+    (or removed entirely if `text` is None, e.g. the path did not exist at HEAD). Used by
+    `--only` mode to ask "what would this doc's orphan status be with its OWN HEAD content,
+    holding the rest of today's corpus fixed" without re-reading every other file from disk."""
+    docs2 = dict(all_docs)
+    bodies2 = dict(all_bodies)
+    docs2.pop(path, None)
+    bodies2.pop(path, None)
+    if text is not None:
+        fm, body = docspec.parse_frontmatter(text)
+        if fm is not None:
+            docs2[path] = fm
+            bodies2[path] = body
+    return docs2, bodies2
 
+
+def _orphans_for(
+    all_docs: dict[Path, dict],
+    all_bodies: dict[Path, str],
+    closeout_family: dict[str, set[Path]],
+) -> dict[Path, str]:
+    """Every current orphan among `all_docs`, given a precomputed closeout_family (paths only —
+    filename-glob-derived, does not depend on doc content, so it's safe to compute ONCE and
+    reuse across the current-state pass and every staged file's HEAD-content-override pass).
+    Shared by full-sweep mode and `--only` mode so the two can never define "an orphan"
+    differently."""
     closeout_targets = frozenset(p for fam in closeout_family.values() for p in fam)
     graph = build_related_graph(all_docs, extra_nodes=closeout_targets)
 
@@ -235,7 +280,8 @@ def main() -> int:
         for p in fam:
             body = all_bodies.get(p)
             if body is None:
-                # archived closeout doc — not in the active-only all_docs/all_bodies scan.
+                # archived closeout doc, or a doc excluded by an --only override — not
+                # necessarily in the (possibly overridden) all_bodies scan.
                 try:
                     _, body = docspec.parse_frontmatter(p.read_text(encoding="utf-8"))
                 except (OSError, UnicodeDecodeError):
@@ -243,7 +289,7 @@ def main() -> int:
             bodies.append(body or "")
         closeout_body_blob[ag] = "\n".join(bodies)
 
-    violations: list[str] = []
+    violations: dict[Path, str] = {}
     for path, fm in all_docs.items():
         if fm.get("status") in EXCLUDED_STATUS:
             continue
@@ -261,7 +307,92 @@ def main() -> int:
             continue
 
         relpath = path.relative_to(PM_DIR).as_posix()
-        violations.append(f"{relpath}: asset_group=[{ag}] has no path (graph or mention) to its closeout family")
+        violations[path] = f"{relpath}: asset_group=[{ag}] has no path (graph or mention) to its closeout family"
+
+    return violations
+
+
+def _head_text(path: Path) -> str | None:
+    """`git show HEAD:<relpath>` content, or None if the path did not exist at HEAD (a
+    brand-new staged file — treated as having no pre-existing-debt exemption)."""
+    try:
+        rel = path.resolve().relative_to(PM_DIR).as_posix()
+    except ValueError:
+        return None
+    proc = subprocess.run(
+        ["git", "-C", str(PM_DIR), "show", f"HEAD:{rel}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    all_docs, all_bodies = _scan_current()
+    search_paths = closeout_search_paths()
+    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in COVERED_ASSET_GROUPS}
+    current_orphans = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    flagged: list[str] = []
+    for raw in paths:
+        p = Path(raw)
+        p = (PM_DIR / raw).resolve() if not p.is_absolute() else p.resolve()
+        if p not in current_orphans:
+            continue  # not currently an orphan -> nothing to flag regardless of HEAD state
+
+        head_text = _head_text(p)
+        if head_text is None:
+            # brand-new staged doc (or unresolvable path) — no pre-existing baseline to exempt
+            # it against, matches check_effort_signal_ratchet.py's "absent at HEAD -> flag" rule.
+            flagged.append(current_orphans[p])
+            continue
+
+        head_docs, head_bodies = _with_override(all_docs, all_bodies, p, head_text)
+        head_orphans = _orphans_for(head_docs, head_bodies, closeout_family)
+        if p not in head_orphans:
+            # wasn't an orphan with its OWN head content (rest of today's corpus held fixed) ->
+            # this commit's edit to the file itself introduced/worsened the orphan status.
+            flagged.append(current_orphans[p])
+        # else: already an orphan at HEAD -> pre-existing debt in a file this commit merely
+        # touches, not this commit's problem — skip (never block on debt you didn't create).
+
+    if not quiet:
+        for v in sorted(flagged):
+            print(f"  ORPHAN  {v}")
+
+    n = len(flagged)
+    print(f"{'✅' if n == 0 else '❌'} check_ag_closeout_linkage (--only): {n} new orphan(s) in staged files")
+    return 0 if n == 0 else 1
+
+
+def main() -> int:
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+
+    quiet = "--quiet" in sys.argv
+    update = "--update-baseline" in sys.argv
+
+    files = target_files()
+    all_docs, all_bodies = _scan_current()
+
+    search_paths = closeout_search_paths()
+    closeout_family: dict[str, set[Path]] = {ag: closeout_family_for(ag, search_paths) for ag in COVERED_ASSET_GROUPS}
+
+    empty_families = sorted(ag for ag, fam in closeout_family.items() if not fam)
+    if empty_families:
+        # LOUD by design, printed unconditionally (even under --quiet, run_hygiene_sweep.sh's
+        # invocation mode) — a family of zero must never read as "nothing to check" for that
+        # tranche. See closeout_search_paths()'s docstring for why archived-only families
+        # (ao/ci today) are still expected to resolve non-empty here.
+        print(
+            f"⚠️  check_ag_closeout_linkage: EMPTY closeout family (UNENFORCED): {', '.join(empty_families)}",
+            file=sys.stderr,
+        )
+
+    violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+    violations = list(violations_by_path.values())
 
     baseline = load_baseline()
     n = len(violations)

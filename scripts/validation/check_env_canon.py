@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-try:
+try:  # noqa: fallback-import — this checker script itself must run outside the workspace where UIC isn't installed
     from unified_api_contracts.internal import EnvVars
 except ImportError:
     # Fallback if UIC not available (e.g. running outside workspace)
@@ -62,6 +62,7 @@ def _iter_source_py(root: Path) -> list[Path]:
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIR_NAMES]
         out.extend(Path(dirpath) / fn for fn in files if fn.endswith(".py"))
     return out
+
 
 # Patterns for os.getenv, os.environ[, os.environ.get(
 OS_GETENV_RE = re.compile(r"os\.getenv\s*\(\s*[\"']([^\"']+)[\"']")

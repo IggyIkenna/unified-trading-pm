@@ -78,8 +78,12 @@ source: >-
       `wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md` (its 2 remaining items),
       `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (all 3 items — 1st+3rd combined,
       2nd separate), `fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (its sole item), and
-      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item only). **Done when**: every one of those
-      flips is committed with the `docs(plans):` prefix and cites the real commit sha.
+      ~~`na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item only)~~ **DONE 2026-08-10 (ao
+      full-tranche sweep, group 3)** — flipped with citation to this batch's own codex-surface-(d) shipment; source
+      doc's 2nd item had since been operator-ruled (2026-08-08), so with both items closed the source doc was fully
+      archived (`/plans/archive/2026_08/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`), one of the 8
+      named docs now reconciled. **Done when**: every one of those flips is committed with the `docs(plans):` prefix and
+      cites the real commit sha.
 - [x] ✅ [INFRA] P0. **Re-check whether any of the 45 declined-orphan docs' NAMED gate has cleared since 2026-08-04, and
       spin any newly-conflict-clear items into batch 7** — walk the batch's own "Deferred — the 45 declined orphans"
       section category by category: has any operator-gated design fork been ruled since? Has any credential/host-access

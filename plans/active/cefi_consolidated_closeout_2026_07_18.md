@@ -133,9 +133,14 @@ context_scope:
 > everything still unchecked in Phases 1b/1c/2/5 as of 2026-07-25 — read the source doc for full context (per-venue
 > live-listing counts, probed Yahoo/Databento limits) before touching any of these.
 
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Propagation ops B1/B3/B4 —
-  IS→catalogue→enumerator→MTDS wave chain for the new Binance tradfi-perp cash-twin equities. Source: Phase 1b.)
+- [x] ✅ [SCRIPT] P0. **DONE 2026-08-09** (dispatched via `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1).
+      Propagation ops B1/B3/B4 — IS→catalogue→enumerator→MTDS wave chain for the new Binance tradfi-perp cash-twin
+      equities. Source: Phase 1b. Verified live against prod GCS state (the 2026-06-24-launched
+      `instr-backfill-tradfi-20260623` backfill + nightly schedulers already propagated the chain over the past ~6 weeks
+      — no new run needed): catalogue has 103 mvp-tagged equity/ETF base_assets incl. every sampled new ticker; manifest
+      shows `expected_unattempted` for every sampled ticker; `NASDAQ:EQUITY:HOOD-USD` 2026-07-20 `ohlcv_15m` sample = 49
+      rows, 0 NaN OHLCV. Full evidence: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log,
+      2026-08-09 entry.
 - [x] ✅ [DATA] P2. ~~**BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage
       (no US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor
       ask → operator). Source: Phase 1b.~~ **CLOSED — na-eligibility-audit 2026-08-09.** Embedded mirror of the
@@ -157,10 +162,15 @@ context_scope:
       (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`, 2026-08-08 Progress Log entry). Open work is now
       the IBKR adapter BUILD itself (that doc's Phase 1e P0 todo, `[BACKEND]`, not embedded in this Track 0's 11-todo
       list — out of this track's Phase 1/1b/1c/2/5 scope).
-- **[UAC] P0. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 for AO dispatch
-  (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Map the index perps
-  SPXUSDT/NAS100/SPYUSDT/XAUUSDT to CME index-future + Databento index canonical, carrying scale/multiplier. Source:
-  Phase 1c.)
+- [x] ✅ [UAC] P0. **DONE 2026-08-09 — `unified-api-contracts@e973c62d`** (dispatched via
+      `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2). Map the index perps SPXUSDT/NAS100/SPYUSDT/XAUUSDT to
+      CME index-future + Databento index canonical, carrying scale/multiplier. Source: Phase 1c. New
+      `canonical/crosscutting/index_commodity_perp_hedge_link.py` (`INDEX_COMMODITY_PERP_HEDGE_LINK` +
+      `hedge_link_for()`), 12 new unit tests, `quality-gates.sh` green. **2 of the 4 requested symbols were stale,
+      corrected with live evidence**: `SPXUSDT` is now the `SPX6900` meme coin (no longer S&P 500-tracking); no
+      `NAS100`/`NAS100USDT` symbol exists on Binance. Shipped: `SPY→ES`, `QQQ→NQ` (substitute for the nonexistent
+      NAS100), `XAU→GC`; `SPX`/`NAS100` recorded in `EXCLUDED_INDEX_COMMODITY_PERP_BASES` with evidenced reasons rather
+      than silently dropped.
 - [ ] [DESIGN] P1. **strategy-service — design the INDEX-perp cash-and-carry archetype** (short Binance SPX/NAS perp +
       long CME ES/NQ real hedge, scale-adjusted) — the FIRST fully-executable equity-perp basis archetype (deep real
       hedge, both legs already in universe+data, CME Globex ~23h/day). Repo: strategy-service. Source: Phase 1c.
@@ -168,15 +178,31 @@ context_scope:
       of scope until now — the un-filter + type-stamping code landed 2026-07-18, this is the actual backfill). Verify
       manifest `capture_status` for an EQUITY_PERP-tagged shard. Repos: instruments-service, deployment-service. Source:
       Phase 2.
-- **[SCRIPT] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 3 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Backfill the 3 KRX stocks via
-  guardrailed Yahoo. Source: Phase 5.)
-- **[UAC] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4 for AO dispatch
-  (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Measure the exact Databento L-floor
-  boundary per level live + update the 3 named constants/functions. Source: Phase 5.)
-- **[REFACTOR] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 5 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Deprecate + remove all Barchart
-  code, no shim. Source: Phase 5.)
+- [x] ✅ [SCRIPT] P1. **NARROWED + DONE 2026-08-09** (dispatched via `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`
+      todo 3). Backfill the 3 KRX stocks via guardrailed Yahoo. Source: Phase 5. The 1h/15m/1m legs conflict with a
+      RESOLVED, still-live 2026-07-12 operator decision this todo's source predates (Yahoo doesn't reliably serve
+      intraday granularity over long historical windows — `unified-api-contracts@a2751f36` narrowed the KRX registry
+      entry to `["ohlcv_24h"]` only). The achievable 1d/`ohlcv_24h` leg verified ~98% complete since 2019-01-02 across
+      all 3 symbols (2943/~2997 canonical-instrument-id shards captured), spot-checked against a real GCS parquet
+      object. 2 adjacent manifest-integrity defects found + filed as follow-up todos. Full evidence:
+      `/plans/active/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`.
+- [x] ✅ [UAC] P1. **DONE 2026-08-09 — `unified-api-contracts@92a418e5`** (dispatched via
+      `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4). Measure the exact Databento L-floor boundary per level
+      live + update the 3 named constants/functions. Source: Phase 5. Binary-searched `metadata.get_cost` live on
+      GLBX.MDP3/ES.c.0: L1 (trades) 367d free/368d metered (was conservative 365d), L2/L3 (mbp-10/mbo) 33d free/34d
+      metered (was conservative 30d) — L1 boundary cross-checked identical on DBEQ.BASIC/AAPL. L0 has no rolling metered
+      boundary at all (probed 5850-5908d back, all $0.0000, then a hard 422 at 5909d+ — `_FULL_HISTORY_DAYS` updated
+      from the arbitrary `16*365` to the measured 5908d). `LEVEL_MAX_LOOKBACK_DAYS` + docstrings + boundary-assertion
+      tests updated to match. `quality-gates.sh` green (336s).
+- [x] ✅ [REFACTOR] P2. **DONE 2026-08-09 — `unified-api-contracts@fc1b4897`, `market-tick-data-service@aea655a9`**
+      (dispatched via `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 5). Deprecate + remove all Barchart code,
+      no shim. Source: Phase 5. Deleted `BARCHART_OHLCV_15M_SCHEMA` + registry entries + the `barchart:` registry blocks
+      in both `provider_api_versions.yaml` copies + the stale comment in `registry/endpoints.py`
+      (unified-api-contracts); deleted the dead `TestBarchartOhlcv` test, renamed `test_barchart_and_yahoo_adapters.py`
+      → `test_yahoo_adapter.py`, dropped the dead `smoke_matrix.py` entry (market-tick-data-service). Deliberately kept
+      the live `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` frozenset (protects 9,119 real legacy manifest rows) and the
+      historical-manifest-compat parsing code — both are live data-compat, not retired fetch-adapter code. Both repos
+      `quality-gates.sh` green, shipped via `quickmerge --agent`, post-push ancestry verified on `live-defi-rollout`.
 
 **Close-out criterion**: all 11 todos above closed or explicitly re-deferred by the operator; the source doc's own
 Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
@@ -331,8 +357,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   into `PYTEST_UNIT_DIR` — the D3 reader-bridge half of Track 1 now HAS CI enforcement.
 - `issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md` — blank-itype `attempted_failed` re-tag,
   gated on `cefi-recapture-sweep-complete` (still false).
-- `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — `lighter` Tardis entitlement
-  (BLOCKED-CREDENTIALS, scaffold correct).
+- `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` — **RESOLVED 2026-08-08, re-verified 2026-08-09**:
+  the Tardis `lighter` entitlement gap is gone (re-probed live, non-1st-of-month dates return real data); the
+  LIGHTER-ZKSYNC `derivative_ticker` re-launch VERIFY landed (16,491 captured rows, 2026-04-17..2026-08-02,
+  source=tardis) and Layer-1 confirms LIGHTER-ZKSYNC is no longer among cefi's missing tuples (only
+  BITGET-FUTURES/OKX-FUTURES remain) — all todos `[x]`, doc archive-eligible per its own finalize plan.
 - `/plans/archive/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` — ✅ DONE (`deployment-service@9b13679`,
   launcher entries removed).
 - `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` — spot-check GCS/manifest/UI
@@ -649,3 +678,12 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   identical item 2026-08-08 citing a 2026-08-07 operator ruling). Remaining items: Track 1 correctly follows-the-fleet
   per a 2026-08-02 operator ruling (not independently reclassify-able), 2 dependency-blocked backfill-verification
   gates, rest genuine coordination/judgment work.
+- **cefi_satellite_ao_dispatch_batch11_finalize 2026-08-09 (slot-17, review) — Track 0 reconciliation**: batch11's todos
+  1-5 (the 5 items this doc EXTRACTED to it 2026-08-09) all landed DONE; replaced each `EXTRACTED — see that doc`
+  pointer above with the real shipping commit + evidence (verified every cited SHA reachable on
+  `origin/live-defi-rollout` before citing it). **Track 0 remaining-open count: 4 of 11** — todo 3 (capture
+  indexPrice/markPrice/fundingRate for equity-perps, `[SCRIPT]` P1), todo 4 (wire recurring funding/basis scan,
+  `[SCRIPT]` P2), todo 7 (design INDEX-perp cash-and-carry archetype, `[DESIGN]` P1), todo 8 (launch CeFi Tardis
+  backfill for the equity-perp window, `[SCRIPT]` P1) — none of these were in batch11's scope (batch11 only extracted
+  the 5 items independently verified as bounded/AO-eligible at drafting time; these 4 remain open, uncategorized new
+  work).

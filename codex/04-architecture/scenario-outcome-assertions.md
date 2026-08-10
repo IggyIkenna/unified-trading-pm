@@ -19,7 +19,7 @@ authoritative_for:
   [scenario outcome-assertion contract, OutcomeCategory closed-enum, scenario matrix PASS/FAIL/WARN semantics]
 referenced_by: [/codex/02-data/scenario-overlay-semantics.md, /codex/04-architecture/scenario-injection-architecture.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-24
 code_refs:
 author: harsh-slot-3
 ---

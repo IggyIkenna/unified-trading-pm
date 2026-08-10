@@ -267,21 +267,31 @@ ledger.
       their real single owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) — owning-tranche fix, leave to each
       tranche's own audit. Done when: all 13 tags are corrected and folded into their real tranche's closeout
       membership.
-- [ ] [DOCS] P1. Retag `plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[ui]` — **flagged urgent for the 3rd consecutive day**: live unauthenticated-prod-endpoint
-      exposure, all 4 fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority
-      commensurate with a live P1 security hole.
-- **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-  `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited docs with a
-  non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-  `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it. See the
-  batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- [ ] [OPERATOR] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — rule on whether
-      `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented safe-field allow-list/
-      `UnsafeConfigChangeError` is the target to BUILD (strategy-service currently ships an unconditional-swap reloader
-      with none of that safety machinery), or the doc is wrong and should be corrected to match shipped behavior.
-      Unruled since 2026-07-31 (day 8).
+- [x] ✅ [DOCS] P1. **DEDUPED 2026-08-10 — duplicate of finding 4 in
+      `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`, the origin doc**, and now dispatched
+      as todo 1 of `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`. The "3rd consecutive day"
+      label is the evidence: re-parked into a fresh dated doc rather than actioned, per the pattern
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc" rule 3 now
+      forbids. Note the retag is the CHEAP half — the doc's 4 open fix-steps for a live unauthenticated prod endpoint
+      are the real exposure, and batch1 todo 1 requires the worker to report their current state rather than treat the
+      retag as closure. Original text preserved for record. Was: Retag
+      `plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`'s `asset_group` `[cross-cutting]` →
+      `[ui]` — **flagged urgent for the 3rd consecutive day**: live unauthenticated-prod-endpoint exposure, all 4
+      fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority commensurate with
+      a live P1 security hole.
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 ->
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`. ✅ DONE 2026-08-09 —
+  unified-trading-pm@3829eea18.** `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test widened to
+  plain `"cross-cutting" in asset_group` (dropping the `parent_epic in DATA_EPICS` gate), no longer silently excludes
+  never-cited docs with a non-data `parent_epic`. See the batch doc for full evidence.
+- **[DOC] P2. EXTRACTED 2026-08-09 -> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.
+  ✅ DONE 2026-08-09 — unified-trading-pm@28d6b07a4.** `cross_cutting_consolidated_closeout_2026_07_25.md`
+  line-cap-split, trimmed 1007→716 lines. See the batch doc for full evidence.
+- [x] ✅ [DOCS] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — **RULED 2026-08-06 (operator), option
+      A**: the documented safe-field allow-list/`UnsafeConfigChangeError` IS the target to build. Target doc's own todo
+      is now `[CODE] P2` ("RULED 2026-08-06 (operator), option A: implement the documented guard") — no longer an open
+      decision, tag corrected there from `[OPERATOR]` already; the actual implementation work continues to be tracked
+      there, not here. Re-verified 2026-08-09: `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md:97` confirms.
 
 ## Codex SSOTs
 
@@ -317,3 +327,7 @@ ledger.
   (Track 2 for slot2_wedged, Track 5 for context_scout) so `check_ag_closeout_linkage.py` clears both (21→19 orphans,
   still ≤ baseline 49). `ci ×6`/`infrastructure ×3`/`meta ×1` remain for those tranches' own audits.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` design
+  question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
+  doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
+  action needed on this doc's side, implementation tracked at the target.

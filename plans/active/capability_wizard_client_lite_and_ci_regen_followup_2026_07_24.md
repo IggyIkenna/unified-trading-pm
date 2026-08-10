@@ -20,6 +20,8 @@ related:
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master
@@ -29,7 +31,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.0
-last_updated: "2026-07-24"
+last_updated: "2026-08-09"
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:
@@ -95,7 +97,8 @@ on a `.venv-workspace`-capable CI runner being provisioned (operator action).
       CI runner (operator action). See findings file for full F14 annotation.
 
 **Gate**: `.venv-workspace` provisioned on a CI runner (or a laptop with full workspace) → re-run
-`generate-unified-openapi.sh` end-to-end → `check_openapi_drift.py` exits 0 with all 3 outputs
+`generate-unified-openapi.sh` end-to-end → its wired-in `check_extraction_count_regression.py` checkpoint (see
+`/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 2) exits 0 with all 3 outputs
 (`ui-reference-data.json`, `config-registry.json`, `unified-trading-system.openapi.json`) freshly regenerated and
 committed.
 
@@ -112,6 +115,35 @@ extraction count BEFORE committing anything — F12's own history shows a broken
 empty the committed registry if blindly committed. Deferred to its own pass given the real-data-corruption risk of
 rushing step 4 under time pressure, not because it needs new infrastructure — that part of the original framing was
 wrong.
+
+**EXTRACTED 2026-08-09 (round-11 RECLASSIFY + satellite-extraction sweep)** to
+`ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — actioning the 2026-08-07 na-eligibility-audit's own "worth a
+RECLASSIFY look... for a future pass with room to execute carefully" flag below. The extraction formalizes the 4-step
+procedure above into an explicit, worker-executable safety gate (verify-all-imports → regen → extraction-count
+checkpoint against the committed baseline → commit-or-revert), directly addressing the rushed-step-4 data-corruption
+risk that held it back rather than working around it. This checkbox stays open here until batch 11's gated finalize twin
+(`ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`) reconciles it with the shipped commit or a clean `BLOCKED-*`
+finding.
+
+**RECONCILED 2026-08-09 (batch 11 finalize twin) — checkbox stays OPEN, `BLOCKED-EXTRACTION-REGRESSION`, nothing
+committed.** Batch 11's todo 1 ran to completion but landed on its own explicitly-valid blocked outcome, not a shipped
+commit: `.venv-workspace` was fixed (root cause was `setup-workspace-venv.sh` never applying a repo's own
+`[tool.uv].override-dependencies` during editable installs, permanently blocking `execution-service` and its dependents
+— fixed and shipped at `unified-trading-pm@026a84d6f6`), every real service now imports cleanly, and
+`generate-unified-openapi.sh` ran end-to-end producing a fresh `unified-trading-system.openapi.json` that improved on
+every metric (473→628 paths, 105→353 schemas, no regression). But the mandatory extraction-count checkpoint caught a
+genuine per-metric regression on `config-registry.json`: `total_repos` 19→14 (though `total_configs` rose 26→30) versus
+the committed baseline. Root-caused (not auto-resolved): the 7 "missing" repos are exactly the phantom per-family
+services (`features-calendar-service`, `features-commodity-service`, `features-cross-instrument-service`,
+`features-delta-one-service`, `features-multi-timeframe-service`, `features-sports-service`, `ml-inference-service`)
+that `generate_config_registry.py`'s own header comment says were consolidated 2026-06-11 into
+`features-service`/`ml-service` monorepos — the committed baseline predates that consolidation-aware script update and
+was never regenerated since, which is the whole premise of this Residual. Per the batch11 todo's own non-discretionary
+checkpoint rule, the worker discarded the generated outputs (`git checkout --`) rather than commit and did not override
+the gate unilaterally. Full findings + 4 follow-up todos (re-verify-and-commit is todo 1, a deprecated-gate correction,
+an unrelated GCS 404, a stale phantom-repo entry) are tracked at
+`/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` — the next picker-up should start
+there (specifically its todo 1) rather than repeat this investigation.
 
 ## Residual 2 — Client-lite wizard successor (use case 4)
 
@@ -135,6 +167,9 @@ precondition named by the parent plan.
 
 ## Deferred work — migrated to:
 
+- P1 (Residual 1, CI-runner-blocked openapi regen): extracted to `ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  (round-11 RECLASSIFY sweep, 2026-08-09). Stays open here until batch 11's gated finalize twin reconciles this checkbox
+  with a shipped commit or a clean `BLOCKED-*` finding.
 - P3 (client-lite wizard mode, use case 4): N/A — no migration. This plan IS the named successor/owner-of-record for the
   item (see "Context" above); it stays open here until the internal wizard precondition is met and the build sub-plan is
   authored under this plan's `parent_epic`.
@@ -159,6 +194,9 @@ precondition named by the parent plan.
 - **context-scout 2026-08-07**: re-verified context_scope (6 entries), unchanged — all 6 entries confirmed still
   resolving on disk (codex doc, archived parent plan, both issue docs, the openapi-regen script under
   `scripts/openapi/`, and the questionnaire UI dir).
+- **round-11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: Residual 1 extracted to
+  `ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 + its gated finalize twin. See the na-eligibility-audit
+  verdict entry above for the full disposition. Residual 2 untouched.
 
 ## na-eligibility-audit verdict
 
@@ -177,3 +215,16 @@ was deliberately deferred rather than rushed. Flagging Residual 1 as **worth a R
 procedure, operator already blessed agent execution) for a future pass with room to execute carefully — not
 reclassifying here given the real risk of a rushed step 4 and this batch's docs-only scope. Residual 2 unchanged:
 deferred design call, its own stated first step is authoring a build sub-plan.
+
+**round-11 RECLASSIFY + satellite-extraction sweep 2026-08-09** (tranche `ci`): whole-doc stays **KEEP-NA** (Residual 2
+remains a genuine unscoped design call, unchanged), but **Residual 1 is per-item RECLASSIFIED via satellite-extraction**
+— actioning the 2026-08-07 flag above. `ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 formalizes the 4-step
+procedure into an explicit worker-executable safety gate: verify every service imports cleanly → run the regen → check
+the extraction count against the currently-committed baseline BEFORE any commit → commit only if at-or-above baseline,
+else revert and report `BLOCKED-*`. This directly closes the rushed-step-4 data-corruption risk that held the prior
+audit back, rather than working around it. Conflict-checked: no other active `assigned_vm: planning` plan under
+`parent_epic: strategy_master` touches `.venv-workspace`/openapi regen; no sibling `ci_satellite_ao_dispatch_batch*` doc
+references this source doc; no consolidated-closeout doc covers it.
+`ci_satellite_ao_dispatch_batch11_finalize_ 2026_08_09.md` (gated) reconciles this doc's Residual-1 checkbox once batch
+11 lands. This doc's own `assigned_vm` stays `NA` — a partial (per-item) extraction, not a whole-doc reclassify, since
+Residual 2 remains genuinely open.

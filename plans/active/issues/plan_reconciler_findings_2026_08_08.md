@@ -144,18 +144,10 @@ the operator, not resolved by this run.
 
 ### Big findings — data-pipeline-correctness-adjacent, routed to operator via `/blocked`
 
-- [ ] [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?**
-      `plans/epics/tradfi_master.md:181-183` contradicts itself in two adjacent sentences: "the Massive estate was
-      PURGED 2026-07-21 (1,701,422 objects → 0, accepted permanent loss)" vs. the very next sentence, "historical
-      `pipeline_mode=batch_massive/` objects retain recognition only until the **separate gated** GCS purge" (implying
-      NOT yet done). Corroborated as NOT-yet-done by
-      `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md:121-124,145-146` (purge is a future
-      `[GATE]` step needing "operator go", explicitly a prod-data hard-stop) and
-      `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md:195-196` ("unchanged from batch1-6... stays
-      deferred as one unit"). The epic's own object count (1,701,422) also matches neither of
-      `tradfi_canonical_path_migration_design_2026_07_19.md`'s own tables (1,469,325 / 1,696,166). This is a real
-      prod-bucket-delete question — I did not attempt to resolve it by picking a side from prose (per delete-safety HARD
-      RULE, a live GCS state check is warranted, not a doc-reconciliation guess).
+- [x] ✅ [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?** **RESOLVED
+      2026-08-09 (interactive session, sub-agent dispatch) — YES, purged, and it stays purged.** See "Massive-purge
+      reconciliation, 2026-08-09" in the Progress Log below for the full evidence chain (doc archaeology + a live
+      bounded prefix-scoped GCS check).
 - [ ] [OPERATOR] P1. **Is DeFi `collect-dex-pools`/`collect-dex-swaps` live capture currently STOPPED or RUNNING?**
       `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:68,195,338` (last touched 2026-08-06) says
       ALL DeFi capture is STOPPED, with `collect-dex-pools` gated-paused behind Track-8 and its own "RESUME the stopped
@@ -206,14 +198,21 @@ ever applied after an explicit operator ruling — filed here, not edited:
       launcher.
 - [ ] [OPERATOR] P3. `/codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
       — it shipped 2026-07-27 (`761edd205`), 11+ days ago (`qg_host_adaptive_resource_governor_2026_07_14.md`).
-- [ ] [OPERATOR] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documents
-      exactly 3 conflict-check surfaces; a measured 4th real surface slips through (fix todo open since 2026-08-06 in
-      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md`).
-- [ ] [OPERATOR] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
+- [x] ✅ [DOCS] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documented
+      exactly 3 conflict-check surfaces; a measured 4th real surface slipped through. **Fixed**:
+      unified-trading-pm@c2083029dc ("docs(codex): add 4th conflict-check surface for draft satellite batches") — the
+      codex doc's § 3 now lists surface (d): `status: draft` satellite batches from either skill's prior run. The
+      originating todo (`na_and_ag_closeout_audit_population_overlap_2026_07_31.md:141`) still tracks the SKILL.md
+      cross-reference half of the same fix separately — not duplicated here.
+- [x] ✅ [DOCS] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table said
       `plan_reconciler` (this very role) runs "daily 01:00 UTC, opus" — current reality is sharded-by-tranche,
-      hourly-retry-until-capacity, sonnet (per `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings
-      and this dispatch's own MODEL=claude-sonnet-5). Self-referential — worth fixing since it's the SSOT for how this
-      role is supposed to be scheduled.
+      2h-retry-until-capacity Sun-Fri / unsharded `all` Saturday, sonnet (per
+      `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings and this dispatch's own
+      MODEL=claude-sonnet-5). **Fixed 2026-08-09 (interactive session)**: the opus/schedule half was already corrected
+      in `unified-trading-pm@879b8e9907`, but that fix carried this finding's OWN stale "hourly-retry" phrasing forward
+      verbatim — the installer was widened hourly→every-2h on 2026-07-30, before this finding was filed. Corrected in
+      `unified-trading-pm@717a17bdfa`. Separately, `plan_reconciler` itself graduated to STEADY STATE (direct push, no
+      review PR) 2026-08-09 — see `agents/plan_reconciler.md`.
 - [ ] [OPERATOR] P3. `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
       `authoritative_for` the archival ritual, but the real "never combine flip+`git mv`" rule lives only in
       `agents/RULES.md`; 10+ plans miscite the source.
@@ -227,18 +226,27 @@ ever applied after an explicit operator ruling — filed here, not edited:
       declares an `ml-models-store` delete "categorically human-only" without ever running the §3a
       fresh-retention-seconds check. No incorrect action has occurred (independently blocked by an unrelated IAM gap
       too) — flagging the plan's mischaracterization, not a codex fix.
-- [ ] [OPERATOR] P3. **Grace-protected this run, skip until it clears.** `/codex/08-workflows/ci-cd-flow.md:882,887-892`
-      describes semver PATCH bumps as commit-label-driven — structurally unreachable for weeks under squash-promote
-      (every `main` commit is `chore(promote):`), just replaced with content-based detection
-      (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`, fix landed 2026-08-07 18:33-20:59Z, codex last
-      touched 08-06).
+- [x] ✅ [DOC] P3. **RULED 2026-08-09 (operator): "Override grace — fix it now."** Operator explicitly overrode the
+      grace-protection window for this mechanical fix rather than waiting for it to clear naturally. Corrected
+      `/codex/08-workflows/ci-cd-flow.md`'s "Version Bump Flow (Semver Agent)" section (the "Compute" table row + the
+      commit-prefix result table, ~lines 936/941-946) — both described semver PATCH bumps as purely commit-label-driven
+      (`fix:` prefix), which has been structurally unreachable since the LDR→main model went squash-only (every commit
+      reaching `main` is `chore(promote): LDR → main ...`, carrying no original conventional-commit message). Corrected
+      wording to describe the actual current mechanism per
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` (fix landed 2026-08-07 18:33-20:59Z): the AST
+      content differ (`detect_breaking_change.py`) still correctly computes `is_breaking` via content (works under
+      squash) for the MINOR tier, and a NEW content-based fallback (any `SOURCE_DIR/` file changed in the diff window,
+      no breaking delta → default PATCH) now implements the PATCH tier that was previously dead. Kept the old
+      commit-prefix table for human intuition but retitled/annotated it to point at the real, content-based live signal
+      per tier rather than removing the historical framing outright.
 
 ### Other filed follow-ups
 
-- [ ] [SCRIPT] P3. Extend `check-locked-plan-deletion.sh`'s `locked_by` parser to treat a literal `""`/`''` value as
+- [x] ✅ [SCRIPT] P3. Extend `check-locked-plan-deletion.sh`'s `locked_by` parser to treat a literal `""`/`''` value as
       empty (currently a naive `grep -oP` extracts the quote characters themselves as a non-empty string) — found via 6
       real corpus instances this run, all now individually normalized, but the parser bug itself is unfixed and will
-      recur on any future doc authored with `locked_by: ""` instead of a true-blank value.
+      recur on any future doc authored with `locked_by: ""` instead of a true-blank value. —
+      unified-trading-pm@81dbe27cd7
 - [x] ✅ [REVIEW] P3. Live-check whether `market-tick-data-service`'s VM `fts-backfill-20260806-012831`
       (`sports_closeout_track_s2_foldin_2026_07_25.md` todo, "RELAUNCHED 2026-08-06") has since completed —
       last-observed state (2026-08-06) was "still RUNNING, no exit signal"; ~2 days have passed as of this run
@@ -309,3 +317,69 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
 ## Progress Log
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the 4th-conflict-check-surface codex-drift finding was stale — the codex
+  fix already landed (`unified-trading-pm@c2083029dc`, verified via `git log` against the target file). Flipped `[x]`,
+  retagged `[OPERATOR]` → `[DOCS]`.
+- **RULED 2026-08-09 (operator)**: "Override grace — fix it now." Overrode the grace-protection window for the
+  semver-PATCH-bump-wording finding rather than waiting for `plan_reconciler`'s next natural clearing pass. Fixed
+  `/codex/08-workflows/ci-cd-flow.md` directly (Compute row + commit-prefix result table in the "Version Bump Flow"
+  section) to describe the actual content-based mechanism per
+  `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` instead of the stale pure-commit-label framing.
+- **Massive-purge reconciliation, 2026-08-09 (sub-agent dispatch, answering the P1 `[OPERATOR]` question above)**:
+  **VERDICT — the Massive estate IS purged, and stays purged as of today.** Resolved without an ad-hoc bucket walk, per
+  the single-walk-discipline instruction, using two layers of evidence:
+  1. **Doc archaeology.** The doc-side "contradiction" was never a genuine open question — it was one epic sentence
+     (`tradfi_master.md:181-182`, both halves written in the SAME commit `1dd1a22fd97`, 2026-07-21) that hedged on
+     whether recognition should be dropped, sitting next to **nine independent, cross-dated, mutually-corroborating
+     records** of the same executed purge: the archived issue doc
+     (`plans/archive/issues/massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`) with full VM-fanout terminal
+     evidence (RUN_TS=20260720-193849, 1,701,414 PURGED + 8 QUARANTINE stragglers deleted directly = 1,701,422, 0
+     `PURGE_REFUSED_GATED`, 0 ORPHAN, a Phase-2 per-day before/after table showing massive→0 with databento counts
+     UNCHANGED); the manifest surgical CAS drop (`manifest-consolidator-ssot.md:603`, 686,005 `batch_massive` rows
+     removed 2026-07-20, 5,209,585→4,519,965); and independent CLOSED/COMPLETED/RETIRED confirmations dated 07-21
+     through 07-25 in `canonical-cutover-register.md` (§4, "COMPLETED 2026-07-21"),
+     `gcs-and-manifest-delete-safety-protocol.md` (hard-stop #3, "EXECUTED 2026-07-20/21 ... not because this specific
+     purge is still pending — it is not"), `reconciliation-finding-taxonomy.md` (AE-4, "CLOSED 2026-07-20/21"),
+     `four-surface-reconciliation-procedure.md` (§6, "COMPLETED 2026-07-20"), `non-canonical-path-inventory.md` (row 10,
+     "RETIRED — the Massive purge EXECUTED"), `tradfi-databento-sourcing-ssot.md`, and two independently-dated active
+     plans (`tradfi_manifest_content_recovery_completion_2026_07_24.md:350` "batch_massive=ZERO (already purged
+     2026-07-21)"; `tradfi_backfill_throughput_followups_2026_07_24.md:195`). All nine cite the identical non-round
+     figure (1,701,422) — not a number that would independently coincide across nine documents by accident.
+  2. **Live, bounded, prefix-scoped verification (not a bucket walk)** — reused the ORIGINAL campaign's own 6 Phase-2
+     verification days from the archived issue doc, plus 2 recent dates well after the purge to rule out resurrection,
+     against the real bucket (`gs://market-data-tick-tradfi-prd-central-element-323112`):
+     `gcloud storage ls ".../day=<D>/pipeline_mode=batch_massive/**"` for
+     `D ∈ {2020-06-15, 2021-06-15, 2022-06-15, 2023-05-23, 2024-06-17, 2025-04-08, 2026-07-25, 2026-08-05}` → **0
+     objects on every single day**, including the two recent dates. A sanity check on the same days against
+     `pipeline_mode=batch_databento` returned 1,350/1,387 objects respectively, confirming the bucket/prefix pattern
+     itself is correct (not a false-empty from a wrong prefix). A cheap delimiter-listing of the bucket root found two
+     `_migration_backup*/` prefixes; spot-checked — these hold manifest/index snapshot parquet only (~118MB), not raw
+     tick data, and are unrelated to the Massive estate. This is the sanctioned §5 route-1 pattern from
+     `/codex/02-data/four-surface-reconciliation-procedure.md` (prefix-scoped listing per known date, not a corpus walk)
+     — no whole-bucket or whole-corpus listing was performed.
+  - **Which docs were wrong — flagged, and one fixed:**
+    - **`plans/epics/tradfi_master.md:181-183` — FIXED this session** (purely mechanical, hard-evidence-backed): removed
+      the self-contradicting "retain recognition only until the separate gated GCS purge" clause and replaced it with
+      the corrected state (purge executed, live-reverified 2026-08-09, citing this entry).
+    - **`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md` — FLAGGED, NOT fixed.** This doc
+      predates the purge (created 2026-07-19; purge ran 2026-07-20/21) and its "Sequencing"/"Hard-stops" sections still
+      frame BOTH step 5 (general canonical `--apply` migration) and step 6 (Massive purge) as future `[GATE]`
+      operator-go items. Beyond the Massive question this doc's own scope was asked about, there is strong independent
+      evidence the ENTIRE migration it describes — not just the Massive purge — has ALSO since executed:
+      `canonical-cutover-register.md:258-259` states "UPDATED 2026-07-27 — migration COMPLETE, not
+      operator-gated/pending ... run `20260720-120911` (mtds-code@5581dcf9), 20/20 SPOT shards reporting ORPHAN=0 over
+      2,649,469 objects," catalogue SHIPPED+APPLIED LIVE 2026-07-25, chain-bundle content gate CLOSED 2026-07-27. The
+      doc's own `## Todos` section already carries zero open items (its one todo is `[x]` done). This looks like a doc
+      whose core content is fully stale/executed and may be an archive candidate — **not resolved here**, since
+      confirming that requires auditing the doc's OTHER still-open surfaces (manifest resurrection cleanup, casing
+      normalization residuals, quarantine disposition) that are outside this todo's scope, and archival needs the full
+      6-step ritual + its `locked_by: live-defi-rollout` clearance. Recommend a dedicated closeout pass on this doc.
+    - **`plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md:195-196` — FLAGGED, NOT fixed.** Its "stays
+      deferred as one unit, unchanged from batch1-6" framing is a downstream inheritance of the design doc's stale
+      gating above — once that doc's status is corrected, this batch's "Deferred" list entry needs updating too (it may
+      no longer be deferred work at all). Left as-is pending the design-doc closeout above; batch8 (or whichever picks
+      this up next) should re-check against the corrected design doc, not this framing.
+  - **Confidence**: high on the narrow question asked (has the Massive estate been purged — yes, confirmed live
+    2026-08-09, not just by trusting doc prose). Lower/flagged on the broader "is the whole migration done" question the
+    investigation surfaced as a side-finding — that one is evidenced but not independently live-verified this session,
+    so it is flagged rather than asserted as fact. Flipped this todo done, retagged `[OPERATOR]` → `[DOC]`.

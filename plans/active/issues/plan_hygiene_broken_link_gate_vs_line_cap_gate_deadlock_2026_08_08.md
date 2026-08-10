@@ -75,7 +75,8 @@ unlocked) per the immediate-archival HARD RULE:
 2. `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` also cites the doc, but via markdown-link syntax
    `[`...`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md)` (line
    741). Leaving it untouched → `validate_plan_links.py` (corpus-wide, unconditional, HARD) fails the commit:
-   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/active/issues/provenance_marker_...md`.
+   `BROKEN: active/cross_cutting_consolidated_closeout_2026_07_25.md -> /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`
+   (once archived out from under this path).
 3. Fixing that one line → `check_line_caps.sh` SCOPED mode fails instead: the file is 1007L (over the 1000L hard cap,
    `todos=1` so not archival-eligible itself), and a same-line text substitution always shows `DELETED=1` in
    `git diff --cached --numstat` (verified directly, not assumed), which fails the ONLY over-cap carve-out
@@ -112,9 +113,53 @@ force it through or damage another agent's active doc.
 
 ## Options (operator decision)
 
-- [ ] [OPERATOR] P1. Decide (a) extend `check_line_caps.sh`'s over-cap carve-out to cover a bounded link-repoint edit,
-      or (b) authorize trimming `cross_cutting_consolidated_closeout_2026_07_25.md` under 1000L, or (c) some other
-      resolution (e.g. a documented stub-redirect convention at the old path).
-- [ ] [INFRA] P1. Once (a)/(b)/(c) is decided, implement it, THEN complete the deferred archival of
-      `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` (all todos
-      already `[x]`, unlocked, `resolved_by` ready to fill with the completing SHA) per the normal 6-step ritual.
+- [x] ✅ [DOC] P1. **RULED 2026-08-09 (operator, via main session):** option **(a)** — extend `check_line_caps.sh`'s
+      over-cap carve-out to also permit a bounded same-line link-repoint edit (`ADDED<=DELETED`, every changed line
+      differing only by a `/plans/active/...`→`/plans/archive/...` path-token substitution, no new prose) alongside the
+      existing marker-append carve-out. Retagged from `[OPERATOR]` in the same edit the ruling landed.
+- [x] ✅ [INFRA] P1. **Implemented 2026-08-09** — `unified-trading-pm@d765b4cfb1` (shipped via
+      `scripts/quickmerge.sh --agent --files`). Added a second SCOPED-mode carve-out to `check_line_caps.sh`: allowed
+      when (a) the file is already over cap before this commit, (b) the staged diff's `ADDED<=DELETED`, and (c) every
+      changed (+/-) content line, after normalizing an `/plans/active/...` or `/plans/archive/<YYYY_MM>/...` path
+      segment to a common token, is textually identical between the removed and added sides. Verified via an isolated
+      scratch git repo (not the real corpus, to avoid touching any live doc mid-audit): the exact real-world scenario
+      from this doc's own "What was found" section (a `sed`-style same-line link-repoint on a 1001L over-cap doc,
+      `git diff --numstat` = `1 1`) now passes as `SOFT` instead of `HARD`; confirmed the carve-out does NOT over-permit
+      — a sneaky same-line prose addition alongside the path fix, and a file newly crossing the cap in the same commit,
+      both still correctly fail `HARD`. **Deliberately NOT done in this same pass: completing the deferred archival of
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.** That doc's own
+      `archive_exempt:     true` banner (set 2026-08-09) names this exact fix as the unblocking condition, but
+      completing the archival for real also requires a corpus-wide referrer-path fixup across **11 active-corpus files**
+      (`cross_cutting_consolidated_closeout_2026_07_25.md` — the one that triggered this deadlock — plus
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`,
+      `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`,
+      `assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md`, `host_root_disk_full_transient_2026_07_13.md`,
+      `governance_sweep_deferred_followups_2026_08_06.md`,
+      `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`,
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`,
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` (2 refs), `/codex/08-workflows/ci-cd-flow.md`) —
+      a materially larger, separately-scoped unit of work than "implement the carve-out," and this issue's own scope
+      (per the task that ruled it) was the carve-out itself. Left as its own explicit next todo below rather than
+      silently expanding scope mid-fix.
+- [ ] [INFRA] P1. **Complete the deferred archival** of
+      `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` (all 3 todos
+      already `[x]`, unlocked, `archive_exempt: true` pending exactly this) now that the carve-out fix above is shipped
+      and verified: `git mv` to `plans/archive/2026_08/issues/`, repoint the 11 active-corpus referrers enumerated above
+      (the `check_line_caps.sh` fix unblocks `cross_cutting_consolidated_closeout_2026_07_25.md`'s specifically — the
+      other 10 aren't over-cap and don't need the carve-out, just a normal link update), un-set `archive_exempt`, fill
+      `resolved_by` with the completing SHA, run the standard 6-step archival ritual.
+
+## Progress Log
+
+- **2026-08-08, filed**: discovered live while archiving
+  `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`; reverted the archival attempt cleanly
+  rather than force a fleet-wide tooling change mid-audit. See "Why not fixed autonomously here" above.
+- **2026-08-09 (operator ruling batch, this session)**: Operator ruled option (a). Implemented + shipped
+  `unified-trading-pm@d765b4cfb1` (quickmerge, code change to `scripts/plan-hygiene/check_line_caps.sh`). Verified
+  against the exact real scenario in an isolated scratch repo (never touched the live corpus mid-verification) plus 2
+  negative cases (sneaky prose, newly-crossing-cap file) to confirm the carve-out is bounded, not over-permissive. Did
+  NOT complete the actual deferred archival in this same pass — that requires a separate 11-file referrer fixup, left as
+  its own explicit todo above. Also updated the sibling doc
+  `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md`'s `[OPERATOR]` todo to reflect this ruling
+  landing (its own park/unpark mechanism is a live-AO-state action outside this doc-editing session's reach — noted
+  there as a standing follow-up).

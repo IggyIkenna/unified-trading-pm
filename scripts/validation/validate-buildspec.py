@@ -105,7 +105,8 @@ def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | No
 
     try:
         data = load_yaml(path)
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — `yaml` is module-level Optional (None when the
+        # SDK is absent); narrowing to yaml.YAMLError here would itself AttributeError on that path
         return False, f"YAML parse error: {e}"
     if data is None:
         return False, "Empty file"

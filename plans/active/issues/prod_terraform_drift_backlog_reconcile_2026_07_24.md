@@ -38,12 +38,12 @@ source:
     said 'filing as a P1 issue todo', this doc completes that filing.",
     "Originally surfaced 2026-06-23 during the watch-the-watchers dead-man's-switch tofu apply.",
   ]
-related: [/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md]
+related: [/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md]
 depends_on: []
 context_scope:
   [
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     deployment-service/terraform/gcp,
     deployment-service/terraform/modules/container-job/gcp,
   ]
@@ -194,18 +194,30 @@ todo below.
       `module.*_job.google_cloud_run_v2_job.job` / `google_cloud_run_v2_job.vm_log_archival` resource. Repo:
       deployment-service.
 
-      **DONE 2026-07-30 — deployment-service@f57c96e.** Added the `ignore_changes = [client, client_version]` lifecycle
-                                                                                                                                                                                                                                                                                                                                                                                                      block to BOTH the shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource
-                                                                                                                                                                                                                                                                                                                                                                                                      (covers every `module.*_job` consumer — the 65-diff bulk) AND the standalone
-                                                                                                                                                                                                                                                                                                                                                                                                      `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (which is NOT
-                                                                                                                                                                                                                                                                                                                                                                                                      built via the shared module, so it needed its own copy — it already had an `ignore_changes = [launch_stage]`
-                                                                                                                                                                                                                                                                                                                                                                                                      block, extended rather than duplicated). Code-only change (no `tofu apply` run — that remains this doc's still-open
-                                                                                                                                                                                                                                                                                                                                                                                                      P1 item's job once it applies the fleet); `tofu fmt -check` confirmed no formatting issues in the added lines
-                                                                                                                                                                                                                                                                                                                                                                                                      (pre-existing unrelated fmt drift elsewhere in both files, untouched, out of this todo's scope). Full
-                                                                                                                                                                                                                                                                                                                                                                                                      `quality-gates.sh` green.
+      **DONE 2026-07-30 — deployment-service@f57c96e.** Added `ignore_changes = [client, client_version]` to BOTH the
+          shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource (covers every
+          `module.*_job` consumer — the 65-diff bulk) AND the standalone
+          `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (not built via
+          the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
+          than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
+          on the added lines; full `quality-gates.sh` green.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. The remaining open item is operator-APPROVED but still requires a FRESH three-way (INTENDED /
+  cosmetic-provider-quirk / stale-or-conflicting) classification over whatever the current live `tofu plan` diff is
+  today before any `tofu apply` — the doc's own text is explicit that the diff is a moving target (grew from 10/67 to
+  17/71 the last time it was checked) and the classification itself is real judgment (is each newly-visible resource
+  intended, stale, or a conflict), not a mechanical re-run of the old 12-resource table. A real, deliberate, prod- infra
+  `tofu apply` remains operator-level application work per the existing 2026-08-06 ruling, not bounded worker dispatch.
+  Checked against this round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-AO-default, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5
+  Slack webhooks): the resources classified here are CREATE-only (plus 2 label-only updates), not deletes, so the
+  reversibility-qualified-deletes carve-out's REASONING (a `tofu destroy`/revert remains available if wrong) already
+  applies and is already cited by this doc's own text — but that carve-out lowers the reversibility bar for a delete, it
+  does not itself convert "apply prod infrastructure changes" into worker-determinable dispatch; the fresh
+  classification step is still real judgment. No change from the existing ruling.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — RULED 2026-07-28 APPROVED-to-apply;
   re-classifying + applying the current full drift set on prod terraform is operator-approved application work, not
   bounded worker dispatch.

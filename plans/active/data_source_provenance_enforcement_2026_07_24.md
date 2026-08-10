@@ -27,7 +27,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-07-24
+last_updated: 2026-08-09
 locked_by:
 locked_since:
 supersedes:
@@ -61,25 +61,26 @@ context_scope:
 
 ### From `data_source_provenance_all_asset_groups_2026_06_01.md` (archived 2026-07-13 -- Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY))
 
-- **[SCRIPT] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Write
-  `backfill_defi_source_column.py` (copy tradfi template) to stamp the known historical source per data_type. See the
-  batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [SCRIPT] P1. **SHIPPED via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 1** (this finalize
+      plan's own todo 2 archives that batch doc). Wrote `backfill_defi_source_column.py` —
+      `market-tick-data-service@63776a43`, verified ancestor of `origin/live-defi-rollout`.
 
 - [ ] [DATA] P1. Backfill the existing DeFi corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
       scope); fold into the defi canonicalisation migration (`defi_manifest_canonicalisation_2026_06_01.md`) if open,
       else run direct; manifest re-consolidation after. **(MIGRATED FROM:
       `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the narrow
-  remaining slice only — the captured write-path already ships `source="tardis"` for cefi; confirm
-  `record_empty_for_shard`/`record_failed_for_shard` likewise forward `source` in market-data-processing-service
-  `canonical_writer.py`). See the batch doc for the full scoped todo; do not duplicate-dispatch from here. The
-  historical-corpus backfill sub-item stays here (rides the cefi C-source RIDER, see below). Repo:
-  market-data-processing-service.
+- [x] ✅ [MTDS] P1. **SHIPPED via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 2** — the narrow
+      remaining slice (the captured write-path already shipped `source="tardis"` for cefi; this fixed
+      `record_empty_for_shard`/`record_failed_for_shard` in `market-data-processing-service`'s `canonical_writer.py` to
+      likewise forward `source`). `market-data-processing-service@c8bece4e8`, verified ancestor of
+      `origin/live-defi-rollout`. The historical-corpus backfill sub-item stays here (rides the cefi C-source RIDER, see
+      below) — NOT covered by batch3.
 
-- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** CeFi unit test:
-  blank `source=` raises; `source="tardis"` persists; a future multi-source registry expansion resolves by priority. See
-  the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [TEST] P1. **SHIPPED via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 3.** CeFi unit test
+      confirmed live for `("cefi", "trades")`: blank `source=` raises, `source="tardis"` persists, a synthetic
+      `SOURCE_PRIORITY` expansion resolves by priority order — `market-tick-data-service@78a8c93b`, verified ancestor of
+      `origin/live-defi-rollout`.
 
 - [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into
       `cefi_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the cefi `_index`;
@@ -129,9 +130,10 @@ context_scope:
       **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation
       ruling.)**
 
-- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** `available_at`
-  parity across sources (batch = live) — a 2-source fixture (tradfi) asserts identical `available_at` derivation per
-  cell. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [TEST] P1. **SHIPPED via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 4.** `available_at`
+      parity fixture added for the registered 2-source cell (`tradfi/ohlcv_15m`, databento/yahoo) — proves derivation is
+      source-blind by construction. `market-tick-data-service@63ce1e05`, verified ancestor of
+      `origin/live-defi-rollout`.
 
 - [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
       `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
@@ -142,22 +144,22 @@ context_scope:
       promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** A12a — wire the
-  remaining 8 DeFi collect handlers (`lending_indices_handler`, `liquidations_handler`, `liquidation_events_handler`,
-  `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`, `flash_loan_events_handler`,
-  `solana_defi_handler`) — 15 of the original 23 already wired via
-  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (`market-tick-data-service@f7d6f5fd`);
-  `drift_v2_historical_handler` confirmed removed; `perp_funding_handler` confirmed intentionally not wired. See the
-  batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [MTDS] P1. **RESOLVED-MOOT via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 5.** A12a — all
+      8 named DeFi collect handlers were ALREADY wired to `assert_defi_catalog_fresh(...)` (7 since `fca15304`
+      2026-06-05, the 8th since `b77fba7a` 2026-06-21) — this item's "8 still-unwired" framing was stale by ~2 months.
+      The one genuine gap (a missing DeFi row in `/codex/04-architecture/instruments-preflight-chain.md`) was added, no
+      MTDS code change needed.
 
-- [ ] ❌ [DATA] P1. OBSOLETE/WONTFIX. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) —
-      run the dual-source backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on
-      legacy tradfi rows + ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST
-      tier — the bulk path; REST for incremental/live). Unblock the dual-source plan's deferred table accordingly.~~
-      **Massive was REMOVED as a TradFi source 2026-07-19** (operator ruling: Databento = batch SoT, Yahoo = daily;
-      routing DELETED `uac@a2beed46`/`mtds@362a487e`) and its GCS corpus **PURGED 2026-07-21** (accepted permanent
-      loss); `tradfi_massive_dual_source_2026_05_28.md` itself now carries a `status: superseded` banner ("OBSOLETE — do
-      not build"). No MASSIVE ingestion remains possible or wanted. The still-valid half (zero-blank `source` on every
+- [x] ❌ [DATA] P1. OBSOLETE/WONTFIX — closed 2026-08-09 (cross_cutting_satellite_ao_dispatch_batch3 finalize
+      reconciliation): superseded, folded into the P0 "Data parquets"/"Manifest" rollup items below, no separate
+      carve-out. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) — run the dual-source
+      backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on legacy tradfi rows +
+      ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST tier — the bulk
+      path; REST for incremental/live). Unblock the dual-source plan's deferred table accordingly.~~ **Massive was
+      REMOVED as a TradFi source 2026-07-19** (operator ruling: Databento = batch SoT, Yahoo = daily; routing DELETED
+      `uac@a2beed46`/`mtds@362a487e`) and its GCS corpus **PURGED 2026-07-21** (accepted permanent loss);
+      `tradfi_massive_dual_source_2026_05_28.md` itself now carries a `status: superseded` banner ("OBSOLETE — do not
+      build"). No MASSIVE ingestion remains possible or wanted. The still-valid half (zero-blank `source` on every
       tradfi cell, including legacy rows) is already covered generically by the P0 "Data parquets" / "Manifest" todos
       below in this same doc — no separate carve-out needed. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
       `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`. **(MIGRATED FROM:
@@ -219,3 +221,12 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
   backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but splitting them out of this
   coordination doc into a fresh batch is plan-authoring work this audit does not do.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **cross_cutting_satellite_ao_dispatch_batch3 finalize reconciliation, 2026-08-09 (slot 15)**: reconciled all 5
+  `EXTRACTED 2026-08-09 -> batch3` pointers against batch3's now-done todos, converting each to a checked `[x]` with the
+  verified shipping commit citation (all 4 distinct commits confirmed ancestors of `origin/live-defi-rollout`:
+  `market-tick-data-service@63776a43`, `market-data-processing-service@c8bece4e8`, `market-tick-data-service@78a8c93b`,
+  `market-tick-data-service@63ce1e05` — the A12a item resolved-moot, no code commit). Also flipped the stale
+  obsolete-Massive checkbox (`[ ]` -> `[x]`, item's own text already explained it's superseded/folded into the P0 rollup
+  -- the checkbox itself was the only stale part). Doc keeps 13 open `- [ ]` items (DeFi/cefi/sports corpus backfills,
+  the tradfi read-path resolver PARTIAL, the manifest dedup-key FINDING, the QG checker wiring, the 6 big P0 rollups,
+  the CODEX item) -- `status` stays `active`, nowhere near zero open work.

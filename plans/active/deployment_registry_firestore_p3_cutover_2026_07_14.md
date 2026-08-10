@@ -28,7 +28,10 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: backend_engineer
-model_tier: opus-required
+model_tier:
+  sonnet # corrected 2026-08-10 (plan_reconciler) -- opus-required has NO standing category left per
+  # CLAUDE.md's 2026-08-07/08-08 ruling ("opus-required = ZERO categories -- opus is now manual-only"); was stale
+  # since 2026-07-14 creation
 drift_direction: advance-code
 depends_on:
   - deployment_registry_firestore_p2_readers_2026_07_14.md

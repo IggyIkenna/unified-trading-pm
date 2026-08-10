@@ -70,7 +70,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py,
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-api-contracts/scripts/check_coverage_floor_registry_drift.py,
-    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
   ]
 ---
 
@@ -237,7 +237,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       `cefi-hyperliquid-2023-*`. (repo: market-tick-data-service / deployment-service — investigation + cross-ref only,
       no code shipped this task)
 - [x] ✅ [DATA] P2. **DONE 2026-08-02 (slot-9, duplicate of the same finding in
-      `/plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`, synced here to avoid a stale
+      `/plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`, synced here to avoid a stale
       duplicate)** — DERIBIT's `trades` sparse-2019 gap root-caused: Tardis confirms `availableSince: 2019-03-30` for
       DERIBIT (denser + earlier than our 2019-05-08 floor); root cause was `_venue_years()` in
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` never including `"2019"` for DERIBIT, so no
@@ -256,7 +256,17 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       references it only in comments. The 7 attempted_failed rows from 2026-07-26 were a one-off probe during the brief
       v9 window. The Tardis binance-delivery endpoint is real and correctly registered, but the venue_start_dates entry
       at 2020-01-01 is Tardis metadata only (unverifiable). Annotated the comment in venue_mapping.py to document this;
-      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse).
+      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse). **CORRECTION
+      (2026-08-09, plan_reconciler agt-5f7f31):** a later, same-topic investigation in
+      `/plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (2026-08-05, slot-5) found
+      this "dead/never-implemented" conclusion was WRONG on the live-fetch question — the forward/cron pipeline STILL
+      attempts BINANCE-DELIVERY daily (704 manifest rows: 669 attempted_failed + 35 empty_confirmed, 2026-05-01 to
+      2026-08-04, 6 data_types, all instrument_count=0.0), because the venue stays in `VENUES_BY_ASSET_GROUP["cefi"]` so
+      it's iterated even though MVP catalog-tagging makes every attempt fail — wasting Tardis API quota daily. The
+      MVP-removal and backfill-launcher-exclusion findings above are still correct; only "has NEVER been fetched" is
+      false. The open remediation (`[INFRA] P3` in the doc cited above, and echoed in
+      `/plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`) is the live tracking location — no new todo
+      needed here.
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
@@ -315,7 +325,17 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 - [ ] [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here').
+- [ ] [DATA] P3. **Re-verify manifest coverage for Hyperliquid 2023-04-15..2023-12-31** once
+      `DEPLOYMENT_COMPLETED exit_code=0` lands for the `cefi-hyperliquid-2023-*` backfill VM (run-id `20260727-071055`
+      was actively advancing through this window as of 2026-07-27T08:37:45Z, ~88s/day — check current run status, it has
+      had 13 days to complete since). Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc
+      tracking this fleet). Repo: market-tick-data-service.
 
+> **CORRECTED 2026-08-09 (plan_reconciler)**: the 2026-08-06 audit note below was itself already stale — its first named
+> item (read_availability_index empty-DF) IS tracked above; only the second (re-verify manifest coverage) was genuinely
+> prose-only. Converted to a tracked todo per the CLAUDE.md HARD RULE ("every follow-up is a `- [ ]` todo, never
+> prose").
+>
 > **2026-08-06 archive-candidate audit**: Hyperliquid todo's own text flags 'worth its own follow-up, not chased here to
 > stay in scope' (read_availability_index empty-DF) and a second prose-only 'Follow-up: re-verify manifest coverage for
 > 2023-04-15..2023-12-31 once DEPLOYMENT_COMPLETED exit_code=0 lands' — neither became a `- [ ]` todo.

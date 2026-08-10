@@ -356,9 +356,11 @@ the canon plan; track there, not as duplicate todos:
       resolution (override / kind-only / correct cat enumeration) so their data-status panels are accurate. —
       deployment-api
 - [x] ✅ [DATA] P0. **APPLY GATE sign-off — cefi, tradfi, prediction: DONE, eyeballed by Ikenna (operator ruling
-      2026-08-07).** Projected captured/attempted/empty/failed split confirmed sane (orphan recovery looks right, no
-      phantom over-count) for these 3 AGs under Manifest-beta mode. **TIER 2 `--apply` is UNBLOCKED for cefi, tradfi,
-      prediction** — proceed per the APPLY GATE banner above (per-AG, not a whole-doc gate).
+      2026-08-07, recorded here in `data_status_tab_and_downloads_remediation_2026_06_16.md`; corroborated in
+      `/plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`).** Projected captured/attempted/empty/
+      failed split confirmed sane (orphan recovery looks right, no phantom over-count) for these 3 AGs under
+      Manifest-beta mode. **TIER 2 `--apply` is UNBLOCKED for cefi, tradfi, prediction** — proceed per the APPLY GATE
+      banner above (per-AG, not a whole-doc gate).
 - [ ] [DATA] P0. **APPLY GATE sign-off — defi, sports: HOLD (operator ruling 2026-08-07).** NOT yet eyeballed — Ikenna
       is still wrestling with agents on manifest canonicalisation for these 2 AGs (see their own outstanding
       canonicalisation todos elsewhere in the corpus); the projected index isn't stable enough to sign off yet. **TIER 2
@@ -466,5 +468,5 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   source targets the remaining open UI/backend todos actually touch.
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the 3 UI todos stay
   correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
-  re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay
-  correctly HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
+  re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay correctly
+  HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).

@@ -30,7 +30,7 @@ stale/absent — never read it whole). Narrow with frontmatter facets, e.g.
 ## ⚠️ CRITICAL: Never Run basedpyright Without Source Dir
 
 - ❌ NEVER `basedpyright .` or `basedpyright` (no args) — hangs indefinitely in 30+ repo workspace
-- ✅ ALWAYS `timeout 120 basedpyright <source_dir>/` — see `.cursor/rules/basedpyright-safety.mdc`
+- ✅ ALWAYS `timeout 120 basedpyright <source_dir>/` — see `.cursor/rules/core/basedpyright-safety.mdc`
 
 ---
 
@@ -41,7 +41,7 @@ bash scripts/quickmerge.sh "feat: description"                        # deps mat
 bash scripts/quickmerge.sh "feat: description" --dep-branch "name"   # deps differ
 ```
 
-See `.cursor/rules/always-use-quickmerge.mdc`
+See `.cursor/rules/core/always-use-quickmerge.mdc`
 
 ---
 
@@ -54,13 +54,13 @@ Sub-agents start with FRESH context — always-apply rules are NOT inherited. Re
 2. Include at TOP: "Before any action, read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
 
 Never rely on reminders alone — sub-agents need the full rules set.
-See `.cursor/rules/agents-follow-cursor-rules.mdc`
+See `.cursor/rules/core/agents-follow-cursor-rules.mdc`
 
 ---
 
 ## Context7 for External Libraries
 
-Append "use context7" for external lib prompts (Tardis, Databento, GCP, pandas, NautilusTrader). See `.cursor/rules/context7-usage.mdc`
+Append "use context7" for external lib prompts (Tardis, Databento, GCP, pandas, NautilusTrader). See `.cursor/rules/core/context7-usage.mdc`
 
 ---
 
@@ -99,18 +99,18 @@ These rules are BLOCKING — always active, never override without audit:
 
 | Rule | Priority | What it enforces |
 |------|----------|-----------------|
-| `.cursor/rules/no-summary-docs.mdc` | 100 | Never create `*_SUMMARY.md` recap docs |
-| `.cursor/rules/runtime-verification-required.mdc` | 95 | Run code, wait 8-10s, check terminal — never claim "done" without |
-| `.cursor/rules/delete-deprecated.mdc` | 95 | Delete old code; no parallel code paths after refactor |
-| `.cursor/rules/never-revert-local-changes.mdc` | 95 | Never `git reset --hard` or discard uncommitted work |
-| `.cursor/rules/no-type-any-use-specific.mdc` | 90 | No `Any` types — use TypedDict/Protocol/specific types |
-| `.cursor/rules/always-use-quickmerge.mdc` | 85 | `bash scripts/quickmerge.sh` — never standalone quality gates or git push |
-| `.cursor/rules/basedpyright-safety.mdc` | 100 | Always `timeout 120 basedpyright <source_dir>/` — never `basedpyright .` |
-| `.cursor/rules/agents-follow-cursor-rules.mdc` | 95 | Sub-agents need explicit rule reminders — include `.cursorrules` at top |
+| `.cursor/rules/core/no-summary-docs.mdc` | 100 | Never create `*_SUMMARY.md` recap docs |
+| `.cursor/rules/core/runtime-verification-required.mdc` | 95 | Run code, wait 8-10s, check terminal — never claim "done" without |
+| `.cursor/rules/core/delete-deprecated.mdc` | 95 | Delete old code; no parallel code paths after refactor |
+| `.cursor/rules/core/never-revert-local-changes.mdc` | 95 | Never `git reset --hard` or discard uncommitted work |
+| `.cursor/rules/core/no-type-any-use-specific.mdc` | 90 | No `Any` types — use TypedDict/Protocol/specific types |
+| `.cursor/rules/core/always-use-quickmerge.mdc` | 85 | `bash scripts/quickmerge.sh` — never standalone quality gates or git push |
+| `.cursor/rules/core/basedpyright-safety.mdc` | 100 | Always `timeout 120 basedpyright <source_dir>/` — never `basedpyright .` |
+| `.cursor/rules/core/agents-follow-cursor-rules.mdc` | 95 | Sub-agents need explicit rule reminders — paste `SUB_AGENT_MANDATORY_RULES.md` at top |
 
 ## Anti-Patterns
 
-See `.cursor/rules/anti-patterns-quick-reference.mdc` for the full table.
+See `.cursor/rules/core/anti-patterns-quick-reference.mdc` for the full table.
 
 ---
 

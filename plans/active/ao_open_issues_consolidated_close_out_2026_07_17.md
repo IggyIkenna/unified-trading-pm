@@ -50,8 +50,8 @@ related:
     ../epics/orchestrator_master.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     /plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md,
@@ -62,7 +62,7 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md,
   ]
 created: 2026-07-17
-last_updated: 2026-08-06 # AO issue-doc re-verification sweep (7 archived, 1 new todo, 1 partial). File now 980/1000 lines — near the hard cap again, next touch should split Progress Log history to the archive doc per the 08-03 precedent
+last_updated: 2026-08-10 # batch10 source-checkbox evidence reconciliation (3 flips). File near hard cap — next touch should split Progress Log history to the archive doc per the 08-03 precedent
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -99,7 +99,7 @@ source:
 > AO-issue pile so nothing needs rediscovering. Every todo below was admitted only after re-verifying its source doc's
 > claim against current code AND the live VM — the classification table is the evidence record. Code ships via
 > `quickmerge.sh --agent --files`; each shippable unit flips its todo here AND updates its source issue doc in the same
-> turn; a source doc archives (5-step ritual) when its last todo here lands.
+> turn; a source doc archives (6-step ritual) when its last todo here lands.
 
 ## Split-out child plans (2026-07-20) — work MOVED out of this plan
 
@@ -156,7 +156,7 @@ linked 2026-07-31. NOT linked: `infra_satellite_ao_dispatch_batch3_2026_07_30.md
 | Self-owned active plan, just not linked here                                                                                                                                                 | 3   | `ao_fleet_observability_kpis_2026_07_20` (✅ ARCHIVED 2026-07-31, no fix needed), `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29` (✅ fixed — now in `related:` 2026-07-31), `orchestrator_vm_e2e_hardening_2026_07_24` (✅ fixed — now in `related:` 2026-07-31)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Conflict-gated (re-triageable next batch)                                                                                                                                                    | 8   | `ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24`, `one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25`, `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26`, `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25`, `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21`, `utl_shared_clone_commits_repeatedly_reset_2026_07_22`, `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24`, `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Operator-gated (needs a ruling, not another audit)                                                                                                                                           | 8   | ~~`escalation_backlog_repo_collision_blind_spot_2026_07_25`~~ **RESOLVED 2026-08-01** (option b shipped `agent-orchestrator@7c937f99e0`, archived), `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25`, `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17` **DECIDED 2026-08-01** (option 5 pre-commit / option 2 post-commit / option 4 docs, work not yet shipped — see doc's own Progress Log), `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24`, `long_lived_vm_logs_not_backed_up_2026_07_02`, `mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27`, `prediction_trades_migration_concurrent_dispatch_2026_07_28`, ~~`idle_slot_dirty_wip_never_auto_resolves_2026_07_20`~~ **MOOT 2026-08-01** (both todos already shipped 2026-07-24 by `ao_remediation_b_code_chain_2026_07_23`, predating the "gate cleared" note below — archived), `unified_trading_pm_stash_pile_accumulation_2026_07_26`, `per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27`, `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15`, ~~`wip_preserve_refs_silently_unrecovered_2026_07_29`~~ **ARCHIVED 2026-08-07** (all 5 todos shipped; daily sweep `agent-orchestrator@d36219c` + post-push gate `unified-trading-pm@98b99afa2`)                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Cross-tranche-claimed                                                                                                                                                                        | 1   | `blank_assigned_vm_dispatch_classification_gap_2026_07_26`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Cross-tranche-claimed                                                                                                                                                                        | 1   | ~~`blank_assigned_vm_dispatch_classification_gap_2026_07_26`~~ **ARCHIVED** (confirmed real owner: `ao_satellite_ao_dispatch_batch2_2026_07_30.md:302` — same ao tranche, not actually cross-tranche; now `plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` — verified by plan_reconciler agt-c7578b 2026-08-10)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Discussed in batch1, no closing todo                                                                                                                                                         | 1   | `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Unclear, needs a closer read before bucketing                                                                                                                                                | 6   | `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29`, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28`, `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`, ~~`na_eligibility_auditor_timer_not_yet_installed_2026_07_27`~~ **ARCHIVED 2026-08-06** (`/ag-closeout-audit ao` — all 4 todos were already `[x]`, `plans/archive/issues/`), `mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29`, `plan_health_tests_leak_real_slack_alerts_2026_07_24`, `watchdog_unpushed_sweep_defeats_operator_merge_gate_2026_07_26`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Found 2026-07-31 audit, self-owned, never referenced                                                                                                                                         | 7   | `ag_closeout_audit_ao_parked_2026_07_31`, `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30`, `ao_done_gate_checkbox_flip_blind_to_paragraph_restructure_2026_07_31`, `ao_orphan_audit_followup_triage_2026_07_30`, `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30`, `orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31`, `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -169,7 +169,7 @@ read in full + cross-checked against current `agent-orchestrator` code / `git lo
 counted). Verdicts: **12 candidate-RESOLVED → 7 confirmed and archived**, **18 PARTIAL** (root cause fixed, one residual
 sub-item), **21 STILL-OPEN** (defect confirmed still present, or genuinely operator-gated).
 
-**Archived 2026-08-06** (5-step ritual applied, now `plans/archive/issues/`, corpus-wide referrer paths fixed):
+**Archived 2026-08-06** (6-step ritual applied, now `plans/archive/issues/`, corpus-wide referrer paths fixed):
 `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25` (dup routed elsewhere, closed),
 `plan_health_tests_leak_real_slack_alerts_2026_07_24` (stale `status: open` corrected),
 `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26` (DEVOPS P1 shipped via `qg-host-governor.sh`,
@@ -396,8 +396,8 @@ NOT AO and are deliberately out of scope here.
       `plan_health` flagged `data_completion_defi_2026_07_15` as CONTRADICTED/superseded by
       `defi_consolidated_closeout_2026_07_18` — which declares the per-instrument re-architecture supersedes the
       batch-model tracks, DeFi capture STOPPED, and backfill GATED on T1–T3 canonicalisation. If that plan never
-      progresses, this park **outlives its reason forever** (a permanent silent park). Operator ruling needed: re-point
-      the unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
+      progresses, this park **outlives its reason forever** (a permanent silent park). Decision needed: re-point the
+      unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
       re-architecture resumes. Source: doc #5 fix-todo 2 + plan_health contradiction output. **Gate**: the owning plan
       (whichever it now is) carries the flip instruction; condition documented; no park without a named live flipper.
       **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` — do NOT action here.**
@@ -476,11 +476,20 @@ NOT AO and are deliberately out of scope here.
       commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies: every
       edit lands committed+pushed in the same session. Source: doc #10. **Gate**: each tier marked landed/routed/dropped
       with evidence; doc archived.
-- [ ] [REVIEW] P0. **Archive each source doc as its items land** (5-step ritual each: migrate deferred → banner →
-      codex-alignment → codex update if a contract changed → clear lock). Docs #2 and #6-frontmatter carry bogus fields
-      (`last_updated: 2026-06-27` predating `created`; stray `locked_by: live-defi-rollout`) — repair at archival.
-      **Gate**: `plans/active/issues/` contains no resolved-but-unarchived AO doc; inventory regenerated. **➡️ EXTRACTED
-      2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3 — do NOT action here.**
+- [x] ✅ [REVIEW] P0. **Archive each source doc as its items land** (6-step ritual each: migrate deferred → banner →
+      codex-alignment → codex update if a contract changed → update every referrer's path corpus-wide → clear lock).
+      Docs #2 and #6-frontmatter carry bogus fields (`last_updated: 2026-06-27` predating `created`; stray
+      `locked_by: live-defi-rollout`) — repair at archival. **Gate**: `plans/active/issues/` contains no
+      resolved-but-unarchived AO doc; inventory regenerated. **✅ DONE 2026-08-10 — 0 archival actions required.**
+      Re-derived the candidate set fresh (not the stale "Docs #2 and #6" reference): all 57 `plans/active/issues/*.md`
+      docs matching `asset_group: [ao]` OR `parent_epic: orchestrator_master`, checked for 0-open-todos-with-`>0`-done +
+      a terminal `status:` field. Result: **0 genuine orphans** — `check_archive_candidates.sh` (0 candidates,
+      baseline 0) + `check_terminal_status_archived.py` (0 violations, baseline 0) both clean; the 4 near-miss docs are
+      each correctly held back (gate_on_depends finalize, `archive_exempt: true`, or the standing corpus-wide
+      `locked_by: live-defi-rollout`). `regenerate_active_plan_inventory.py` re-run clean (0 orphans, 297 plans). NOTE
+      (2026-08-10, slot 24 re-verify): the corpus-wide gates have since drifted — `check_archive_candidates.sh` now
+      flags 2 candidates and the inventory reports 3 orphans, both from new 2026-08-10 work; tracked as todo 5 in
+      `/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
 
 ### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
 
@@ -570,16 +579,16 @@ NOT AO and are deliberately out of scope here.
       `estimated_unblock_minutes`, and the cooldown becomes that estimate (+small buffer) instead of the defaults.
       Design note: this is the missing middle layer between the existing slot-scoped skip TTL and Phase-3's auto-park
       (park = the ≥N-skips escalation of the same mechanism; the cooldown handles the 1st–Nth skip window). **Build
-      exactly ONE fleet-scoped cooldown store** (keyed by task*id, with change-listeners on prerequisite/regen/park
+      exactly ONE fleet-scoped cooldown store** (keyed by task_id, with change-listeners on prerequisite/regen/park
       events) that is REUSED by Phase-3 auto-park AND AF-1's escalator backoff — do NOT ship three separate
-      cooldown/backoff engines (they diverge). \*\*New tunables (base cooldown, 1h fallback, N-skip park threshold,
-      escalator cap) go on the env-free `config.tuning` / `TuningDefaults`, NOT a new `ORCHESTRATOR*\*` alias** (per the
+      cooldown/backoff engines (they diverge). **New tunables (base cooldown, 1h fallback, N-skip park threshold,
+      escalator cap) go on the env-free `config.tuning` / `TuningDefaults`, NOT a new `ORCHESTRATOR_*` alias** (per the
       2026-07-18 config split); reuse existing knobs where they fit (`slot_skip_ttl_hours`,
       `orphaned_task_reclaim_grace_seconds`, `dispatch_ack_timeout_seconds`). Sources: operator 2026-07-17 + doc #5's
       fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot redispatch inside base cooldown;
       prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured redispatch-of-declined-task rate
       drops to the policy curve on the live VM. **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` —
-      do NOT action here.\*\*
+      do NOT action here.**
 - [x] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
       two NEW defects remain.** **(a) ✅ RE-ENABLED 2026-07-17T18:03Z (operator request, this session)**: ran
       `install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` via SSM; verified `is-enabled=enabled`,
@@ -804,14 +813,14 @@ NOT AO and are deliberately out of scope here.
       **Measured 2026-08-08 ~08:21 UTC**: `dispatched`-status task count = 6; slots with `current_task` set = 6; exact
       1:1 mapping, zero orphans in either direction. 7 `stale_dispatch_reclaimed` events since 2026-07-26 (fix active
       and triggering). **VERDICT: PASS — invariant holds.**
-- [ ] [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
+- [x] ✅ [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
       residuals from the root-cause fix.** Two runs have died so far (07-20 `agt-751738` at 07:33:30, same
       `tmux_session_lost`/`archived_lifecycle_complete` signature as the historical 07-15/17/18 deaths) — root-caused to
       an UNGUARDED `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaping a live-working reconciler whose
       slot had flipped to `idle` (idle-reclaim, `ticks=2`), 1h38m BEFORE the `f641968` typed-agent-exemption guard was
       even committed — so the fix is plausible but UNTESTED (no reconcile run since it deployed). **Gate**: (a) observe
       a full run producing BOTH a `plan_health_result` activity row AND a pushed `plan_reconciler/<dispatch_id>` branch
-      — cite the dispatch*id, result row, and branch name; do not tick on a green-looking journal line alone; (b) **R1**
+      — cite the dispatch_id, result row, and branch name; do not tick on a green-looking journal line alone; (b) **R1**
       — pin the exact code path that flips a typed agent's slot `working`→`idle` (empirically happened at/around a
       service restart on 07-20; not yet located in code — checked & excluded: seed-from-tabs, claim_slot, the
       dispatch-ack requeue, the 25-min health stale-timeout); (c) **R2** — on the next run, confirm the watchdog logs an
@@ -825,10 +834,20 @@ NOT AO and are deliberately out of scope here.
       (/plan-reconcile ao): all 6 named plans are now confirmed archived** (`ao_fleet_infra_hardening` corrected above
       to ✅ ARCHIVED, 5/5, no residual; the other 5 were already shown archived in the split-out table above). The hold
       no longer blocks a retry — this P0 stays unflipped, the run itself still needs to happen. \_Source:
-      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).* **➡️
-      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 — do NOT action here.**
-- [ ] [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
-      reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).* **✅ DONE
+      2026-08-10 — (a)(b)(c) all recorded with evidence.** (a) A full run completed end-to-end, standing behavior since
+      2026-08-06: cited `dispatch_id=agt-a398c9` — `plan_health_dispatch_initiated` row `396415` @ 2026-08-09 03:02:46
+      UTC → `plan_health_result` @ 04:43:25 UTC (contradictions=5, doc_drift=5, fixes_applied=12, filed=4,
+      commit_sha=40ad77233, pr_url=https://github.com/IggyIkenna/unified-trading-pm/pull/2653) → branch
+      `plan_reconciler/agt-a398c9` on origin; 20 completed reconcile runs since 2026-08-06 each with a pushed branch.
+      (b) R1 pinned: `WorkerLivenessWatchdog._reclaim_exited_slot()` (`worker_liveness_watchdog.py:1311-1359`), gated on
+      `has_session()==False` → `reset_slot_worker_state(...,"idle")`; the OLD `_reclaim_idle_lingering_sessions` path is
+      structurally incapable of touching a live typed agent. (c) R2 confirmed live: `orch-slot-19`'s reconciler sat
+      3134s heartbeat-silent yet stayed `working`, protected by the terminal-lifecycle
+      `watchdog_scheduled_heartbeat_timeout`=3600s (`config.py:499`) vs the persistent 900s (`config.py:489`). Residual
+      filed separately: `/plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
+- [x] ✅ [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles
+      with reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
       reclassify to `persistent`, and resolve `data_engineering` (scheduled-vs-persistent). **NOT required for
       correctness** — the shipped fix rekeyed reaping on DISPATCH CONTEXT (a bound `one_shot` `AgentRow`), so nothing
       reads `role.lifecycle` to decide reaping any more; this is a declared-vs-actual **documentation-integrity** item.
@@ -837,8 +856,17 @@ NOT AO and are deliberately out of scope here.
       **Operator-owned timing** (2026-07-21): "after updating docs, fixing this, and everything discussed." **Gate**:
       each role's `lifecycle` matches its real dispatch pattern, or a recorded decision says why the declared value
       stays. _Source: `ao_worker_lifecycle_dispatch_context_2026_07_21.md` (archived 2026-07-23), its "Deferred
-      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._ **➡️ EXTRACTED
-      2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 5 — do NOT action here.**
+      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._ **✅ DONE 2026-08-10
+      — all 5 role files reclassified.** `agents/{backend_engineer,ui_developer,quant_dev,infra,data_engineering}.md`
+      now all declare `lifecycle: persistent` (they drain the backlog via the /boot→work→/done loop, not event-spawned
+      one-offs); `data_engineering` resolved to `persistent` per the 2026-08-06 `task_role_group` ruling. Updated the
+      agent-orchestrator tests/comments that hardcoded the old values (`test_role_registry.py` `_EXPECTED`,
+      `test_reap_orphan_agents.py`, `test_task_usage_windows.py` docstrings, `tests/fixtures/agents/*.md` mirrors,
+      `state_store/{agents,slots}.py` comments) + the 2 codex SSOTs (`agent-orchestrator-worker-liveness.md`,
+      `agent-orchestrator-single-vm-architecture.md`). No dispatch/reap behavior changed (reaping keys on dispatch
+      context, never this field). Commits: `agent-orchestrator@c72daaa` (state_store + tests) + `@4421129` (test
+      fixtures), `unified-trading-pm@14f1dcd` (role files). Re-verified 2026-08-10 (slot 24, review): all 5 role files
+      declare `lifecycle: persistent`.
 - [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
       `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
       in-window alongside the DB migration). Took the `sed -i` backup-first route (backups
@@ -937,67 +965,22 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Progress Log
 
-> **Line-cap remediation (2026-08-03)**: entries from this plan's 2026-07-17 authoring through the 2026-07-28 A7 ruling
-> were extracted verbatim to
+> **Line-cap remediation (2026-08-03, round 1)**: entries from this plan's 2026-07-17 authoring through the 2026-07-28
+> A7 ruling were extracted verbatim to
 > `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md` to bring this doc
-> back under the 1000-line hard cap. New entries append below the kept 2026-08-02 entry.
+> back under the 1000-line hard cap. **Line-cap remediation (2026-08-10, round 2)**: entries from the 2026-08-02 marker
+> through the 2026-08-08 Phase-8 measurement entry were extracted verbatim to
+> `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_10.md`. New entries append
+> below the kept 2026-08-09 (round9) entry.
 
-- **na-eligibility-audit 2026-08-02** (re-affirms the 2026-07-30 verdict, unchanged): KEEP-NA, valid — header declares
-  `Human plan — operator session executes it (assigned_vm: NA, never ingested)` /
-  `LOCAL track — operator-driven, never dispatched`. Of its 8 open todos, 4 are explicitly operator-timing-gated
-  (Layer-1 rewire 'do it at last'; plan_reconciler retry 'hold until the other concurrently-landing AO plans settle';
-  role-lifecycle 'Operator-owned timing'; tmux_session_lost root-cause '⛔ SEQUENCED, do NOT start before the
-  prereq-reaper P0 lands'). Flipping `assigned_vm` would dispatch those four alongside the two now-due calendar
-  re-measurements.
-- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, per-item read.** In scope
-  because the doc was edited since the 2026-08-02 marker (1000L→877L line-cap remediation extraction, no todo content
-  changed). Applied the per-item rubric fresh: 6 of 8 open items are genuinely VALID_JUDGMENT (4 carry the explicit
-  dated operator-timing citations already named above; the ao_docs_reconciliation close-out and archival-ritual items
-  are ongoing judgment-laden meta-work). But **2 items are clean BOUNDED_RECLASSIFY candidates whose gates have now
-  cleared and were never individually assessed** (only ever audited as part of the whole-doc NA framing) — naming them
-  explicitly so they aren't silently dropped:
-  - Line ~726, Phase 8 residual: re-measure the `tmux_session_lost` rate vs. the 192-events-since-07-18 baseline and
-    record the delta — pure read-only activity_log count query over a comparable window with a stated gate, no design
-    call.
-  - Line ~733, Phase 8 residual: the stale-dispatch invariant 24h spot-check (dispatched count == live-worker-held
-    count) — code + 9 regression tests already shipped (`agent-orchestrator@aa81706`); only the operational proof
-    remains, a pure read-only count comparison with a stated gate.
-
-  This skill's Phase 3 only flips a doc's `assigned_vm` IN PLACE as a whole — it does not carve out a partial-doc
-  satellite the way `/ag-closeout-audit` does for orphans, so the doc stays NA as a whole (flipping would also dispatch
-  the still-genuinely-gated items). Per this doc's own established pattern (8 prior child-plan spin-outs already visible
-  in its "Split-out child plans" table), the correct mechanism for these 2 items — if a human decides to act on this —
-  is a small dedicated satellite plan, not a whole-doc flip. NOT drafted by this audit (outside this skill's Phase 3
-  action set for a MIXED verdict); flagging for a human/future run to decide. Explicitly NOT recommending the Phase-8
-  line-738 `plan_reconciler` item despite its own operator-timing gate having since cleared (all 6 named prerequisite
-  plans now archived) — its content targets a since-deleted mechanism (`typed_agent_sessions`, replaced by
-  `ao_uniform_agent_liveness_contract_2026_07_20.md`) and touches the fleet's most incident-prone subsystem
-  (`WorkerLivenessWatchdog`); it needs a human re-scope pass before it could be safely dispatched, not a mechanical
-  bounded-check.
-
-- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the Layer-1 recovery SSOT, the
-  `ao_docs_reconciliation` close-out target, and the two source files (`worker_liveness_watchdog.py`,
-  `stale_dispatch.py`) most load-bearing for the still-open Phase 8/LAST P0 items; dropped entries tied to
-  already-archived earlier phases.
-- **na-eligibility-audit 2026-08-04** (tranche `ao`): KEEP-NA re-affirmed, whole-doc (8 open items, still mostly
-  operator/timing-gated per the 2026-08-02/08-03 markers, independently confirmed on a fresh read). **Closes the loop
-  the 2026-08-03 marker left open**: the 2 flagged BOUNDED_RECLASSIFY items (Phase-8 `tmux_session_lost` re-measure +
-  stale-dispatch 24h spot-check) are now extracted into `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 (drafted
-  today by `/ag-closeout-audit ao`) — same two items, independently found. `assigned_vm` stays NA (extraction ≠
-  reclassify-in-place; flipping this doc would also dispatch the other 6 genuinely-gated items).
-- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
-
-- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
-  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
-- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
-  2026-08-06 marker (only context-scout touched it 2026-08-07). Of the 8 open items, 4 remain explicitly
-  operator-timing-gated (Layer-1 rewire, plan_reconciler retry hold, role-lifecycle timing, tmux_session_lost
-  sequencing); the 2 Phase-8 re-measure items remain independently extracted into
-  `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 per the 2026-08-04 marker (not a fresh finding); the
-  `ao_docs_reconciliation` close-out and archival-ritual items remain ongoing judgment-laden meta-work.
-- **2026-08-08 (ao_satellite_ao_dispatch_batch6-001, slot-3)**: Phase-8 items 5+6 measured and flipped `[x]`. (1)
-  `tmux_session_lost` re-measure: pre-fix 2-day window Jul 18-19 = 189 events (~95/day); post-fix 2-day window Aug 6-7 =
-  645 events (~322/day). **VERDICT: rate did NOT drop (~3.4× INCREASE); orphan-reaper hypothesis ELIMINATED; churn hunt
-  resumes.** (2) Stale-dispatch 24h invariant: `dispatched`-status tasks = 6, slots with `current_task` = 6, exact 1:1
-  match, zero orphans; 7 `stale_dispatch_reclaimed` events since 2026-07-26 confirm reclaimer active. **VERDICT: PASS.**
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — Prior verdict re-verified, no whole-doc RECLASSIFY. Of
+  the 5 remaining un-extracted open items (365, 474, 479-already-extracted-to-batch10, 677, 807): item 365
+  (tmux_session_lost root-cause) stays genuinely open-ended per its own 2026-08-08 re-measure showing the rate
+  INCREASED, not a simple bounded task; item 474 (ao_docs_reconciliation close-out) requires deep cross-doc verification
+  spanning many scattered commits, not a mechanical check; item 677 (Layer-1 producer rewire) is operator-sequenced to
+  run last. Item 807 (prove one plan_reconciler run end-to-end) is flagged, not extracted: `plan_reconciler` graduated
+  to steady-state direct-push 2026-08-09 (see `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`'s
+  Background — 28+ consecutive clean runs 2026-08-02→08-09), which makes this item's literal gate (observe a pushed
+  `plan_reconciler/<dispatch_id>` branch) now inapplicable to the current mechanism — closing it properly needs to
+  reconcile the gate's INTENT against the new steady-state facts, not just cite one recent run; left open rather than
+  force a possibly-wrong extraction.

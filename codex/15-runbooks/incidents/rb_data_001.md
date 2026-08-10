@@ -25,7 +25,7 @@ referenced_by:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
-    plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
   ]
 ---
 

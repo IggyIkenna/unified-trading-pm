@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Sports Data Source — Coverage Matrix SSOT
 summary:
   Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 96, footystats
-  48, understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
+  50, understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -32,7 +32,7 @@ referenced_by:
     /codex/02-data/sports-scheduling-and-sharding.md,
   ]
 owner:
-last_reviewed: 2026-07-24
+last_reviewed: 2026-08-10
 code_refs:
 ---
 
@@ -87,14 +87,14 @@ Cross-refs:
 ## 1. Expected-league counts per source (re-verified live 2026-07-24, originally observed 2026-04-20)
 
 These counts are live-derived from `LEAGUE_REGISTRY` and are the authoritative denominator for data-status coverage %.
-**Re-verified 2026-07-24** directly against the live `LEAGUE_REGISTRY` — the registry has grown since the 2026-04-20
-snapshot; `odds_api`/`open_meteo`/`soccer_football_info`/`understat` are unchanged, `api_football`/`footystats`/
-`transfermarkt`/the total drifted (see changelog):
+**Re-verified 2026-08-10** directly against the live `LEAGUE_REGISTRY` — `footystats` drifted since the 2026-07-24
+snapshot (subscription upgrade, see changelog); `odds_api`/`open_meteo`/`soccer_football_info`/`understat`/
+`api_football`/`transfermarkt` are unchanged:
 
 | `data_sources` key     | Leagues expecting this source | Classification breakdown                                      |
 | ---------------------- | ----------------------------: | ------------------------------------------------------------- |
 | `api_football`         |                            96 | PREDICTION 33 + FEATURES 24 + REFERENCE 39                    |
-| `footystats`           |                            48 | PREDICTION 28 + FEATURES 20                                   |
+| `footystats`           |                            50 | PREDICTION 32 + FEATURES 18                                   |
 | `odds_api`             |                            33 | PREDICTION 33                                                 |
 | `open_meteo`           |                            33 | PREDICTION 33 (weather on fixture dates)                      |
 | `soccer_football_info` |                            33 | PREDICTION 33                                                 |
@@ -156,8 +156,9 @@ field) require updating both the SchemaContract and this table in lockstep.
 
 ### 2.2 FootyStats-sourced entities (source key = `footystats`)
 
-Expected leagues: `[l for l in LEAGUE_REGISTRY.values() if "footystats" in l.data_sources]` = 48 (PREDICTION 28 +
-FEATURES 20). Note PRED_NO_FOOTYSTATS preset excludes some PREDICTION leagues (subscription limit).
+Expected leagues: `[l for l in LEAGUE_REGISTRY.values() if "footystats" in l.data_sources]` = 50 (PREDICTION 32 +
+FEATURES 18). Note PRED_NO_FOOTYSTATS preset still excludes 1 PREDICTION league (subscription limit, raised but not
+removed 2026-08-07 — see changelog).
 
 | data_type     | Coverage axis                 | Expected shards per day                                         | `record_empty` expected |
 | ------------- | ----------------------------- | --------------------------------------------------------------- | ----------------------- |
@@ -341,6 +342,14 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
 
 ## 5. Changelog
 
+- **2026-08-10** — `footystats` expected-league count corrected 48→50 (§1 table, §2.2, summary/frontmatter) — a
+  2026-08-07 operator subscription upgrade (`unified-api-contracts@7810dad61`, `SPORTS_LEAGUES_CONFIG_VERSION` 2→3)
+  raised the footystats league cap, moving 4 PREDICTION-tier leagues (ARGENTINA_PRIMERA, CHILE_PRIMERA, LIGA_MX,
+  K_LEAGUE_1) from `PRED_NO_FOOTYSTATS`→`PRED_NO_UNDERSTAT` and dropping 2 FEATURES-tier leagues (CHINA_SUPER_LEAGUE,
+  RUSSIA_PREMIER_LEAGUE, neither has a Prediction-tier sibling) entirely out of scope. New breakdown: PREDICTION 28→32,
+  FEATURES 20→18, net 48→50. Verified same-day in prod: the 4 additions backfilled clean (0 gaps), the 2 removals' stale
+  captured rows purged (4,458 rows, 0 residual). This doc had not been updated since the change landed — found stale via
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
 - **2026-07-24** — Stale-under-banner verification pass (`sports_closeout_batch1_ao_ready_2026_07_24.md` [DOC] P2):
   every claim in the top banner re-checked against a fresh read-only prod census. Corrected the FIXTURES-migration
   status claim (code path shipped `instruments-service@e19c5a7a`/`@47c1ffb3`, historical backfill of 337,464 legacy rows

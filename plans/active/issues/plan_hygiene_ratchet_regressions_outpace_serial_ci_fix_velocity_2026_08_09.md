@@ -19,7 +19,8 @@ repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci, quality-gates-v2, ratchet, plan-hygiene, concurrency, live-incident]
 related:
-  - /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md
+  - /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md
+  - /plans/active/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md
 created: 2026-08-09
 author: agt-22de53 (main), relaying a finding from agt-558c62 (slot 3)
 parent_epic: infrastructure_master
@@ -47,8 +48,8 @@ context_scope: [unified-trading-pm/scripts/plan-hygiene/, unified-trading-pm/.gi
 consecutive distinct regressions in a row, each on a fresh `HEAD`:
 
 1. `codex-doc-freshness` — already independently root-caused and re-baselined this session
-   (`plans/active/issues/codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md`), an ambient time-decay
-   ratchet, not this worker's fault.
+   (`plans/archive/2026_08/issues/codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md`, archived
+   2026-08-09 once its structural fix shipped), an ambient time-decay ratchet, not this worker's fault.
 2. `effort-ratchet`
 3. `archive-candidates` (x2 — regressed twice)
 4. `dangling-reference-paths` — 95 violations > baseline 86, current at time of report
@@ -70,7 +71,7 @@ words: "this branch is churning faster than one CI worker can chase serially").
 
 ## Todos
 
-- [ ] [BACKEND] P3. **New facet found 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): the same
+- [x] ✅ [BACKEND] P3. **New facet found 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): the same
       zero-baseline-grace `--only` design also hard-blocks LOCAL pre-commit, not just CI.** A routine, fully-unrelated
       context_scope-maintenance sweep (touching ~270 docs, no todo/status/effort-tier content changed) hit
       `check_plan_operator_ruling_evidence.py --only` and `check_effort_signal_ratchet.py --only` failing on ANY staged
@@ -86,17 +87,143 @@ words: "this branch is churning faster than one CI worker can chase serially").
       (`scripts/quality_gates/check_plan_operator_ruling_evidence.py`,
       `scripts/plan-hygiene/check_effort_signal_ratchet.py`). Done-when: same structural fix as the P2 todo below
       resolves this facet too (a grandfather/baseline mode for `--only`, or moving these two checks to periodic/batched
-      sweep, would both fix it) — track under the same resolution, don't design a separate fix.
-- [ ] [BACKEND] P2. Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
-      high-churn branch: (a) debounce/coalesce the CI re-trigger (e.g. the hourly `ldr-ci-monitor`) so a fix push
-      doesn't immediately race a fresh concurrent regression; (b) batch multiple ratchet-fix commits into a single CI
-      pass instead of one escalation-and-fix cycle per individual regression; (c) evaluate whether any of the four
-      ratchet checks that regressed here (codex-doc-freshness, effort-ratchet, archive-candidates,
-      dangling-reference-paths) should move from hard-fail to a periodic/batched sweep instead of per-commit
-      enforcement, given they're corpus-wide ambient-drift-prone rather than tied to the committing agent's own diff.
-      Repo: unified-trading-pm (`.github/workflows/`, `scripts/quality_gates/`).
-- [ ] [REVIEW] P3. Once a structural fix lands, verify by watching the next 2-3 `quality-gates-v2` runs on
-      `live-defi-rollout` for whether ratchet regressions still chain the way they did here.
+      sweep, would both fix it) — track under the same resolution, don't design a separate fix. — DONE 2026-08-09
+      (unified-trading-pm@ad65d14da): `check_effort_signal_ratchet.py --only` already had this fix shipped by the
+      2026-08-09 slot-18 dispatch (found on pickup — see Progress Log). Applied the same grandfather-at-HEAD pattern to
+      `check_plan_operator_ruling_evidence.py --only`: each staged file's violations are now diffed against its own
+      committed HEAD version (`git show HEAD:<path>`, matched by (phrase, context) identity) — a citation already
+      unsourced at HEAD is skipped, a brand-new one still flags. Also deleted ~20 lines of provably-dead code in
+      `main()` (an argparse-`--only` branch that could never execute since the early `if "--only" in sys.argv` check
+      always short-circuits first). 9 new unit tests (real throwaway-git-repo fixture, since this is `git show`
+      integration behavior), `quality-gates.sh` green (1890 tests passed).
+- [x] [BACKEND] P2. ✅ Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
+      high-churn branch — `unified-trading-pm@36eb05954` (see Progress Log entry below for the exact commit and what
+      shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
+      `check_archive_candidates.sh --diff-base` pattern, plus a latent fail-unsafe bug fixed in that same pattern for
+      the periodic cron path). Follow-up P2/P3 todos below track the checks this dispatch did NOT convert.
+- [x] [BACKEND] P2. ✅ Extend the SAME `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh`
+      2026-08-06, `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and
+      `check_na_corpus_ratchet.py` — both are structurally identical in shape (a corpus-wide scan producing a total
+      count compared against a static baseline), so the same "compare the violation/candidate SET at HEAD vs the set at
+      `<ref>`, fail only on what's new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared
+      `DIFF_BASE_REF` guard (already computed once, resolvability-checked) the same way the two existing diff-scoped
+      checks consume it — do not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this
+      dispatch fixed. Repo: unified-trading-pm (`scripts/plan-hygiene/`). Shipped `unified-trading-pm@b12d43618` (+
+      `@3fffb345b` for this doc's own updates), verified ancestor of `origin/live-defi-rollout`.
+- [x] ✅ [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into
+      `quality-gates.sh`'s post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks
+      above are — its violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip
+      stale↔fresh between two CI runs with ZERO commits in between; diffing against any git ref cannot express "did
+      today's wall-clock make this worse". This is the strongest candidate for option (c)'s literal ask ("move to
+      periodic/batched sweep instead of per-commit enforcement") since gating an unrelated commit on ambient calendar
+      drift is not a diff-scoping problem to solve, it's a policy call about whether per-commit enforcement is the right
+      shape at all — needs an operator/main decision (weakening a currently-hard gate), not a unilateral backend change.
+      File the decision as its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
+
+      **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
+                                                                                          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+                                                                                          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+                                                                                          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+                                                                                          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+                                                                                          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+                                                                                          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+                                                                                          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+                                                                                          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+                                                                                          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+                                                                                          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+                                                                                          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+                                                                                          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+                                                                                          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+                                                                                          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+
+                                                                      **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
+                                                                      `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
+                                                                      the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
+                                                                      slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
+                                                                      is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
+                                                                      runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
+                                                                      symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
+                                                                      note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
+                                                                      change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
+
+- [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
+      commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
+      `scripts/quality-gates.sh`), or move to a periodic/batched sweep instead (e.g. folded into
+      `run_hygiene_sweep.sh`'s cron path, Slack-notify + exit-0-always, matching how the periodic path already treats
+      `archive-candidates`/`reference-paths` outside CI)?** The check's violations are pure wall-clock decay
+      (`last_reviewed` aging past the 90-day window) — a doc can go from fresh to stale between two CI runs with ZERO
+      commits touching it, so an unrelated commit can be blocked by a doc nobody in that commit's diff touched. The
+      per-file baseline-snapshot fix (`unified-trading-pm@8bc27fe8f`) already stopped the CHAOTIC re-baselining symptom
+      (a session hitting the gate now sees the exact new-stale doc, not a vague delta) — this is the separate,
+      still-open question of whether ambient calendar drift should gate commits AT ALL. - Option A (status quo): keep it
+      a hard per-commit gate. Pro: freshness debt can't silently accumulate past the ratchet without a
+      `--baseline-write` that visibly acknowledges the new debt. Con: still blocks commits on doc content the committer
+      never touched — the same "chasing a moving target" shape this whole issue doc documents across 8+ distinct ratchet
+      checks. - Option B (recommended): drop it from `quality-gates.sh`'s post-gates and move it to
+      `run_hygiene_sweep.sh`'s periodic/cron path (Slack-only, non-blocking). A stale codex doc is real debt worth
+      surfacing, but it isn't caused by — and shouldn't block — an unrelated commit; this matches the "batched sweep"
+      shape option (c) originally asked for. - Option C: keep it in `quality-gates.sh` but scope it to fire only when
+      the commit's OWN diff touches a cutover-critical codex path (skip entirely otherwise) — closer to the diff-base
+      checks in the P2 todo above, but weaker: it narrows who gets blocked without solving "the doc went stale with
+      nobody committing anything." Repo: unified-trading-pm (`scripts/quality_gates/check_codex_doc_freshness.py`,
+      `scripts/quality-gates.sh` `CODEX_FRESHNESS_CHECKER` block). Once decided, implement the outcome and update this
+      todo with the result.
+
+- [ ] [OPERATOR] P1. **Decide how to break the `assigned_vm:NA corpus size` / LDR→main promote deadlock** — as of the
+      2026-08-10 slot-3 dispatch below, `origin/main` for `unified-trading-pm` is 1121 commits behind LDR and NO promote
+      PR has merged since 2026-08-09T09:19:49Z (#2671) — 39+ consecutive `Option-B auto-drain` PRs closed unmerged over
+      20+ hours, every one blocked by exactly this one check (`check_na_corpus_ratchet.py --diff-base     origin/main`).
+      This is a genuine chicken-and-egg deadlock, not ambient churn to wait out: the check compares current NA-doc/todo
+      counts against `origin/main`, but `origin/main` cannot advance until a promote PR passes this SAME check — so
+      every hour the promotion stays stalled, MORE legitimate multi-session NA-doc growth accumulates into the "new vs.
+      main" diff, making the next attempt strictly harder, not easier. Per this doc's 13+ prior dispatches (see Progress
+      Log), spot-checks confirm the large majority of the "new" docs are genuinely NA-worthy content (credential-asks,
+      operator-ruling records, credential-blocked trackers) accumulated over a day-plus of real fleet work, not misuse
+      of the NA classification — so a blind bulk-reclassification to force a green run would be inventing busywork to
+      satisfy a stale baseline, not fixing a real defect. Options: (A) run a dedicated `/na-eligibility-audit` pass NOW
+      (audit-scale, per-doc judgment, not a one-shot CI fix — this is the mechanism CLAUDE.md already names for
+      shrinking this exact ratchet) to bring the corpus back under baseline before the next promote attempt; (B) grant a
+      ONE-TIME reviewed baseline bump for `check_na_corpus_ratchet.py` (with an explicit justification note, per this
+      repo's own "reviewed, justified baseline bump" carve-out already referenced in the Progress Log) sized to the
+      genuine backlog measured by (A), landing main once so the `--diff-base` re-zeroes against a current tip and future
+      diffs return to being small and chaseable; (C) a human-authorized one-time manual merge of a promote PR bypassing
+      this specific check ONLY (not a general precedent — a scoped, logged exception) to unstick `origin/main`, followed
+      immediately by (A) or (B) so it doesn't recur next cycle. Recommend (A) then (B) in sequence: audit first so any
+      baseline bump is evidence-backed, not a blind escape hatch. Repo: unified-trading-pm
+      (`scripts/plan-hygiene/check_na_corpus_ratchet.py`, `.github/workflows/quality-gates-v2.yml`). Once decided,
+      implement the outcome and update this todo with the result — do not fold into the P3 backlog todo below (that one
+      is `check_todo_regression.sh`, a different check).
+
+- [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
+      compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
+      (re-fetched fresh every run), not a stable ref like `origin/main`, so it races on every CI run rather than being
+      fixable by pointing `--diff-base` at it. The correct fix compares each touched file's OWN todo count only against
+      ITS state at the merge-base of HEAD and `origin/live-defi-rollout` (the actual fork point), not the moving tip —
+      but computing a reliable merge-base needs more history than this job's shallow `fetch-depth: 2` checkout carries
+      (confirmed via inspection of `python-quality-gates-v2.yml`'s QG-slice job), so the fix also needs either a
+      deeper/targeted fetch (`git fetch --deepen=<N>` or a merge-base-aware shallow fetch) or a restructure to scope the
+      scan to only files this push's own diff touched (skip files nobody in this push edited entirely, regardless of
+      what origin's tip does). Scope this as its own investigation, not a copy-paste of the diff-base pattern above — it
+      doesn't fit that shape. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+- [x] ✅ [REVIEW] P3. Once the structural fix above lands, verify by watching the next 2-3 `quality-gates-v2` runs on
+      `live-defi-rollout` for whether ratchet regressions still chain the way they did here. — DONE 2026-08-09 (review,
+      slot 12): watched 7 consecutive `quality-gates-v2` runs on `live-defi-rollout` spanning 16:13Z-23:09Z
+      (`31323011190`→`31341193852`, 7 distinct HEAD SHAs, real fleet churn between each). Confirmed convergence, not
+      continued chaining: the hard-fail set shrank from 4-5 distinct ratchet checks at 16:13/17:14 (reference-paths,
+      archive-candidates, create-only-archival-guard, na-corpus, prosewrap) down to exactly the SAME 2 checks
+      (`assigned_vm:NA corpus size`, `No prettier proseWrap continuation-padding`) on every one of the last 4
+      consecutive runs (20:54, 21:10, 22:08, 23:09 — 2h+ span, no new distinct check appeared). `reference-paths` and
+      `archive-candidates` — both converted to `--diff-base` in this doc's P2 dispatches — now pass or stay off the
+      failure list run-over-run; `effort-signal-ratchet` shows explicit `✅ 0 NEW violation(s) vs origin/main` in every
+      sampled run. The 2 remaining failures are exactly the 2 already-diagnosed-open items this doc's own Progress Log
+      already tracks, not a new chain link: `na-corpus` is diff-scoped but blocked on the stalled LDR→main promotion
+      catching up (its baseline ref `origin/main` sits hundreds of commits behind LDR per the slot-18/slot-4 entries
+      above), and `prosewrap` is the one check from the original option-(c) list never converted to diff-base (existing
+      P3 backlog todo below covers it — not a new finding, no new todo filed). Verdict: the P2 structural fix
+      demonstrably stopped the "different check fails every retrigger" pattern for the checks it touched; the residual
+      wall is 2 stable, already-tracked root causes, not an unconverged race. Evidence:
+      `gh run list --branch live-defi-rollout --repo IggyIkenna/unified-trading-pm --workflow quality-gates-v2 --limit 10` +
+      `gh run view <id> --log-failed` per run, cross-referenced above.
 
 ## Progress log
 
@@ -236,3 +363,371 @@ words: "this branch is churning faster than one CI worker can chase serially").
   race this doc already documents 6+ times over. No code/plan fix needed or applied; nothing to push. Confirms this
   escalation lineage's already-established finding rather than adding a new failure mode. `AUTHORING_SLOT=ci-reconcile`
   sentinel (not a numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
+- 2026-08-09 (backend_engineer, slot 7, dispatched for the P2 structural-fix todo): shipped option (c) for one of the
+  four named checks. Root-caused the exact mechanism: `run_hygiene_sweep.sh --ci` (the plan-hygiene hard gate folded
+  into `quality-gates-v2`'s `checks` leg, `python-quality-gates-v2.yml` line ~843) runs most ratchet checks in
+  corpus-wide baseline mode — comparing the CURRENT live corpus count against a static YAML baseline, regardless of
+  whether the commit under test touched the offending doc — which is exactly why an unrelated concurrent commit landing
+  between a worker's fix-push and the next CI re-run fails that re-run on a check the worker never touched.
+  `check_archive_candidates.sh` already had a proven fix for this shape (`--diff-base <ref>`, operator ruling
+  2026-08-06): compare the violation SET at HEAD vs the violation SET at a stable ref (`origin/main`) via
+  `git ls-tree`/`git show` snapshot reads (no merge-base/history-depth needed, so the job's shallow `fetch-depth: 2`
+  checkout is not a problem), and fail only on violations NEW at HEAD. Extended the SAME pattern to
+  `check_reference_paths.py` ("dangling-reference-paths", explicitly named in option (c)) — added `--diff-base <ref>`
+  mode there, batched via `git ls-tree` + one `git cat-file --batch` call (an initial per-file `git show` implementation
+  measured 60s+ per run on this corpus; the batched version is ~4s). Verified locally: baseline mode unchanged (64/81
+  format, 79/86 existence, matches pre-change output exactly), `--diff-base origin/main` correctly finds 8 genuine NEW
+  violations vs `origin/main` (real drift from docs authored on LDR ahead of the last promotion), and an unresolvable
+  ref correctly fails hard (confirming the mode is fail-UNSAFE on a missing ref, same as archive-candidates' existing
+  mode — this is why the caller-side guard below exists). Also found + fixed a REAL latent bug in the existing
+  archive-candidates fix while implementing this: `run_hygiene_sweep.sh` gated `--diff-base origin/main` on bare
+  `[ -n "$CI_MODE" ]`, which ALSO fires for `cron_hygiene_sweep_entrypoint.sh`'s periodic sweep — that entrypoint does a
+  shallow single-branch clone with no `origin/main` fetch, so `origin/main` was never resolvable there, meaning the
+  periodic sweep's archive-candidates check was silently degrading to "every current candidate counts as new"
+  (fail-unsafe) instead of its intended baseline-tolerant behavior, since 2026-08-06 — never caught because the periodic
+  sweep already tolerates hard failures (exits 0 always, Slack-only). Fixed by hoisting a single `DIFF_BASE_REF` guard
+  (resolvability-checked via `git rev-parse --verify -q origin/main`) that both the archive-candidates AND
+  reference-paths invocations now share — `DIFF_BASE_REF` only gets set when `origin/main` is actually fetched (true in
+  the quality-gates-v2 CI-gate context, which explicitly fetches it before this step; false in the periodic-cron
+  context), so the periodic sweep now correctly falls back to full baseline mode instead of hard-failing on 100% of
+  corpus debt. Filed 3 follow-up todos above for the checks NOT converted this dispatch: extending the same pattern to
+  effort-ratchet/na-corpus (mechanical, same shape), moving codex-doc-freshness to periodic-only (a POLICY call, needs
+  operator/main sign-off since it weakens a hard gate — not something to unilaterally decide as backend_engineer craft),
+  and a differently-shaped fix for todo-regression-vs-origin (its second comparison side is a moving live ref, not a
+  stable one — the diff-base pattern doesn't directly apply). Files touched:
+  `scripts/plan-hygiene/check_reference_paths.py`, `scripts/plan-hygiene/run_hygiene_sweep.sh`. No CI workflow change
+  needed (the existing `origin/main` fetch step in `python-quality-gates-v2.yml`, added for archive-candidates, already
+  covers reference-paths too). Live-observed the exact race this doc documents while testing: a fresh
+  `check_todo_regression` run during this session failed on `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`
+  (origin=3 current=2) from a concurrent agent's commit — not mine, not fixed this dispatch (tracked in the
+  todo-regression follow-up above), but direct live confirmation the systemic pattern is still active and this fix
+  targets a real, currently-firing failure mode.
+- 2026-08-09 (backend_engineer, slot 7, same dispatch, shipping): landed `unified-trading-pm@36eb05954`. Hit the exact
+  race this doc documents twice more on the way out: (1) two consecutive `git pull --rebase --autostash` cycles (18 then
+  12 commits behind) before a clean commit window, one with a real conflict in
+  `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (slot 23 independently fixed the SAME fabricated-SHA
+  citation I'd found, more accurately — took theirs, dropped my redundant edit); (2) quickmerge's re-gate then failed on
+  an UNRELATED regression, `check_cloudbuild_template_drift.py` (client-reporting-api 4 markers > baseline 3, confirmed
+  genuine via matched-HEAD sibling clone — not a stale-clone false positive), a hard post-gate outside
+  `run_hygiene_sweep.sh`'s scope entirely (this doc's fix doesn't cover it) that blocks EVERY `unified-trading-pm`
+  commit regardless of diff. Filed
+  `plans/archive/issues/cloudbuild_template_drift_client_reporting_api_regression_2026_08_09.md` (resolved + archived
+  2026-08-09 — `unified-trading-pm@51808a4a6e` + `client-reporting-api@9b28914`, slot-17)
+  (`unified-trading-pm@5c25acbbb`) and declared repo-blocker `RB-b7866b60` per RULES.md § 4b rather than chase it myself
+  (outside craft/scope — needs Cloud Build template-vs-repo intent judgment). A subsequent retry landed clean
+  (`36eb05954` verified via `git merge-base --is-ancestor` against `origin/live-defi-rollout`) even though the checker
+  itself still failed when run standalone afterward — quickmerge's own re-gate apparently didn't re-hit this specific
+  check on that attempt (content-hash/cache short-circuit, not a real fix); `RB-b7866b60` stays open for the other
+  registered waiter (slot 24) since the underlying drift is still live. Net: this dispatch's own P2 deliverable is
+  shipped and verified; the cloudbuild-drift regression is a SEPARATE, now-tracked problem for someone else's dispatch,
+  not a blocker on calling this one done.
+- 2026-08-09 (backend_engineer, slot 18, dispatched for the follow-up P2 todo above): extended the diff-base pattern to
+  the remaining 2 checks named in the todo. `check_effort_signal_ratchet.py`: reused the existing
+  `_is_silent_default_text` content-level predicate (already shared by baseline mode and `--only`) plus a batched
+  `git ls-tree`/`git cat-file --batch` read (same shape as `check_reference_paths.py`'s `_violations_at`) to compute the
+  silent-default-effort plan basename SET at an arbitrary ref; `--diff-base <ref>` fails only on basenames new to that
+  set at HEAD. `check_na_corpus_ratchet.py`: this one is NOT a pure violation-SET check like the other three (it tracks
+  TWO scalar axes — doc count AND total open-todo count — and an already-qualifying doc can gain new todos without being
+  a "new" population member), so the diff-scoped refactor needed a small generalization beyond a literal set-diff:
+  compute a `{relpath: open_todos}` map at HEAD and at `<ref>` (via the same docspec.parse_frontmatter-based predicate
+  `generate_na_doc_tranche_inventory.py` already uses — proper YAML parse, never a line-grep, per that script's own
+  documented bug class), then fail on either axis independently — `new_docs` (paths present at HEAD but not at `<ref>`)
+  or `new_todos_total` (sum of each new doc's full count, plus positive per-doc growth on docs that already qualified at
+  `<ref>` — todos removed, or a doc leaving the population, never count against either axis, matching baseline mode's
+  shrinkage-is-never-a-violation contract). Both wired into `run_hygiene_sweep.sh`'s existing `DIFF_BASE_REF` guard
+  exactly like the two proven checks (no new guard shape, no `[ -n "$CI_MODE" ]`-only duplication). **Caught + fixed a
+  real bug while validating**: my first `git ls-tree <ref> -- <dir>` implementation (no trailing slash) returns the
+  single `tree` object entry for the directory itself, not its children — silently produced 0 entries at every ref,
+  which would have made diff-scoped mode permanently report "0 pre-existing debt at base" (i.e. fail-unsafe on 100% of
+  the live corpus, not just genuinely new drift). Caught by manually comparing head-set vs base-set sizes before
+  trusting the diff output (169 silent-default plans expected at `origin/main`, got 0). Fixed by adding the trailing
+  slash (`plans/active/` / `<dir>/`) both scripts need for a non-recursive `ls-tree` on a specific subdirectory —
+  verified post-fix: `check_effort_signal_ratchet.py --diff-base origin/main` correctly finds 0 new violations (159 at
+  HEAD, 169 at origin/main — LDR is AHEAD, not behind, since slot-23's earlier fix in this same lineage already reduced
+  the count); `check_na_corpus_ratchet.py --diff-base origin/main` correctly finds real new drift (19-21 new docs /
+  44-78 new todos, moving as the sweep re-ran minutes apart — live fleet churn during verification, not a bug). Ran the
+  full `run_hygiene_sweep.sh --ci` end-to-end: both checks execute in diff-scoped mode without error;
+  `Silent-default-effort plans (ratchet)` passed, `assigned_vm:NA corpus size` correctly failed on genuine live drift
+  unrelated to this change (other checks in the sweep also failed on pre-existing/concurrent regressions — per this
+  doc's own established "hand off, don't chase" precedent, none of that is this dispatch's scope). Files touched:
+  `scripts/plan-hygiene/check_effort_signal_ratchet.py`, `scripts/plan-hygiene/check_na_corpus_ratchet.py`,
+  `scripts/plan-hygiene/run_hygiene_sweep.sh`. Committed locally `unified-trading-pm@7aa1fcaa4`. **Could not push via
+  the normal quickmerge flow**: Pass-1 `bash scripts/quality-gates.sh` fails on this exact HEAD (and identically on a
+  pristine committed tree with zero relation to this change) via the "No broad except Exception" codex-compliance gate —
+  a genuine, unrelated, pre-existing repo-wide RED introduced by `unified-trading-pm@0f6087516` (a same-day, unrelated
+  finops commit), NOT caused by this dispatch. Filed
+  `plans/archive/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md` (full repro + violation
+  inventory) and declared repo-blocker `qg_red` for `unified-trading-pm` per RULES.md § 4b rather than chase an
+  unrelated 12-file/21-occurrence fix inside this dispatch's scope. This todo's code is DONE and verified correct (see
+  the diff-base testing above); it will push + get its `docs(plans):` SHA-citation update the moment the repo-blocker
+  resolves green. The remaining P3 todos above (`check_codex_doc_freshness.py` — needs an operator/main policy call, not
+  a unilateral backend change; `check_todo_regression.sh` — needs a differently-shaped merge-base-aware fix) are NOT
+  addressed by this dispatch, exactly as scoped.
+- **2026-08-09 (slot 18, resolution)**: `RB-a1b3b316` resolved green (repo-health watcher reporter path, ~1h50m after
+  declaring) — the underlying `ldr_qg_failure` escalation (`agt-433520`) had been actively chased by slot 4 (28
+  attempts, 5 re-escalations on `root_key agt-3dc7e9` before this) and, independently of this dispatch's own fix todo,
+  someone else's commit narrowed `measure_agent_fleet_tokens.py`'s 2 occurrences too (slightly different exception
+  types, `TypeError` vs my `AttributeError` on the timestamp-parse branch — functionally equivalent, took theirs on
+  rebase rather than re-litigate). Re-verified directly against `origin/live-defi-rollout` tip before trusting the green
+  signal (per the resolution-message caveat in RULES.md § 4b): confirmed `bash scripts/quality-gates.sh` exits 0 on the
+  rebased HEAD, "No broad except Exception" shows ✅. Rebased my 3 local commits onto the fresh tip (1 conflict, on the
+  shared finops file — resolved by taking upstream's version, making my own now-redundant fix commit empty and
+  auto-dropped by the rebase), then shipped clean via `quickmerge --agent`: `unified-trading-pm@b12d43618` (the
+  diff-base code) + `unified-trading-pm@3fffb345b` (this doc + the qg_red issue doc), both verified
+  `git merge-base --is-ancestor` of `origin/live-defi-rollout`. Re-verified precisely (not just assumed): all 21 real
+  broad-except occurrences from `pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`'s inventory are STILL
+  live at HEAD — the repo-blocker's green signal did not mean the corpus got fixed. Worse: confirmed the check itself
+  produced a false-negative green on the exact SHA `.qg_last_passed_sha` recorded as clean (content verified via
+  `git show`, all 21 violations present) — a new, more serious P1 finding logged in that doc rather than here (same
+  subject as its existing todo, not a new doc). This P2 todo itself is now fully done and shipped regardless — my own
+  code adds/removes zero broad-except occurrences.
+- **2026-08-09 (infra worker, slot 18, dispatched for
+  `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md` todo 2)**: independently hit this SAME
+  promote-stall while trying to manually re-trigger `unified-trading-library`'s Semver Agent run — found `origin/main`
+  568 commits behind `origin/live-defi-rollout` on `unified-trading-pm` itself, blocked on open promote PR #2704 (head
+  `promote/unified-trading-pm/026a84d6f685`, opened 2026-08-09T16:45:59Z): `QG slice (checks)` hard-FAILED (16:50:04Z)
+  with 5 `❌`s — `No prettier proseWrap continuation-padding (ratchet)` and
+  `Create-only archival guard (archive/active duplicate pairs)` are 2 NEW distinct checks not yet logged in this doc's
+  history (on top of the already-tracked `Reference path convention`/`assigned_vm:NA corpus size`/ `Archive candidates`)
+  — now 8 distinct ratchet checks observed regressing under concurrent commit load on this lineage. `QG slice (tests)`
+  has been `in_progress` on the SAME run since 16:47:07Z (90+ min as of this check, no step progress past "Run quality
+  gates (leg tests)") — looks like the genuine hung-job class RULES.md §4b / CLAUDE.md's "v2-never-reported deadlock"
+  describes, not just a ratchet race. **New downstream consequence not previously documented here**:
+  `unified-trading-ci`'s reusable `semver-agent.yml` fetches `scripts/cicd/detect_breaking_change.py` LIVE from
+  `unified-trading-pm`'s default branch (`main`) via unauthenticated `gh api .../contents/...` (no `--diff-base`/ref
+  pin) for every NON-PM repo's classifier run — so the `source_touched` squash-promote patch-fallback fix
+  (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` + its 2026-08-09 refinement, confirmed present on
+  `unified-trading-pm@30ed07eff` / LDR) is fleet-wide INERT for every repo on the `ldr_main` model until THIS
+  promote-stall clears — confirmed live: a fresh `Semver Agent` run on `unified-trading-library`'s `main` HEAD
+  (`e94be221`, run `31325951737`, 18:07:42Z) still printed the pre-fix
+  `"No feat:/fix:/breaking commits or API changes found. Skipping version bump."` with no `source_touched` key in its
+  JSON verdict — i.e. this isn't just a PM-corpus-hygiene problem anymore, it's silently blocking every fleet repo's
+  internal-bugfix releases too. Per this doc's own established precedent (9th dispatch into the same lineage), NOT
+  attempting a fix-and-retrigger cycle myself — continuing to wait for a future green promote cycle. Cross-referencing
+  from `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md` todo 2, which is blocked on this exact
+  condition.
+- **2026-08-09 (cicd agt-433520, slot 4, `ldr_qg_failure` on `unified-trading-pm` `live-defi-rollout`, `#0`, 10th
+  dispatch into this lineage)**: originating context (repo-blocker `RB-b76ac836`, declared by slot 24) diagnosed the
+  wall as evidence-backed-completion sub-rule B still red — STALE by the time I picked this up: re-ran the check fresh
+  at HEAD, it now passes cleanly (`✅ Evidence-backed-completion check passed ... sub-rule B at/below baseline`). The
+  LIVE `QG slice (checks)` failure (run `31333505879`, 20:08:54Z) is 4 DIFFERENT hard failures from
+  `run_hygiene_sweep.sh --ci`, none of them evidence-backed-completion — same "each retrigger lands on a fresh
+  regression" signature this doc already documents 9x over. Triaged each on its merits rather than assuming all 4 are
+  ambient churn: (1) **`Reference path convention`** — genuine, small, fixed: 2 docs
+  (`asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`,
+  `infra_health_audit_alert_coverage_gaps_2026_08_07.md`) still cited the OLD `plans/active/...` path (no leading slash
+  here deliberately, to avoid re-triggering this same check) of `infra_health_audit_findings_fix_2026_08_07.md` after it
+  was archived to `plans/archive/2026_08/...` — repointed all 3 citations (frontmatter `related:`/`context_scope:` + one
+  prose mention), re-verified `0 NEW violation(s)` locally. (2) **`Archive candidates`** — 4 flagged docs, individually
+  reviewed (not a blind bulk archive): 2 already carried a legitimate `archive_exempt: true` but in YAML block-scalar
+  form (`archive_exempt:\n  true # ...`) that the checker's `^archive_exempt:[[:space:]]*true` regex — same-line only —
+  never matched, a real false-positive bug (script fix out of scope for this dispatch; reformatted both docs'
+  frontmatter to single-line `archive_exempt: true` as the minimal doc-level fix); 1
+  (`sports_odds_feature_naming_canonicalization_2026_07_21.md`) had 0 open checkboxes but an explicit prior-session note
+  that archival is premature (extraction to `sports_satellite_ao_dispatch_batch11_2026_08_09.md` still in flight) —
+  added a real `- [ ]` tracked todo so the checker's checkbox-count method reflects that, instead of re-litigating the
+  deferral; 1 (`strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`) had its own most-recent
+  Progress Log entry already recommending archival but deferring the full ritual (~10-doc referrer sweep) to a future
+  `/ag-closeout-audit` pass — added `archive_exempt: true` citing that entry, matching the check's own documented
+  exemption category (b). Did NOT perform full `git mv` archival on either of the latter 2 — the referrer-sweep scope
+  (10-25 files) is exactly the audit-scale work this doc's precedent says not to attempt in a one-shot CI-wall dispatch.
+  (3) **`assigned_vm:NA corpus size`** — 33 new NA docs / 97 new open todos vs `origin/main`, spread across ~30 distinct
+  2026-08-09-dated docs from many different concurrent sessions — textbook ambient churn, not a single-session
+  regression; confirms `origin/main` sitting 688 commits behind LDR (up from the 568 the slot-18 entry above measured)
+  makes this diff-scoped check's baseline increasingly meaningless as the promote-stall (see that same entry) drags on.
+  Declining to chase, same as every prior dispatch into this specific check. (4)
+  **`No prettier proseWrap continuation-padding`** — NOT diff-scoped (unlike the 3 above, which
+  backend_engineer/slot-7/slot-18 already converted) — full-corpus baseline, 4706 violating lines vs baseline 4472
+  (+234), spread across dozens of files (plans, codex, audit-instruction docs) with no way to attribute to a single
+  cause. Same audit-scale shape as na-corpus; declining to bulk-fix. This IS one of the "8 distinct ratchet checks" the
+  slot-18 entry above already named as newly-observed and not yet diff-scoped — confirms it's still live and
+  unconverted. Shipping the 2 genuine fixes (`unified-trading-pm@<pending, see this dispatch's plan-flip commit>`);
+  na-corpus and prosewrap remain the live blockers on this wall as of this tick, same systemic pattern as every prior
+  dispatch. Reinforcing the P3 backlog todos above (prosewrap needs the same diff-base conversion as the other 3;
+  na-corpus's real fix is the stalled LDR→main promotion clearing, not a per-dispatch chase).
+- 2026-08-09 (backend_engineer, slot 4, dispatched for the `check_codex_doc_freshness.py` P3 todo): the todo's own text
+  scopes this as a policy call, not a unilateral backend change — its instruction is literally "file the decision as its
+  own `[OPERATOR]`-tagged todo once picked up." Verified the slot-28 partial fix (per-file baseline-snapshot diffing in
+  `check_codex_doc_freshness.py`) is real and still live by reading the current file directly, and confirmed the check
+  is still wired as an unconditional post-gate in `scripts/quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, ~line 639 —
+  runs on every commit to this repo, no diff-scoping to the commit's own changed paths). Filed the `[OPERATOR]` todo
+  above with 3 concrete options (keep hard-gate / move to periodic sweep [recommended] / scope-to-touched-paths) so
+  main/operator can make the actual call. No code change — the residual question this todo raises is explicitly a policy
+  decision, not something a backend_engineer craft should decide unilaterally. Flipping this P3 todo done on "OPERATOR
+  todo filed", not on "policy question resolved" — the new `[OPERATOR]` todo tracks the open decision going forward.
+- 2026-08-09 (cicd agt-75d0b0, slot 5, `sit_failure` on `unified-trading-pm` promotion PR #2706, head `cd6e65a7a57f`,
+  11th dispatch into this lineage): `QG slice (checks)` failed with exactly the 2 already-tracked live blockers, no new
+  distinct check — `assigned_vm:NA corpus size` (`check_na_corpus_ratchet.py --diff-base origin/main`: 37 new
+  NA-population docs / 102 new open todos vs `origin/main`, re-measured locally moments apart from the CI run's own 34
+  docs/97 todos — moving as ambient fleet churn continues, textbook shape of every prior dispatch's finding) and
+  `No prettier proseWrap continuation-padding` (full-corpus baseline, still NOT diff-scoped per the P3 backlog todo
+  above — 4665 violating lines vs baseline 4472, +193, down from the slot-4 dispatch's +234 measurement earlier today,
+  i.e. drifting but not monotonically — consistent with "audit-scale corpus debt", not a single attributable
+  regression). Attempted to precisely isolate the "new" prosewrap lines by diffing violation signatures against the file
+  content at the commit that seeded the baseline (`ef487d1eaf`, 2026-08-03): the diff was NOT usable — 6 days of
+  legitimate corpus churn (edits/renames/todo-flips across ~300 active docs) shifts line-content signatures so broadly
+  that the file-level delta (4256+ "new" signatures, exceeding the total violation count itself) does not correspond to
+  genuinely-new corruption, confirming this check's own documented gap (P3 todo above: "needs the same diff-base
+  conversion as the other 3 [checks]" — not yet done for prosewrap, so no reliable way to attribute new-vs-pre-existing
+  short of that structural fix landing). Per this doc's own 10x-reaffirmed "hand off, don't keep serially chasing"
+  precedent — both blockers are the exact 2 checks already explicitly named as audit-scale/ambient-churn, not
+  one-shot-fixable — declining a fix-and-retrigger cycle. No code/doc-content fix pushed this dispatch beyond this
+  Progress Log entry. Reinforcing the standing recommendation: the prosewrap P3 todo (diff-base conversion, same pattern
+  already proven for reference-paths/effort-ratchet/na-corpus) is the only remaining unconverted check from the original
+  4-check P2 list and would likely resolve this exact wall; na-corpus's real fix is the stalled LDR→main promotion
+  catching up (`origin/main` was measured 688+ commits behind LDR earlier today per the slot-18 entry above).
+  `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
+- 2026-08-10 (cicd agt-6eb218, slot 5, `sit_failure` on `unified-trading-pm` promotion PR #2707, head `4e9b2dd4ec03`,
+  12th dispatch into this lineage): `QG slice (checks)` failed with exactly the 2 already-tracked live blockers, no new
+  distinct check — `assigned_vm:NA corpus size` (`check_na_corpus_ratchet.py --diff-base origin/main`: 37 new
+  NA-population docs / 102 new open todos vs `origin/main` at the PR's snapshot; re-measured live at dispatch time — 45
+  new docs / 111 new todos, i.e. still growing as ambient fleet churn continues, `origin/main` still hundreds of commits
+  behind LDR) and `No prettier proseWrap continuation-padding` — this one has since SELF-RESOLVED: re-ran
+  `check_prosewrap_padding.sh` locally against current `live-defi-rollout` HEAD (`5353bbd7ac`, 113 commits ahead of the
+  PR's frozen snapshot) and it now PASSES (4414 violating lines ≤ baseline 4472) — confirms it was a stale-snapshot
+  artifact of the frozen per-SHA promote ref, not a live regression; a fresh promote PR from current LDR tip will not
+  hit it. Spot-checked ~12 of the 45 new NA docs (credential-asks, operator-ruling records, plan-reconciler findings
+  logs, BLOCKED-CREDENTIALS trackers) — all genuinely NA-worthy on read, consistent with this doc's own ~2/3-genuine
+  finding; also confirmed `--diff-base` mode has NO `--update-baseline` escape hatch (that flag only writes the OTHER
+  (non-diff) mode's YAML baseline, which this CI invocation never consults) — the only way to green this check for a
+  real PR is either (a) reclassify/archive an offsetting number of the 45 docs, which is audit-scale per-doc judgment
+  work matching every prior dispatch's "declining to chase" conclusion, or (b) wait for `origin/main` to actually
+  advance past this snapshot (the fix this doc's own precedent already settled on). Per the 11x-reaffirmed "hand off,
+  don't keep serially chasing" precedent above, declining a fix-and-retrigger cycle. No code/doc-content fix pushed this
+  dispatch beyond this Progress Log entry — na-corpus remains the one live blocker, unblocked only by the stalled
+  LDR→main promotion itself catching up. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this
+  role's skip-rule. Completing via `/done`.
+- 2026-08-09 (review, slot 12, [REVIEW] P3 verification todo): sampled 7 consecutive `quality-gates-v2` runs on
+  `live-defi-rollout` (`31323011190` 16:13Z → `31341193852` 23:09Z, 7 distinct HEAD SHAs) via
+  `gh run list --branch live-defi-rollout --repo IggyIkenna/unified-trading-pm --workflow quality-gates-v2` +
+  `gh run view <id> --log-failed` per run. Result: the failing-check SET converged, it did not keep chaining. Early
+  samples (16:13, 17:14) showed 4-5 distinct hard-fail checks including `Reference path convention` and
+  `Archive candidates` (both P2-converted to `--diff-base` earlier in this lineage); by 20:54 those two had dropped off
+  the failure list for good, and the last 4 consecutive runs (20:54, 21:10, 22:08, 23:09 — spanning 2h+, real commits
+  landing between each) all failed on the exact SAME 2 checks: `assigned_vm:NA corpus size` and
+  `No prettier proseWrap continuation-padding`, zero new distinct checks appearing. Both are already-diagnosed, already-
+  tracked residuals, not evidence of continued chaining: na-corpus is diff-scoped but gated on the stalled LDR→main
+  promotion catching up (its `origin/main` baseline sits hundreds of commits behind LDR); prosewrap is the one check
+  from the original 4 never converted to `--diff-base` (covered by the existing P3 backlog todo above — no new todo
+  needed). Verdict: the P2 structural fix (diff-base pattern) demonstrably stopped the "different check fails every
+  retrigger" pattern for the checks it touched. Flipped the [REVIEW] todo done on this finding.
+- 2026-08-10 (cicd agt-75d0b0, slot 9, `sit_failure` on `unified-trading-pm` promotion PR #2706 (closed/superseded by
+  the time of pickup — `Option-B auto-drain` had already rolled to #2707→#2708→#2709), 13th dispatch into this lineage):
+  confirmed via `gh pr list --search promote --state all` that NO promotion PR has merged since #2671
+  (2026-08-09T09:19:49Z) — 38 consecutive auto-drain PRs (#2672-#2709) closed unmerged over ~19.5h, all blocked by this
+  lineage's tracked ratchets. Triaged the live #2709 `QG slice (checks)` failure fresh (3 hard-fails:
+  `Reference path convention`, `No prettier proseWrap continuation-padding`, `assigned_vm:NA corpus size`) — unlike
+  several prior dispatches, 2 of the 3 were genuinely fixable this tick, not ambient churn: (1) **reference-paths** — 1
+  NEW violation, a single dangling `related:` entry in `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`
+  pointing at `dp_exit_code_monitor_oom_signal9_2026_08_09.md`, a file that was never created anywhere in the corpus
+  (active or archive, confirmed via full-corpus grep) — removed the dangling entry (content-invention to recreate the
+  missing doc was out of scope/unsafe). (2) **prosewrap-padding** — 4483 vs baseline 4472 (+11); since this check is
+  STILL not diff-base-converted (per this doc's own P3 backlog todo), isolated the 21-line worst offender by inspection
+  rather than a corpus-wide diff (confirmed unusable per the slot-5/2026-08-09 entry above) —
+  `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md` lines 73-93 carried the exact documented
+  prettier non-idempotent-reflow bug (58-space continuation padding on a list-item's 2nd nested paragraph, vs. the
+  sibling paragraph's correct 6-space indent 2 lines above it) — dedented all 21 lines, re-verified locally (4462 ≤
+  baseline 4472, comfortable margin). Both fixes shipped: `unified-trading-pm@f57562d711`, verified
+  `git merge-base --is-ancestor` of `origin/live-defi-rollout`. (3) **`assigned_vm:NA corpus size`** — 46 new NA docs /
+  112 new open todos vs `origin/main` (which is now ~1065 commits behind LDR, the worst-measured gap in this lineage's
+  history, consistent with the 38-PR unmerged streak above) — same audit-scale blocker this doc has tracked 12x over;
+  declining to chase per established precedent, no bulk reclassification attempted. Post-fix,
+  `run_hygiene_sweep.sh --ci` confirms exactly 1 remaining hard failure (`assigned_vm:NA corpus size`), down from 3 — a
+  real, durable reduction, not just a snapshot artifact. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping
+  applicable per this role's skip-rule. Completing via `/done`.
+- **2026-08-10 (cicd agt-cced28, slot 9, `ldr_qg_failure` on `unified-trading-pm` `live-defi-rollout`, `#0`, 14th
+  dispatch into this lineage): re-confirms, no new finding.** Reproduced fresh at `origin/live-defi-rollout` HEAD
+  `a9bdc5fd1f` (pulled clean, ff-only). `bash scripts/quality-gates.sh` alone passes locally (sentinel written) — the
+  actual failing step is CI's separate `run_hygiene_sweep.sh --ci --no-regen` invocation (folded into the `checks` slice
+  as "Plan hygiene hard gate"), same mechanism this doc's history already establishes; ran it directly and it now
+  reports exactly 1 hard failure: `assigned_vm:NA corpus size` (51 new NA-population docs / 116 new open todos vs
+  `origin/main`) — both of the OTHER 2 checks the immediately-prior slot-9 entry (2026-08-10, above) fixed
+  (`Reference path convention`, `No prettier proseWrap continuation-padding`) are still green on this fresh HEAD, so no
+  regression there. `origin/main` is now 1108 commits behind `origin/live-defi-rollout` (worse than the prior
+  entry's 1065) — promote PR #2709 (`chore(promote): LDR -> main (Option-B auto-drain)`, opened 2026-08-10T04:46:28Z) is
+  still open, confirming the promote-stall this lineage's precedent already identifies as na-corpus's actual root fix is
+  still unresolved, not a new condition. No open `repo-blockers` for this repo (`GET /api/repo-blockers` ->
+  `{"open": []}`). Per the 13x-reaffirmed "hand off, don't keep serially chasing" precedent (bulk-reclassifying 51 docs
+  / 116 todos is audit-scale `/na-eligibility-audit` work, not a one-shot CI-wall fix, and would itself just race the
+  next tick of ambient churn), declining a fix-and-retrigger cycle. No code/doc-content fix pushed beyond this Progress
+  Log entry. `AUTHORING_SLOT=ci-reconcile` sentinel (not a numbered slot) — no slot-ping applicable per this role's
+  skip-rule. Completing via `/done`.
+- 2026-08-10 (cicd, slot 3, `sit_failure` on `unified-trading-pm` promotion PR #2708 (closed/superseded by #2709 by the
+  time of pickup — `Option-B auto-drain` had already rolled forward), 15th dispatch into this lineage): pulled
+  `live-defi-rollout` clean to fresh HEAD `634f45eee3` and ran `run_hygiene_sweep.sh --ci --no-regen` directly — exactly
+  1 hard failure, the same already-tracked blocker: `assigned_vm:NA corpus size` (51 new NA-population docs / 119 new
+  open todos vs `origin/main`, which is now **1121 commits behind LDR**, worse than every prior measurement in this
+  lineage — no promote PR has merged since #2671 on 2026-08-09T09:19:49Z, now 20+ hours and 39+ closed-unmerged
+  auto-drain PRs). `reference-paths` and `prosewrap-padding` (the 2 checks earlier dispatches fixed) both still green,
+  confirming those fixes are durable. Re-confirms the systemic finding with no new distinct check — but unlike the prior
+  13 dispatches, which each correctly declined to bulk-chase this specific check and then completed via `/done` with no
+  durable escalation of the underlying DEADLOCK (the check can structurally never pass while blocking the only mechanism
+  that resets its own baseline), filed the `[OPERATOR]` P1 todo above proposing 3 concrete ways to break it
+  (audit-then-baseline-bump, recommended) — no such todo existed yet despite 14 prior dispatches all independently
+  reaching the same "audit-scale, not one-shot" conclusion without escalating the deadlock shape itself for a decision.
+  No code/doc-content fix pushed beyond this Progress Log entry + the new OPERATOR todo (the underlying check logic is
+  correct and working as designed; the fix here is a policy/process decision, not a bug). `AUTHORING_SLOT=ci` (not a
+  numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
+- 2026-08-10 (cicd agt-6eb218, slot 4, `sit_failure` on `unified-trading-pm` promotion PR #2707 (closed/superseded by
+  the time of pickup — `Option-B auto-drain` had already rolled to #2708→#2709, #2709 still open), 16th dispatch into
+  this lineage): pulled `live-defi-rollout` clean to fresh HEAD `16c5f227d3` (ff-only) and re-ran both the
+  reference-paths and prosewrap-padding checks that recent dispatches fixed, to confirm durability before re-confirming
+  the standing blocker: `check_reference_paths.py --diff-base origin/main` → 0 NEW violations (still green);
+  `check_prosewrap_padding.sh` → 4405 violating lines ≤ baseline 4472 (still green).
+  `check_na_corpus_ratchet.py --diff-base origin/main` → 52 new NA-population docs / 115 new open todos vs
+  `origin/main`, the same single live blocker every dispatch since 2026-08-09 has confirmed. `origin/main` is now **1148
+  commits behind LDR** (worse than every prior measurement in this lineage — the gap has grown monotonically across all
+  16 dispatches, exactly the runaway shape the `[OPERATOR]` P1 todo above describes). PR #2709 (opened
+  2026-08-10T04:46:28Z) is still open and still the active auto-drain PR; no promotion has merged since #2671
+  (2026-08-09T09:19:49Z), now 40+ closed-unmerged auto-drain PRs over 20+ hours. The CI log for the originally-escalated
+  wall (PR #2707, run `31356548320`) additionally showed reference-paths and prosewrap as failing — confirmed this was a
+  stale-snapshot artifact (PR #2709's head, `59d422665f`, was cut before the fixes from the 2026-08-10 slot-9 dispatch
+  landed on LDR), not a regression of either fix; both are durably green on current LDR tip. Per the now-16x-reaffirmed
+  "hand off, don't serially chase the audit-scale NA-corpus check" precedent, and since the `[OPERATOR]` P1 todo already
+  exists with 3 concrete resolution options recommended in sequence (A: `/na-eligibility-audit` pass, then B: reviewed
+  baseline bump), not filing a duplicate escalation — the standing todo already captures this. No code/doc-content fix
+  pushed beyond this Progress Log entry (the underlying check logic is correct; the fix is a pending operator decision,
+  not a bug). `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's skip-rule. Completing
+  via `/done`.
+- 2026-08-10 (cicd agt-e56165, slot 23, `sit_failure` on `unified-trading-pm` promotion PR #2709, head `59d422665faf`,
+  17th dispatch into this lineage): pulled `live-defi-rollout` clean to fresh HEAD `ecf5ba05f0` (ff-only) and re-ran
+  `run_hygiene_sweep.sh --ci --no-regen` directly — exactly 1 hard failure, the same already-tracked blocker:
+  `assigned_vm:NA corpus size` (51 new NA-population docs / 135 new open todos vs `origin/main`). Confirmed the OTHER 2
+  checks CI reported failing on PR #2709's frozen snapshot (`Reference path convention`,
+  `No prettier proseWrap continuation-padding`) are, as the immediately-prior slot-4 dispatch already found,
+  stale-snapshot artifacts of the frozen `59d422665f` head cut before their fixes landed — both durably green when
+  re-run against current LDR tip (`check_reference_paths.py --diff-base origin/main` → 0 NEW;
+  `check_prosewrap_padding.sh` → well under baseline). `origin/main` is now **1159 commits behind LDR** (worse than
+  every prior measurement in this lineage — still climbing monotonically, 40+ closed-unmerged auto-drain PRs, no
+  promotion merged since #2671 on 2026-08-09T09:19:49Z, now 21+ hours). Checked `GET /api/repo-blockers`: one open
+  blocker (`RB-5b82f02e`, `qg_red`, declared by slot 32) is a DIFFERENT, unrelated `check_plan_discipline.py`
+  DEFERRED-banner issue on a doc currently `locked_by: plan_reconciler` — not this lineage's NA-corpus wall, not
+  touching it. Per the 17x-reaffirmed "hand off, don't serially chase the audit-scale NA-corpus check" precedent, and
+  since the `[OPERATOR]` P1 todo above already captures the 3 resolution options with no new information to add, not
+  filing a duplicate escalation or attempting a bulk reclassification. No code/doc-content fix pushed beyond this
+  Progress Log entry. `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's skip-rule.
+  Completing via `/done`.
+- 2026-08-10 (cicd agt-e56165, slot 3, `sit_failure` on `unified-trading-pm` promotion PR #2709, 18th dispatch into this
+  lineage): pulled `live-defi-rollout` clean (ff-only) and re-ran `run_hygiene_sweep.sh --ci --no-regen` — found TWO NEW
+  genuine plan-hygiene regressions vs the immediately-prior dispatch's "durable green" confirmation (which was on
+  `ecf5ba05f0`, now 222+ commits behind): (1) `check_reference_paths.py --diff-base origin/main` → **2 NEW violations**
+  — `plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md`'s 3 refs to
+  `ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` dangled because the finalize was archived
+  (`plans/archive/2026_07/`) by a later commit, and
+  `plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` refs
+  `dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md` which the prose claimed was "filed" but the file was never
+  created; and (2) `check_prosewrap_padding.sh` → **4649 > baseline 4472** (was 4403 at `ecf5ba05f0`) — 452 new
+  over-indent/backtick-padding lines across 12 files landed after the prior green confirmation. FIXED BOTH on LDR:
+  batch2 refs re-pointed to the archive path; the referenced `dp_live_003_..._2026_08_10.md` issue doc created (it
+  documents a real confirmed production blocker — AWS credentials gap in the `uts-prod-dp-meta-watchers` Cloud Run Job,
+  per the dp_cron doc's own evidence); 452 prosewrap lines hand-repaired (content-preserving, `git diff -w` empty) →
+  `check_prosewrap_padding.sh` now 4197 ≤ baseline 4472. Post-fix `run_hygiene_sweep.sh --ci --no-regen`: exactly **1
+  hard failure**, the same already-tracked operator-gated blocker — `check_na_corpus_ratchet.py --diff-base origin/main`
+  (56 new NA-population docs / 181 new open todos vs `origin/main`, which is now **~1159+ commits behind LDR**, no
+  promote merged since #2671 on 2026-08-09T09:19:49Z, 40+ closed-unmerged auto-drain PRs, 21+ hours). Reference-paths
+  and prosewrap-padding both durably green again. This dispatch's value-add over the prior 17: it caught + fixed two NEW
+  regressions that had re-broken the 2 checks the lineage had already cleared, restoring LDR to the single known
+  blocker. The NA-corpus check remains the `[OPERATOR]` P1 todo above (3 resolution options, no new information to add,
+  not attempting bulk reclassification — the corpus is within its own baseline mode, the diff-base-vs-main is the
+  main-behind-LDR deadlock). `AUTHORING_SLOT=ci` (not a numbered slot) — no slot-ping applicable per this role's
+  skip-rule. Completing via `/done`.

@@ -45,7 +45,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.6
-assigned_role: devops
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 source: >-
@@ -137,16 +137,19 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
 ## Todos
 
 - [x] ✅ [OPERATOR-DECISION] P1. **RESOLVED 2026-08-08 -- operator ruling: option (b), a non-shared credential file per
-      job.** Decide the durable direction. Candidates were: (a) extend `CLOUDSDK_CONFIG` isolation to wrap WORKFLOW JOB
-      STEPS too; (b) move `unified-trading-sa`'s activation to a NON-shared location (a dedicated
+      job** (transcribed + traceable at
+      `/plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`, filed 2026-08-09 — this citation
+      was previously unsourced). Decide the durable direction. Candidates were: (a) extend `CLOUDSDK_CONFIG` isolation
+      to wrap WORKFLOW JOB STEPS too; (b) move `unified-trading-sa`'s activation to a NON-shared location (a dedicated
       `GOOGLE_APPLICATION_CREDENTIALS` env var / per-job credential file that AO code + CI steps always reference
       explicitly, never relying on `gcloud`'s ambient active-account resolution); (c) stop dual-purposing the VM as a
       self-hosted runner pool; (d) a periodic self-heal cron. **operator ruling 2026-08-08: (b) -- non-shared credential
-      file per job.** Investigated current exposure before scoping the follow-up (2026-08-08): **PM's own contribution
-      to this mechanism is ALREADY ELIMINATED**, as a side effect of an unrelated billing decision, not a fix for this
-      issue -- `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24 (`unified-trading-pm@c8cd56251e`,
-      2026-08-07, "full-revert unified-trading-pm's self-hosted workflows to ubuntu-latest") flipped every one of PM's
-      ~40 self-hosted-routed workflows to `ubuntu-latest`, and PM was removed from
+      file per job** (see `operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`). Investigated current exposure
+      before scoping the follow-up (2026-08-08): **PM's own contribution to this mechanism is ALREADY ELIMINATED**, as a
+      side effect of an unrelated billing decision, not a fix for this issue --
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24 (`unified-trading-pm@c8cd56251e`, 2026-08-07,
+      "full-revert unified-trading-pm's self-hosted workflows to ubuntu-latest") flipped every one of PM's ~40
+      self-hosted-routed workflows to `ubuntu-latest`, and PM was removed from
       `scripts/workflow-templates/self-hosted-qg-repos.txt`. Verified live 2026-08-08:
       `grep -rE '^\s*runs-on:\s*\[self-hosted' .github/workflows/*.yml` in this repo returns ZERO matches -- no PM
       workflow runs on the shared orchestrator VM anymore, so PM's `cloud-build-router.yml` WIF-auth step (the
@@ -283,9 +286,32 @@ a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdic
 **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the head `[OPERATOR-DECISION]` item
 resolved TODAY (option (b)), which unblocks but does not itself dispatch the 2 remaining implementation todos. Checked
 all 9 of today's operator-Q&A precedents: this is explicitly NOT an IAM/permissions gap (the doc's own "Why this is NOT
-an IAM/permissions problem" section rules that out by name — it is an authentication/credential-resolution defect, not
-a missing grant); no other ruling matches either. Held at KEEP-NA on the merits regardless: this is shared-credential-
+an IAM/permissions problem" section rules that out by name — it is an authentication/credential-resolution defect, not a
+missing grant); no other ruling matches either. Held at KEEP-NA on the merits regardless: this is shared-credential-
 resolution infrastructure on the exact host every AO worker slot boots from, spans two repos (one, `agent-orchestrator`,
-outside this session's own repo scope), and a bad change risks breaking credential resolution for the entire
-dispatching fleet — the same "too_large_or_risky" bar this tranche already applies to comparably shared-critical-path
-infra (`base-service.sh`, the CI VM's own concurrency governor). No `assigned_vm` change.
+outside this session's own repo scope), and a bad change risks breaking credential resolution for the entire dispatching
+fleet — the same "too_large_or_risky" bar this tranche already applies to comparably shared-critical-path infra
+(`base-service.sh`, the CI VM's own concurrency governor). No `assigned_vm` change.
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none unblock this doc — the round-7
+"too_large_or_risky" holding (shared credential-resolution infra every AO worker slot boots from, one of the two touched
+repos outside this session's own scope, a bad change risks breaking fleet-wide credential resolution) is substance, not
+staleness, and is unaffected by any of today's precedents (this is not an IAM-role gap, not a `scripts/**`/D16 push, not
+a delete, and the operator decision it does rest on — option (b) — already resolved 2026-08-08, pre-dating this sweep).
+Unlike the openapi-regen case reclassified elsewhere in this same sweep (a git-revertible content-generation task with
+an explicit pre-commit checkpoint), a mis-executed credential-file migration here could break `gcloud`/`gsutil`
+resolution for every dispatching worker mid-flight — not comparably reversible. No RECLASSIFY, no satellite-extraction.
+No ARCHIVE.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:da0e2f132b663b85]: KEEP-NA,
+valid — grep confirms exactly 2 open todos (lines 164, 185), matching the phase0 figure; 1 further todo is checked done
+(the head [OPERATOR-DECISION], resolved 2026-08-08, cited to doc
+operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md in the same batch). The 2 remaining implementation todos are
+held NA under a standing, twice-reconfirmed ruling: round-7 (2026-08-08) and round-11 (2026-08-09) both explicitly hold
+this KEEP-NA on a 'too_large_or_risky' basis -- shared credential-resolution infrastructure every AO worker slot boots
+from, spanning two repos (one, agent-orchestrator, outside this session's own scope), where a mis-executed change 'risks
+breaking gcloud/gsutil resolution for every dispatching worker mid-flight -- not comparably reversible.' Per the
+rubric's 'never re-litigate an established ruling' instruction, this standing risk-based holding is respected rather
+than re-derive...

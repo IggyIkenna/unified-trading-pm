@@ -16,11 +16,11 @@ scope: [engineer, admin]
 tags: [strategy, archetypes, reconciliation, defi, mvp, verification]
 related:
   [
-    ../../../04-architecture/operational-modes.md,
-    ../../../04-architecture/paper-vs-live-execution-seam.md,
-    ../../../05-infrastructure/per-venue-paper-policy.md,
-    pnl-attribution.md,
-    ../category-instrument-coverage.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
   ]
 created: 2026-05-09
 authoritative_for: [per-archetype paper-mode readiness taxonomy + paper-runnable gate set]
@@ -81,7 +81,7 @@ reads paper-readiness state to decide which archetypes surface their backtest co
 An archetype graduates from `paper-shippable` → `paper-runnable` only when ALL of the following are met:
 
 1. **End-to-end run completed** for ≥3 continuous days against real venues + real data + matching engine (or testnet per
-   `paper_target_registry`).
+   `get_paper_target()`).
 2. **Event stream verified** per CLAUDE.md "no fire-and-forget VM launches" rule — STARTED / per-instrument progress /
    STOPPED with non-empty metadata.
 3. **P&L attribution decomposed** by source (strategy alpha vs execution alpha vs financing) per
@@ -258,7 +258,7 @@ paper-mode uses devnet (or localnet / surfnet) — picked by `pvl-p20c`. `carry_
 - [`../../../04-architecture/paper-vs-live-execution-seam.md`](../../../04-architecture/paper-vs-live-execution-seam.md)
   — execution-only seam principle.
 - [`../../../05-infrastructure/per-venue-paper-policy.md`](../../../05-infrastructure/per-venue-paper-policy.md) —
-  `paper_target_registry`.
+  `PAPER_EXECUTION_TARGETS`.
 - [`pnl-attribution.md`](pnl-attribution.md) — P&L decomposition per source.
 - [`../../../14-customer-journeys/dart/mode-toggle.md`](../../../14-customer-journeys/dart/mode-toggle.md) — DART
   visualization of paper-runnable archetypes.

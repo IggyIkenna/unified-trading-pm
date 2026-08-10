@@ -58,12 +58,21 @@
 #   QG_GOVERNOR_DIR       token dir (default ${TMPDIR:-/tmp}/qg-host-governor)
 #   QG_GOVERNOR_DISABLE   set to "true" to make acquire/release no-ops (CI / single-run)
 #   QG_GOVERNOR_NICE      nice increment applied to the QG tree (default 10)
-#   QG_TOTAL_INSTANCE_CAP override the total-instance gate's cap (default: physical
-#                         cores, floored at 4)
+#   QG_TOTAL_INSTANCE_CAP override the total-instance gate's cap (default:
+#                         floor(physical cores × 0.75), floored at 6 — see
+#                         _qg_total_default_cap; tightened 2026-08-10,
+#                         ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4)
 #   QG_TOTAL_GOVERNOR_DIR total-instance token dir (default: host-shared dir, same
 #                         placement rule as the RAM ledger — see _qg_shared_root)
 #   QG_TOTAL_GOVERNOR_DISABLE  set to "true" to make the total-instance gate a no-op
-#   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default 80)
+#   QG_HOST_SHARED_LEDGER_ROOT  override the ONE shared root both interactive slots
+#                         (.tabs) AND glue-runner CI (/opt/github-glue-runners*)
+#                         collapse to for ledger placement (default
+#                         ${HOME:-/home/ubuntu}/unified-trading-system-repos — NOT
+#                         /opt, which is outside every interactive slot's sandboxed
+#                         ReadWritePaths) — see _qg_shared_root
+#   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default
+#                                75 — tightened from 80 on 2026-08-10, same todo as above)
 #   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
 #   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
 #   QG_GOVERNOR_WATCHDOG_DISABLE  set to "true" to disable the runtime abort-monitor (reservation mode only)
@@ -96,19 +105,89 @@ _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"
 # plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
 # 2026-08-09: BOOTSTRAP/AUTO-FIX/LINT and the large CODEX-COMPLIANCE phase run fully
 # UNGATED, so a host can carry many more live script instances than the heavy-phase K
-# ever caps — 12-19 observed against a live K<=6). Default cap = physical cores (a
-# looser bound than the heavy-phase K, since most of a run's wall-clock is lighter than
-# pytest/basedpyright), floored at 4 for small hosts. Overridable via
-# QG_TOTAL_INSTANCE_CAP; separate lock dir from the heavy-phase token dir above so the
-# two gates never collide.
+# ever caps — 12-19 observed against a live K<=6). Default cap = floor(cores × 0.75),
+# floored at 6 (TIGHTENED 2026-08-10,
+# plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4 —
+# was a flat `cores` with no headroom discount, e.g. 8 on this host's 8 physical cores;
+# now that the CI-glue-runner and interactive-slot reservation ledgers are unified
+# (todo 2, same doc), BOTH topologies' load is visible to the SAME admission gates for
+# the first time, so the old cap needs to leave headroom for combined demand rather than
+# interactive-slot demand alone. The 0.75 multiplier reserves ~25% of cores as non-QG /
+# light-phase overhead margin (git operations, python cold-starts, the AO server itself)
+# instead of letting total-instance count climb to the full core count. Still floored at
+# 6 (unchanged from the 2026-08-09 operator ruling — matches the measured safe
+# cross-repo ceiling on a small/macOS host) so this stays a monotonic TIGHTENING on
+# every host size, never a loosening: floor(cores×0.75) ≤ cores always, and the floor=6
+# guarantees small hosts don't regress below the already-validated minimum. On THIS
+# 8-core host: floor(8×0.75)=6 (was 8) — a real, live reduction from today's measured
+# `total-instance gate: K=8` reading. Overridable via QG_TOTAL_INSTANCE_CAP; separate
+# lock dir from the heavy-phase token dir above so the two gates never collide.
 _qg_total_default_cap() {
     local cores; cores="$(_qg_physical_cores)"
-    local k="$cores"
-    (( k >= 4 )) || k=4
+    local k=$(( cores * 3 / 4 ))
+    (( k >= 6 )) || k=6
     echo "$k"
 }
 _qg_total_k() { echo "${QG_TOTAL_INSTANCE_CAP:-$(_qg_total_default_cap)}"; }
 _qg_total_dir() { echo "${QG_TOTAL_GOVERNOR_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor-total}"; }
+
+# ── PER-REPO sub-cap (operator ruling 2026-08-09) ────────────────────────────────
+# WHY: the flat total-instance cap above answers "how many quality-gates.sh processes
+# host-wide" but not "how many are the SAME repo" — measured live 2026-08-09: ~24
+# concurrent AO-dispatched slots all committing/QG-running on unified-trading-pm at
+# once produced sustained git-index-lock contention and branch-drift-retry storms this
+# gate alone cannot see (it only counts PROCESSES, not which repo they belong to). PM
+# specifically both tolerates and needs more headroom than a single service repo (its
+# own commit velocity is the fleet's shared bottleneck), so it gets a higher sub-cap;
+# every other (service) repo gets 1 — never two concurrent QG runs on the SAME service
+# repo on one host, since those virtually always collide on the SAME git ref. The two
+# caps COMPOSE (both must have room) rather than replace each other: the per-repo cap
+# stops one repo from monopolising the flat cap; the flat cap stops the WHOLE host from
+# oversubscribing even if every repo's own sub-cap would individually allow it.
+_qg_repo_name() {
+    # SLOT-AGNOSTIC BY DESIGN (2026-08-09, second incident same day — see
+    # plans/active/issues/qg_governor_repo_bucketing_falls_back_to_slot_number_2026_08_09.md).
+    # The first fix here only reordered PRECEDENCE (`PROJECT_ROOT:-REPO_ROOT` instead of
+    # the reverse) — it still depended on PROJECT_ROOT being POPULATED by the time this
+    # function runs, and a bare `bash scripts/quality-gates.sh --no-fix` invocation
+    # reproduced the identical slot-number bucketing the SAME day with PROJECT_ROOT
+    # apparently still empty at this call site (exact sourcing-order gap not fully
+    # traced — see the issue doc's Root Cause section). Querying git directly sidesteps
+    # the entire "which caller-populated env var, set in what order" class of bug — no
+    # env var needs to be populated at all, so this is immune to call-time ordering:
+    #   1. `git remote get-url origin`, basename minus the `.git` suffix — the repo's
+    #      actual GitHub identity. Correct from the main per-slot clone AND from a
+    #      nested worktree (.claude/worktrees/<branch>/) of the SAME repo, since a git
+    #      worktree shares its parent repo's remotes — `git rev-parse --show-toplevel`
+    #      would instead return the worktree's OWN directory (e.g. a branch/session hash),
+    #      wrongly treating it as a different "repo" than its own main clone (verified
+    #      live against a real worktree checkout while fixing this).
+    #   2. `git rev-parse --show-toplevel`, basename — falls back here only if there is no
+    #      `origin` remote (rare/test fixtures); still immune to slot number and worktree
+    #      nesting since it reads the actual working-tree root, not a caller-supplied path.
+    #   3. PROJECT_ROOT / REPO_ROOT / pwd, basename — final fallback only if git itself is
+    #      unavailable or this isn't a git working tree at all (matches this file's
+    #      existing graceful-degradation posture — a governor failure must never block
+    #      the run it's meant to be scheduling).
+    local url root
+    url="$(git remote get-url origin 2>/dev/null)"
+    if [[ -n "$url" ]]; then
+        basename "$url" .git
+        return 0
+    fi
+    root="$(git rev-parse --show-toplevel 2>/dev/null)"
+    if [[ -n "$root" ]]; then
+        basename "$root"
+        return 0
+    fi
+    root="${PROJECT_ROOT:-${REPO_ROOT:-}}"
+    [[ -n "$root" ]] && basename "$root" || echo "unknown"
+}
+_qg_repo_instance_default_cap() {
+    [[ "$(_qg_repo_name)" == "unified-trading-pm" ]] && echo 4 || echo 1
+}
+_qg_repo_instance_k() { echo "${QG_REPO_INSTANCE_CAP:-$(_qg_repo_instance_default_cap)}"; }
+_qg_repo_instance_dir() { echo "$(_qg_total_dir)/repo/$(_qg_repo_name)"; }
 
 # ── HOST CAPACITY INTROSPECTION (Phase 2) ────────────────────────────────────
 # Reads the host's real capacity so the (Phase-3) admission gates can size
@@ -184,34 +263,75 @@ qg_host_capacity() {
 # so the upcoming dual-gate admission can bound the SUM of concurrent peak-RSS
 # (the 6×UTL stacking case) instead of a fixed count. One row per reservation:
 #     <pid> <repo> <rss_mb> <ts>
-# HOST-SHARED path: strip the per-slot `/.tabs/<N>` suffix off WORKSPACE_ROOT so
-# every slot on a host shares ONE ledger — raw WORKSPACE_ROOT is per-slot (set by
-# setup-tab-worktrees.sh), which would make the ledger per-slot and defeat
-# cross-slot coordination. On a single-clone host the strip is a no-op.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 #
-# GLUE-RUNNER topology (plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md):
-# on the GHA self-hosted glue-runner host, each repo's CI job runs from its own
-# POOL_TAG-suffixed runner dir (/opt/github-glue-runners[-<repo>]/glue-N/_work/<repo>),
-# so quality-gates.sh's own `WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`
-# resolves to that per-repo-job path — the same defeat-cross-coordination problem as
-# .tabs, one topology layer up (confirmed live 2026-08-02: ~10 repos' independently-empty
-# ledgers on one host). Collapse ANY such path to one host-shared dir — NOT the
-# per-pool `/opt/github-glue-runners[-<repo>]` parent itself (verified 2026-08-03 via SSM:
-# every pool's top-level dir is root:root 0755, so the glue-runner user `ubuntu` cannot
-# mkdir under it — the same class of failure setup-glue-runners.sh's own 2026-07-16
-# incident comment describes for SLOT_VENV/SLOT_REPO). setup-glue-runners.sh's `install`
-# pre-provisions this dir ubuntu-owned so new hosts self-provision; already applied to the
-# one live host via a one-time root SSM step (2026-08-03).
-_QG_GLUE_RUNNER_SHARED_ROOT="/opt/.qg-governor-glue-shared"
+# ONE SHARED ROOT FOR EVERY CALLER TOPOLOGY (fixed 2026-08-10,
+# ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 2 — closes the gap todo 1
+# on that doc found: interactive slots and glue-runner CI resolved to two genuinely
+# DISJOINT directories, so admission control on one side had zero visibility into
+# concurrent load from the other, even though both run on the identical shared VM and
+# both correctly call qg_governor_acquire() in reservation mode). Previously:
+#   - interactive slots (WORKSPACE_ROOT matching `*/.tabs/<N>`) stripped to the
+#     per-HOST root (e.g. /home/ubuntu/unified-trading-system-repos) — correct
+#     cross-SLOT coordination, but a path private to this topology.
+#   - glue-runner CI (WORKSPACE_ROOT matching `/opt/github-glue-runners[-<repo>]/...`,
+#     one POOL_TAG-suffixed dir per repo) collapsed to /opt/.qg-governor-glue-shared —
+#     correct cross-REPO coordination (plans/archive/2026_08/
+#     qg_governor_glue_runner_ledger_coordination_2026_08_03.md), but a path private
+#     to THIS topology, never the same as the interactive-slot one above even on the
+#     SAME host (live-verified 2026-08-10: same filesystem device id, different
+#     inodes — not a symlink, genuinely two ledgers).
+# Fix: BOTH topologies now collapse to the identical shared root, so a `--status` run
+# from either surface reads the other's live reservations.
+#
+# WHY THE SHARED ROOT IS /home/ubuntu/unified-trading-system-repos, NOT
+# /opt/.qg-governor-glue-shared (rejected during this same 2026-08-10 fix, do not
+# revert to it without re-reading this): every interactive agent-orchestrator worker
+# process is a descendant of the `orchestrator.service` systemd unit (confirmed via
+# `/proc/self/cgroup` → `system.slice/orchestrator.service`), and that unit's own
+# `/proc/self/mountinfo` shows `/` bind-mounted `ro` FOR THAT MOUNT NAMESPACE
+# specifically (per-mount options `ro,nosuid,relatime` vs. the underlying superblock's
+# real `rw,discard,...` — a systemd `ProtectSystem`-style sandbox scoped to
+# `ReadWritePaths=` under /home + /tmp, not a real host disk/filesystem incident —
+# confirmed live 2026-08-10 by cross-checking that `rsyslogd`/`amazon-ssm-agent`/the AO
+# server itself keep writing to /var/log in real time on the SAME host while every
+# write attempt from an agent-orchestrator worker shell to /opt, /var, or /etc fails
+# EROFS, with and without the Bash tool's own sandbox override). So /opt is
+# UNREACHABLE from every interactive slot's shell by design, always — hardcoding the
+# shared ledger there would silently degrade admission control to unlocked
+# best-effort for the interactive-slot side specifically (via
+# _qg_ledger_with_lock's existing mkdir-failure degrade — no hard failure, but zero
+# real coordination, defeating the point of this fix). /home IS in the sandbox's
+# ReadWritePaths (proven: every interactive slot's own git worktree already lives
+# there) and the glue-runner CI systemd unit runs as the SAME OS user (`ubuntu`,
+# unsandboxed — it already had /opt access, e.g. its own historical ledger writes up
+# to 2026-08-05), so /home/ubuntu is writable by BOTH topologies without any new
+# provisioning step.
+#
+# Overridable via QG_HOST_SHARED_LEDGER_ROOT (env, read fresh on every
+# _qg_shared_root() call — not captured to a fixed var at source time — so a caller
+# can export it at runtime without re-sourcing this file, e.g. from
+# install-qg-governor-shell-env.sh or the reusable CI workflow) for a host with a
+# different sandbox/ReadWritePaths shape — falls back to unlocked best-effort ledger
+# writes via _qg_ledger_with_lock's existing mkdir-failure degrade, same as any other
+# missing-dir/unwritable-dir case, never a hard failure.
+_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT="${HOME:-/home/ubuntu}/unified-trading-system-repos"
 _QG_LEDGER_FD=220
 
+# .tabs branch keeps its ORIGINAL dynamic `${ws%/.tabs/*}` derivation as the fallback
+# (not the fixed default directly) so a synthetic WORKSPACE_ROOT under an isolated test
+# root (e.g. test-qg-cross-host.sh's `$TMP/h_.../.tabs/1`) still strips to that test's
+# OWN isolated dir, not the real host's shared ledger — on the one real host, that
+# dynamic derivation already equals $_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT (WORKSPACE_ROOT
+# is always ${HOME}/unified-trading-system-repos/.tabs/<N> there), so production
+# unification with the glue-runner branch below still holds; QG_HOST_SHARED_LEDGER_ROOT
+# overrides BOTH branches when a caller needs to force agreement explicitly.
 _qg_shared_root() {
     local ws="${WORKSPACE_ROOT:-}"
     case "$ws" in
         "")                        echo "${TMPDIR:-/tmp}" ;;
-        */.tabs/*)                 echo "${ws%/.tabs/*}" ;;
-        /opt/github-glue-runners*) echo "$_QG_GLUE_RUNNER_SHARED_ROOT" ;;
+        */.tabs/*)                 echo "${QG_HOST_SHARED_LEDGER_ROOT:-${ws%/.tabs/*}}" ;;
+        /opt/github-glue-runners*) echo "${QG_HOST_SHARED_LEDGER_ROOT:-$_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT}" ;;
         *)                         echo "$ws" ;;
     esac
 }
@@ -443,7 +563,7 @@ _qg_governor_acquire_reservation() {
 _qg_watchdog_pressure_hit() {
     local mt ma abort_pct min_avail
     mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"
-    abort_pct="${QG_HOST_RAM_ABORT_PCT:-80}"
+    abort_pct="${QG_HOST_RAM_ABORT_PCT:-75}"
     min_avail=$(( mt * (100 - abort_pct) / 100 ))
     (( ma < min_avail ))
 }
@@ -485,12 +605,12 @@ _qg_watchdog_loop() {
                     echo "aborted_by=qg-governor-watchdog"
                     echo "target_pid=${target_pid}"
                     echo "repo=${repo}"
-                    echo "reason=host_ram_pressure_ge_${QG_HOST_RAM_ABORT_PCT:-80}pct_for_${hits_needed}_consecutive_checks"
+                    echo "reason=host_ram_pressure_ge_${QG_HOST_RAM_ABORT_PCT:-75}pct_for_${hits_needed}_consecutive_checks"
                     echo "mem_total_kb=$(_qg_mem_total_kb)"
                     echo "mem_available_kb=$(_qg_mem_available_kb)"
                     echo "aborted_at_epoch=$(date +%s 2>/dev/null || echo 0)"
                 } > "$marker" 2>/dev/null
-                echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-80}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
+                echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-75}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
                 _qg_watchdog_signal_tree "$target_pid"
                 return 0
             fi
@@ -582,9 +702,51 @@ qg_governor_release() {
     _QG_GOV_FD=""
 }
 
-# Base FD for the total-instance token locks — well clear of the heavy-phase range
-# (200+1..200+K, K bounded by cores/4) and the ledger lock FD (220).
+# Base FDs for the total-instance token locks — well clear of the heavy-phase range
+# (200+1..200+K, K bounded by cores/4) and the ledger lock FD (220). Two ranges: the
+# flat host-wide cap (300+K, K<=~16 in practice) and the per-repo sub-cap (350+K, K<=4
+# today but roomy) — kept separate so a partial-acquire backoff (below) can release
+# just one without disturbing FD bookkeeping for the other.
 _QG_TOTAL_FD_BASE=300
+_QG_REPO_FD_BASE=350
+
+# _qg_try_repo_token / _qg_try_global_token — single non-blocking pass over k numbered
+# lockfiles under a dir, using the GLOBAL _QG_REPO_TOTAL_FD/_QG_TOTAL_FD variables
+# directly (NOT a return-via-$(command substitution) — that would run the exec+flock
+# pair inside a forked subshell, whose exit closes the FD and silently drops the flock
+# the instant the substitution completes, before the caller ever gets to use it; a real
+# bug caught live in this exact function 2026-08-09 by a contention test that showed a
+# same-repo second acquirer sailing straight through instead of queueing). Sets the FD
+# var and returns 0 on success; returns 1 with the var left empty on failure (having
+# closed every FD it opened along the way, so the caller can retry cleanly).
+_qg_try_repo_token() {
+    local dir="$1" k="$2" i fd
+    _QG_REPO_TOTAL_FD=""
+    for (( i=1; i<=k; i++ )); do
+        fd=$(( _QG_REPO_FD_BASE + i ))
+        eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
+        if flock -n "$fd"; then
+            _QG_REPO_TOTAL_FD=$fd
+            return 0
+        fi
+        eval "exec ${fd}>&-"
+    done
+    return 1
+}
+_qg_try_global_token() {
+    local dir="$1" k="$2" i fd
+    _QG_TOTAL_FD=""
+    for (( i=1; i<=k; i++ )); do
+        fd=$(( _QG_TOTAL_FD_BASE + i ))
+        eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
+        if flock -n "$fd"; then
+            _QG_TOTAL_FD=$fd
+            return 0
+        fi
+        eval "exec ${fd}>&-"
+    done
+    return 1
+}
 
 # Acquire a TOTAL-INSTANCE token — gates the WHOLE quality-gates.sh run, held from
 # right after this file is sourced until the caller's EXIT trap releases it (see
@@ -593,37 +755,51 @@ _QG_TOTAL_FD_BASE=300
 # phase. Same flock/explicit-numeric-FD pattern (bash 3.2-safe), separate lock dir +
 # FD range so the two gates coexist — a run holds a total-instance token for its full
 # lifetime AND, later, a heavy-phase token/reservation nested inside it.
+#
+# TWO-PHASE / COMPOSED (operator ruling 2026-08-09, see _qg_repo_name's comment above
+# for the why): admission requires BOTH this repo's own sub-cap AND the flat host-wide
+# cap to have room, checked together each cycle — never hold one while blocked on the
+# other (that would let a repo's own slot sit idle mid-wait, starving same-repo peers
+# for no reason). A cycle that gets the repo token but not the global one releases the
+# repo token immediately and retries both from scratch next tick.
 qg_governor_acquire_total_instance() {
     [[ "${QG_TOTAL_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — total-instance gate ungoverned" >&2; return 0; }
     [[ -n "${_QG_TOTAL_FD:-}" ]] && return 0   # already holding (idempotent)
 
-    local k dir fd
-    k="$(_qg_total_k)"; dir="$(_qg_total_dir)"
-    mkdir -p "$dir" 2>/dev/null || { echo "[qg-governor] cannot create $dir — total-instance gate ungoverned" >&2; return 0; }
+    local repo_k repo_dir global_k global_dir repo_name
+    repo_name="$(_qg_repo_name)"
+    repo_k="$(_qg_repo_instance_k)"; repo_dir="$(_qg_repo_instance_dir)"
+    global_k="$(_qg_total_k)"; global_dir="$(_qg_total_dir)"
+    mkdir -p "$repo_dir" "$global_dir" 2>/dev/null \
+        || { echo "[qg-governor] cannot create governor dirs — total-instance gate ungoverned" >&2; return 0; }
 
     local waited=0
     while true; do
-        local i
-        for (( i=1; i<=k; i++ )); do
-            fd=$(( _QG_TOTAL_FD_BASE + i ))
-            eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
-            if flock -n "$fd"; then
-                _QG_TOTAL_FD=$fd
+        if _qg_try_repo_token "$repo_dir" "$repo_k"; then
+            if _qg_try_global_token "$global_dir" "$global_k"; then
                 QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
-                [[ "$waited" -gt 0 ]] && echo "[qg-governor] total-instance token $i/$k acquired after ${waited}s wait" >&2
+                [[ "$waited" -gt 0 ]] && echo "[qg-governor] total-instance token acquired (${repo_name}: <=${repo_k}, host-wide: <=${global_k}) after ${waited}s wait" >&2
                 return 0
             fi
-            eval "exec ${fd}>&-"   # slot busy — close and try next
-        done
-        sleep 2; waited=$(( waited + 2 ))
-        (( waited % 30 == 0 )) && echo "[qg-governor] all ${k} total-instance tokens busy — queued ${waited}s" >&2
+            flock -u "$_QG_REPO_TOTAL_FD" 2>/dev/null || true
+            eval "exec ${_QG_REPO_TOTAL_FD}>&-" 2>/dev/null || true
+            _QG_REPO_TOTAL_FD=""
+        fi
+        sleep 1; waited=$(( waited + 1 ))
+        (( waited % 30 == 0 )) && echo "[qg-governor] total-instance tokens busy (${repo_name} sub-cap ${repo_k} / host-wide cap ${global_k}) — queued ${waited}s" >&2
     done
 }
 
-# Release the held total-instance token (also auto-freed on process exit — flock
-# auto-drops on fd close). Idempotent, safe no-op if never acquired.
+# Release the held total-instance tokens — BOTH the per-repo sub-cap and the flat
+# host-wide cap (also auto-freed on process exit — flock auto-drops on fd close).
+# Idempotent, safe no-op if never acquired.
 qg_governor_release_total_instance() {
+    if [[ -n "${_QG_REPO_TOTAL_FD:-}" ]]; then
+        flock -u "$_QG_REPO_TOTAL_FD" 2>/dev/null || true
+        eval "exec ${_QG_REPO_TOTAL_FD}>&-" 2>/dev/null || true
+        _QG_REPO_TOTAL_FD=""
+    fi
     [[ -n "${_QG_TOTAL_FD:-}" ]] || return 0
     flock -u "$_QG_TOTAL_FD" 2>/dev/null || true
     eval "exec ${_QG_TOTAL_FD}>&-" 2>/dev/null || true

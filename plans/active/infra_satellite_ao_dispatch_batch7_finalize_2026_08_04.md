@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-7, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
     /plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -42,9 +42,10 @@ depends_on: [infra_satellite_ao_dispatch_batch7_2026_08_04]
 gate_on_depends: true
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
@@ -89,12 +90,10 @@ skill's no-double-gate mechanism).
       — archived 2026-08-08 to
       `/plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md` per the standard
       6-step ritual (this is that reconciliation). (repo: unified-trading-pm)
-- [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md`** once all three todos above are done and
-      both reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`,
-      fix every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py`
-      both stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip +
-      `git mv` in one commit — 2026-07-30 incident,
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo: unified-trading-pm)
+- [x] ✅ [DOC] P3. **Archived `infra_satellite_ao_dispatch_batch7_2026_08_04.md`** to `plans/archive/2026_08/` via the
+      standard 6-step archival ritual. All three batch7 todos were already `[x]` done (since 2026-08-08). Updated all
+      corpus referrer paths; `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` verified clean.
+      (repo: unified-trading-pm)
 
 ## Codex SSOTs
 
@@ -114,3 +113,6 @@ skill's no-double-gate mechanism).
   todos (1, 2) and the finalize plan's todo 2 (deployment_service_live_event_log) were already `[x]` before this
   session; with all three now closed, todo 3 (archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md`) is unblocked
   for the next dispatch (out of scope for this task — a separate `[DOC]`-tagged todo).
+- **2026-08-10 (infra, slot 15)** — Todo 3: Archived `infra_satellite_ao_dispatch_batch7_2026_08_04.md` to
+  `plans/archive/2026_08/`. All three batch7 todos were already `[x]` done (since 2026-08-08). Updated 7 corpus
+  referrers with new archive paths; `regenerate_active_plan_inventory.py` confirmed clean (0 orphans).

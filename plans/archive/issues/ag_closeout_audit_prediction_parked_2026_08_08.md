@@ -38,7 +38,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_07.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
@@ -107,7 +107,7 @@ operator approval).** The other 12 never-cited candidates all classify `exclude_
   `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`. Full per-doc reasoning history:
   `plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_07.md` + the 07-31/08-04/08-06 parked docs it cites.
 - **1 freshly classified `orphaned_never_touched`, extracted into batch8** —
-  [`issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`](/plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md),
+  [`issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`](/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md),
   created 2026-08-07 by a concurrent na-eligibility-audit pass (postdates the 08-06 audit's own candidate snapshot).
   Independent Phase-1 agent found: `asset_group: [prediction]` (single tag, no peer-AG marker),
   `parent_epic: predictions_master`, `assigned_vm: NA`. Its one open todo (extract a closed Progress Log section from

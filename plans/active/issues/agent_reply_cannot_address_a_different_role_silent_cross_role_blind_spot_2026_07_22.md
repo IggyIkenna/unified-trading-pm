@@ -184,9 +184,11 @@ too large.
 - [x] ✅ [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
       from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
       delivery. **Gate**: approval recorded before the P1 todo ships. — **Operator ruling 2026-08-08** (ao round-5 apply
-      session, item 4): "Conditional: check for conflicts with other plans/issues/implementations first; ship only if it
-      is a clear improvement and does not conflict. Operator delegates the conflict-check judgment call back to Claude."
-      Conflict-check performed 2026-08-08: grepped `plans/active/issues/` for
+      session, item 4, recorded verbatim in
+      `/plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md`): "Conditional: check for
+      conflicts with other plans/issues/implementations first; ship only if it is a clear improvement and does not
+      conflict. Operator delegates the conflict-check judgment call back to Claude." Conflict-check performed
+      2026-08-08: grepped `plans/active/issues/` for
       `agent_reply`/`cross-role reply`/`reply routing`/`redelivery-cap`/`reply-ack` — only 1 doc references this fix
       (`boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`), and only as a `related:` link +
       a one-line "related prior boot/comms defect" note, not a conflict or regression report. No doc anywhere in the
@@ -258,3 +260,11 @@ too large.
   `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md`"), gated behind batch5 (both
   currently `status: draft`, pending operator activation) — leaving archival to that plan to avoid a concurrent-archival
   collision once it dispatches.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is
+  the "archive this doc" tracking todo, still correctly owned by
+  `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2. Verified live: batch5 and batch5_finalize are now
+  BOTH `status: active`/`assigned_vm: planning` (the operator activation this doc's own note was waiting on has since
+  happened) — batch5_finalize is machine-gated (`gate_on_depends: true`) on batch5's own todos completing first, so
+  this doc's archival will land automatically through that already-dispatched chain rather than needing separate
+  action here. Not reclassifying this doc itself — doing so would create a competing/duplicate archival claim against
+  the plan that already owns it.

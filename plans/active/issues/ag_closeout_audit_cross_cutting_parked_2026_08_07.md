@@ -41,7 +41,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -252,14 +252,29 @@ spot per this skill's SKILL.md).
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag `plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`'s
-      `asset_group` `[cross-cutting]` → `[ci]` (finding 1) — owning-tranche fix, leave to the `ci` tranche's own audit.
-      Done when: the tag is corrected and the doc is folded into `ci`'s consolidated-closeout membership.
-- [ ] [DOCS] P3. Retag `plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`'s
-      `asset_group` `[cross-cutting]` → `[ci]` (finding 2) — owning-tranche fix, leave to the `ci` tranche's own audit.
-      Done when: the tag is corrected, the doc is folded into `ci`'s closeout membership, and current incident state
-      (was blocked on an external GH Actions outage as of 2026-08-06) is re-verified before treating any of its 3 todos
-      as stale.
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
+- [x] ✅ [DOCS] P3. **MOOT 2026-08-10 — target already archived** at
+      `/plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`. An
+      archived doc's tranche tag no longer routes anything, so the retag has no remaining effect. Verified live.
+      Original text preserved for record. Was: Retag
+      `plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`'s `asset_group`
+      `[cross-cutting]` → `[ci]` (finding 1) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
+      tag is corrected and the doc is folded into `ci`'s consolidated-closeout membership.
+- [x] ✅ [DOCS] P3. **MOOT 2026-08-10 — target already archived** at
+      `/plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`. Verified
+      live. Original text preserved for record. Was: Retag
+      `plans/active/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`'s `asset_group`
+      `[cross-cutting]` → `[ci]` (finding 2) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
+      tag is corrected, the doc is folded into `ci`'s closeout membership, and current incident state (was blocked on an
+      external GH Actions outage as of 2026-08-06) is re-verified before treating any of its 3 todos as stale.
 - [ ] [DOCS] P3. Retag
       `plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible) —

@@ -47,6 +47,10 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 last_updated: 2026-07-08
+archive_exempt: true
+# 0 open todos as of 2026-08-09 but archival is deliberately deferred to
+# /plans/active/sports_taxonomy_p3_consumers_2026_08_08_finalize.md todo 1, which names this doc as one of the
+# six absorbed source docs it flips + archives (see that plan + this doc's own Progress Log)
 supersedes:
 superseded_by:
 depends_on:
@@ -203,7 +207,7 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
     call sites. — instruments-service@2b45cb78, with regression tests for every fixed site (see
     `tests/unit/test_sports_reference_v9_path.py::TestReadPerLeagueEntityDf`,
     `::TestEnsureCanonicalFixturesForOverride`, `tests/unit/test_orchestrator_data_fetchers.py::TestFetchWeatherData`).
-- [ ] [DATA] P2. **NEW FOLLOW-UP FINDING (2026-07-08, flagged not fixed) — `_build_fixture_league_map_from_gcs` has a
+- [x] [DATA] P2. ✅ **NEW FOLLOW-UP FINDING (2026-07-08, flagged not fixed) — `_build_fixture_league_map_from_gcs` has a
       real mapping-coverage gap, independent of the path bug just fixed above.** Real-data check: for 2026-06-23,
       2026-07-01, 2026-07-04 the "fixtures" GCS entity's real captured universe spans 22-82 distinct leagues per date,
       but only 0-2 of those overlap `get_prediction_leagues()` (the ONLY set this function's af_league_id→ canonical
@@ -217,7 +221,20 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
       needs an operator/architecture decision on whether the mapping should use the broader
       Prediction+Features+Reference set (matching `_fetch_fixture_ids_via_api`'s fallback-path scope) or whether
       `fixture_ids_override`'s real callers only ever pass fixture_ids that already have a working non-GCS league
-      source, making this dead weight — real verification of which, before choosing a fix, is required.
+      source, making this dead weight — real verification of which, before choosing a fix, is required. — **RESOLVED
+      2026-08-09** (via `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "enumerate callers and use cases"
+      todo, operator-ruled 2026-08-08). Both open questions answered with evidence: (1) `fixture_ids_override`'s real
+      callers are NOT dead weight — `_resolve_fixture_ids` calls `_build_fixture_league_map_from_gcs` whenever
+      `fixture_ids_override is not None`, reached live from `process.py::_enrichment_only_fast_path` plus 3 more real
+      orchestrator call sites
+      (`process_preflight.py`/`process_fetch.py`/`process_zero_records.py`/`process_enrichment.py`) — genuine production
+      wiring, not test-only. (2) The mapping-coverage gap itself is **already fixed**, by an unrelated commit:
+      `instruments-service@aeaf4c0d` (2026-07-14, "GW enrichment manifest write path" fix) widened the
+      af_league_id→canonical fallback map from `get_prediction_leagues()` (33) to
+      `get_expected_leagues_for_source("api_football")` (94) — confirmed LIVE on `origin/live-defi-rollout` today
+      (direct content read of the function, not a git-log inference; `git log -S get_prediction_leagues` shows no later
+      commit reverted it). No further action needed — this todo's own open question was answered by a side effect of a
+      different investigation, verified independently here.
 - [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. See
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s corresponding todo for full evidence. Summary: no per-date
       consolidated parquet exists in the real storage layout, so per-ENTITY batching (via the already-shared
@@ -361,3 +378,15 @@ it's titled after never consults the manifest) is unchanged today.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries) — swapped in
   `sports_taxonomy_p3_consumers_2026_08_08.md` (the doc named verbatim as what resolves this issue) in place of the
   batch2 finalize companion.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed
+  `sports_taxonomy_p3_consumers_2026_08_08.md` is still `status: active` / `assigned_vm: planning` with its own open
+  `[REVIEW] P1` todo (`sports_dependency.py::_build_fixture_league_map_from_gcs` — enumerate callers, line ~169) citing
+  this doc verbatim — the implementing plan is genuinely in-flight, not stalled. No change: this doc's sole open todo
+  stays resolved-by-citation to that plan's finalize.
+- **2026-08-09 (slot 15)** — Dispatched (via the P3 plan's `[REVIEW]` todo) to enumerate
+  `_build_fixture_league_map_ from_gcs`'s real callers and apply the operator's pre-specified decision rule. Full
+  evidence recorded on this doc's own last-open todo above (now flipped): real production callers exist (not dead code),
+  and the mapping-coverage gap itself was already fixed by an unrelated 2026-07-14 commit. **This doc now has 0 open
+  todos** — set `archive_exempt: true` rather than archiving here directly, since
+  `sports_taxonomy_p3_consumers_2026_08_08_finalize.md` todo 1 explicitly names this doc as one of six it will flip +
+  archive together; archiving it unilaterally here would race/duplicate that already-scoped finalize step.

@@ -468,25 +468,41 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # every layer agrees. UV_LINK_MODE=hardlink makes any residual cross-device mismatch warn loudly +
     # fall back visibly instead of silently copying. SSOT:
     # plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md.
+    # NOTE (tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09): a shared cache
+    # dir SIBLING of .tabs/ (i.e. directly under the workspace root) sits on a different
+    # mount boundary than .tabs/<N>/<repo>/.venv on this host — hardlink() returns EXDEV
+    # across that boundary and uv silently falls back to a full per-slot copy, defeating the
+    # dedup this block exists for. Mirrors the .tabs-relocated pnpm store fix in setup.sh:
+    # when the repo IS a per-slot worktree clone, place the cache INSIDE .tabs/ itself.
     _uv_repo_root="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
     case "${_uv_repo_root}" in
-        */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}" ;;
-        *) _uv_ws_common="$(cd "${_uv_repo_root}/.." && pwd)" ;;
+        */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}"; _uv_cache_default="${_uv_ws_common}/.tabs/.uv-cache" ;;
+        *) _uv_ws_common="$(cd "${_uv_repo_root}/.." && pwd)"; _uv_cache_default="${_uv_ws_common}/.uv-cache" ;;
     esac
-    export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
+    export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_cache_default}}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
-    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    # PORTABILITY (found 2026-08-09, same class as the DI-check fix at line ~1507): macOS `/usr/bin/grep`
+    # (BSD) does NOT support `-P` and exits 2 on it. This line ran unguarded (no `|| :`, no `2>/dev/null`
+    # swallowing the exit status) directly under `set -e`, so on every macOS slot the WHOLE gate script
+    # aborted right after the dep-content gate with NO error output at all (grep's usage error went to
+    # stderr but the script exit trapped silently) — blocking ALL local QG runs host-wide, not just this
+    # repo. `rg --pcre2` is byte-identical local↔CI (ripgrep's bundled PCRE2, not the platform grep) and
+    # already a hard QG dependency (see the "[9] ripgrep" setup.sh check), so it adds no new tool.
+    _uv_pm_root="${WORKSPACE_ROOT:-$(cd "${_uv_repo_root}/.." && pwd)}"
+    _uv_pin="$(rg --pcre2 -o '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null || :)"
+    command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
-    # The workspace uv pin is 0.10.8 (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
-    # are `revision = 3`, the serialization 0.10.8 produces; a `uv lock` run under a drifted 0.11.x can
-    # re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns on a FRESH
-    # bootstrap, but this check catches drift on a box that never re-runs setup.sh (a long-lived VM,
-    # a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
+    # The workspace uv pin above (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
+    # are `revision = 3`, the serialization the pinned uv produces; a `uv lock` run under a drifted
+    # newer uv can re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns
+    # on a FRESH bootstrap, but this check catches drift on a box that never re-runs setup.sh (a
+    # long-lived VM, a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
     _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
-    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
-        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    if [[ -n "$_uv_pin" && -n "$_uv_ver" && "$_uv_ver" != "$_uv_pin" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is $_uv_pin — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/${_uv_pin}/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
     fi
-    unset _uv_ver
+    unset _uv_ver _uv_pin _uv_pm_root
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
@@ -1084,6 +1100,64 @@ PYEOF
 )
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_ok "All pytest.mark.skip have reason comments"
+
+    # ── BATS SHELL TESTS (warn-only, transitional) ──────────────────────────
+    # `.bats` shell-test suites (per-tab-worktree invariants, FF-pull starvation
+    # detection, git-status dirty-count integrity, etc.) were written but never
+    # actually invoked by this gate — CI installs bats-core into the tool cache
+    # but no step ever called `bats tests/`, so a regression in any of them went
+    # undetected. WARN-ONLY initially (mirrors the actionlint transitional
+    # pattern at [5.5] below) since the fleet-wide pass/fail baseline across
+    # every repo's `.bats` files has never been measured; re-harden to a hard
+    # failure once a clean baseline run is confirmed.
+    # SSOT: plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md
+    _BATS_FILES=()
+    while IFS= read -r -d '' _bf; do _BATS_FILES+=("$_bf"); done \
+        < <(find tests -name "*.bats" -type f -print0 2>/dev/null)
+    if [ "${#_BATS_FILES[@]}" -gt 0 ]; then
+        log_section "BATS SHELL TESTS"
+        if command -v bats &>/dev/null; then
+            # Run in PARALLEL where the host can (measured 2026-08-10, PM's 211 tests across
+            # 28 files): serial 663s vs `-j 8` 115s — 5.8x, and bats alone was essentially the
+            # WHOLE quality-gate budget (PM's gate hit its own 600s cap at 659s; pytest's
+            # entire slowest-25 is ~48s by comparison). These suites are hermetic git tests —
+            # every setup() does init/clone/commit/push in its own mktemp dir — so they are
+            # process-spawn bound, not CPU bound, which is close to the ideal parallel case.
+            #
+            # Verified SAFE before enabling, not assumed: serial and -j 8 produced identical
+            # outcomes on the same tree — 151 ok / 60 not-ok, and the failing test NAMES
+            # matched exactly. Parallelism surfaced no new failures.
+            #
+            # Degrades to today's serial behaviour rather than breaking, in both directions:
+            # `bats -j` requires GNU parallel, so without it we must NOT pass the flag (bats
+            # errors out), and BATS_JOBS=1 (or =0) is an explicit opt-out for a host where a
+            # repo's suite turns out not to be hermetic. Other repos share this base file and
+            # their suites were NOT part of the measurement above — the parallel path is
+            # therefore gated on GNU parallel being present, and any repo that trips over it
+            # can pin BATS_JOBS=1 without touching this file.
+            _BATS_JOBS="${BATS_JOBS:-}"
+            if [ -z "$_BATS_JOBS" ]; then
+                _bats_cores="$( (getconf _NPROCESSORS_ONLN || sysctl -n hw.ncpu || nproc) 2>/dev/null || echo 2)"
+                _BATS_JOBS=$((_bats_cores / 2))
+                [ "$_BATS_JOBS" -lt 2 ] && _BATS_JOBS=2
+            fi
+            _BATS_ARGS=()
+            if [ "$_BATS_JOBS" -gt 1 ] && command -v parallel &>/dev/null; then
+                _BATS_ARGS=(-j "$_BATS_JOBS")
+                echo "  BATS: running ${#_BATS_FILES[@]} file(s) with -j $_BATS_JOBS (GNU parallel present)"
+            else
+                echo "  BATS: running ${#_BATS_FILES[@]} file(s) SERIALLY (GNU parallel absent or BATS_JOBS<=1)"
+            fi
+            if bats "${_BATS_ARGS[@]}" "${_BATS_FILES[@]}" 2>&1; then
+                log_ok "BATS tests PASSED (${#_BATS_FILES[@]} file(s))"
+            else
+                log_warn "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (NON-FATAL transitional — re-harden to hard-fail once a clean fleet baseline is confirmed)"
+            fi
+        else
+            log_warn "bats not found on PATH — skipping shell tests (${#_BATS_FILES[@]} .bats file(s) present); install: https://github.com/bats-core/bats-core"
+        fi
+    fi
+
     qg_prof end tests
 fi
 # QG_SLICE=tests finishes here (its one phase is the pytest run above).
@@ -1563,15 +1637,43 @@ PIP=$(codex_rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --gl
     | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install'"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install"
 
-BE_EXTRA_GLOBS=()
-for g in ${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}; do
-    BE_EXTRA_GLOBS+=(--glob "!$g")
-done
-BE=$(codex_rg "except Exception:" --type py --glob "!tests/**" ${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" 2>/dev/null || :)
-# Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
-[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
+# STEP 5.5 — broad `except Exception[ as X]:` ratchet (AST-based; mirrors
+# check_no_fallback_imports.py). Replaces the old literal-substring regex
+# (`codex_rg "except Exception:"`), which was blind to the `except Exception as
+# X:` binding form — the ` as <name>` text between `Exception` and the trailing
+# colon meant that form never matched at all, not merely bypassed via
+# BE_EXCLUDE_GLOBS. See
+# plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md.
+_BE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_broad_except.py"
+if [ -f "$_BE_CHECKER" ]; then
+    _BE_REPO=$(basename "$PROJECT_ROOT")
+    _BE_WS="$REPO_ROOT"
+    _BE_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    _BE_LOG="${TMPDIR:-/tmp}/broad_except_qg.log.$$"
+    if $PYTHON_CMD "$_BE_CHECKER" \
+            --workspace-root "$_BE_WS" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >"$_BE_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_BE_LOG" 2>/dev/null; then
+            log_warn "STEP 5.5: below the broad-except baseline — ratchet broad_except_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.5: No new broad except Exception[ as X] sites (baseline-ratchet)"
+        fi
+    else
+        log_fail "STEP 5.5: NEW broad except Exception[ as X] site(s) above the per-repo baseline. Narrow to the specific exception type(s), or add '# noqa: broad-except' with a one-line reason:"
+        cat "$_BE_LOG"
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/broad_except_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_broad_except.py --workspace-root $_BE_WS --scope $_BE_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_BE_LOG" 2>/dev/null
+else
+    log_success "STEP 5.5: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
 
-# Swallowed errors — except that silently passes/returns None
+# Swallowed errors — except that silently passes/returns None (still a literal
+# regex — this specifically targets the pass/return-None BODY shape after a
+# literal-colon `except Exception:`, orthogonal to the broad-except site count
+# above; the `as X:` binding form's swallow shape is covered by the AST check).
 SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
@@ -3802,13 +3904,18 @@ fi
 # _MAX_RETRIES for no benefit (the kalshi_perp mtds_perp_funding_backfill_hang_2026_07_14 bug
 # class). Convention (shard-level-failure-isolation.md): unclassified -> retry_safe = False
 # (never default-retry unknowns); branch on HTTP status directly BEFORE ever consulting the
-# classifier for the permanent-vs-transient split. Single global ratchet (baseline=2) covers
-# the whole fleet today: market-tick-data-service's onchain/{glassnode,helius_solana}.py kept
-# `else True` deliberately for their non-status aiohttp.ClientError/asyncio.TimeoutError branch
-# (transient-by-EXCEPTION-TYPE, permanent-status class already intercepted above) — annotated
-# `# QG-allow: retry-safe` with the rationale inline. A NEW unmarked site fails immediately; a
-# NEW marked site above the baseline fails too (a whitelist growth needs an explicit baseline
-# bump in this comment + the plan doc, not a silent add).
+# classifier for the permanent-vs-transient split. Single global ratchet (baseline=2, LOWERED
+# 2026-08-10 from 3: the 2026-08-09 bump existed solely for kaiko.py, and the Kaiko provider was
+# removed fleet-wide by operator ruling — /plans/active/kaiko_provider_removal_2026_08_10.md.
+# Verified before lowering (rule 11a, a stricter gate must be one the whole fleet already passes):
+# the pattern has exactly 2 CODE sites fleet-wide, both in market-tick-data-service; every other
+# repo has 0, so a baseline of 2 cannot fail them) covers the whole fleet today:
+# market-tick-data-service's onchain/{glassnode,helius_solana}.py kept `else True` deliberately for their non-status
+# aiohttp.ClientError/asyncio.TimeoutError branch (transient-by-EXCEPTION-TYPE, permanent-status
+# class already intercepted above) — annotated `# QG-allow: retry-safe` with the rationale
+# inline. A NEW unmarked site fails immediately; a NEW marked site above the baseline fails too
+# (a whitelist growth needs an explicit baseline bump in this comment + the plan doc, not a
+# silent add).
 _RSD_PATTERN='classification\.retry_safe if classification( is not None)? else True'
 _RETRY_SAFE_DEFAULT_BASELINE=2
 _RETRY_SAFE_DEFAULT_HITS=$(grep -rn -E "${_RSD_PATTERN}" "${SOURCE_DIR}" --include="*.py" 2>/dev/null | grep -v '__pycache__' || :)

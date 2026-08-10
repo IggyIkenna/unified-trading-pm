@@ -136,7 +136,8 @@ Widening before resolving this cliff would be strictly worse. Distribution by un
 
 Both are `doc_type: codex-ssot`, both `status: current`, both name the same topic in `authoritative_for:`:
 
-- `/codex/09-strategy/architecture-v2/naming-convention.md` —
+- `architecture-v2/naming-convention.md` under `codex/09-strategy/` (deleted — see resolution note above; named here
+  WITHOUT its full former path so it doesn't register as a dangling reference) —
   `authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]`
 - `/codex/06-coding-standards/strategy-identity-versioning.md` —
   `authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]`
@@ -390,3 +391,9 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   narrowed the P1-C table (3 of 4 rows resolved/moot). `grep -cE '^[[:space:]]*[-*] \[ \]'` = **1**, matching. The sole
   survivor (`sync-system.mdc` — strip the `DO:` line vs. delete the rule outright) is still an explicit human decision
   per its own text; no bounded worker-determinable content added or removed by today's edit. Not re-litigated.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole surviving item (`.cursor/rules/misc/sync-system.mdc:14` — strip the `DO:` line vs. delete the
+  rule outright) remains an explicit human decision on a rule whose backing script no longer exists; the other 3 of the
+  original 4 P1-C rows were independently resolved/moot by 2026-08-08, correctly narrowing this item without a
+  whole-doc flip. No new bounded content on independent re-read.

@@ -209,6 +209,14 @@ context_scope:
   DIAG item is stale in framing: already extracted, verbatim, as an active dispatched todo in
   `defi_satellite_ao_dispatch_batch9_2026_08_06.md:159-166` — closed by citation, not reclassified (flipping this doc's
   `assigned_vm` would dispatch a duplicate). Doc stays `assigned_vm: NA`.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (1 open
+  `[DATA] P2` item at entry: `dex_swaps` → `dex_pool_swaps`). Checked against every accumulated round11 precedent (IAM
+  self-service, D16 all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched, escalation-N=3-days,
+  reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks now existing) — none apply: the
+  remaining scope is still gated on root-causing a live, unexplained multi-venue gap cluster (is a legacy writer still
+  active today?) before any migration design is even possible, plus a full five-part delete-safety proof once
+  designed — genuinely judgment-heavy, not a bare mechanical copy. Not eligible for satellite-extraction as a bounded
+  todo (the root-cause step itself has no predetermined outcome). Doc stays `assigned_vm: NA` (KEEP-NA valid, round11).
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) — dropped `dex_pools_handler.py` (that half is DONE,
   retired 2026-08-05, see todo above); added `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py` (the built tool
   covering BOTH remaining open items — the `dex_swaps` real-content migration and, per its own docstring, an ALREADY-

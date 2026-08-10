@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [testing, macos, cross-platform, worktree-liveness, ci-cd]
 related:
   [
-    /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
+    /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-08-02

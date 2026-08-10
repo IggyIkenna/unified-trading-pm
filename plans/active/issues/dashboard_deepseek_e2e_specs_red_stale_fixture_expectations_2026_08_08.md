@@ -91,9 +91,17 @@ mechanical fix, which is why this is filed rather than patched.
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Decide (a) re-baseline vs (b) real regression for `avg_turns_per_task` (25.0 vs 9.0) and the wallet
-      worker split ($3.0000 vs $5.0000), citing which value is authoritative — then fix accordingly in
-      `agent-orchestrator`.
+- [ ] [REVIEW] P2. **RULED 2026-08-09 (operator): investigate as a possible real regression FIRST — do NOT re-baseline
+      the fixtures yet.** Trace `agent-orchestrator/server/deepseek_usage.py`'s `avg_turns_per_task` aggregation and the
+      wallet worker-split computation against `fixtures/seed_e2e_state.py`'s seeded `TaskUsageRow`s: identify whether
+      any commit changed the aggregation formula since the specs' `25.0`/`$3.0000` expectations were authored, and state
+      whether `9.0`/`$5.0000` is the correct output of the CURRENT formula applied to the seed data — case (a), fixture
+      drift, safe to re-baseline — or a mismatch between intended and actual computation — case (b), real regression,
+      needs a code fix, not a spec edit. Done when: this todo cites the specific commit/formula evidence for whichever
+      case it is. Do not re-baseline the specs or change `deepseek_usage.py` as part of this todo — that is a follow-up
+      once the investigation lands, and only if the investigation itself settles which value is authoritative (if it
+      stays a genuine semantics call even after tracing the code/history, escalate back to `[OPERATOR]` rather than
+      guessing). Repo: agent-orchestrator.
 - [ ] [UI] P2. Once the two specs are green again, decide whether the dashboard Playwright suite should run anywhere
       automatically. It is currently in no gate: `scripts/quality-gates.sh` runs `tsc` + Vitest only, and
       `quality-gates-v2` does not invoke Playwright — so these two have been red with nothing reporting it. Reference
@@ -102,3 +110,22 @@ mechanical fix, which is why this is filed rather than patched.
 ## Progress Log
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **2026-08-09 (operator ruling)**: RULED — investigate as a possible real regression FIRST, do NOT re-baseline the
+  fixtures yet. Todo 1 retagged `[OPERATOR]` → `[REVIEW]` and reworded into a bounded investigation (trace the
+  aggregation formula's history against the seed data, do not touch the specs or the computation as part of it).
+  Considered reclassifying `assigned_vm: NA` → `planning` (dispatch-scope-eligibility bar,
+  `plans/active/task_template.md` §4): declined for now — this doc's other open todo ([UI] P2, gate the Playwright suite
+  into CI) is explicitly sequenced AFTER these specs go green and would be concurrently dispatchable the moment the doc
+  goes AO-live (same-priority todos run concurrently by default; nothing here sets `sequential: true`), and
+  distinguishing (a) fixture-drift vs (b) real-regression can still terminate in a genuine semantics call the
+  investigation alone can't resolve, per the doc's own original framing. Stays `assigned_vm: NA` — revisit if the
+  investigation lands a clean, code-only verdict.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — re-confirms the same-day operator-ruling entry
+  directly above (RECLASSIFY already explicitly considered and declined this session). No new facts change that
+  call.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. The 2026-08-09 operator ruling entry explicitly considered `assigned_vm: NA → planning`
+  (dispatch-scope-eligibility bar) and declined it for a stated, still-current reason: the `[UI]` item is sequenced
+  after the `[REVIEW]` investigation and would become concurrently dispatchable the moment this doc goes AO-live, and
+  the investigation can still terminate in a genuine semantics call the investigation alone can't resolve. Explicit
+  dated operator consideration-and-decline, not re-litigated.

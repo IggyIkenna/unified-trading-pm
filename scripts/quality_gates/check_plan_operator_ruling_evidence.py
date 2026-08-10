@@ -51,6 +51,19 @@ run_hygiene_sweep.sh's STAGED_PLANS precommit block so the fast doc-commit path 
 was actually producing this drift all day, invisible to every code-commit-only quickmerge run
 until hours later — now catches a NEW unsourced citation at commit time instead of letting it
 land and surface as a corpus-wide QG failure someone has to firefight after the fact.
+
+**Pre-existing-debt exemption (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_ci_
+fix_velocity_2026_08_09.md "New facet"):** `--only` originally flagged EVERY violation in a staged
+file regardless of whether it already existed at HEAD — measured live: a routine, fully-unrelated
+context_scope-maintenance sweep touching ~270 docs hit 39 files failing this check on
+pre-existing, untouched citations, none introduced by that session, with no way to proceed short
+of excluding all 39 from the commit. Same shape + fix as check_effort_signal_ratchet.py's
+`_was_silent_default_at_head`: a violation is compared by identity (ruling phrase + context
+snippet) against the violation set already present in the file's committed HEAD version — a
+citation that was ALREADY unsourced at HEAD is pre-existing debt and is skipped; a citation that
+is new (brand-new file, brand-new ruling phrase, or an edit that changes an existing citation's
+context) still flags. This is the same "flag only what THIS COMMIT INTRODUCES" contract the
+corpus-wide baselined-ratchet mode above already has — `--only` just didn't inherit it.
 """
 
 from __future__ import annotations
@@ -58,12 +71,30 @@ from __future__ import annotations
 import argparse
 import io
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
 import yaml
+
+
+def _pm_root_or_legacy(workspace_root):
+    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
+
+    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
+    named checkout; fixes resolution when running from a git worktree."""
+    import pathlib as _pathlib
+    import sys as _sys
+
+    _d = str(_pathlib.Path(__file__).resolve().parent)
+    if _d not in _sys.path:
+        _sys.path.insert(0, _d)
+    from _pm_root import pm_root_or_legacy as _impl
+
+    return _impl(workspace_root)
+
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_operator_ruling_evidence_baseline.yaml"
 
@@ -238,13 +269,10 @@ def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> N
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
-def _violations_for_file(p: Path) -> list[RulingViolation]:
-    """Shared by the corpus-wide glob and the --only path so the two modes can never
-    silently diverge on what counts as a violation."""
-    try:
-        text = p.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return []
+def _violations_for_text(text: str, p: Path) -> list[RulingViolation]:
+    """Pure content-level scan, so the same rule can be applied to a working-tree file AND
+    to a `git show HEAD:<path>` blob without a second implementation (mirrors
+    check_effort_signal_ratchet.py's _is_silent_default_text split)."""
     out: list[RulingViolation] = []
     for citation in _iter_frontmatter_ruling_citations(text, p):
         out.append(RulingViolation(citation=citation))
@@ -253,16 +281,59 @@ def _violations_for_file(p: Path) -> list[RulingViolation]:
     return out
 
 
+def _violations_for_file(p: Path) -> list[RulingViolation]:
+    """Shared by the corpus-wide glob and the --only path so the two modes can never
+    silently diverge on what counts as a violation."""
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    return _violations_for_text(text, p)
+
+
+def _violations_at_head(p: Path) -> list[RulingViolation]:
+    """Violations already present in the committed HEAD version of this file.
+
+    A file absent from HEAD (brand-new) returns [] — a new file introducing an unsourced
+    ruling citation IS the growth this check exists to stop, so it must still flag.
+    """
+    proc = subprocess.run(
+        ["git", "-C", str(_PM_ROOT), "show", f"HEAD:{p.resolve().relative_to(_PM_ROOT)}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return []
+    return _violations_for_text(proc.stdout, p)
+
+
+def _violation_identity(v: RulingViolation) -> tuple[str, str]:
+    """(phrase, context) — stable enough to match "the same citation" across an unrelated
+    edit elsewhere in the file, but changes if the citation text itself is edited (which
+    correctly re-earns scrutiny rather than silently staying grandfathered forever)."""
+    return (v.citation.phrase, v.citation.context)
+
+
 def _run_only(paths: list[str], quiet: bool) -> int:
-    """Precommit-scoped mode: check exactly the given staged files, no baseline/ratchet.
-    An unsourced 'operator ruling' citation in a file you're actively staging is
-    unconditionally wrong regardless of the rest of the corpus's pre-existing backlog."""
+    """Precommit-scoped mode: check exactly the given staged files.
+
+    Flags only what THIS COMMIT INTRODUCES — a citation already unsourced at HEAD is
+    pre-existing debt and is skipped (2026-08-09; see the module docstring's --only
+    section). A pre-existing violation in a file you happen to be touching for an
+    unrelated reason must not block that commit; a brand-new unsourced citation still
+    does.
+    """
     violations: list[RulingViolation] = []
     for raw in paths:
         p = Path(raw)
         if not p.is_absolute():
             p = Path.cwd() / p
-        violations.extend(_violations_for_file(p))
+        current = _violations_for_file(p)
+        if not current:
+            continue
+        already_at_head = {_violation_identity(v) for v in _violations_at_head(p)}
+        violations.extend(v for v in current if _violation_identity(v) not in already_at_head)
 
     if not quiet:
         for v in violations:
@@ -287,17 +358,6 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
-    parser.add_argument(
-        "--only",
-        nargs="*",
-        default=None,
-        help=(
-            "Blast-radius-safe precommit mode (RULE-11, mirrors check_finalize_plan_coverage.py): still "
-            "scans the whole corpus, but only reports/fails on violations among these specific paths — a "
-            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline "
-            "comparison in this mode; any violation among --only paths fails immediately."
-        ),
-    )
     return parser.parse_args()
 
 
@@ -312,7 +372,7 @@ def main() -> int:
     baseline_path: Path = cast(Path, ns.baseline_path)
     baseline_write: bool = cast(bool, ns.baseline_write)
 
-    active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
     if not active_dir.is_dir():
         print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
         return 2
@@ -336,26 +396,6 @@ def main() -> int:
         seen.add(key)
         deduped.append(v)
     violations = deduped
-
-    only = cast("list[str] | None", ns.only)
-    if only is not None:
-        # Precommit scoping: the author who writes an unsourced ruling citation is the one who
-        # should fix it. Before this existed, these gates ran ONLY inside the full
-        # quality-gates.sh, so `safe-doc-push` (prek-only, the sanctioned pure-doc fast path)
-        # let an unsourced citation land freely and the red surfaced later for whichever OTHER
-        # agent next ran quickmerge — measured 2026-08-08/09, baseline 58 -> 76 in a day with
-        # the cost landing on bystanders. Same blast-radius-safe shape as
-        # check_finalize_plan_coverage.py: full corpus scan, narrowed reporting, no ratchet math.
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
-        if not violations:
-            print("✅ plan-operator-ruling-evidence (--only): clean.")
-            return 0
-        print("❌ Unsourced 'operator ruling' citation(s) in staged plan(s) — cite the doc that records the ruling")
-        print("   (/plans/…, /codex/…, or a .md filename) within 300 chars of the ruling phrase:")
-        for v in violations:
-            print(f"  - {v.citation.path}:{v.citation.line_no}: {v.citation.context[:120]}")
-        return 1
 
     print(
         f"Scanned {len(plan_files)} plan(s) — "

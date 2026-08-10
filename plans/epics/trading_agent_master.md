@@ -40,21 +40,3 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 _(no active plans currently declare `parent_epic: trading_agent_master`. Audit-pool wrapper plans for this epic land
 here as they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
-
-## P3 — backlog (recovered 2026-07-25; completes a migration declared but never applied)
-
-> The frontmatter summary's "P3 backlog" claim was previously untracked anywhere in this file's body — this section
-> completes the migration `plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md` explicitly
-> declared ("MIGRATED FROM: this plan → `plans/epics/trading_agent_master.md` P3") but that never actually landed here.
-> No active plan currently carries these items — they are backlog prose only, not yet forked into a dispatchable plan.
-
-- **Real allocator logic** (post-cutover successor to the May-23 no-op directive emission, Phase 6) — was tracked in the
-  now-`SUPERSEDED` `plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md` Phase 10.7; needs a live successor
-  plan/epic before this is dispatchable.
-- **ML/LLM subscribers** — real derivations replacing the May-23 STUB subscribers (Phase 6); was tracked at epic Phase
-  10.7 + an `ml_repo_consolidation` plan (status not re-verified in this pass).
-- **`performance_features` passthrough** — real rolling sharpe/drawdown/attribution replacing the May-23 passthrough
-  stub (Phase 3), scoped to the Allocator service post-cutover. Note: `plans/epics/features_and_ml_master.md`'s archived
-  `phase5_features_streaming_carry_staked_basis_mvp_2026_05_19` records its own Phase-H "`performance_features`
-  passthrough... complete" — that is the features-service COMPUTE side; whether it also satisfies this
-  trading-agent-service CONSUME-side item was not re-verified in this pass.

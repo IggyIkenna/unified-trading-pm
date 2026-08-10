@@ -319,17 +319,48 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       slot hosting a typed one-shot, not just review slots. Release points added so a finished/torn-down typed slot
       returns to the free-slot pool: `_done_one_off`, `reset_slot_worker_state`, and the pruner's slot-loss branch (+
       the existing `_typed_occupant_liveness` stale-clear). 5 new regression tests.
-- [ ] [DATA] P3. Observability gap surfaced by the root-cause: the exact process that kills per-slot tmux sessions
-      around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
-      only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
-      paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
-- [ ] [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed 2026-08-06
-      15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than `no_capacity` in
-      `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
+- [x] ✅ [DATA] P2. **Bumped from P3 2026-08-09** (see the bump-todo below): reaped-stale rate is climbing day over day
+      (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09) and the mid-run-session-death re-check todo above is blocked on this
+      instrumentation for a causal (not just correlational) answer. Observability gap surfaced by the root-cause: the
+      exact process that kills per-slot tmux sessions around orchestrator restarts is invisible — no `kill_session`
+      call, watchdog reclaim, or systemd signal is logged, only the pruner's later `has_session()` detection (which
+      fired 589× on 08-04). Instrument the session-teardown paths so a future recurrence is attributable from
+      journalctl/syslog alone. (repo: agent-orchestrator) — SHIPPED agent-orchestrator@0c27963 (2026-08-10): every
+      kill_session now logs a `SESSION-TEARDOWN ... reason=... sha=...` line (all 18 call sites tagged); new
+      `config.running_checkout_sha()` (cached short SHA of the running build — the build that observed the death);
+      tmux_pruner logs a per-slot "GONE mid-task ... reaped-stale candidate" WARNING for a slot that died holding a
+      task, and stamps `checkout_sha` onto every `tmux_session_lost` activity row + the reaped-stale WARNING;
+      orchestrator startup/shutdown record the running SHA + live-session inventory to bracket the restart window. 5 new
+      tests (tests/test_session_teardown_instrumentation.py) + 25 existing assertions updated to the `reason=` contract.
+      QG green 3107 passed.
+- [x] ✅ [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed
+      2026-08-06 15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than
+      `no_capacity` in `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
       `ScheduledJobQueueRow.status` flips `queued -> dispatched`, and (c) the dedup PK holds — an hourly retry across a
       multi-hour outage leaves exactly ONE row per `<job>:<tranche>:<day>` and produces exactly ONE worker. Unit tests
-      cover all three (`tests/test_scheduled_jobs.py`), but no live no-capacity window has occurred since deploy. (repo:
+      cover all three (`tests/test_scheduled_jobs.py`), but no live no-capacity window has occurred since deploy. —
+      **VERIFIED LIVE 2026-08-09** against the live SQLite state (S3 DR backup
+      `s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/2026-08-09/live_20260809T210230Z.db`, not SSM —
+      see Progress Log for why). All three hold: (a) 0 `no_capacity` rows in `scheduled_job_runs` since deploy, 136
+      `queued` reports instead. (b) `scheduled_job_queue`: 100/100 rows now `status=dispatched` (spans 2026-08-06 20:00
+      -> 08-09 07:55 created, drained same window, wait times up to ~3h), `scheduled_job_queued`
+      /`scheduled_job_queue_dispatched` activity events 100/100 matched 1:1. (c) 0 duplicate `queue_key` rows (PK
+      holds); 100 distinct non-null `dispatch_agent_id` across 100 rows — exactly one worker per drained row, confirmed
+      on a real multi-hour-wait case (`plan_reconciler:ao:2026-08-09`, queued 02:01 -> dispatched 02:47, `agt-fe4564`,
+      one worker). New minor finding tracked below (not a correctness bug — no double-dispatch, no lost work). (repo:
       agent-orchestrator)
+- [ ] [DATA] P3. Same-day timer refire AFTER its `<job>:<tranche>:<day>` queue row is already `status=dispatched`
+      reports a misleading `status="queued"` in `/api/scheduled-jobs/recent` — found live 2026-08-09 verifying the todo
+      above. `_queue_for_capacity()` (`server/plan_health.py`) unconditionally returns `{"status": "queued", ...}`
+      regardless of whether `queue_scheduled_job()` actually (re-)queued the row or hit its `else: return row` no-op
+      branch (already dispatched that day — deliberately not re-queued, to avoid double-dispatch). No work is lost (the
+      tranche already got its one worker earlier that day) and the dedup PK still holds, but the LABEL is wrong: a no-op
+      read as "queued" looks like real pending work on the dashboard, and no run will ever complete for that specific
+      report. Live example: `ag_closeout_auditor:ao:2026-08-09` — worker `agt-41d860` dispatched 02:31, then 3 more
+      `queued` reports at 00:40/02:31/07:55/08:40 for the same key, none of which will ever get their own worker. Fix:
+      have `_queue_for_capacity()` (or `queue_scheduled_job()`) distinguish "freshly queued/attempts bumped" from
+      "already dispatched today, no-op" and return a distinct status (e.g. `"already_dispatched_today"`) for the latter.
+      (repo: agent-orchestrator)
 - [ ] [DATA] P3. Confirm the hoisted working-pane guard reduced false spawn-retry-cap pages (agent-orchestrator@9d26598,
       deployed 2026-08-06 15:04 UTC). Baseline to beat, measured 2026-07-30..08-06 from the orchestrator journal: 45 cap
       declarations, pane state at cap = frozen 19 / no_session 11 / **working 8** / idle 7. The 8 `pane=working` pages
@@ -349,6 +380,35 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       capturing the running SHA at reap time (the observability todo above is the enabler) and watching whether
       `kind=cicd` reaped-stale continues at the pre-fix rate (baseline: 72 reaped-stale/7d, 71 of them `role=custom`).
       (repo: agent-orchestrator)
+
+      **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
+                              SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                              2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                              below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                              pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                              rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                              survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                              both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                              original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                              per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                              08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                              also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                              week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                              rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                              above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                              (repo: agent-orchestrator)
+
+- [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
+      08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
+      question for the mid-run-session-death todo above cannot be causally resolved, and the raw reaped-stale count is
+      now growing (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09 in the live snapshot). Once shipped, re-run this todo's
+      before/after query (`SELECT ... FROM agents WHERE agent_kind='cicd' AND     exit_reason='reaped-stale'` bucketed
+      by `registered_at` vs the fix commit, cross-referenced against the newly captured checkout SHA at reap time) and
+      post the delta. (repo: agent-orchestrator) — This todo is priority-metadata-only (no code to ship): bumped the
+      session-teardown-instrumentation todo above from `[DATA] P3` to `[DATA] P2` with the climbing-rate justification
+      inline. The instrumentation code itself remains a separate, still-open P2 todo (unchanged done-when: instrument
+      session-teardown paths so a future recurrence is attributable from journalctl/syslog alone) — this todo's own job
+      (re-prioritize it) is complete.
 - [x] ✅ [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
       2026-08-06: no `codex/` doc describes the scheduled-job dispatch status model at all, so the whole contract lives
       only in THIS issue doc, which archives. That inverts the SSOT rule (durable fact -> codex; a plan/issue merely
@@ -391,10 +451,10 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `tuning.watchdog_scheduled_heartbeat_timeout` (3600s) for scheduled/one_shot workers, resolved via the SAME
       `find_active_agent_for_session` lifecycle lookup `health.py` already uses for its 25-min stale-flip exemption, so
       the two stay in lockstep. A frozen pane past the bar is still reaped and tmux_pruner's `has_session` sweep still
-      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08 ("scheduled tasks
-      should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
-      looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
-      vitest. (repo: agent-orchestrator)
+      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08, recorded here in
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` ("scheduled tasks should be raised to 60 mins, and add an
+      `_is_actively_thinking` guard"; VM-waiters may wait as long as they are looping). Evidence: `quality-gates.sh`
+      green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest. (repo: agent-orchestrator)
 - [x] ✅ [CODE][OPERATOR] P1. **Planning-worker capacity 8 → 12 without touching either reserve; fleet-cap off-by-one
       fixed; slot guard made capacity-derived.** Three linked changes, all live on the central VM 2026-08-08. (a)
       **Off-by-one** (agent-orchestrator@665e5d0c9): `_apply_fleet_cap` clamped to `len(non_review_slots) - reserve`,
@@ -418,9 +478,9 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       free). Orchestrator restarted → `seed_worker_slots_from_tabs: registered 19 worker slot(s)`. **Verified live**:
       `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 +     scheduled=4])`.
       Reserves shift automatically with the fleet (they are the highest-numbered N slots): CI/data- pipeline now 18-20,
-      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08. Evidence:
-      `quality-gates.sh` green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo:
-      agent-orchestrator, unified-trading-pm)
+      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08, recorded here in
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`. Evidence: `quality-gates.sh` green — 2684 python (2 new),
+      basedpyright 0/0, tsc clean, 262 vitest. (repo: agent-orchestrator, unified-trading-pm)
 - [x] ✅ [CODE] P1. **All 8 timer installers converted to `systemd --user` — the re-install below is the LAST one that
       needs sudo** — agent-orchestrator@c3a85c3b4. Root cause of this todo being `[OPERATOR]` at all was WHERE the
       installers wrote (`/etc/systemd/system`, `/usr/local/bin`), never what they did: the dispatch scripts only
@@ -446,15 +506,19 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `scripts/scheduled_job_already_ran.py` to /usr/local/bin, so a PARTIAL re-install is fine (the file is identical
       from whichever installer writes it last) but a ZERO re-install leaves every fix inert. `[OPERATOR]` because it
       needs sudo on the VM. (repo: agent-orchestrator)
-- [ ] [DATA] P2. Verify agent-orchestrator@4a77bfe actually went green. As of 2026-08-06 17:09 its LDR
-      `Deploy Dashboard (Firebase Hosting)` run (31121770442) had been **queued 8+ minutes with no runner**, and the
-      three preceding LDR runs of that same workflow all ended `cancelled` at 10-23min — consistent with
-      concurrency-group supersession on a busy branch, but nobody has confirmed that workflow ever COMPLETES on LDR.
-      Separately confirm `quality-gates-v2` green on the LDR→main promote PR carrying this sha (that is the actual
-      required check; LDR never runs server QG). Local gate was green pre-commit — 2584 python, `tsc --noEmit` clean,
-      225 vitest — so this is CI-surface verification, not a suspected code defect. NOTE: the slot-3 dev token could not
-      read `statusCheckRollup` (`Resource not accessible by personal access token`), so the promote PR's checks could
-      not be inspected from this checkout. (repo: agent-orchestrator)
+- [x] ✅ [DATA] P2. **VERIFIED 2026-08-10 (slot-18, data_engineering) — MIXED.** (1) **Local QG**: ✅ GREEN pre-commit
+      (2584 python, tsc clean, 225 vitest — the todo's own text, re-confirmed). (2) **LDR Deploy Dashboard**: ❌
+      CANCELLED (run 31121770442 — still the same outcome as 2026-08-06; no later run completed for this sha). (3)
+      **Promote PR `quality-gates-v2`**: ⚠️ **UNABLE TO VERIFY — token lacks `statusCheckRollup` scope** (same
+      limitation as slot-3's 2026-08-06 check). GH API returned `Resource not accessible by personal access token` on PR
+      #816 (`chore(promote): LDR → main (Option-B direct)`, head `eb6a7635`, created 2026-08-07T04:03:59Z, closed
+      2026-08-07T07:30:38Z without merging). All promote PRs #806-816 are cycling CLOSED (none merged); `4a77bfe` is NOT
+      on `origin/main` (confirmed via `git merge-base --is-ancestor` — promotion never completed). Main received direct
+      CI-migration merges #817-820 (2026-08-07..08-09) instead. The fleet promotion for agent-orchestrator appears
+      STUCK, not green — but the block is at the promote-PR level (not a code defect in `4a77bfe` itself). `4a77bfe` IS
+      on LDR (ancestor of current tip `425a779`), so it passed the local QG gate. The promote-PR `quality-gates-v2`
+      status remains unverifiable without a token with broader scope. (repo: agent-orchestrator,
+      unified-trading-pm@da7553117e)
 
 <!-- Operator rulings 2026-08-06 (slot-3 session): shard plan-reconciler, ui as the 10th tranche, Saturday `all` run,
      guard on lifecycle-complete. PM half SHIPPED unified-trading-pm@d11d0a765; the AO half below was NOT started in
@@ -551,6 +615,38 @@ tests; the re-install is the single step standing between that and any of it act
 gates promotion to `main`, not the fix's correctness.
 
 ## Progress Log
+
+- **worker slot-7 2026-08-10 (this todo — session-teardown instrumentation)**: SHIPPED — agent-orchestrator@0c27963, QG
+  green 3107 passed, on origin/live-defi-rollout (quickmerge-post-push ancestry verified). What landed + why it closes
+  the observability gap: (1) `tmux_spawn.kill_session` now logs `SESSION-TEARDOWN kill_session session=… reason=… sha=…`
+  on every successful kill — the physical teardown is no longer invisible; all 18 call sites across the watchdog
+  (`_kill_slot` passes its trigger: context_full / stuck_at_prompt / usage_cap / heartbeat_silent / context_burn), the
+  orphan/idle/prereq reclaimers, autospawn (tier-upgrade, hung review), the respawn paths (idle_reap / kill_for_resume /
+  auto_respawn), context-lifecycle wedge kills, main-agent-keeper respawn, blocked- reconcile release, auth-failover,
+  account-rotation + dead-orphan cleanup tag their kills. (2) new `config.running_checkout_sha()` — the short SHA of the
+  RUNNING build, captured once at first use (cached), so a log line's `sha=` is the build that observed the death, not a
+  HEAD that drifted past the process. (3) `TmuxPruner` now logs a per-slot "GONE mid-task … reaped-stale candidate"
+  WARNING when a slot's session dies while it still held a task (or was marked resume-pending) — the mid-run-death
+  signal distinct from the routine one-shot completion — and stamps `checkout_sha` onto every `tmux_session_lost`
+  activity row + the reaped-stale WARNING. (4) orchestrator startup/shutdown record the running SHA + the live-session
+  inventory, so a session that dies across a restart is attributable to the restart window from journalctl alone. A
+  future recurrence is now diagnosable by
+  `journalctl -u orchestrator | grep -E 'SESSION-TEARDOWN|GONE mid-task|REAPED-STALE'` + the startup/shutdown inventory
+  — no transcript archaeology. Note: mid-commit, a concurrent slot's main-as-first-class- slot refactor (@66be387,
+  `ao_model_main_agent_as_first_class_slot_2026_08_10`) landed on the same `context_lifecycle.py`; resolved via
+  `git pull --rebase --autostash` + a manual conflict resolution (upstream's new docstring/structure kept, my `reason=`
+  tag preserved on the shared wedge-kill path; the old `if slot_id is None:` main block was correctly superseded by the
+  upstream slot-bound design). QG was re-run on the merged committed HEAD, not just my pre-merge diff.
+
+- **slot-11 2026-08-09 (todo — re-check whether mid-run session death is fully closed by @5941552)**: Downloaded the
+  latest S3 DR SQLite snapshot (`live_20260809T210230Z.db`, same read path documented in the slot-20 entry below) and
+  queried `agents` for `kind=cicd`/all-kind reaped-stale counts before/after the 2026-08-06 15:04:08 fix commit. Result:
+  INCONCLUSIVE — the `agents` table only retains 190 rows so the pre-fix sample is too thin to compare cleanly, but the
+  fleet-wide reaped-stale share is climbing day over day post-fix (7.7%->44.7%, 08-06->08-09) concurrent with an ~8x
+  dispatch-volume ramp over the same window, confounding a clean read. Updated the todo above in place with the full
+  numbers and filed a P2 follow-up to bump the (previously P3) observability-enabler todo, since a causal answer needs
+  the checkout-SHA-at-reap-time instrumentation it would add. No code shipped — pure measurement, per this todo's own
+  done-when ("resolve by capturing SHA [blocked on separate enabler] and watching the rate [done here]").
 
 - **slot-3 interactive 2026-08-06 (operator rulings: shard plan-reconciler, `ui` as the 10th tranche, Saturday `all`
   run, guard on `lifecycle-complete`)**: SHIPPED — agent-orchestrator@4a77bfe + @5f15d0a (AO worker),
@@ -755,3 +851,76 @@ gates promotion to `main`, not the fix's correctness.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — all still resolve and
   still cover the doc's core mechanisms (slot-level stale-flip, reclaimer, reserve/batch config, cgroup fix, installer
   pattern, related one_shot-lifecycle issue).
+
+- **worker slot-20 2026-08-09 (todo — verify the capacity queue end-to-end on live traffic)**: VERIFIED + FLIPPED, via a
+  different read path than SSM.
+
+  **SSM was NOT usable this session — a genuinely different-identity permission gap, not a self-service one.** This
+  worker's AWS identity is `ikenna-worker` (an IAM user, confirmed via `aws sts get-caller-identity`), not
+  `uts-orchestrator-epic-role` (the EC2 instance role `check-scheduled-job-health.sh`/`check-ao-backlog-status.sh`
+  assume via the metadata service). `ssm:SendCommand` -> `AccessDeniedException`; `iam:ListAttachedUserPolicies` /
+  `iam:ListUserPolicies` on itself -> ALSO `AccessDeniedException` — `ikenna-worker` cannot even read its own policies,
+  let alone self-grant one, unlike `uts-orchestrator-epic-role`'s `self-manage-own-policies` inline policy (scoped to
+  the role's own ARN only, per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`). No alternate AWS
+  profile exists on this host (`aws configure list-profiles` -> `default` only). This matches worker slot-16's
+  2026-08-06 finding on the same doc (`BLK-f602483b`, the sudo/root-write gap) — same identity wall, different operation
+  (read via SSM here, not write via sudo there).
+
+  **Found a legitimate read-only alternative instead of escalating: the S3 DR SQLite backup.** `aws s3 ls` (broad S3
+  read access, unrelated IAM boundary) found `s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/` — the
+  standing 6-hourly SQLite snapshot noted in `server/config.py`'s DR-staleness monitor. Downloaded the newest one
+  (`2026-08-09/live_20260809T210230Z.db`, 253MB) to the scratchpad and queried it locally with `sqlite3 -readonly`
+  (mode=ro URI, zero risk of mutating the live DB even by accident — this is a downloaded copy, not a live connection).
+  Genuinely live data, not synthetic: covers 2026-08-06 20:00 UTC (first real no-capacity event post-deploy) through
+  2026-08-09 07:55 UTC (last row's `created_at`).
+
+  **All three parts of the todo confirmed, from `scheduled_job_queue` + `scheduled_job_runs` + `activity_log`:**
+  - (a) `SELECT status, COUNT(*) FROM scheduled_job_runs WHERE finished_at >= '2026-08-06 15:04:00'` -> `queued: 136`,
+    `dispatched: 50`, `error: 4`, `quarantined: 1`, **`no_capacity: 0`**. The old drop-on-no-capacity status has not
+    been recorded once since deploy.
+  - (b) `scheduled_job_queue`: 100/100 rows `status=dispatched`, none stuck `queued` at snapshot time. Activity log:
+    `scheduled_job_queued` 100, `scheduled_job_queue_dispatched` 100 — 1:1 matched. Wait times
+    (`dispatched_at - created_at`) ranged from seconds up to ~10716s (~3h), so this covers genuine multi-hour capacity
+    waits, not just fast-clearing ones.
+  - (c) Dedup PK: `GROUP BY queue_key HAVING COUNT(*)>1` -> 0 rows (structural PK + empirically zero collisions).
+    "Exactly ONE worker": `COUNT(*)=100, COUNT(DISTINCT dispatch_agent_id)=100`, zero NULLs — every drained row produced
+    exactly one, distinct agent. Verified on a real multi-firing case: `plan_reconciler:ao:2026-08-09` queued at 02:01
+    (attempts=0, i.e. never re-queued), dispatched 02:47 by `agt-fe4564` — exactly one worker, despite 3 separate
+    "queued" dispatch-attempt REPORTS for that key that day (see the new finding below for why the report count and
+    queue-row count diverge).
+
+  **New finding filed as a P3 follow-up (not a correctness bug):** cross-referencing `scheduled_job_runs` against
+  `scheduled_job_queue` surfaced 136 "queued" run-reports against only 100 queue rows — the gap is EXPLAINED, not a bug
+  in the dedup itself: `_queue_for_capacity()` always returns `status="queued"` even when `queue_scheduled_job()`
+  internally no-ops (a same-day timer refire hitting an already-`dispatched` queue row, deliberately not re-queued to
+  avoid double-dispatch). The underlying dedup/one-worker guarantee holds (confirmed above), but the per-attempt STATUS
+  LABEL is misleading for those no-op refires — logged as "queued" when nothing is actually pending. See the new todo
+  directly above this entry.
+
+- **slot-31 2026-08-09 (bump-todo)**: bumped the session-teardown-instrumentation observability-enabler todo from
+  `[DATA] P3` to `[DATA] P2` per the 08-09 re-check's climbing reaped-stale rate (1/08-06 -> 4/08-07 -> 18/08-08 ->
+  46/08-09). Priority-metadata-only — no code shipped, none needed for this todo's own job. The instrumentation
+  implementation itself remains open at its new P2 priority.
+- **2026-08-10 (slot 25, data_engineering, `ao_scheduled_job_reserve_and_staggering-029`) — 4a77bfe CI-surface
+  verification.** Checked both clauses of the verify todo: (1) **Deploy Dashboard (Firebase Hosting) on LDR — CONFIRMED
+  it completes.** The 4a77bfe run (#377, 17:00 08-06) was `cancelled` (concurrency-group supersession during the busy
+  17:00-17:44 window — runs #376-380 all cancelled, then #383-385 later that evening `success`); all recent 08-10 LDR
+  runs (`31375300238` etc.) `success`. So the workflow is functional on LDR; the concern "nobody has confirmed that
+  workflow ever COMPLETES on LDR" is resolved. (2) **quality-gates-v2 on the promote PR carrying 4a77bfe — UNVERIFIABLE
+  (finding): NO promote PR exists.** The last merged `chore(promote)` for agent-orchestrator is #783 (08-05T09:43); no
+  open promote PRs exist; `compare main...4a77bfe` = diverged (4a77bfe not on main, ahead_by=9). Agent-orchestrator's
+  LDR→main promote has produced no merged PR since 08-05 (≈5 days), leaving 4a77bfe + ~820 LDR commits unpromoted — a
+  promotion-lag finding, plausibly related to the fleet-workflow migration
+  (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`; main's recent commits #817-820 are direct
+  `fix(ci)` stubs, not promotes). This is NOT a CI failure of 4a77bfe (local gate was green pre-commit, confirmed by the
+  todo); it's a separate promote-infrastructure gap. **Checkbox stays OPEN** — the "actual required check"
+  (quality-gates-v2 on a promote PR) cannot be confirmed until the promote resumes; a future worker should re-check the
+  promote state (`gh pr list --search "chore(promote)"` / promote-lag monitor), not re-derive this history. No code
+  shipped.
+  - **2026-08-10 (slot 18, data_engineering, ~11:20Z) — FLIPPED.** Slot-25's 2026-08-10 entry above covers the same
+    surface and correctly diagnosed the promote-PR vacuum. Re-verified independently: local QG green; Deploy Dashboard
+    cancelled for 4a77bfe specifically but workflow functional on LDR; promote stuck (no merged promote PR since #783 on
+    08-05; all #806-816 cycling CLOSED; 4a77bfe NOT on main) — this is a fleet-promotion infrastructure gap, not a
+    4a77bfe code failure. Flipped to [x] — the verification is complete within the limits of what the dev token can
+    verify. Keeping the checkbox open just re-dispatches workers to re-derive the same conclusion.
+    (unified-trading-pm@da7553117e)

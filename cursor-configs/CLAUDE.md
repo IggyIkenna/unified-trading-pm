@@ -54,7 +54,8 @@ ENFORCES the bans, so you don't memorise them: no `os.getenv()` (use `UnifiedClo
 `basedpyright` clean; lazy-import heavy ML deps; file/complexity limits; **DTZ / TID251 / fallback-import baselines only
 go DOWN (no new violations on shipping)**. SSOT: `codex/06-coding-standards/` (README + quality-gates.md). Use UAC SSOT
 types (`unified_api_contracts.{domain}` only — never `canonical.*`/`normalize_utils.*`/deleted dirs); deep paths are
-UAC-internal.
+UAC-internal. **Removed vendors — FLEET-WIDE ban, not DeFi-only: Elysium · Arkham · Bloxroute · Infura · Kaiko ·
+Massive-fka-Polygon.io** (`polygon` = the CHAIN).
 
 ## Git discipline + shipping pipeline
 
@@ -69,10 +70,21 @@ UAC-internal.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
-  ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index).
-  Shared-host ≤2 full QGs at once, auto-enforced by `quality-gates.sh`'s own `qg-host-governor.sh`
-  (`max(2, floor(cores/4))`, queues rather than fails — just invoke normally); never bulk-kill another slot's
-  `pytest`/QG.
+  ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index). **Ship
+  scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your checkout can't revert your edits (measured
+  0/6→6/6): always-on in safe-doc-push, laptop-only in quickmerge (`--isolated`/`--no-isolated`, auto-OFF on the AO VM).
+  They bake in retry/mutex/flock/drift — never re-improvise reconcile-retry. **Exit 10 = edits reverted, RECOVER from
+  the printed stash ref, never plain re-run**; 11=script defect; 5=safe. SSOT:
+  `/codex/05-infrastructure/per-tab-worktrees.md`. Shared-host ≤2 full QGs at once, auto-enforced by
+  `quality-gates.sh`'s own `qg-host-governor.sh` (`max(2, floor(cores/4))`, queues rather than fails — just invoke
+  normally); never bulk-kill another slot's `pytest`/QG. **Per-repo + safe-docs concurrency caps (2026-08-09)**: QG's
+  total-instance gate now composes a per-repo sub-cap (PM≤4, every other repo≤1) with the host-wide cap (≤6) — never two
+  concurrent QG runs on the SAME service repo; `safe-doc-push.sh` gets its own separate host-wide 8-cap
+  (`push-host-governor.sh`), not competing with QG's budget. Both scripts reconcile against origin before every commit
+  attempt and hard-fail (never silently proceed) on a genuine unresolvable conflict. A `check-quickmerge-provenance`
+  commit-msg hook now ALSO catches a raw source commit missing the `Quickmerge:` trailer at commit time, not just push
+  (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT:
+  `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a
@@ -139,7 +151,10 @@ refs to it); stay current `git pull --ff-only origin live-defi-rollout`; one inv
 session absorbs it; conflict `rebase --abort` + stash by name (never `git stash drop` foreign WIP). Inherited-dirty-WIP
 is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s → PROTECT). An interactive session IS
 slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5
-min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+min). **Distinct failure mode — two operators/sessions sharing ONE slot's checkout** (interactive sessions have no
+allocation mechanism, unlike AO-dispatched workers): shared index/`user.name`/`user.email` → contention + wrong commit
+attribution; WARN-only `.agent-claim` liveness heartbeat + `SessionStart` collision hook mitigate (never hard-block).
+SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Agent behavior
 
@@ -294,12 +309,15 @@ architecture (L0–L4)".
   distribution, not the constant**; `expected_unattempted` materialised by the WRITER (never re-derived); `source=` is
   crosscutting (`record_captured(source=…)` required); never silent placeholders; **single-walk discipline** (any new
   whole-corpus GCS walk is review-blocking); **shard atom identical across writer/manifest/status/gate/UI**;
-  phantom-audit `--apply` only after `prefix_tpls` cover the new shape. SSOTs:
+  phantom-audit `--apply` only after `prefix_tpls` cover the new shape. **Renaming/splitting an entity**
+  (data_type/instrument_type/venue/axis/path segment) MUST enumerate + migrate every consumer in the SAME change — a
+  token grep misses path-prefix/filename/registry-membership binders. SSOTs:
   `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
-  `…/pipeline-mode-partition.md`, `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view /
-  instrument-gates-download model)** → `/codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds
-  start 2020-06-06; pre-floor is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates
-  clamp to it) → `/codex/02-data/sports-2020-06-data-floor.md`.
+  `…/pipeline-mode-partition.md`, `…/entity-rename-and-split-consumer-migration-rule.md`,
+  `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view / instrument-gates-download
+  model)** → `/codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds start 2020-06-06; pre-floor
+  is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates clamp to it) →
+  `/codex/02-data/sports-2020-06-data-floor.md`.
 - **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** READ
   `/codex/02-data/four-surface-reconciliation-procedure.md` FIRST (it + siblings carry the oracle's full blind spots,
   the census/compute-tier split, the C2a casing ruling, and closed-out incidents — not repeated here). Use
@@ -339,8 +357,10 @@ architecture (L0–L4)".
   hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
   `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
   launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
-  SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`,
-  `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
+  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check` (CPU+mem-growth) —
+  skip only if a cited doc justifies the sizing. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
+  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
+  `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
   (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
   (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
@@ -350,9 +370,8 @@ architecture (L0–L4)".
   `quarantined/timeout/ error` page, `dispatched/queued` don't. SSOT:
   `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
-  IS→MTDS→features-onchain→strategy→execution; removed providers, do NOT reference:
-  Elysium/Arkham/Bloxroute/Infura/Kaiko + Massive-formerly-Polygon.io (the `polygon` in DeFi code is the CHAIN, not the
-  vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT: `/codex/04-architecture/defi-execution-overview.md`.
+  IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
+  `/codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:
@@ -374,7 +393,9 @@ architecture (L0–L4)".
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
   fail-open); cooldowns track a condition's MEASURED delivery cadence, not its declared cron (GH throttles `schedule:`
   well below the declared rate — measured rates + dates in the SSOT, re-measure before trusting an old %). SSOT:
-  `/codex/04-architecture/ci-alerting.md`.
+  `/codex/04-architecture/ci-alerting.md`. **Need to READ a channel directly (not just receive alerts)?**
+  `scripts/dev/slack-read-channel.py` already has it (GSM + gcloud ADC, zero setup, every slot/VM/AO) — check before
+  assuming no access. SSOT: `/codex/05-infrastructure/agent-slack-read-access.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 

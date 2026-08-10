@@ -298,3 +298,44 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-09 (slot-30)** — **FOURTH occurrence, new symptom flavor: two DIFFERENT task_ids concurrently dispatched for
+  the SAME todo, not a sibling-id reset after the fact.** Dispatched
+  `prediction_betfair_lay_price_adapter_scaffold_deleted-caad88819ca3` (todo 2 of
+  `plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`) at ~14:xx UTC; slot-5 was
+  independently dispatched the SAME todo's content under its own task_id at the same time (`14:45:17Z` per its commit
+  `market-tick-data-service@1200d443`). Both fully implemented + QG-passed the identical `download_batch`/
+  `VENUE_REGISTRY` feature; my quickmerge push hit a real rebase conflict against slot-5's already-merged version
+  (auto-rebase `CONFLICT (content)` on all 3 touched files). Recovered cleanly — `git rebase --abort`, verified slot-5's
+  version satisfied the done_definition, discarded my redundant local commit via `git reset --keep origin/...` (working
+  tree was clean, no data lost, original commit `7fd423579a` recoverable via reflog), called `/done` anyway citing
+  slot-5's SHA. Server confirmed:
+  `"dispatch_reason":"orphan task closed — no backlog.yaml definition found for this task_id"` — my task_id had already
+  fallen out of backlog.yaml by the time I finished (~30min of wall-clock work, ~9 QG retries) purely because of the
+  race window, not because of anything wrong in my execution. This is the same "external race reads a flipped checkbox
+  as unflipped" precondition this doc already names (§ The mechanism) — consistent with regen running against a stale
+  plan-clone read of todo 2 as still `- [ ]` while slot-5's flip was in flight, minting a second live `queued` row under
+  a fresh id for the same brief instead of guard 1 (same-plan brief-keyed reconcile) catching it. No code fix attempted
+  here (this doc's rewrite todo is `assigned_vm: NA`, banner-guarded, operator/local-only-homed) — logging as further
+  evidence the standing P2 content-hash-id rewrite is still needed; cost this time was one full worker-session's wasted
+  compute, not corrupted audit history.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: **DO NOT RECLASSIFY THIS DOC** — re-affirmed on citation alone, per the
+  skill's own hardened rule this exact doc's incident history wrote. Both hard triggers verified real by reading them
+  directly: the top-of-body "🟢 EXECUTION CONSOLIDATED" banner still reads "Do NOT start work from this doc alone"; the
+  inline `assigned_vm: NA #`-comment still states "NOT AO-dispatchable," citing the 2026-07-31 RECLASSIFY-then-revert
+  (BLK-29884333). Checked every round7-10 precedent (IAM self-service, D16, S5.1,
+  plan-destination-defaults-AO-dispatched, escalation-N, reversibility-qualified deletes, Option B retirement,
+  DeepSeek/Slack credentials) against this doc specifically — NONE of them touch the actual reason this doc is
+  hard-KEEP-NA (a documented, THIRD-repeat, real production mis-dispatch of live-dispatch-core rewrite work), so none
+  provide grounds to override the standing ruling. The 2026-08-09 (slot-30) recurrence entry directly above is a FOURTH
+  live occurrence of the underlying bug (new flavor: concurrent double-dispatch of the same todo, not a post-hoc
+  sibling-id reset) — further evidence the rewrite is still needed, not evidence the doc is now AO-dispatchable. No
+  per-item extraction either: all 2 open `[BACKEND] P2` todos are explicitly one indivisible, full-blast-radius rewrite
+  by the 2026-07-28 operator ruling ("full completion required, no partial rollout").
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: **DO NOT RECLASSIFY THIS DOC** — per this
+  sweep's own explicit instruction not to re-litigate this exact doc (documented history of 3-4 real mis-dispatch
+  incidents from prior wrongful reclassification). Both hard triggers re-verified present by direct read: the
+  top-of-body "🟢 EXECUTION CONSOLIDATED" banner still reads "Do NOT start work from this doc alone"; the inline
+  `assigned_vm: NA #` comment still states "NOT AO-dispatchable," citing BLK-29884333. Content unchanged since round11.
+  KEEP-NA, valid.

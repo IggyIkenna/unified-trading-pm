@@ -38,8 +38,15 @@ related_plans:
   - ../active/tradfi_backfill_throughput_followups_2026_07_24.md
   - ../active/tradfi_consolidated_closeout_2026_07_18.md
   - ../active/tradfi_manifest_content_recovery_completion_2026_07_24.md
-  - /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md
+  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
   - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
+  - ../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md
+  - ../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
+  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
@@ -178,17 +185,24 @@ Covers:
   `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` `("tradfi","trades"|"tbbo"|"ohlcv_1s")`).
   **Massive (= Polygon.io) was REMOVED as a TradFi source 2026-07-19** (operator ruling: Databento is the batch
   source-of-truth, Yahoo covers daily `ohlcv_24h` for treasuries/KRW) and the Massive estate was **PURGED 2026-07-21**
-  (1,701,422 objects → 0, accepted permanent loss). The historical `pipeline_mode=batch_massive/` objects retain
-  `possible_manifest`/`PipelineMode.BATCH_MASSIVE` recognition only until the separate gated GCS purge. The
-  `tradfi_massive_dual_source` child plan is `status: superseded` — dual-source Massive is no longer a live goal.
-  Barchart is **RETIRED as a general OHLCV tick source** — ~~it now survives ONLY as the VIX-15m cash-index layering
-  (Barchart preload 2020-01-02→2025-11-12 + Yahoo rolling 60d + honest gap), which Databento does not serve.~~
-  **[2026-07-14 correction, verify-rerun-2 finding 217] stale** (was the text struck through above — contradicted this
-  same epic's own § "Anti-patterns" `[2026-07-12 correction]`, which this Scope section was never updated to match).
-  Operator decision 2026-06-23 DELETED the VIX cash index entirely (`instruments-service@814b14a`, 1,621 GCS objects
-  removed) — there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via
-  Databento `XCBF.PITCH`** (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero
-  remaining sanctioned use** in TradFi sourcing. SSOT:
+  (1,701,422 objects → 0, accepted permanent loss). **[Corrected 2026-08-09 — self-contradiction removed]** this
+  sentence previously claimed `pipeline_mode=batch_massive/` objects "retain recognition only until the separate gated
+  GCS purge," implying the purge was still pending — that clause was written in the SAME commit as the "PURGED
+  2026-07-21" sentence above and contradicted it; the purge is in fact the gated GCS purge referenced, it EXECUTED
+  (RUN_TS=20260720-193849), and a live bounded prefix-scoped check 2026-08-09 confirms 0 `batch_massive` objects remain
+  (see `plans/active/issues/plan_reconciler_findings_2026_08_08.md` Progress Log). `batch_massive`
+  `PipelineMode`/`possible_manifest` READ recognition is now safe to drop from code (tracked separately, not yet done as
+  of this edit) — matching `/codex/02-data/canonical-cutover-register.md`
+  §4/`/codex/02-data/reconciliation-finding-taxonomy.md` AE-4 (CLOSED). The `tradfi_massive_dual_source` child plan is
+  `status: superseded` — dual-source Massive is no longer a live goal. Barchart is **RETIRED as a general OHLCV tick
+  source** — ~~it now survives ONLY as the VIX-15m cash-index layering (Barchart preload 2020-01-02→2025-11-12 + Yahoo
+  rolling 60d + honest gap), which Databento does not serve.~~ **[2026-07-14 correction, verify-rerun-2 finding 217]
+  stale** (was the text struck through above — contradicted this same epic's own § "Anti-patterns"
+  `[2026-07-12 correction]`, which this Scope section was never updated to match). Operator decision 2026-06-23 DELETED
+  the VIX cash index entirely (`instruments-service@814b14a`, 1,621 GCS objects removed) — there is no more
+  Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via Databento `XCBF.PITCH`**
+  (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero remaining sanctioned use**
+  in TradFi sourcing. SSOT:
   [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**: as
   of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
   Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged
@@ -798,45 +812,72 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_6 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
-Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_12 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
-
-### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
-
-**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: TradFi S&P ML + price-arb backtest
-readiness (ES feature runs + data-clean slice)
-
-## P1 — important; post-current-gate
 
 ### [`tradfi_backfill_throughput_followups_2026_07_24`](../active/tradfi_backfill_throughput_followups_2026_07_24.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi backfill-throughput follow-ups —
 download/VM throughput residuals + T+1 job hardening
 
-### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
-code→migrations→coverage→smoke-test to MVP-backfill-ready
-
 ### [`tradfi_manifest_content_recovery_completion_2026_07_24`](../active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
-
-### [`tradfi_multisource_backfill_2026_06_22`](/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md)
-
-**status**: archived 2026-08-03 · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi backfill multi-source —
-FX→yahoo, CBOE cash-index no-provider, ICE source-ask
 
 ### [`tradfi_phase_d_terminal_gate_2026_07_24`](../active/tradfi_phase_d_terminal_gate_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi Phase-D terminal gate —
 post-migration all-shards re-smoke-test
 
+## P1 — important; post-current-gate
+
+### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
+code→migrations→coverage→smoke-test to MVP-backfill-ready
+
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
+### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md)
+
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — fresh
+/ag-closeout-audit extraction (4 clean orphans)
+
+### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize`](../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — fresh
+/ag-closeout-audit extraction (4 clean orphans)
+
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — fresh
+/ag-closeout-audit extraction (3 clean orphans)
+
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — finalize
+(reconcile source docs + resolve deferrals + archive)
+
+### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: TradFi S&P ML + price-arb backtest
+readiness (ES feature runs + data-clean slice)
 
 ## P3 — backlog; revisit quarterly
 

@@ -130,3 +130,13 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. Sole open todo remains a real design decision on "the single riskiest automated code path in the
   system" (doc's own words).
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the full round7-10 precedent set (IAM
+  self-service, D16, S5.1, plan-destination default, escalation-N, reversibility-qualified deletes, Option B retirement,
+  DeepSeek/Slack-webhook credentials, sibling-script self-service) — none apply; the retry-vs-alert design call on the
+  fleet's riskiest auto-push path is unchanged and genuinely undecided. Corroborated by the same-day
+  `/ag-closeout-audit ao` batch12 run, which independently lists this doc under operator-gated (22), declined
+  zero-extraction.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open todo remains a real, undecided retry-vs-alert design call on "the single riskiest
+  automated code path in the system" (doc's own words, unchanged framing since filing) — checked against the full
+  round7-10 precedent set, none apply.

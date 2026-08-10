@@ -23,12 +23,16 @@ summary: >-
   investigation since nobody has actually looked at either.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100% an
+  # agent-orchestrator server-code defect (server/escalation.py:_poll_wall_resolution); the wall_type values it
+  # mishandles are escalation CATEGORIES the mechanism routes, not asset groups the doc spans -- same mistag
+  # pattern already corrected elsewhere (data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md).
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [escalation, data-pipeline-correctness, false-resolution, hard-rule-violation, qg-fallthrough]
-related: []
+related: [/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md]
 created: 2026-08-09
 author: agt-22de53 (main), consolidating a finding from escalation_queue_reconciler (slot 11, task agt-21fadd)
 parent_epic: agent_operating_framework_master
@@ -96,9 +100,16 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 ## Disposition
 
 - **Code fix**: approved same-tick via BLK-2a812311 (answered A by main after independent code verification) —
-  dispatched to slot 11 (task agt-21fadd) as a scoped allowlist fix (gate the line-1736 fallthrough to only
-  `wall_type in {"ldr_qg_failure", "main_ci_red"}`, return `None` otherwise) with a regression test covering all 8 wall
-  types, shipped via quickmerge. **This doc does not duplicate that work** — see that PR/commit for the actual fix.
+  dispatched to slot 11 (task agt-21fadd) as a scoped allowlist fix. **That dispatch never shipped it**: `agt-21fadd`
+  registered 2026-08-09 05:16:46 and was reaped `exit_reason=reaped-stale` at 05:40:26 (confirmed live via the
+  orchestrator's `agents` table), 24 minutes in, with no matching commit ever landing on `live-defi-rollout`. The bug
+  sat live+unfixed for another ~6 hours until an unrelated main-agent session (diagnosing a different escalation
+  anomaly, live-queried the same DB) independently rediscovered it, found this doc already covering it, and shipped the
+  exact scoped fix described here: gated the line-1736 fallthrough to
+  `_QG_SIGNAL_WALLS = {"ldr_qg_failure", "main_ci_red"}`, added a parametrized regression test sweeping every wall type
+  NOT in that set (so a future new wall type defaults to the safe `None` branch too) plus a `main_ci_red`-unaffected
+  guard test. Shipped `agent-orchestrator@884a9bfe1` (`live-defi-rollout`), full `quality-gates.sh` green (2908 passed)
+  before shipping.
 - **This doc's scope**: (1) operator-visible record of the historical blast radius given the HARD RULE violation, per
   CLAUDE.md's "big finding (data-correctness...) → NOTIFY OPERATOR + issue doc"; (2) tracking the two specific live
   escalations that were wrongly auto-closed and still need real investigation — the code fix does not retroactively
@@ -106,20 +117,34 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Confirm DP-VM-003 (stalled backfill VM) has been manually relaunched/investigated — it was
-      auto-closed without any worker ever looking at it. If already handled through some other channel, note that here
-      and close this todo; if not, this needs a real dispatch.
-- [ ] [OPERATOR] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
-      investigated — same auto-close-with-zero-worker issue as DP-VM-003.
-- [ ] [BACKEND] P2. Once the BLK-2a812311 quickmerge fix lands, spot-check a sample of the historical
-      `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug (beyond
-      DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. Scope this
-      as a bounded sample (e.g. the last 30 days per wall_type), not a full 1000+-row audit, unless the sample turns up
-      more live misses.
-- [ ] [REVIEW] P2. Once the quickmerge fix ships, verify it against this doc: confirm the allowlist gate exactly matches
-      the scope described above (only `ldr_qg_failure`/`main_ci_red` reach the generic QG check), confirm the regression
-      test covers all 8 wall types, confirm `ldr_qg_failure`(pr_number>0 and ==0) and `main_ci_red` behavior is provably
-      unchanged (diff review, not just green tests).
+- [ ] [OPERATOR] P1. **CONFIRMED STILL OPEN 2026-08-09 (operator, interactive)** — checked live AO backlog status via
+      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` (the sanctioned read-only SSM path): no
+      `DP-VM-003` entry anywhere in the current queued/dispatched backlog. Confirms the doc's own framing — it was
+      auto-closed without any worker ever looking at it, and nothing since has picked it up through another channel.
+      This is a real gap, not a stale finding — the stalled backfill VM still needs an actual manual relaunch.
+- [x] ✅ [VERIFY] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
+      investigated — **it has, extensively**:
+      `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` carries a 25+-dispatch escalation
+      history (confirmed via `na-eligibility-audit 2026-08-09`'s own full re-read) with 5 shipped fixes (3 root-cause
+      schema-contract fixes — MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864` — plus 2 alerting-layer fixes —
+      deployment-service `a564cca` materiality downgrade, `9102eb9b` dedup-gap fix). This doc's framing ("nobody has
+      actually looked at either") is stale for DP-FETCH-009 specifically; DP-VM-003 above is untouched by this
+      re-verification and remains open.
+- **[BACKEND] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`.** Now that the
+  BLK-2a812311 quickmerge fix has landed (`agent-orchestrator@884a9bfe1`), spot-check a bounded sample of the historical
+  `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug (beyond
+  DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. See the batch
+  doc for the full scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-09 (main) — verified against `agent-orchestrator@884a9bfe1`.** Allowlist gate
+      exactly matches scope: `_QG_SIGNAL_WALLS = frozenset({"ldr_qg_failure", "main_ci_red"})`, checked via
+      `if     wall_type not in _QG_SIGNAL_WALLS: return None` right before the generic
+      `ci_reconcile.repo_ldr_qg_conclusion` call. Regression coverage:
+      `test_poll_wall_resolution_non_qg_signal_walls_never_auto_resolve` is parametrized over
+      `escalation.WALL_TYPES - escalation._QG_SIGNAL_WALLS` (all 7 non-QG-signal types, derived from the real set, not
+      hand-listed — a future new wall type defaults to the same safe branch) plus asserts the unrelated poll is never
+      even CALLED; `test_poll_wall_resolution_main_ci_red_unaffected_still_resolves_via_qg_green` confirms main_ci_red
+      is unchanged; all pre-existing `ldr_qg_failure` PR-scoped/bare tests pass unmodified (diff-reviewed, not just
+      green). Full `quality-gates.sh` 2908 passed before shipping.
 
 ## Progress log
 
@@ -128,3 +153,23 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   finding exactly (down to the docstring/implementation mismatch). This doc covers the operator-notification and
   live-follow-up scope that the code fix alone does not: historical blast radius, and DP-VM-003/DP-FETCH-009 needing
   real (not silently-marked) resolution.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: DP-FETCH-009's "confirm investigated" todo was stale — re-verified
+  against `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`'s own Progress Log: 25+
+  dispatches, 5 shipped fixes across 3 repos. Flipped `[x]`, retagged `[OPERATOR]` → `[VERIFY]`. DP-VM-003 (separate
+  todo above) was not re-verified this pass and stays open.
+- **2026-08-09 (main, separate session)**: while diagnosing an unrelated escalation-queue anomaly (root_key staleness,
+  see the sibling finding this session also fixed), live-queried `GET /api/escalations/active` and the orchestrator's
+  `escalation_queue`/`agents` tables directly and found this doc's "dispatched to slot 11, shipped via quickmerge" claim
+  was inaccurate — `agt-21fadd` died `reaped-stale` after 24 minutes, no commit ever landed, and the bug was still live
+  (still auto-closing data_pipeline_failure walls against `market-tick-data-service` within 1-7 minutes, observed
+  directly: 9 instances in a 2h window, `dispatched_at` null on every one). Implemented the exact scoped fix this doc
+  already specified, added regression tests, ran full `quality-gates.sh` (2908 passed) — which also surfaced and
+  required fixing an unrelated stale-`.venv` pip-audit gate failure (msgpack/pip/pyasn1/setuptools — `uv.lock` already
+  had the patched versions from the CVE remediation doc's 2026-07-30 pass, the checked-out `.venv` just never ran
+  `uv sync` after — fixed via `uv sync --frozen`, no lockfile/floor changes needed). Shipped
+  `agent-orchestrator@884a9bfe1` via quickmerge. DP-VM-003 and the P2 historical-sample todo remain genuinely open —
+  this entry only covers the code-fix landing.
+- **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the bounded `[BACKEND] P2` historical-sample audit into
+  `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md` — the code-fix prerequisite it was waiting on has landed.
+  Whole-doc RECLASSIFY not applied — the `[OPERATOR] P1` DP-VM-003 confirm/relaunch item stays open and genuinely
+  operator-tagged.

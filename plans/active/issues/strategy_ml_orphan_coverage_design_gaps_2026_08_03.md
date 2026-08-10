@@ -148,20 +148,38 @@ just (c).
 
 ## Open work
 
-- [ ] 1. [OPERATOR] P2. Decide the fate of `strategy_orders`/`strategy_positions`/`strategy_pnl`: wire up a real
-      caller + deployment config (in which case also fix the PATH_REGISTRY divergence found above, mirroring todo 3b's
-      `ml_predictions`/`strategy_instructions` fixes) OR delete the dead code
-      (`CloudStrategyStorage.store_positions`/`store_pnl`, `store_orders_batch`, `OrderBatchStorage`) as tech debt.
-      Repo: strategy-service. Only once resolved does an orphan sweep for this family become meaningful to build.
-- [ ] 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
-      `data_type=backtest_results` keyed by `(strategy_id, run_id)`) or is intentionally out of the
-      availability-manifest's scope. Repo: strategy-service.
-- [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
-      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
+- [x] ✅ 1. [DOCS] P2. Decide the fate of `strategy_orders`/`strategy_positions`/`strategy_pnl`. **RULED 2026-08-05
+      (operator, BLK-75060009): wire up.** The orphan-sweep-tooling half of this decision already shipped (todo 4 below,
+      strategy-service@4733a7e7). The real-caller wiring + PATH_REGISTRY divergence fix implied by "wire up" is NOT yet
+      built — tracked as new todo 5 below so it isn't lost now that the decision itself is closed. Repo:
+      strategy-service.
+- [x] ✅ 2. [DOCS] P2. Decide whether `backtest_results` should get a manifest-WRITE design. **RULED 2026-08-05
+      (operator, BLK-75060009): ephemeral, no sweep** — intentionally out of the availability-manifest's scope, no
+      further work needed. Repo: strategy-service.
+- [x] ✅ 3. [DOCS] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
+      manifest-WRITE design. **RULED 2026-08-05 (operator, BLK-75060009): ephemeral, no sweep** — intentionally exempt,
+      no further work needed. Repo: ml-service.
 - [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
       Repo: strategy-service, ml-service.
+- [ ] 5. [OPERATOR] P2. **New 2026-08-09, split out of todo 1's now-resolved decision. Mechanical sub-parts SHIPPED
+      2026-08-09 (slot 8); the real-caller sub-part is now BLOCKED on an operator decision — see BLK below.** Wire up a
+      real caller for `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit
+      `PROTOCOL_DATA_SINK_BUCKET_STRATEGY_ORDERS`-class deployment config (currently defaults to `LocalDataSink()` — no
+      `PROTOCOL_DATA_SINK_BACKEND`/bucket env var set in
+      `deployment-service/terraform/services/strategy-service/gcp/main.tf:197-224`) — **done, strategy-service /
+      deployment-service, see Progress Log** — and fix the PATH_REGISTRY divergence
+      (`PATH_REGISTRY["strategy_orders"].path_template` declares
+      `strategy_orders/by_date/day={date}/strategy_id={strategy_id}/` but the real writer call resolves to bucket-root
+      `day={date}/strategy_id={strategy_id}/{uuid}.parquet` with no prefix — same class as todo 3b's
+      `ml_predictions`/`strategy_instructions` fixes) — **done, strategy-service, see Progress Log**. **Still open**:
+      wiring an actual real (non-test) caller of `store_orders_batch`/`store_positions`/`store_pnl` — investigation this
+      session found `OrderRecord`/UAC `OrderData` has ZERO real-data producers anywhere in the workspace (see BLK
+      question in Progress Log); inventing one would fabricate the `strategy_orders` corpus, not wire it up. **Done
+      when**: a real caller writes through `get_data_sink(routing_key="strategy_orders")` to the documented
+      `PATH_REGISTRY` path, deployment config sets an explicit GCS backend, and `bash scripts/quality-gates.sh` is
+      green. Repo: strategy-service, deployment-service.
 
 ## Progress Log
 
@@ -177,3 +195,53 @@ just (c).
   run gap (c) cites as prior evidence) and the orphan-detection codex SSOT, and swapped the ml-service writer in for the
   sweep-tool script since this doc's decision is about the 3 write-site gaps, not the future sweep extension.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: todos 1-3 carried stale `[OPERATOR]` tags — all 3 were already ruled
+  2026-08-05 (BLK-75060009, cited inline in the 2026-08-05 entry above). Flipped all 3 `[x]`, retagged `[DOCS]`. Todo
+  1's "wire up" ruling implies real, un-started implementation work (a live caller + PATH_REGISTRY fix) beyond the
+  orphan-sweep-tool extension todo 4 already shipped — split that out as new todo 5 (`[BACKEND] P2`) rather than let it
+  go untracked. Todos 2/3 needed no follow-up (both ruled "ephemeral, no sweep").
+- **2026-08-09** (AO dispatch, slot 8, data_engineering) — Todo 5's two mechanical sub-parts shipped:
+  1. **PATH_REGISTRY divergence fix** — `CloudStrategyStorage.__init__` now passes `prefix="strategy_orders/by_date"` to
+     `get_data_sink(routing_key="strategy_orders", ...)` (was: no `prefix=`, resolving to bucket-root);
+     `store_orders_batch`'s write call now passes `filename="orders.parquet"` matching
+     `PATH_REGISTRY["strategy_orders"].file_template`. Combined with `_build_partition_path`'s alphabetical
+     partition-key sort (`day` before `strategy_id`, matching the template's own order), a real write now lands at
+     `strategy_orders/by_date/day={date}/strategy_id={strategy_id}/orders.parquet`, matching the documented path
+     exactly. `strategy_positions`/`strategy_pnl` have no `PATH_REGISTRY` entry to diverge from, so left unprefixed —
+     out of this fix's stated scope. strategy-service (uncommitted at time of writing — see below).
+  2. **Deployment config** — added `PROTOCOL_DATA_SINK_BACKEND=gcp` +
+     `PROTOCOL_DATA_SINK_BUCKET_STRATEGY_{ORDERS,POSITIONS,PNL}=strategy-store-prd-${var.project_id}` to
+     `deployment-service/terraform/services/strategy-service/gcp/main.tf`'s `daily_job` env vars — bucket matches
+     `PATH_REGISTRY["strategy_orders"].bucket_template` (the strategy-store FOLD D flat env-tiered bucket) so the
+     UCI-DataSink writer and any future PATH_REGISTRY-based reader agree on the physical bucket. deployment-service
+     (uncommitted at time of writing).
+  3. **Real-caller sub-part investigated, found genuinely blocked** — grepped every non-test call site of
+     `CloudStrategyStorage`/`OrderBatchStorage`/UAC `OrderData(` in the ENTIRE workspace (not just strategy-service):
+     `store_positions`/`store_pnl` have zero callers anywhere; `store_orders_batch`'s only caller
+     (`OrderBatchStorage.save_order_batch`) is itself never instantiated outside its own unit tests; UAC
+     `OrderData(...)` has **zero real constructors in any repo** (the only workspace-wide grep hits for `OrderData(`
+     were a `CeFiVenueOrderData(TypedDict)` false-positive and test fixtures). Every actual strategy-signal-generation
+     code path in the current tree (`batch_signals.py`'s DeFi `_collect_instructions` → operation/instrument_id/amount/
+     direction envelopes, and the `v2_prod` harness's `on_tick()` emissions) produces operation-shaped data with no
+     side/price/status fields — there is no code path anywhere that naturally produces `OrderRecord`-shaped
+     (order_id/side/quantity/price/status) data. The generic non-DeFi `generate_signal()` path `batch_signals.py` falls
+     back to for non-DeFi strategies has zero concrete implementations in the tree (V1 archetype deleted, 2026-05-01
+     V1-RETIRE Phase 2) — it is dead code, not a live signal source either. Constructing an `OrderRecord` from a DeFi
+     instruction would require inventing what "side"/"price"/"status" mean for non-trade operations
+     (TRANSFER/BORROW/REPAY/FLASH_BORROW have no buy/sell direction or price at signal time) — a genuine product
+     decision, not a mechanical wire-up, and doing it unilaterally risks writing systematically-wrong data under the
+     `strategy_orders` corpus (a data-correctness violation per this craft's own north-star). Posting `/blocked`
+     (question below) rather than fabricating a caller; the two mechanical sub-parts above are shipped as real partial
+     progress. Todo 5 stays open, retagged `[OPERATOR]`.
+  - **BLK question**: "The BLK-75060009 'wire up' ruling for `strategy_orders`/`strategy_positions`/`strategy_pnl`
+    assumed a real caller could simply be added, but this session found `OrderRecord`/UAC `OrderData` has ZERO real-data
+    producers anywhere in the workspace — no strategy code path emits side/price/status-shaped data. What should
+    'strategy orders' data represent for the real caller?" Options: **(A, recommended)** treat each DeFi strategy
+    instruction as the 'order' (matches `OrderBatchStorage`'s own docstring — "orders generated by strategy service ...
+    for later use by execution service backtest"): map `operation`→`side` only for directional ops (SWAP/TRADE have a
+    `direction`), synthesize `price` from `benchmark_price`/candle close at signal time, and explicitly SKIP
+    non-directional ops (TRANSFER/BORROW/REPAY/FLASH_BORROW) rather than force them into a side/price shape they don't
+    have — i.e. `strategy_orders` covers only the directional-trade subset of instructions, honestly. **(B)** reverse
+    the "wire up" ruling to "ephemeral, no sweep" (matching `backtest_results`/`ml_models`) since no real data source
+    exists and inventing one is fabrication. **(C)** wire `strategy_orders` from execution-service's real fill data
+    instead of strategy-service — a different repo/flow, out of this todo's declared repos, much larger scope.

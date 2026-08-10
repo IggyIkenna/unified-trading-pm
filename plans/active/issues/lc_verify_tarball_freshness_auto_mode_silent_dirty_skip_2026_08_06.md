@@ -28,6 +28,7 @@ related:
   [
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-06"
 author: unknown
@@ -152,6 +153,14 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Todo 1 (the bounded fix) is already closed (AO slot-9, `deployment-service@450b212`, shipped via the now-
+  archived `infra_satellite_ao_dispatch_batch8_2026_08_07.md`). Sole remaining open item is todo 2 (`[DIAG] P3`), still
+  explicitly framed as "Consider whether... should auto-apply `--allow-dirty-tarball`... (not as a general default — a
+  human running the script directly should still get the safety prompt)" — a design-preference call on where to draw a
+  safety-vs-convenience line, not a bounded spec. Checked against this round's accumulated-precedent list (IAM
+  self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default, escalation-N=3-days, reversibility-qualified
+  deletes, Option B retired, GSM secret + 5 Slack webhooks) — none resolve that design call.
 - **interactive session 2026-08-06**: filed after hitting this twice in ~3 hours on the same VM launcher, working around
   it manually both times (stash-by-name → rebuild tarball → pop stash → relaunch, verified `all 3 tarball(s) current` on
   the successful relaunch). Not yet fixed — flagged for its own dedicated pass rather than a rushed edit to shared

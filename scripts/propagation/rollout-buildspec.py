@@ -96,7 +96,7 @@ def validate_yaml(content: str, path_label: str) -> bool:
             print(f"  YAML VALIDATION: {path_label} missing 'phases' key", file=sys.stderr)
             return False
         return True
-    except Exception as exc:
+    except (yaml.YAMLError, TypeError) as exc:
         print(f"  YAML VALIDATION FAILED ({path_label}): {exc}", file=sys.stderr)
         return False
 

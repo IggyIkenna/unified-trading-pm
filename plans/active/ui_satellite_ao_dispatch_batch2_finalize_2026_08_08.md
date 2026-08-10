@@ -70,16 +70,15 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the source doc's 4 checkboxes.** For batch 2's now-done todo, find the 4 corresponding
-      checkboxes in `cost_observability_deferred_followups_2026_07_10.md`'s "## Unscheduled P3 enhancements" section
-      (month-aware AWS cutoff, credits/discounts view, usage-quantity unit economics, "Other resources" leaf table) and
-      flip each `[x]`, citing the batch-2 commit sha(s) that shipped it. **Verify the cited sha actually exists and is
-      an ancestor of `origin/live-defi-rollout`** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`) before
-      citing it. If only some of the 4 sub-items shipped (e.g. the todo was partially completed or descoped mid-flight),
-      flip only those and leave the rest open with a stated reason — do not flip on the batch todo's completion alone
-      without verifying each sub-item's actual shipped state. **Done when**: every sub-item that genuinely shipped has
-      its source-doc checkbox flipped with a verified sha; any that didn't ship is left open with a stated reason. Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **Reconcile the source doc's 4 checkboxes — DONE 2026-08-10 (slot-33).** All 4 P3 checkboxes in
+      `cost_observability_deferred_followups_2026_07_10.md`'s "## Unscheduled P3 enhancements" section were already
+      flipped `[x]` citing the batch-2 SHAs: (1) month-aware AWS cutoff → `deployment-api@6a536a82d`; (2)
+      credits/discounts view → `deployment-api@6a536a82d` + `deployment-ui@b7beaf33b`; (3) usage-quantity unit economics
+      → `deployment-api@6a536a82d` + `deployment-ui@b7beaf33b`; (4) "Other resources" leaf table →
+      `deployment-ui@b7beaf33b`. Both SHAs verified ancestors of `origin/live-defi-rollout`
+      (`git merge-base     --is-ancestor`). All 4 sub-items shipped; none left open. Repo: unified-trading-pm.
+      **Evidence**: verified 2026-08-10 — `deployment-api@6a536a82d` and `deployment-ui@b7beaf33b` both confirmed on
+      origin.
 
 - [ ] [REVIEW] P2. **Re-check batch 2's 1 `## Deferred` item for resolution.** Has
       `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s standing follow-up todo ("dedicated migration plan
@@ -87,12 +86,15 @@ source: >-
       launchers now route through the shared choke point? If so, re-scope the business-context-enrichment item's
       READ-SIDE half (AWS cost-allocation-tag support in `cost_observability/models.py`, a `strategy` key in
       `BUSINESS_LABEL_KEYS`, a backfill script reconciling the `asset_group=`/`asset-group=` key-name drift already
-      found in launchers that HAVE labels) as a possible batch-3 candidate — this half is genuinely
+      found in launchers that HAVE labels) as a possible future-satellite-batch candidate — this half is genuinely
       ui/cost-observability scoped and doesn't depend on the launcher-migration completing 100%, only on there being
       enough labeled resources to make the read-side work meaningful. Do NOT re-scope or draft the launcher-migration
       half itself — that stays infra-tranche's own surface regardless of progress. **Done when**: a dated
       CLEARED-or-STILL-BLOCKED verdict is recorded with evidence (the infra doc's own current todo/progress state), and
-      if cleared, the read-side half is written up as an explicit batch-3 candidate line. Repo: unified-trading-pm.
+      if cleared, the read-side half is written up as an explicit future-satellite-batch candidate line (name corrected
+      2026-08-10, plan_reconciler: "batch-3" is now taken by `ui_satellite_ao_dispatch_batch3_2026_08_09.md`, an
+      unrelated artifact_pipeline_observability meta-items batch — use the next free number at execution time). Repo:
+      unified-trading-pm.
 
 - [ ] [REVIEW] P2. **Re-measure the ui tranche's orphan count.** Re-run the `/ag-closeout-audit ui` classification over
       the tranche's now-updated docs and report the new orphan count against this run's 9-of-13 baseline. Expect

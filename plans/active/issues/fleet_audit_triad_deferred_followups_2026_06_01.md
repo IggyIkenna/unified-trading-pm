@@ -1,9 +1,11 @@
 ---
 doc_type: issue
 title: Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)
-summary:
-  The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped;
-  these are the consciously-deferred tails ("let it be" — not to be actioned until...
+summary: >-
+  Operator-deferred ('let it be') follow-up tail from the three 2026-05-27 fleet-audit plans (canonical_vm_log_archival,
+  cefi_venue_backfill_coverage_remediation, deployment_ui_vm_and_venue_coverage_visibility) after they were archived —
+  captures un-actioned items (e.g. archive crons never `tofu apply`'d) so nothing is silently lost; not to be worked
+  until the operator activates it.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -104,7 +106,8 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       (UTL@cb1f4b5f `_upload_with_backoff_on_429`), Finding 3 UNKNOWN-partition re-normalization (canonical_writer),
       Finding 4 faulthandler (UTL@de00a08d). All 5 SHAs confirmed reachable from origin/live-defi-rollout. The Tardis
       API-key block that was gating "once backfills resume" is CLEARED (operator ruling 2026-07-12, reconfirmed
-      2026-07-27). Reprocess command (launch via infra worker when tradfi raw tick backfill is complete):
+      2026-07-27, recorded here in `fleet_audit_triad_deferred_followups_2026_06_01.md`). Reprocess command (launch via
+      infra worker when tradfi raw tick backfill is complete):
       `bash deployment-service/scripts/vm/launch-mdps-backfill-vm.sh --force tradfi 2020-01-01 2026-04-18 full` (MDPS
       reads raw_tick_data → writes processed_candles; --force re-writes already-captured cells).
 - [x] ✅ [DOC] P3. **B2 codex marker reconciliation (HARD-RULE SSOT — do deliberately, NOT a find-replace).** Code emits
@@ -117,20 +120,20 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       breakage).
 
       **MOSTLY STALE-DONE (2026-07-30, conflict-check)** — `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md:375`
-                                                                                      already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
-                                                                                      `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
-                                                                                      (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
-                                                                                      reconciliation.
+                                                                                                                  already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
+                                                                                                                  `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
+                                                                                                                  (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
+                                                                                                                  reconciliation.
 
-                                                                          **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
-                                                                          claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
-                                                                          `/codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
-                                                                          the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
-                                                                          uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
-                                                                          (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short
-                                                                          cross-reference note to each of the 3 docs pointing to the as-shipped marker
-                                                                          (`staleness_seconds>0 + trade_count==0`) and the B2 banner, so a reader landing on the legacy token isn't misled.
-                                                                          — unified-trading-pm@(this commit).
+                                                                                                      **DONE (2026-08-02, slot-15)** — read all 3 named residual docs deliberately (not a find-replace); none of them
+                                                                                                      claimed the retired `zero_activity=True` boolean column (the actual B2 error) — `codex/00-SSOT-INDEX.md` and
+                                                                                                      `/codex/04-architecture/batch-live-architecture.md` only use `ZERO_ACTIVITY_BAR` as the category *label*, which
+                                                                                                      the existing banner in `live-pipeline-architecture.md` explicitly retains for continuity; `alerting-batch-live.md`
+                                                                                                      uses `zero_activity_bar_rate`, a real, shipped `StreamingHealthSnapshot` field
+                                                                                                      (`unified_trading_library/streaming/streaming_health.py`), unrelated to the retired boolean. Added a short
+                                                                                                      cross-reference note to each of the 3 docs pointing to the as-shipped marker
+                                                                                                      (`staleness_seconds>0 + trade_count==0`) and the B2 banner, so a reader landing on the legacy token isn't misled.
+                                                                                                      — unified-trading-pm@(this commit).
 
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 
@@ -154,17 +157,17 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       future change touches these surfaces, run the smoke suite where system deps exist before re-ticking.
 
       **DONE (2026-08-02, slot-7) — the `libatk` slot-env blocker is RESOLVED; pw:L2 now runs green in-slot.** Verified
-                                                                      empirically in the slot-7 worktree (deployment-ui@b7f5d81): `ldd chrome` reports 0 missing libs and a headless
-                                                                      chromium launch succeeds, so the 2026-06-01 "`libatk-1.0.so.0` missing" premise no longer holds. Ran the full pw:L2
-                                                                      **smoke** suite the item asked for — `npx playwright test tests/smoke` (per-slot mock server on :5206,
-                                                                      `VITE_MOCK_API=true`, workers=1) → **428 passed / 0 failed (8.3m), exit 0**, covering the VM- and venue-coverage
-                                                                      surfaces this item guards (e.g. `vm_deployments_reconcile`, `vm-resource-rolling-window`, `venue_*`,
-                                                                      `data_status_coverage_labels`, cockpit AG/VM picker). This re-tick satisfies the item's own condition ("run the
-                                                                      smoke suite where system deps exist before re-ticking"). NB the heavier `tests/e2e/**` drilldown specs showed
-                                                                      30.0s-timeout flakes when run concurrently under host load-avg ~42 on 16 cores (5 sibling slots running Playwright)
-                                                                      — that is the shared-host-contention flakiness the `playwright.config.ts` comment already documents (workers=1
-                                                                      mitigates but does not eliminate it), not a regression, and e2e is outside this item's "smoke suite" scope. Doc-only
-                                                                      flip: the specs (`deployment-ui@7bbc270`) were already shipped; only the run-and-re-tick remained.
+                                                                                                  empirically in the slot-7 worktree (deployment-ui@b7f5d81): `ldd chrome` reports 0 missing libs and a headless
+                                                                                                  chromium launch succeeds, so the 2026-06-01 "`libatk-1.0.so.0` missing" premise no longer holds. Ran the full pw:L2
+                                                                                                  **smoke** suite the item asked for — `npx playwright test tests/smoke` (per-slot mock server on :5206,
+                                                                                                  `VITE_MOCK_API=true`, workers=1) → **428 passed / 0 failed (8.3m), exit 0**, covering the VM- and venue-coverage
+                                                                                                  surfaces this item guards (e.g. `vm_deployments_reconcile`, `vm-resource-rolling-window`, `venue_*`,
+                                                                                                  `data_status_coverage_labels`, cockpit AG/VM picker). This re-tick satisfies the item's own condition ("run the
+                                                                                                  smoke suite where system deps exist before re-ticking"). NB the heavier `tests/e2e/**` drilldown specs showed
+                                                                                                  30.0s-timeout flakes when run concurrently under host load-avg ~42 on 16 cores (5 sibling slots running Playwright)
+                                                                                                  — that is the shared-host-contention flakiness the `playwright.config.ts` comment already documents (workers=1
+                                                                                                  mitigates but does not eliminate it), not a regression, and e2e is outside this item's "smoke suite" scope. Doc-only
+                                                                                                  flip: the specs (`deployment-ui@7bbc270`) were already shipped; only the run-and-re-tick remained.
 
 ## Why it matters
 

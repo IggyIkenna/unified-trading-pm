@@ -24,6 +24,7 @@ last_updated: "2026-08-08"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
+sequential: true
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -77,8 +78,8 @@ context_scope:
 > doc-inventory/index files). Clear to dispatch. Paired finalize sibling:
 > `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
 
-**This is now an AO-dispatched plan (`assigned_vm: planning`).** It scopes the work AND is now the dispatch target —
-the 5 implementation checkboxes below are the AO backlog content.
+**This is now an AO-dispatched plan (`assigned_vm: planning`).** It scopes the work AND is now the dispatch target — the
+5 implementation checkboxes below are the AO backlog content.
 
 ## Why this is needed (not just "run the strategy backtest again")
 
@@ -92,17 +93,33 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Add `run_sports_backtest(args, config, config_path) -> int` to
+- [x] ✅ [BACKEND] P3. Add `run_sports_backtest(args, config, config_path) -> int` to
       `execution_service/cli/backtest_domains.py`, mirroring `run_defi_backtest`'s structure (simplest of the three — no
       lateral-feed preloading needed): `setup_backtest(...)` → `_create_backtest_engine(...)` →
       `run_and_save_backtest(...)`. Needs an `extract_sports_instrument` extractor (new, alongside
       `extract_cefi_instrument`/`extract_tradfi_defi_instrument` in `engine/backtest/runner.py`) that resolves a
-      sports/prediction fixture+market instrument from config instead of a CeFi/TradFi symbol.
-- [ ] [BACKEND] P3. Wire a data source: reuse the Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
+      sports/prediction fixture+market instrument from config instead of a CeFi/TradFi symbol. —
+      execution-service@5e80d437. `run_sports_backtest` mirrors `run_defi_backtest` (no lateral-feed preloading) and
+      wires `extract_sports_instrument` (fixture id from `strategy.fixture_id` / `strategy.instrument.instrument_id` /
+      `strategy.instrument_id` / V2 `instruments` list — `instrument_id = fixture_id` convention). Full dispatch chain
+      wired so the harness is reachable, not dead code: `DomainType.SPORTS`/`PREDICTION`, explicit
+      `asset_group: sports|prediction` in `get_asset_group_from_config`, `backtest.py` domain map + date-skip category,
+      and the engine-core extractor branch. 10 new unit tests (8 extractor + 2 runner wiring) + updated
+      `test_all_members` (5 domains). `quality-gates.sh` full green on the committed HEAD (sentinel=37c83f3d; shipped as
+      5e80d437 + test-fix 4ceaec57).
+- [x] ✅ [BACKEND] P3. Wire a data source: reuse the Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
       (`tests/fixtures/sports_odds/premier_league_arb_sample.py`, 3 synthetic EPL ticks) as the first hermetic input —
       port or import it into execution-service's catalog/data layer rather than inventing a second fixture format.
       Confirm whether `CatalogManager` needs a new sports/prediction data-type branch or can consume the same
-      synthetic-tick shape CeFi uses.
+      synthetic-tick shape CeFi uses. — execution-service@51bee662a. Ported `premier_league_arb_sample.py`
+      (byte-compatible, same format — port, not import, per the no-service↔service-dep tier rule) to
+      `execution_service/data/fixtures/sports_odds/`, and added `execution_service/data/sports_fixture_source.py`
+      projecting it into the harness's hermetic input shapes: `strategy.instruction_data` (direction gated by value-bet
+      `min_edge`, benchmark = decimal odds) + synthetic L0 TOB `QuoteTick`s registered through `CatalogManager`, plus a
+      `build_sports_fixture_backtest_config()` hermetic config builder. **CatalogManager question confirmed: NO new
+      branch needed** — CatalogManager is a domain-agnostic Nautilus `ParquetDataCatalog` wrapper; the sports
+      synthetic-tick shape is the same QuoteTick shape CeFi registers (verified by write+read-back in
+      `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd; shipped as 51bee662a.
 - [ ] [DESIGN] P3. **RESOLVED by the 2026-08-08 OPERATOR RULING banner above — option (a), delete it.** Resolve the
       `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
@@ -135,6 +152,27 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Progress Log
 
+- **2026-08-10 (slot 19, backend_engineer)**: Todo 2 shipped — `execution-service@51bee662a`. Ported the Group-B fixture
+  (`strategy-service@9a7de7f8`'s `premier_league_arb_sample.py`, 3 synthetic EPL ticks) into
+  `execution_service/data/fixtures/sports_odds/` (byte-compatible — port, not import, per the T4 no-service↔service-dep
+  tier rule; reuses the exact same fixture format rather than inventing a second). Added
+  `execution_service/data/sports_fixture_source.py` wiring it as the first hermetic input for `run_sports_backtest`: (1)
+  `build_sports_fixture_instruction_data()` projects each tick's prediction into `strategy.instruction_data` (direction
+  gated by the archetype `min_edge` 0.03 — 2 of 3 ticks fire, 1 no-trades; benchmark_price = home decimal odds), (2)
+  `build_sports_fixture_quote_ticks()` projects the odds into synthetic L0 TOB `QuoteTick`s, (3)
+  `register_sports_fixture_catalog()` writes them through `CatalogManager`, (4) `build_sports_fixture_backtest_config()`
+  assembles a hermetic `run_sports_backtest`-consumable config (L0_TOB venue, embedded instruction stream,
+  `data_source: local`). **CatalogManager question confirmed**: it is a domain-agnostic Nautilus `ParquetDataCatalog`
+  wrapper — it stores Nautilus data objects (QuoteTick/TradeTick) keyed by instrument, so sports consumes the SAME
+  synthetic-tick shape CeFi uses; NO new sports/prediction data-type branch needed (proven by register+read-back in
+  `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd.
+- **2026-08-10 (slot 25, backend_engineer)**: Todo 1 shipped — `run_sports_backtest` + `extract_sports_instrument` +
+  full dispatch wiring (DomainType.SPORTS/PREDICTION, domain detection, backtest.py map/date-skip, engine-core branch).
+  Read the prerequisite context first: `backtest-groups.md` Group-C contract, `run_defi_backtest` as the structural
+  mirror (no lateral-feed preloading), sports `instrument_id = fixture_id` convention from the sports matching surface.
+  10 new unit tests + updated `test_all_members` (first QG pass caught `len(members) == 3` hard-code — fixed). QG green
+  on 37c83f3d; shipped as execution-service@5e80d437 (feat) + 4ceaec57 (test fix) — re-created hashes from shared-clone
+  contention, content verified identical.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid (sports tranche) — re-confirms the 2026-07-30 entry below. Live
   re-verification (execution-service HEAD 4e7f4833, 2026-08-06): `run_sports_backtest` still does not exist in
   `backtest_domains.py`, `SportsMatchingEngine` still has zero real callers — factual premises unchanged. Independently
@@ -154,17 +192,17 @@ CLI wiring, same shape as the 3 domains that already have it.
   now-answered bullets. Closes round-5 sports item 2. The 5 `[BACKEND]/[DESIGN]/[SCRIPT]` implementation checkboxes
   remain open (real code not yet shipped) — left unchanged per this corpus's evidence-backed-completion rule.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **RECLASSIFY → planning.** With the operator-question
-  resolution above, every prior pass's KEEP-NA rationale (2026-07-30/08-07: "self-declared scope note... an
-  established, still-unanswered gate") no longer holds — the doc's own gate is answered. Flipped
-  `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, kept `assigned_role:
-  backend_engineer` (ruling-confirmed). Conflict-check (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): no
-  other active `assigned_vm: planning` doc in `parent_epic: sports_master` claims `run_sports_backtest`/
-  `SportsMatchingEngine` ground (`sports_taxonomy_p3_consumers_2026_08_08.md` references this doc but its own Todos
-  don't touch execution-service's backtest CLI); no sibling batch/finalize doc claims it either (checked batch9/batch10,
-  both pre-date today's ruling and both explicitly cite the now-resolved craft-split/SportsMatchingEngine forks as their
-  reason for excluding this doc). Todo 3's remaining `(a) vs (b)` fork is also now resolved by the same ruling (delete
-  `SportsMatchingEngine`) — annotated inline on that todo rather than flipped `[x]` (no commit ships the deletion yet,
-  per the evidence-backed-completion rule). Todo 5 (docs/BACKTESTS.md placement) is the one item the ruling doesn't
-  address; left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain
-  runners' CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired
-  finalize sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+  resolution above, every prior pass's KEEP-NA rationale (2026-07-30/08-07: "self-declared scope note... an established,
+  still-unanswered gate") no longer holds — the doc's own gate is answered. Flipped `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`, kept `assigned_role: backend_engineer` (ruling-confirmed).
+  Conflict-check (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): no other active `assigned_vm: planning` doc
+  in `parent_epic: sports_master` claims `run_sports_backtest`/ `SportsMatchingEngine` ground
+  (`sports_taxonomy_p3_consumers_2026_08_08.md` references this doc but its own Todos don't touch execution-service's
+  backtest CLI); no sibling batch/finalize doc claims it either (checked batch9/batch10, both pre-date today's ruling
+  and both explicitly cite the now-resolved craft-split/SportsMatchingEngine forks as their reason for excluding this
+  doc). Todo 3's remaining `(a) vs (b)` fork is also now resolved by the same ruling (delete `SportsMatchingEngine`) —
+  annotated inline on that todo rather than flipped `[x]` (no commit ships the deletion yet, per the
+  evidence-backed-completion rule). Todo 5 (docs/BACKTESTS.md placement) is the one item the ruling doesn't address;
+  left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain runners'
+  CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired finalize
+  sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.

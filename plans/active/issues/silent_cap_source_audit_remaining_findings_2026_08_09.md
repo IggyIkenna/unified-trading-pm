@@ -43,6 +43,8 @@ source:
   ]
 assigned_role: data_engineering
 effort: high
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Silent-cap source audit — remaining findings
@@ -91,15 +93,22 @@ findings.
       exhaustion-driven; added a for/else cap-exhaustion warning (mirrors AsterAdapter); regression test
       `test_get_instruments_beyond_2000_market_hard_ceiling_not_truncated` proves a 2537-market/26-page universe is no
       longer truncated.
-- [ ] [CODE] P1. **Betfair `listMarketCatalogue` sorted-by-start-time top-1000 cap (LIVE, real risk).**
+- [x] ✅ [CODE] P1. **Betfair `listMarketCatalogue` sorted-by-start-time top-1000 cap (LIVE, real risk).**
       `instruments_service/reference_data/adapters/sports/adapters/betfair.py` `_fetch_markets_raw` (`maxResults=1000`,
       `sort: "FIRST_TO_START"`, effectively "all markets" filter). Betfair's API hard-caps `maxResults` at 1000 with NO
       offset pagination on this call — the only way past it is to narrow the `filter` (per `eventTypeId` / per rolling
       time window) and merge multiple scoped calls. Betfair typically has well over 1000 concurrently-listed markets, so
       later-starting markets are silently dropped today. Repo: instruments-service. Done when: the single "all markets"
       call is split into multiple `filter`-scoped calls (e.g. per sport `eventTypeId`) and merged; a regression test
-      proves a >1000-market universe across 2+ event types is no longer truncated.
-- [ ] [CODE] P2. **TradFi/DeFi Aave-history caps in market-tick-data-service (protocol-outage + risk-parameter blind
+      proves a >1000-market universe across 2+ event types is no longer truncated. — instruments-service@b8668094:
+      enumerates event types (sports) live via `listEventTypes` (no hardcoded id list) and scopes each
+      `listMarketCatalogue` call to one `eventTypeId`, raising the effective ceiling from 1000 markets globally to 1000
+      per sport; a residual per-sport cap hit now logs `ADAPTER_PAGE_CAP_HIT` instead of staying silent; per-event-type
+      fetch failures are shard-isolated (partial results kept; only all-failed raises to `attempted_failed`). 3 new
+      regression tests: `test_get_instruments_pages_across_event_types` (2 sports merged),
+      `test_get_instruments_logs_page_cap_hit` (ceiling-hit observability),
+      `test_get_instruments_partial_event_type_failure_keeps_results` (shard isolation).
+- [x] ✅ [CODE] P2. **TradFi/DeFi Aave-history caps in market-tick-data-service (protocol-outage + risk-parameter blind
       spots).** Two files: (a) `market_interface/adapters/defi/protocol_outage_adapter.py`'s
       `_AAVE_V2_RESERVE_HISTORY_QUERY` (`reserveConfigurationHistoryItems`, whole-history no time filter,
       `orderBy: timestamp asc`, `first: 1000`) — ordered ASCENDING with no window filter means if Aave V2's
@@ -111,8 +120,14 @@ findings.
       rate-index history. Repo: market-tick-data-service. Done when: (a) switches to a `skip`-paginated or
       DESCENDING-ordered query (recent-first) so a cap-hit preserves the operationally-relevant tail; (b) gains a `skip`
       pagination loop mirroring the already-fixed `_dex_swaps_queries.py` timestamp-cursor pattern; both get a
-      regression test proving a >1000-event day is no longer truncated.
-- [ ] [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
+      regression test proving a >1000-event day is no longer truncated. — market-tick-data-service@0b6a13d5: (a) added a
+      genuine `skip`-paginated loop (`_AAVE_V2_HISTORY_MAX_SKIP=5000`, mirrors `uniswap_v2.py`'s proven pattern) so no
+      history is dropped rather than just reordering; cap-exhaustion warning on exhaustion. (b) added timestamp-cursor
+      pagination within the 1-day window (mirrors `_dex_swaps_queries.py`'s `_paginate_swaps`). New regression tests:
+      `test_history_beyond_1000_items_not_truncated` in both `test_protocol_outage_adapter.py` and the new
+      `test_aave_positions.py`, each proving a >1000-item multi-page response is fully collected, not truncated to the
+      first page. Full quality-gates.sh green (10286+ tests passed).
+- [x] ✅ [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
       identically to "no more data."** 9 call sites across
       `market_interface/adapters/defi/{curve_adapter,balancer_adapter,uniswapv2_adapter,     uniswap_v3_adapter,uniswapv4_adapter}.py`
       (swaps + hourly-data + position-data queries, all `first: 1000, skip` loops bounded by The Graph's hard ~5000-skip
@@ -121,23 +136,46 @@ findings.
       `while True: if not     raw: break` loop treats it exactly like honest exhaustion. Repo: market-tick-data-service.
       Done when: each of the 9 call sites detects a GraphQL/HTTP error response distinctly from a genuinely empty page
       and logs/routes it as an incomplete fetch (mirroring the `for/else` cap-exhaustion pattern already shipped for
-      Kalshi/Polymarket this session) rather than silently treating it as "done."
-- [ ] [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files, ascending
-      real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently few per
-      chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
+      Kalshi/Polymarket this session) rather than silently treating it as "done." — market-tick-data-service@60c61bbb
+      (fix content at d63f436c, refactored for QG file/method size gates at 60c61bbb): fixed all 9 sites across 3 code
+      shapes — (1) `curve_adapter.py`/ `balancer_adapter.py`: the page-fetch helper already returned `None` distinctly
+      on error, but the caller's `if not raw: break` collapsed `None`/`[]` into the same falsy branch — split into
+      `if raw is None: warn+break` / `if not raw: break`; (2) `uniswapv2_adapter.py`/`uniswapv4_adapter.py` (2 sites
+      each): the helper itself collapsed a genuinely empty page into `None` (`return swaps if swaps else None`) — fixed
+      to `return swaps` (preserve `[]`), plus the same distinct-warning split in the caller; (3) `uniswap_v3_adapter.py`
+      (3 sites): goes through the shared `_execute_graphql()` (never returns `None`; errors surface via
+      `data["errors"]`) — added an explicit `if data.get("errors"): warn+break` before the empty-page check. Each error
+      path now logs `"... pagination stopped early at skip=%d ... results may be truncated"` distinctly from the silent
+      genuine-exhaustion break. New regression tests (`test_defi_dex_swaps_pagination_error_handling.py`, 10 tests, 2
+      per adapter file): proves an error page logs the truncation warning and a genuinely empty page does not. Follow-up
+      P3 todo added below for a separate, pre-existing (not part of this finding) dormant AttributeError bug discovered
+      in `uniswap_v3_adapter.py` while adding this test coverage.
+- [x] ✅ [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files,
+      ascending real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently
+      few per chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
       (`_RESERVES_QUERY_TEMPLATE`, `first: 100,     where: {isActive: true})`). All three currently sit well under 100
       real reserves/markets per chain, but none has a runtime count-check or comment acknowledging the boundary the way
       Kalshi's historical-mode cap does. Repo: instruments-service. Done when: each gains either a `skip` pagination
       loop (mirrors this session's `uniswap_v2.py`/`morpho.py` fixes) OR, if a live schema check confirms `skip` isn't
       supported, a loud warning when `len(results) >= 100` (mirrors this session's `morpho.py` warning-only fix) plus a
-      code comment stating which mitigation was chosen and why.
-- [ ] [CODE] P2. **Raydium REST pagination not wired despite a paged API contract.**
+      code comment stating which mitigation was chosen and why. — instruments-service@58ede81d: all three query
+      `gateway.thegraph.com` (the same genuine-The-Graph infra already proven to support `skip` in `uniswap_v2.py`/
+      `uniswap_v3.py`, unlike Morpho's unverified first-party API), so each gained a real `while skip <= _MAX_SKIP`
+      (5000, matching the sibling adapters) pagination loop rather than a warning-only mitigation. New regression tests
+      (`test_get_instruments_paginates_past_first_page` in `test_defi_adapters_comprehensive.py` ×2 and
+      `test_spark_metadata.py`) prove a >`_FETCH_LIMIT`-market/reserve universe across a full + short page is fully
+      collected, not truncated. Full quality-gates.sh green (155s).
+- [x] ✅ [CODE] P2. **Raydium REST pagination not wired despite a paged API contract.**
       `instruments_service/reference_data/adapters/defi/raydium.py` `_fetch_active_pools` hardcodes `page="1"` with no
       loop to `page=2,3,…`, even though the endpoint is an explicit `page`/`pageSize` REST API whose response wrapper
       carries its own `count` total (never compared against `len(pools)` to detect truncation). Repo:
       instruments-service. Done when: the fetcher loops `page += 1` while `len(pools) == pageSize` (or compares against
       the response's `count` field) and a regression test proves a >1-page pool universe is no longer truncated to the
-      first page.
+      first page. — instruments-service@5502e9e7: loop now pages `page += 1` while the page is full
+      (`len(pools) == _RAYDIUM_PAGE_SIZE`) and the response's `count` isn't yet reached, mirroring the for/else
+      cap-exhaustion pattern already shipped for Polymarket/Kalshi this session (`_RAYDIUM_MAX_PAGES=10000` safety-net).
+      New regression test `test_get_instruments_paginates_past_first_page` proves a 2-page/3-pool universe is no longer
+      truncated to the first page. Full quality-gates.sh green (107s).
 - [ ] [SCRIPT] P3. **Coinbase CDE futures-universe cap, no guard.**
       `instruments_service/reference_data/adapters/cefi/coinbase_cde.py` `get_instruments` (`limit="250"`, single GET,
       no offset loop or count check) — docstring claims "ALL 99 real live products" today (well under 250) but no
@@ -153,7 +191,7 @@ findings.
       large safety-net page count, e.g. mirroring `polymarket/clob.py`'s `_CLOB_MAX_PAGES = 10000` "safety cap against
       runaway loop" pattern which already correctly exits on the CLOB's own cursor sentinel) BEFORE either venue's
       `_REPOINT_PENDING` flag flips to re-enable it.
-- [ ] [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
+- [x] ✅ [REVIEW] P3. **Kalshi instruments-service nested series-scoped mitigation caps — verify against live API before
       trusting the current mitigation is sufficient.**
       `instruments_service/reference_data/adapters/prediction/kalshi.py`'s live snapshot already mitigates the top-2000
       cap via a category/series-scoped supplemental fetch (`_fetch_series_scoped_batch`), but that mitigation has its
@@ -164,7 +202,17 @@ findings.
       call — unverified whether Kalshi's `/series` endpoint has its own hidden page cap. Repo: instruments-service. Done
       when: a live (or sandbox) probe of Kalshi's `/series` endpoint confirms whether it paginates; if the nested caps
       are provably safe at current real-world series/market counts, document the measured headroom in a code comment; if
-      not, extend the pagination the same way.
+      not, extend the pagination the same way. — instruments-service@74763c05: live probes (2026-08-10) confirmed
+      `/series` is non-paginating (no cursor, `limit` ignored, full category list in one response) and measured BOTH
+      nested caps already being silently exceeded — 447 non-OTHER series vs `_MAX_SERIES_TOTAL=362` (old cap dropped
+      ~85, mostly the Politics tail: only 1 of its 86 fetched), and KXNASDAQ100U holding 2800+ open markets vs the
+      1000-market/series page budget (old budget silently dropped ~1800 markets for that one series). Raised
+      `_MAX_SERIES_TOTAL` 362→1000 and `_MAX_SERIES_PAGES` 5→50 (10k/series safety-net, mirrors clob.py's
+      `_CLOB_MAX_PAGES`); both cap-hits now log a warning + emit `ADAPTER_PAGE_CAP_HIT` (for/else on page-budget
+      exhaustion; empty-page honest-exhaustion break added); measured headroom documented in code comments. 6 new
+      regression tests (460-series universe not truncated at old cap; 7-page/1400-market series fully collected;
+      page-budget + total-cap-hit emit the event; constant guards vs measured counts). Full quality-gates.sh green
+      (127s).
 - [ ] [CODE] P3. **Morpho Blue first-party API — verify `skip` support before implementing real pagination.** This
       session added a page-cap WARNING to `morpho.py` (not full pagination) because Morpho Blue's `blue-api.morpho.org`
       GraphQL schema is first-party (not The Graph) and its `skip`/cursor support was NOT verified against a live schema
@@ -173,7 +221,7 @@ findings.
       `markets(skip: Int, ...)` is a valid argument; if yes, implement the same `while skip <= _MAX_SKIP` loop already
       proven in `uniswap_v2.py`/`uniswap_v3.py`; if no, document the confirmed absence in the code comment and leave the
       warning-only mitigation in place.
-- [ ] [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
+- [x] ✅ [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
       cap.**
       `instruments_service/reference_data/adapters/sports/adapters/{api_football,     base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
       have zero grep hits for `page`/`offset`/`cursor`/`has_more`/`MAX_` — each call appears naturally bounded by its
@@ -181,7 +229,23 @@ findings.
       docs for a hidden default page size on a list-style endpoint called with no explicit `limit`/`page` param
       (vendor-side default silently applies). Repo: instruments-service. Done when: each vendor's API docs (or a live
       probe) confirms whether any unparented list-style call in these files can silently truncate; document the finding
-      per file (even a "confirmed no cap" note closes this out) or fix any confirmed cap.
+      per file (even a "confirmed no cap" note closes this out) or fix any confirmed cap. —
+      instruments-service@2d7c19827: vendor-doc review (2026-08-10) confirmed TWO hidden caps fixed + one conditional
+      cap + documented no-caps: (a) FootyStats `/todays-matches` returns max 500 matches/page and paginates by default
+      (`&page=N`) — added `_fetch_todays_matches` page loop (get_fixtures / get_fixture_predictions /
+      get_fixture_odds_snapshot all rewired), short-page exhaustion + `_TODAYS_MATCHES_MAX_PAGES` safety-net; documented
+      `/league-teams` (100/page, safe for ~18-40-team leagues) + `/league-list` (no documented page param). (b) SFI
+      `/championships/list/` paginates unconditionally (`p` param, 100/page, ~1954 total) and `/matches/day/basic/`
+      paginates for present/future days (100/page) — added shared `_fetch_paginated` loop (get_leagues +
+      get_match_descriptors_for_date; short-page + count-confirmed + safety-net termination; unpaginated historical-day
+      responses stop after page 1). (c) api-football endpoints used are documented single-page but the `paging` envelope
+      was ignored — added `_warn_on_unfetched_pages` guard so a future vendor-side page cap is LOUD, not silent. (d)
+      confirmed-no-cap documented per file for transfermarkt (Apify dataset items have no default limit; standings
+      naturally bounded), understat (full-season single response, no pagination concept), open_meteo (point+date-range
+      timeseries), api_football_reference (wrapper, delegates), base (shared HTTP layer). 5 new regression tests
+      prove >page-size universes are no longer truncated (footystats 700-match date; SFI 150-championship list +
+      250-match present-day + 2 pagination-parser units). Full quality-gates.sh green (exit 0, 173s first run / 35s
+      content-sentinel re-run), quickmerge landed + ancestry-verified on origin/live-defi-rollout.
 - [ ] [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
       gap as this session's Kalshi/Polymarket fix, lower priority given confirmed call-graph usage.**
       `market_interface/clients/alchemy_transfers_client.py::get_all_transfers` already got a warning-only fix this
@@ -201,6 +265,45 @@ findings.
       market-tick-data-service. Done when: either the function gains real chunking so a future wider-window caller can't
       silently truncate, or (if genuinely out of scope) a code comment states the current call-graph invariant that
       keeps this safe, so a future caller change is forced to notice the constraint.
+- [ ] [CODE] P3. **`UniswapV3Adapter._download_swaps`/`_download_pool_hourly_data` (market-tick-data-service) crash with
+      `AttributeError` on ANY successful non-empty page — dormant because nothing in production instantiates
+      `UniswapV3Adapter`.** Discovered while adding regression coverage for this doc's Graph-pagination-error-vs-empty
+      todo (item 4, now shipped). `_parse_swap_record` reads `swap.amountUSD`/`swap.sqrtPriceX96`/
+      `swap.transaction.blockNumber` and `_convert_v3_hourly_item` reads `item.periodStartUnix` etc., but the backing
+      pydantic models (`GraphUniswapSwap`/`GraphSwapTransaction`/`GraphPoolHourData` in `_defi_graph_models.py`) declare
+      those fields under their snake_case Python name with a camelCase GraphQL `alias` (e.g.
+      `amount_usd: ... = Field(alias="amountUSD")`) — pydantic v2 attribute access uses the field name, not the alias,
+      so `swap.amountUSD` raises `AttributeError` (confirmed via a live `.venv` repro, not just a read). Live V3
+      swap/hourly capture is unaffected TODAY because `dex_swaps_handler.py`'s cascade
+      (`build_swaps_cascade`/`_dex_swaps_queries.py`) is the actual production path for Uniswap V3 and does not use this
+      adapter class — `grep -rn "UniswapV3Adapter("` outside its own file hits only one test file. Repo:
+      market-tick-data-service. Done when: every aliased-model attribute access in `_parse_swap_record` and
+      `_convert_v3_hourly_item` is switched to the model's actual (snake_case) field name, and a regression test
+      exercises `_download_swaps`/`_download_pool_hourly_data` with a non-empty page (previously impossible without
+      hitting this crash) to prove the class is safe if it's ever wired into production.
+
+## Progress Log (append-only)
+
+- 2026-08-09 (slot 30, data_engineering): shipped the Aave-history pagination todo — see the todo's own evidence line
+  above for detail. market-tick-data-service@0b6a13d5. Remaining todos in this doc are still open.
+- 2026-08-09 (slot 30, data_engineering): shipped item 4 (Graph skip-pagination error-vs-empty-page distinction, 9 call
+  sites) — see the todo's own evidence line above. market-tick-data-service@60c61bbb (fix content d63f436c, size-gate
+  refactor 60c61bbb), QG green (265s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Filed a new P3
+  follow-up todo for a separate, pre-existing dormant `AttributeError` bug in `UniswapV3Adapter` discovered while adding
+  test coverage (not part of the silent-cap finding itself — a field-name/alias mismatch). Remaining todos in this doc
+  are still open.
+- 2026-08-09 (slot 24, data_engineering): shipped the `first: 100` lending-market discovery cap todo (compound_v3.py,
+  spark.py, aave_v3.py) — see the todo's own evidence line above for detail. instruments-service@58ede81d, QG green
+  (155s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-09 (slot 31, data_engineering): shipped the Raydium REST pagination todo — see the todo's own evidence line
+  above for detail. instruments-service@5502e9e7, QG green (107s), quickmerge landed + ancestry-verified on
+  origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-10 (slot 19, review): shipped the Kalshi nested series-scoped mitigation caps todo — see the todo's own
+  evidence line above for detail. instruments-service@74763c05, QG green (127s), quickmerge landed + ancestry-verified
+  on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-10 (slot 19, review): shipped the sports-adapters hidden-vendor-page-cap todo — see the todo's own evidence
+  line above for detail. instruments-service@2d7c19827, QG green (exit 0), quickmerge landed + ancestry-verified on
+  origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 

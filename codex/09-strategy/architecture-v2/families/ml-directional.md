@@ -158,6 +158,64 @@ method.
   (prediction error exceeds training residual), venue outage
 - **Concentration risk**: managed via per-instrument max position + per-family gross exposure limits
 
+## Latency Requirements
+
+**Category: `Low`** — sub-second total E2E, live mode only (batch mode has no latency requirements; it replays
+historical data at compute speed). Baseline: the archived
+[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
+table has **no ML Directional row** — this family is greenfield here, not a correction of existing numbers. The closest
+archived analogs (`Mean Reversion` < 3 s Medium, `Prediction Contrarian` < 75 s High) are **superseded for this family**
+by the 2026-08-10 operator correction (ml-directional must be in the ms realm). The segment budgets below are derived
+from the archived doc's own **internal** pipeline budgets instead: `features-*-service` < 100 ms per single-instrument
+feature update, `ml-inference-api` < 50 ms per warm-model prediction, `strategy-service` < 20 ms per strategy
+evaluation, and `execution-service` < 50 ms for a simple market/limit order — plus the archived sports/prediction
+venue-latency table for the event-settled fill leg. The family's own
+`Stale-signal rate (signals that expired before execution)` UI dashboard metric is the operational monitor that enforces
+the decision-latency numbers: a signal that expires before execution IS a decision-latency breach, and a rising
+stale-signal rate is the family-specific signal to tighten the pipeline.
+
+| Expression                                                                              | Tick-to-Signal | Signal-to-Order | Order-to-Fill                                                                                      | Total E2E | Category |
+| --------------------------------------------------------------------------------------- | -------------- | --------------- | -------------------------------------------------------------------------------------------------- | --------- | -------- |
+| Continuous single-instrument (spot/perp/dated future)                                   | < 100 ms       | < 100 ms        | Venue-dep. (CeFi 20–50 ms order / 10–30 ms fill; TradFi FIX 1–10 ms; DeFi perp confirmation-bound) | < 200 ms  | Low      |
+| Continuous options expression (ATM call / 25d call / synthetic = long call + short put) | < 100 ms       | < 100 ms        | Venue-dep. (Deribit 15–40 ms order / 10–25 ms fill)                                                | < 200 ms  | Low      |
+| Event-settled (sports / prediction-market outcome)                                      | < 500 ms       | < 250 ms        | < 300 ms (odds-venue API 50–300 ms)                                                                | < 1 s     | Low      |
+
+The tick-to-signal budget is dominated by the **model-inference leg**, which is what separates this family from
+market-making: an ML signal has a feature-update + inference + calibration cost before any instruction can be emitted,
+and the `< 100 ms` figure above is the sum of the archived per-stage budgets (feature update + warm inference + strategy
+evaluation) with margin, not a decision-at-light-speed claim. Cold-start model loads (the archived < 500 ms cold-start
+figure) are excluded from the live decision path — a cold model must not block a warm path that already has a signal.
+
+**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
+`deployment_profiles` category mapping (bundled services on one VM for low-latency handoff), matching the market-making
+and arbitrage-structural families' derivation. Note this is NOT yet reflected in
+[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
+§ 6's `ML_DIRECTIONAL_CONTINUOUS` / `ML_DIRECTIONAL_EVENT` `topology_requirements` rows (execution isolated / strategy
+shared OK / co-location `no` / min SLA `standard`), which predate this latency categorization — those rows' `no`
+co-location + `standard` SLA tier conflicts with the Low→`co_located_vm` rubric, a discrepancy this audit surfaces for
+the derivation todo that writes `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`.
+
+### Decision latency vs. inter-leg execution gap
+
+The `< 200 ms` figures above are the **decision budget** — market tick → feature update → model inference → calibration
+→ edge computation → a single `StrategyInstruction`. They are NOT the whole requirement for this family's multi-leg
+expressions, where the binding constraint is the **inter-leg execution gap** (2026-08-10 operator ruling: "we are
+executing two legs of a trade... how are we ensuring the lag leg followed by the lead leg is ms timing"):
+
+- **Options expressions** (Deribit ATM call / 25d call / **synthetic = long call + short put**): a "BTC up" ML signal
+  expressed as a synthetic is two legs, and the two must be entered together — a short put left naked because its paired
+  call leg filled late is exactly the tail-risk directional exposure the Risk profile section warns about. An options
+  position carried with a **delta hedge on the underlying** has the same requirement: the hedge leg must follow the fill
+  at ms timing.
+- **Cross-venue best-odds selection** (event-settled shared primitive): the stake is a single leg, but the odds
+  comparison that picks the venue must be fresh — a stale best-odds read is a mispriced bet. Live/halftime markets are
+  the tight case (Betfair streaming 50–500 ms odds-update cadence drives the < 1 s event-settled row); pre-game windows
+  are seconds-to-minutes and relax toward the `Low` category's upper bound.
+
+So for ML Directional, "Low" means the **inter-leg execution timing budget is ms-realm for every multi-leg expression**
+(options synthetics + hedges), while single-leg continuous and pre-game event-settled bets are bounded by the (still
+sub-second) decision budget.
+
 ## UI dashboard (shared across all ML Directional instances)
 
 - Confusion matrix (per strategy + family aggregate)

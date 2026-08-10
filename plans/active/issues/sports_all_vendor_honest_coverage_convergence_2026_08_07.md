@@ -180,6 +180,41 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       working)"), and **still 502 at 2026-08-08T01:20Z** (15h+ outage, direct probe with the correct `id`/`season`
       params, ~52s latency before the 502 — see Progress Log entry below). Tagged BLOCKED-UPSTREAM-OUTAGE; do not
       relaunch without verifying the endpoint returns 200 first.
+- [ ] [SCRIPT] P1. **Odds_api gap-backfill campaign — babysit the `mtds-backfill-odds-*` fleet to genuine completion.**
+      This todo replaces reliance on an interactive session's own self-scheduled monitoring loop — handing it to normal
+      AO dispatch (this doc is already `assigned_vm: planning`) so it survives across dispatches without needing a
+      specific chat session kept alive. **Done-when**: re-run
+      `cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod CLOUD_MOCK_MODE=false .venv/bin/python scripts/sports/census_odds_api_gap_verify_2026_08_02.py 2>&1 | grep -E "DAY-LEVEL|VERDICT"`
+      reads 0 missing days, OR 2+ consecutive dispatches (spaced hours apart) read an identical small residual — treat
+      that as a genuine honest-absence floor the same way the AF entities' small non-zero floors were treated (see
+      `sports_af_full_entity_completion_2026_08_03.md`), then flip this todo citing the stable reading. Full gap
+      breakdown + root-cause history: `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (635→590→300 missing days
+      across several rounds of fixes: launcher OOM bug, manifest-consolidator stall, credential/quota block — all
+      resolved). **State at handoff (2026-08-10T08:30Z)**: 300/2257 days missing, unchanged since 2026-08-02 — NOT a
+      stall, the current run walks sequentially from 2020-06-06 forward and hadn't yet reached the earliest real gap
+      (2021-06-07, ≈chunk 70/425) as of this entry; re-run the census only when the frontier is estimated to have passed
+      a milestone like that, not every dispatch (it's cheap but there's no point re-reading an unchanged number). **Each
+      dispatch, in order**: (1) check `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s tail for the
+      current occurrence count and read its Timeline table + the most recent Progress Log entries for the full
+      established playbook (chunk 18 and chunk 26 are the historically dominant silent-hang death sites, 7/12 and 4/12
+      respectively; chunk 8 is also now a confirmed danger point per occurrence 12 — don't assume safety at any specific
+      chunk); (2)
+      `gcloud compute instances list --account=1060025368044-compute@developer.gserviceaccount.com --filter="name~'mtds-backfill-odds'"`
+      for the live instance; (3) if gone, distinguish CONFIRMED SILENT HANG (triple-signal ~15-21min silence across
+      run.log/heartbeat-blob/WATCHDOG_TRACE.log, then a `delete` op from account
+      `1060025368044-compute@developer.gserviceaccount.com` — add a Timeline row + Progress Log entry to the hang-doc,
+      bump its occurrence count) from a ROUTINE SPOT PREEMPTION (`compute.instances.preempted` system event, not a
+      `delete` op — NOT an occurrence, wait ~5min for the fleet's own auto-recovery via `unified-trading-sa@...` before
+      relaunching manually); (4) relaunch via
+      `CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-smallchunkN-20260810`
+      (increment N; the launcher can background past a short foreground timeout on tarball republish — check its output
+      when it completes rather than assuming failure), confirm genuine boot via `run.log` content, not
+      exit_code/creation alone; (5) journal a Progress Log entry to this doc citing chunk position, OOM count,
+      occurrence count, and (only when re-run) the gap census reading; commit+push+verify
+      (`git rev-list --count origin/<branch>..HEAD` must be 0 after push). **Not AO-dispatchable as a single one-shot
+      todo** (the underlying task runs for days across many silent-hang cycles) — this is intentionally designed to be
+      picked up, make partial progress, and left open across many repeated dispatches, the same proven pattern already
+      used for weeks in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own P1/P2 todos.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
       `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
       `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
@@ -198,8 +233,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `_record_weather_empty`, `_record_weather_failed`, end-of-function EXPECTED_NO_FIXTURE loop) writes ONLY for those
       33 leagues; non-Prediction league rows persist as `expected_unattempted` indefinitely. The -215 net reduction came
       from 215 Prediction-league rows resolved by this run. The 350 rows on 2026-07-28 are for non-Prediction leagues —
-      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` (already exists
-      for this exact pattern). See Progress Log 2026-08-07 (slot 7).
+      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py --apply` (already exists for
+      this exact pattern). See Progress Log 2026-08-07 (slot 7).
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363
       expected_unattempted shards (distinct from the already-resolved 89-row attempted_failed cluster).
@@ -239,576 +274,39 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 
 ## Progress Log
 
-- **2026-08-07T10:2XZ** — Doc created in response to the operator's scope-widening directive. Ran the first
-  comprehensive per-source census (table above) — this is meaningfully bigger than the vendor-completion audit done
-  earlier the same session suggested (that audit's "100% clean" verdict for weather/understat only checked
-  `attempted_failed`, missing the `expected_unattempted` backlog entirely — corrected here). Diagnosed odds_api's two
-  failure modes (stale-credential 401s vs. the live, still-recurring SOURCE_RETURNED_ZERO honest-coverage guard-rail
-  rejection). Killed the stuck Transfermarkt retry VM after confirming 2h17m of zero progress against a durably-502ing
-  vendor endpoint. No remediation done yet beyond what's already tracked in the AF doc — this tick was entirely
-  discovery + scoping; next tick should start on the P0 odds_api items.
-- **2026-08-07T11:35Z** — **`mtds-backfill-odds-1` is behaving genuinely differently from every prior attempt in
-  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s history** — actively skip-fasting through already-covered
-  dates at ~0.2-0.3s each (2020-08-01→2020-08-26 in under a minute) and correctly real-fetching genuinely-missing dates
-  (2020-08-18: 782 rows written via the Tier-2 sentinel fan-out). This is the first live confirmation that the
-  2026-07-30 freshness-scoping fix's own claim — "narrower/cheaper run, won't re-touch the 1,545 already-covered days" —
-  is actually true in practice, not just in the fix author's analysis. One minor non-fatal warning noted
-  (`venue=ODDS_API: data_type 'ODDS' is not valid for this venue's asset group`) but it didn't block the real write —
-  not chasing it further this tick. No `PROGRESS.json` yet (still inside its first 250-day chunk). Still RUNNING, no
-  signs of the preemption/freeze/OOM patterns that killed every prior attempt — watching through to actual completion.
-  Weather backfill (`weather-backfill-20260807-120241`) also healthy: 16,361+ entries written, real per-date
-  fixture-venue matching working, automatic archive-tier fallback handling minor upstream 400s cleanly. Launched the SFI
-  expected_unattempted backfill (205,363 shards,
-  `launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`) — confirm it reached RUNNING next
-  tick. Checked Transfermarkt for endpoint recovery signal: no new manifest activity for `source=transfermarkt` since
-  before the VM was killed (still 8 attempted_failed, unchanged) — this session's identity lacks Secret Manager access
-  to the RapidAPI key to check the endpoint directly, so deferring rather than blind-retrying into a possibly-still-down
-  endpoint.
-- **2026-08-07T11:57Z — Intermediate re-census** (`census_all_sports_sources_2026_08_07.py`,
-  instruments-service@f917f04f, 9,552,235 rows post-floor, down from 10,463,368 — consistent with China/Russia purge
-  removing out-of-scope rows). VMs all still RUNNING: `mtds-backfill-odds-1`, `mtds-backfill-odds-401-retry`,
-  `sfi-backfill-20260807-123519`, `weather-backfill-20260807-120241`. **Not yet converged**; doc remains open.
-
-  | source                   | attempted_failed |  captured | empty_confirmed | expected_unattempted | Δ vs baseline                                             |
-  | ------------------------ | ---------------: | --------: | --------------: | -------------------: | --------------------------------------------------------- |
-  | api_football             |           30,044 | 1,608,086 |       3,242,485 |              649,952 | AF↓5,014 (quota exhaustion clearing via running backfill) |
-  | odds_api                 |           14,005 |    39,405 |          25,085 |                    0 | AF↑89 (SOURCE_RETURNED_ZERO still live-recurring)         |
-  | mdps_odds_horizon_bucket |            2,791 |   198,520 |         256,585 |              157,994 | unchanged — backfill VM running                           |
-  | transfermarkt            |                8 |    37,611 |         378,449 |                    0 | unchanged — vendor still down                             |
-  | instruments_service      |                2 |     2,169 |          60,145 |                    0 | unchanged                                                 |
-  | footystats               |                0 |    63,603 |       1,116,989 |                    0 | rows reduced (China/Russia purge)                         |
-  | open_meteo (weather)     |                0 |    16,479 |         196,329 |              205,517 | EU unchanged — backfill VM running                        |
-  | soccer_football_info     |                0 |    20,118 |         190,742 |              205,363 | EU unchanged — backfill VM running                        |
-  | understat                |                0 |     7,158 |         826,321 |                   30 | rows reduced (China/Russia purge); EU=30 unchanged        |
-
-  Key findings: (1) odds_api AF **increased** by 89, confirming SOURCE_RETURNED_ZERO cluster still actively generating
-  new failures — P0 investigation unresolved. (2) `mtds-backfill-odds-401-retry` VM running (not yet in manifest). (3)
-  Blank-source row (250 captured, no source value) appeared in manifest — minor artifact, not investigated. (4) A new
-  census should be run once all VMs reach clean terminal state.
-
-- **2026-08-07T12:15Z** — **Root-caused + fixed the 13,045-row SOURCE_RETURNED_ZERO cluster.** Root cause: the v1
-  sentinel (`_emit_sports_v1_sentinels`) was missing the per-bookmaker coverage gate that the v2 path already had.
-  `is_expected_for_source("odds_api", ...)` returns `True, None` for all leagues (generic catch-all — no bookmaker
-  dimension), so all 22 bookmakers were treated as expected for every league with a fixture. The fix: add
-  `_is_bookmaker_league_covered_exact(bm, league_id)` check inside the `SOURCE_RETURNED_ZERO` branch — when False, emit
-  `empty_confirmed(EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE)` instead of `attempted_failed`. Import already existed;
-  mirrors v2 exactly. Test updated (old name renamed + coverage mock added) + new uncovered-path test added. Shipped:
-  `market-tick-data-service@70f131667`, QG green. The recurring 13,045 rows will resolve on next backfill run as the v1
-  sentinel re-emits these shards with the correct classification.
-
-- **2026-08-07T12:00Z** — **Confirmed credential valid + launched targeted 401-retry VM.** Credential check:
-  `mtds-backfill-odds-1` (sweeping 2020-06-06→2026-08-07) has been running with zero 401s; wrote 782 rows on 2020-08-18
-  confirming the key is live. Launched `mtds-backfill-odds-401-retry`
-  (`launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-401-retry --start 2025-09-01 --end 2026-07-27 --allow-parallel`,
-  SPOT e2-highmem-4, concurrency guard: 1+1=2 ≤ cap 5, all 4 tarballs fresh). VM RUNNING at 11:55:46Z, startup script
-  completed (exit 0, PID 4903/4917), first log at 11:59:01Z with skip-fast through covered dates and real-fetching
-  2026-02-22 (960 credits, no 401s). `check_shard_freshness(retry_failed=True)` will mark the 871 `attempted_failed`
-  401-rows as stale and re-fetch them as the VM sweeps through their dates.
-- **2026-08-07T12:10Z — CORRECTION to the prior tick's optimistic `mtds-backfill-odds-1` assessment; it was wrong.**
-  What looked healthy at 11:35Z (skip-fasting correctly, one real write for 2020-08-18) was only the FIRST few minutes
-  of a repeating OOM-crash-loop I hadn't yet seen the full shape of. By 12:00Z the VM had OOM-killed
-  (`exit=137 reason=OOM_KILLED`) on chunk 1/10 (`2020-06-06→2021-02-10`, the default 250-day chunk) for **10 consecutive
-  leagues in ~50 minutes** — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
-  SUPER_LIG, SCOTTISH_PREMIERSHIP — every single one crashing identically, zero successful chunk completions across any
-  league, zero real forward progress despite ~50 minutes of GCE billing. This is the exact "cumulative, monotonic memory
-  growth across real-fetch days" signature already documented (and never fully root-caused) in
-  `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` — retagged that doc's own stale
-  `BLOCKED-CREDENTIALS` P1 too (same 2026-08-02→08-03 story) and recorded this fresh 2026-08-07 recurrence there. Killed
-  `mtds-backfill-odds-1`. Attempted to relaunch with `--chunk-size 5` (that doc's best-validated, if imperfect,
-  mitigation) but the concurrency guard correctly REFUSED (`mtds-backfill-odds-401-retry` already counts as 1 running,
-  cap 1 without `--allow-parallel`) — waiting for that VM to finish rather than overriding, since it's small and already
-  making genuine progress (real trades data confirmed writing, e.g. 786 rows for 2026-02-23, healthy memory ~40%).
-  **Lesson for next tick**: relaunch the full-range odds_api backfill with
-  `--vm-name <fresh> --chunk-size 5 --start 2020-06-06 --end <today>` (no `--force`) ONLY after confirming zero
-  `mtds-backfill-odds-*` VMs are running (or explicitly pass `--allow-parallel` if `401-retry` is still going and credit
-  budget is re-verified healthy first) — and even then, per the OOM doc's own "fifth recurrence" history,
-  `--chunk-size 5` has previously still OOM'd 4 times in 75 chunks (much better than 10/10, but not proven-clean) —
-  expect to babysit this, not launch and walk away. All other VMs healthy this tick: AF campaign PLAYER_STATS climbing
-  (2025-03-08), footystats climbing (2023-04-23), SFI climbing with real writes (21,742 rows for 2020-10-17), weather
-  confirmed still RUNNING (log read hit a transient 404, not treated as a failure signal on its own).
-- **2026-08-07T12:21Z (slot 15)** — **Transfermarkt endpoint verification: still 502.** Confirmed
-  `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` returns HTTP 502 with RapidAPI message
-  `"The API is unreachable, please contact the API provider" / "Your Client (working) ---> Gateway (working) ---> API (not working)"`.
-  Now 3h+ since initial failure at 10:17Z. Secret Manager access confirmed working (key len=50 chars); the 8
-  `attempted_failed` PLAYER_VALUES rows remain unretried. Tagged todo `[BLOCKED-UPSTREAM-OUTAGE]` — do not relaunch
-  blind; verify endpoint returns 200 before dispatching a retry VM.
-- **2026-08-07T12:38Z** — Applied the new codex rule 1b (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`,
-  added this tick) properly this time: verified all five running VMs by diffing actual progress VALUES against the prior
-  tick's readings, not just checking that log lines were still appearing. All genuinely healthy: AF campaign
-  PLAYER_STATS 2025-03-08→2025-05-31 (chunk 21/26), footystats 2022-10-13→2023-10-16, SFI 2020-10-17→2021-02-17..19
-  (distinct advancing dates), weather processing 2024-02-18..22, `mtds-backfill-odds-401-retry` 2026-02-23→2026-03-01
-  with **zero** `CHUNK_FAILED`/`OOM_KILLED` matches across its entire log (not just the tail) — genuinely clean, still
-  mid-chunk-1-of-2. Live-reverified odds-api credits: 14,463,684 remaining (only ~12,690 used since the ~11:35Z check,
-  very low burn rate). Since `401-retry` is EPL-only/2025-09→2026-05 (non-overlapping in practical terms with a
-  full-range/all-league relaunch — by the time a full sweep reaches that window, `401-retry`'s work will already be
-  captured and skip-fast) and credits are healthy, launched the full-range small-chunk backfill WITH `--allow-parallel`
-  rather than waiting further: `mtds-backfill-odds-smallchunk-20260807`
-  (`--chunk-size 5 --start 2020-06-06 --end 2026-08-07`, no `--force`). This is the mitigation
-  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` itself flags as imperfect (previously OOM'd 4/75 chunks) —
-  watching closely next tick for `CHUNK_FAILED`/`OOM_KILLED` recurrence, not treating this as fire-and-forget.
-- **2026-08-07T13:08Z — both odds VMs confirmed genuinely healthy, zero OOM signatures.**
-  `mtds-backfill-odds-smallchunk-20260807`: 0 `CHUNK_FAILED`/`OOM_KILLED` matches across its full log, now at chunk
-  6/451 (`2020-07-01→2020-07-05`), skip-fasting + real-fetching correctly across ~30 leagues per chunk. Full-range,
-  5-day-chunked, so a fresh subprocess baseline every chunk — the mitigation appears to be holding.
-  `mtds-backfill-odds-401-retry`: also 0 `CHUNK_FAILED`/`OOM_KILLED`, still chunk 1/2 but genuinely progressing
-  (2026-03-01 → date not yet logged this check, prior tick's date confirmed superseded). Its memory (`RESOURCE_SAMPLE`
-  over the last 8 minutes: 50.8%→78.5%→50.4%→70.1%→39.3%→67.5%→10.5%→...→71.1%) is **oscillating, not monotonically
-  climbing** — this is the healthy per-date-cleanup signature, distinct from the broken default-chunk-size VM's
-  cumulative-growth pattern from two ticks ago. No action needed; continuing to watch since this VM's single chunk spans
-  8+ months uninterrupted (no 5-day respawn safety net like the sibling VM has), so it remains the more theoretically
-  exposed of the two, just not currently showing distress.
-- **2026-08-07T13:38Z — `mtds-backfill-odds-401-retry` finally OOM'd, but this is the GOOD failure mode, not a repeat of
-  the earlier bad one.**
-  `CHUNK_FAILED: chunk=1/2 league=EPL range=2025-09-01→2026-05-08 exit=137 reason=OOM_KILLED time=2026-08-07T13:31:29Z`
-  — EPL's single 8-month chunk finally hit the ceiling, but only after covering the overwhelming majority of the range
-  (Sept 2025 through ~March 2026 already confirmed captured in prior ticks' checks, written incrementally via
-  `ManifestWriter` per-date, not held in memory — that data is durable regardless of the crash). The wrapping
-  `mtds_chunk_loop.sh` correctly caught the failure and **auto-recovered by moving to the next league (LA_LIGA)** rather
-  than freezing — exactly the "fail-loud, self-recovering" design
-  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` documents working correctly for chunk-level failures. No
-  manual intervention taken; letting it continue through the remaining leagues. **Residual gap to track**: EPL's tail
-  (~2026-03 through 2026-05-08, the portion after the last confirmed-captured date) may still need a narrow follow-up
-  retry once this VM finishes its full league sweep — added as a todo below rather than acting now, since the sweep
-  isn't done yet and a premature narrow retry would just get re-covered by the eventual full-range small-chunk VM
-  anyway. `mtds-backfill-odds-smallchunk-20260807` remains fully clean: 0 `CHUNK_FAILED`/`OOM_KILLED` matches, now at
-  chunk 13/451 (`2020-08-05→2020-08-09`).
-- **2026-08-07T14:17Z — `401-retry` OOM'd 5 more times (6 total), but produced a genuinely useful diagnostic, not just
-  churn.** Precise timing: EPL (first subprocess this VM's lifetime) survived 93.3 min; every subsequent league
-  (LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE) OOM'd in a tight 6.5-8.9 min band — too consistent across leagues
-  with genuinely different real-fetch densities to be pure per-process real-fetch-volume variance, suggesting something
-  persists across subprocess launches within one VM lifetime (candidate mechanisms + full writeup added to
-  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s Progress Log — not investigated further here, out of scope
-  for an operational tick). No data lost (per-date incremental writes are durable); self-recovery continues working
-  correctly (now on PRIMEIRA_LIGA). Not killing it — still net-positive real progress each cycle. AF campaign
-  PLAYER_STATS now at **chunk 24/26** (only 2 left). footystats (2024-09-22→2025-04-06), SFI (2021-11-02→2022-03-11),
-  weather (→2026-07-25), `mtds-backfill-odds-smallchunk-20260807` (chunk 17/451, still 0 OOM) all confirmed healthy via
-  value-diffs.
-- **2026-08-07T14:47Z — CORRECTION: weather backfill finished (exit_code=0, self-deleted) but did NOT actually resolve
-  the honest-coverage gap — do not read `exit_code=0` as "done" (exactly the trap codex rule 4a warns about).**
-  `weather-backfill-20260807-120241` reached `last_completed_date=2026-08-07` (the full range end) and exited cleanly,
-  but a fresh census shows: `expected_unattempted` barely moved (205,517 → 205,302, only -215) and **16,241 NEW
-  `attempted_failed` rows appeared** (`error_reason=ClientResponseError`, spread across ~478 distinct dates from
-  2024-01-03 to 2026-08-07 — not a narrow today-only edge case, a genuine broad vendor-API issue; the tail log showed
-  the concrete signature: `400 Bad Request` against
-  `customer-previous-runs-api.open-meteo.com/v1/forecast?...&previous_day1&...`). Also confirmed the remaining
-  `expected_unattempted` rows span the FULL date range including recent dates (e.g. 2026-07-28: 350 rows on a single
-  date) — meaning many (date, venue) shards were never even attempted despite the date-loop completing, a separate
-  puzzle from the `ClientResponseError` cluster. **Two genuinely new, unresolved findings, not a closed line item**: (1)
-  root-cause the `customer-previous-runs` 400 errors (vendor contract issue? request malformed for certain date/venue
-  combos?); (2) explain why so many shards remain fully untouched despite the date-iteration reaching the full range (a
-  skip-condition false-positive, a per-venue sub-loop bug, or a rate-limit silently short-circuiting without recording
-  `attempted_failed`?). Neither investigated further this tick — flagging clearly rather than claiming a false win.
-  `mtds-backfill-odds-smallchunk-20260807` had its first OOM this tick (chunk 18/451, EPL, `exit=137`) but
-  self-recovered correctly (moved to LA_LIGA) — 1 failure in 18 chunks, consistent with (better than) the OOM doc's own
-  "4/75 chunks" precedent for `--chunk-size 5`, not concerning. `401-retry`'s per-league OOM cadence holds steady at
-  ~6-9 min (4 more failures: PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP; now on GREEK_SUPER_LEAGUE, 10
-  total) — stable, not degrading further, no action needed.
-- **2026-08-07 (slot 4) — Root-caused and fixed weather's 16,241 `ClientResponseError` rows
-  (`instruments-service@1fafbe23`).** Root cause: inside `OpenMeteoAdapter.get_weather_match_window`, the inner `except`
-  block for the `customer-previous-runs-api.open-meteo.com` call (lines 154-162) had a spurious `raise` that propagated
-  the 400 Bad Request upward, aborting the entire fetch. The adapter's OWN comment at line 136 already stated the
-  correct intent ("if Previous Runs API is down, skip forecasts and still get actuals"), but the `raise` contradicted it
-  — so every date ≥ 2024-01-01 where the customer previous-runs endpoint returned 400 became an `attempted_failed` row
-  instead of getting actual weather from the archive/forecast endpoint. Fix: removed `raise`; added regression test
-  `test_prev_runs_400_falls_back_to_actuals` in `test_open_meteo_adapter_coverage.py` and updated
-  `test_previous_runs_api_exception_propagates` (renamed, docstring and `call_count` assertion corrected). QG green. On
-  the next weather backfill run, the 16,241 shards will be re-touched; they should resolve to `captured` (venues with
-  weather data) or `empty_confirmed` (venues with no data) rather than `attempted_failed`.
-- **2026-08-07 (slot 7) — Root-caused why weather's `expected_unattempted` barely moved (205,517→205,302, -215).**
-  Confirmed via code inspection of `weather.py` +
-  `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py`. **Not** a skip-condition
-  false-positive or per-venue sub-loop bug. Definitive finding: `_fetch_weather_data` builds
-  `_expected_weather_league_ids` using `get_expected_leagues_for_source("open_meteo", classifications=["Prediction"])` —
-  only ~33 leagues. All write paths (season-window guard → `record_expected_empty` → `EMPTY_CONFIRMED`; coverage-start
-  guard; `_record_weather_empty`; `_record_weather_failed`; end-of-function EXPECTED_NO_FIXTURE loop) write exclusively
-  for league_ids in that 33-league set. The 205K `expected_unattempted` rows are for the ~172 non-Prediction leagues
-  seeded historically (dates 2026-02-20→2026-06-26, documented in the existing one-off script's own docstring) by an
-  older weather VM that used a broader league set. Since the backfill never emits ANY manifest entry for non-Prediction
-  leagues — not captured, not empty_confirmed, not attempted_failed — those rows are structurally unreachable by the
-  weather writer regardless of date range. The -215 reduction = 215 Prediction-league rows that happened to still be
-  expected_unattempted and got resolved. The 350 rows on 2026-07-28 are for non-Prediction leagues, untouched by design.
-  Resolution path: `instruments-service/scripts/type_weather_eu_no_provider_coverage_2026_06_27.py --apply`
-  (reclassifies to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`) + consolidator pass — separate action, not this
-  task.
-- **2026-08-07T16:53Z** — **footystats' 50-league backfill VERIFIED cleanly done** (re-census, not just `exit_code=0`):
-  0 `attempted_failed`, 0 `expected_unattempted` both before and after; +2,383 captured / +8,088 empty_confirmed for the
-  18 newly-widened leagues. First VM this session to converge with zero loose ends — the footystats line item in the
-  priority table above can be considered closed. FIXTURE_STATS (AF-doc scope, cross-referenced) is doing a full
-  skip-fast sweep from 2020-06-06 rather than literally resuming from a checkpoint — expected, not a bug, just slower
-  wall-clock. All other VMs (SFI, both odds VMs) confirmed healthy via value-diffs, consistent with established patterns
-  — no new incidents.
-- **2026-08-07T17:18Z — found + fixed a real stale-code problem: `mtds-backfill-odds-smallchunk-20260807` was running ~5
-  hours of PRE-FIX code past the SOURCE_RETURNED_ZERO fix landing.** Investigating `401-retry`'s SPOT preemption (clean,
-  expected — `compute.instances.preempted` at 16:55:35Z, right after its last log line, not an app bug) surfaced
-  something bigger: odds_api `attempted_failed` had grown to 26,934 (from 13,916), and the original 871 stale-401 rows
-  were STILL completely untouched despite hours of VM runtime. Root cause: the SOURCE_RETURNED_ZERO fix
-  (`market-tick-data-service@70f13166`) landed at **2026-08-07T12:19:49Z**, but both odds VMs I'd launched (`401-retry`
-  at 04:55:46Z, `smallchunk` at 05:39:59Z) started HOURS before that — their baked tarballs simply predate the fix's
-  existence, so the launch-time freshness check had nothing to catch (the fix didn't exist yet at launch). `smallchunk`
-  was still running live with the stale tarball, actively generating **13,025 NEW SOURCE_RETURNED_ZERO
-  `attempted_failed` rows since the fix landed** (verified via `attempted_at` timestamps, split cleanly pre/post-fix at
-  ~13,038/~13,025). Checked `scripts/reset_source_returned_zero_manifest.py` as a candidate remediation — doesn't apply,
-  it targets a different pattern (`capture_status=empty_confirmed` fake-empties, not `attempted_failed` rows; ours are
-  correctly classified, just need re-attempting with fixed code). Killed `smallchunk`, relaunched as
-  `mtds-backfill-odds-smallchunk2-20260807` (`--chunk-size 5`, no `--force`), verified via
-  `git merge-base --is-ancestor` that the new tarball's commit (`52d6da40`) genuinely includes the fix. Going forward:
-  `attempted_failed` is not in this pipeline's skip-set, so the relaunch will naturally re-attempt all 26,934 rows
-  including the original 871 stale-401s. **Lesson for future launches**: a VM's tarball freshness is only checked
-  against the repo at LAUNCH TIME — a long-running VM (hours+) can silently drift stale if a relevant fix lands mid-run;
-  for any multi-hour backfill, worth a mid-run check of whether a relevant fix has landed since launch, not just a
-  freshness check at launch.
-- **2026-08-07T18:05Z (slot 4) — Understat expected_unattempted P3 investigation CLOSED: confirmed live-cron artifact.**
-  Ran `census_understat_expected_unattempted_2026_08_07.py` (instruments-service@1ebc2ca9, bounded, read 9,595,128
-  manifest rows). Result: **25 rows** remain (post China/Russia purge from 30), all dated 2026-08-05→2026-08-07, all
-  venue="" (blank), data_type=XG (10) and XG_SHOTS (15). Code inspection of `engine/orchestrator/understat.py` confirms:
-  `expected_unattempted` rows are seeded by the production IS cron for recent fixture shards before the daily pass
-  processes them; the empty venue is the standard "not yet processed" signature. No understat backfill VM was running.
-  No corrective action needed — these 25 rows resolve naturally on the next daily IS cron cycle.
-- **2026-08-07T20:03Z (slot 13) — EPL odds_api tail re-census completed; narrow retry NOT launched.** Ran
-  `census_epl_odds_api_attempted_failed_2026_08_07.py` (instruments-service@ca437ed3). Result: 206 EPL
-  `attempted_failed` rows across date range 2020-10-06→2026-08-06 (most recent `attempted_at`=2026-08-07T16:51Z).
-  Breakdown: **23 UNCLASSIFIED:401** (stale-credential window 2025-09→2026-05, the original 401-retry target) + **183
-  SOURCE_RETURNED_ZERO** (created by old unfixed `smallchunk` VM before it was killed at 17:18Z; will resolve with fixed
-  code). Narrow retry NOT launched: `401-retry` was preempted (SPOT) at 16:55Z before finishing its league sweep, but
-  `mtds-backfill-odds-smallchunk2-20260807` (full range 2020-06-06→2026-08-07, 5-day chunks, fixed SOURCE_RETURNED_ZERO
-  code as of commit `52d6da40`) is running and will naturally re-attempt all 206 rows when its sweep reaches EPL's date
-  ranges — consistent with the todo's own rationale. VM confirmed active at 20:00Z (chunk 18/451, EREDIVISIE 2020-08,
-  memory oscillating 5-71%, no monotonic growth).
-- **2026-08-07T21:16Z — MILESTONE: SFI genuinely converged (verified via re-census, rule 4a), AND both weather's + SFI's
-  `expected_unattempted` backlogs (410,665 rows combined) are now correctly reclassified.**
-  `sfi-backfill-20260807-123519` reached `last_completed_date=2026-08-07` (full range end), `exit_code=0`, self-deleted.
-  Re-census showed the SAME pattern weather hit: `expected_unattempted` completely unchanged (205,363→205,363, zero
-  movement) plus 80 new `attempted_failed` rows — exit_code=0 again did NOT mean the gap resolved (rule 4a validated a
-  second time). Root-cause verification: **zero overlap** between SFI's 33 captured leagues (≈ its 34-league
-  Prediction-tier write scope) and the 350 leagues comprising the stuck backlog — those 205,363 rows were seeded
-  historically by a broader-scope run and are structurally unreachable by the current narrower-scope writer, no matter
-  how many times it's re-run. Exact same pattern as weather (already diagnosed by another worker, "slot 7," but its own
-  remediation script had never actually been RUN). Found the sanctioned, already-built, precedent-tested fix for both:
-  `scripts/type_sfi_eu_no_provider_coverage_2026_06_27.py` and
-  `scripts/type_weather_eu_no_provider_coverage_2026_06_27.py` (dated 2026-06-27, correctness-fixed 2026-07-08 to
-  exclude genuinely-covered leagues from the retype) — both reclassify `expected_unattempted` + blank-reason +
-  non-covered-league rows to `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`, writing ONLY an additive per-VM shard
-  (never touching the canonical index directly — the consolidator's last-write-wins merge picks up the retype next
-  cycle, so this is much lower-risk than a canonical-index rewrite). Ran both dry-run then `--apply`: SFI 205,363 rows
-  retyped (`type-sfi-eu-1786133580.parquet`), weather 205,302 rows retyped (`type-weather-eu-1786133699.parquet`).
-  **Pending the next manifest-consolidator cycle to actually land in the canonical index** — the live
-  `expected_unattempted` count will still read the old figures until that merge completes; re-verify next tick. The 80
-  new SFI `attempted_failed` rows and weather's pre-existing 16,241 (already root-caused + code-fixed earlier this
-  session) are separate, smaller residuals, not touched by this reclassification.
-- **2026-08-07T20:47Z — CONFIRMED: the consolidator merge landed, both sources genuinely converged.** Re-census (rule
-  4a, live manifest re-read, not assumed): `soccer_football_info` — `empty_confirmed` 208,726→**414,173** (+205,447,
-  matching the retype), `expected_unattempted` **completely gone** (0 rows, was 205,363), `captured` 20,953,
-  `attempted_failed` unchanged at 80. `open_meteo` — `empty_confirmed` 215,865→**421,167** (+205,302, an EXACT match to
-  the retype count), `expected_unattempted` **completely gone** (0 rows, was 205,302), `captured` 28,698,
-  `attempted_failed` unchanged at 16,241 (the already-tracked, separately-fixed residual). Both sources are now down to
-  just `captured` + `empty_confirmed` + a small, already-diagnosed `attempted_failed` tail — this is genuinely,
-  verifiably the operator's original target state for these two vendors. `mtds-backfill-odds-smallchunk2-20260807`
-  (chunk 18/451, now 6 OOM total — checked the actual league list: EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
-  SUPER_LIG, GREEK_SUPER_LEAGUE, six DIFFERENT leagues each failing once and self-recovering, not a stuck repeat —
-  consistent with the established tolerable pattern, watching but not intervening) and FIXTURE_STATS (chunk 6/26,
-  2021-10-14) both remain healthy.
-- **2026-08-07T21:22Z — smallchunk2 odds STILL on chunk 18/451, now confirmed 10/18 leagues OOM'd (55%) — root-caused as
-  genuine per-league progress, not a stall (full detail + league list in
-  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`b90338bfd9`).** PROGRESS.json's `last_completed_date`
-  reading (`2020-08-29`, `updated=19:22:22Z`) looked 2h-stale at first glance — this is exactly the rule-1b check case,
-  so read the full `run.log` (not just PROGRESS.json) rather than concluding either way from the checkpoint alone:
-  confirmed 18 DISTINCT leagues attempted this chunk (EPL...BRASILEIRAO, zero repeats), EKSTRAKLASA fully completed, the
-  other 10 OOM'd once each and correctly advanced (self-recovery intact). Verdict: not a stall, PROGRESS.json simply
-  checkpoints at the whole-chunk boundary and this specific 2020-08-30→2020-09-03 range (a genuine European
-  season-opener window) is unusually failure-prone. FIXTURE_STATS re-checked same tick: `last_completed_date=2021-11-19`
-  (up from 2021-11-06), `updated=21:22:14Z` (fresh) — healthy, no action needed. No intervention on either VM this tick.
-- **2026-08-07T21:53Z — FIXTURE_STATS jumped 89 days** (`last_completed_date=2022-02-16`, was `2021-11-19`,
-  `updated=21:52:23Z` fresh) — healthy, accelerating. **smallchunk2 odds STILL on chunk 18/451** (PROGRESS.json
-  checkpoint unchanged, `2020-08-29`/`19:22:22Z` — now 2.5h stale on the checkpoint alone), but `run.log` confirms
-  continued genuine progress: 22 distinct leagues attempted this chunk now (up from 18), currently on `J1_LEAGUE`,
-  actively running (RSS cycling 10-23GiB normally, no stuck/frozen process), 12 total OOMs (up from 10, still zero
-  repeats — each OOM'd league only failed once). This chunk has now run ~2h40m; not yet escalating — self-recovery
-  remains intact and every restart is still doing real, distinct work, but flagging for whoever next touches this: if
-  it's still on chunk 18 at the NEXT tick, that would be a genuine outlier worth deeper thought (e.g. whether the full
-  league roster for this chunk is unusually long, not just unusually OOM-prone).
-- **2026-08-07T22:21Z — followed up on the flagged outlier: STILL on chunk 18/451 (~3h now), but confirmed this is the
-  roster being genuinely large for this specific week, not malfunction.** FIXTURE_STATS:
-  `last_completed_date=2022-04-06` (up from 2022-02-16, +49 days), fresh checkpoint (`22:20:25Z`) — healthy, continuing
-  to accelerate, no action needed. odds smallchunk2: full `run.log` re-read (rule 1b) shows **25 distinct leagues
-  attempted this chunk now** (up from 22 last tick — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1, EREDIVISIE,
-  PRIMEIRA_LIGA, JUPILER_PRO, SUPER_LIG, SCOTTISH_PREMIERSHIP, GREEK_SUPER_LEAGUE, AUSTRIAN_BUNDESLIGA,
-  SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, EKSTRAKLASA, ALLSVENSKAN, BRASILEIRAO, ARGENTINA_PRIMERA, MLS,
-  J1_LEAGUE, CHILE_PRIMERA, LIGA_MX, K_LEAGUE_1, A_LEAGUE — spanning Europe, South America, Asia, North America,
-  Oceania), still **zero repeats**, 13 total OOMs (+1 since last tick, LIGA_MX). This spread (multiple continents' top
-  flights all represented) plus the fact the chunk is STILL not exhausted after 25 leagues strongly suggests the
-  Prediction-tier roster is simply large and this 2020-08-30→2020-09-03 week is the first chunk since the 2020-06-06
-  range start where essentially every league worldwide has a real season-opener fixture simultaneously — i.e. this may
-  be close to a full-roster real-fetch pass in one chunk, something later/earlier chunks in off-season weeks won't
-  repeat. Not a stall by rule 1b's own test (values keep climbing every tick); no intervention — self-recovery, zero
-  data loss, genuinely converging.
-- **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
-  smallchunk2 STILL chunk 18/451 (~3.5h) — lighter rule-1b diff (root cause already established, not re-litigating): 29
-  distinct leagues now (up from 25), 15 OOM (up from 13), still zero repeats, RSS cycling normally — continued genuine
-  movement, no intervention.
-- **2026-08-07T23:17Z — CLOSED: chunk 18/451 finally cleared. FIXTURE_STATS +72 days.** FIXTURE_STATS:
-  `last_completed_date=2022-08-01` (fresh `23:16:40Z`), continuing to accelerate. odds smallchunk2: `run.log`'s own
-  `PROGRESS: chunk=18/451 ... time=2026-08-07T22:59:42Z` line confirms the chunk completed — total elapsed **3h38m**
-  (started 19:21:28Z per chunk 17's completion line), final tally **30 distinct leagues attempted, 16 OOM'd once each
-  (14 succeeded clean on first try)**, zero repeats throughout — closes out the season-opener-week investigation as
-  designed-behavior, not a bug. Chunk 19 (`2020-09-04→2020-09-08`) is already under way and moving fast — its first
-  league is skip-fasting through dates (`SKIP date=2020-09-04/05/06`), confirming the off-season-weeks-move-faster
-  hypothesis. **New finding for future ticks**: `PROGRESS.json` itself did NOT update at the chunk-18→19 transition — it
-  still read the stale `2020-08-29`/`19:22:22Z` value even ~18 minutes after chunk 18's own `run.log` completion line.
-  The true checkpoint state must be cross-checked against `run.log`'s own `PROGRESS: chunk=N` lines near a suspected
-  chunk boundary, not trusted from `PROGRESS.json` alone — worth a rule-1b/4a addendum if this recurs. Reverting to
-  lightweight per-tick `PROGRESS.json` checks per the standing instruction, since the outlier is now closed; will only
-  re-deep-dive if a future chunk shows the same multi-hour-stall signature.
-- **2026-08-07T23:17Z — self-correction: FIXTURE_STATS's chunk NUMBER had gone stale in the journal for several ticks.**
-  Every tick's `last_completed_date` reading was genuinely accurate (each one re-fetched live), but I'd been carrying
-  forward the label "chunk 6/26" from an early tick without re-verifying it against `run.log` — a live check just now
-  shows it's actually **chunk 9/26** (`2022-05-27→2022-08-24`, chunks 6-8 each cleared in well under an hour: chunk 6 @
-  21:25:10Z, chunk 7 @ 21:56:53Z, chunk 8 @ 22:51:26Z). No data-integrity issue — the underlying values were never
-  wrong, only the derived chunk-number label I was echoing. At this clip (~3-9 chunks/hour once past quota-limited early
-  chunks), 26/26 is plausibly within the next 1-3 hours. Using the verified chunk 9/26 going forward.
-- **2026-08-07T23:47Z — upgrading last tick's `PROGRESS.json` finding: it's not lag, the file appears to have STOPPED
-  updating entirely for odds smallchunk2.** FIXTURE_STATS: +30 days (`last_completed_date=2022-08-31`, fresh
-  `23:46:43Z`) — a bit slower than recent ticks but healthy. odds smallchunk2: `PROGRESS.json` still reads the exact
-  same stale value as 4.5 hours ago (`2020-08-29`/`19:22:22Z`, chunk 17's write), but `run.log`'s own
-  `PROGRESS: chunk=N` lines prove real progress has continued well past the last tick's finding: **chunk 19 @ 23:18:02Z,
-  chunk 20 @ 23:24:10Z, chunk 21 @ 23:30:17Z — each cleared in ~6 minutes**, currently on **chunk 22/451**
-  (`2020-09-19→2020-09-23`), zero new OOMs since chunk 18 closed (still 16 total). This confirms two things at once: (1)
-  the season-opener week really was the sole outlier — normal off-season chunks fly through in ~6 min once the league
-  roster is mostly skip-fast/cheap real-fetches, and (2) `PROGRESS.json`'s GCS upload for this VM has not written a
-  single new value since chunk 17 (19:22:22Z) despite 5 more chunks completing since — this is no longer "lag," it looks
-  like the upload step itself stopped functioning for this file specifically (the VM is otherwise clearly alive:
-  `run.log` keeps growing, manifest shards keep writing, heartbeats keep firing). **Not blocking** — `run.log`'s own
-  `PROGRESS: chunk=N` lines are a fully reliable substitute and this doc will use them as ground truth for this VM going
-  forward — but worth a note in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` for whoever next touches the
-  launcher, since a future session trusting `PROGRESS.json` alone on this specific VM would wrongly conclude it's been
-  stuck since 19:22Z.
-- **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
-  smallchunk2 (via `run.log`, `PROGRESS.json` still not used per above): now **chunk 25/451** (`2020-10-04`), up from
-  chunk 22 — chunks 23 (00:07:19Z) and 24 (00:13:41Z) both cleared, zero new OOMs (still 16 total since chunk 18). Both
-  VMs healthy, no intervention.
-- **2026-08-08T01:24Z (slot 14)** — **Recurrence of the exact killed-and-tagged anti-pattern: a second Transfermarkt
-  backfill VM was launched blind, 13h into the still-ongoing outage, and got stuck the same way.** Dispatched
-  `sports_satellite_ao_dispatch_batch9-002` (the golden-window PLAYER_VALUES relaunch todo) and found
-  `tm-backfill-20260807-233040` already RUNNING (launched 2026-08-07T23:30:47Z, exact matching scope:
-  `--sports-entity PLAYER_VALUES --sports-provider TRANSFERMARKT --start-date 2025-09-01 --end-date 2025-11-30`, no
-  `--force`) — some earlier session/dispatch launched it without checking this doc's BLOCKED-UPSTREAM-OUTAGE tag first.
-  `run.log` showed the identical signature this doc already diagnosed at 10:17Z the day before:
-  `transfermarkt_teams_fetch` cycling through leagues, each one exhausting all 10 retry-with-backoff attempts against
-  `GET /api/v1/competitions/standings` (HTTP 502 every time), ~10 min/league, **zero rows written and zero leagues
-  captured across 1h45m** (23:33Z→01:16Z). Direct-probed the endpoint myself with the adapter's real params
-  (`id=GB1&season=2025`, not the malformed query I tried first which returned a fast 422 from RapidAPI's gateway itself)
-  — still **HTTP 502, ~52s latency**, confirming the outage is continuous and now 15h+ old (started 2026-08-07T10:17Z).
-  Killed `tm-backfill-20260807-233040` (`gcloud compute instances delete`, confirmed via heartbeat-blob freshness +
-  run.log zero-progress — same justified-stale basis as the original 2h17m kill this doc already recorded), matching
-  this doc's own standing guidance rather than letting it burn further GCE billing against a call that cannot succeed.
-  Did **not** relaunch. `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2 stays unchecked, annotated with this
-  citation — real completion requires the vendor endpoint to recover first. **Lesson for future dispatches**: any
-  Transfermarkt PLAYER_VALUES/TEAM launcher todo should grep this doc (or its `BLOCKED-UPSTREAM-OUTAGE` tag) for a live
-  outage before launching, not just check the launcher's own singleton lock — the singleton lock only prevents a
-  _second_ concurrent VM, it doesn't stop the _first_ one from launching blind into a known-dead endpoint.
-- **2026-08-08T00:16Z-02:46Z — long tick: (1) FIXTURE_STATS confirmed chunk 12/26 @ `2023-03-05`, (2) odds smallchunk2
-  found DELETED with no explanation, root-caused as an external forced-kill (not self-delete-on-exit, not OOM, not
-  preemption), real progress preserved through chunk 25/451, and RELAUNCHED as `smallchunk3`.** FIXTURE_STATS:
-  `PROGRESS.json` read via direct HTTPS GET (see below) shows `last_completed_date=2023-03-05`, `run.log`'s own
-  `PROGRESS: chunk=11/26 range=2022-11-23→2023-02-20 time=2026-08-08T02:00:13Z` +
-  `--- Chunk 12/26: 2023-02-21 → 2023-05-21 ---` confirms **chunk 12/26**, actively processing `date=2023-03-06` with
-  real API calls succeeding — healthy, no action needed. **Tooling note (not a durable lesson, just this tick's
-  noise)**: `gcloud storage cat`/`cp` intermittently failed for over an hour with THREE different error types in
-  sequence (404, network error, 401) on files that `gcloud storage ls -L` proved existed and were being freshly written
-  (`Update Time` matched real recent activity) — worked around via a direct HTTPS GET
-  (`curl -H "Authorization: Bearer $(gcloud auth print-access-token ...)" "https://storage.googleapis.com/storage/v1/b/<bucket>/o/<url-encoded-path>?alt=media"`,
-  optionally with a `Range:` header for large files), which worked reliably throughout. Resolved on its own by ~02:44Z
-  (plain `gcloud storage cat` worked normally again for the relaunch verification below). <br><br>**odds smallchunk2
-  deletion**: `gcloud compute operations list` showed `delete` ops at `00:55:20Z` and `00:56:15Z`,
-  principal=`1060025368044-compute@developer.gserviceaccount.com` (the shared automation SA — not attributable to a
-  specific human or session from this alone). `run.log`'s GCS object `Update Time` metadata (`00:37:08Z`) confirms the
-  file genuinely stopped growing ~18 min before the delete, mid-chunk-26 (`league=EPL, 2020-10-09→2020-10-13`), ending
-  on an ordinary `RESOURCE_SAMPLE` line — **no terminal `exit_code=` line, no `Traceback`, no `CHUNK_FAILED`, no
-  completion marker**, which per `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`'s "Self-deleting VM/job"
-  rule (a graceful self-delete-on-exit writes the terminal exit_code to `run.log` _before_ destroying itself) means this
-  does **not** match the VM's own normal self-delete-on-completion-or-crash behavior — it looks like an external forced
-  deletion. No entry anywhere in this doc from another worker/slot claims responsibility (checked full-doc grep for
-  "smallchunk2"). **Not proof of completion either way** (rule 4a) — real confirmed progress stops at chunk 25/451
-  (`2020-10-08`), 426 chunks still remaining, nowhere near done. **Recovery**: `odds-api-concurrency-guard.sh` confirmed
-  0 running odds VMs (cap=1, would permit a relaunch), so relaunched immediately with the identical params
-  (`START_DATE=2020-06-06 END_DATE=2026-08-07 CHUNK_SIZE=5`, tarballs verified fresh incl.
-  `market-tick-data-service@0e40bc53b168`) as **`mtds-backfill-odds-smallchunk3-20260808`** — guard passed
-  (`0 running + 1 planned = 1 <= cap 1`), VM created RUNNING, verified booted and correctly skip-fasting through
-  already-covered dates (`chunk 1/451`, ~7s/league) confirming zero data loss and correct resume behavior. Using
-  `smallchunk3`'s `run.log` as ground truth going forward (same `PROGRESS.json`-may-lag caveat applies until proven
-  otherwise on this new instance). **Open question, not investigated further**: who/what actually issued the delete —
-  worth asking the operator or checking other slots' session logs if this pattern recurs, since an unexplained VM kill
-  mid-run is exactly the kind of thing that should be attributable.
-- **2026-08-08T03:15Z** — FIXTURE_STATS +80 days (`last_completed_date=2023-05-24`, fresh `03:14:21Z`), steady, roughly
-  chunk 13/26 now. `smallchunk3` confirmed healthy via `run.log`: chunk 7/451 (`2020-07-06→2020-07-10`), chunks 1-6 each
-  cleared in a steady ~4.5min (subprocess-bootstrap overhead across ~40-60 rostered leagues dominates even pure
-  skip-fast dates — matches the earlier bootstrap-cost pattern seen on smallchunk2), zero OOMs so far (expected —
-  skip-fast dates need minimal memory). At this pace, ETA to reach chunk 26 (`2020-10-09`, where real new work resumes
-  past smallchunk2's last confirmed progress) is roughly another ~1h20m. Both VMs healthy, no intervention.
-- **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`), steady. odds
-  smallchunk3: chunk 13/451 now (`2020-08-05`), up from chunk 7 — pace holding at ~4.5min/chunk, zero OOMs. ~13 chunks
-  (~58 min) remaining to reach chunk 26. Both healthy, no intervention.
-- **2026-08-08T04:10Z** — FIXTURE_STATS +30 days (`last_completed_date=2023-09-03`, fresh `04:09:26Z`), steady. odds
-  smallchunk3: chunk 17/451 (`2020-08-25`), zero OOMs still. **Forward-looking note**: chunk 18
-  (`2020-08-30→2020-09-03`) is next — the same season-opener week that took smallchunk2 3h38m with a 55% per-league OOM
-  rate. Since smallchunk2 already durably captured ~14/30 of that window's leagues before dying (manifest writes survive
-  VM death regardless of which VM wrote them), `smallchunk3` should skip-fast through those and only need real
-  re-fetches for the ~16 leagues smallchunk2 left `attempted_failed` (EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
-  SUPER_LIG, GREEK_SUPER_LEAGUE, SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, ALLSVENSKAN, and others per the
-  earlier per-league tally) — expect SOME OOMs to resume there, but a materially shorter pass than the original ordeal.
-  Not alarming if it happens; logging the expectation now so it reads as anticipated, not a new incident.
-- **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`), steady. odds
-  smallchunk3: **now in chunk 18** (`2020-08-30→2020-09-03`, the known season-opener week), 4 leagues attempted so far
-  (EPL, LA_LIGA, BUNDESLIGA, SERIE_A), **zero OOMs** — confirms the skip-fast-for-already-captured-leagues hypothesis
-  from last tick, materially better than smallchunk2's original 55% OOM rate on this same chunk. Watching for it to
-  clear; not alarming if OOMs do appear on the previously-`attempted_failed` leagues later in this chunk.
-- **2026-08-08T05:05Z** — FIXTURE_STATS +49 days (`last_completed_date=2023-12-08`, fresh `05:04:33Z`), steady. odds
-  smallchunk3: still in chunk 18, now **10 distinct leagues attempted, still zero OOMs** (~46 min into this chunk) — the
-  skip-fast-plus-partial-real-fetch pattern is holding cleanly, just at the usual ~4.5min/league bootstrap-bound pace
-  rather than a faster-than-normal clip; the real win is avoiding the wasted OOM-restart cycles entirely. Both healthy,
-  no intervention.
-- **2026-08-08T05:33Z — MAJOR (recurring): `smallchunk3` also died, second occurrence of the identical
-  silent-hang-then-watchdog-kill pattern. New issue doc filed.** `smallchunk3` was gone from
-  `gcloud compute instances list` entirely — not OOM (last RSS=8.6GiB, well below the ~28-31GiB OOM range), not the VM's
-  own graceful self-delete (no terminal `exit_code=` line). `run.log` went silent at `05:05:17Z` (mid-chunk-18,
-  `SCOTTISH_PREMIERSHIP` real-fetch), **the heartbeat blob itself also stopped updating** (`05:06:23Z`, confirmed via
-  `gcloud storage ls -L`) — ruling out a watchdog false-positive against a still-alive VM (the documented 2026-07-18
-  API-Football precedent) and pointing instead to a genuine ~20-minute hang that `vm_zombie_watchdog.py` correctly
-  caught and killed (`delete` op at `05:26:25Z`). This is the SAME signature as `smallchunk2`'s death earlier this
-  session (~19 min silent gap there too). Filed as a proper new issue since it's now a confirmed-recurring pattern, not
-  investigated to root cause yet (would need to catch a live hang in progress via `py-spy`/`strace`, not post-mortem):
-  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`. No data loss — chunk 18's progress through
-  `SCOTTISH_PREMIERSHIP` (10 leagues) is durable. Relaunched as **`mtds-backfill-odds-smallchunk4-20260808`** (guard
-  passed, RUNNING, tarballs fresh); not yet verified booted this tick (checked too soon after launch — startup script
-  was still extracting tarballs). FIXTURE_STATS unaffected, continuing healthy.
-- **2026-08-08T05:57Z — smallchunk4 confirmed booted + healthy.** Chunk 4/451 (`2020-06-21`), zero OOMs, correctly
-  skip-fasting through already-covered ground same as prior relaunches — no third occurrence yet (it's still well before
-  chunk 18, where both prior deaths' real-fetch load was heaviest). FIXTURE_STATS jumped **98 days**
-  (`last_completed_date=2024-03-15`, fresh `05:55:28Z`) — steadily accelerating toward chunk 26/26. Both healthy, no
-  intervention.
-- **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`), steady. odds
-  smallchunk4: chunk 10/451 now (`2020-07-21`), up from chunk 4, ~5min/chunk pace, zero OOMs — still no third
-  occurrence, 8 chunks remaining before reaching chunk 18's known danger zone. Both healthy, no intervention.
-- **2026-08-08T06:52Z** — FIXTURE_STATS +30 days (`last_completed_date=2024-05-18`, fresh `06:50:26Z`), steady. odds
-  smallchunk4: chunk 15/451 now (`2020-08-15`), zero OOMs, ~5min/chunk pace holding — 3 chunks remaining before
-  chunk 18. Both healthy, no intervention.
-- **2026-08-08T07:22Z — smallchunk4 just entered chunk 18, the critical watch-point.** FIXTURE_STATS +69 days
-  (`last_completed_date=2024-07-26`, fresh `07:21:37Z`), accelerating well. odds smallchunk4: chunk 17 cleared
-  (`07:19:09Z`), now in **chunk 18** (`2020-08-30→2020-09-03`), 1 league attempted so far (`EPL`), zero OOMs total
-  across the entire run. This is exactly where `smallchunk3` died last time — watching closely next tick.
-- **2026-08-08T07:39Z — smallchunk4 SURVIVED the critical window, still alive and progressing through chunk 18.** 4
-  leagues attempted so far (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), zero OOMs total, actively logging as recently as ~90s
-  ago — no third occurrence. Useful negative data point: this specific chunk can clear cleanly, so the hang isn't
-  deterministically tied to chunk 18's content alone. FIXTURE_STATS +14 days (`last_completed_date=2024-08-09`, fresh
-  `07:38:10Z`), still healthy. Continuing to watch until smallchunk4 is clearly into chunk 19+.
-- **2026-08-08T08:13Z** — FIXTURE_STATS +35 days (`last_completed_date=2024-09-13`, fresh `08:11:18Z`), steady. odds
-  smallchunk4: still chunk 18/451, now 2 OOMs total (up from 0) — normal self-recovery pattern (distinct leagues,
-  correctly advancing), not the silent-hang signature (no total-silence gap observed). Both healthy, no intervention.
-  **Also this tick**: dug into whether the AF entity chain (FIXTURE_STATS→FIXTURE_LINEUPS→INJURIES) could be
-  parallelized per an operator ask — confirmed it cannot (real, previously-hit account-wide API-Football daily quota,
-  launcher refuses a 2nd concurrent AF VM by design) — but confirmed via live AO backlog that 3 workers (slots 5, 7, 12)
-  are already actively dispatched on `sports_taxonomy_p1`'s remaining P0 todos in parallel with this campaign, so
-  parallelism is already maximized where it's genuinely available. No action needed on this doc from that finding.
-- **2026-08-08T08:40Z — THIRD occurrence of odds smallchunk deletion, pattern now definitively confirmed.**
-  `mtds-backfill-odds-smallchunk4-20260808` was gone from `gcloud compute instances list` entirely. Confirmed via
-  `gcloud compute operations list`: `delete` op at `08:27:34Z`. `run.log` last real line `08:11:46Z` (mid-chunk-18,
-  `AUSTRIAN_BUNDESLIGA`, RSS=24.4GiB — a third, very different RSS value, ruling out a memory-threshold trigger),
-  heartbeat blob last update `08:11:31Z` — ~16 min silent gap, consistent with the prior two (~19min, ~20-21min). Same
-  signature as before: no exit_code, no Traceback, no CHUNK_FAILED — a real hang, correctly caught by the watchdog.
-  Updated `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` in full (timeline table, bumped P2→P1,
-  closed the "if a third occurrence" todo, opened a new one flagging the actual blocker for live diagnosis: this
-  session's `gcloud compute ssh` via IAP is unauthorized, so catching a live hang with `py-spy`/`strace` isn't currently
-  possible from here — needs a session/operator with working SSH access). No data loss — durable progress through chunk
-  17 + partial chunk 18. Relaunched as **`mtds-backfill-odds-smallchunk5-20260808`** (guard passed, RUNNING).
-  FIXTURE_STATS unaffected, continuing healthy.
-- **2026-08-08T09:13Z** — FIXTURE_STATS +86 days (`last_completed_date=2024-12-08`, fresh `09:12:35Z`), accelerating
-  well. odds smallchunk5: chunk 7/451 (`2020-07-06`), zero OOMs, healthy skip-fast pace — still well before chunk 18's
-  danger zone. Both healthy, no intervention.
-- **2026-08-08T09:40Z** — FIXTURE_STATS +71 days (`last_completed_date=2025-02-17`, fresh `09:39:39Z`), getting close to
-  convergence. odds smallchunk5: chunk 12/451 (`2020-07-31`), zero OOMs, 6 chunks remaining before chunk 18. Both
-  healthy, no intervention.
-- **2026-08-08T10:07Z** — FIXTURE_STATS +49 days (`last_completed_date=2025-04-07`, fresh `10:06:41Z`). odds
-  smallchunk5: chunk 17/451 (`2020-08-25`), zero OOMs — chunk 18 (2 of the 3 prior hang occurrences happened there)
-  starts next. Watching closely next tick.
-- **2026-08-08T10:29Z — smallchunk5 SURVIVED entering chunk 18, no 4th occurrence.** FIXTURE_STATS +34 days
-  (`last_completed_date=2025-05-11`, fresh `10:28:32Z`), close to convergence. odds smallchunk5: 4 leagues attempted in
-  chunk 18 (`EPL, LA_LIGA, BUNDESLIGA, SERIE_A`), 3 OOMs total (up from 0) with normal self-recovery, actively logging
-  as recently as 25s ago. Both healthy, no intervention. Continuing to watch until clearly past chunk 18.
-- **2026-08-08T10:51Z** — FIXTURE_STATS +70 days (`last_completed_date=2025-07-20`, fresh `10:50:24Z`), very close to
-  its 2026-08-07 target end now. odds smallchunk5: still chunk 18, 11 distinct leagues attempted (zero repeats), 8 OOMs
-  total (up from 3) with normal self-recovery, actively logging as recently as ~17s ago — no 4th occurrence. Both
-  healthy, no intervention.
-- **2026-08-08T11:13Z — operator invoked `/autonomous`, "finish everything," and left.** Continuing this loop under the
-  autonomous completion contract (`cursor-configs/AUTONOMOUS_AGENT_RULES.md`) — no change to method, just no further
-  per-tick user check-ins expected. FIXTURE_STATS +26 days (`last_completed_date=2025-08-15`, fresh `11:12:09Z`) — pace
-  has accelerated sharply the last several ticks (enrichment-only mode, mostly-covered dates), likely converging within
-  a few more ticks. odds smallchunk5: still chunk 18, 16 OOMs total (up from 8) but actively logging as recently as ~15s
-  ago — genuinely alive, no hang signature. Both healthy, no intervention. Per rule 2 of the autonomous contract, also
-  picking up the previously-parked cross-vendor honest-absence/denominator-hardening generalization ask as a scoped
-  audit + documented proposal (not a unilateral architecture change) rather than leaving it `BLOCKED-OPERATOR` — will
-  work this in as a parallel thread once the current milestone watch eases.
-- **2026-08-08T~11:35Z — CLOSED: cross-vendor denominator-hardening ask.** Background audit (footystats, open_meteo,
-  soccer_football_info, transfermarkt, understat — the 5 vendors the operator's original ask named, distinct from
-  api_football/odds_api which have their own dedicated docs, and instruments_service/mdps_odds_horizon_bucket which are
-  internal not vendors) found the generalization **already holds workspace-wide**: a fresh live census of all 9 sports
-  manifest sources shows **0% blank-`error_reason` `empty_confirmed` rows everywhere**, not just the 5 — a direct
-  downstream effect of the SFI/weather retype fixes landed earlier this session plus the other 3 vendors never having
-  had the blank-reason problem. Per-vendor dominant reason codes: footystats `EXPECTED_NO_PROVIDER_COVERAGE` 70.8%,
-  open_meteo 87.4%, SFI 85.7%, transfermarkt 92.1% (matches the original PLAYER_VALUES finding almost exactly),
-  understat 97.9%. Checked for the SFI/weather-class `expected_unattempted` structural bug in all 5: only 3 residuals
-  exist (open_meteo 384, SFI 350, understat 35), all dated `2026-08-05` through today — the already-diagnosed
-  self-resolving in-progress-cron-shard pattern, not a new backlog. One candidate that looked structural — **footystats'
-  891 `expected_unattempted` rows for CHINA_SUPER_LEAGUE + RUSSIA_PREMIER_LEAGUE** — resolved as honest, expected churn:
-  the 2026-08-07 out-of-scope purge (`footystats_purge_out_of_scope_leagues_2026_08_07.py`) removed these leagues from
-  subscription scope, and the full-history footystats backfill VM (`fs-backfill-20260807-100731`) is correctly
-  re-sweeping the entire league universe, writing fresh honestly-typed `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`
-  rows as it passes over these 2 now-descoped leagues — same as every other non-subscribed league. **Not a bug, no
-  action needed** — but noting here so a future tick doesn't mistake this for a live regression and attempt to re-purge
-  rows that will just regenerate on the next full sweep. **No retype script run, no manifest purge performed** — nothing
-  was found wrong to fix. Shipped the one genuine deliverable: two small codex/skill-doc additions codifying the
-  "blank-reason-is-a-code-smell" principle for future vendors (`/codex/02-data/honest-absence-downstream-handling.md`
-  Reason Taxonomy § principle 3, `cursor-configs/skills/data-pipeline-reconciliation/reference-sports.md` per-vendor
-  audit step 6) — pushed `304041840e`. This closes the last standing item from the operator's original big-picture asks
-  for this session.
-- **2026-08-08T11:31Z** — FIXTURE_STATS +14 days (`last_completed_date=2025-08-29`, fresh `11:27:41Z`) — smaller jump
-  this tick but still steady. odds smallchunk5: still chunk 18 (~70 min this pass now), 20 OOMs total (up from 16),
-  actively logging as recently as ~2 min ago — no hang signature, continuing normal self-recovery. Both healthy, no
-  intervention.
-- **2026-08-08T11:53Z — smallchunk5 cleared chunk 18.** Chunk 18 took `10:20:04Z→11:51:19Z` (1h31m), 24 total OOMs this
-  pass, zero hangs — now on **chunk 19/451** (`2020-09-04`), moving fast with skip-fast dates. FIXTURE_STATS +24 days
-  (`last_completed_date=2025-09-22`, fresh `11:52:30Z`), steady. Both healthy, no intervention.
-- **2026-08-08T12:15Z** — FIXTURE_STATS +25 days (`last_completed_date=2025-10-17`, fresh `12:15:18Z`), steady. odds
-  smallchunk5: chunk 20/451 (`2020-09-09`), zero new OOMs since clearing chunk 18 (still 24 total). Both healthy, no
-  intervention.
-- **2026-08-08T12:37Z** — FIXTURE_STATS +18 days (`last_completed_date=2025-11-04`, fresh `12:37:03Z`), steady. odds
-  smallchunk5: chunk 22/451 (`2020-09-19`), zero new OOMs (still 24 total). Both healthy, no intervention.
-- **2026-08-08T12:59Z** — FIXTURE_STATS +26 days (`last_completed_date=2025-11-30`, fresh `12:58:49Z`), steady. odds
-  smallchunk5: chunk 24/451 (`2020-09-29`), zero new OOMs (still 24 total). Both healthy, no intervention.
-- **2026-08-08T13:21Z — FIXTURE_STATS crossed into 2026.** +34 days (`last_completed_date=2026-01-03`, fresh
-  `13:20:37Z`) — very close to its 2026-08-07 target end now, likely just 1-2 chunks remaining. Watching very closely
-  next tick. odds smallchunk5: chunk 25/451 (`2020-10-04`), 1 new OOM (25 total). Both healthy, no intervention.
-- **2026-08-08T13:45Z — FIXTURE_STATS confirmed chunk 23/26, entering 24/26 (3 chunks remain, not 1-2 as estimated).**
-  Verified via `run.log`'s own chunk markers: chunk 23 (`2025-11-07→2026-02-04`) done, now in chunk 24
-  (`2026-02-05→2026-05-05`). `last_completed_date=2026-02-26`, fresh `13:37:06Z`. **odds smallchunk5 died — FOURTH
-  occurrence**, this time at chunk 26 (`LA_LIGA`, RSS=13.5GiB), same ~17min silent-gap signature, no exit_code. This was
-  smallchunk5's longest life yet (~5h27m) and furthest progress (cleared chunk 18 fully, then 8 more chunks to 26) —
-  genuinely useful evidence downgrading the "chunk 18 is special" hypothesis toward a time-since-boot/cumulative-load
-  trigger instead. Reconsidered pause-vs-relaunch seriously at 4 occurrences; decided to keep relaunching (empirically
-  working — durable net progress every time, doesn't block anything). Relaunched as
-  `mtds-backfill-odds-smallchunk6-20260808` (guard passed, confirmed RUNNING). Full detail + updated Timeline table:
-  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`179166cf88` (also resolved a git stash conflict
-  with a concurrent na-eligibility-audit entry on that doc — both pieces of content preserved).
-- **2026-08-08T14:02Z** — FIXTURE_STATS still chunk 24/26 (`2026-02-05→2026-05-05`), `last_completed_date=2026-04-09`
-  fresh — **2 chunks remain (25, 26)**. odds smallchunk6: chunk 4/451 (`2020-06-21`), zero OOMs, healthy skip-fast pace.
-  Both healthy, no intervention.
-- **2026-08-08T14:19Z — FIXTURE_STATS entered chunk 25/26, the LAST chunk before it.** Chunk 24 completed `14:12:30Z`,
-  now in chunk 25 (`2026-05-06→2026-08-03`) — only chunk 26 remains after this. odds smallchunk6: chunk 8/451
-  (`2020-07-11`), zero OOMs, healthy. Both healthy, no intervention. Watching very closely next tick for FIXTURE_STATS's
-  genuine convergence.
-- **2026-08-08T14:36Z** — FIXTURE_STATS still in chunk 25/26, but very close to its end now
-  (`last_completed_date=2026-07-17`, fresh `14:34:51Z`, vs chunk boundary `2026-08-03`) — likely converges within the
-  next tick or two. odds smallchunk6: chunk 11/451 (`2020-07-26`), zero OOMs, healthy. Both healthy, no intervention.
-  (Note: FIXTURE_STATS's `run.log` returned a transient 404 this tick before a retry succeeded — PROGRESS.json stayed
-  reliable throughout, consistent with the earlier-documented GCS flakiness pattern, not a real signal.)
+- **2026-08-07T10:2XZ→2026-08-08T14:54Z (compacted 2026-08-09, was 570 lines of granular per-tick play-by-play — see git
+  history at this doc's own path for the full detail if ever needed).** Summary of everything resolved in this window:
+  - **weather (open_meteo)**: root-caused + fixed 16,241 `ClientResponseError` rows (spurious `raise` in
+    `OpenMeteoAdapter.get_weather_match_window`'s previous-runs fallback, `instruments-service@1fafbe23`). Separately
+    root-caused its 205,517 `expected_unattempted` backlog as structurally unreachable (seeded historically by a
+    broader-scope run than the current Prediction-tier writer covers) and resolved via
+    `scripts/type_weather_eu_no_provider_coverage_2026_06_27.py --apply` (205,302 rows retyped to
+    `empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE)`) — **converged**, verified via re-census post-consolidator-merge.
+  - **SFI (soccer_football_info)**: identical structural `expected_unattempted` pattern (205,363 rows), same remediation
+    script, same verified convergence.
+  - **footystats**: 50-league backfill verified cleanly done (0 `attempted_failed`, 0 `expected_unattempted`).
+  - **understat**: 25-row residual closed as a self-resolving live-cron artifact (not a bug).
+  - **transfermarkt**: `BLOCKED-UPSTREAM-OUTAGE` — confirmed HTTP 502 on `competitions/standings` twice (direct probe),
+    outage ongoing since 2026-08-07T10:17Z; a second blind-launched retry VM was found and killed for burning GCE
+    against the same dead endpoint. Still open, gated on vendor recovery.
+  - **odds_api**: root-caused + fixed the `SOURCE_RETURNED_ZERO` misclassification (missing per-bookmaker coverage gate
+    in the v1 sentinel, `market-tick-data-service@70f131667`). The odds backfill VM chain
+    (`mtds-backfill-odds-1`→`401-retry`→`smallchunk`→`smallchunk2`→`smallchunk3`→`smallchunk4`→`smallchunk5`→`smallchunk6`)
+    went through this window's early OOM-retry-storm findings (self-recovering, not a bug — chunk 18's 2020-08-30→09-03
+    season-opener week is unusually real-fetch-heavy across every league worldwide simultaneously) and the FIRST FOUR
+    confirmed silent-hang-then-watchdog-kill occurrences (smallchunk2/3/4/5, each ~16-21min total silence then a correct
+    watchdog kill, no data loss — durable per-VM manifest shards survive regardless of which VM wrote them). Full
+    timeline + diagnostic detail lives in the dedicated doc:
+    `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now tracking 6 occurrences as of this doc's
+    latest entries below).
+  - **Cross-vendor denominator-hardening audit** (operator ask, footystats/open_meteo/SFI/transfermarkt/understat):
+    closed — a fresh census confirmed 0% blank-`error_reason` `empty_confirmed` rows workspace-wide already, only 3
+    small self-resolving cron-artifact residuals found, nothing to fix. Two codex/skill-doc additions shipped codifying
+    the "blank-reason-is-a-code-smell" principle.
+  - **FIXTURE_STATS**: converged its own chunk 26/26 sweep (`af-backfill-20260807-161736`, clean exit_code=0), re-census
+    confirmed genuine (24,462→116 needed shards, the residual being an honest-absence floor). Same census confirmed
+    **PLAYER_STATS fully resolved** (needed=0). This triggered the AF entity chain's next stage: FIXTURE_LINEUPS
+    launched immediately (line below), then INJURIES queued behind it.
 - **2026-08-08T14:54Z — 🎉 MAJOR MILESTONE: FIXTURE_STATS GENUINELY CONVERGED.** `af-backfill-20260807-161736` completed
   all 26 chunks: `PROGRESS: chunk=26/26 range=2026-08-04→2026-08-07 time=2026-08-08T14:40:07Z`,
   `instruments-backfill loop complete`, `exit_code=0`, clean graceful self-delete via `VM_SHUTDOWN_ON_COMPLETION`. **Per
@@ -946,11 +444,410 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   non-historically-dangerous chunk). Relaunched as **`mtds-backfill-odds-smallchunk10-20260809`** (timestamp-suffixed
   this time, per the naming lesson from the last incident). Full detail:
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
-- **07:54Z — smallchunk10 launch confirmed genuine** (retried once the unrelated concurrent session's dirty
-  `deployment-service` file resolved on its own) — chunk 1/451, correct 5-day chunking, skip-fasting cleanly, real boot
-  banner. FIXTURE_LINEUPS needed **43,518 → 41,381** (-2,137, fast real progress), heartbeat live. Both healthy.
-- **08:24Z** — smallchunk10 chunk 7/451, zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **41,381 → 39,749** (-1,632).
-  Both healthy, no action. Did another compaction pass (969→951 lines) — this doc keeps needing one ~every 2h; if that
-  cadence continues, worth spinning a continuation doc next time rather than compacting again.
-- **08:54Z** — smallchunk10 chunk 13/451, still zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **39,749 → 38,691**
-  (-1,058). Both healthy, no action.
+- **07:54Z-10:21Z (compacted).** smallchunk10 launch confirmed genuine, climbed cleanly chunk 1→17/451 with **zero
+  OOMs** (cleanest run yet) before the streak ended at chunk 18 as expected (21 `CHUNK_FAILED` by 10:21Z, in-range).
+  FIXTURE_LINEUPS dropped steadily across 6 re-census points, 43,518→34,003 (rate held/accelerated,
+  ~1,000-2,500/interval), heartbeat live throughout both fleets. No incidents this stretch.
+- **10:49Z** — smallchunk10 still chunk 18, 21 `CHUNK_FAILED` (in-range), heartbeat live. FIXTURE_LINEUPS needed
+  **34,003 → 32,547** (-1,456). Both healthy. Did a compaction pass (962→952 lines).
+- **11:04Z** — smallchunk10 chunk 18 finally cleared (26 total `CHUNK_FAILED` before clearing) and moved on to chunk
+  19/451, real forward work (`Odds API batch complete: date=2020-09-07`), heartbeat ~1.5min old, RSS ~1.08GiB/7.7% —
+  healthy, no OOM signature on the new chunk. Full detail:
+  `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
+- **13:08Z — CONFIRMED 6th silent-hang occurrence: `smallchunk10` killed by the watchdog at chunk 26.** All 3 signals
+  (run.log, heartbeat blob, `WATCHDOG_TRACE.log`) went silent together ~12:50Z; VM deleted `13:07:57Z` (~18min gap, by
+  the standard `1060025368044-compute@...` account — matches the watchdog's own established pattern exactly, clean
+  multi-signal evidence unlike the smallchunk9 incident). Relaunched as `mtds-backfill-odds-smallchunk11-20260809`
+  (timestamp-suffixed). FIXTURE_LINEUPS unaffected, healthy, far advanced. Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
+- **14:27Z (slot 4, data_engineering, odds_api-doc dispatch) — `smallchunk11` (the 13:08Z relaunch) is ALSO dead, but
+  from a genuinely NEW failure mode: SETUP FAILURE, not OOM/silent-hang. Currently 0 odds_api backfill VMs running.**
+  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk11-20260809/` shows
+  `EXIT_STATUS=1`/`SETUP_EXIT_STATUS=1` at `14:15:5{0,2}Z`, no `run.log` ever created — the pipeline itself never
+  started. `vm-setup.log` (2497 bytes, complete) shows code deploy succeeded for all 4 repos
+  (uac`82505ed7`/utl`262a8531`/deployment-service`1e85ce3b`/mtds`15864866`) then fails within 1s at
+  `uv pip install --no-sources -e .../uac -e .../utl -e .../mtds` — `SETUP FAILED rc=1` with **no pip stderr captured**
+  despite the startup template piping everything through `tee`; could not determine whether pip genuinely fast-failed
+  (e.g. a lockfile/version conflict from the freshly-deployed tarball SHAs above) or the self-delete raced the tee
+  buffer flush. This is a DIFFERENT bug class from the watchdog/OOM pattern this doc has tracked all along — worth its
+  own follow-up if it recurs (the launcher's setup-failure path doesn't reliably preserve the actual error). Did not
+  relaunch myself (dispatched via the odds_api-scattered-gaps doc, whose own standing instruction there is "do not
+  launch a VM from this todo" — deferring to whoever continues this tracker). Full detail + the odds_api-doc side of
+  this entry: `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **Net: the campaign is
+  currently stalled at 0 running VMs** — next continuation of this doc should check for a live VM first and, if still 0,
+  do a fresh guard-respecting relaunch (`odds-api-concurrency-guard.sh` cap=1 permits it) and watch the first few
+  minutes closely to confirm setup actually completes this time before walking away.
+- **15:13Z-15:22Z (slot 20) — picked up this doc's own recommended next continuation: 0 VMs still running after 46min,
+  relaunched `mtds-backfill-odds-smallchunk12-20260809`, and likely root-caused `smallchunk11`'s setup failure.** The
+  launch's `lc_verify_tarball_freshness` check caught the `market-tick-data-service` tarball STALE (pinned sha
+  `1a704b0f0892` vs repo HEAD `85872cab756e`) and auto-republished it before creating the VM — `smallchunk11` almost
+  certainly deployed against that stale/mismatched tarball, consistent with its near-instant
+  `uv pip install -e .../mtds` failure with no captured stderr. Watched the new VM through setup (polled 30s×6):
+  `run.log` appeared clean at T+~4min, real pipeline bootstrap + `SKIP date=2020-06-06: all 1 venues fresh` (correct
+  skip-fast resume, no data loss). No setup failure this pass. Full detail:
+  `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
+- **15:20Z — DEEPER ROOT CAUSE found in parallel: a fleet-wide P0 bug, not tarball staleness or odds-specific.**
+  `setup-data-pipeline-vm.sh:940`'s `SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` had fallen below UAC's own real floor
+  (MDPS/MTDS/UTL/deployment-service all now require `unified-api-contracts>=0.106.0`), so `uv pip install` failed ~1s in
+  on **every** VM using the shared Pattern-A bootstrap — confirmed via `uts-prd-sa@...` self-delete audit logs showing
+  dozens of unrelated campaigns (tradfi-bf-*, mdps-backfill-cefi, expected-universe-v2-sports, footystats-fwd) also
+  dying within ~2min of boot in the same window. Fixed: bumped pretend-version to `0.199.0`, shipped
+  `deployment-service@501eb48b8` via quickmerge, verified ancestor-of-origin. **Confirmed working**: the fleet's
+  automated SPOT-relaunch mechanism (`unified-trading-sa@...`) picked up the gap and launched `smallchunk12` unprompted
+  — verified genuinely at chunk 1/452 real work (not just exit_code=0). Odds campaign resumed. Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
+- **17:35Z — Dual-fleet health check + fresh FIXTURE_LINEUPS census (rule 1b, diffing actual values not log activity).**
+  smallchunk12: RUNNING, chunk 18/452 (now GREEK_SUPER_LEAGUE, was BUNDESLIGA last check — real forward progress within
+  the chunk), RSS 10.5GiB (normal range), heartbeat fresh. FIXTURE_LINEUPS (`af-backfill-20260809-020527`): RUNNING,
+  actively fetching current fixtures (~1.2-1.36M fixture ID range), fresh timestamps. Ran
+  `census_fixture_stats_lineups_widening_volume_2026_07_31.py` fresh: **FIXTURE_LINEUPS needed dropped 32,547 → 11,257**
+  (-21,290 shards over ~6.5h since the last reading at 10:49Z — genuine, substantial, continued convergence;
+  FIXTURE_STATS confirmed still resolved at 116). At the observed rate (~3,275 shards/hr), full convergence to near-zero
+  is roughly ~3-4h out, not yet at the "launch INJURIES next" trigger threshold — continuing to monitor rather than
+  launching prematurely. Both VMs healthy, no intervention needed this tick.
+- **18:11Z — 7th silent-hang occurrence (smallchunk12, chunk 18), relaunched; FIXTURE_LINEUPS SPOT-preempted +
+  auto-recovered; census shows accelerating convergence.** `smallchunk12` died with clean 3-signal evidence (~19min
+  silent gap, standard watchdog account, RSS=15.9GiB — not OOM); relaunched as
+  `mtds-backfill-odds-smallchunk13-20260809`, confirmed genuinely booted (chunk 1/451, correct skip-fast). Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 7x). Separately, FIXTURE_LINEUPS's VM was
+  routinely SPOT-preempted (not the hang pattern) and auto-relaunched as `af-backfill-20260809-180612` within ~4 min,
+  confirmed resuming cleanly. Fresh census: FIXTURE_LINEUPS needed **11,257 → 8,332** (-2,925 in ~32min, rate
+  accelerated to ~5,484/hr vs ~3,275/hr last tick) — still not at the near-zero INJURIES-launch trigger, but closing in
+  (~1.5h out at this rate if it holds). Both fleets healthy, no further intervention needed this tick.
+- **18:42Z — Both fleets steady, no incidents.** `smallchunk13`: chunk 7/451 (`2020-07-06→2020-07-10`), zero OOMs,
+  healthy skip-fast pace, fresh timestamps. `af-backfill-20260809-180612`: actively fetching current fixtures
+  (~1.35-1.39M range), fresh. Census: FIXTURE_LINEUPS needed **8,332 → 6,334** (-1,998 in ~31min, ~3,750/hr — steady,
+  89% converged from the 58,523 campaign start). Still not at the near-zero INJURIES trigger (targeting a floor similar
+  to FIXTURE_STATS's own 116-shard honest-absence residual); no intervention needed.
+- **19:14Z — Both fleets healthy, no incidents; FIXTURE_LINEUPS rate has slowed noticeably.** `smallchunk13`: chunk
+  14/451 (`2020-08-10→2020-08-14`), real forward progress (up from chunk 7), zero OOMs, healthy — 4 chunks from chunk
+  18's danger zone, watching next tick. `af-backfill-20260809-180612`: actively writing real manifest shards (13,620
+  total entries this VM instance), now processing more "enrichment-only" per-fixture sweeps (log shows
+  `core entities fresh — enrichment-only mode`) rather than fresh core fetches — plausible explanation for the slowdown
+  below. Census: FIXTURE_LINEUPS needed **6,334 → 5,741** (-593 in ~32min, ~1,112/hr — down sharply from the prior
+  ~3,750/hr; still genuine forward movement per rule 1b, not a stall, just a real rate change likely from the campaign
+  shifting into slower enrichment-only territory). At this new rate, ~5.2h to the near-zero floor (was ~1.7h estimate
+  last tick) — re-estimating each tick rather than trusting the old rate. Not yet at the INJURIES trigger, no
+  intervention needed.
+- **19:44Z — smallchunk13 reached chunk 17/451 (doorstep of the chunk-18 danger zone), zero OOMs across the entire run
+  so far — genuinely clean. FIXTURE_LINEUPS rate sped back up sharply.** Census: FIXTURE_LINEUPS needed **5,741 →
+  3,462** (-2,279 in ~30min, ~4,558/hr — back up from the prior tick's slower ~1,112/hr; the rate has been genuinely
+  variable tick-to-tick, re-estimate fresh each time rather than trusting the last reading). Getting close to the
+  ~100-500 near-zero floor now (~46min out at this rate, though the rate itself may shift again) — not yet triggering
+  the INJURIES launch, watching very closely next tick for genuine convergence. Both fleets healthy, no intervention.
+- **20:08Z — smallchunk13 entered chunk 18 as expected; hit 3 OOM-retries so far (EPL, LA_LIGA, BUNDESLIGA, now on
+  SERIE_A) — this is the established, self-recovering, NOT-actionable pattern, not a repeat of the tracked silent-hang
+  bug** (chunk 17 cleared cleanly first, heartbeat fresh at 20:08:14Z, ~23s old at check time). FIXTURE_LINEUPS hitting
+  API rate limits (`sleeping 59s to next minute`), a normal self-throttle, not a failure. Census: FIXTURE_LINEUPS needed
+  **3,462 → 1,326** (-2,136 in ~24min, ~5,340/hr) — very close to the ~100-500 near-zero floor now but still just above
+  the >1000 hold-off threshold, so NOT launching INJURIES yet. Expect genuine convergence within the next tick or two at
+  this rate. Both fleets healthy, no intervention needed.
+- **20:34Z — 🎉 MAJOR MILESTONE: FIXTURE_LINEUPS shard-level target reached (needed 1,326 → 116, matching
+  FIXTURE_STATS's own 116-shard honest-absence floor exactly). Also: 8th silent-hang occurrence (smallchunk13, chunk 18,
+  relaunched).** Census confirms FIXTURE_LINEUPS has converged to the same genuine honest-absence residual as
+  FIXTURE_STATS — this is the target state, not a fluke (clean match to precedent). **However, the INJURIES launch is
+  NOT triggered yet**: the current FIXTURE_LINEUPS VM (`af-backfill-20260809-180612`) is still actively running its
+  full-range resume sweep (chunk 3/5 as of this check, ~70min estimated remaining) and the AF launcher's singleton lock
+  only permits ONE concurrent VM account-wide (previously confirmed: parallelizing
+  FIXTURE_STATS→FIXTURE_LINEUPS→INJURIES is not possible due to the real account-wide API-Football daily quota) — so
+  INJURIES must wait for this VM to complete and self-delete, matching the exact precedent FIXTURE_STATS itself set
+  (didn't declare done/launch-next until its own VM reached 26/26 chunks and gracefully exited). **Correction to my own
+  earlier-tick trigger criterion**: shard-count alone reaching the floor is necessary but not sufficient — the singleton
+  lock's actual availability (VM completion) is the real gate. Will launch INJURIES the moment
+  `af-backfill-20260809-180612` self-deletes. Separately: `smallchunk13` died with clean 3-signal evidence (~17.6min
+  gap, chunk 18 again — back-to-back with occurrence 7/smallchunk12, now the clear majority death chunk at 4/8),
+  relaunched as `mtds-backfill-odds-smallchunk14-20260809`, confirmed genuinely booted (chunk 1/451, correct skip-fast).
+  Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 8x).
+- **21:33Z — 🎉🎉 MAJOR MILESTONE: FIXTURE_LINEUPS FORMALLY CLOSED OUT (genuinely converged, VM completed cleanly),
+  INJURIES LAUNCHED (final entity in the AF campaign queue).** `af-backfill-20260809-180612` reached
+  `PROGRESS: chunk=5/5 range=2026-05-15→2026-08-08 time=2026-08-09T21:17:46Z`, `instruments-backfill loop complete`,
+  `exit_code=0`, clean graceful self-delete via `VM_SHUTDOWN_ON_COMPLETION` — same completion signature FIXTURE_STATS
+  set as precedent. **Per rule 4a, re-censused live before trusting the clean exit**: FIXTURE_LINEUPS needed **still
+  116** (unchanged from the pre-completion reading, confirming durable, genuine convergence — not a fluke or a
+  regression). This closes out FIXTURE_LINEUPS at the exact same honest-absence floor as FIXTURE_STATS (116 each).
+  **Launched INJURIES immediately** (the AF campaign's final queued entity, singleton lock now free):
+  `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` with
+  `RESUME_ENTITY=INJURIES RESUME_START_DATE=2020-06-06 RESUME_END_DATE=2026-08-09` (same pattern as the earlier
+  FIXTURE_LINEUPS launch) — created `af-backfill-20260809-222924`, confirmed RUNNING via the launcher's own output
+  (tarballs fresh, guard passed); boot-health verification via run.log in progress (background poll, not yet trusted on
+  exit_code alone). Confirmed baseline via `census_all_af_entities_completion_2026_08_03.py` right before launch:
+  INJURIES needed=62,709 (unchanged, matches the last dedicated reading — the biggest remaining chunk of the whole AF
+  campaign). Separately: `smallchunk14` healthy at chunk 9/451, zero incidents this tick. **AF campaign status: 3 of 4
+  full-league entities now converged (FIXTURE_STATS, PLAYER_STATS, FIXTURE_LINEUPS) — only INJURIES (running), STANDINGS
+  (271 needed), and TEAMS (96 needed) remain**, with STANDINGS/TEAMS being small honest-absence-adjacent residuals
+  likely to resolve incidentally as INJURIES sweeps the same date range.
+- **21:46Z — a SECOND, undocumented odds_api VM (`smallchunk10`, reused name) ran concurrently with `smallchunk14` for
+  ~15 min — a real `odds-api-concurrency-guard.sh` cap-violation — but self-resolved (deleting on its own) before any
+  action was needed.** Full detail + evidence in the owning issue doc:
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s 21:46Z Progress Log entry. Short version: `smallchunk10`
+  (`START_DATE=2020-08-29`, heavily overlapping `smallchunk14`'s `START_DATE=2020-06-06`, both `END_DATE=2026-08-08`)
+  appeared `RUNNING` alongside `smallchunk14` with no launch provenance in either doc — most likely an uncoordinated
+  concurrent-slot relaunch. Credit balance checked live and healthy (10,654,194 of 15M remaining), so not urgent; by the
+  time investigation finished `smallchunk10` had already entered `STOPPING` on its own. `smallchunk14` unaffected,
+  healthy at chunk 12/451. No VM launched or killed by this tick. Flagging: if this shape recurs and does NOT
+  self-resolve, escalate to the operator (real vendor-credit double-spend risk).
+- **22:03Z — Both fleets healthy, genuine forward progress confirmed on INJURIES (rule 1b).**
+  `af-backfill-20260809-222924` (INJURIES): real date progress 2020-06-16→2021-01-17 since launch, entity-scoped mode
+  correctly restricting to INJURIES only. `smallchunk14`: chunk 15/451 (`2020-08-15→2020-08-19`), **zero OOMs across the
+  entire run so far**, heartbeat fresh (~1.7min old) — 3 chunks from chunk 18. Census
+  (`census_all_af_entities_completion_2026_08_03.py`): INJURIES needed **62,709 → 60,733** (-1,976 in ~27min, ~4,391/hr)
+  — genuine movement, though at this rate full convergence is ~14h out (this is by far the largest remaining AF entity,
+  expect a long haul, not a quick tick-over- tick drop like FIXTURE_LINEUPS showed). STANDINGS (271) and TEAMS (96)
+  unchanged, as expected (not independently tracked unless they stall). No intervention needed.
+- **22:46Z — Both fleets healthy, INJURIES rate accelerated sharply.** `af-backfill-20260809-222924`: real progress
+  2021-01-17→2021-11-04 since last check, writing genuine injury rows (e.g. 125 for 2021-11-04), new
+  `[[VM_PROGRESS]] last_completed_date=... monotonic=true` marker observed (useful ground-truth signal for future
+  ticks). `smallchunk14`: cleared chunk 17 cleanly, now in chunk 18 with 1 expected OOM-retry (EPL, self-recovering, not
+  actionable) on LA_LIGA, RSS climbing (24.8GiB, approaching but not yet OOM range), heartbeat fresh (~54s old). Census:
+  INJURIES needed **60,733 → 52,494** (-8,239 in ~43min, ~11,497/hr — up sharply from ~4,391/hr last tick; ETA to
+  convergence now ~4.6h at this rate, down from the earlier ~14h estimate). STANDINGS/TEAMS unchanged as expected. No
+  intervention needed.
+- **23:19Z-23:27Z — 9th silent-hang occurrence (smallchunk14, chunk 18 again — now 5/9 occurrences at chunk 18, a clear
+  majority), relaunched; INJURIES steady progress continues.** `smallchunk14` died with clean 3-signal evidence
+  (~17.3min gap, standard watchdog account, RSS=17.3GiB — not OOM), relaunched as
+  `mtds-backfill-odds-smallchunk15-20260810` (new date, timestamp-suffixed), confirmed genuinely booted (chunk 1/452,
+  correct skip-fast). Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 9x). INJURIES
+  (`af-backfill-20260809-222924`): `[[VM_PROGRESS]]` marker confirms real monotonic advance to 2022-06-19 (from
+  2021-11-04 last tick). Census: INJURIES needed **52,494 → 47,294** (-5,200 in ~33min, ~9,455/hr — steady, similar
+  order to last tick; ETA holding around ~5h). Both fleets healthy overall, no further intervention needed.
+- **00:26Z — Both fleets healthy, INJURIES accelerating further.** `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance 2022-06-19→2023-09-04 (over a year of dates in under an hour). `smallchunk15`: chunk 12/452, **zero
+  OOMs across the entire run so far**, fresh (~19s heartbeat lag) — 6 chunks from chunk 18. Census: INJURIES needed
+  **47,294 → 35,732** (-11,562 in ~59min, ~11,764/hr — accelerating further; ETA now ~3h, down from ~5h). Minor
+  non-issue: PLAYER_STATS shows `needed=3` (was 0) — its `expected` denominator grew by exactly 3 as "today" advances
+  and new fixture-days enter scope; not a regression, those 3 shards are brand-new and simply not yet captured.
+  STANDINGS/TEAMS unchanged. No intervention needed.
+- **00:57Z — Both fleets healthy, INJURIES holding accelerated pace.** `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance 2023-09-04→2024-04-04. `smallchunk15`: chunk 17/452, zero OOMs across the entire run so far, fresh
+  (~11s heartbeat lag) — 1 chunk from chunk 18, watching closely next tick. Census: INJURIES needed **35,732 → 29,480**
+  (-6,252 in ~31min, ~12,101/hr — steady, consistent with the recent accelerated pace; ETA ~2.4h). Not yet near the
+  convergence floor (~1000-2000 range) — no "campaign done" planning needed yet. No intervention needed.
+- **01:28Z — 10th silent-hang occurrence (smallchunk15, chunk 18 again — now 6/10, the clear majority), relaunched;
+  caught the STOPPING transition live for the first time this session; discovered + filed a separate manifest
+  consolidator finding.** `smallchunk15` died with clean 3-signal evidence (~15.5min gap, standard watchdog account,
+  RSS=22.8GiB — not OOM); a background poll caught it in `status=STOPPING` at 01:27:33Z before full deletion at
+  01:28:47Z (first live catch this session, previously always found already-gone). Relaunched as
+  `mtds-backfill-odds-smallchunk16-20260810`, confirmed genuinely booted (chunk 1/452, correct skip-fast). Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 10x). **Separately**: two consecutive INJURIES
+  census reads ~50min apart were byte-identical (needed=29,480 both times) despite the VM's own `[[VM_PROGRESS]]` marker
+  confirming real, substantial date advancement in that window — root-caused via Cloud Logging: the sports manifest
+  consolidator for this bucket has been reporting a static `rows_out=17090683` across
+  > =5 genuine merges spanning 1h+ (rows_in and dedup_dropped both climbing in lockstep, netting zero canonical growth),
+  > plus a 15min streak where every consolidator attempt returned `error=locked`. This matches the symptom signature of
+  > the already-RESOLVED `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` incident (that one was
+  > odds_api-specific, root-caused to a freshness-sentinel bug, not a consolidator defect) but for a different entity
+  > (INJURIES) — NOT assumed to be the same root cause without verification. Filed as its own P1 doc:
+  > `sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md`. **Practical implication for this monitoring
+  > loop going forward**: during a stall like this, trust a live VM's own progress marker (`[[VM_PROGRESS]]`/chunk
+  > markers) over a flat census reading — the underlying campaigns are NOT actually stalled, only the aggregate
+  > measurement is currently blind. Both fleets' underlying work is healthy; the census-based "needed" numbers from the
+  > last ~1h+ should be treated as a lower bound on true progress, not a stall signal.
+- **02:39Z — Manifest consolidator stall has RESOLVED; both fleets healthy.** `smallchunk16`: chunk 13/452, zero OOMs
+  across the entire run so far, fresh — 5 chunks from chunk 18. `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance continuing to 2024-11-02. Census confirms the manifest consolidator finding from last tick
+  (`sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md`) has self-resolved: manifest rows grew
+  (16,176,107 → 16,181,741, +5,634) and INJURIES needed dropped **29,480 → 20,490** (-8,990) — both the census and the
+  VM's own progress marker now agree on genuine forward movement (not reporting a precise hourly rate this tick since
+  the stall window makes the elapsed-time denominator ambiguous). No intervention needed on either fleet.
+- **03:12Z — Both fleets healthy, no new hang, real forward progress on both measures.** Same live instances as last
+  tick (`af-backfill-20260809-222924`, `mtds-backfill-odds-smallchunk16-20260810`) — no rotation, still 10x hang
+  occurrences (no 11th). `smallchunk16`: chunk 16/452, zero OOMs/CHUNK_FAILED, fresh (log activity at current wall time)
+  — 2 chunks from chunk 18. INJURIES `[[VM_PROGRESS]]` monotonic advance 2024-11-02 → 2025-05-04 (~6 real months in
+  ~30min). Fresh census confirms genuine progress: INJURIES needed **20,490 → 17,135** (-3,355); other AF entities
+  unchanged at their floors (PLAYER_STATS=3, STANDINGS=271, TEAMS=96); grand total needed 20,860 → 17,505. Note:
+  manifest row total itself read flat (16,181,741, same as last tick) even though INJURIES needed dropped — entity-level
+  resolution apparently isn't purely a function of the aggregate row count, so not treating this as a fresh stall (both
+  the VM's own marker and the entity-specific needed count independently confirm real movement). No intervention needed
+  on either fleet.
+- **03:31Z — INJURIES strong progress; smallchunk16 POSSIBLE 11th hang developing (watching, not yet confirmed).** Same
+  instances as last tick, still 10x confirmed hang occurrences. INJURIES `[[VM_PROGRESS]]` monotonic advance 2025-05-04
+  → 2025-09-20 (~4.5 real months in ~19min, strong pace); census confirms INJURIES needed **17,135 → 13,957** (-3,178);
+  other entities unchanged at floor. Manifest row total still flat at 16,181,741 (3rd consecutive reading at this exact
+  value while INJURIES needed keeps dropping each tick) — now a stable, reproducible pattern across 2 ticks; treating
+  entity-level `needed` (corroborated independently by the VM's own progress marker every tick) as the trustworthy
+  signal, not reopening the filed consolidator issue since actual progress is unambiguous. **Watch item**:
+  `smallchunk16` hit chunk 18 at ~03:25Z with RSS climbing fast (1.7→10.2→16.4→21.5GiB across ~1min), then all
+  `run.log`/`WATCHDOG_TRACE.log` activity stopped at ~03:26:39-49Z; heartbeat blob's last update 03:27:19Z. As of this
+  entry (03:31:15Z, ~4.5min silent) the instance is still `RUNNING` (not yet `STOPPING`) — too early to call an 11th
+  occurrence (prior silences ran 15-21min before deletion) but the profile (chunk 18, fast RSS climb, silence onset)
+  matches the established signature closely. Not relaunching preemptively — will re-check on a shortened watch interval;
+  if it resolves into a full triple-signal silence + delete op, will log as the 11th occurrence and relaunch immediately
+  per the established pattern. If it recovers/resumes cleanly, that would be the first-ever self-recovery from this
+  signature — also worth noting either way.
+- **03:50Z — 11th silent-hang occurrence CONFIRMED for `smallchunk16` (chunk 18, ~19.8min gap, longest yet); relaunched
+  as `smallchunk17`; INJURIES needed 13,957 → 11,001.** The watch item flagged last tick resolved as a confirmed hang,
+  not a self-recovery: `smallchunk16` stayed silent from `03:26:39Z`, was caught live in `STOPPING` at `03:46:52Z` (2nd
+  live catch this session), delete op confirms insert `03:46:30Z` — a ~19.8min gap, the longest confirmed so far though
+  still within the established ~16-24min range, not a new outlier. Chunk 18 is now the dominant death site at 7/11 (vs
+  4/11 at chunk 26); EPL has recurred as the death-league 3 times. Relaunched immediately as
+  `mtds-backfill-odds-smallchunk17-20260810`, guard confirmed `0 running + 1 planned = 1 <= cap 1`, tarballs fresh,
+  instance created and `RUNNING`; boot-health verification (first real run.log line) pending as of this entry — not yet
+  trusting exit_code/creation alone. Full detail + Timeline row + Progress Log entry:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 11x). **Separately**: INJURIES continued
+  strong, unambiguous progress — `[[VM_PROGRESS]]` advanced 2025-09-20 → 2025-12-19 this tick, census confirms needed
+  dropped **13,957 → 11,001** (-2,956); manifest row total has now been flat at 16,181,741 for a 4th consecutive reading
+  while needed keeps declining every tick — a stable, reproducible decoupled-metric pattern (not a stall; both
+  independent signals keep confirming real forward movement). Other AF entities unchanged at their floors.
+- **04:16Z — Both fleets healthy; INJURIES accelerating hard toward convergence (needed 11,001 → 5,406, -5,595 in one
+  tick).** Same live instances (`af-backfill-20260809-222924`, `mtds-backfill-odds-smallchunk17-20260810`) — no
+  rotation, still 11x hang occurrences (no 12th). `smallchunk17`: chunk 5/425, zero OOMs/CHUNK_FAILED, fresh — 13 chunks
+  from chunk 18. INJURIES `[[VM_PROGRESS]]` monotonic advance 2025-12-19 → 2026-05-22 (~5 real months in ~22min, the
+  fastest pace observed yet, now within ~2.5 months of the 2026-08-09 end date). Fresh census confirms the acceleration:
+  INJURIES needed **11,001 → 5,406** (-5,595); other AF entities unchanged at floor (PLAYER_STATS=3, STANDINGS=271,
+  TEAMS=96); grand total needed 11,371 → 5,776 — the campaign is now visibly closing in on whatever INJURIES' own
+  honest-absence floor turns out to be (watching closely over the next few ticks; may not reach exactly 0, similar to
+  the other 3 entities' small non-zero floors). Manifest row total flat at 16,181,741 for a 5th consecutive tick while
+  needed keeps dropping — the decoupled-metric pattern remains stable and not concerning. No intervention needed on
+  either fleet.
+- **04:39Z — MAJOR MILESTONE: INJURIES backfill VM (`af-backfill-20260809-222924`) completed its full date range CLEANLY
+  and self-deleted — needed dropped to 334, near the same order of magnitude as the other 3 entities' floors.**
+  Confirmed via run.log: reached `PROGRESS: chunk=26/26 range=2026-08-04→2026-08-09` (the full 2020-06-06→2026-08-09
+  assigned range), `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`, then
+  `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`. Confirmed via `gcloud compute operations list`: the delete
+  op was issued by `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` (the VM's own service account
+  self-terminating on completion), NOT the `1060025368044-compute@...` watchdog account — this is a genuine clean
+  finish, not a silent-hang kill (the hang-doc's tracked signature is unrelated to this event). Fresh census confirms
+  INJURIES needed **5,406 → 334** (-5,072); all 4 AF entities are now at small residual floors: PLAYER_STATS=3,
+  INJURIES=334, STANDINGS=271, TEAMS=96 — grand total needed only **704** shards (down from tens of thousands at
+  campaign start). **Not yet declaring the AF campaign fully done**: per rule 4a (never trust a single reading), 334
+  needs at least one more stable re-census before treating it as INJURIES' genuine honest-absence floor rather than a
+  residual still being caught up by the manifest consolidator from the VM's final batch of per-VM shard writes (the
+  manifest row total itself is still flat at 16,181,741 for a 6th consecutive tick, though no active INJURIES VM remains
+  to explain further catch-up the way earlier ticks did) — will re-check next tick with no VM running to see if 334
+  holds steady. The AF singleton lock is now free (no AF VM running); with FIXTURE_STATS, FIXTURE_LINEUPS, PLAYER_STATS,
+  STANDINGS, and TEAMS already converged and INJURIES now essentially converged too, there is no further AF entity
+  queued to launch — if 334 confirms stable, the AF side of this dual-fleet campaign is effectively complete, leaving
+  only the odds_api backfill as the sole remaining open campaign. **Odds fleet**: same instance
+  (`mtds-backfill-odds-smallchunk17-20260810`), still 11x hang occurrences (no 12th); chunk 10/425, zero
+  OOMs/CHUNK_FAILED, fresh — 8 chunks from chunk 18 (watch closer next tick as it approaches).
+- **04:58Z — AF CAMPAIGN COMPLETE: INJURIES needed confirmed stable at 334 (byte-identical repeat reading, no active
+  VM), all 4 AF entities converged.** Re-census with no INJURIES VM running reads **identical** to the prior tick:
+  INJURIES needed=334 (unchanged), manifest rows=16,181,741 (unchanged, 7th consecutive flat reading), confirmed no new
+  `af-backfill-*` instance exists anywhere. Per rule 4a (never trust a single reading), this repeat-stable value with
+  zero active writers confirms 334 is INJURIES' genuine honest-absence floor, not consolidator catch-up lag. **All 4 AF
+  entities are now at their converged floors**: PLAYER_STATS=3, INJURIES=334, STANDINGS=271, TEAMS=96 — grand total
+  needed=704 shards, unchanged from last tick. Combined with FIXTURE_STATS/FIXTURE_LINEUPS' earlier confirmed
+  convergence (both at needed=116, matching exactly), **the entire AF full-entity-completion campaign (FIXTURE_STATS →
+  FIXTURE_LINEUPS → PLAYER_STATS → INJURIES → STANDINGS → TEAMS) is now DONE** — no further AF VM launches are needed;
+  the singleton lock is permanently free going forward for this campaign. The standing monitoring loop continues for the
+  odds_api fleet only (the sole remaining open campaign). **Odds fleet**: `smallchunk17` was SPOT-preempted
+  (`compute.instances.preempted`, routine — NOT the tracked hang signature) at 04:44:35Z and auto-relaunched by the
+  fleet's own recovery mechanism (`unified-trading-sa@...`) within ~2min at 04:46:30Z, confirmed genuinely resuming
+  (chunk 2/415, zero OOMs, correctly skip-fasting). Still 11x hang occurrences (no 12th) — this preemption is unrelated
+  to that tracked pattern. No intervention needed.
+- **05:22Z — Odds fleet healthy, no new hang (still 11x); AF sanity-check clean (no new af-backfill instance, as
+  expected now the AF campaign is closed).** `smallchunk17`: chunk 5/415, zero OOMs/CHUNK_FAILED, fresh (~8s log lag) —
+  13 chunks from chunk 18. **Noted for future ticks**: unlike the 4 AF entities, there is no dedicated odds_api-wide
+  census script in this repo tree — the reliable ground-truth completion signal for this fleet is the VM's own chunk
+  total (currently 415, recalculated fresh at each boot as remaining real-work chunks shrink — was 452 several
+  relaunches ago, then 425, now 415) reaching its own final chunk N/N followed by a clean `exit_code=0` +
+  `VM_SHUTDOWN_ON_COMPLETION` self-delete, mirroring exactly how the INJURIES AF-entity VM completed last tick. Watching
+  for that same signature on this fleet as the terminal completion event, alongside the shrinking chunk-total trend as a
+  proxy for how close the campaign is to done. No intervention needed this tick.
+- **05:54Z — Odds fleet healthy, no new hang (still 11x); AF sanity-check clean.** `smallchunk17`: chunk 8/415, zero
+  OOMs/CHUNK_FAILED, RSS=10.2GiB (unremarkable), ~3min log lag (within normal noise, not concerning — established hang
+  signature is 15-21min total silence) — 10 chunks from chunk 18. No new `af-backfill-*` instance exists (AF campaign
+  remains closed as expected). No intervention needed.
+- **06:25Z — 12th silent-hang occurrence CONFIRMED for `smallchunk17` (NEW death site: chunk 8, not 18 or 26);
+  relaunched as `smallchunk18`, VM created + RUNNING, run.log boot-health still pending.** `smallchunk17` went silent
+  `05:51:56Z`-`05:53:55Z`, deleted by the watchdog account at `06:14:41Z` (~20.8min gap, longest yet but still within
+  the established range). Died mid-chunk-8, EPL, RSS=10.2GiB — the FIRST occurrence at a chunk other than 18 or 26 in
+  this campaign's history (updated tally: 18×7, 26×4, 8×1), meaningfully weakening the per-chunk-content correlation
+  hypothesis further. Full detail + Timeline row + Progress Log entry:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 12x). **Relaunch anomaly (resolved)**: the
+  standard launcher invocation did not complete within the harness's 120s foreground window (prior relaunches always
+  completed in ~10-15s) and was moved to a background task — the actual cause, confirmed from the completed task's
+  output, was a stale-tarball republish step (`lc_verify_tarball_freshness: republish complete — re-verifying`,
+  re-uploading `setup-data-pipeline-vm.sh`/`vm-exec-with-gcs-tee.sh`), NOT a hang in the launcher itself.
+  `mtds-backfill-odds-smallchunk18-20260810` confirmed created and `RUNNING` via `gcloud compute instances list`;
+  `run.log` boot-health (first real log line) not yet available as of this entry (still within the normal ~1-2min
+  tarball-extraction boot window) — will confirm genuine progress next tick, not trusting VM-created/RUNNING alone. AF
+  sanity check remains clean (no new `af-backfill-*` instance).
+- **06:44Z — `smallchunk18` boot-health CONFIRMED healthy; the ~5.5min-and-counting run.log delay was just slower
+  tarball extraction, not a genuine problem.** Real log content now present: chunk 3/425, zero OOMs/CHUNK_FAILED,
+  correctly skip-fasting through already-covered dates. Still 12x hang occurrences (no 13th). AF sanity check remains
+  clean (no new `af-backfill-*` instance). No intervention needed.
+- **07:13Z — Odds fleet healthy, no new hang (still 12x); cleared chunk 8 (the new confirmed danger point) cleanly.**
+  `smallchunk18`: chunk 9/425, zero OOMs/CHUNK_FAILED, fresh (~1.3min log lag) — 9 chunks from chunk 18. AF sanity check
+  remains clean (no new `af-backfill-*` instance). No intervention needed.
+- **07:37Z — CORRECTION + better ground-truth tool found: a dedicated odds_api-wide gap census DOES exist**
+  (`market-tick-data-service/scripts/sports/census_odds_api_gap_verify_2026_08_02.py`), contradicting an earlier tick's
+  claim that no such script exists (that was a search-thoroughness miss, not a fact about the codebase) — it was built
+  by the prior `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` investigation (635→590→300 missing days across
+  several rounds of fixes: OOM bug, manifest-consolidator stall, credential/quota block). Ran it fresh: **300 of 2257
+  calendar days since the 2020-06-06 floor still have ZERO manifest row for odds_api** — byte-identical to the
+  2026-08-02 reading, i.e. genuinely ZERO net gap-closure in the ~8 days since, despite this whole campaign's relaunch
+  history. This is NOT a stall: the current run walks sequentially from 2020-06-06 forward and is only at chunk 13/425
+  (~2020-08-09) — the earliest of the 151 real gap-ranges is 2021-06-07, so the campaign hasn't reached a single actual
+  gap day yet; everything so far has been skip-fast through already-covered 2020 ground (1957/2257 days, 87%, are
+  already captured — this was never a from-scratch backfill). The 300-day gap is dominated by 3 named multi-week ranges
+  (2024-11-21→12-31 41d, 2026-02-22→03-28 35d, 2026-06-25→07-15 21d) plus ~148 smaller 3-5 day ranges scattered
+  2021-2026 — full breakdown + root-cause history in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **Going
+  forward, this census (re-run periodically, not every tick — it's cheap, ~4s/one manifest read) is the authoritative
+  completion signal for this campaign, not the chunk-counter proxy** — the chunk counter tells us the VM is alive and
+  progressing but not whether real gap-closing work is happening yet; watch for the 300 to start dropping once the
+  frontier passes ~chunk 70 (≈2021-06). **Odds fleet health this tick**: `smallchunk18` at chunk 13/425, zero
+  OOMs/CHUNK_FAILED, fresh (~1.5min log lag) — 5 chunks from chunk 18 (tightening next wakeup to watch it through the
+  danger zone). Still 12x hang occurrences (no 13th). AF sanity check remains clean.
+- **07:52Z — Odds fleet healthy, no new hang (still 12x); still approaching chunk 18.** `smallchunk18`: chunk 15/425,
+  zero OOMs/CHUNK_FAILED, very fresh (~40s log lag) — 3 chunks from chunk 18, keeping the tightened watch interval until
+  it clears. AF sanity check remains clean (no new `af-backfill-*` instance). Not re-running the odds_api gap census
+  this tick (nothing new to learn — frontier is still deep in already-covered 2020 ground, well before the first real
+  gap at ~chunk 70/2021-06). No intervention needed.
+- **08:06Z — `smallchunk18` gone: a routine SPOT preemption (NOT the tracked 13-occurrence-yet silent-hang bug), but
+  auto-recovery didn't fire within ~11min (longer than the ~2-4min auto-recovery window seen earlier this session for
+  the same preemption class) — relaunching manually as `smallchunk19`.** Confirmed via `gcloud compute operations list`:
+  a `compute.instances.preempted` system event at `07:55:55Z` (aligning almost exactly with the last observed signals —
+  run.log `07:53:50Z`, heartbeat `07:55:31Z`, WATCHDOG_TRACE `07:55:03Z`), NOT a `delete` op from the
+  `1060025368044-compute@...` watchdog account — this is the routine SPOT-preemption pattern (same class as
+  smallchunk16's and FIXTURE_LINEUPS' earlier preemptions), distinct from the hang-doc's tracked silent-hang signature;
+  still 12x confirmed hang occurrences, this is NOT a 13th. Died at chunk 15/425 (well before chunk 18), zero
+  OOMs/CHUNK_FAILED beforehand. Waited ~11min for the fleet's own auto-recovery mechanism (which handled prior
+  preemptions within ~2-4min) — no new instance appeared, so relaunched manually via the standard launcher
+  (`--vm-name mtds-backfill-odds-smallchunk19-20260810`); the launch command backgrounded past the harness's 120s
+  timeout (this time all 4 tarballs were already fresh, unlike occurrence 12's republish-driven delay — cause of the
+  slowness this time unclear). Guard confirmed `0 running + 1 planned = 1 <= cap 1`, `smallchunk19` created and
+  `RUNNING`; `run.log` boot-health still pending as of this entry, not yet trusted on VM-created/RUNNING alone. AF
+  sanity check remains clean.
+- **08:31Z — `smallchunk19` ALSO preempted, within ~2min of creation (before any run.log line was ever written) —
+  relaunched as `smallchunk20`.** Confirmed via `gcloud compute operations list`: insert `08:09:50Z`, a second
+  `compute.instances.preempted` system event at `08:11:45Z` — routine SPOT variance, not the tracked hang (no `delete`
+  op from the watchdog account, and no processing ever started to exhibit that signature anyway). Two preemptions in
+  ~35min is unusual but not itself actionable (no available evidence distinguishes it from ordinary zone-level SPOT
+  capacity variance; not switching to on-demand over 2 data points). No auto-recovery fired again within the ~20min this
+  VM was absent, so relaunched manually via the standard launcher (`--vm-name mtds-backfill-odds-smallchunk20-20260810`)
+  — guard confirmed `0 running + 1 planned = 1 <= cap 1`, all 4 tarballs fresh, created and `RUNNING`. **New todo added
+  this tick**: a proper `- [ ]` AO-dispatchable todo for this fleet's ongoing babysitting-to-completion was missing from
+  this doc's `## Todos` section (the doc has always been `assigned_vm: planning`, but all monitoring work since
+  2026-08-07 has lived only in this Progress Log narrative with no open checkbox for AO's backlog regenerator to pick
+  up) — added, citing the full established playbook (hang-doc, preemption-vs-hang disambiguation, census script,
+  relaunch command) so a fresh AO dispatch can continue this without needing this session's accumulated context. AF
+  sanity check remains clean.
+- **09:05Z — CORRECTION: 3rd preemption confirmed for `smallchunk20` too (not a hang); found another session's VM
+  already covering the gap — did NOT launch a duplicate `smallchunk21`.** Verified via `gcloud compute operations list`:
+  `smallchunk20` also died via `compute.instances.preempted` (`08:38:22Z`, ~5.5min lifespan) — **all 3 of
+  smallchunk18/19/20 were routine preemptions, zero actual silent-hangs this window**, confirmed via the authoritative
+  operations list each time (not inferred from silence alone). A concurrent AO dispatch of the sibling
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` doc's own P1 backfill todo independently observed the same
+  0-VM window and tentatively logged it as "13th/14th hang occurrence" — that inference didn't check operations list and
+  is incorrect per the evidence above; **the hang-doc's occurrence count stays correctly at 12x**, not 13x/14x. My own
+  relaunch attempt (`smallchunk21`) failed outright at launch time (stale `unified-api-contracts` tarball even after
+  auto-republish — transient, the repo's working tree is clean now) and never created an instance. By the time I checked
+  again, a different VM had appeared: `mtds-backfill-odds-gap-20260727-20260806` (`--start 2026-07-27 --end 2026-08-06`,
+  a narrow targeted range covering the scheduler-dormancy gap window, `RESUME_ALLOW_PARALLEL=true`, created `08:54:37Z`)
+  — confirmed genuinely healthy and real-fetching (chunk 1, real `Processed date=2026-07-27` rows, `ManifestWriter`
+  writes), though its RSS was climbing fast (9→28GiB in ~3min, 92.9% mem at last sample — worth watching for an OOM next
+  tick). Did NOT launch a duplicate, respecting the fleet's singleton-VM policy — the sibling doc's own dispatch
+  independently reached the same non-duplication decision. **Discovered this tick**: AO is already actively dispatching
+  the ORIGINAL `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` doc's own P1 backfill todo (task
+  `-3b44a0a4ec31`, multiple dispatches: slot 20, slot 3, slot 26...) — this is a working, proven precedent for exactly
+  the AO-dispatch pattern just set up in this doc's own new todo above; the two todos now track overlapping scope (both
+  "keep the odds fleet alive to completion") and should be treated as the same underlying work, not duplicated effort —
+  the sibling doc already cross-references this doc as "Full live tracker," closing the loop in one direction.
+- **2026-08-10T~10:06Z (slot 25, `sports_all_vendor_honest_coverage_convergence-9e96b5aa58cd`)**: Odds babysit dispatch
+  — fleet: single live instance `mtds-backfill-odds-smallchunk14-20260809` RUNNING, booted ~09:42-09:52Z; run.log
+  genuine (MEM_PRECHECK chunk 3/2171 league=ELITESERIEN mem_avail ~29GiB, PIPELINE_HEARTBEAT fresh); PROGRESS.json
+  last_completed=2020-08-30 monotonic. Fresh relaunch after smallchunk14's 08:36Z SPOT-preemption STOP (hang-doc
+  DP-VM-003) — landed ~09:29Z by another actor; no action needed this dispatch. Silent-hang occ. count: 12 (hang-doc
+  Timeline). Frontier ≈2020-08-30, NOT past the 2021-06-07 milestone → gap census NOT re-run (300/2257 unchanged per
+  todo guidance). No code/VM changes this dispatch.

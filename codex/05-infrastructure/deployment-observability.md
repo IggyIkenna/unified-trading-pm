@@ -20,7 +20,7 @@ related:
     /codex/05-infrastructure/deployment-ui-architecture.md,
     /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     /codex/05-infrastructure/live-deployment-monitoring.md,
-    plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
+    /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
     /plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
@@ -42,9 +42,9 @@ referenced_by:
     /codex/04-architecture/cross-venue-prediction-arb-detection.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
-    plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
-    plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
-    plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
+    /plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
+    /plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    /plans/archive/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
 last_reviewed: 2026-08-05
@@ -77,7 +77,8 @@ code_refs:
 > Every compute unit (a **VM** or a **Cloud Run job**) is a **classified deployment target** tracked under a
 > live/batch/paper umbrella, surfaced in deployment-ui `/deployments` + Slack at the same grade the CI/CD `/repos` page
 > gives repos. GCP is complete; AWS rides the same contract (Phase 5). Plan:
-> `plans/active/deployment_observability_parity_live_batch_paper_2026_06_22.md` (parent epic `observability_master`).
+> `plans/archive/2026_07/deployment_observability_parity_live_batch_paper_2026_06_22.md` (parent epic
+> `observability_master`).
 
 ## The umbrella model (the classification everything reads)
 
@@ -258,8 +259,8 @@ The Deployments table's Cost/day column (`CostCell`, `deployment-ui/src/pages/De
 resource-level billing export + AWS Athena CUR data via `deployment-api`'s
 `CostObservabilityService.per_resource_daily()` (`deployment_api/services/cost_observability/service.py`) — **no rate
 card, no fabrication**. It attaches three USD figures per deployment target by joining on billing
-`resource_id == item.name`. Fixed 2026-07-21 (`plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md`) after
-all three figures were individually correct in source but wrong in aggregation.
+`resource_id == item.name`. Fixed 2026-07-21 (`plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md`)
+after all three figures were individually correct in source but wrong in aggregation.
 
 **The three definitions** (`ResourceDailyCost`, `cost_observability/models.py`) — net = cost + credit, USD (GCP already
 converted from GBP at query time):
@@ -339,7 +340,7 @@ stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wr
 Repro audit finding: before this workstream, `run.log` content was **never fetched into the browser** — the "Live log
 tail" panel was actually `StreamingLogsPanel` reading lifecycle EVENTS (`vm_events.py`, a different bucket entirely),
 and the archive-path lookup 404d live because it guessed a date (`completed_at[:10]`) instead of matching the archiver's
-actual write key. Plan: `plans/active/deployment_ui_vm_log_viewer_2026_07_20.md`.
+actual write key. Plan: `plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md`.
 
 **Final-snapshot writer contract** (the fix at the source): `HeartbeatDaemon._write_final_log_snapshot()`
 (`unified_trading_library/lifecycle/daemon.py`) writes ONE durable copy of the local run.log to

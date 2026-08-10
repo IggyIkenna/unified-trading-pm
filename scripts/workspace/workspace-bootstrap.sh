@@ -543,8 +543,10 @@ fi
 # Enforce the PINNED uv (lockfile-determinism SSOT). A VM provisioned with a newer uv (e.g. 0.11.x) breaks
 # per-repo setup.sh (its fallback runs on the pipless uv-managed CPython) + risks uv.lock revision churn.
 # Realign via the astral standalone installer (pip-free; works regardless of the current uv).
-REQUIRED_UV="0.10.8"
-if [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ] && command -v uv &>/dev/null && command -v curl &>/dev/null; then
+# Single canonical definition: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+# (PM is guaranteed cloned by Phase 0 above, so this file is always reachable at this point).
+REQUIRED_UV="$(grep -oP '^UV_VERSION = "\K[^"]+' "$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+if [ -n "$REQUIRED_UV" ] && [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ] && command -v uv &>/dev/null && command -v curl &>/dev/null; then
   if uv --version 2>&1 | grep -q "$REQUIRED_UV"; then
     log_ok "uv $REQUIRED_UV (pinned)"
   else
@@ -552,6 +554,8 @@ if [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ] && command -v uv &>/d
     hash -r
     if uv --version 2>&1 | grep -q "$REQUIRED_UV"; then log_ok "uv realigned to pinned $REQUIRED_UV"; else log_warn "uv not pinned to $REQUIRED_UV (got $(uv --version 2>&1))"; fi
   fi
+elif [ -z "$REQUIRED_UV" ] && [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ]; then
+  log_warn "canonical UV_VERSION source not found — skipping uv pin check"
 fi
 
 # ripgrep

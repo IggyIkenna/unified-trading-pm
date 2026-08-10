@@ -243,7 +243,8 @@ def set_release_version(
         try:
             _apply(client.transaction(max_attempts=max_attempts))
             return outcome.get("prev", "NONE"), outcome.get("written", version)
-        except Exception as err:  # pragma: no cover — transient-retry path (needs a flaky real Firestore)
+        except Exception as err:  # noqa: broad-except  # pragma: no cover — transient-retry path
+            # (needs a flaky real Firestore); matched by exception class NAME, SDK-free import
             if type(err).__name__ not in _transient or attempt == 2:
                 raise
             last_err = err
@@ -307,7 +308,8 @@ def resolve_version_map(
     base = manifest_version_map(manifest)
     try:
         fs = get_all(project_id=project_id, firestore_module_factory=firestore_module_factory)
-    except Exception as err:
+    except Exception as err:  # noqa: broad-except — any Firestore unavailability must degrade to
+        # the manifest fallback cache (the designed offline fallback), never crash the caller
         logging.getLogger(__name__).warning(
             "version_registry Firestore read unavailable (%s: %s) — using manifest fallback cache",
             type(err).__name__,

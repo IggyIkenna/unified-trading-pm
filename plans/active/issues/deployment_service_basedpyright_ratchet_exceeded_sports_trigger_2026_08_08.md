@@ -10,7 +10,10 @@ summary: >
   just the one that found it.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
+  # basedpyright quality-gate ratchet breach blocking every future quickmerge to one repo -- squarely
+  # ci-tranche CI/CD-pipeline-mechanics territory, not cross-AG data-pipeline content.
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
@@ -104,3 +107,15 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
   for an explicit operator ruling"), staying `assigned_vm: NA` and flagging here rather than guessing which side should
   own the file family.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:34bffa9113b13578]: KEEP-NA,
+valid — The sole open todo is bounded/deterministic ON ITS FACE (fix ~23 named basedpyright errors in 4 named files to
+drop a repo-wide error-count ratchet from 1295 to <=1293) -- ordinarily an easy RECLASSIFY shape. However the doc's own
+2026-08-08 na-eligibility-audit pass ran the mandatory conflict-check and explicitly HELD it at KEEP-NA: an ACTIVE
+assigned_vm: planning doc in a DIFFERENT parent_epic,
+plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md (parent_epic sports_master), shipped a
+same-repo same-file-family basedpyright fix in sports_trigger_periodic.py one week prior (moved the ratchet 1293->1294
+via a reportPrivateUsage fix) and remains AO-dispatchable, creating a real race risk on the SAME shared repo-wide
+basedpyright counter/file family.

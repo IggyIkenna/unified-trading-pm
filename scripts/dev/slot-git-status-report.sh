@@ -82,6 +82,18 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Token-near-expiry early warning
+# (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
+# the reporter already resolves the bearer token to build the Authorization
+# header; this decodes that SAME token's `exp` claim and warns before it lapses
+# instead of after, since a lapsed token silences this whole host's git-health
+# view while looking like a frozen-but-fine dashboard. Toggle off with
+# TOKEN_EXPIRY_WATCHDOG=0. Does NOT raise the TTL — see the source doc: that just
+# delays and worsens the eventual outage.
+TOKEN_EXPIRY_WATCHDOG="${TOKEN_EXPIRY_WATCHDOG:-1}"
+TOKEN_EXPIRY_WARN_DAYS="${TOKEN_EXPIRY_WARN_DAYS:-3}"
+TOKEN_EXPIRY_STATE_DIR="${TOKEN_EXPIRY_STATE_DIR:-}"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --workspace)          WORKSPACE_PATH="$2"; shift 2;;
@@ -146,6 +158,7 @@ if [[ ! -d "${TABS_DIR}" ]]; then
     log "[err] no .tabs/ dir under ${WORKSPACE_PATH}"
     exit 1
 fi
+TOKEN_EXPIRY_STATE_DIR="${TOKEN_EXPIRY_STATE_DIR:-${TABS_DIR}/.token-expiry-state}"
 
 # Cross-platform helpers.
 HOST_OS="$(uname -s)"
@@ -203,6 +216,35 @@ except Exception:
     print(0)' "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
 fi
 
+# Read ONE repo's own dirty_consecutive_ticks out of FF_RESULT_FILE's per-repo
+# repo_dirty_ticks map (0 if the file/repo/field is absent or unparseable). This is
+# the reporter-side counterpart of slot-cron-ff-pull.sh's own _read_repo_dirty_ticks —
+# same FF_RESULT_FILE, same repo_key convention (the repo clone's OWN resolved
+# absolute path, set by classify_repo() via `pwd` post-pushd, matching ff_one()'s
+# `repo_key="$(pwd)"` exactly, so a lookup here always hits the same key the FF-cron
+# wrote). Fixes git_health_not_clean_since_pinned_constant_2026_07_27.md finding
+# (iii): before this, the reporter forwarded only the HOST-WIDE aggregate
+# (FF_DIRTY_CONSECUTIVE_TICKS above), so one repo's confirmed dirty streak could
+# block EVERY repo on the host from clearing not_clean_since. agent-orchestrator's
+# server side (RepoStatus.dirty_consecutive_ticks, _propagate_not_clean_since) already
+# prefers this per-repo value when present — this is the companion reporter change
+# named in that fix's commit message (agent-orchestrator@5d6752b).
+read_repo_dirty_ticks() {
+    local repo_key="$1"
+    if [[ -s "${FF_RESULT_FILE}" ]]; then
+        python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get('repo_dirty_ticks', {}).get(sys.argv[2], 0)))
+except Exception:
+    print(0)
+" "${FF_RESULT_FILE}" "${repo_key}" 2>/dev/null || echo 0
+    else
+        echo 0
+    fi
+}
+
 # Defensive instrumentation (ao_remediation_b_code_chain_2026_07_23.md item 2 — the
 # diagnostic half of item 1). Item 1 made dirty_files := len(sample_list), so
 # `dirty_files>0 with an empty sample` is now structurally unreachable through
@@ -227,8 +269,13 @@ log_df_sample_mismatch_if_any() {
 }
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
-#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample
+#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample<TAB>repo_dirty_ticks
 #
+# repo_dirty_ticks: THIS repo's own dirty_consecutive_ticks from slot-cron-ff-pull.sh's
+#   repo_dirty_ticks map (see read_repo_dirty_ticks above) — always a non-negative int
+#   (0 when the FF-cron has never observed this specific repo dirty, or hasn't run at
+#   all on this host). Forwarded per-repo in post_snapshot() so the server's confirm-
+#   gate keys on THIS repo's own streak, not the host-wide aggregate.
 # unpushed_plans: pipe-separated list of plan file basenames (plans/active/*.md or
 #   plans/active/issues/*.md) that are dirty or untracked in a unified-trading-pm worktree.
 #   Empty string for all other repos.
@@ -245,15 +292,22 @@ log_df_sample_mismatch_if_any() {
 classify_repo() {
     local repo_dir="$1"
     local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
+    local repo_key repo_dirty_ticks
     repo_name=$(basename "${repo_dir}")
     int_branch="${INTEGRATION_BRANCH}"
 
     pushd "${repo_dir}" >/dev/null 2>&1 || return 0
+    # Per-repo identity for the dirty-ticks lookup — the resolved cwd (post-pushd),
+    # same convention slot-cron-ff-pull.sh's ff_one() uses for repo_key, so two
+    # slots' clones of the same repo NAME never collide (see read_repo_dirty_ticks
+    # above).
+    repo_key="$(pwd)"
+    repo_dirty_ticks="$(read_repo_dirty_ticks "${repo_key}")"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\t%s\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "${repo_dirty_ticks}"
         popd >/dev/null || return 0
         return 0
     fi
@@ -335,8 +389,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
             popd >/dev/null || return 0
             return 0
         fi
@@ -355,8 +409,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
     popd >/dev/null || return 0
 }
 
@@ -415,9 +469,9 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 11:
-        parts += [""] * (11 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw = parts[:11]
+    if len(parts) < 12:
+        parts += [""] * (12 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw, repo_dirty_ticks_raw = parts[:12]
     repo = {
         "name": name,
         "branch": branch,
@@ -434,6 +488,13 @@ for line in sys.stdin:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     if dirty_sample_raw:
         repo["dirty_files_sample"] = [p for p in dirty_sample_raw.split("|") if p]
+    # Per-repo dirty-tick count (git_health_not_clean_since_pinned_constant_2026_07_27.md
+    # finding (iii) fix): keys RepoStatus.dirty_consecutive_ticks so the server
+    # not_clean_since confirm-gate reads this repos own streak, not the host-wide
+    # aggregate below. Always present (classify_repo always computes it, default "0"),
+    # so this branch only skips on a genuinely malformed/short row.
+    if repo_dirty_ticks_raw != "":
+        repo["dirty_consecutive_ticks"] = int(repo_dirty_ticks_raw)
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
@@ -597,6 +658,80 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
+# Prints the epoch on success; prints nothing and returns non-zero on any malformed/
+# undecodable input — callers MUST treat that as "can't tell, skip" rather than
+# "expired", so an unexpected token shape (e.g. a future non-JWT credential format)
+# never gets misread as an emergency and spams a false warning.
+decode_jwt_exp() {
+    local token="$1" payload_seg
+    payload_seg=$(printf '%s' "${token}" | cut -d. -f2)
+    [[ -n "${payload_seg}" ]] || return 1
+    python3 -c '
+import base64, json, sys
+seg = sys.argv[1]
+try:
+    padded = seg + "=" * (-len(seg) % 4)
+    claims = json.loads(base64.urlsafe_b64decode(padded))
+    exp = claims.get("exp")
+    if exp is None:
+        sys.exit(1)
+    print(int(exp))
+except Exception:
+    sys.exit(1)
+' "${payload_seg}" 2>/dev/null
+}
+
+# Token-near-expiry early warning
+# (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) — the
+# smallest fix, needs no new credential surface). Reuses the token this reporter
+# already resolved to build its own Authorization header (resolve_token_for_slot),
+# decodes its `exp` claim, and fires ONE warning per state-transition into the
+# near-expiry window into the AO activity feed (via the slot message inbox — same
+# post_starve_ping mechanism + one-marker-per-episode dedup pattern the
+# FF-starvation/stash-pile watchdogs above already use), never every tick. Clears
+# on transition OUT of the window (a re-mint via remint-orch-token.sh, or this host
+# switching to a longer-lived token) so a fresh near-expiry episode re-warns. Never
+# raises the TTL itself — see the source doc: that just delays and worsens the
+# eventual outage.
+check_token_expiry_for_slot() {
+    local slot_id="$1"
+    [[ "${TOKEN_EXPIRY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    [[ -n "${token}" ]] || return 0   # loopback/anonymous — no bearer token to expire
+
+    local exp_epoch
+    exp_epoch=$(decode_jwt_exp "${token}") || return 0
+    [[ -n "${exp_epoch}" ]] || return 0
+
+    mkdir -p "${TOKEN_EXPIRY_STATE_DIR}" 2>/dev/null || true
+    local marker="${TOKEN_EXPIRY_STATE_DIR}/slot-${slot_id}.near-expiry"
+    local now_epoch remaining_secs warn_secs
+    now_epoch=$(date -u +%s)
+    remaining_secs=$(( exp_epoch - now_epoch ))
+    warn_secs=$(( TOKEN_EXPIRY_WARN_DAYS * 86400 ))
+
+    if [[ "${remaining_secs}" -le "${warn_secs}" ]]; then
+        if [[ ! -f "${marker}" ]]; then
+            local exp_iso payload
+            exp_iso=$(date -u -d "@${exp_epoch}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+                || date -u -r "${exp_epoch}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+                || echo "${exp_epoch}")
+            payload="orch_token near expiry: exp ${exp_iso} (~$(( remaining_secs / 3600 ))h remaining). Re-mint via scripts/dev/remint-orch-token.sh before it lapses — do not just raise the TTL (/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)."
+            if post_starve_ping "${slot_id}" "orch_token" "${payload}" "${token}" "token-expiry-warn"; then
+                : > "${marker}" 2>/dev/null || true
+            fi
+        else
+            log_quiet "[token-expiry-dup] slot ${slot_id} — already signalled this episode"
+        fi
+    else
+        # Back outside the warn window (re-mint or a longer-lived token) → clear any
+        # prior marker so a future near-expiry episode re-warns.
+        [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+    fi
+}
+
 # Live heartbeat on .agent-claim (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md
 # candidate fix 1, unblocked by operator ruling 2026-08-08: "build a collision-warning mechanism"). The claim
 # file's own `expires_at` is a poor liveness signal on its own: an AO-dispatched worker's claim already gets
@@ -655,6 +790,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
     refresh_agent_claim_heartbeat "${slot_id_str}" "${slot_dir}"
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
     check_stash_pile_for_slot "${slot_id_str}" "${slot_dir}"
+    check_token_expiry_for_slot "${slot_id_str}"
 done
 
 # Slot 0 = the un-slotted main workspace checkout (the base copy the per-slot

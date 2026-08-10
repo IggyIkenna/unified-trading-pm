@@ -233,7 +233,10 @@ extremes that mean-revert — tighten before trusting (filed).
 ## 8. Integration TODOs (tracked in the experiment plan / issue doc)
 
 1. **Build the `--live` multi-venue snapshot mode** in the harness per §1–§3 (11 venues; FundingPoint(day="LIVE");
-   interval-aware annualise; conservative cash-margin for the 5 new venues). batch==live: same emitter/diff.
+   interval-aware annualise; conservative cash-margin for the 5 new venues). batch==live: same emitter/diff. **DONE for
+   the e2e read** (corrected 2026-08-10, matching item 7's own marker below) — shipped alongside items 6/7 in the same
+   change; live-verified in `e2e-testing/scripts/defi/staked_basis_funding_scan.py` today (`FundingPoint(day="LIVE")`
+   snapshot mode present and wired for all named venues).
 2. **UAC `perp_funding_cadence`**: add Gate/KuCoin/Bitget/Kraken/MEXC cadences (+ the per-pair non-8h exceptions).
 3. **UAC `venue_collateral`**: verify + add the 5 new venues' real collateral programs (multi-asset/portfolio margin);
    until verified, the conservative cash-margin default stands.
@@ -242,7 +245,10 @@ extremes that mean-revert — tighten before trusting (filed).
 5. **Lending**: live Aave reserve-data supply/borrow APY adapter; Compound v3 source.
 6. **DEX-perp venues — dYdX v4 + Vertex are PUBLIC (not credentialed)**: dYdX `indexer.dydx.trade/v4/perpetualMarkets`
    (`nextFundingRate`, hourly) verified reachable; Vertex `gateway.prod`/`archive.prod.vertexprotocol.com` public
-   (resolve OK — `api.vertexprotocol.com` is a stale 404). Wire both into the live snapshot.
+   (resolve OK — `api.vertexprotocol.com` is a stale 404). Wire both into the live snapshot. **DONE for the e2e read**
+   (corrected 2026-08-10) — both wired in the same change as items 1/7; live-verified: both `DYDX` and `VERTEX` branch
+   handling present in `e2e-testing/scripts/defi/staked_basis_funding_scan.py` today (Vertex warn-skips at runtime on
+   hosts its edge TLS-resets, which is a host-connectivity condition, not a missing wire-up).
 7. **Drift — WIRED via an ISOLATED venv (driftpy CANNOT be a flat dep)**: funding read **on-chain via Helius RPC** +
    `driftpy` (perp-market `amm.last24h_avg_funding_rate / FUNDING_RATE_PRECISION / oracle_twap`, hourly). **driftpy's
    metadata exact-pins ~25 common libs** (`urllib3==1.26.13` / `websockets==13.0` / `zstandard==0.18.0` / `solders<0.27`

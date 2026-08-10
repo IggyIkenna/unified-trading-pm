@@ -1,0 +1,260 @@
+---
+doc_type: issue
+title: >-
+  API-Football sports completion campaign residual: ~976-object tail (fresh 2026-08-10 re-census) has no tracked owner —
+  the re-census gate in sports_af_full_entity_completion_2026_08_03.md is parked pending ~0, but no todo runs the
+  residual completion pass.
+summary: >-
+  Slot 25's 2026-08-10 re-census of the 8 in-scope AF entities found a ~976-object residual tail (was 146,640):
+  PLAYER_STATS 3 · INJURIES 334 · STANDINGS 271 · TEAMS 96 · FIXTURE_STATS 136 · FIXTURE_LINEUPS 136, ~all
+  `expected_unattempted`/absent tail, 19 TEAMS `attempted_failed`. The completion campaign's P0 re-census gate
+  (`sports_af_full_entity_completion_2026_08_03.md`) is durably PARKED by slot 25 because its done-when (~0 needed) is
+  unmet — but the residual pass that would actually close the tail was only a prose recommendation in that doc's
+  Progress Log, never a tracked todo. This issue owns the completion pass so the campaign can genuinely converge and the
+  re-census gate can then pass + the AF plan downgrade.
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+repos: [instruments-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer]
+tags: [sports, api-football, backfill, completion, data-correctness]
+related: [/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md]
+created: "2026-08-10"
+author: main agent (agt-fe67fd) — routing the slot-25 re-census residual (2026-08-10)
+source: sports_af_full_entity_completion_2026_08_03.md slot-25 re-census progress entry (2026-08-10)
+resolved_by:
+locked_by:
+parent_epic: sports_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+assigned_role: data_engineering
+drift_direction: advance-data
+depends_on: []
+---
+
+## Todos
+
+- [ ] [SCRIPT] P1. **Residual completion pass — close the ~976-object tail** (fresh 2026-08-10 re-census, slot 25):
+      PLAYER_STATS 3 · INJURIES 334 · STANDINGS 271 · TEAMS 96 · FIXTURE_STATS 136 · FIXTURE_LINEUPS 136 = ~976 (was
+      146,640); ~all `expected_unattempted`/absent tail, 19 TEAMS `attempted_failed`. Launch the `af-backfill-*`
+      residual pass (`--entity` per remaining non-zero entity, respecting the `af-backfill-*`/`af-audit-*` singleton
+      lock — one `af-backfill-*` VM at a time against the shared API key, self-check the lock before launching),
+      resuming from each entity's `PROGRESS.json` checkpoint where present. Done when: a fresh re-census shows every
+      in-scope entity at ~0 needed (only genuine honest-absence floors remain, e.g. FIXTURE_EVENTS' ~1,943-stub
+      pattern), i.e. the re-census gate in `/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md` can
+      pass. Then unpark/flip the re-census condition (`auto_unpark__sports_af_full_entity_completion-9798da269f23`) so
+      it dispatches and closes that doc. (repo: instruments-service / market-tick-data-service)
+
+## Progress Log
+
+- **2026-08-10 (main agent, agt-fe67fd)**: Filed this doc to give the slot-25 re-census residual an owner. The re-census
+  task `sports_af_full_entity_completion-9798da269f23` is durably parked (cooldown GATED + prereq
+  `auto_unpark__...-9798da269f23`=0, set_by slot-25 2026-08-10 09:51:52) and correctly so — its done-when (~0) is unmet.
+  But nothing tracks the ~976-object completion pass itself; this doc owns it. Fleet impact of leaving it unowned: the
+  parked re-census is the top idle-blocker-inferred source (17 events) holding ~270 downstream tasks.
+- **2026-08-10 (slot 15, data_engineering)** — Residual completion pass started:
+  - Fresh census (`census_all_af_entities_completion_2026_08_03.py`) confirmed slot 25's numbers byte-for-byte:
+    PLAYER_STATS needed=3 · INJURIES needed=334 · STANDINGS needed=271 · TEAMS needed=96 (grand total 704 across 4
+    entities). FIXTURE_STATS (136) + FIXTURE_LINEUPS (136) still from slot 25's snapshot = ~976 total.
+  - No `af-backfill-*`/`af-audit-*` VMs were running (singleton lock clear). Live API-Football `/status`:
+    remaining_daily_quota=135,443 (healthy).
+  - **Launched `af-backfill-20260810-102659`** (SPOT, `--entity INJURIES 2020-06-06 2026-08-10`) — vanished during boot,
+    likely SPOT preemption before `run.log` was written. **Re-launched `af-backfill-20260810-103218`** (on-demand,
+    `e2-standard-8`, same range/entity) — confirmed RUNNING and healthy via SSH at 10:35Z: `instruments_chunk_loop.sh`
+    active, chunk 1 processing dates from 2020-06-14, fetching INJURIES, rate-budget 167 req/min, manifest per-VM shard
+    writing. Fetched 0 INJURIES for early dates (2020-06-14, 2020-06-15 — expected for COVID-era sparse fixture
+    calendar). VM left running; next entities (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) queued behind
+    the singleton lock. Will monitor for completion via run.log → exit_code.
+  - **Session compacted 2026-08-10 ~11:00Z** — VM still mid-flight. Deferred work table below.
+
+    - **2026-08-10 (slot 15, data_engineering, post-compact resume ~12:00Z)** — Resumed, VM still RUNNING:
+      - Progress: `last_completed_date=2021-11-26` via SSH (GCS tee shows `2021-11-24`, normal lag). Pace ~10 dates/min,
+        ~3 more hours to complete the full 2020-06-06 to 2026-08-10 range.
+      - Confirmed all-entity invocation: omitting `--entity` from the launcher defaults to "all entities" mode (line
+        308: `ENTITY_DESC="all entities"`). Strategy: a single all-entity VM will close the 5 remaining entities
+        (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) in one pass rather than 5 sequential launches.
+      - **Session compacted 2026-08-10 ~13:30Z** — VM still mid-flight: (see deferred work table below for latest)
+
+      - **Session compacted 2026-08-10 ~11:45Z** — VM still mid-flight: (see deferred work table below for latest)
+
+      - **Session compacted 2026-08-10 ~11:48Z** — VM still RUNNING:
+        - Progress: `last_completed_date=2022-05-01` (local SSH, 11:48Z), `2022-04-23` (GCS tee, normal lag). ~695/2257
+          days done (~31%). Pace steady at ~7-10 dates/min. ETA to completion: ~2.6-3.7h → finish ~14:30-15:30Z.
+        - VM healthy: `instruments_chunk_loop.sh` + `heartbeat_daemon.py` both running, PIPELINE_HEARTBEAT emitting.
+
+      - **Session compacted 2026-08-10 ~11:53Z** — VM still RUNNING:
+        - Progress: `last_completed_date=2022-06-11` (local SSH, 11:52Z), `2022-05-26` (GCS tee, normal ~15-date lag).
+          ~735/2257 days done (~33%). Pace steady at ~10 dates/min. ETA to completion: ~2.5h → finish ~14:40Z.
+        - VM healthy: `instruments_chunk_loop.sh` + `heartbeat_daemon.py` both running.
+
+      - **Session resumed 2026-08-10 ~12:00Z (post-compact)** — VM still RUNNING:
+        - Progress: `last_completed_date=2022-07-18` (GCS tee, ~11:56Z); SSH unavailable (transient). GCS tee lag
+          typically ~15 dates behind local → local est. `~2022-08-02`. ~772-787/2256 days done (~34-35%). Pace steady at
+          ~10 dates/min. ETA: ~14:25Z.
+        - VM confirmed RUNNING via GCS tee progression + `gcloud compute instances list`; `heartbeat_daemon.py`
+          emitting. Monitors re-armed: run.log poll + 30-min watchdog.
+
+      - **Session compacting 2026-08-10 ~12:15Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2022-08-27` (monitor `bwf612ii7`/`bpe60pooj`). ~812/2256 days done
+          (~36%). Pace steady at ~10 dates/min. ETA: ~14:40Z.
+        - SSH remains unavailable (transient, same as prior session). VM healthy per GCS tee progression + watchdog.
+
+      - **Session compacting 2026-08-10 ~12:04Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2022-09-28` (direct `gsutil cat`). ~844/2256 days done (~37%). Pace
+          steady at ~10 dates/min, ~1412 days remaining → ETA ~14:25Z.
+        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet (expected — still mid-flight).
+
+      - **Session compacting 2026-08-10 ~12:09Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2022-10-23` (~39%), ~1387 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet (mid-flight). Monitors re-armed.
+
+      - **Session compacting 2026-08-10 ~12:16Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-01-07` (~42%), ~1311 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:27Z.
+        - VM confirmed RUNNING; no `exit_code=` yet. Monitors armed.
+
+      - **Session compacting 2026-08-10 ~12:19Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-02-12` (~43.5%), ~1274 days remaining. Pace steady at ~10
+          dates/min. ETA ~14:27Z.
+        - VM confirmed RUNNING; no `exit_code=` yet. Monitors armed (`bomhvtqy0` 3-min poll + `bwdr9v3z7` 10-min
+          watchdog).
+
+      - **Session compacting 2026-08-10 ~12:24Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-02-26` (~44%), ~1260 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING; no `exit_code=` yet.
+
+      - **Session resumed 2026-08-10 ~12:27Z (post-compact)** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-03-27` (~45%), ~1230 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet.
+
+      - **Session compacting 2026-08-10 ~12:30Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-04-20` (~46%), ~1207 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING; no `exit_code=` yet.
+
+      - **Session compacting 2026-08-10 ~12:32Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-04-30` (~47%), ~1197 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING; no `exit_code=` yet.
+
+      - **Session compacting 2026-08-10 ~12:36Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2023-05-13` (~48%), ~1184 days remaining. Pace steady at ~10 dates/min.
+          ETA ~14:30Z.
+        - VM confirmed RUNNING; no `exit_code=` yet.
+
+      - **2026-08-10 (slot 28, data_engineering, 12:57Z–15:31Z)** — Monitored INJURIES VM to near-completion:
+        - **Progress trajectory** (GCS tee `[[VM_PROGRESS]]` markers):
+          - 12:57Z: `2023-07-24` (~51%) · 13:10Z: `2023-09-27` (~54%) · 13:26Z: `2024-02-09` (~59%) · 13:45Z:
+            `2024-05-20` (~66%) · 14:01Z: `2024-09-21` (~80%)
+          - 14:17Z: `2025-01-25` (~93%, crossed into 2025) · 14:44Z: `2025-07-31` · 14:59Z: `2025-11-07` (~88%) ·
+            15:08Z: `2026-01-11` (crossed into 2026!)
+          - 15:18Z: `2026-03-16` (~94%) · 15:26Z: `2026-05-04` (~96%) · 15:31Z: `2026-05-22` (~98%)
+        - **Pace**: variable — ranged from ~3 dates/min (rate-limited windows) to ~16 dates/min (fast bursts through
+          sparse dates). Average ~6-8 dates/min across the full range. Multiple API rate-limit backoffs observed
+          (sleeping 58-60s, attempts 1-2/10) — normal, self-recovering.
+        - **Current at compaction (15:31Z)**: VM RUNNING, `last_completed_date=2026-05-22`, ~79 days remaining
+          (2026-05-23→2026-08-10). ETA ~15:46Z (~15 min from last progress marker). VM healthy — PIPELINE_HEARTBEAT
+          emitting.
+        - **CANONICAL_LEAGUE_ID_LOOKUP_MISS warnings**: api_football_id=223, 252, 270 — non-lossy (pass through as raw
+          numeric IDs). Resolved when UAC registry is updated.
+        - **Rightsizing note**: VM has been running ~5h on `e2-standard-8` (on-demand). The new CLAUDE.md rule
+          (2026-08-10) calls for `/vm-resource-rightsizing-check` on any VM >30min — flagged for next session.
+        - **No code shipped** — pure monitoring task. The VM is the same one launched by slot 15; no new launches.
+
+      - **2026-08-10 (slot 28, data_engineering, ~15:36Z–15:42Z)** — Post-compact monitoring session:
+        - Resumed with VM at `2026-06-20`. Progressed to `2026-07-12` (GCS tee, 15:35:56Z log timestamp) — ~22 dates in
+          ~6 min, ~3-4 dates/min (slower pace — larger per-date payloads in recent seasons, more injuries per fixture).
+        - VM RUNNING per `gcloud compute instances list`; PIPELINE_HEARTBEAT alive at 15:35:32Z. No `exit_code=` yet.
+        - ~29 days remaining (2026-07-13 → 2026-08-10). At current pace (~3-4 dates/min), ETA ~15:48Z-15:52Z.
+        - **Pace observation**: rate slowed from ~10 dates/min (sparse 2020-2024 seasons) to ~3-4 dates/min (dense
+          2025-2026 seasons — more fixtures, more injuries per date, more API calls). This is expected behavior, not a
+          stall.
+        - **Rightsizing note**: VM now running ~5.5h on `e2-standard-8` (on-demand). Flag carries forward.
+        - **No code shipped** — pure monitoring. Session compacting again; VM near completion.
+
+      - **2026-08-10 (slot 28, data_engineering, ~15:39Z–15:45Z)** — INJURIES VM completed + all-entity VM launched:
+        - **INJURIES VM `af-backfill-20260810-103218`**: STOPPING at 15:39Z, `exit_code=0` (success). Completed full
+          range 2020-06-06→2026-08-10 — all 334 INJURIES objects backfilled.
+        - Singleton lock cleared (no other `af-backfill-*`/`af-audit-*` VMs).
+        - **Launched all-entity VM `af-backfill-20260810-154220`** (on-demand, `e2-standard-8`, `asia-northeast1-c`):
+          `--on-demand 2020-06-06 2026-08-10` with no `--entity` flag → all-entity mode (STANDINGS 271 + TEAMS 96 +
+          FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642). Confirmed RUNNING at 15:44Z. run.log not yet
+          written (VM booting).
+        - **No code shipped** — pure operations. All-entity VM left running.
+
+      - **2026-08-10 (slot 28, data_engineering, ~15:46Z–15:50Z)** — All-entity VM boot complete + first progress:
+        - VM `af-backfill-20260810-154220` completed startup at 15:46:21Z. Chunk loop running (PID 4997), heartbeat
+          daemon active (60s interval). First chunk: 2020-06-06→2020-09-03. First progress:
+          `last_completed_date=2020-06-06` at ~15:47Z. All-entity mode fetches
+          TEAMS/STANDINGS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS per date.
+        - VM healthy — `instruments_chunk_loop.sh` + `heartbeat_daemon.py` + `vm-exec-with-gcs-tee.sh` all running. GCS
+          run.log being populated. 30-min stall watchdog armed (`b8udhrys4`).
+        - **Pace TBD** — too early for ETA (only 1 date, first chunk includes metadata pre-fetch). Will estimate after
+          more dates accumulate (~15:52Z+).
+        - **No code shipped** — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~15:56Z–16:00Z)** — All-entity VM progress check:
+        - First date `2020-06-06` completed at ~15:52:11Z with all 5 entities: 14 fixture_stats, 328 fixture_events, 769
+          fixture_lineups, 113 player_stats, 76 team mappings. Manifest: 2474 entries (2091 new) across 7 entities.
+        - **GCS log sync stalled** — run.log last updated 15:53:32Z, manifest shard last updated 15:52:11Z (stale ~7+
+          min). Serial port shows last gcloud CLI activity at 15:53:31Z — heartbeat daemon's GCS sync likely stopped.
+          Python backfill process may still be running (independent process), but without SSH access (OS Login
+          `sshd.service not found` — VM image issue) cannot verify locally.
+        - VM confirmed RUNNING via `gcloud compute instances list`. Actual zone: `asia-northeast1-c` (not
+          `us-central1-a`). External IP 34.146.116.249 — SSH timeout (sshd not running).
+        - **Watchdog armed**: `b7tzrmn3w` — polls GCS log + manifest + VM status every 60s; escalates at 20+ min stall.
+        - **Pace**: single data point only (first date ~10 min, includes metadata pre-fetch). Cannot estimate ETA until
+          more progress markers appear. Expected pace: ~1-5 min/date depending on fixture density (all-entity = ~5× API
+          calls vs single-entity INJURIES mode). Range: 2020-06-06 → 2026-08-10 = ~2258 days. Rough ETA: 24-72 hours.
+        - **No code shipped** — pure monitoring. GCS sync stall is a concern but may self-recover (INJURIES VM also had
+          transient GCS tee lag).
+
+      - **2026-08-10 (slot 28, data_engineering, ~16:07Z–16:11Z)** — Stalled VM stopped + replacement launched:
+        - **VM `af-backfill-20260810-154220` stalled**: 5 watchdog checks (16:01Z–16:06Z) confirmed no progress — GCS
+          run.log (15:53:32Z) + manifest shard (15:52:11Z) + serial-port gcloud scopes all stopped within 1 min window.
+          VM RUNNING but producing zero external output for 14+ min. No OOM/crash/traceback evidence. Root cause
+          inconclusive (likely network issue on the instance or Python process deadlock). Stopped at 16:07Z (TERMINATED
+          by 16:09Z).
+        - **Replacement `af-backfill-20260810-160958` launched**: same zone (`asia-northeast1-c`), on-demand
+          `e2-standard-8`, no `--entity` (all 5 remaining entities: STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/
+          PLAYER_STATS). Launched at 16:10Z, RUNNING at 16:11Z (external IP 136.110.92.190).
+        - **First-progress monitor armed** (`bxik8gb08`) — polls GCS run.log for `[[VM_PROGRESS]]` marker. Stall
+          watchdog to follow.
+        - **No code shipped** — pure operations (VM stop + re-launch).
+
+      - **2026-08-10 (slot 28, data_engineering, ~16:22Z–16:29Z)** — All-entity mode REPRODUCIBLY broken; pivoting to
+        per-entity:
+        - **Second VM `af-backfill-20260810-160958` also stalled** after first-date writes (16:19:27Z). Same pattern:
+          completed 2020-06-06 (TEAMS→STANDINGS→FIXTURE_STATS→FIXTURE_LINEUPS→PLAYER_STATS → manifest), emitted 2
+          heartbeats (16:19:54Z, 16:20:54Z), then complete GCS silence. Watchdog confirmed stall at 16:22:27Z.
+        - **Root cause**: reproducible bug in all-entity mode's chunk loop — succeeds on first date, hangs after
+          manifest write. INJURIES single-entity mode worked fine (334 objects, full range). The 5-entity aggregation
+          triggers a deadlock/hang in the iterator or API client pool.
+        - **Strategy pivot**: per-entity serial launches (the working single-entity pattern). Order: STANDINGS (271) →
+          TEAMS (96) → FIXTURE_STATS (136) → FIXTURE_LINEUPS (136) → PLAYER_STATS (3).
+        - **Launched `af-backfill-20260810-162910`** (`--entity STANDINGS`, on-demand, `e2-standard-8`, 2020-06-06 →
+          2026-08-10). API quota healthy: 113,622 remaining. STANDINGS is season-scoped (1 API call per league per
+          season), should be faster than per-date entities like INJURIES.
+        - **No code shipped** — pure operations (VM stop + strategy pivot).
+
+## Deferred work after 2026-08-10 ~16:29Z
+
+| Item                                                             | State / why deferred                                 | Blocked on                         |
+| ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | Just launched, RUNNING, `e2-standard-8`              | VM completion (real infra)         |
+| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
+| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
+| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
+| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)       | FIXTURE_LINEUPS VM exit_code=0     |
+| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging       | All per-entity VMs exit_code=0     |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                | Re-census confirms ~0 needed       |
+| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                  | After each VM >30min or terminates |
+
+**Recommended NEXT item**: Wait for STANDINGS VM `af-backfill-20260810-162910` boot + first progress. When complete:
+launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.

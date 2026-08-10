@@ -19,9 +19,11 @@ source: >-
   Discovered while shipping todo 1 of /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md (a DeFi
   instruments-service task, unrelated to sports) — full `quality-gates.sh` run surfaced 2 pre-existing RED tests,
   verified byte-identical on a clean `git stash` tree at LDR HEAD `cccc6ef5` before this session's DeFi diff.
-summary:
-  "`bash scripts/quality-gates.sh` on `instruments-service` fails 2 tests, both pre-existing (reproduced on a clean
-  stash of LDR HEAD, unrelated to any DeFi/adapter work):"
+summary: >-
+  SUPERSEDED — duplicate discovery of the same instruments-service QG-RED blocker (FOOTYSTATS violates the IS/UAC
+  sports-venue disjointness invariant + a golden-fixture drift) already filed, more completely, in the archived
+  `instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`; kept for corpus trail only, do not dispatch its
+  todos.
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code

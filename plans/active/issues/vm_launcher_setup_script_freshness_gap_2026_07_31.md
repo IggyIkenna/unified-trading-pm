@@ -28,8 +28,8 @@ scope: [engineer]
 tags: [vm-launcher-runbook, spot-preemption, setup-script-freshness, gcs-staleness, fleet-wide]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md,
   ]
@@ -57,7 +57,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 
@@ -213,3 +213,21 @@ sweep here.
   in `launch-scenario-runner-vm.sh`. QG green (all gates passed, 227s). Shipped: deployment-service@6998cc228. Remaining
   ~136 launchers need a dedicated migration plan (follow-up todo added above).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **data_engineering 2026-08-09 (slot 28) — live reproduction confirmed via `gcloud storage objects describe`**: while
+  building a new raw-create launcher (`launch-prediction-kalshi-historical-gap-backfill-vm.sh`,
+  `prediction_satellite_ao_dispatch_batch9_2026_08_09.md` todo 3), shipped a `setup-data-pipeline-vm.sh` fix
+  (deployment-service@fe20aed8c, e2e-testing NODEPS routing gap), republished it via `lc_verify_tarball_freshness`'s
+  auto-republish path, then launched — the VM failed with the EXACT SAME pre-fix error. Direct
+  `gcloud storage objects describe gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh` at that
+  moment showed `Content-Length: 184235` (the OLD pre-fix size) with an `Update time` seconds AFTER my own republish — a
+  concurrent agent's own launcher (on a different, not-yet-pulled local checkout) had raced my publish and clobbered it
+  back to stale content in the same shared-fleet window theory 1 above already suspected but couldn't confirm (no object
+  versioning). This is direct, dated evidence FOR theory 1 as a real, live mechanism (not just plausible) — filed here
+  rather than a new issue doc since it's the same root cause this doc already tracks. Workaround shipped in the new
+  launcher itself (not a `lc_gcloud_create` migration — that helper has no
+  `--provisioning-model=SPOT`/`--instance-termination-action` support, which this backfill-VM-default-SPOT launcher
+  needs): call `LC_SETUP_SCRIPT_FRESHNESS=auto lc_verify_setup_script_freshness` directly, immediately before its own
+  `gcloud compute instances create`, narrowing (not eliminating) the race window to right before creation instead of
+  leaving it wide open for the whole tarball-freshness-check duration beforehand. Does not touch the P3 follow-up todo's
+  scope (the 136-launcher `lc_gcloud_create` migration) — `lc_gcloud_create` itself would need SPOT/disk-type support
+  added before a SPOT launcher like this one could migrate to it.

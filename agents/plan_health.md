@@ -122,14 +122,31 @@ where `<THE_JSON_OBJECT>` is EXACTLY this shape and nothing else:
   "doc_drift": [
     {
       "doc": "CLAUDE.md|SUB_AGENT_MANDATORY_RULES.md",
+      "doc_line": "<N>",
       "claim": "...",
       "contradicted_by": "<plan file>",
-      "description": "..."
+      "contradicted_by_line": "<N>",
+      "description": "...",
+      "resolution_required": true|false
     }
   ],
   "hygiene_pulse": "<one-line snapshot>"
 }
 ```
+
+**`doc_drift` field contract — REQUIRED vs optional.** The server validates the POSTed shape; a finding missing a
+required field, or naming a `doc` outside the governance-doc set, is logged as `doc_drift_malformed` and skipped rather
+than rendered into a blocked row.
+
+| Field                  | Required? | Type     | Contract                                                                                                                                                                                                                                                                                        |
+| ---------------------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doc`                  | REQUIRED  | `string` | MUST be `CLAUDE.md` or `SUB_AGENT_MANDATORY_RULES.md` — governance-doc drift is the whole point of CHECK 2; a plan filename here is an off-schema finding and the server will reject it.                                                                                                        |
+| `doc_line`             | REQUIRED  | `int`    | Line number in the governance doc where the claim appears (1-based).                                                                                                                                                                                                                            |
+| `claim`                | REQUIRED  | `string` | The verbatim asserted rule / value / scope / status from the governance doc, UNTRUNCATED.                                                                                                                                                                                                       |
+| `contradicted_by`      | REQUIRED  | `string` | The plan file (under `plans/active/` or `plans/epics/`) whose title, frontmatter, or todos say the canonical answer is now different. MUST be non-empty — a finding without a second side is structurally undecidable.                                                                          |
+| `contradicted_by_line` | REQUIRED  | `int`    | Line number in the contradicting plan where the contradictory assertion appears (1-based).                                                                                                                                                                                                      |
+| `description`          | REQUIRED  | `string` | The worker's explanation of what it found — why the two sides disagree, what the actual live state appears to be, and a concrete recommendation. MUST be non-empty (an undecidable finding has no business as a card).                                                                          |
+| `resolution_required`  | REQUIRED  | `bool`   | Set by the worker: `true` if a human decision is genuinely needed (the two sides actually conflict and the resolution isn't obvious); `false` if the finding is informational or self-resolving (e.g. "no further action needed now"). The server suppresses blocked-row creation when `false`. |
 
 If none: `{"contradictions": [], "doc_drift": [], "hygiene_pulse": "<one-line snapshot>"}`
 

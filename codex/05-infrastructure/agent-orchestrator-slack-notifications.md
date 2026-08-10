@@ -26,7 +26,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-25
 code_refs:
 ---
 
@@ -81,7 +81,8 @@ The S (Slack) / T (Telegram) columns mark which module exports each function.
 
 ### Payload shape (Block Kit)
 
-All three functions produce:
+All 13 Slack functions produce (Block Kit is Slack-specific; Telegram's 9 functions use a separate, non-Block-Kit
+payload shape in `server/notifications/telegram.py`):
 
 ```json
 {

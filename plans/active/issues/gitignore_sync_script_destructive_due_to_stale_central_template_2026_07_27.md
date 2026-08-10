@@ -129,6 +129,13 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Both remaining `[SCRIPT]`/`[VERIFY]` items still gate on the same real, per-line human diffing/merging
+  judgment call (which of PM's accumulated `.gitignore` exceptions are PM-specific vs. should-be-central) this doc's own
+  text has described since 2026-07-30; the P3 verify item is dependency-gated behind it. Checked against this round's
+  accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks) — none bear on
+  a template-vs-live-file reconciliation judgment call.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — template reconciliation is a judgment call
   (which .gitignore is canonical) + post-fix verification sweep; operator/design-flavored, not a bounded flip.
 

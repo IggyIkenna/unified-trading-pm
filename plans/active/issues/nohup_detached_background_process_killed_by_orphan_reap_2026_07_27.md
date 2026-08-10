@@ -175,12 +175,12 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
       correction only, no code).
 
       **na-eligibility-audit 2026-08-03**: the referenced doc is now archived/resolved
-                                                                                                      (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, 2026-07-28) but via a
-                                                                                                      DIFFERENT fix mechanism (a qg-governor runtime abort-monitor watchdog + SIGTERM/SIGINT/SIGHUP signal traps) — its
-                                                                                                      own extensive multi-session Progress Log never performs the specific `orphan_reap`/`kill_session`-journalctl
-                                                                                                      cross-check this todo asks for; every one of its own recorded incidents cites `free -h` swings, load-average
-                                                                                                      spikes, OOM-killer signatures, or TYPE-CHECK/pytest timeouts, never an `orphan_reap sweep ... KILLED` log line.
-                                                                                                      This cross-check remains genuinely un-done, not closing here.
+                                                                                                              (`plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`, 2026-07-28) but via a
+                                                                                                              DIFFERENT fix mechanism (a qg-governor runtime abort-monitor watchdog + SIGTERM/SIGINT/SIGHUP signal traps) — its
+                                                                                                              own extensive multi-session Progress Log never performs the specific `orphan_reap`/`kill_session`-journalctl
+                                                                                                              cross-check this todo asks for; every one of its own recorded incidents cites `free -h` swings, load-average
+                                                                                                              spikes, OOM-killer signatures, or TYPE-CHECK/pytest timeouts, never an `orphan_reap sweep ... KILLED` log line.
+                                                                                                              This cross-check remains genuinely un-done, not closing here.
 
 ## Progress Log
 
@@ -196,3 +196,15 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — re-read end-to-end; both remaining `[SCRIPT] P3` items
+  are explicitly optional/defense-in-depth per the doc's own primary-mitigation-already-shipped framing (one is a
+  "consider whether there's even a legitimate use case" question, the other a cross-doc root-cause re-attribution
+  judgment). Checked against the round7-10 precedent set — none apply. Corroborated same-day: `/ag-closeout-audit ao`
+  batch12 independently lists this doc under genuinely-human-only (4), "(optional leg only)."
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of both open
+  items. Item 1 (orphan_reap special-casing investigation) is explicitly open-ended ('there might not be a legitimate
+  use case'). Item 2 (cross-check the archived RAM-exhaustion doc's incidents against orphan_reap journalctl signatures)
+  is a real but low-materiality (P3) root-cause re-attribution judgment call; 3 prior audits (08-02, 08-06,
+  round11-08-09) kept this NA consistently. No new facts found this pass.

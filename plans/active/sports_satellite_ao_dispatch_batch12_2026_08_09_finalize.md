@@ -15,8 +15,8 @@ tags: [sports, ao-dispatch, close-out, batch-12, satellite-docs, ag-closeout-aud
 related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
-    /plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
+    /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
+    /plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -56,16 +56,28 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P3. Reconcile `canonical_player_stats_fixture_events_quality_2026_07_16.md` — once batch-12 todo 1 (the
+- [x] [DATA] P3. Reconcile `canonical_player_stats_fixture_events_quality_2026_07_16.md` — once batch-12 todo 1 (the
       `--apply-prod` reconciliation pass) lands, flip that doc's `## Follow-ups` `[DATA] P3` checkbox with the cited
       commit + post-write verification output; no other open items remain in that doc once this lands — archive it as
       part of this todo (6-step ritual). Source: `canonical_player_stats_fixture_events_quality_2026_07_16.md`. Done
-      when: the checkbox is flipped with evidence and the doc sits in `plans/archive/2026_08/`.
-- [ ] [DATA] P3. Reconcile `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` — once batch-12
+      when: the checkbox is flipped with evidence and the doc sits in `plans/archive/2026_08/`. **✅ DONE 2026-08-10
+      (slot-29)**: Follow-ups checkbox flipped with both commit SHAs + both verification outputs
+      (`unified-trading-pm@10c16bb8d1`); doc moved to
+      `plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` with the archive
+      banner + `status: resolved`. Corpus referrers with full paths fixed (this doc's `related:`, batch12's `related:` +
+      `Source:` citation); the AO-host resource-watchdog codex doc
+      (`/codex/05-infrastructure/agent-orchestrator-api-host.md`) updated with the new sandboxed-session kill-diagnosis
+      lesson learned while executing batch-12 todo 1.
+- [x] [DATA] P3. Reconcile `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` — once batch-12
       todo 2 (the `odds_targets` re-export + confirm) lands, flip that doc's `## Follow-ups` `[DATA] P3` checkbox with
       the cited GCS parquet path(s); no other open items remain in that doc once this lands — archive it as part of this
       todo. Source: `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`. Done when: the checkbox
-      is flipped with evidence and the doc sits in `plans/archive/2026_08/`.
+      is flipped with evidence and the doc sits in `plans/archive/2026_08/`. **✅ DONE 2026-08-10 (slot-29)**:
+      Follow-ups checkbox flipped with the GCS parquet path + confirmed non-null `odds_closing_*` values
+      (`unified-trading-pm@904dfa2301` flip, this commit's `git mv` archival); doc moved to
+      `plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` with the
+      archive banner + `status: resolved`. Corpus referrers with full paths fixed (this doc's `related:`, batch12's
+      `related:` + todo 2's `Source:` citation, and batch12's Deferred-work table).
 - [ ] [DATA] P3. Reconcile `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` — once batch-12 todo 3 (the
       23-sentinel-free-days investigation) lands, flip that doc's `## Follow-ups` `[DATA] P3` checkbox with the cited
       explanation/evidence; no other open items remain in that doc once this lands — archive it as part of this todo.

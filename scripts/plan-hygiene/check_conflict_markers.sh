@@ -32,8 +32,6 @@ fi
 
 # Standard open/close markers (7 angle brackets never appear legitimately in prose, mid-line or
 # not) OR the prettier-mangled `> > > > > > >` (>=7 nested blockquote levels — never used in plans).
-# The `=======` middle marker is intentionally NOT matched: a 7+ `=` run collides with setext-H1
-# underlines, and the open/close markers alone are an unambiguous, sufficient signal.
 PAT='(<<<<<<<|>>>>>>>)|(^|[[:space:]])(> ){6,}>'
 
 RC=0
@@ -45,6 +43,28 @@ for f in "${FILES[@]}"; do
     if [ "$QUIET" -eq 0 ]; then
       echo "❌ conflict marker(s) in $f:"
       printf '%s\n' "$HITS" | sed 's/^/    /'
+    fi
+  fi
+  # ── Orphaned ======= check (2026-08-10) ──────────────────────────────────────────
+  # The `=======` middle-marker was deliberately excluded from PAT because a 7+ `=`
+  # run collides with setext-H1 underlines (Title\n=======).  But commit 505bfe3ced
+  # proved an ORPHANED `=======` (NOT serving as a setext underline) can reach LDR as
+  # partial conflict debris without the open marker.  Flag lines of 7+ `=` signs NOT
+  # directly under a non-empty text line.  Separator lines (>=30 `=`) are skipped as
+  # a deliberate visual convention.  SSOT: committed_conflict_marker_plan_doc_2026_08_10.
+  ORPHANED_EQUALS=$(awk '
+    /^={7,}$/ {
+      if (length($0) >= 30) next       # skip visual separator lines
+      if (NR > 1 && prev !~ /^[[:space:]]*$/ && prev !~ /^={7,}$/) next  # setext underline
+      print NR ":" $0
+    }
+    { prev = $0 }
+  ' "$f" 2>/dev/null) || true
+  if [ -n "$ORPHANED_EQUALS" ]; then
+    RC=1
+    if [ "$QUIET" -eq 0 ]; then
+      echo "❌ orphaned ======= conflict marker(s) in $f:"
+      printf '%s\n' "$ORPHANED_EQUALS" | sed 's/^/    /'
     fi
   fi
 done

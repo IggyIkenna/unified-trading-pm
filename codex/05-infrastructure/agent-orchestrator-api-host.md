@@ -156,6 +156,16 @@ non-allowlisted processes exceeding per-resource thresholds:
 (`POST /api/resource-watchdog/kill`). The orchestrator relays the kill event to the owning slot via its next
 `/heartbeat` response so the agent knows NOT to re-spawn the killed workload — "offload to a spot VM."
 
+**Diagnosing a silent kill from inside an interactive per-slot sandbox (found 2026-08-10)**: a slot's own container
+cannot `sudo grep /var/log/syslog` (blocked by the container's "no new privileges" flag) and `dmesg`/`journalctl -k`
+return genuinely empty (no host-kernel visibility at all from inside the container, not just a permissions gap) — both
+are dead ends for kill diagnosis from an interactive session, as opposed to an AO-dispatched worker loop that receives
+the relay via its own `/heartbeat`. The reliable channel from inside the sandbox is reading
+`/dev/shm/resource-watchdog/kills/<pid>.json` directly (world-readable) — it is also more complete than a syslog line
+(structured `rss_mb`/`limit_mb`/`pressure_level`/`reason` fields). The absence of a traceback in a crashed process's
+captured stdout/stderr (vs. a genuine Python exception, which always prints one) is the tell that a silent exit was a
+kill, not a code bug, and is worth checking for the marker before assuming either.
+
 **Dual-write to deployment-api (additive, 2026-08-05)**: In addition to the existing AO-internal POST above, the
 watchdog also POSTs each kill event to deployment-api's `POST /api/fleet/watchdog/kill-events` ingest route
 (`_rw_notify_deployment_api()` in `resource-watchdog.sh`, opt-in via `RW_DEPLOYMENT_API_URL` env var). This second write

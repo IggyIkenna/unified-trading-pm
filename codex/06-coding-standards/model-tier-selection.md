@@ -57,6 +57,45 @@ STANDARD configuration for a plan declaring no tier is the todo-count-derived de
 10-todo threshold), not an unconditional `effort: max` and not a silent fallback either. The `audit_model_tier.py`
 heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
 
+### Context window is PER-MODEL, and has exactly one SSOT (codified 2026-08-10)
+
+There is no single "the context window" number. It is a property of the model, and
+`agent-orchestrator/server/model_tier.py::context_window()` is the **only** place it may be encoded — never a literal
+copied into a caller:
+
+| model                                | window |
+| ------------------------------------ | ------ |
+| Haiku 4.5, Sonnet 4.6 (`light`)      | 200K   |
+| Sonnet 5, Opus, Fable                | 1M     |
+| DeepSeek V4 — **both** Pro and Flash | 1M     |
+| unknown / unset                      | 1M     |
+
+DeepSeek's 1M is measured, not assumed: the live API served 988,249 tokens in one request and named its ceiling refusing
+1,235,325 — `maximum context length is 1048565 tokens`. AO's prior stays at a round 1,000,000, 4.5% conservative,
+because under-estimating costs one slightly-early compaction while over-estimating produces a terminal wedge.
+
+**Claude Code applies its own per-model window, and it is right for models it RECOGNISES** — it sizes Sonnet 4.6 at 200K
+and Sonnet 5/Opus at 1M by itself. The problem is only the fallback: for an **unrecognised** model string it assumes
+~200K. DeepSeek lands there because `--model` is deliberately suppressed for non-Anthropic providers
+(`accounts.py::model_flag_for_provider`), leaving the CLI no model identity to size from — so it compacted every
+DeepSeek worker at ~17% of real capacity.
+
+**The override — `CLAUDE_CODE_MAX_CONTEXT_TOKENS`** (undocumented by the vendor; found by enumerating env-var symbols in
+the CLI binary and confirmed behaviourally via `/context`: `21.9k / 200k` unset vs `21.9k / 1m` set). Two rules govern
+its use, both load-bearing:
+
+1. **Derive the value from `context_window()`, never write the number.** A literal is a second encoding of the same fact
+   and drifts silently — a stale value still satisfies a "below the ceiling" assertion.
+2. **Scope it to models the CLI cannot identify.** Do NOT export it for Anthropic models. Telling the CLI that a
+   genuinely-200K model (Sonnet 4.6, Haiku) holds 1M means it never auto-compacts and wedges at the real limit. Emitted
+   in `tmux_spawn._start_session` as a runtime shell `case` on `ANTHROPIC_MODEL` — the model is not known to Python at
+   every spawn site, but the account env file sourced immediately before it is authoritative.
+
+**Failure mode to watch:** if that undocumented variable is ever renamed or removed, DeepSeek workers silently revert to
+compacting at ~17% of capacity — a cost regression with no error. The tripwire is the `auto`-`compact_boundary` registry
+signal: a DeepSeek `auto` boundary reappearing in the ~150-200K band means the override stopped working. Post-rollout
+the fleet measured an `auto` boundary at preTokens **935,549** (~93.5% of the window), against 166-190K before.
+
 **Operator ruling (2026-08-08) — the sonnet sub-tier default INVERTS: sonnet-5 everywhere, sonnet-4.6 opt-in only.**
 Sonnet 5 is simultaneously smarter, 1M-context (vs sonnet-4.6's 200K — see `_CONTEXT_WINDOW_200K` in `model_tier.py`,
 measured over 17,974 transcripts), and **cheaper than sonnet-4.6 through end of August 2026**. There is no axis on which

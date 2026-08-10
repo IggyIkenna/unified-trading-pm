@@ -33,6 +33,11 @@ estimate_calibrated_ai_days: 3
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
+sequential:
+  true # added 2026-08-10 (plan_reconciler) -- todo 2 (design gate: bound vs stream vs precompute) has
+  # no machine gate before todo 3/4, which structurally require its decision first; both same-priority P1, so a
+  # same-priority-concurrent-by-default dispatch could pick up "implement the bounded read" before the design
+  # choice is made. AO-dispatch-readiness finding, no content/meaning change, restricts scheduling only.
 source: "deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md §4 (operator ruling 2026-07-18: SCHEDULE)"
 locked_by:
 locked_since:
@@ -171,7 +176,8 @@ real fix is to never load the whole manifest per request.
     are still OOM-dangerous — hence the `live_build_guard.py` pre-flight refusal.
   - Target for todo 2 design: bounded/streamed/precomputed approach must keep peak RSS < 4 GiB even for a full-history
     request at MTDS's worst-case rate (5.19 MB/day/category).
+
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a
-  genuine architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline
-  implications, not a cheat-sheet-matched default.
+  todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a genuine
+  architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline implications, not a
+  cheat-sheet-matched default.

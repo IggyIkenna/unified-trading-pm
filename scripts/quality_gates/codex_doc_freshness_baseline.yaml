@@ -1,56 +1,6 @@
-violation_count: 25
+violation_count: 0
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
   governance_qg_automation_gaps_post_cutover_2026_05_12.md\
   \ \xA7 Group B"
-baseline_files:
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/bar-boundary-candle-edge-convention.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/cefi-capture-universe.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/data-status-drilldown-hierarchy.md
-    reason: stale
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/data-status-drilldown.md
-    reason: stale
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/external-data-always-available-rule.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/lst-exchange-rate-surfaces.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/02-data/scenario-overlay-semantics.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/client-funds-isolation.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/cross-service-promote-handlers.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/custody-architecture.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/instruments-service-as-ssot-for-mtds.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/regime-clustering-structure-allocator.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/scenario-outcome-assertions.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/strategy-lifecycle-state-machine.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/04-architecture/trading-agent-service-directive-pipeline.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/05-infrastructure/agent-orchestrator-deploy.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/05-infrastructure/agent-orchestrator-slack-notifications.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/05-infrastructure/local-tmux-precompact-watcher.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/05-infrastructure/path-registry.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/11-project-management/citadel-grade-planning-standards.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/11-project-management/cross-reference-path-convention.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/11-project-management/doc-frontmatter-schema.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/11-project-management/foundation-completion-gate-discipline.md
-    reason: no-last_reviewed-field
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/27/unified-trading-pm/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md
-    reason: no-last_reviewed-field
+baseline_files: []

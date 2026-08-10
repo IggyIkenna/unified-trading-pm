@@ -815,7 +815,7 @@ def detect_stale_quarantine(now: _dt.datetime, stale_min: int = 120) -> list[dic
     try:
         with open("workspace-manifest.json") as fh:
             manifest = json.load(fh)
-    except Exception:
+    except (OSError, json.JSONDecodeError):
         return []
 
     quarantine: dict[str, dict[str, object]] = manifest.get("promotion_quarantine") or {}
@@ -830,7 +830,7 @@ def detect_stale_quarantine(now: _dt.datetime, stale_min: int = 120) -> list[dic
             continue
         try:
             since_ts = _parse_ts(since_raw)
-        except Exception:
+        except ValueError:
             continue
         if since_ts >= cutoff:
             continue  # recent quarantine — not yet stale
@@ -1970,8 +1970,11 @@ def _write_firestore_ci_watcher(
     now_iso: str,
     project_id: str,
 ) -> None:
-    try:
-        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+    try:  # noqa: fallback-import — Firestore is an optional extra, only needed for the best-effort ledger write
+        from google.api_core.exceptions import GoogleAPICallError  # noqa: imports-inside-functions
+        from google.cloud import (  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+            firestore,
+        )
 
         client = firestore.Client(project=project_id)
         trans_by_repo: dict[str, list[dict]] = {}
@@ -1996,7 +1999,7 @@ def _write_firestore_ci_watcher(
                 },
                 merge=True,
             )
-    except Exception as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
+    except (ImportError, GoogleAPICallError) as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
         print(f"::warning ::ci-failure-watcher Firestore write failed — ledger may be stale: {exc}")
 
 

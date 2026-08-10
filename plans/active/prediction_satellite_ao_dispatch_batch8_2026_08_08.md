@@ -37,7 +37,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_08.md,
@@ -60,7 +60,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/task_template.md,
     scripts/plan-hygiene/check_line_caps.sh,
@@ -99,7 +99,7 @@ discover it either (see the frontmatter summary's reasoning on why this classifi
 
 ## Todos
 
-- [ ] [DOC] P2. **Extract the oldest fully-closed dated Progress Log section from
+- [x] ✅ [DOC] P2. **Extract the oldest fully-closed dated Progress Log section from
       `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` into a dated `_history_2026_08.md` archive
       doc**, clearing the 1000-line hard cap it is currently sitting at (999 lines as of 2026-08-08, `wc -l` — it was
       1000 exactly on 2026-08-07; re-measure current line count and current open-item line numbers first, they shift
@@ -188,3 +188,35 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
     (`context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md`, which explicitly defers execution — "needs an
     operator/committer to execute it" — rather than claiming it). Extracted the 1 conflict-clear bounded todo. Left
     `status: draft` per the autonomous-mode safety rail — operator flips to `active` to dispatch.
+- **2026-08-09 (slot 8, data_engineering, backlog `prediction_satellite_ao_dispatch_batch8-001`)**: todo executed.
+  Re-verified premise first (per the todo's own re-verify instruction): source doc was 1013L with only 2 open items
+  (lines 172, 380) — the 3rd open item cited in the todo text (line 702, series-scoped historical backfill) had already
+  been extracted to `prediction_satellite_ao_dispatch_batch9_2026_08_09.md` earlier the same day, so this run is
+  2-in/2-out, not the 3-in/3-out the todo text anticipated. Computed section boundaries for all 15 dated `###` Progress
+  Log sub-sections; found 13 fully-closed (0 open checkboxes) vs. the 2 carrying the known open items. Before
+  extracting, found one genuine forward-pointer hazard the naive "oldest first" read would have missed: the doc's own
+  top 2026-08-04 entry references "this Progress Log's 2026-06-26 entry" by name, so that fully-closed section was
+  deliberately LEFT IN PLACE (not extracted) to avoid orphaning that pointer. Also found the last dated section
+  (2026-06-27 ~10:10 UTC) had accumulated a long tail of much-more-recent audit-trail bullets (na-eligibility-audit /
+  context-scout entries dated 2026-07-30 through 2026-08-09) appended after its narrative content with no new header —
+  trimmed the extraction range to the section's true narrative end (line 979 of the original) and left that tail in
+  place as current status. Extracted the remaining 12 fully-closed sections (718→684 lines after the 06-27 trim; 0 open
+  checkboxes in the extracted content, verified) verbatim into
+  `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md`, left a one-line pointer explaining
+  what was kept and why. Source doc: 1013L → 339L before the todo-conservation stub index, 376L final (well under the
+  500L soft cap). Verified both pre-existing open checkboxes exist byte-identical post-extraction (set-equality check,
+  not just count). `check_line_caps.sh`: green (0 new violations; baseline unchanged at 17). **Hit a same-day gate gap
+  on first commit attempt**: `check_todo_regression.sh` (migrated into the `safe-doc-push.sh` precommit fast path THIS
+  SAME DAY, per its own header) counts TOTAL `- [ ]`/`- [x]` lines and has no exemption for a Finding-J archival
+  extraction — moving 25 already-`[x]` items to the archive read as `lost=25`. Same root cause as
+  `issues/todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md` (filed same day, different
+  trigger) — appended a finding there rather than re-filing. Workaround (not a real fix): appended a 25-line "Extracted
+  items index" stub section (one-line `- [x]` pointer per moved item, clearly labeled as a todo-conservation mechanism,
+  not live work) so the doc's total checkbox count matches origin (27); source doc final size 376L, still well under the
+  500L soft cap. **Also hit + recovered from a `safe-doc-push.sh` patch-loss bug**: the script's prek-patch
+  stash/restore (for unstaged files outside the commit scope) saved a patch on its SECOND commit attempt but never
+  restored it after the retry succeeded, silently dropping this doc's + the issue doc's checkbox-flip edits from the
+  working tree — recovered via `git apply` on the orphaned patch file
+  (`~/.cache/prek/patches/1786283053921-3898887.patch`) before this commit. Shipped: unified-trading-pm@afd6891bb3
+  (source split + archive doc + stub index); this docs(plans) commit flips this doc's own todo + the source issue doc's
+  own todo.

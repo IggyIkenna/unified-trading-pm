@@ -17,7 +17,7 @@ scope: [admin]
 tags: [operator-action-items, session-wrapup, stash-cleanup, secrets, blocker-digest]
 related:
   [
-    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
   ]
 created: 2026-08-08
@@ -38,7 +38,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -54,9 +54,24 @@ applied autonomously and is not repeated here.
 
 ## 1. Secrets / credentials only you can create
 
-- [ ] [OPERATOR] P2. **Create GSM secret for the DeepSeek API key** (currently plaintext on two hosts). Exact name +
-      command prepared by the AO apply agent — see `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
-      Progress Log for the exact `gcloud secrets create` invocation. An agent wires the re-sourcing once created.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-09** — GSM secret `deepseek-v4-pro-api-key` created live. See
+      `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` for evidence; re-sourcing on both hosts is
+      the next (non-operator) todo there.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-09 — 5 Slack alerting webhooks provisioned to GSM, unprompted operator offer
+      ("would be good to get them all ready so we can monitor them with agents").** Operator pasted all known webhook
+      URLs (8 total, including duplicates); hash-compared the 2 ambiguous duplicate pairs (`#uts-live-alerts`,
+      `#agent-orchestrator-alerts`) against what's already live in GSM to resolve which is current without guessing —
+      `#uts-live-alerts` resolved cleanly (one pasted value matched the live `alerting-uts-live-alerts-slack-webhook`
+      secret exactly, confirming which of the two was current); `#agent-orchestrator-alerts` had no existing secret to
+      compare against, so the choice there is unverified — **flagging for a quick confirm**, not blocking.
+      `#paper-trading-alerts` already matched the live `agent-orchestrator-paper-trading-slack-webhook` secret exactly —
+      no change needed. Created/populated: `cloud-monitoring-slack-ci-failures-webhook` (was an empty shell, now has
+      v1), `alerting-monitoring-deadman-slack-webhook` (new), `alerting-data-pipeline-alerts-slack-webhook` (new),
+      `alerting-agent-orchestrator-alerts-slack-webhook` (new — **unverified which of 2 candidate URLs is current,
+      picked the one matching the pattern of the resolved `#uts-live-alerts` case; operator should confirm the
+      #agent-orchestrator-alerts channel is actually receiving posts before relying on this for paging**). Raw webhook
+      URLs handled via a scratchpad temp file (session-isolated, not git-tracked) deleted immediately after use — never
+      committed, never echoed back in chat.
 - [ ] [OPERATOR] P2. **Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local`** so `ao-self-pull.sh`
       wedge/drift alerts page instead of silently logging "no webhook." Exact resolution+restart steps (mirroring
       `bootstrap_vm.sh`'s own logic) are in
@@ -126,15 +141,15 @@ pull any specific checkout's full table back up if you want it before deciding.
 - [ ] [OPERATOR] P2. **Honest-coverage mockup design reviews** (4 related sub-questions, paced to your own cadence):
       re-verify the SPORTS/PREDICTION leaf model, approve CEFI instrument-type groupings, + 2 others in the same thread.
       You said you need to review these yourself. `plans/active/cefi_consolidated_closeout_2026_07_18.md`.
-- [ ] [OPERATOR] P2. **Sign off on making `quality-gates-v2`'s content-sentinel dependency-content-aware** (key on
-      own-tree-hash + resolved-UAC/UTL-content). Highest-blast-radius change to the fleet's core CI gate cache — a full
-      technical walkthrough of the current code + 3 candidate keying implementations with tradeoffs is already written
-      into `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`, ready for a fast
-      sign-off. Nothing shipped, as instructed.
-- [ ] [OPERATOR] P3. **Did you personally rule on tradfi audit Finding E-1 (order-routing scaffolding) somewhere
-      untracked?** A worker's "DECIDED (operator ruling)" citation traced to no recorded source anywhere in the corpus.
-      Treated as unruled per your answer; a fresh `[OPERATOR]` todo is filed in
-      `plans/archive/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` if you do recall it.
+- [x] ✅ [DOCS] P2. **See `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` — RULED
+      2026-08-09.** Option 2 approved (hash UAC's + UTL's resolved git ref/commit) — the doc's own stated
+      recommendation. Full ruling + a mixed-eligibility cleanup found while reclassifying the doc for AO dispatch are
+      recorded there, not re-litigated here. Nothing shipped yet — implementation is now AO-dispatchable
+      (`assigned_vm: planning`), not hand-implemented in this pass (highest-blast-radius fleet CI gate).
+- [x] ✅ [DOCS] P3. **See
+      `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` — RULED
+      2026-08-09.** Bridge the gates (option A). Full ruling + a newly-found conflict with an unproven
+      backfill=paper=live precondition are recorded there, not re-litigated here.
 
 ## 5. Permanent hard-stops (not time-sensitive, listed for completeness)
 
@@ -146,15 +161,17 @@ pull any specific checkout's full table back up if you want it before deciding.
 
 ## 6. Loose ends worth a quick look
 
-- [ ] [OPERATOR] P1. **`.tabs/2`'s live working tree has real unresolved git conflict markers** in
-      `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` right now (found during the stash
-      audit, not touched) — separate from the stash question above, this file itself needs a human to resolve the
-      conflict.
-- [ ] [OPERATOR] P1. **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — a confirmed-live bug in
-      the shared checkout's `prek` stash-restore hook that was actively destroying uncommitted work today (independently
-      discovered by 3+ concurrent agents). Several agents had to route around it with `--no-verify` or `git commit-tree`
-      on already-verified-correct content. Worth a priority look since it's an active hazard to every session sharing
-      this checkout, not just today's.
+- [x] ✅ [VERIFY] P1. **RE-CHECKED 2026-08-09 (operator, interactive) — already resolved, no action needed.**
+      `.tabs/2`'s `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` has 0 conflict markers now;
+      last touch was a routine `na-eligibility-audit` commit (`a3c8a449f`), not a manual conflict resolution — some
+      other session's normal edit flow cleared it. Stale finding, closing.
+- [x] [OPERATOR] P1. ✅ **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — resolved and archived
+      2026-08-09 (`/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`): the
+      issue's own 4 todos shipped — deterministic repro, flock-serialized `git commit` in
+      `safe-doc-push.sh`/`quickmerge.sh` (`unified-trading-pm@d38f16f66`), a checksum-verify hard-stop on silent reverts
+      (`unified-trading-pm@f8a307bad`), and a documented scratchpad-backup HARD RULE
+      (`/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover", item 4). No remaining
+      priority look needed.
 - [ ] [OPERATOR] P2. **`tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`** — a Cloud Scheduler job
       believed paused since 2026-06-25 was found still firing daily during today's tradfi §8 purge; protectively paused
       (plus a second, never-tracked weekly job) but the root cause of why the pause never took needs a look.
@@ -164,3 +181,79 @@ pull any specific checkout's full table back up if you want it before deciding.
 - 2026-08-08: Filed as the consolidated wrap-up of the full 80-item Q&A + 6-agent apply + 7-tranche RECLASSIFY session,
   per the operator's explicit request for one document to work through.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09 (operator ruling)**: the Finding E-1 item above was ruled — bridge the gates (option A). Marked done here
+  as a pointer; full ruling recorded in
+  `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — this doc is a pure consolidated OPERATOR-only action
+  list (credential/wallet-key provisioning, IAM/GitHub-org settings, human design reviews, live-trading sign-off,
+  per-checkout stash-drop judgment calls) — every remaining item genuinely requires the operator's own hands or
+  judgment. The 2 credential items this round's cheat-sheet flagged are already recorded here as DONE, with the
+  re-sourcing follow-up correctly pointed at (and now extracted from)
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of all 16 items.
+  This doc's own purpose is curation of genuinely operator-only leftovers (credentials/exchange logins, GitHub UI clicks
+  with no API, git-stash-drop (categorically blocked for agents), permanent hard-stops, human judgment reviews) — every
+  remaining item still requires the operator's own hands per its own definition. Round9 (2026-08-09) already re-verified
+  this same conclusion in detail; no new facts found this pass.
+
+## Carried in from the 2026-08-10 ag-closeout parked-corpus close-out
+
+Six items that genuinely still need the operator, lifted out of five dated `ag_closeout_audit_<tranche>_parked_*.md`
+reports on 2026-08-10 so they live on one list instead of five, and so those reports can reach zero open todos and
+archive. Nine other `[OPERATOR]` items in those same reports were resolved or re-homed to AO the same day and are closed
+in place with their evidence — they are deliberately NOT repeated here.
+
+- [ ] [OPERATOR] P2. **Confirm the 6 transcribed rulings in
+      `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` are accurate.** Operator-only — cannot be
+      worker-determined. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` (finding 4 item 1), 2026-08-10.
+- [ ] [OPERATOR] P3. **Approve or decline the ICE/OPRA Databento subscription add.** Billing decision, no data-derivable
+      answer. Source `/plans/active/issues/databento_ice_opra_subscription_ask_2026_08_09.md` (retagged `[tradfi]`
+      2026-08-10). Carried from `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 2.
+- [ ] [OPERATOR] P3. **Provision `glassnode-api-key` in Secret Manager, or decline.** Glassnode is NOT a removed
+      provider and the adapter is scaffolded; per `/codex/02-data/external-data-always-available-rule.md` exhausting the
+      free path is a credential ask, not a descope. The Kaiko half of the original joint ask was closed by the
+      2026-08-10 ruling — do not provision `kaiko-api-key`. Source
+      `/plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md`.
+- [ ] [OPERATOR] P3. **Provision `sportradar-api-key` and decide Sportradar's scope, or decline.** Human-held
+      credential; the sports-only `SportradarAdapter` is blocked on it. Source
+      `/plans/active/issues/sportradar_credential_ask_2026_08_09.md` (retagged `[sports]` 2026-08-10). Carried from
+      `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 6.
+- [ ] [OPERATOR] P2. **Rule on `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`**: flip
+      `status: draft` → `active`, OR provision the IPRoyal residential-proxy credential (~$7 PAYG) to unblock its items
+      4/5/7, OR decline and leave it parked. Carried from `ag_closeout_audit_tradfi_parked_2026_08_10.md` finding 2.
+- [ ] [OPERATOR] P1. **Complete or explicitly re-park the 2026-08-07 ruling's remaining 2/8 + 0/1 items**: flip
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (+ its finalize twin) to `active`, and schedule item 8's
+      fold/archive of `tradfi_consolidated_closeout_2026_07_18.md` once the currently-active tradfi batches clear.
+      Carried from `ag_closeout_audit_tradfi_parked_2026_08_10.md` finding 5.
+
+### Design calls carried in the same pass (2026-08-10)
+
+Six human-judgment items that were pinning four dated `ag_closeout_audit_*_parked_*.md` reports open. They are not
+`[OPERATOR]`-tagged at source — they are `[DOCS]`/`[LOCAL]`/`[DOC]` design calls — but none has a worker-determinable
+outcome, so they belong on this list rather than in an audit report nobody owns.
+
+- [ ] [OPERATOR] P3. **Decide where future operator-ruling sessions get recorded** among the 3 options named in
+      `/plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md` item 2. A judgment call, low
+      urgency. Carried from `ag_closeout_audit_ao_parked_2026_08_10.md` 2026-08-10.
+- [ ] [OPERATOR] P3. **Resolve the aggregate-zero-path signal design fork** in
+      `/plans/active/issues/ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]` todo — a two-direction
+      design choice with no evidence-based tiebreaker; its `[UI]` and `[BACKEND]` todos are both blocked behind it.
+      Carried 2026-08-10.
+- [ ] [OPERATOR] P3. **Run `/plan-brainstorm` on
+      `/plans/active/issues/context_scope_sufficiency_measurement_2026_08_08.md`'s sufficiency-metric question** before
+      any implementation todo is authored — the doc's own text calls it "genuinely open-ended". Carried 2026-08-10.
+- [ ] [OPERATOR] P3. **Rule on the `self_dispatched_orphan_count` addition to
+      `/scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py`** — segment the headline orphan count so runs
+      don't overstate the batch-needed backlog, or drop the idea. A tooling-priority call. Re-confirmed unchanged on 5
+      separate audit runs (08-04/-06/-08/-09/-10), which is past the escalation trigger — it needs a ruling, not a 6th
+      re-confirmation. Carried from `ag_closeout_audit_infra_parked_2026_08_03.md` finding 12, 2026-08-10.
+- [ ] [OPERATOR] P3. **Scope the 2 flagged `CITE_RE`-era candidates, or drop them**: the `CITE_RE` hardening design
+      (should a Progress Log narrative mention of a filename count as a dispatch citation?), and
+      `/plans/active/repo_scripts_governance_audit_2026_06_18.md`'s L208/L213. Neither is ready to batch as written.
+      Same 5-run escalation trigger as the entry above. Carried from `ag_closeout_audit_infra_parked_2026_08_03.md`
+      finding 13, 2026-08-10.
+- [ ] [OPERATOR] P2. **Decide whether `/ag-closeout-audit all` mode should budget for the full candidates-generator +
+      Phase-1 sweep per tranche, or explicitly document its orphan counts as a lower bound.** The 2-vs-31 orphan gap
+      between two same-day tradfi passes is a real methodology difference, not noise — an operator reading only an
+      `all`-mode report would not currently know the count is partial. Carried 2026-08-10.

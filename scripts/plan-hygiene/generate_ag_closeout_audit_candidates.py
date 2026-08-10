@@ -67,13 +67,6 @@ CLOSEOUT_NAME = {
 # a handful of AGs date their closeout doc differently -- resolved by globbing at use time, not hardcoded further
 
 CITE_RE = re.compile(r"([a-z0-9_]+_20\d\d_\d\d_\d\d(?:_finalize)?\.md)")
-DATA_EPICS = {
-    "infrastructure_master",
-    "instruments_master",
-    "mtds_mdps_master",
-    "manifest_master",
-    "features_and_ml_master",
-}
 EXCLUDED_STATUS = {"resolved", "archived", "superseded"}
 
 
@@ -192,10 +185,16 @@ def main(argv=None) -> int:
         basename = path.name
         if path in covering_paths:
             continue
-        if re.search(r"_consolidated_closeout", basename):
+        if re.fullmatch(r"[a-z_]+_consolidated_closeout(?:_aggregated_sources)?_\d{4}_\d{2}_\d{2}\.md", basename):
             # a sibling tranche's own hub doc citing/being-cited-by another hub doc (e.g. ao's closeout
             # linking to ci's) is a hub cross-reference, never a real audit-target membership -- exclude
             # every *_consolidated_closeout_* doc regardless of which tranche's citation surfaced it.
+            # ANCHORED as a fullmatch (not re.search) -- a bare substring search also matched issue docs
+            # whose own (longer, more specific) title merely CONTAINS "_consolidated_closeout" while
+            # describing a problem WITH the hub doc rather than being the hub doc itself, e.g.
+            # tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md -- that doc
+            # carries genuine open tradfi-scoped work and was silently invisible to EVERY tranche's
+            # candidate list (found live 2026-08-10, ag-closeout-audit tradfi tranche).
             continue
         if re.search(r"_finalize(_\d{4}_\d{2}_\d{2})?\.md$", basename):
             # a finalize doc's filename is inherited from its SOURCE doc, not tranche-prefixed (e.g.
@@ -210,7 +209,6 @@ def main(argv=None) -> int:
         asset_group = fm.get("asset_group") or []
         if isinstance(asset_group, str):
             asset_group = [asset_group]
-        parent_epic = fm.get("parent_epic") or ""
 
         if t in AGS or t in NON_AG_TRANCHES:
             # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
@@ -219,7 +217,18 @@ def main(argv=None) -> int:
             # infra's enum VALUE is "infrastructure", not "infra" -- see TRANCHE_ASSET_GROUP_VALUE.
             member = TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group
         elif t == "cross-cutting":
-            member = "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or basename in cited)
+            # Tested identically to every other tranche (plain tag membership) -- previously gated on
+            # `parent_epic in DATA_EPICS or basename in cited`, which silently excluded a bare
+            # `[cross-cutting]` doc with a non-data `parent_epic` (e.g. `plan_hygiene_master`,
+            # `agent_operating_framework_master`) THAT HAD NEVER BEEN CITED ANYWHERE: it failed the
+            # member test entirely, so it was invisible to both the "cited" and "never cited" buckets,
+            # not just the latter (Process finding 2,
+            # issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md -- 4 such docs were only found
+            # by cross-checking against check_ag_closeout_linkage.py's stricter graph-reachability
+            # check, which has no such member-test gate). Citation status still drives the
+            # cited/never-cited split below via `cited_in_covering_doc` -- it just no longer gates
+            # membership itself.
+            member = "cross-cutting" in asset_group
 
         if not member:
             continue

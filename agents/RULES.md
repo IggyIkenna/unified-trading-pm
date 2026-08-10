@@ -92,6 +92,20 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   common wasted-turn errors: `File has been modified since read` (Write refused) and
   `String to replace not found in file` (Edit's `old_string` no longer matches the live content). Re-Read the exact file
   immediately before any Edit/Write that isn't its first touch this turn — one cheap tool call beats a retry cycle.
+- **Never delete another agent's already-landed content in a shared plan/issue doc — append, don't replace (confirmed
+  root cause, 2026-08-08 incident, `quickmerge_concurrent_same_file_edit_blind_overwrite_2026_08_08.md`).**
+  Investigation + direct reproduction (3 scratch-repo scenarios run through quickmerge's exact STAGE 0.4 sequence —
+  same-line edits, different sections sharing a Progress-Log append anchor, and fully independent edits) confirmed
+  quickmerge's `git pull --rebase --autostash` conflict detection is NOT defective: git correctly raises a rebase
+  CONFLICT whenever two commits' diffs genuinely overlap (including the shared-append-anchor case this incident's
+  hypothesis suspected might slip through), and cleanly preserves BOTH sides when edits are genuinely independent. The
+  live incident's actual mechanism was different: the clobbering commit's diff is provably built ON TOP OF the earlier
+  commit's own output (same blob hash chain — no rebase involved at all), and its author's edit REPLACED the earlier
+  author's already-present checkbox annotation + Progress Log entry instead of appending alongside it. That is a
+  content-discipline gap invisible to git/quickmerge — a fully valid, non-conflicting sequential commit by git's own
+  rules. Before replacing a checkbox/Progress-Log entry in a shared doc, check whether it already carries content from
+  another author/session — if so, APPEND your entry rather than overwriting theirs, even when your own investigation
+  reaches a similar or better conclusion.
 - **The guardrail-blocked command list is knowable in advance — don't discover it by trial.**
   `agent-orchestrator/scripts/hooks/block_destructive_commands.py` hard-blocks (exit 2, every time, no exceptions for an
   autonomous worker) a fixed set of irreversible patterns: `git stash drop/clear`, `git reset --hard`,
@@ -178,15 +192,14 @@ the flip in the verification window either way.
 **Enforcement**: `slot_done_no_plan_flip` when the check IS applicable and neither pattern fired. ≥3 in 4 h from one
 slot escalates to `slot_dual_flip_pattern_violation` — the review agent chats main about you.
 
-**Never combine the checkbox flip with a `git mv` archival in ONE commit (2026-07-30 incident; SSOT
-`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — cite that doc, not this one, from plans).** If a
-todo's own completion also makes its doc archival-eligible (all todos done, no lock), a single commit that both edits
-the checkbox AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL `plan_ref` PATH show only a
-file deletion — no `[ ] → [x]` transition is visible there (git's rename pairing isn't applied when a path-scoped
-`git show`/`git log` query is run against just the old path), so `/done`'s M3 check (`cross_repo_pm_flip_verified`)
-rejects it with `cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened. Fix: commit the
-flip FIRST as a plain edit at the still-active path, THEN `git mv` to the archive location as a separate follow-up
-commit.
+**Never combine the checkbox flip with a `git mv` archival in ONE commit — CROSS-REPO (mode-2) only (2026-07-30
+incident; SSOT `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — cite that doc, not this one, from
+plans).** For a cross-repo flip (plan-of-record in the sibling PM worktree), a single commit that both edits the
+checkbox AND `git mv`s the file makes the diff at the original `plan_ref` path show only a deletion, which defeats
+`/done`'s M3 check — commit the flip FIRST at the still-active path, THEN `git mv` in a follow-up commit. **Single-repo
+finalize plans (plan-of-record in the worker's own worktree, e.g. a PM-direct worker): same-commit flip+archival is now
+SANCTIONED** (verify.py resolves it — `plan_ref_self_archived_with_marker` — and `check_archive_candidates.sh --only`
+requires it; narrowed 2026-08-10).
 
 **Pre-shutdown self-check** before you walk away:
 

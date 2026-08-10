@@ -44,7 +44,7 @@ context_scope:
   [
     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh,
     scripts/setup.sh,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 ---
 
@@ -86,7 +86,7 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
       `case` pattern (line 50) to match `setup.sh`'s current pip-fallback wording (unquoted `uv==0.10.8`, `--quiet`,
       `$PYTHON_CMD -m` prefix) instead of the stale quoted-literal expectation. Done when:
       `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed. **DONE —
-      shipped via `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`: `unified-trading-pm@eff7413da`
+      shipped via `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md`: `unified-trading-pm@eff7413da`
       (2026-08-06T17:18:14Z, "fix(qg): update uv bootstrap fallback test structural anchor to match setup.sh's current
       pip fallback"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck
       sweep): re-ran the test directly — `── result: 5 passed / 0 failed ──`. Batch4's own doc had already flipped this
@@ -97,8 +97,9 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
 
 **na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated).** This is a
 textbook bounded/deterministic fix on its own merits (live-reverified: still 4/5 passed, same root cause). But the
-sibling `/ag-closeout-audit ci` skill's same-day draft `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has
-**already extracted this exact sole todo verbatim**, citing
+sibling `/ag-closeout-audit ci` skill's same-day draft
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has **already extracted this exact sole todo
+verbatim**, citing
 `Source: issues/uv_bootstrap_fallback_test_structural_ anchor_stale_2026_07_30.md (sole todo) — never cited by any covering doc; a clean, small, previously-untriaged orphan.`
 Reclassifying this doc's own `assigned_vm` now would open a second, independent dispatch path to the identical one-line
 fix once batch4 activates. Staying NA until batch4 ships it or is archived unshipped (then re-open as RECLASSIFY on the

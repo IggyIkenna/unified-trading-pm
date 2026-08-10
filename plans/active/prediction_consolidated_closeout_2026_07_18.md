@@ -359,10 +359,10 @@ fixture-linked before MVP backfill.
     since; live-verified via direct checkbox read). **[DATA] P2.** Verify the Kalshi execution-service paper-order flow
     end-to-end — the same deliverable as `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6's second leg,
     itself currently `BLOCKED-OPERATOR-DECISION` (gated on the same credential/host question, see that plan).
-  - [`plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`](/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md)
-    — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). 2 open, covered by
-    `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 (secret reshape DONE 2026-07-31; live paper-order
-    verify BLOCKED-OPERATOR-DECISION, same gate as the item above).
+  - [`plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`](/plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md)
+    — **added to this index 2026-07-31** (`/ag-closeout-audit prediction` Finding 3 fix). **RESOLVED + archived
+    2026-08-09** (0 open) — covered by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5
+    (`execution-service@577b9a884`; both secret reshape and non-live paper-order verify shipped).
   - [`plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`](/plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md)
     — **added to this index 2026-07-31** (Finding 3 fix). 3 open, covered by
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 7 (recurrence check + reclassification + contingent
@@ -371,15 +371,15 @@ fixture-linked before MVP backfill.
     — **added to this index 2026-07-31** (Finding 3 fix). 3 open P3, self-dispatching (`assigned_vm: planning`); its
     higher-value item is already substantively closed via `data_pipeline_check_mdps_features_2026_07_20.md`, only a
     small currently-unreachable volatility-module echo remains.
-  - [`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`](/plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md)
+  - [`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`](/plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md)
     — **added to this index 2026-07-31** (Finding 3 fix). 2 prose-only recommended fixes, no checkboxes; dual-tagged
     `[prediction, ao]`, `parent_epic: orchestrator_master` — genuinely owned by the `ao` tranche's own closeout
     (dispatcher/checkpoint architecture, not prediction data work), not re-drafted here per the primary-owner rule for
     multi-tranche docs.
-  - [`plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+  - [`plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
     — **new 2026-07-31** (filed by `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1's adapter dead-code
-    audit). 1 open `[BACKEND] P2` — genuine (A) delete vs (B) keep-and-document judgment call, explicitly "not
-    adjudicated" by its own filing; operator-gated, not AO-dispatchable as written.
+    audit). **RESOLVED 2026-08-09** — operator ruled DELETE (option A) 2026-08-07, executed + archived
+    (instruments-service@4b55c57b) via batch10's todo; the doc is now 0-open-todos and archived.
   - [`plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
     — **new 2026-07-31** (same audit). 1 open `[BACKEND] P2` — same shape (A) delete vs (B) keep-and-document,
     operator-gated.
@@ -783,3 +783,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
   (`archive_exempt: true`, `gate_on_depends: false` coordination hub; `depends_on` lists the 4 Phase A-E children, all
   still open under their own docs — this parent has nothing of its own to reclassify). Nothing to reclassify.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
+  (`archive_exempt: true` coordination hub; 4 Phase A-E children still open under their own docs, plus its own 0-todo
+  status is by design, not a moot/ARCHIVE candidate — `archive_exempt: true` is the correct standing marker). Doc stays
+  NA.

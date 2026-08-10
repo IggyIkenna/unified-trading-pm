@@ -28,7 +28,7 @@ from __future__ import annotations
 import sys
 
 import pandas as pd
-from unified_trading_library import read_availability_index, resolve_bucket_name
+from unified_trading_library import BucketNamingError, read_availability_index, resolve_bucket_name
 
 # (kind, asset_group-or-None) pairs to check. asset_group=None -> single bucket (no AG split).
 TARGETS: list[tuple[str, str | None]] = (
@@ -43,13 +43,17 @@ TARGETS: list[tuple[str, str | None]] = (
 def audit_bucket(kind: str, asset_group: str | None) -> dict | None:
     try:
         bucket = resolve_bucket_name(cloud="gcp", kind=kind, asset_group=asset_group)
-    except Exception as exc:
+    except BucketNamingError as exc:
         print(f"SKIP {kind}/{asset_group}: bucket resolve failed: {exc}", file=sys.stderr)
         return None
 
     try:
         df = read_availability_index(bucket, columns=["capture_status", "available_at", "service_name"])
-    except Exception as exc:
+    except Exception as exc:  # noqa: broad-except — read_availability_index's own contract explicitly
+        # re-raises arbitrary unclassified exceptions (auth/permission errors, pyarrow errors) beyond
+        # the (FileNotFoundError, OSError, ValueError, ParserError, NotFound/Forbidden-by-name) it
+        # already swallows internally; this is a per-bucket audit-sweep isolation catch — one bad
+        # bucket must SKIP, not crash the whole multi-target audit.
         print(f"SKIP {kind}/{asset_group} bucket={bucket}: read failed: {exc}", file=sys.stderr)
         return None
 

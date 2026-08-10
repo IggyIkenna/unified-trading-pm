@@ -59,7 +59,7 @@ context_scope:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
+    /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
     instruments-service/scripts/build_instrument_catalogue.py,
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
@@ -136,10 +136,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       This is the activity-vs-target-artifact trap the async-wait-discipline codex SSOT warns about: "fleet FINISHED"
       was VM-completion proof, not data-capture proof. Full evidence + recommended root-cause diagnosis steps (not
       executed here — this is a genuine, uniform zero-yield pattern that needs adapter-level investigation, not a
-      mechanical re-run): `plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. **Did NOT update
-      `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file had an uncommitted
-      in-progress edit (mtime <120s) from another active session at the time of this check; whoever owns that edit
-      should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the new issue doc).
+      mechanical re-run): `plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` (archived 2026-08-09,
+      resolved). **Did NOT update `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file
+      had an uncommitted in-progress edit (mtime <120s) from another active session at the time of this check; whoever
+      owns that edit should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the
+      new issue doc).
 - [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): launch ES_OPT now AND wire its
       manifest-verify into Phase-D gate tracking — the singleton Databento lock blocker cleared (confirmed 2026-07-26,
       zero `tradfi-bf-*` instances in any state).** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated
@@ -180,10 +181,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       force past someone else's live job. **Re-attempt once `tradfi-bf-fred-full-*` completes** (re-check via the same
       `gcloud compute instances list` filter). **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED
       2026-08-07)**: this item, combined with the manifest-verify item below, is extracted verbatim as todo #2 in
-      `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — that plan is now `status: active`
-      (`assigned_vm: planning`, activated 2026-08-06) with a live autonomous watcher session actively polling the
-      singleton lock and launching ES_OPT as of 2026-08-07T~04:46Z (see that plan's own Progress Log) — track there, the
-      "once that batch activates" condition is satisfied.
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — that plan was activated 2026-08-06
+      (`assigned_vm: planning`) with a live autonomous watcher session polling the singleton lock and launching ES_OPT
+      as of 2026-08-07T~04:46Z, and has since been **completed and ARCHIVED** (path updated 2026-08-10; its todo #2 is
+      `[x]` there with evidence). This item stays open until someone verifies that outcome against this plan's own gate
+      — read the archived plan's Progress Log, do not assume it is still being tracked live.
 - [ ] [DATA] P1. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
       /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
       **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator ruling
@@ -193,8 +195,9 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
       post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts. **CITATION
       (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED 2026-08-07)**: combined with the ES_OPT launch item
-      above into the same `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction — that
-      plan is now `status: active` with a live tracking session — see that citation for detail.
+      above into the same `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction
+      — that plan is now **completed and ARCHIVED** (path updated 2026-08-10), not a live tracking session — see the
+      citation above for detail.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
@@ -715,3 +718,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   confirmation (distinct from the already-granted 4-leg go-ahead). One data-hygiene note (not actionable): the
   ICE-Databento parquet GCS-cleanup checkbox was converted today to a plain "EXTRACTED 2026-08-09" bullet (no longer a
   `- [ ]`), correctly explaining the 5->4 open-count drop since the 08-08 marker. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:a16006baae5f205f]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed.** Fresh full read, 4 open todos. Independently re-verified the
+  ES_OPT duplication citation by reading `tradfi_databento_account_billing_suspended_2026_08_09.md` directly: confirms 2
+  real `tradfi-bf-es-opt-*` launches already happened 2026-08-09 with genuine captured data, and names
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (status: active) as the live dispatch vehicle -- matching this
+  doc's own citation exactly. Todo 4 (residual catalogue-leg purge) stays OPERATOR_QUESTION, not bundled into the
+  already-granted 4-leg go-ahead. `assigned_vm` unchanged.

@@ -1,0 +1,2122 @@
+<!--
+  Odum Research — Google Cloud twelve-month consumption forecast (client-facing deliverable).
+  Repo copy of record. Published artifact: https://claude.ai/code/artifact/4b2f07d2-2db2-4b07-a388-c6158af593c2
+
+  Epic:        commercial / cloud cost negotiation
+  Lifecycle:   durable — the record of the 2026-08 Google Cloud credits ask
+  Delete-when: superseded by a later forecast; supersede in place, do not fork
+
+  2026-08-09 REWRITE. Restructured from an internal-metrics forecast into a DART-led
+  commercial case, after reviewing odum-research.com. Six main sections + a five-part
+  technical appendix. Positioning verified against the live site (FCA 975797, DART's
+  three delivery modes, the five engagement routes) — not invented here.
+
+  DELIBERATELY EXCLUDED, do not reintroduce: the "7 Claude accounts -> 2" optimisation
+  narrative, and any discussion of routing to open-weight / cheapest-provider models.
+  Both read to a cloud vendor as "here is how hard we plan to avoid paying you".
+
+  EDITING — the traps, all of which have bitten:
+    1. Validate the HTML, not the generator. Extract and parse the inline script:
+         python3 -c "import re,pathlib;m=re.search(r'<script>(.*?)</script>',pathlib.Path('FILE').read_text(),re.S);pathlib.Path('/tmp/c.js').write_text(m.group(1))"
+         node --check /tmp/c.js
+       A single mismatched quote blanks EVERY chart while static prose still renders.
+    2. Keep the inline script pure ASCII (\uXXXX escapes). Literal em-dashes mojibake
+       wherever the page is served without a charset header.
+    3. niceTicks() MUST return a top tick >= the data max. svg has overflow:visible,
+       so bars taller than the last gridline escape the plot and overlap the prose.
+    4. Charts sample CSS vars at draw time — the MutationObserver on data-theme is
+       what makes the viewer's dark/light toggle actually repaint them.
+    5. Open it and LOOK at it. Traps 3 and 4 both parse clean and both are visible
+       only on screen.
+-->
+<title>Odum Research — Scaling DART on Google Cloud</title>
+
+<style>
+  :root {
+    color-scheme: light;
+    --ground:      #eceff1;
+    --surface:     #fbfcfd;
+    --surface-2:   #f4f6f8;
+    --ink:         #0d1317;
+    --ink-2:       #4b5761;
+    --ink-3:       #7d8a95;
+    --rule:        #d3dade;
+    --rule-soft:   #e3e8eb;
+    --accent:      #1b4472;
+    --accent-soft: #dce6f2;
+    --signal:      #8f5300;
+    --signal-soft: #f6ead6;
+
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+    --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+    --grid: #e1e5e8;
+    --axis: #c3ccd2;
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:      #0b0f12;
+      --surface:     #141a1f;
+      --surface-2:   #1a2127;
+      --ink:         #e9eef1;
+      --ink-2:       #98a5af;
+      --ink-3:       #69757e;
+      --rule:        #232c33;
+      --rule-soft:   #1c242a;
+      --accent:      #82abdf;
+      --accent-soft: #1a2a3c;
+      --signal:      #efb148;
+      --signal-soft: #2b2113;
+
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+      --grid: #222a30;
+      --axis: #333d45;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:      #0b0f12;
+    --surface:     #141a1f;
+    --surface-2:   #1a2127;
+    --ink:         #e9eef1;
+    --ink-2:       #98a5af;
+    --ink-3:       #69757e;
+    --rule:        #232c33;
+    --rule-soft:   #1c242a;
+    --accent:      #82abdf;
+    --accent-soft: #1a2a3c;
+    --signal:      #efb148;
+    --signal-soft: #2b2113;
+
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+    --grid: #222a30;
+    --axis: #333d45;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 0 24px 96px; }
+
+  p.prose, ul.prose, ol.prose {
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    line-height: 1.62;
+    color: var(--ink-2);
+    max-width: 66ch;
+  }
+  p.prose strong, ul.prose strong { color: var(--ink); font-weight: 600; }
+  p.prose + p.prose { margin-top: 1.1em; }
+  ul.prose { padding-left: 1.15em; }
+  ul.prose li + li { margin-top: .6em; }
+
+  header.masthead { padding: 56px 0 0; }
+  .eyebrow {
+    font-size: .6875rem; font-weight: 600; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    font-weight: 640; letter-spacing: -.025em; line-height: 1.06;
+    text-wrap: balance; margin: 14px 0 0; color: var(--ink);
+  }
+  .standfirst {
+    font-family: var(--serif); font-size: 1.2rem; line-height: 1.5;
+    color: var(--ink-2); max-width: 54ch; margin: 18px 0 0;
+  }
+  .dateline {
+    margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    font-size: .75rem; color: var(--ink-3); font-variant-numeric: tabular-nums;
+  }
+  .dateline b { color: var(--ink-2); font-weight: 600; }
+
+  .headline-row {
+    margin-top: 30px; display: grid; gap: 1px;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--rule); border: 1px solid var(--rule);
+  }
+  @media (max-width: 900px) { .headline-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .headline-row { grid-template-columns: 1fr; } }
+  .tile { background: var(--surface); padding: 18px 20px 20px; }
+  .tile.lead { background: var(--accent-soft); }
+  .tile-label {
+    font-size: .6875rem; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .tile.lead .tile-label { color: var(--accent); }
+  .tile-value {
+    font-size: 2rem; font-weight: 640; letter-spacing: -.03em;
+    margin-top: 8px; font-variant-numeric: tabular-nums; line-height: 1.05;
+  }
+  .tile.lead .tile-value { color: var(--accent); }
+  .tile-note {
+    font-family: var(--serif); font-size: .875rem; line-height: 1.45;
+    color: var(--ink-2); margin-top: 7px;
+  }
+  .tile-note b { color: var(--ink); font-weight: 600; }
+
+  .contents {
+    margin-top: 34px; border: 1px solid var(--rule); background: var(--surface);
+    padding: 16px 20px 18px;
+  }
+  .contents-grid {
+    margin-top: 10px; display: grid; gap: 4px 30px;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 760px) { .contents-grid { grid-template-columns: 1fr; } }
+  .contents a {
+    color: var(--ink-2); text-decoration: none; font-size: .875rem;
+    padding: 3px 0; display: block; border-bottom: 1px solid transparent;
+  }
+  .contents a:hover { color: var(--accent); border-bottom-color: var(--rule); }
+  .contents a b {
+    color: var(--ink-3); font-weight: 600; font-variant-numeric: tabular-nums;
+    display: inline-block; min-width: 2.1em;
+  }
+
+  .callout {
+    margin-top: 30px; background: var(--surface); border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent); padding: 20px 24px 22px;
+  }
+  .callout p {
+    font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6;
+    color: var(--ink-2); margin: 0; max-width: 70ch;
+  }
+  .callout p + p { margin-top: .95em; }
+  .callout strong { color: var(--ink); font-weight: 600; }
+
+  section { margin-top: 62px; }
+  .sec-head {
+    border-top: 2px solid var(--ink); padding-top: 12px; margin-bottom: 20px;
+  }
+  h2 {
+    font-size: clamp(1.35rem, 2.9vw, 1.75rem); font-weight: 640;
+    letter-spacing: -.02em; margin: 6px 0 0; text-wrap: balance; color: var(--ink);
+  }
+  h3 {
+    font-size: 1.0625rem; font-weight: 640; letter-spacing: -.012em;
+    margin: 40px 0 12px; color: var(--ink);
+  }
+  h4 {
+    font-size: .8125rem; font-weight: 650; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink-3); margin: 28px 0 10px;
+  }
+
+  .appendix-rule {
+    margin-top: 80px; border-top: 2px solid var(--ink); padding-top: 16px;
+  }
+  .appendix-rule h2 { margin-top: 4px; }
+
+  /* ------------------------------------------------------- tables ---- */
+  .table-wrap { overflow-x: auto; margin-top: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: .875rem; min-width: 540px; }
+  caption {
+    caption-side: top; text-align: left; font-size: .75rem; color: var(--ink-3);
+    padding-bottom: 8px; font-weight: 500;
+  }
+  th, td {
+    text-align: left; padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule-soft); vertical-align: top;
+  }
+  thead th {
+    font-size: .6875rem; font-weight: 650; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-3);
+    border-bottom: 1px solid var(--rule); padding-bottom: 7px;
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  tr.total td {
+    border-top: 1px solid var(--rule); border-bottom: none;
+    font-weight: 650; color: var(--ink); padding-top: 11px;
+  }
+  td.wrap-cell {
+    font-family: var(--serif); color: var(--ink-2); font-size: .875rem;
+    line-height: 1.45; min-width: 250px;
+  }
+  .swatch {
+    display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+    margin-right: 8px; vertical-align: baseline;
+  }
+  .mono { font-family: var(--mono); font-size: .8125em; }
+
+  /* ------------------------------------------------------- charts ---- */
+  .figure { margin-top: 22px; }
+  .chart-host { position: relative; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .fig-cap {
+    font-size: .75rem; color: var(--ink-3); margin-top: 12px;
+    line-height: 1.55; max-width: 84ch;
+  }
+  .fig-cap b { color: var(--ink-2); font-weight: 600; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 14px;
+    font-size: .75rem; color: var(--ink-2);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; opacity: 0;
+    transition: opacity .09s ease; background: var(--surface);
+    border: 1px solid var(--rule); padding: 9px 11px; font-size: .75rem;
+    min-width: 190px; z-index: 5; box-shadow: 0 5px 18px rgba(0,0,0,.13);
+  }
+  .tooltip.on { opacity: 1; }
+  .tt-title {
+    font-weight: 650; color: var(--ink); margin-bottom: 6px;
+    padding-bottom: 5px; border-bottom: 1px solid var(--rule-soft);
+  }
+  .tt-row { display: flex; justify-content: space-between; gap: 18px; padding: 1.5px 0; }
+  .tt-row .lbl { color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+  .tt-row .lbl i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .tt-row .val { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+  .tt-total {
+    display: flex; justify-content: space-between; gap: 18px; margin-top: 6px;
+    padding-top: 5px; border-top: 1px solid var(--rule-soft);
+    font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+
+  details.tableview { margin-top: 12px; }
+  details.tableview summary {
+    cursor: pointer; font-size: .75rem; color: var(--ink-3);
+    list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.tableview summary::-webkit-details-marker { display: none; }
+  details.tableview summary::before { content: "\25B8"; font-size: .7em; }
+  details.tableview[open] summary::before { content: "\25BE"; }
+  details.tableview summary:hover { color: var(--accent); }
+
+  /* -------------------------------------------------- DART spine ---- */
+  .spine {
+    margin-top: 20px; display: grid; gap: 1px;
+    grid-template-columns: repeat(5, 1fr);
+    background: var(--rule); border: 1px solid var(--rule);
+  }
+  @media (max-width: 900px) { .spine { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .spine { grid-template-columns: 1fr; } }
+  .spine-step { background: var(--surface); padding: 15px 16px 17px; }
+  .spine-n {
+    font-size: .6875rem; font-weight: 650; letter-spacing: .1em;
+    color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  .spine-t {
+    font-size: .9375rem; font-weight: 640; margin-top: 6px;
+    letter-spacing: -.01em; color: var(--ink);
+  }
+  .spine-d {
+    font-family: var(--serif); font-size: .8125rem; line-height: 1.45;
+    color: var(--ink-2); margin-top: 6px;
+  }
+
+  .two-col {
+    margin-top: 26px; display: grid; gap: 34px;
+    grid-template-columns: 1.3fr 1fr;
+  }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; gap: 26px; } }
+  .panel {
+    background: var(--surface-2); border: 1px solid var(--rule);
+    padding: 18px 20px 20px; align-self: start;
+  }
+  .panel h4 { margin-top: 0; }
+  .panel ul {
+    margin: 0; padding-left: 1.05em; font-family: var(--serif);
+    font-size: .875rem; line-height: 1.5; color: var(--ink-2);
+  }
+  .panel ul li + li { margin-top: .55em; }
+  .panel ul strong { color: var(--ink); font-weight: 600; }
+
+  .modes {
+    margin-top: 20px; display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr);
+    background: var(--rule); border: 1px solid var(--rule);
+  }
+  @media (max-width: 800px) { .modes { grid-template-columns: 1fr; } }
+  .mode { background: var(--surface); padding: 16px 18px 18px; }
+  .mode-k {
+    font-size: .6875rem; font-weight: 650; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .mode-t { font-size: .9375rem; font-weight: 640; margin-top: 6px; color: var(--ink); }
+  .mode-d {
+    font-family: var(--serif); font-size: .8125rem; line-height: 1.5;
+    color: var(--ink-2); margin-top: 7px;
+  }
+
+  /* ---------------------------------------------------- flywheel ---- */
+  .flywheel {
+    margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch;
+  }
+  .fw-step {
+    flex: 1 1 152px; background: var(--surface); border: 1px solid var(--rule);
+    padding: 12px 14px; font-family: var(--serif); font-size: .8125rem;
+    line-height: 1.45; color: var(--ink-2);
+  }
+  .fw-step b {
+    display: block; font-family: var(--sans); font-size: .6875rem; font-weight: 650;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .fw-step.terminal { background: var(--accent-soft); border-color: var(--accent); }
+
+  .yr-grid {
+    margin-top: 20px; display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr);
+    background: var(--rule); border: 1px solid var(--rule);
+  }
+  @media (max-width: 660px) { .yr-grid { grid-template-columns: 1fr; } }
+  .yr { background: var(--surface); padding: 16px 18px 18px; }
+  .yr-k {
+    font-size: .6875rem; font-weight: 650; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .yr-v {
+    font-size: 1.6rem; font-weight: 640; letter-spacing: -.03em; margin-top: 7px;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+  .yr-d {
+    font-family: var(--serif); font-size: .8125rem; line-height: 1.45;
+    color: var(--ink-2); margin-top: 6px;
+  }
+
+  .note {
+    margin-top: 24px; background: var(--signal-soft); border: 1px solid var(--rule);
+    border-left: 3px solid var(--signal); padding: 15px 18px 16px;
+    font-family: var(--serif); font-size: .9375rem; line-height: 1.55; color: var(--ink-2);
+    max-width: 78ch;
+  }
+  .note strong { color: var(--ink); font-weight: 600; }
+  .note b.tag {
+    display: block; font-family: var(--sans); font-size: .6875rem; font-weight: 650;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--signal);
+    margin-bottom: 7px;
+  }
+  .note a { color: var(--accent); }
+
+  code {
+    background: var(--surface-2); border: 1px solid var(--rule-soft);
+    padding: .08em .32em; border-radius: 2px; color: var(--ink-2);
+    font-family: var(--mono); font-size: .8125em;
+    overflow-wrap: anywhere;
+  }
+
+  .ask-list {
+    margin-top: 22px; display: grid; gap: 1px;
+    background: var(--rule); border: 1px solid var(--rule);
+  }
+  .ask {
+    background: var(--surface); display: grid;
+    grid-template-columns: 210px 1fr; gap: 18px; padding: 16px 20px; margin: 0;
+  }
+  @media (max-width: 700px) { .ask { grid-template-columns: 1fr; gap: 5px; } }
+  .ask dt { font-size: .8125rem; font-weight: 650; color: var(--ink); letter-spacing: -.005em; }
+  .ask dd {
+    margin: 0; font-family: var(--serif); font-size: .9375rem;
+    line-height: 1.55; color: var(--ink-2);
+  }
+
+  a.xref { color: var(--accent); }
+
+  footer.colophon {
+    margin-top: 80px; border-top: 1px solid var(--rule); padding-top: 18px;
+    font-size: .75rem; color: var(--ink-3); line-height: 1.55; max-width: 80ch;
+  }
+  footer.colophon b { color: var(--ink-2); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">Odum Research &middot; FCA 975797 &middot; prepared for the Google Cloud account team</div>
+    <h1>Scaling DART on Google Cloud</h1>
+    <p class="standfirst">
+      A three-year infrastructure proposal for an institutional capital-markets technology
+      platform, with the first twelve months forecast from measured consumption.
+    </p>
+    <div class="dateline">
+      <span><b>Issued</b> 9 August 2026</span>
+      <span><b>Proposal term</b> 3 years, tapering</span>
+      <span><b>Forecast detail</b> Sep 2026 &ndash; Aug 2027</span>
+      <span><b>Basis</b> USD, gross of credits</span>
+      <span><b>Billing account</b> <span class="mono">016B25-109840-AF2ACB</span></span>
+    </div>
+  </header>
+
+  <div class="headline-row">
+    <div class="tile">
+      <div class="tile-label">FCA-authorised since</div>
+      <div class="tile-value">2023</div>
+      <div class="tile-note">UK investment firm, reference <b>975797</b>. Professional and institutional market participants.</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Data estate</div>
+      <div class="tile-value">112 TB</div>
+      <div class="tile-note">across <b>79 buckets</b> and <b>four markets</b> &mdash; one normalised, research-ready corpus.</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Strategy catalogue</div>
+      <div class="tile-value">Hundreds</div>
+      <div class="tile-note">of systematic strategy variants across <b>five asset groups</b> &mdash; the search space research runs against.</div>
+    </div>
+    <div class="tile lead">
+      <div class="tile-label">The proposal &mdash; tapering support</div>
+      <div class="tile-value">80&thinsp;&rarr;&thinsp;50&thinsp;&rarr;&thinsp;30%</div>
+      <div class="tile-note">over three years. <b>$2.0M</b> gross consumption, <b>$870k</b> support, <b>$1.13M</b> paid to Google.</div>
+    </div>
+  </div>
+
+  <nav class="contents">
+    <div class="eyebrow">Contents</div>
+    <div class="contents-grid">
+      <div>
+        <a href="#s1"><b>1</b> The proposition</a>
+        <a href="#s2"><b>2</b> DART &mdash; what the money runs</a>
+        <a href="#s3"><b>3</b> Why consumption grows</a>
+        <a href="#s4"><b>4</b> The twelve-month forecast</a>
+        <a href="#s5"><b>5</b> The case for Google</a>
+        <a href="#s6"><b>6</b> Why Google Cloud specifically</a>
+      </div>
+      <div>
+        <a href="#a"><b>A</b> Appendix &mdash; the agent fleet, measured</a>
+        <a href="#b"><b>B</b> Appendix &mdash; research unit economics</a>
+        <a href="#c"><b>C</b> Appendix &mdash; where today's credit lands</a>
+        <a href="#d"><b>D</b> Appendix &mdash; scenario model</a>
+        <a href="#e"><b>E</b> Appendix &mdash; method and uncertainties</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================== 1. THE PROPOSITION ==== -->
+  <section id="s1">
+    <div class="sec-head">
+      <div class="eyebrow">Section 1</div>
+      <h2>The proposition</h2>
+    </div>
+
+    <p class="prose">
+      <strong>DART is Odum Research's institutional capital-markets technology platform.</strong> It
+      provides a reusable infrastructure layer for quantitative research, large-scale data
+      processing, strategy simulation, deployment, execution and production monitoring &mdash; one
+      codebase, one operating surface, spanning digital assets, traditional markets, sports and
+      prediction markets.
+    </p>
+    <p class="prose">
+      <strong>It is a platform, not a consulting engagement.</strong> The architecture is
+      deliberately multi-tenant: a common core serves many institutional users and many strategies,
+      rather than a bespoke build per client. Onboarding an institutional user configures the
+      platform; it does not fork it. That distinction is the whole commercial thesis, and it is why
+      the consumption curve in section 5 compounds with users rather than scaling linearly with
+      headcount.
+    </p>
+    <p class="prose">
+      Odum Research Ltd is an FCA-authorised UK investment firm (firm reference 975797, authorised
+      since 2023). DART is built for professional and institutional market participants. The
+      authorisation covers Odum's regulated activities as a firm; it is not an endorsement of any
+      particular technology, venue or counterparty, and nothing here should be read as one.
+    </p>
+    <p class="prose">
+      <strong>Google Cloud is the infrastructure layer underneath all of it.</strong> The 112 TB
+      corpus, the research and simulation environment, the always-on execution spine and the
+      reporting surface all run here. What we are asking Google to support is not an experiment
+      looking for a use case. It is the scaling of a platform that already exists, already runs, and
+      is already regulated.
+    </p>
+
+    <h3>Why consumption expands from here</h3>
+    <p class="prose">
+      Four things multiply together. <strong>More datasets</strong> &mdash; traditional markets alone
+      quadruples as CME futures and options land. <strong>More strategies</strong> under research and
+      in production. <strong>More simulation</strong> per strategy, as the research universe widens
+      from a narrow sample to the full captured corpus. And <strong>more institutional users</strong>,
+      each mandate running in its own isolated process tree because capital isolation is not
+      optional. An increasingly capable AI and agent layer sits across all four.
+    </p>
+
+    <div class="callout">
+      <div class="eyebrow">The ask, stated plainly</div>
+      <p>
+        <strong>We are proposing a bespoke three-year arrangement on a tapering discount:</strong>
+        <strong>80% in year one, 50% in year two, 30% in year three.</strong> Year one is $300,000 of
+        gross consumption &mdash; $25,000 a month, of which we fund $5,000. The taper is the point:
+        our share rises every year as the platform scales, and by year three we are paying the large
+        majority of a much larger bill.
+      </p>
+      <p>
+        Across the term that is <strong>$2.0M of gross consumption, $870,000 of support, and $1.13M
+        paid to Google in cash</strong>. Google's annual credit exposure barely moves &mdash;
+        $240k, $300k, $330k &mdash; while our cash payment grows nearly thirteenfold. Section 5 sets
+        out the arithmetic.
+      </p>
+      <p>
+        The $25,000 starting point is not an aspiration we are negotiating up to. <strong>August 2026
+        is already tracking near $18,000 a month across Google Cloud and AWS combined</strong>,
+        against effectively nothing invoiced a year ago, and the workload behind it is still
+        expanding. It is the next step on a curve that has climbed all year &mdash; and our own
+        modelled demand for those same twelve months is materially higher than $300,000.
+      </p>
+      <p>
+        <strong>Without support, the honest answer is that consumption goes the other way.</strong>
+        We would keep Google Cloud for bulk data storage &mdash; roughly $1,000 a month &mdash; and
+        split compute, model inference and CI across AWS and Azure on price. We would rather not.
+        Running one regulated platform across three providers is an operational headache we would be
+        taking on for no reason other than cost. But at our current scale it would be the responsible
+        call, and we would make it.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================== 2. DART ==== -->
+  <section id="s2">
+    <div class="sec-head">
+      <div class="eyebrow">Section 2</div>
+      <h2>DART &mdash; what the money runs</h2>
+    </div>
+
+    <p class="prose">
+      DART is one operating surface. A strategy moves from raw market data through research and
+      simulation into live execution without changing systems, and one monitoring, reporting and
+      governance layer covers every stage.
+    </p>
+
+    <div class="spine">
+      <div class="spine-step">
+        <div class="spine-n">01</div>
+        <div class="spine-t">Data</div>
+        <div class="spine-d">Market, on-chain and alternative data captured and normalised across sources into one corpus.</div>
+      </div>
+      <div class="spine-step">
+        <div class="spine-n">02</div>
+        <div class="spine-t">Research</div>
+        <div class="spine-d">Feature engineering, model training and signal development against the full captured history.</div>
+      </div>
+      <div class="spine-step">
+        <div class="spine-n">03</div>
+        <div class="spine-t">Simulation</div>
+        <div class="spine-d">Backtesting, paper trading and a promotion ladder that gates what reaches production.</div>
+      </div>
+      <div class="spine-step">
+        <div class="spine-n">04</div>
+        <div class="spine-t">Execution &amp; risk</div>
+        <div class="spine-d">Live order routing, position and treasury management, capacity limits and drawdown controls.</div>
+      </div>
+      <div class="spine-step">
+        <div class="spine-n">05</div>
+        <div class="spine-t">Monitoring &amp; reporting</div>
+        <div class="spine-d">T+1 reconciliation, live-versus-backtest tracking, client reporting and governance evidence.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>Three deployment configurations of one platform</h3>
+        <p class="prose">
+          These are configurations, not bespoke builds &mdash; the same core, with different parts of
+          it exposed. They matter to the forecast because each consumes infrastructure differently
+          and they compound rather than substitute. A user on signals-in drives execution,
+          reconciliation and reporting load. A user on the full workflow additionally drives research
+          and simulation load, which is by far the larger number.
+        </p>
+        <div class="modes">
+          <div class="mode">
+            <div class="mode-k">Mode 01 &middot; Client &rarr; Odum</div>
+            <div class="mode-t">Client-provided signals</div>
+            <div class="mode-d">
+              Research stays with the client's team and their signal logic is never exposed to us.
+              Odum runs execution, reconciliation, monitoring and reporting.
+            </div>
+          </div>
+          <div class="mode">
+            <div class="mode-k">Mode 02 &middot; Research &rarr; execution</div>
+            <div class="mode-t">Full workflow</div>
+            <div class="mode-d">
+              The whole stack: granular tick, book, on-chain and alternative data; the research
+              environment; the promotion ladder; live execution with post-trade analytics.
+            </div>
+          </div>
+          <div class="mode">
+            <div class="mode-k">Mode 03 &middot; Odum &rarr; counterparty</div>
+            <div class="mode-t">Odum-provided signals</div>
+            <div class="mode-d">
+              Signals delivered under agreed scope; execution stays with the counterparty. Delivery
+              health and acknowledgement flows run through DART.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h4>Why this scales commercially</h4>
+        <ul>
+          <li><strong>One infrastructure base, many mandates.</strong> The marginal cost of the next client is compute and storage, not a rebuild.</li>
+          <li><strong>Clean IP boundaries.</strong> Clients keep their signal logic; we run everything around it. That widens the addressable set to teams who would never outsource research.</li>
+          <li><strong>Regulated wrapper.</strong> FCA authorisation lets deployments stand up to allocator and regulator scrutiny &mdash; a real barrier to entry, and slow to replicate.</li>
+          <li><strong>We run on it ourselves.</strong> The platform trades our own capital, so the research and execution load exists whether or not the next user onboards.</li>
+          <li><strong>Data gravity compounds it.</strong> Market data, derived features, simulation results and strategy metadata all accumulate in one place. Every subsequent research and AI workload runs next to that corpus &mdash; which is what makes the estate sticky rather than portable.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>A single corpus across four markets</h3>
+    <div class="table-wrap">
+      <table>
+        <caption>Captured data estate as at 9 August 2026 &mdash; 112 TB across 79 Cloud Storage buckets.</caption>
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th>What is captured</th>
+            <th>Direction of travel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Digital assets &mdash; centralised</td>
+            <td class="wrap-cell">Tick trades, full order books, funding, open interest and derivatives across major venues.</td>
+            <td class="wrap-cell">Universe widening roughly 1.5&times; over the window.</td>
+          </tr>
+          <tr>
+            <td>Digital assets &mdash; on-chain</td>
+            <td class="wrap-cell">DEX swaps, pool state, liquidity events and chain-level activity across multiple chains.</td>
+            <td class="wrap-cell">Roughly 1.25&times;; new chains onboard as discrete bursts.</td>
+          </tr>
+          <tr>
+            <td>Traditional markets</td>
+            <td class="wrap-cell">Equities, futures and index data sourced through institutional vendors.</td>
+            <td class="wrap-cell"><b>Roughly 4&times;</b> &mdash; CME futures and options are the largest single expansion in the forecast.</td>
+          </tr>
+          <tr>
+            <td>Sports &amp; prediction markets</td>
+            <td class="wrap-cell">Odds, line movement and market microstructure from a hard June 2020 data floor.</td>
+            <td class="wrap-cell">Roughly 1.25&times;; a genuinely differentiated dataset.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fig-cap">
+      <b>Why the coverage matters commercially.</b> Very few firms hold tick-level digital asset,
+      traditional market and sports or prediction market data in one normalised corpus with a
+      research environment sitting directly on top of it. That cross-asset breadth is what makes the
+      research and simulation workload &mdash; the largest growth line in this forecast &mdash; both
+      large and defensible.
+    </p>
+  </section>
+
+  <!-- ================================== 3. WHY CONSUMPTION GROWS ==== -->
+  <section id="s3">
+    <div class="sec-head">
+      <div class="eyebrow">Section 3</div>
+      <h2>Why consumption grows</h2>
+    </div>
+
+    <p class="prose">
+      Every line in the forecast belongs to one of four workload families. Each has a distinct
+      scaling driver, and they compound: more data widens research, more research produces more
+      strategies, more strategies mean more production footprint, and the AI layer sits across all
+      three.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Workload family</th>
+            <th>Scaling driver</th>
+            <th>Google Cloud consumption</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="swatch" style="background:var(--s2)"></span><b>Data</b></td>
+            <td class="wrap-cell">More markets, deeper history, more features, client-specific datasets.</td>
+            <td class="wrap-cell">Cloud Storage; Compute Engine and Cloud Run for capture and transformation.</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--s1)"></span><b>Research &amp; simulation</b></td>
+            <td class="wrap-cell">Strategy archetypes &times; runs per day &times; universe width. The dominant multiplier.</td>
+            <td class="wrap-cell">Compute Engine (Spot), Cloud Run jobs, Batch; heavy Cloud Storage reads.</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--s3)"></span><b>Production trading</b></td>
+            <td class="wrap-cell">Venues, live strategies and mandates &mdash; one isolated process tree per client.</td>
+            <td class="wrap-cell">Always-on Cloud Run, Pub/Sub, Memorystore, Cloud SQL, networking.</td>
+          </tr>
+          <tr>
+            <td><span class="swatch" style="background:var(--s4)"></span><b>AI &amp; agents</b></td>
+            <td class="wrap-cell">Engineering throughput today; operational and client-facing intelligence next.</td>
+            <td class="wrap-cell">Vertex AI and Model Garden inference, accelerators, orchestration compute.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Data</h3>
+    <p class="prose">
+      112 TB across 79 buckets today. Cost tracks pipeline throughput as much as corpus size:
+      roughly <strong>48% object operations, 30% stored bytes, 22% retrieval</strong> &mdash; so it
+      rises with research reads as well as with ingest. Historical backfill is a finite job that
+      completes; what persists is the monthly increment, roughly 2% of the corpus, plus live
+      streaming of a similar volume again. Step changes come from onboarding new sources, and the
+      traditional-markets expansion is the large one in this window.
+    </p>
+
+    <h3>Research &amp; simulation</h3>
+    <p class="prose">
+      This is the largest growth line and the one with the steepest curve. The shape is simple:
+      <strong>ten backtests per strategy archetype per day across the full history</strong>,
+      approximately <strong>one thousand backtests to take a single strategy from idea to live</strong>,
+      and one T+1 batch-versus-live reconciliation run per live archetype per day. Archetype count and
+      universe width multiply together, and both are increasing. Unit economics are in
+      <a class="xref" href="#b">appendix&nbsp;B</a>.
+    </p>
+
+    <h3>Production trading</h3>
+    <p class="prose">
+      The always-on spine &mdash; event transport, execution, strategy, risk and live market data
+      &mdash; plus continuous paper trading alongside every live strategy, so that live performance
+      can be tracked against backtest on a T+1 basis. Because capital isolation is a regulatory and
+      commercial requirement, <strong>each client runs in its own process tree</strong>; this line
+      therefore scales with mandates, not only with strategies. Colocated execution in additional
+      regions is the other multiplier.
+    </p>
+
+    <h3>AI &amp; agents</h3>
+    <p class="prose">
+      Today this is an engineering and operations layer: agents implement and test strategy code,
+      diagnose pipeline failures, investigate production incidents, and retrieve across our
+      documentation and data estate. The workload is real and it is large &mdash; we measured
+      <strong>296 billion tokens a month</strong> against our own infrastructure, detailed in
+      <a class="xref" href="#a">appendix&nbsp;A</a>. None of it currently runs on Google Cloud, and
+      migrating it onto Vertex AI and Model Garden is the live decision this forecast assumes.
+    </p>
+    <p class="prose">
+      Framed properly, this is not a productivity story. <strong>Odum already operates an agentic
+      quantitative research environment at scale</strong> &mdash; agents retrieve datasets, generate
+      experiment and strategy code, orchestrate simulations, analyse results and diagnose pipeline
+      failures, hundreds of tasks a day. What is internal today is the <em>user</em>, not the
+      capability. The product step is exposing that environment to institutional researchers on the
+      full DART workflow, so they can move from hypothesis to data retrieval to strategy
+      specification to simulation to analysis conversationally.
+    </p>
+    <p class="prose">
+      <strong>We should be clear about the boundary.</strong> The agentic layer runs in production
+      today against our own research and engineering. The client-facing surface is roadmap. We would
+      rather say that plainly than overstate it.
+    </p>
+
+    <h3>Where the AI layer stops</h3>
+    <p class="prose">
+      This matters more in our domain than most. Systematic trading is a high-consequence
+      environment, and the architecture is explicit about what a model is allowed to touch.
+      <strong>No language model reaches capital.</strong> The agentic layer proposes; deterministic
+      systems dispose.
+    </p>
+
+    <div class="spine" style="grid-template-columns:1fr">
+      <div class="spine-step">
+        <div class="spine-n">Layer 01 &mdash; probabilistic</div>
+        <div class="spine-t">Agentic research and operations</div>
+        <div class="spine-d">
+          Dataset interrogation &middot; experiment design &middot; strategy and feature code
+          generation &middot; simulation orchestration &middot; result analysis &middot; operational
+          diagnostics and incident investigation. Everything here is a <em>proposal</em>.
+        </div>
+      </div>
+      <div class="spine-step" style="background:var(--surface-2)">
+        <div class="spine-n">Layer 02 &mdash; gate</div>
+        <div class="spine-t">Validation and approval</div>
+        <div class="spine-d">
+          Automated tests &middot; backtests across the full captured history &middot; paper trading
+          alongside live &middot; the promotion ladder &middot; risk validation &middot;
+          <strong>human approval</strong>. Nothing advances to production without clearing this
+          layer, and the ladder is deliberately expensive &mdash; roughly a thousand backtests to
+          promote one strategy.
+        </div>
+      </div>
+      <div class="spine-step">
+        <div class="spine-n">Layer 03 &mdash; deterministic</div>
+        <div class="spine-t">Production systems</div>
+        <div class="spine-d">
+          Order execution &middot; pre-trade risk limits &middot; position and capacity limits
+          &middot; drawdown controls &middot; per-client capital isolation &middot; T+1
+          reconciliation &middot; kill switches. Conventional, auditable, deterministic code. No
+          model inference sits in this path.
+        </div>
+      </div>
+    </div>
+    <p class="fig-cap">
+      <b>Why this is worth stating to an infrastructure partner.</b> It explains why our Vertex
+      consumption is large and growing without that consumption representing unsupervised automated
+      decision-making over client capital. The AI layer accelerates research and operations; the
+      controls that govern money are deterministic, human-gated and independently auditable &mdash;
+      which is what an FCA-authorised firm is required to be able to demonstrate.
+    </p>
+  </section>
+
+  <!-- ==================================== 4. THE FORECAST (HERO) ==== -->
+  <section id="s4">
+    <div class="sec-head">
+      <div class="eyebrow">Section 4</div>
+      <h2>The twelve-month forecast</h2>
+    </div>
+
+    <p class="prose">
+      Everything to 9 August 2026 in the chart below is measured from the Google Cloud billing
+      export and AWS Cost Explorer. Everything after it is the plan this document asks Google to
+      support.
+    </p>
+
+    <div class="figure">
+      <div class="chart-host" id="host-actuals">
+        <svg id="chart-actuals" viewBox="0 0 860 330" role="img"
+             aria-label="Monthly cloud consumption from November 2025 to December 2026"></svg>
+        <div class="tooltip" id="tt-actuals" role="status" aria-live="polite"></div>
+      </div>
+      <div class="legend" id="legend-actuals"></div>
+      <details class="tableview">
+        <summary>Table view</summary>
+        <div class="table-wrap" id="table-actuals"></div>
+      </details>
+      <p class="fig-cap">
+        <b>Measured to August 2026; expected thereafter.</b> An annual credits programme absorbed
+        roughly $90,000 of consumption across the fifteen months to April 2026 &mdash; the platform
+        was not dormant, it was funded differently. Line-by-line billing export begins 1 May 2026,
+        when that programme ended and invoiced spend began. <b>&dagger;</b> Nov&ndash;Feb and
+        Mar&ndash;Apr are monthly averages over their periods. <b>*</b> August is measured to the 9th
+        with the balance of the month projected.
+      </p>
+    </div>
+
+    <h3>Where the spend lands, by service</h3>
+    <p class="prose">
+      At the $25,000 monthly gross the ask is built around, consumption distributes across Google
+      Cloud service families as follows. The ramp is real: the first quarter carries migration and
+      consolidation, and the run-rate settles higher than it starts.
+    </p>
+
+    <div class="figure">
+      <div class="chart-host" id="host-quarters">
+        <svg id="chart-quarters" viewBox="0 0 860 344" role="img"
+             aria-label="Quarterly Google Cloud consumption by service family"></svg>
+        <div class="tooltip" id="tt-quarters" role="status" aria-live="polite"></div>
+      </div>
+      <div class="legend" id="legend-quarters"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Gross consumption, USD. Quarterly totals; the year column sums to the $300,000 Year-1 plan.</caption>
+        <thead>
+          <tr>
+            <th>Service family</th>
+            <th class="num">Q1 Sep&ndash;Nov</th>
+            <th class="num">Q2 Dec&ndash;Feb</th>
+            <th class="num">Q3 Mar&ndash;May</th>
+            <th class="num">Q4 Jun&ndash;Aug</th>
+            <th class="num">Year 1</th>
+          </tr>
+        </thead>
+        <tbody id="quarter-rows"></tbody>
+      </table>
+    </div>
+
+    <h4>What drives each quarter</h4>
+    <div class="ask-list">
+      <dl class="ask">
+        <dt>Q1 &mdash; Sep to Nov 2026</dt>
+        <dd>
+          Consolidation and migration. The self-hosted CI estate and the AI engineering fleet move
+          off AWS onto Google Cloud. The traditional-markets expansion lands as a finite backfill
+          burst. Live trading starts in October on a small book.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Q2 &mdash; Dec to Feb</dt>
+        <dd>
+          Backfill completes and normalises down; research takes its place. The research universe
+          widens from a narrow sample toward the full captured corpus, and Vertex inference reaches
+          steady state as the agent fleet finishes migrating.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Q3 &mdash; Mar to May 2027</dt>
+        <dd>
+          Institutional scaling. More mandates means more isolated process trees, more paper trading
+          alongside live, and more T+1 reconciliation. Accelerators come online for model training.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Q4 &mdash; Jun to Aug 2027</dt>
+        <dd>
+          A mature production estate at a higher steady state, with client-facing analytics and
+          reporting becoming a measurable line for the first time.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="note">
+      <b class="tag">The constraint, stated honestly</b>
+      <strong>$300,000 is a budget, not a demand forecast.</strong> Our bottom-up model of what the
+      roadmap actually wants to consume over the same twelve months is substantially higher &mdash;
+      the ambitious case runs to roughly $780,000 (<a class="xref" href="#d">appendix&nbsp;D</a>). We are
+      presenting $300,000 because that is what we can responsibly commit to at $5,000 a month net.
+      The gap between the two numbers is not padding. It is work that gets deferred, run at a
+      narrower universe, or run somewhere cheaper.
+    </div>
+  </section>
+
+  <!-- ================================= 5. THE CASE FOR GOOGLE ==== -->
+  <section id="s5">
+    <div class="sec-head">
+      <div class="eyebrow">Section 5</div>
+      <h2>The case for Google</h2>
+    </div>
+
+    <p class="prose">
+      A credit is an investment, so the relevant question is not whether Odum needs it. It is whether
+      the consumption it creates persists after it expires. We think the structure here is unusually
+      good on that test, for one specific reason: <strong>the workload is not created by the
+      credit.</strong> It already exists and is already growing. The credit determines where it runs.
+    </p>
+
+    <div class="flywheel">
+      <div class="fw-step"><b>Support</b>Google underwrites the ramp on a taper &mdash; 80%, then 50%, then 30%.</div>
+      <div class="fw-step"><b>Consolidation</b>Compute, inference and CI migrate onto Google Cloud instead of splitting across three providers.</div>
+      <div class="fw-step"><b>Capacity</b>Research runs at full universe width, accelerators come online, the agent fleet moves to Vertex.</div>
+      <div class="fw-step"><b>Deployment</b>Strategies reach production sooner; more mandates onboard.</div>
+      <div class="fw-step"><b>Usage</b>Each mandate adds an isolated production footprint plus research and reporting load.</div>
+      <div class="fw-step terminal"><b>Recurring revenue</b>$1.13M paid across the term, on infrastructure that is by then load-bearing.</div>
+    </div>
+
+    <h3>The proposal: support that tapers as we scale</h3>
+    <p class="prose">
+      We are not asking for a flat discount that expires at a cliff edge. We are proposing a
+      three-year taper &mdash; <strong>80%, then 50%, then 30%</strong> &mdash; deliberately
+      structured so that our share of the bill rises every year while the bill itself grows.
+    </p>
+
+    <div class="figure">
+      <div class="chart-host" id="host-taper">
+        <svg id="chart-taper" viewBox="0 0 860 350" role="img"
+             aria-label="Three-year tapering structure: Odum cash payment versus Google credit"></svg>
+        <div class="tooltip" id="tt-taper" role="status" aria-live="polite"></div>
+      </div>
+      <div class="legend" id="legend-taper"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Proposed three-year structure. Gross consumption in USD; Year 1 is the forecast in section 4; Years 2 and 3 are planning figures.</caption>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th class="num">Gross consumption</th>
+            <th class="num">Discount</th>
+            <th class="num">Google support</th>
+            <th class="num">Paid to Google</th>
+          </tr>
+        </thead>
+        <tbody id="taper-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <b class="tag">The two numbers that matter</b>
+      <strong>Google's annual support barely moves: $240k, $300k, $330k.</strong> Odum's annual cash
+      payment grows from $60,000 to $770,000 &mdash; nearly thirteenfold. By year three Google is
+      collecting more in cash from us in a single year than it extended in support across the entire
+      first two. That is the whole design: the support does not scale with the relationship, the
+      revenue does.
+    </div>
+
+    <p class="prose">
+      Years 2 and 3 are planning figures, not commitments, and we would rather say so than dress them
+      up. What we can say with confidence is the direction: our modelled demand for year one alone is
+      roughly $780,000 unconstrained (<a class="xref" href="#d">appendix&nbsp;D</a>) against the
+      $300,000 we are committing to. The constraint on years 2 and 3 is not whether the workload
+      exists.
+    </p>
+
+    <h3>Three things that make this durable</h3>
+    <ul class="prose">
+      <li>
+        <strong>The consumption is load-bearing, not experimental.</strong> This is a regulated
+        firm's production trading infrastructure. Migrating it away once it is running live is
+        expensive and risky in a way that moving a research prototype is not &mdash; which cuts both
+        ways, and is exactly why the platform decision is being made now rather than later.
+      </li>
+      <li>
+        <strong>Demand already exceeds the ask.</strong> We are not projecting growth into a credit
+        and hoping it materialises. We are deferring work today for budget reasons. A credit converts
+        deferred work into consumption immediately.
+      </li>
+      <li>
+        <strong>Client growth compounds the estate.</strong> Each mandate adds an isolated production
+        footprint, its own research load and its own reporting surface. The platform's unit of growth
+        is a customer, and every one of them lands on Google Cloud.
+      </li>
+    </ul>
+
+    <div class="note">
+      <b class="tag">The alternative, without editorial</b>
+      If support is not available, we reduce Google Cloud to bulk storage &mdash; roughly
+      <strong>$1,000 a month</strong> &mdash; and split compute, inference and CI across AWS and
+      Azure on price. We would rather not. Operating one regulated platform across three providers
+      costs engineering time we would rather spend on the product, and we would be doing it purely
+      for cost reasons. But at our current scale it would be the responsible decision.
+    </div>
+  </section>
+
+  <!-- ============================ 6. WHY GOOGLE SPECIFICALLY ==== -->
+  <section id="s6">
+    <div class="sec-head">
+      <div class="eyebrow">Section 6</div>
+      <h2>Why Google Cloud specifically</h2>
+    </div>
+
+    <div class="ask-list">
+      <dl class="ask">
+        <dt>Data</dt>
+        <dd>
+          Cloud Storage handles a 112 TB Hive-partitioned Parquet corpus with the throughput
+          characteristics our pipeline needs, and BigQuery sits naturally alongside it for analytics
+          and client reporting without moving the lake.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Compute</dt>
+        <dd>
+          Spot Compute Engine, Cloud Run jobs and Batch fit research and simulation well: the
+          workload is embarrassingly parallel and interruption-tolerant. This is where the largest
+          growth line lands.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>AI</dt>
+        <dd>
+          Vertex AI and Model Garden let the agent fleet run on managed infrastructure alongside the
+          data it operates on, with the option to route across model families rather than commit to
+          one. Today that fleet runs entirely off Google Cloud.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Consolidation</dt>
+        <dd>
+          One provider for storage, compute, inference and CI removes cross-cloud egress and the
+          operational overhead of a split estate. For a small team running regulated infrastructure,
+          that simplification has real value.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Control and residency</dt>
+        <dd>
+          A regulated firm cannot run on the cheapest available compute. IAM and least-privilege
+          access, per-client data isolation, encrypted key custody, controlled deployment pipelines,
+          audit trails and regional data-residency controls are requirements, not preferences
+          &mdash; and they are a large part of why this is a Google Cloud decision rather than a
+          GPU-price decision.
+        </dd>
+      </dl>
+      <dl class="ask">
+        <dt>Longer term</dt>
+        <dd>
+          If DART scales as intended, Google's consumption grows with our institutional user base
+          rather than with a fixed research budget. That is a different and better shape of customer
+          than a one-off workload.
+        </dd>
+      </dl>
+    </div>
+
+    <h3>Institutional control requirements</h3>
+    <p class="prose">
+      For completeness, the controls the platform is built around. These are what make the workload
+      viable for regulated institutional users at all, and they run on Google Cloud primitives.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Control</th><th>How it is implemented</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Access control</td><td class="wrap-cell">IAM with least privilege; per-tier service accounts; write-protection enforced at the storage tier, not by convention.</td></tr>
+          <tr><td>Client isolation</td><td class="wrap-cell">One process tree per client. Funds never move between clients &mdash; cross-client transfer is structurally prohibited, not policy-prohibited.</td></tr>
+          <tr><td>Key and secret custody</td><td class="wrap-cell">Cloud KMS-encrypted credentials; secrets in Secret Manager; no long-lived material on disk.</td></tr>
+          <tr><td>Deployment control</td><td class="wrap-cell">Gated CI/CD; every change through automated quality gates; no direct path to production.</td></tr>
+          <tr><td>Risk controls</td><td class="wrap-cell">Pre-trade limits, position and capacity limits, drawdown discipline, kill switches &mdash; all deterministic.</td></tr>
+          <tr><td>Audit and reconciliation</td><td class="wrap-cell">T+1 batch-versus-live reconciliation; live performance tracked against backtest; full event log retained.</td></tr>
+          <tr><td>Data residency</td><td class="wrap-cell">Regional placement per engagement where required; execution colocated by venue region.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================== APPENDIX ==== -->
+  <div class="appendix-rule">
+    <div class="eyebrow">Technical appendix</div>
+    <h2>Supporting detail</h2>
+    <p class="prose" style="margin-top:12px">
+      The material below supports the forecast above. It is included so the numbers can be inspected
+      rather than taken on trust. None of it is required to evaluate the commercial case in sections
+      1 to 6.
+    </p>
+  </div>
+
+  <!-- ================================= A. THE AGENT FLEET ==== -->
+  <section id="a">
+    <div class="sec-head">
+      <div class="eyebrow">Appendix A</div>
+      <h2>The agent fleet, measured</h2>
+    </div>
+
+    <p class="prose">
+      The AI workload in section 3 is not an estimate. We instrumented seven consecutive days of
+      agent activity on our orchestrator and counted tokens directly from per-request usage records.
+      The measurement covers one host; two operator workstations add an estimated 25%, which is the
+      only judgement in the volume figure.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Measured 2&ndash;9 August 2026 on the orchestrator, then extrapolated.</caption>
+        <thead>
+          <tr><th>Measure</th><th class="num">Value</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tokens, 7 days, orchestrator</td><td class="num">61.09B</td><td class="wrap-cell">Counted from per-request usage records, not estimated.</td></tr>
+          <tr><td>Assistant messages</td><td class="num">169,013</td><td class="wrap-cell">Hundreds of automated tasks a day, each a 3 to 60 minute job.</td></tr>
+          <tr><td>Prompt-cache reads</td><td class="num">98.3%</td><td class="wrap-cell">About 355k cached tokens per request. Cache economics dominate everything else.</td></tr>
+          <tr><td>Per day, fleet-wide</td><td class="num">9.73B</td><td class="wrap-cell">Orchestrator measurement plus the 25% workstation uplift.</td></tr>
+          <tr class="total"><td>Per month</td><td class="num">296B</td><td class="wrap-cell">Roughly 3.55 trillion tokens a year.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>What it costs, and what it would cost here</h3>
+    <p class="prose">
+      This volume runs today on flat-fee subscription products, entirely off Google Cloud, at
+      approximately <strong>$1,500 a month</strong>. Priced at standard metered rates the same volume
+      would be far higher. The difference is a function of subscription pricing and of the 98.3%
+      cache-read share, not of anything clever.
+    </p>
+    <p class="prose">
+      <strong>We carry this line in the forecast at $3,000 rising to $4,000 a month</strong>, which
+      is what we would realistically expect to pay to run it on Vertex AI at metered rates, with the
+      fleet growing across the window. That is the one line in the model reflecting intent rather
+      than measurement: the <em>volume</em> underneath it is measured precisely; the price we would
+      pay for it is a negotiation.
+    </p>
+    <p class="prose">
+      We flag it plainly because it is the material fact of the migration. <strong>This workload is
+      not on anyone's cloud bill today.</strong> Moving it to Vertex AI is net-new consumption for
+      Google, and it is the single largest thing a credit would unlock.
+    </p>
+  </section>
+
+  <!-- =============================== B. RESEARCH ECONOMICS ==== -->
+  <section id="b">
+    <div class="sec-head">
+      <div class="eyebrow">Appendix B</div>
+      <h2>Research and simulation unit economics</h2>
+    </div>
+
+    <p class="prose">
+      The research line grows faster than anything else in the forecast because three quantities
+      multiply. This is the arithmetic.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Input</th><th class="num">Today</th><th class="num">Month 12</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Strategy archetypes</td><td class="num">~10</td><td class="num">~20</td>
+            <td class="wrap-cell">Each archetype runs ten backtests a day.</td>
+          </tr>
+          <tr>
+            <td>Backtests per month</td><td class="num">~3,000</td><td class="num">~6,000</td>
+            <td class="wrap-cell">Plus one T+1 reconciliation run per live archetype per day.</td>
+          </tr>
+          <tr>
+            <td>Cost per backtest, narrow universe</td><td class="num">$0.60</td><td class="num">$0.60</td>
+            <td class="wrap-cell">About 3 vCPU-hours, blended across Spot and Cloud Run.</td>
+          </tr>
+          <tr>
+            <td>Cost per backtest, full universe</td><td class="num">$8.50</td><td class="num">$8.50</td>
+            <td class="wrap-cell">About 100 vCPU-hours. Crypto and traditional markets move to full over the window.</td>
+          </tr>
+          <tr>
+            <td>Backtests to take one strategy live</td><td class="num">~1,000</td><td class="num">~1,000</td>
+            <td class="wrap-cell">The promotion ladder is deliberately expensive; it is the risk control.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="fig-cap">
+      <b>Universe width is the sensitive variable.</b> The same research programme costs roughly
+      fourteen times more against the full captured corpus than against the narrow sample. That is
+      not waste &mdash; it is the difference between a strategy validated on a slice and one
+      validated on everything we hold, which is precisely what an institutional allocator asks about.
+      It is also why the research line dominates the growth curve, and why a budget constraint shows
+      up first as a decision to test on less data.
+    </p>
+  </section>
+
+  <!-- ================================ C. CREDIT COVERAGE ==== -->
+  <section id="c">
+    <div class="sec-head">
+      <div class="eyebrow">Appendix C</div>
+      <h2>Where today's credit lands, and where it stops</h2>
+    </div>
+
+    <p class="prose">
+      A recurring promotional credit has applied since March 2026. It is working &mdash; and it is
+      concentrated on the services we were consuming a year ago rather than the ones this forecast
+      grows into. The right-hand column is the part worth reading.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Services in use, 1 May to 9 August 2026 (USD), then the services the forecast grows into &mdash;
+          on which we have no spend and no coverage today.</caption>
+        <thead>
+          <tr><th>Service</th><th class="num">Gross</th><th class="num">Credit</th><th>Forward relevance</th></tr>
+        </thead>
+        <tbody id="credit-rows"></tbody>
+      </table>
+    </div>
+
+    <p class="fig-cap">
+      <b>The pattern.</b> Credit absorbed has climbed steadily &mdash; $1,091 in May, $2,896 in June,
+      $3,784 in July, and $3,573 in the first nine days of August, which means it is now exhausting
+      within the first week of the month. Coverage is strong on Compute Engine, Cloud Run and Cloud
+      Storage &mdash; the services we were already consuming a year ago.
+      <b>The last three rows are the point of this table.</b> We have never run a workload on Vertex
+      AI, on accelerators, or in BigQuery: spend is nil and coverage is nil. They are not
+      under-covered, they are absent &mdash; and between them they account for roughly a quarter of
+      the year-one forecast and a larger share thereafter. Kubernetes Engine and networking are in
+      use but carry no coverage at all.
+    </p>
+  </section>
+
+  <!-- ================================== D. SCENARIO MODEL ==== -->
+  <section id="d">
+    <div class="sec-head">
+      <div class="eyebrow">Appendix D</div>
+      <h2>Scenario model</h2>
+    </div>
+
+    <p class="prose">
+      <strong>The base case is the committed plan.</strong> $300,000 in year one &mdash; $20,700 a
+      month rising to $28,100 &mdash; is what we commit to and what the taper is priced on. It is
+      not a floor beneath some other forecast; it <em>is</em> the forecast. <strong>Ambitious</strong>
+      is the same roadmap unconstrained, and is upside for Google rather than a gap we are failing to
+      fill. <strong>No arrangement</strong> is what happens if we cannot make the economics work.
+    </p>
+
+    <div class="figure">
+      <div class="chart-host" id="host-scen">
+        <svg id="chart-scen" viewBox="0 0 860 340" role="img"
+             aria-label="Monthly consumption: committed base case, unconstrained ambitious case, and the no-arrangement fallback"></svg>
+        <div class="tooltip" id="tt-scen" role="status" aria-live="polite"></div>
+      </div>
+      <div class="legend" id="legend-scen"></div>
+      <details class="tableview">
+        <summary>Table view</summary>
+        <div class="table-wrap" id="table-scen"></div>
+      </details>
+      <p class="fig-cap">
+        <b>September 2026 to August 2027.</b> <b>Base</b> is the committed plan of section 4,
+        deliberately paced to what we can fund at $5,000 a month net &mdash; live trading from
+        October, research widening steadily, the agent fleet migrating onto Vertex.
+        <b>Ambitious</b> is the same roadmap unconstrained: the full captured universe across all
+        asset groups, more mandates, accelerators in continuous use. The difference between those two
+        is not scope, it is <em>when</em>. <b>No arrangement</b> is a different thing entirely
+        &mdash; not a slower roadmap but a smaller Google Cloud: we hold at roughly what we can self-
+        fund and migrate compute, inference and CI to AWS and Azure, leaving bulk storage behind.
+      </p>
+    </div>
+
+    <div class="note">
+      <b class="tag">How this reconciles with the three-year taper</b>
+      Base and ambitious are not competing forecasts &mdash; they are the same curve at two speeds.
+      <strong>The ambitious case reaches within twelve months a scale the committed plan does not
+      reach until year two</strong> ($780k against the plan’s $600k in year two). Funding does not
+      change what we build; it changes how quickly Google’s consumption arrives &mdash; and under
+      the taper, arriving sooner means Odum paying a larger share of it sooner.
+      <br><br>
+      <strong>The third line is the one worth sitting with.</strong> Without an arrangement, Google
+      Cloud consumption over the same twelve months is roughly <strong>$33,000 &mdash; about 11% of
+      the committed case</strong>, and still falling at the end of it. That is not us bluffing about
+      leaving; it is the arithmetic of a firm that cannot carry $25,000 a month gross unsupported and
+      would keep only the part that is genuinely hard to move.
+    </div>
+
+    <h3>Internal workload view at the $25,000 monthly plan</h3>
+    <p class="prose">
+      Section 4 presents the plan by Google Cloud service family. This is the same $25,000 seen the
+      way we manage it internally, by workload.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Workload</th><th class="num">Monthly</th><th>What it covers</th></tr>
+        </thead>
+        <tbody id="target-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============================ E. METHOD & CAVEATS ==== -->
+  <section id="e">
+    <div class="sec-head">
+      <div class="eyebrow">Appendix E</div>
+      <h2>Method, sources and where we might be wrong</h2>
+    </div>
+
+    <h4>Sources</h4>
+    <ul class="prose">
+      <li>
+        <strong>Google Cloud spend</strong> &mdash; BigQuery billing export, table
+        <code>gcp_billing_export_v1_016B25_109840_AF2ACB</code>, 1 May to 9 August 2026. The account
+        settles in GBP; USD figures are computed per line as cost divided by that row's conversion
+        rate, not converted at a period average.
+      </li>
+      <li><strong>AWS spend</strong> &mdash; Cost Explorer, payer account, unblended monthly.</li>
+      <li><strong>Storage estate</strong> &mdash; Cloud Monitoring per-bucket total bytes.</li>
+      <li><strong>Agent fleet volume</strong> &mdash; per-request usage records across seven days of agent transcripts.</li>
+    </ul>
+
+    <h4>Where we might be wrong</h4>
+    <ul class="prose">
+      <li>
+        <strong>The March to April figure is an estimate, not the export.</strong> The billing export
+        was enabled on 30 April 2026 and is not retroactive. The roughly $30,000 gross for 9 March to
+        30 April is reconstructed from console recollection. If a certified figure is required it must
+        come from the Cloud Billing console. Everything from 1 May is measured line by line.
+      </li>
+      <li>
+        <strong>Per-backtest cost is modelled bottom-up, not benchmarked.</strong> We have not yet run
+        a full-pool backtest end to end, so this is the least-verified unit cost in the model &mdash;
+        and it multiplies by thousands of runs.
+      </li>
+      <li>
+        <strong>The live-trading line is sized from the always-on service footprint</strong>, because
+        we have not yet run a strategy in production. It is the line most likely to be wrong in either
+        direction.
+      </li>
+      <li>
+        <strong>The agent-fleet price is a judgement; the volume is not.</strong> We carry the line at
+        roughly twice today's subscription cost because that is what we would expect to pay to move.
+        A different negotiated rate moves that line directly.
+      </li>
+      <li>
+        <strong>One artefact bucket holds 51 TB</strong> of deployment tarballs accumulating without a
+        lifecycle rule. That is a cleanup we owe ourselves, and it makes the storage line slightly
+        pessimistic.
+      </li>
+      <li>
+        <strong>The schedule assumes slippage.</strong> Our internal roadmap had live trading starting
+        in September; we have moved it to October because we are behind, and shifted the rest to
+        match. If we recover that time, the curve arrives earlier.
+      </li>
+    </ul>
+  </section>
+
+  <footer class="colophon">
+    <b>Odum Research Ltd</b> &middot; FCA firm reference 975797 &middot; Twelve-month Google Cloud
+    consumption forecast &middot; issued 9 August 2026. Figures are gross of credits and denominated
+    in USD; the underlying billing account settles in GBP at the observed August rate of 0.7522.
+    Forecast scenarios are internal planning estimates, not commitments, and not projections of
+    revenue or performance. Prepared from internal billing and workload telemetry.
+    <b>No client, mandate, counterparty or strategy information is disclosed in this document.</b>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------- data ---- */
+
+  const ACTUALS = [
+    { m: "Nov-Feb\u2020", label: "Nov 2025 to Feb 2026 \u2014 monthly avg, credits programme", net: 0, credit: 4600, aws: 60 },
+    { m: "Mar-Apr\u2020", label: "9 Mar to 30 Apr 2026 \u2014 monthly avg", net: 11500, credit: 5700, aws: 100 },
+    { m: "May",  label: "May 2026", net: 13280, credit: 1186, aws: 5 },
+    { m: "Jun",  label: "Jun 2026", net: 16060, credit: 2957, aws: 36 },
+    { m: "Jul",  label: "Jul 2026", net: 16246, credit: 3901, aws: 1020 },
+    { m: "Aug*", label: "Aug 2026", net: 4098, credit: 3609, aws: 1036, proj: 14257 },
+    { m: "Sep",  label: "Sep 2026 \u2014 expected", net: 5000, credit: 20000, aws: 0, fc: true },
+    { m: "Oct",  label: "Oct 2026 \u2014 expected", net: 5000, credit: 20000, aws: 0, fc: true },
+    { m: "Nov",  label: "Nov 2026 \u2014 expected", net: 5000, credit: 20000, aws: 0, fc: true },
+    { m: "Dec",  label: "Dec 2026 \u2014 expected", net: 5000, credit: 20000, aws: 0, fc: true }
+  ];
+
+  /* Quarterly plan. mo[] = monthly average within each quarter; quarter = mo x 3. */
+  const QLABEL = ["Q1", "Q2", "Q3", "Q4"];
+  const QFULL  = ["Q1 \u2014 Sep to Nov 2026", "Q2 \u2014 Dec 2026 to Feb 2027",
+                  "Q3 \u2014 Mar to May 2027", "Q4 \u2014 Jun to Aug 2027"];
+  const SERVICES = [
+    { k: "Compute \u2014 Compute Engine, Cloud Run, Batch, GKE", s: 0, mo: [9800, 10400, 10900, 11100] },
+    { k: "Cloud Storage",                     s: 1, mo: [5500, 5900, 6500, 6700] },
+    { k: "Vertex AI and accelerators",        s: 2, mo: [3800, 5800, 6600, 7000] },
+    { k: "Networking, Pub/Sub and databases", s: 3, mo: [1300, 1900, 1900, 2200] },
+    { k: "BigQuery and client analytics",     s: 4, mo: [300, 500, 800, 1100] }
+  ];
+
+  const CREDITS = [
+    ["Compute Engine",           22319, 4009, "Research and simulation \u2014 the largest growth line"],
+    ["Cloud Run",                20844, 4005, "Batch jobs and the always-on execution spine"],
+    ["Cloud Storage",            14588, 2503, "The whole 112 TB corpus"],
+    ["Cloud Build",               1599,  329, "CI/CD"],
+    ["Artifact Registry",          808,  253, "Container images"],
+    ["Memorystore (Redis)",        363,   99, "Live-trading state"],
+    ["Cloud Pub/Sub",              247,   79, "Event spine \u2014 grows sharply with live trading"],
+    ["Networking",                 225,    0, "NO COVERAGE \u2014 egress grows as we go multi-region"],
+    ["Cloud SQL",                  118,   32, "Operational metadata"],
+    ["Kubernetes Engine",           24,    0, "NO COVERAGE"],
+    ["Vertex AI / Model Garden",     0,    0, "NOT YET USED \u2014 the agent-fleet migration lands here"],
+    ["GPU / accelerators",           0,    0, "NOT YET USED \u2014 gates the ML training line"],
+    ["BigQuery",                     0,    0, "NOT YET USED \u2014 grows with client analytics"]
+  ];
+
+  const TARGET = [
+    ["Data capture and storage",          6000, "Bulk storage for the 112 TB corpus, growing about 2% a month"],
+    ["Research and backtesting",          5000, "Ten backtests per archetype per day across the full history"],
+    ["AI and agent inference",            4000, "Vertex inference for the agent fleet and the orchestrator"],
+    ["Live trading and reconciliation",   3500, "Always-on execution spine, paper trading, T+1 reconciliation"],
+    ["ML training and inference",         2500, "Model training and inference, on accelerators"],
+    ["CI/CD and platform infrastructure", 2000, "Self-hosted CI runner, Cloud Build, Artifact Registry"],
+    ["Batch pipeline",                    1200, "Incremental capture and live streaming; new-source bursts"],
+    ["Analytics and client platform",      800, "BigQuery, client reporting, externally-facing data products"]
+  ];
+
+  /* Proposed three-year taper. credit = gross * discount; paid = gross - credit. */
+  const TAPER = [
+    { k: "Year 1", sub: "Sep 2026 - Aug 2027", gross: 300000,  disc: 0.80 },
+    { k: "Year 2", sub: "Sep 2027 - Aug 2028", gross: 600000,  disc: 0.50 },
+    { k: "Year 3", sub: "Sep 2028 - Aug 2029", gross: 1100000, disc: 0.30 }
+  ];
+
+  const SCEN = {
+    base: {
+      label: "Base \u2014 the committed plan, and the basis of this proposal",
+      totals: [20700, 20700, 20700, 24500, 24500, 24500, 26700, 26700, 26700, 28100, 28100, 28100],
+      year: 300000
+    },
+    ambitious: {
+      label: "Ambitious \u2014 the same roadmap, unconstrained",
+      totals: [29950, 40700, 47450, 48850, 52600, 59150, 66550, 73850, 80550, 87400, 93550, 99700],
+      year: 780300
+    },
+    declined: {
+      label: "No arrangement \u2014 Google Cloud reduced to storage",
+      totals: [5000, 4600, 4100, 3600, 3100, 2700, 2300, 2000, 1700, 1450, 1200, 1000],
+      year: 32750
+    }
+  };
+  const SCEN_MONTHS = ["Sep 26", "Oct", "Nov", "Dec", "Jan 27", "Feb",
+                       "Mar", "Apr", "May", "Jun", "Jul", "Aug 27"];
+
+  /* ------------------------------------------------------- helpers ---- */
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = function (id) { return document.getElementById(id); };
+
+  function cssVar(n) {
+    return getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  }
+  function seriesColors() {
+    return [cssVar("--s1"), cssVar("--s2"), cssVar("--s3"), cssVar("--s4"),
+            cssVar("--s5"), cssVar("--s6"), cssVar("--s7"), cssVar("--s8")];
+  }
+  function usd(n) {
+    if (n >= 1000000) return "$" + (n / 1000000).toFixed(2).replace(/\.?0+$/, "") + "M";
+    if (n >= 1000) return "$" + Math.round(n / 1000).toLocaleString() + "k";
+    return "$" + Math.round(n).toLocaleString();
+  }
+  function usdFull(n) { return "$" + Math.round(n).toLocaleString(); }
+  function el(tag, attrs, text) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function niceTicks(max, count) {
+    const raw = max / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+    /* The top tick MUST be >= max, or bars taller than the last gridline
+       escape the plot area (svg has overflow:visible) and overlap the prose
+       above the figure. Generate until the tick covers max. */
+    const ticks = [];
+    for (let v = 0; ticks.length < 40; v += step) {
+      ticks.push(v);
+      if (v >= max - step * 1e-9) break;
+    }
+    return ticks;
+  }
+  function drawFrame(svg, geo, ticks, fmt) {
+    const g = el("g", {});
+    ticks.forEach(function (t) {
+      const y = geo.y(t);
+      g.appendChild(el("line", {
+        x1: geo.left, x2: geo.right, y1: y, y2: y,
+        stroke: t === 0 ? cssVar("--axis") : cssVar("--grid"),
+        "stroke-width": 1, "shape-rendering": "crispEdges"
+      }));
+      g.appendChild(el("text", {
+        x: geo.left - 10, y: y + 4, "text-anchor": "end",
+        fill: cssVar("--ink-3"), "font-size": 11,
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, fmt(t)));
+    });
+    svg.appendChild(g);
+  }
+  function makeTip(hostId, tipId) {
+    const host = $(hostId), tip = $(tipId);
+    return {
+      show: function (html, cx, cy) {
+        tip.innerHTML = html;
+        tip.classList.add("on");
+        const hb = host.getBoundingClientRect();
+        const tb = tip.getBoundingClientRect();
+        let x = cx - hb.left + 14;
+        let y = cy - hb.top - tb.height / 2;
+        if (x + tb.width > hb.width) x = cx - hb.left - tb.width - 14;
+        if (x < 0) x = 4;
+        y = Math.max(2, Math.min(y, hb.height - tb.height - 2));
+        tip.style.left = x + "px";
+        tip.style.top = y + "px";
+      },
+      hide: function () { tip.classList.remove("on"); }
+    };
+  }
+  function tipRows(rows, total) {
+    let h = "";
+    rows.forEach(function (r) {
+      h += '<div class="tt-row"><span class="lbl"><i style="background:' + r.c + '"></i>' +
+           r.k + '</span><span class="val">' + r.v + '</span></div>';
+    });
+    if (total) {
+      h += '<div class="tt-total"><span>' + total.k + '</span><span>' + total.v + '</span></div>';
+    }
+    return h;
+  }
+  function roundedTop(x, yy, bw, hh, rad) {
+    const r = Math.max(0, Math.min(rad, hh, bw / 2));
+    return "M" + x + "," + (yy + hh) +
+      " L" + x + "," + (yy + r) +
+      " Q" + x + "," + yy + " " + (x + r) + "," + yy +
+      " L" + (x + bw - r) + "," + yy +
+      " Q" + (x + bw) + "," + yy + " " + (x + bw) + "," + (yy + r) +
+      " L" + (x + bw) + "," + (yy + hh) + " Z";
+  }
+  function buildLegend(hostId, items) {
+    const host = $(hostId);
+    host.innerHTML = "";
+    items.forEach(function (it) {
+      const s = document.createElement("span");
+      const i = document.createElement("i");
+      i.style.background = it.c;
+      s.appendChild(i);
+      s.appendChild(document.createTextNode(it.label));
+      host.appendChild(s);
+    });
+  }
+
+  /* ============================== CHART 1 \u2014 measured + expected ==== */
+  function drawActuals() {
+    const svg = $("chart-actuals");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const C = seriesColors();
+    const keys = [
+      { k: "net",    label: "Google Cloud \u2014 invoiced", c: C[0] },
+      { k: "credit", label: "Google Cloud \u2014 credit absorbed", c: C[1] },
+      { k: "aws",    label: "AWS", c: C[2] }
+    ];
+
+    const W = 860, H = 330, left = 62, right = W - 12, top = 16, bottom = H - 44;
+    let max = 0;
+    ACTUALS.forEach(function (r) {
+      const t = r.net + r.credit + r.aws + (r.proj || 0);
+      if (t > max) max = t;
+    });
+    const ticks = niceTicks(max * 1.06, 5);
+    const scaleMax = ticks[ticks.length - 1];
+    const geo = {
+      left: left, right: right,
+      y: function (v) { return bottom - (v / scaleMax) * (bottom - top); }
+    };
+    drawFrame(svg, geo, ticks, function (t) { return usd(t); });
+
+    const n = ACTUALS.length;
+    const slot = (right - left) / n;
+    const bw = Math.min(46, slot * 0.62);
+    const tip = makeTip("host-actuals", "tt-actuals");
+
+    ACTUALS.forEach(function (r, i) {
+      const x = left + slot * i + (slot - bw) / 2;
+      let acc = 0;
+      const g = el("g", {});
+
+      keys.forEach(function (key) {
+        const v = r[key.k];
+        if (!v) return;
+        const y0 = geo.y(acc), y1 = geo.y(acc + v);
+        const hh = Math.max(0, y0 - y1 - 2);
+        if (hh <= 0) { acc += v; return; }
+        g.appendChild(el("path", {
+          d: roundedTop(x, y1 + 2, bw, hh, 4),
+          fill: key.c, opacity: r.fc ? 0.55 : 1
+        }));
+        acc += v;
+      });
+
+      if (r.proj) {
+        const y0 = geo.y(acc), y1 = geo.y(acc + r.proj);
+        const hh = Math.max(0, y0 - y1 - 2);
+        g.appendChild(el("path", {
+          d: roundedTop(x, y1 + 2, bw, hh, 4),
+          fill: keys[0].c, opacity: 0.32
+        }));
+        acc += r.proj;
+      }
+
+      const total = acc;
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: geo.y(total) - 7, "text-anchor": "middle",
+        fill: cssVar("--ink-3"), "font-size": 10.5,
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, usd(total)));
+
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: bottom + 17, "text-anchor": "middle",
+        fill: r.fc ? cssVar("--ink-3") : cssVar("--ink-2"), "font-size": 11,
+        "font-family": "var(--sans)"
+      }, r.m));
+
+      const hit = el("rect", {
+        x: left + slot * i, y: top, width: slot, height: bottom - top,
+        fill: "transparent", style: "cursor:crosshair"
+      });
+      hit.addEventListener("mousemove", function (ev) {
+        const rows = [];
+        keys.forEach(function (key) {
+          if (r[key.k]) rows.push({ k: key.label, v: usdFull(r[key.k]), c: key.c });
+        });
+        if (r.proj) rows.push({ k: "Balance of month, projected", v: usdFull(r.proj), c: keys[0].c });
+        tip.show('<div class="tt-title">' + r.label + '</div>' +
+                 tipRows(rows, { k: "Total", v: usdFull(total) }), ev.clientX, ev.clientY);
+      });
+      hit.addEventListener("mouseleave", function () { tip.hide(); });
+      g.appendChild(hit);
+      svg.appendChild(g);
+    });
+
+    const dx = left + slot * 6;
+    svg.appendChild(el("line", {
+      x1: dx, x2: dx, y1: top, y2: bottom,
+      stroke: cssVar("--ink-3"), "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.55
+    }));
+    svg.appendChild(el("text", {
+      x: dx + 7, y: top + 11, fill: cssVar("--ink-3"), "font-size": 10.5,
+      "font-family": "var(--sans)"
+    }, "expected \u2192"));
+    svg.appendChild(el("text", {
+      x: dx - 7, y: top + 11, "text-anchor": "end", fill: cssVar("--ink-3"),
+      "font-size": 10.5, "font-family": "var(--sans)"
+    }, "\u2190 measured"));
+
+    buildLegend("legend-actuals", keys.map(function (k) { return { c: k.c, label: k.label }; }));
+
+    let h = '<table><thead><tr><th>Month</th><th class="num">Invoiced</th>' +
+            '<th class="num">Credit</th><th class="num">AWS</th><th class="num">Total</th></tr></thead><tbody>';
+    ACTUALS.forEach(function (r) {
+      const t = r.net + r.credit + r.aws + (r.proj || 0);
+      h += '<tr><td>' + r.label + '</td><td class="num">' + usdFull(r.net + (r.proj || 0)) +
+           '</td><td class="num">' + usdFull(r.credit) + '</td><td class="num">' + usdFull(r.aws) +
+           '</td><td class="num">' + usdFull(t) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    $("table-actuals").innerHTML = h;
+  }
+
+  /* ==================== CHART 2 \u2014 quarterly plan by service ==== */
+  function drawQuarters() {
+    const svg = $("chart-quarters");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const C = seriesColors();
+
+    const W = 860, H = 344, left = 66, right = W - 12, top = 18, bottom = H - 50;
+    let max = 0;
+    for (let q = 0; q < 4; q++) {
+      let t = 0;
+      SERVICES.forEach(function (s) { t += s.mo[q] * 3; });
+      if (t > max) max = t;
+    }
+    const ticks = niceTicks(max * 1.08, 5);
+    const scaleMax = ticks[ticks.length - 1];
+    const geo = {
+      left: left, right: right,
+      y: function (v) { return bottom - (v / scaleMax) * (bottom - top); }
+    };
+    drawFrame(svg, geo, ticks, function (t) { return usd(t); });
+
+    const slot = (right - left) / 4;
+    const bw = Math.min(98, slot * 0.5);
+    const tip = makeTip("host-quarters", "tt-quarters");
+
+    for (let q = 0; q < 4; q++) {
+      const x = left + slot * q + (slot - bw) / 2;
+      let acc = 0;
+      const g = el("g", {});
+
+      SERVICES.forEach(function (s) {
+        const v = s.mo[q] * 3;
+        const y0 = geo.y(acc), y1 = geo.y(acc + v);
+        const hh = Math.max(0, y0 - y1 - 2);
+        if (hh > 0) {
+          g.appendChild(el("path", { d: roundedTop(x, y1 + 2, bw, hh, 4), fill: C[s.s] }));
+        }
+        acc += v;
+      });
+
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: geo.y(acc) - 9, "text-anchor": "middle",
+        fill: cssVar("--ink"), "font-size": 12.5, "font-weight": "640",
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, usdFull(acc)));
+
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: bottom + 18, "text-anchor": "middle",
+        fill: cssVar("--ink-2"), "font-size": 11.5, "font-family": "var(--sans)"
+      }, QLABEL[q]));
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: bottom + 33, "text-anchor": "middle",
+        fill: cssVar("--ink-3"), "font-size": 10, "font-family": "var(--sans)",
+        "font-variant-numeric": "tabular-nums"
+      }, usdFull(acc / 3) + "/mo"));
+
+      const hit = el("rect", {
+        x: left + slot * q, y: top, width: slot, height: bottom - top,
+        fill: "transparent", style: "cursor:crosshair"
+      });
+      const qi = q, qTotal = acc;
+      hit.addEventListener("mousemove", function (ev) {
+        const rows = SERVICES.map(function (s) {
+          return { k: s.k, v: usdFull(s.mo[qi] * 3), c: C[s.s] };
+        });
+        tip.show('<div class="tt-title">' + QFULL[qi] + '</div>' +
+                 tipRows(rows, { k: "Quarter total", v: usdFull(qTotal) }), ev.clientX, ev.clientY);
+      });
+      hit.addEventListener("mouseleave", function () { tip.hide(); });
+      g.appendChild(hit);
+      svg.appendChild(g);
+    }
+
+    buildLegend("legend-quarters", SERVICES.map(function (s) {
+      return { c: C[s.s], label: s.k };
+    }));
+
+    let h = "";
+    const colTot = [0, 0, 0, 0];
+    let yearTot = 0;
+    SERVICES.forEach(function (s) {
+      let yr = 0;
+      h += '<tr><td><span class="swatch" style="background:' + C[s.s] + '"></span>' + s.k + '</td>';
+      for (let q = 0; q < 4; q++) {
+        const v = s.mo[q] * 3;
+        yr += v; colTot[q] += v;
+        h += '<td class="num">' + usdFull(v) + '</td>';
+      }
+      yearTot += yr;
+      h += '<td class="num">' + usdFull(yr) + '</td></tr>';
+    });
+    h += '<tr class="total"><td>Total</td>';
+    for (let q = 0; q < 4; q++) h += '<td class="num">' + usdFull(colTot[q]) + '</td>';
+    h += '<td class="num">' + usdFull(yearTot) + '</td></tr>';
+    h += '<tr><td style="color:var(--ink-3)">Monthly average</td>';
+    for (let q = 0; q < 4; q++) {
+      h += '<td class="num" style="color:var(--ink-3)">' + usdFull(colTot[q] / 3) + '</td>';
+    }
+    h += '<td class="num" style="color:var(--ink-3)">' + usdFull(yearTot / 12) + '</td></tr>';
+    $("quarter-rows").innerHTML = h;
+  }
+
+  /* ============================= CHART 3 \u2014 scenario demand ==== */
+  function drawScen() {
+    const svg = $("chart-scen");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const C = seriesColors();
+    const order = [
+      { k: "base",      c: C[2] },
+      { k: "ambitious", c: C[0] },
+      { k: "declined",  c: C[7] }
+    ];
+
+    const W = 860, H = 340, left = 66, right = W - 14, top = 18, bottom = H - 42;
+    let max = 0;
+    order.forEach(function (o) {
+      SCEN[o.k].totals.forEach(function (v) { if (v > max) max = v; });
+    });
+    const ticks = niceTicks(max * 1.05, 5);
+    const scaleMax = ticks[ticks.length - 1];
+    const geo = {
+      left: left, right: right,
+      y: function (v) { return bottom - (v / scaleMax) * (bottom - top); }
+    };
+    drawFrame(svg, geo, ticks, function (t) { return usd(t); });
+
+    const n = 12;
+    const step = (right - left) / (n - 1);
+    const X = function (i) { return left + step * i; };
+
+    order.forEach(function (o) {
+      const s = SCEN[o.k];
+      let d = "";
+      s.totals.forEach(function (v, i) { d += (i ? " L" : "M") + X(i) + "," + geo.y(v); });
+      svg.appendChild(el("path", {
+        d: d, fill: "none", stroke: o.c, "stroke-width": 2,
+        "stroke-linejoin": "round", "stroke-linecap": "round",
+        "stroke-dasharray": o.k === "base" ? "6 4" : "none"
+      }));
+      s.totals.forEach(function (v, i) {
+        svg.appendChild(el("circle", {
+          cx: X(i), cy: geo.y(v), r: 3.2, fill: o.c,
+          stroke: cssVar("--surface"), "stroke-width": 2
+        }));
+      });
+      svg.appendChild(el("text", {
+        x: X(n - 1) - 4, y: geo.y(s.totals[n - 1]) - 12, "text-anchor": "end",
+        fill: o.c, "font-size": 11, "font-weight": "640",
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, usd(s.totals[n - 1]) + "/mo"));
+    });
+
+    SCEN_MONTHS.forEach(function (m, i) {
+      if (i % 2 !== 0 && i !== n - 1) return;
+      svg.appendChild(el("text", {
+        x: X(i), y: bottom + 18, "text-anchor": "middle",
+        fill: cssVar("--ink-3"), "font-size": 10.5, "font-family": "var(--sans)"
+      }, m));
+    });
+
+    const tip = makeTip("host-scen", "tt-scen");
+    const cross = el("line", {
+      x1: 0, x2: 0, y1: top, y2: bottom, stroke: cssVar("--axis"),
+      "stroke-width": 1, opacity: 0
+    });
+    svg.appendChild(cross);
+    const overlay = el("rect", {
+      x: left - step / 2, y: top, width: right - left + step, height: bottom - top,
+      fill: "transparent", style: "cursor:crosshair"
+    });
+    overlay.addEventListener("mousemove", function (ev) {
+      const box = svg.getBoundingClientRect();
+      const px = (ev.clientX - box.left) / box.width * W;
+      let i = Math.round((px - left) / step);
+      i = Math.max(0, Math.min(n - 1, i));
+      cross.setAttribute("x1", X(i));
+      cross.setAttribute("x2", X(i));
+      cross.setAttribute("opacity", "0.6");
+      const rows = order.map(function (o) {
+        return { k: SCEN[o.k].label, v: usdFull(SCEN[o.k].totals[i]), c: o.c };
+      });
+      tip.show('<div class="tt-title">' + SCEN_MONTHS[i] + '</div>' + tipRows(rows),
+               ev.clientX, ev.clientY);
+    });
+    overlay.addEventListener("mouseleave", function () {
+      cross.setAttribute("opacity", "0");
+      tip.hide();
+    });
+    svg.appendChild(overlay);
+
+    buildLegend("legend-scen", order.map(function (o) {
+      return { c: o.c, label: SCEN[o.k].label + " \u2014 " + usd(SCEN[o.k].year) + " over 12 months" };
+    }));
+
+    let h = '<table><thead><tr><th>Month</th><th class="num">Base (committed)</th>' +
+            '<th class="num">Ambitious</th><th class="num">No arrangement</th></tr></thead><tbody>';
+    for (let i = 0; i < n; i++) {
+      h += '<tr><td>' + SCEN_MONTHS[i] + '</td><td class="num">' + usdFull(SCEN.base.totals[i]) +
+           '</td><td class="num">' + usdFull(SCEN.ambitious.totals[i]) +
+           '</td><td class="num">' + usdFull(SCEN.declined.totals[i]) + '</td></tr>';
+    }
+    h += '<tr class="total"><td>12-month total</td><td class="num">' + usdFull(SCEN.base.year) +
+         '</td><td class="num">' + usdFull(SCEN.ambitious.year) +
+         '</td><td class="num">' + usdFull(SCEN.declined.year) + '</td></tr>';
+    h += '</tbody></table>';
+    $("table-scen").innerHTML = h;
+  }
+
+  /* ======================= CHART 4 \u2014 three-year taper ==== */
+  function drawTaper() {
+    const svg = $("chart-taper");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const C = seriesColors();
+    const cPaid = C[0], cCredit = C[3];
+
+    const W = 860, H = 350, left = 72, right = W - 12, top = 20, bottom = H - 56;
+    let max = 0;
+    TAPER.forEach(function (t) { if (t.gross > max) max = t.gross; });
+    const ticks = niceTicks(max * 1.1, 4);
+    const scaleMax = ticks[ticks.length - 1];
+    const geo = {
+      left: left, right: right,
+      y: function (v) { return bottom - (v / scaleMax) * (bottom - top); }
+    };
+    drawFrame(svg, geo, ticks, function (t) { return usd(t); });
+
+    const slot = (right - left) / TAPER.length;
+    const bw = Math.min(120, slot * 0.46);
+    const tip = makeTip("host-taper", "tt-taper");
+
+    TAPER.forEach(function (t, i) {
+      const credit = Math.round(t.gross * t.disc);
+      const paid = t.gross - credit;
+      const x = left + slot * i + (slot - bw) / 2;
+      const g = el("g", {});
+
+      /* paid sits at the base \u2014 it is the number that grows */
+      let y0 = geo.y(0), y1 = geo.y(paid);
+      let hh = Math.max(0, y0 - y1 - 2);
+      if (hh > 0) g.appendChild(el("path", { d: roundedTop(x, y1 + 2, bw, hh, 4), fill: cPaid }));
+
+      y0 = geo.y(paid); y1 = geo.y(t.gross);
+      hh = Math.max(0, y0 - y1 - 2);
+      if (hh > 0) g.appendChild(el("path", { d: roundedTop(x, y1 + 2, bw, hh, 4), fill: cCredit }));
+
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: geo.y(t.gross) - 10, "text-anchor": "middle",
+        fill: cssVar("--ink"), "font-size": 13, "font-weight": "640",
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, usd(t.gross) + " gross"));
+
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: bottom + 19, "text-anchor": "middle",
+        fill: cssVar("--ink-2"), "font-size": 12, "font-family": "var(--sans)"
+      }, t.k));
+      g.appendChild(el("text", {
+        x: x + bw / 2, y: bottom + 35, "text-anchor": "middle",
+        fill: cssVar("--accent"), "font-size": 11.5, "font-weight": "650",
+        "font-family": "var(--sans)", "font-variant-numeric": "tabular-nums"
+      }, Math.round(t.disc * 100) + "% supported"));
+
+      const hit = el("rect", {
+        x: left + slot * i, y: top, width: slot, height: bottom - top,
+        fill: "transparent", style: "cursor:crosshair"
+      });
+      hit.addEventListener("mousemove", function (ev) {
+        tip.show('<div class="tt-title">' + t.k + " \u2014 " + t.sub + "</div>" +
+          tipRows([
+            { k: "Paid to Google", v: usdFull(paid), c: cPaid },
+            { k: "Google support", v: usdFull(credit), c: cCredit }
+          ], { k: "Gross consumption", v: usdFull(t.gross) }), ev.clientX, ev.clientY);
+      });
+      hit.addEventListener("mouseleave", function () { tip.hide(); });
+      g.appendChild(hit);
+      svg.appendChild(g);
+    });
+
+    buildLegend("legend-taper", [
+      { c: cPaid, label: "Paid to Google in cash \u2014 grows 12.8x across the term" },
+      { c: cCredit, label: "Google support \u2014 $240k, $300k, $330k (roughly flat)" }
+    ]);
+
+    let h = "", tg = 0, tc = 0, tp = 0;
+    TAPER.forEach(function (t) {
+      const credit = Math.round(t.gross * t.disc), paid = t.gross - credit;
+      tg += t.gross; tc += credit; tp += paid;
+      h += "<tr><td><b>" + t.k + "</b><br><span style=\"color:var(--ink-3);font-size:.8125rem\">" +
+           t.sub + '</span></td><td class="num">' + usdFull(t.gross) +
+           '</td><td class="num">' + Math.round(t.disc * 100) + '%</td><td class="num">' +
+           usdFull(credit) + '</td><td class="num">' + usdFull(paid) + "</td></tr>";
+    });
+    h += '<tr class="total"><td>Three-year total</td><td class="num">' + usdFull(tg) +
+         '</td><td class="num">' + Math.round(tc / tg * 100) + '%</td><td class="num">' +
+         usdFull(tc) + '</td><td class="num">' + usdFull(tp) + "</td></tr>";
+    $("taper-rows").innerHTML = h;
+  }
+
+  /* ------------------------------------------------ static tables ---- */
+  function fillCredits() {
+    let h = "";
+    CREDITS.forEach(function (r) {
+      const zero = r[2] === 0;
+      const unused = r[1] === 0;
+      h += '<tr><td>' + r[0] + '</td><td class="num"' +
+           (unused ? ' style="color:var(--ink-3)"' : '') + '>' +
+           (unused ? '\u2014' : usdFull(r[1])) +
+           '</td><td class="num"' + (zero ? ' style="color:var(--signal);font-weight:650"' : '') + '>' +
+           (zero ? "\u2014" : usdFull(r[2])) + '</td><td class="wrap-cell"' +
+           (zero ? ' style="color:var(--signal)"' : '') + '>' + r[3] + '</td></tr>';
+    });
+    $("credit-rows").innerHTML = h;
+  }
+
+  function fillTarget() {
+    let h = "", tot = 0;
+    TARGET.forEach(function (r) {
+      tot += r[1];
+      h += '<tr><td>' + r[0] + '</td><td class="num">' + usdFull(r[1]) +
+           '</td><td class="wrap-cell">' + r[2] + '</td></tr>';
+    });
+    h += '<tr class="total"><td>Total</td><td class="num">' + usdFull(tot) +
+         '</td><td class="wrap-cell">Gross monthly consumption; Odum funds $5,000 of it.</td></tr>';
+    $("target-rows").innerHTML = h;
+  }
+
+  /* ----------------------------------------------------- lifecycle ---- */
+  function renderAll() {
+    drawActuals();
+    drawQuarters();
+    drawTaper();
+    drawScen();
+  }
+
+  fillCredits();
+  fillTarget();
+  renderAll();
+
+  let t = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(t);
+    t = setTimeout(renderAll, 140);
+  });
+  /* Charts sample CSS custom properties at draw time, so they must redraw on
+     ANY theme change: the OS-level media query AND the viewer's explicit
+     data-theme stamp on <html>. Without the observer, a toggle leaves stale
+     axis/grid/ink colours from the previous theme. */
+  if (window.matchMedia) {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", renderAll);
+  }
+  if (window.MutationObserver) {
+    new MutationObserver(renderAll).observe(document.documentElement, {
+      attributes: true, attributeFilter: ["data-theme"]
+    });
+  }
+})();
+</script>

@@ -55,11 +55,37 @@ _VERDICT_MARKER_RE = re.compile(
     r"(?:\[body-hash:([a-f0-9]{8,64})\])?"  # group 2: optional stored body hash
 )
 
-# Strips entire lines that contain a verdict marker so body_content_hash is stable
-# w.r.t. marker addition/update (the marker itself lives in the body, so without
-# this the hash would change every time a verdict is written or updated).
+# Sibling-marker family: automated skills that write a purely boilerplate dated
+# bookkeeping line into a doc's body (no doc-specific verdict/analysis payload) each
+# time they touch it -- a touch-only visit from one of these must not flip
+# body_content_hash, or every future run forces a needless full re-classification
+# (na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md: 44%
+# false-positive rate from context-scout's line alone, one tranche, one run).
+#
+# Confirmed by grepping plans/active/ for every `**<name> YYYY-MM-DD**` convention in
+# informal use and sampling each candidate's actual line text before adding it here:
+#   - na-eligibility-audit: this skill's own verdict marker (also parsed by
+#     _VERDICT_MARKER_RE below) -- boilerplate template, verdict text is standardized.
+#   - context-scout: "**context-scout YYYY-MM-DD**: populated/refreshed context_scope
+#     (N entries)." -- always boilerplate, never doc-specific content.
+# Investigated and DELIBERATELY EXCLUDED: docs-reconcile / plan-reconcile /
+# ag-closeout-audit / ag_closeout_auditor all write doc-specific substantive analysis
+# in the same marker line (e.g. "linkage fix -- added...", "operator confirmed...",
+# "first-ever `/ag-closeout-audit ui` run -- the..."). Stripping those would hide a
+# genuine content change from the hash and cause a false SKIP -- worse than the
+# false-positive this family fixes. Add a name here only after confirming (by
+# sampling real lines, same as above) that the skill's marker is boilerplate-only.
+_BOOKKEEPING_MARKER_SKILL_NAMES = (
+    "na-eligibility-audit",
+    "context-scout",
+)
+
+# Strips entire lines that contain a bookkeeping marker so body_content_hash is
+# stable w.r.t. marker addition/update (the marker itself lives in the body, so
+# without this the hash would change every time one is written or updated).
+_BOOKKEEPING_MARKER_ALTERNATION = "|".join(re.escape(n) for n in _BOOKKEEPING_MARKER_SKILL_NAMES)
 _VERDICT_MARKER_LINE_RE = re.compile(
-    r"^[^\n]*\*\*na-eligibility-audit \d{4}-\d{2}-\d{2}[^\n]*\n?",
+    r"^[^\n]*\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}[^\n]*\n?",
     re.MULTILINE,
 )
 

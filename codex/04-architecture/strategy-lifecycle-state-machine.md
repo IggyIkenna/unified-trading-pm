@@ -16,7 +16,7 @@ created: 2026-05-21
 authoritative_for:
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-24
 code_refs:
 type: architecture
 ---

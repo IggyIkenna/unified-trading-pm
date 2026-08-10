@@ -187,6 +187,13 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. All 3 `[HUMAN]` P2/P3 items still require the same whole-fleet naming-collision blast-radius review this
+  doc's own text says was explicitly rejected as out-of-scope for the narrower Gap-3 fix (a false positive here means
+  wrongly matching a legitimately-continuous live/paper VM name); none is independently separable from that review.
+  Checked against this round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-AO-default, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5
+  Slack webhooks) — none apply to a fleet-wide naming-heuristic blast-radius judgment call.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: KEEP-NA, valid — 3 [HUMAN] P2 items (stall-timeout/auto-kill
   design, naming-heuristic allowlist, cron reprioritization); design/operator decisions, not bounded outcomes.
 

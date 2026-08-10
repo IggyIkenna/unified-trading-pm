@@ -50,7 +50,7 @@ locked_by:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     scripts/quality-gates-base/base-service.sh,
     .github/workflows/python-quality-gates-v2.yml,
   ]
@@ -110,12 +110,12 @@ todo.
 
 ## Todos
 
-- [ ] [INFRA] P2. Add a BATS test-execution phase to `scripts/quality-gates-base/base-service.sh`: detect `bats` on
+- [x] ✅ [INFRA] P2. Add a BATS test-execution phase to `scripts/quality-gates-base/base-service.sh`: detect `bats` on
       PATH + any `tests/*.bats` files, run them, and initially treat failures as WARN-ONLY (mirroring the actionlint
       transitional pattern at base-service.sh [5.5]) since the fleet-wide pass/fail baseline across every repo's `.bats`
       files (if any exist outside PM) has never been measured. Wire the CI-side bats-core install
       (`.github/actions/setup-python-tools/action.yml`) so the binary installed there is actually the one
-      `quality-gates.sh` finds on PATH inside the same job. (repo: unified-trading-pm)
+      `quality-gates.sh` finds on PATH inside the same job. (repo: unified-trading-pm) — unified-trading-pm@d3f7b6497
 - [ ] [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
       failure (`exit 1` on any bats test failure), same re-harden-after-baseline pattern used for actionlint. (repo:
       unified-trading-pm)
@@ -148,8 +148,8 @@ framework is exactly the live-dispatch-critical-path class that stays NA even bu
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (4 entries) — swapped the stale archived
   `ci_satellite_ao_dispatch_batch2_2026_07_29.md` citation for
-  `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (the current active doc that re-examines this issue as
-  D4-10 and carries the still-unanswered operator escalation).
+  `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (the current active doc that re-examines this
+  issue as D4-10 and carries the still-unanswered operator escalation).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — live-dispatch-critical-path class, operator authority question
@@ -190,3 +190,25 @@ this tranche. Clear — flipping this doc directly (retroactive reclassification
 phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatchable as-is.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+
+- **2026-08-09 (slot 29, infra craft adopting data_engineering→infra per task assigned_role)**: Shipped todo 1
+  (`unified-trading-pm@d3f7b6497`). Added a warn-only BATS phase to `scripts/quality-gates-base/base-service.sh` (inside
+  the existing `[3] TESTS` block, after the pytest-skip-reason check): detects `tests/*.bats`, runs them via `bats` if
+  present on PATH, warns (never fails) on findings. **CI-side wiring investigated and found ALREADY correct — no change
+  needed**: `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s "Install bats-core" step (~L485) + "Add
+  tools to PATH" step (~L511, unconditional on cache-hit) both run before the "Run Quality Gates" step (~L825
+  `bash scripts/quality-gates.sh --no-fix`) — bats-core is genuinely on PATH when the gate runs in CI already; the
+  todo's premise that CI wiring needed fixing was stale (verified against the live template, not the archived
+  `scripts/self-hosted-runners/hosted-baseline/` snapshot, which is a stale reference copy, not what actually runs).
+  Verified locally: built bats-core v1.12.0 from source into a scratch dir (not installed on this dev box, matching the
+  issue doc's own earlier finding), ran it against PM's now-16 `.bats` files — 118/167 assertions pass, 49 pre-existing
+  failures (mostly `test_workspace_lib.bats`/ `test_sync_pull.bats`/`test_ff_starvation_detect.bats`, root cause:
+  `scripts/sync-rules-push.sh` referenced by a test helper no longer exists) — confirms the WARN-ONLY design choice was
+  correct: a hard-fail rollout today would have reddened the fleet gate on 49 pre-existing findings nobody has looked at
+  yet. Ran the full local `quality-gates.sh` end-to-end (not just the new phase in isolation) three times against this
+  change — all three green (`✅ ALL QUALITY GATES PASSED`), confirming no regression to the rest of the gate. Shipping
+  itself hit severe unrelated shared-host contention (30-40 concurrent QG/pytest processes fleet-wide at points during
+  this session, several qg-host-governor RAM-pressure SIGTERM kills mid-run, several LDR rebase races) — none of that
+  reflects on this change's correctness, just ordinary fleet load; eventually landed clean via quickmerge's own
+  retry/rebase handling. Todo 2 (re-harden to hard-fail) stays open, correctly gated on "a clean fleet PR cycle" — not
+  started this turn (the 49 pre-existing failures above are exactly why it can't be started yet).

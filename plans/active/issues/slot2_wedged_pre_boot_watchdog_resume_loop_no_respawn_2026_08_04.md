@@ -159,3 +159,8 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
   fix to live dispatch-critical-path watchdog machinery -- neither is a worker-determinable bounded fix safely
   dispatchable through the same fleet it would be modifying.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of both open
+  items. The `[BACKEND]` durable watchdog-escalation fix touches core dispatch-critical-path machinery (same caution
+  class as the sibling context-pct-75 wedge doc). The `[OPERATOR]` slot-3 kill+respawn item is an explicit operator-only
+  live-infra action main/workers cannot self-serve. 3 prior audits (08-04, 08-06, round7-08-08) consistently agree.

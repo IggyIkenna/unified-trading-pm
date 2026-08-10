@@ -75,6 +75,17 @@ batch.
 
 Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batch9-001, slot 2, 2026-08-07).
 
+## Todos
+
+- [x] ✅ [OPERATOR] P2. **Rule on the SOLANA_VAULT compound-symbol format for `kamino.py:199`** — **RULED 2026-08-10:
+      option (a), `-` separator.** Shipped `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb`: the
+      f-string now produces `f"{venue_tag}:SOLANA_VAULT:{sym_a}-{sym_b}-{address[:8]}"` (last `:` before the address
+      replaced with `-`, clearing UAC's colon-guard). Existing-row migration written in the same commit —
+      `scripts/fix_kamino_stale_colon_catalog_rows_2026_08_10.py` (113 stale KAMINO SOLANA_VAULT rows identified in a
+      fresh `prod/catalog.parquet` query, 0 collisions with an already-clean counterpart, mirrors the
+      `fix_morpho_stale_colon_catalog_rows_2026_08_05.py` precedent) — **written but not yet confirmed executed
+      against prod** as of this edit; re-verify execution before treating existing rows as migrated.
+
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. The doc carries
@@ -88,3 +99,17 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   checkboxes but 1 real prose-only open item (this corpus's confirmed trap): UAC's colon-guard hard-rejects kamino.py's
   SOLANA_VAULT compound symbol. 3 explicit options laid out, each with different GCS-path/manifest-migration
   implications -- doc's own text: "operator ruling required" before any implementation. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (0 already
+  resolved). The options (a)/(b)/(c) ruling flagged by every prior na-eligibility-audit pass as "1 real prose-only
+  open item" had never actually been formalized as a `- [ ]` checkbox — added a `[OPERATOR] P2` todo under a new
+  `## Todos` section.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — the sole todo is
+  explicitly `[OPERATOR]`-tagged and self-describes as "Genuinely a judgment call, not worker-determinable" (a
+  GCS-path-changing instrument-key format ruling with manifest-migration implications, 3 undismissed options). Never
+  re-litigating: the same disposition was independently reached by the 2026-08-07 and 2026-08-09 na-eligibility-audit
+  passes on this exact doc. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (operator ruling + implementation session)**: operator ruled option (a) via a direct question. Shipped
+  `instruments-service@6f3fce6ddd82c84cf2550a7a774d16202c19dbfb` — code fix + migration script for the 113 existing
+  stale-colon rows. Sole todo now `[x]`. **Not archiving yet**: the migration script's execution-against-prod status
+  is unconfirmed (no follow-up commit/log found) — re-verify the 113 rows actually got migrated before treating this
+  doc as fully closed.

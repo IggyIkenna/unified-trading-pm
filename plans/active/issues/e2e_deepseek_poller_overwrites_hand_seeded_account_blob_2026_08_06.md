@@ -35,7 +35,7 @@ repos: [agent-orchestrator]
 tags: [agent-orchestrator, e2e, playwright, deepseek, test-reliability, fixture-drift]
 related:
   [
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md,
   ]
 created: 2026-08-06
@@ -63,7 +63,7 @@ context_scope:
     agent-orchestrator/server/deepseek_usage_poller.py,
     agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh,
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
   ]
 ---
 
@@ -156,3 +156,8 @@ context_scope:
   step, not a forgotten completion. Set `archive_exempt: true` rather than duplicate-archive here. Un-set once that
   finalize plan's archival todo actually runs (it will naturally pick this doc up).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — 0 open todos,
+  `archive_exempt: true`. Independently re-verified the routing plan
+  (`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`) still carries its own open `[REVIEW] P0` archival todo
+  naming this doc — routing still valid, not stale.

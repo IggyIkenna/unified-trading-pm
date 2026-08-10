@@ -101,27 +101,36 @@ context_scope:
       `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
       verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
       hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
-- [ ] [DATA] P0. BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **MVP backfill readiness gate** —
-      only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP, throughput-fixed) and verify
-      manifest-counted canonical rows for each MVP cell. **Still blocked** — Phase D is not literally green per the note
-      above; do not start this until the chain-bundle follow-up is resolved or the operator explicitly accepts the
-      current evidence as sufficient. **FLAGGED, NOT CORRECTED (na-eligibility-audit 2026-08-09, tradfi tranche,
-      dispatch agt-3df41f):** both cited sub-blockers may now be stale for the specific cells this run's own MVP-of-MVP
-      narrowing (`/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) actually targets — (a)
-      the billing suspension was independently live-verified lifted for in-scope items the same day per that doc; (b)
-      `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4's exhaustive diff places ES/BTC/ETH in its clean
-      "Matches" bucket, not its 3 open-defect items (CBOE VIX + 15 micro-contract codes + 8 sector-identity codes only).
-      Not re-citing this pass -- confirming the EXACT narrowed-scope claim needs one more direct read before editing a
-      critical-path gate's blocking citation; recommend a follow-up pass (or the doc owner) verify and re-point if
-      confirmed.
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on
-      databento account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **Post-full-backfill
-      reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill readiness gate above
-      goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this terminal gate's final
-      verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's
-      checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
+- [ ] [DATA] P0. **UNBLOCKED 2026-08-10 (this is the recommended follow-up pass the 2026-08-09 flag below asked for)** —
+      the databento account-level billing-suspension gate is confirmed resolved account-wide, not just for the narrower
+      MVP-of-MVP scope: live `DatabentoBaseClient.warmup()` → `metadata.list_datasets()` (an unscoped, account-level
+      call) succeeded 2026-08-10, no auth/suspended error — see
+      `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log. Prior gate
+      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+      **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
+      (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real
+      metered `GLBX.MDP3` ES.FUT and `XCBF.PITCH` VX.FUT pulls both succeeded — see
+      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a SEPARATE,
+      unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green per the
+      note above; do not start this until the chain-bundle follow-up
+      (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, CBOE VIX + 15 micro-contract codes + 8
+      sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient. **MVP
+      backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
+      throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
+- [ ] [DATA] P1. **UNBLOCKED 2026-08-10** — same databento resolution as the MVP backfill readiness gate above; this
+      todo's remaining blocker is purely its dependency on that gate above (and, transitively, the chain-bundle
+      follow-up it's still blocked on — see that todo's note). Prior gate (superseded, kept for history):
+      ~~BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on databento account
+      billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+      **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
+      (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls
+      both succeeded — see `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`).
+      **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill
+      readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this
+      terminal gate's final verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md`
+      §11's checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
       reconciliation run cited). Definition of done: a dated reconciliation report path cited, covering both the
       raw-tick and candles layers, with any finding either resolved or explicitly carried forward as a new tracked todo.
       Inherits P0's same flagged-citation caveat above (not independently re-checked).
@@ -134,6 +143,15 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-10 (live-verification session)**: acted on the 2026-08-09 na-eligibility-audit flag below asking for a
+  direct-read follow-up pass. Independently live-verified Databento account access is restored — an unscoped
+  `DatabentoBaseClient.warmup()` → `client.metadata.list_datasets()` call succeeded (29 datasets, no auth/suspended
+  error), stronger evidence than the 2026-08-09 in-scope-only verification since it's not limited to the MVP-of-MVP
+  scope list. Lifted the databento-specific citation on both open todos (P0 MVP backfill readiness gate, P1
+  post-full-backfill reconciliation checkpoint) — see each item's `UNBLOCKED 2026-08-10` note. **Neither todo is
+  dispatchable yet**: the P0 gate's SEPARATE chain-bundle-sampler blocker
+  (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) is untouched by this pass and remains open; the P1 todo
+  inherits that same block transitively. Doc stays NA, still genuinely gated (by a different blocker now).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped 2 general codex/sibling-plan entries for
   the 2 real `EXCHANGE_CODE_TO_NAME` source files the blocking chain-bundle issue names, since both open todos gate on
   that contradiction.
@@ -448,10 +466,15 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   > scoping list (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this
   > note describes); the actual native-shutdown-script code fix shipped `deployment-service@db5d3c7` — the gap this note
   > flags is now closed at both the doc-scoping and launcher levels.
-- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever
-      running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.
-      **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line -- was invisible to checkbox
-      tooling; content unchanged.)**
+- [x] ✅ [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever
+      running --apply — DONE. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): STALE,
+      closing.** This checkbox is a duplicate of the same Progress-Log-forked item already flipped `[x]` in the sibling
+      fork `tradfi_manifest_content_recovery_completion_2026_07_24.md` (line 840): "Retire-phase candidate list
+      reviewed + APPLIED — DONE 2026-07-26 (operator go-ahead)," citing `deployment-service@ab8e0d7` + completed VM
+      apply run `canonical-migration-tradfi-manifest-retire-20260726-160002` (65,628 rows retired, independently
+      re-verified present in the sibling doc this pass). Both docs fork the same parent Progress Log; only the sibling's
+      copy was flipped until now. **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line --
+      was invisible to checkbox tooling; content unchanged.)**
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
 
@@ -576,3 +599,11 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` narrows to, but confirming the exact narrowed-scope claim
   needs a direct read before editing a critical-path gate's citation -- left for a follow-up pass. Doc stays NA (still a
   genuine, multi-part gated mix).
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:cd6bd4d3bfd17533]: **KEEP-NA,
+  stale-items fixed.** Fresh full read, 4 open items. Closed 1 stale checkbox this pass (the retire-phase candidate-list
+  review — duplicate of the same Progress-Log-forked item already flipped `[x]` in the sibling fork
+  `tradfi_manifest_content_recovery_completion_2026_07_24.md`, independently re-verified at that doc's line 840:
+  `deployment-service@ab8e0d7` + completed VM apply run `canonical-migration-tradfi-manifest-retire-20260726-160002`,
+  65,628 rows retired). Remaining 3 items (MVP backfill readiness gate, its dependent reconciliation checkpoint, and a
+  test addition blocked on a separate flaky-test fix) stay DEPENDENCY_BLOCKED, established reasoning unchanged. Doc
+  stays NA.

@@ -29,11 +29,11 @@ tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-5, plan-hygi
 related:
   [
     /plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
-    /plans/active/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,

@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-30
+last_reviewed: 2026-08-10
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -31,6 +31,8 @@ code_refs:
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/tmux_pruner.py,
     agent-orchestrator/server/orphan_reap.py,
+    agent-orchestrator/server/context_probe.py,
+    agent-orchestrator/server/context_lifecycle.py,
   ]
 ---
 
@@ -316,6 +318,42 @@ remains exactly as defeatable as the 2026-07-26 incident. Regression coverage: `
 
 ---
 
+## Fleet-wide in-flight-task double-dispatch guard + abandoned-claim threshold (2026-08-06/09)
+
+**The gap this closes.** A resumable long-running todo (a GCS backfill/migration whose real-world work can outlive its
+owning slot's tracked session — the triggering incident, `prediction_trades_migration_concurrent_dispatch_2026_07_28.md`
+— a slot's session ended with no closing Progress Log entry) could be re-dispatched to a SECOND slot while the first was
+still genuinely working, because the backlog dispatcher's existing `status == 'queued'` precondition doesn't by itself
+catch a task whose `TaskRow` bookkeeping reads free but whose owning `SlotRow` is still actively working it.
+
+**The guard (`agent-orchestrator@9e28a36`, 2026-08-06).** A FLEET-scope `in_flight_elsewhere` eligibility filter in
+`server/dispatch.py`'s `_FILTERS` table: if a `SlotRow` still shows a task as its `current_task` with a live heartbeat,
+no OTHER slot may claim the same task id, even if the `TaskRow`'s own `status`/`dispatched_to` reads free. Wired into
+`_detailed_fleet_reasons` so `/api/backlog/{id}/blockers` reports the block by name. The staleness threshold is an
+INJECTED tuning parameter, `tuning.in_flight_task_owner_stale_after_seconds` (env-free — change the code default +
+redeploy, `.env.local` silently no-ops) — never hardcoded into the filter logic. Regression:
+`tests/ test_dispatch_in_flight_elsewhere.py` (live-owner blocks a second slot; stale-owner releases it; the owning slot
+may still claim its own task; threshold configurable via `set_tuning`; a live-owned in-flight task excluded from the
+spawn budget).
+
+**Operator ruling 2026-08-09 (`prediction_trades_migration_concurrent_dispatch_2026_07_28.md` todo 3) — both open
+questions now resolved:**
+
+1. **Threshold: 900s, ratified.** The shipped default was already this value — it's the exact number BOTH the precedents
+   that motivated the knob (`TuningDefaults.watchdog_heartbeat_timeout`, `server/config.py:473`, and
+   `one_shot_stale_grace_minutes`=15min, `…/config.py:664`) independently agree on. No code change required — the ruling
+   confirms the existing default is correct, it doesn't change it.
+2. **Stale-claim takeover rule: merge, preferring the higher-progress checkpoint.** When a second slot resumes a task
+   whose prior owner went stale, it does NOT blindly adopt the dead slot's checkpoint as-is, and does NOT always
+   re-verify from zero — it merges the available checkpoint(s) and prefers the entry with the higher progress count.
+   This mirrors the triggering incident's own ad-hoc fix (three report files merged by day, preferring the higher
+   `canonical_enriched` count) — a working pattern already proven under the exact failure this guard exists for, rather
+   than a fresh design. Any resumable todo whose checkpoint format supports a monotonic progress count should implement
+   takeover this way; a format without one should state its own equivalent (e.g. latest-mtime-wins) rather than
+   defaulting to blind adopt-or-discard.
+
+---
+
 ## Slack alert paths
 
 | Event                   | Alert                                                                                                | Severity                        |
@@ -337,7 +375,7 @@ infrastructure required.
 | `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`          | Consecutive frozen ticks before kill (3 × interval = 180s)                                                                      |
 | `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`        | Heartbeat-silent threshold (15 min)                                                                                             |
 | `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`        | Per-slot kill cooldown (5 min)                                                                                                  |
-| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`         | Per-VM kills before dormancy                                                                                                    |
+| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `50`         | Per-VM kills before dormancy                                                                                                    |
 
 ---
 
@@ -388,7 +426,7 @@ Expected: kill event within 180s, fresh tmux session within 300s total.
 - **Do NOT roll Phase 3 in parallel across all VMs** — canary-first, same discipline as autospawn.
 - **Do NOT bypass the per-slot 5-min cooldown** — without it, a misconfigured watchdog could kill+respawn the same slot
   every 60s indefinitely.
-- **Do NOT bypass the per-VM 20-kills-per-day cap** — at cap, Slack alert fires + watchdog goes dormant; operator must
+- **Do NOT bypass the per-VM 50-kills-per-day cap** — at cap, Slack alert fires + watchdog goes dormant; operator must
   investigate root cause, not mask it.
 
 ---
@@ -522,8 +560,10 @@ fresh worker picks up later work. So: **crafts** stay `working` until `/done` (n
 
 ### Deferred (revisit later, not required for correctness)
 
-- **Role-field reclassification** (`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
-  `data_engineering` scheduled-vs-persistent). Reaping keys on dispatch context, not the field, so this is cosmetic.
+- ~~**Role-field reclassification**~~ — DONE (2026-08-10): `backend_engineer`/`ui_developer`/`quant_dev`/`infra`/
+  `data_engineering` all now declare `lifecycle: persistent` (matching `worker`) — they're plan-backlog workers, not
+  event-spawned one-offs, per the table above. Reaping keys on dispatch context, not the field, so this was cosmetic; no
+  dispatch/reap behavior changed.
 - **Sequential-plan context-continuity** (pin a `sequential` plan to one slot for conversational continuity across a
   cross-plan gate). A nice-to-have only — the durable state above already carries what matters. Explicitly out of scope.
 
@@ -641,3 +681,222 @@ Flow:
   #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
 SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Operator follow-up (2026-06-22)".
+
+---
+
+## Calibration-source contract: only CLI-rendered percentages may calibrate a learned window (2026-08-09)
+
+**The rule.** `context_probe.observe(model, tokens, *, pane_pct=...)` treats `pane_pct` as an AUTHORITATIVE calibration
+source — the exact denominator the CLI itself is dividing by — and latches `tokens / (pane_pct/100)` into
+`calibrated_window`. That field is **monotonic** (only ever grows) and **outranks every other signal** (the watermark,
+the `model_tier` prior), so a single bad write permanently inflates a model's learned window for the whole fleet. A
+caller may therefore pass `pane_pct` to `observe()` ONLY when it is a percentage the CLI **itself rendered** — never a
+heuristic estimate of one.
+
+`server/worker_liveness/__init__.py::derive_context_used_pct()` (a general-purpose "how full is it" READING) has three
+branches, in priority order: (1) `_CONTEXT_USED_RE` — "N% context used", CLI-rendered, authoritative; (2)
+`_AUTO_COMPACT_RE` — "N% until auto-compact" (inverted), CLI-rendered, authoritative; (3) `_TOKEN_USAGE_RE` — a
+mid-spinner "↑ N.Nk tokens" readout divided by a hardcoded `_DEFAULT_CONTEXT_WINDOW_K` assumption — a **guess**, not a
+CLI-rendered fact. Branch 3 calibrates the window against an assumption about the window — circular, and the `observe()`
+contract above means it is unsafe to ever feed as `pane_pct`.
+
+**The fix**: `derive_calibration_pct()` (same module) is split out to cover ONLY branches 1–2 — CLI-rendered
+percentages, never the heuristic. Both calibration call sites (`context_lifecycle.py::_pane_readings()`, which returns
+`(reading_pct, calibration_pct)` from one pane capture and passes `calibration_pct` — never `reading_pct` — to
+`context_probe.context_used_pct(..., pane_pct=calibration_pct)`) now pass this narrower value;
+`derive_context_used_pct()` (all three branches) remains available as a plain reading, never as a calibration input.
+**Any future caller of `context_probe.observe()`/`context_used_pct()` must follow the same rule: pass a calibration
+value only if it came from a CLI-rendered percentage, never from a token-count/window-size heuristic.**
+
+**Defense-in-depth**: `context_probe._calibration_is_plausible()` independently rejects a calibration exceeding
+`_MAX_CALIBRATION_OVERSHOOT` (1.5×) of `max(model_tier.context_window(model), watermark_tokens)` — so even a future
+caller that gets the source wrong cannot inflate a model's window past a bounded multiple of its prior/watermark. This
+does not depend on every caller honoring the calibration-source contract above; it is the backstop, not a substitute for
+it.
+
+> **SUPERSEDED in part (2026-08-10, `ao_model_main_agent_as_first_class_slot_2026_08_10`) — main now has a real
+> `SlotRow`.** The premise of the paragraph below — _"Main has no `SlotRow`"_ — no longer holds: `main_agent_keeper`
+> `_sync_main_slot_row` keeps a genuine `SlotRow(slot_id=0)` current every keeper tick, sourced from main's own
+> `AgentRow` (see "main is a first-class slot" at the end of this doc). The `_main_pct()` floor mechanism described here
+> has since been COLLAPSED into the ordinary `_read_pct()` slot path (issue todo 5, `agent-orchestrator@bef2f6b`):
+> `_read_pct` now applies the same probe-vs-self-report floor (max of {self-report, probe}, ratchet-up persisted) to
+> every target — main included — while the keeper writes main's raw self-report to the SlotRow; the special case is gone
+> along with its structural reason.
+
+**Main's `AgentRow` floor — the other half of the fix.** Every WORKER already had a self-reported floor: `_read_pct`
+took `max(SlotRow.context_used_pct, probe)`, so a poisoned/under-reading probe could only ever be overridden upward by
+the worker's own `/progress`-reported percentage. **Main has no `SlotRow`** (it is not a slot-bound worker), so before
+this fix it relied on the measured probe ALONE — no self-report floor at all. `context_lifecycle.py::_main_pct()` closes
+that asymmetry: it takes the measured probe, then floors it on main's own `AgentRow.context_used_pct` (the CLI's own
+self-reported figure, posted by main on every tick) via the same ratchet-and-persist pattern as the worker path —
+`max(measured, self_reported)` wins and is written back. A learned- window error can therefore only ever make the
+compaction policy fire EARLY (over-report), never blind it (under-report), for every target in the fleet — worker or
+main.
+
+**The incident this closes.** `claude-sonnet-5`'s `calibrated_window` was latched to 2,614,639 (true window ~937K, a
+2.8x overshoot) because a `_TOKEN_USAGE_RE` heuristic reading was fed to `observe()` as if it were authoritative. Main's
+real 99%-context session measured as 26% against the poisoned window, no `context_lifecycle` threshold ever fired
+(`proactive_compact_guidance` = 0 for `role=main` across a 4.3-hour activity window), and main ran to the model's hard
+limit with the compaction safety net silently disarmed — while the worker fleet was unaffected because every worker
+still had its `SlotRow` self-report floor. Full root-cause detail, live-verification evidence, and the
+plausibility-audit results:
+`plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md`. Regression
+coverage: `tests/test_context_probe.py::test_the_measured_poisoning_case_is_rejected` and siblings.
+
+---
+
+## Context-window learning is per-model; per-session divergence is expected and already floored (2026-08-09)
+
+`context_probe.py`'s learned-window registry (`data/state/learned_context_windows.json`, `context_window_for(model)`) is
+keyed **only by model string** — no account or session dimension. Follow-up to
+`ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md`: with the poisoning fixed, main's own
+CLI-rendered figure still showed its TRUE usable window as ~696K (99% at 689,570 tokens) — BELOW both the sonnet-5
+corpus watermark (937,882, the largest context any sonnet-5 session has demonstrably reached) and the `model_tier`
+cold-start prior (1,000,000). Investigated whether the effective window is genuinely per-account/per-session rather than
+per-model.
+
+**Account tier ruled out for this instance, but a real registry blind spot.** `agents/accounts.json`'s `AccountTier`
+field (`pro`/`max5`/`max20`/`team`/`enterprise`/`api`) is declared once per Claude subscription and never reaches
+`context_probe` — every account's sessions blend into one per-model figure regardless of tier. Checked directly against
+the live registry: main's account at the time (`sub-f-odum2default`) is `max20`, the SAME tier as the large majority of
+fleet accounts that built the 937,882 sonnet-5 watermark — so a downgraded account tier does not explain this specific
+gap. The blind spot itself is still real: the fleet carries one `pro`-tier account (`sub-a-ikenna`) whose sessions feed
+the same undifferentiated per-model watermark, so a future genuine tier-driven window difference (if Anthropic's own CLI
+enforces one) would be silently averaged away rather than surfaced.
+
+**`effort`/`thinking` is the better-supported per-session driver.** `agents/main.md` runs `thinking: high`, while the
+ordinary `worker.md` default is `thinking: medium` (confirmed via each role's own frontmatter) — main's session
+population differs systematically in effort/thinking depth from the mostly-worker sessions that built the corpus
+watermark. Higher effort/thinking plausibly reserves more of the CLI's own internal turn budget, which would make the
+CLI itself decide a session is "full" — and render its own "N% context used" — at a lower absolute input-token count
+than an otherwise-identical lower-effort session on the same model. This is Anthropic's own Claude Code CLI internal
+budgeting, opaque to this codebase, so it is the best-supported hypothesis rather than a proven mechanism.
+
+**Conclusion — documented as expected divergence, not a defect; no registry change made.** The per-model
+`context_window_for(model)` figure is intentionally coarse: a COLD-START / no-better-signal fallback, never an override,
+for any target carrying its own self-report. Main's `AgentRow.context_used_pct` (the CLI's own figure, reported every
+tick) already floors the measured probe in `_main_pct()` (`context_lifecycle.py`), and every worker already floors its
+probe with `SlotRow.context_used_pct` the same way — so whatever per-session/per-account variance produces a session's
+true window, the ONE target it matters for (that session) already gets the accurate number via the self-report ratchet,
+not the corpus/model-level estimate. The residual risk is a target with no self-report at all silently under-compacting
+on a smaller-than-average window; none exists in the fleet today (main and every worker/review slot carries a
+self-report). A future per-model-only registry key should stay that way unless a NEW target class appears with no
+self-report of its own.
+
+---
+
+## main/review stay COOPERATIVE-first — the idle gate is intended, not a defect (operator ruling 2026-08-10)
+
+**The ruling.** main and review keep the cooperative-first compaction path with its idle-verified forced fallback. The
+worker-style UNCONDITIONAL force (`context_worker_force_compact_pct`, no idle check, operator ruling 2026-08-05) is
+**not** extended to them. This reaffirms the 2026-08-05 rationale — _"never compact mid-work — a single pane-snapshot
+'looks idle' is untrustworthy on a days-long loop"_ — against live measurement.
+
+**What the idle gate actually costs.** The forced fallback needs `classify_pane == "idle"` on `_FORCE_IDLE_OBSERVATIONS`
+(3) consecutive keeper ticks, plus an empty input box, plus ≤1 child process under the pane shell. The keeper ticks
+every `main_agent_interval_seconds` (**60s**), so the requirement is **~3 minutes of continuous quiet** — not hours. A
+recurring misreading is to treat the ≥6h instrumentation OBSERVATION WINDOW as an idle expectancy; it is not.
+
+**The measurement that decided it** (read-only `GET /api/activity?limit=4000`, 3.7h window 2026-08-09 19:50Z→23:30Z,
+live fleet, taken after the idle-gate instrumentation landed):
+
+| path                        | events                                                                                  | effectiveness    |
+| --------------------------- | --------------------------------------------------------------------------------------- | ---------------- |
+| COOPERATIVE (main + review) | main: guidance 1 → compaction 1, idle gate blocked 1 · review: 16 compactions, 0 forces | **17/17 = 100%** |
+| FORCED (workers)            | `forced_precompact` 68 · `forced_compact` 65 · `forced_compact_ineffective` 51          | **14/65 = 22%**  |
+
+The cooperative nudge lands before the force is needed: main and review are not starved of the 3-minute idle window,
+they mostly never reach the fallback at all. Extending the unconditional force to them would move the two roles that
+compact reliably onto the path that currently fails ~78% of the time
+(`/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive "verify by
+EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a regression).
+
+**Consequences for future work — read before "fixing" the idle gate:**
+
+- The gate refusing to open is **not** by itself a bug report. Judge the path by whether the target actually compacts
+  (`context_compact_observed`), never by whether the force fired.
+- A silent main/review — zero context-lifecycle events — is still a real alarm, because that is exactly what the
+  2026-08-09 poisoned-window incident looked like. The silent-disarm detector, not the force, is the control for it.
+- If the forced path's effectiveness is ever fixed to approach the cooperative path's, this ruling may be revisited —
+  with a fresh measurement, not from first principles.
+
+### Anti-pattern (adds to the list above)
+
+- **Do NOT extend the worker unconditional force-compact to main/review while the forced path measures WORSE than the
+  cooperative one.** This is a DATA gate, not an operator gate (operator ruling 2026-08-10, deliberately relaxed from
+  "requires a new operator ruling" so a worker can act on evidence without waking a human). The bar is stated and
+  checkable — a worker may extend the force to main/review, without any further ruling, once a fresh measurement over a
+  window of **>=6h of live fleet activity** shows BOTH:
+
+  1. forced-path effectiveness (`context_compact_observed` following a `forced_compact`, divided by `forced_compact`) is
+     **>= the cooperative path's** over the same window, and
+  2. forced-path effectiveness is **>= 90%** in absolute terms.
+
+  Baseline to beat, measured 2026-08-09 over 3.7h: cooperative **17/17 = 100%**, forced **14/65 = 22%**. Below that bar
+  the ruling stands and the idle gate stays. Record the new measurement in this section when you change it, so the next
+  reader sees the numbers that moved it rather than an assertion.
+
+  Two things this gate does NOT accept as evidence: the force _submitting_ (`submitted=True` is what
+  `forced_compact_ineffective` exists to disprove — see
+  `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`), and the idle gate merely
+  _refusing to open_ (judge the path by whether the target compacts, never by whether the force fired).
+
+  Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the idle-gated
+  `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently. Changing the
+  policy therefore means deliberately updating that test WITH the measurement above in the commit message — which is the
+  intended friction, not a blocker.
+
+---
+
+## main is a first-class slot — the slot-less special case is retired (operator ruling 2026-08-10)
+
+**The ruling.** main becomes a first-class slot: it gets a real, live `SlotRow`, exactly like every worker and review
+slot. This is a STRUCTURAL fix, not another main-specific branch. Every defect in the 2026-08-09 context-lifecycle
+family traced to one asymmetry — main was the ONE lifecycle target with no `SlotRow` — and each was patched with a
+main-specific branch + main-specific test: no self-reported context floor (main ran to 99% with the compaction net
+disarmed for 4.3h), `context_pressure` hardcoded `"low"` (the thrashing-recycle trigger structurally unreachable), and a
+terminal wedge-recovery gated behind a force main could never receive. The fourth mechanism to assume "targets have
+SlotRows" would have started the class again. Issue:
+`plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`.
+
+**Prerequisite resolved — `slot_id` 0 meant two different things.** Before main could own a real row, the identifier had
+to be disambiguated: `autospawn._MAIN_SLOT_ID = 0` (main's identity) collided with a synthetic sentinel `slot_id=0` used
+for plan-level/operator-gated rows that belong to NO worker (`bootstrap.py:931`, `orm.py:390`,
+`blocked_reconcile.py:474`). A real `SlotRow(slot_id=0)` written while the sentinel meaning persisted would have made
+every plan-level activity row appear to belong to main. The no-slot rows now carry `orm.NO_WORKER_SLOT_SENTINEL = -1`
+(`agent-orchestrator@0efa913`): a value no real slot can hold. Every write/read site (`bootstrap.py`, `plan_health.py`,
+`blocked_reconcile.py`, `routes/backlog.py`, `regen_backlog_from_plan.py`'s raw SQL) was migrated off the literal `0`,
+and `bootstrap._migrate_blocked_queue_no_slot_sentinel` is a data-only UPDATE rewriting legacy rows on live DBs (proof:
+`tests/test_migrate_blocked_queue_no_slot_sentinel.py`). A `context_lifecycle.py` THIRD encoding — main as
+`slot_id is None` inside its own target list — was confirmed clean and left alone (it already can't collide with a real
+int id).
+
+**The resulting shape.**
+
+- **Real `SlotRow`, owned by `MainAgentKeeper`** (`agent-orchestrator@8fedf51`). `main_agent_keeper.MAIN_SLOT_ID = 0` —
+  the same value every pre-existing "main identity" call site already assumed (kept as an independent literal, not a
+  shared import with `autospawn._MAIN_SLOT_ID`, to avoid a circular import; `test_main_slot_id_matches_autospawn` pins
+  the two equal). `tick_once()` is a thin wrapper around the renamed `_tick_once_inner` so `_sync_main_slot_row` runs
+  EVERY tick regardless of which branch fired — not threaded into each of the many early returns. The row's
+  `context_used_pct`/`context_pressure`/`last_ping` are written via `state_store.update_slot_ping` — the SAME function
+  every worker's `/progress`|`/done`|`/heartbeat` already calls — sourced from main's own `AgentRow.context_used_pct`
+  (already ratcheted by `_main_pct` against the measured probe earlier the same tick), so the SlotRow tracks the
+  AgentRow rather than re-deriving anything. `status` comes from a fresh `tmux_spawn.has_session` read (not the tick's
+  own branch outcome); `claude_session_id` from the AgentRow. `/api/state` now shows main's row with a live context pct.
+  Tests: `test_main_slot_row_created_and_tracks_agent_row_every_tick`,
+  `test_main_slot_row_status_idle_when_session_dead`.
+- **Dispatch exclusion — the ONE deliberate difference.** main must NOT become dispatchable for backlog tasks, and must
+  NOT count toward claimable capacity. `dispatch._MAIN_SLOT_ID = 0` + an unconditional early-return guard in
+  `_task_is_routable_to` (`agent-orchestrator@3fa500e`, checked BEFORE the target_slot match so an explicit
+  `target_slot=0, affinity=high` pin cannot override it) reject slot 0 outright; main's row carries no
+  worktree/branch/operator, so `slot_is_spawnable` never satisfies it either and AutoSpawn skips it (`"main_slot"`
+  reason). This survives the refactor BY DESIGN — the `dispatch.py:606-611` incident (an unconfigured slot 0 read as
+  permanently claimable and burned a budget slot every tick) is why the exclusion is a non-goal, not a regression.
+  Tests: `tests/test_dispatch_main_slot_gate.py`, `tests/test_autospawn.py`'s `main_slot` skip-reason test.
+- **Standing guard against the regression class.** `test_every_context_lifecycle_target_has_slot_row`
+  (`agent-orchestrator@c8109bd`) mirrors `ContextLifecyclePolicy.tick()`'s target-list construction (main + review +
+  workers) and asserts every target resolves to a real `SlotRow` — a future target added without one fails the suite.
+- **Not changed.** Compaction semantics are untouched — main's observable compaction behaviour is identical; the point
+  was deleting special cases, not changing policy. The remaining main-specific branches in `context_lifecycle.py`
+  (`_main_pct`, the `slot_id is None` wedge-recovery) are scheduled to be collapsed into the ordinary slot path (issue
+  todos 5-6) once the row is the stable base; the row existing NOW is what makes those collapses pure refactors.

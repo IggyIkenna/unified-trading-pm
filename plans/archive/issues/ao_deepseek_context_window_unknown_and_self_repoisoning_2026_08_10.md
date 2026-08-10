@@ -1,0 +1,296 @@
+---
+doc_type: issue
+title:
+  DeepSeek's context window was inferred from a corpus that could never reach it — every AO-derived estimate was too
+  small; the real ceiling is 1,048,565 tokens, measured
+summary: >-
+  RESOLVED 2026-08-10. DeepSeek V4-Pro and V4-Flash are BOTH 1M-context models, measured directly against the live API
+  rather than inferred: oversized prompts to api.deepseek.com served 988,249 tokens in a single request (HTTP 200) and
+  were refused at 1,235,325 with the ceiling named outright — "This model's maximum context length is 1048565 tokens"
+  (2^20 - 11). EVERY window AO had derived from its own transcripts was far too small — 325K/468K (manual-compaction
+  maxima), ~200K (auto-compaction cluster), and the live 240,211/177,703 pane calibrations — and all of them failed the
+  same way: Claude Code does not recognise the DeepSeek model string, assumes ~200K, and auto-compacts DeepSeek sessions
+  at ~166-190K, so no session was ever free to reach the ceiling being measured. Corroborated across 1,342 DeepSeek
+  transcripts (604 flash / 756 pro sessions): ZERO were ever refused for exceeding a context limit. Fixed in
+  agent-orchestrator@905c21061 + @809c405d6 — the prior is 1M for both, and context_window_for() takes that prior for
+  DeepSeek outright instead of its learned signals, which is what actually heals the live registry (excluding DeepSeek
+  from calibration only stopped NEW writes while the already-poisoned values kept being served). Follow-on work — the
+  CLI still compacting DeepSeek at ~17% of capacity — is carried in
+  /plans/active/issues/ao_cli_assumes_200k_window_for_deepseek_2026_08_10.md.
+status: resolved
+nature: issue
+asset_group: [ao]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [agent-orchestrator, context, deepseek, measurement, context-probe, worker-lifecycle]
+related:
+  [
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+  ]
+created: 2026-08-10
+last_updated: "2026-08-10"
+parent_epic: orchestrator_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 0.6
+estimate_calibrated_ai_days: 0.5
+assigned_role: backend_engineer
+drift_direction: fix-regression
+resolved_by:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+source: >-
+  Operator observation 2026-08-10 ("with deepseek we got this context bloating issue reappearing, is deepseek pro and
+  flash set to 1m or 500k?"), measured live via read-only SSM in the same session.
+depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/context_probe.py,
+    agent-orchestrator/server/model_tier.py,
+    agent-orchestrator/server/worker_liveness/__init__.py,
+  ]
+---
+
+# DeepSeek's real context window is unknown and its learned value re-poisons itself
+
+> **🟢 ARCHIVED 2026-08-10** — `status: resolved`, all 5 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> All five todos shipped to agent-orchestrator@LDR: impossible-window guard (`4af78dc99`), measured DeepSeek priors
+> (`29526a4`), DeepSeek pane-pct calibration exclusion (`6be3454`), `token_total()` resident-context verification, and
+> the standing calibrated-window move-invariant (`c730f46`). Moved by the 2026-08-10 checkbox-flip + archive pass (slot
+> 14).
+
+> **🔴 READ THIS BEFORE THE ANALYSIS BELOW — its central number is WRONG.** Everything from here to the Progress Log was
+> written while the window was still being inferred from our own transcripts, and it argues for figures between 180K and
+> 468K. The real ceiling was later measured directly against the DeepSeek API: **1,048,565 tokens** (see the final
+> Progress Log entry). Todos 1 and 2 are flipped `[x]` against the superseded 325K/468K figures and todo 3's "the CLI's
+> ~200K denominator" framing is likewise pre-correction. The sections are kept because HOW three independent estimates
+> all landed too low is the lesson: a ceiling can only be measured by something free to reach it, and the CLI was
+> truncating every session at ~166-190K. Trust the frontmatter summary and the last Progress Log entry; treat the body
+> as history.
+
+## Measured evidence (orchestrator VM, 2026-08-10, read-only)
+
+Live `message.usage` from the newest transcript of each session:
+
+| session         | model             | input | cache_read | cache_creation | token_total |  pane % |
+| --------------- | ----------------- | ----: | ---------: | -------------: | ----------: | ------: |
+| orch-slot-2     | deepseek-v4-pro   |   963 |    162,304 |              0 |     163,267 |  **91** |
+| orch-slot-19    | deepseek-v4-flash |   168 |    227,584 |              0 |     227,752 | **100** |
+| orch-agent-main | deepseek-v4-flash |    80 |     70,784 |              0 |      70,864 |    none |
+
+Learned-registry state at the same moment, and how fast it moves:
+
+| model             | calibrated_window | watermark_tokens | corpus figure (2026-08-08) |
+| ----------------- | ----------------: | ---------------: | -------------------------: |
+| deepseek-v4-pro   |  82,715 → 180,191 |          266,764 |                    425,572 |
+| deepseek-v4-flash | 178,952 → 254,635 |          327,909 |                    917,159 |
+
+Both `calibrated_window` values moved between two reads minutes apart — this is a live re-poisoning loop, not a stale
+artifact.
+
+## Why DeepSeek and not sonnet-5 (the operator's question, answered from data)
+
+Two measured asymmetries, both visible in the table above:
+
+1. **DeepSeek's pane renders a real CLI percentage nearly every turn** (91%, 100%), and those readings are
+   calibration-eligible (`derive_calibration_pct` returns them — they are genuinely CLI-rendered, not the heuristic).
+   `context_probe`'s own docstring records that the `"N% context used"` readout matched **0 of 11** live worker panes on
+   Claude, because the CLI only renders it near the ceiling. So Claude sessions almost never calibrate; DeepSeek
+   sessions calibrate constantly. More calibration events on a wrong denominator = faster, repeated poisoning.
+2. **DeepSeek usage is ~99.4% `cache_read_input_tokens`** with `cache_creation` at exactly 0, a very different shape
+   from Claude's. `token_total()` sums input + cache_read + cache_creation, so for DeepSeek it is essentially a pure
+   cache-read count.
+
+Combined: a session whose pane says 100% at 227,752 tokens writes `calibrated_window = 227,752`. If the CLI's own
+denominator for a DeepSeek session is not the model's true window, every one of those frequent calibrations is wrong,
+and they keep overwriting each other.
+
+## The open question this leaves — and why it is P0
+
+The shipped guard (`agent-orchestrator@4af78dc99`) refuses a window smaller than the observed watermark, at write AND
+read time. That correctly stops the "reports 5x its real context" bloat. But with the bad calibration ignored, both
+models now resolve to **`model_tier`'s 1,000,000 prior**, while every measurement above points at a true window nearer
+**180-270K**.
+
+Under-reporting is the dangerous direction: it is precisely what
+`/plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md` records as
+letting a session sail past every threshold and run to the model's hard limit. So the fleet may have traded
+over-compaction for under-compaction, and neither is correct until the real number is established.
+
+## Todos
+
+- [x] ✅ [BACKEND] P0. Establish DeepSeek's ACTUAL usable context window for both `deepseek-v4-pro` and
+      `deepseek-v4-flash` from evidence rather than the shared 1M prior — e.g. the largest `token_total` observed
+      immediately before a `compact_boundary` across many sessions, which is a lower bound the provider itself enforced.
+      Done-when: a per-model figure with its sample size and method is recorded in this doc's Progress Log. **DONE
+      2026-08-10 (slot-19)** — per-model lower bounds recorded in the Progress Log below: pro ≈ 325K (57 boundaries / 26
+      sessions), flash ≈ 468K (266 boundaries / 117 sessions); zero boundaries ≥500K for either model (the 1M prior is
+      unsupported by any observed compaction).
+- [x] ✅ [BACKEND] P0. Give `model_tier.context_window()` a DeepSeek-specific prior from todo 1 instead of falling
+      through to the 1M default. The current fallback is a Claude number applied to a non-Claude model, and it is the
+      value in force right now. Done-when: a unit test asserts the DeepSeek prior is not the 1M default, and the live
+      registry resolves both models to it. — agent-orchestrator@29526a4: `context_window()` now returns
+      DeepSeek-measured priors (pro 325K / flash 468K — todo 1's compact-boundary lower bounds) instead of the 1M Claude
+      default, and the live registry (`context_window_for()`) inherits them when unlearned. Tests:
+      `test_deepseek_prior_is_measured_not_the_1m_claude_default` +
+      `test_deepseek_models_resolve_to_prior_in_live_registry`. Verified QG-green on the merged LDR tree (slot-14).
+- [x] ✅ [BACKEND] P1. Decide whether a DeepSeek pane percentage may calibrate at all. If the CLI's denominator for a
+      DeepSeek-backed session is not that model's real window, `derive_calibration_pct` is authoritative about the CLI,
+      but the CLI is not authoritative about DeepSeek — in which case DeepSeek must be excluded from calibration and
+      learn from the watermark alone. Done-when: the decision plus its evidence is recorded here and enforced in
+      `observe()`. — agent-orchestrator@6be3454: DECISION — DeepSeek pane percentages must NOT calibrate. The CLI is
+      authoritative about its OWN ~200K divisor, not about DeepSeek's real window: auto-triggered DeepSeek compactions
+      cluster at 169-259K (pro) / 179-191K (flash) — the CLI's ~200K fallback for the unknown DeepSeek model string —
+      while forced/manual compactions reached 325K (pro) / 468K (flash), the true lower bounds from todo 1. So
+      `tokens / (pct/100)` for DeepSeek latches the wrong ~200K divisor and re-poisons the registry on every one of its
+      frequent CLI-rendered percentages (the 2026-08-10 5x-over-report symptom's root). Enforced in `observe()`: the
+      `pane_pct` calibration branch is gated on `not _is_deepseek(model)`; the watermark path (a genuine lower bound)
+      still applies — DeepSeek learns from the watermark alone. Tests: `test_deepseek_pane_pct_never_calibrates`
+      (control model with the identical measurement still calibrates) + `test_deepseek_still_learns_from_the_watermark`.
+- [x] ✅ [BACKEND] P1. Verify `token_total()` is the right measure for a provider whose usage is ~99.4% cache-read with
+      zero cache-creation. Confirm cache_read is genuinely resident context and not a cumulative counter (a cumulative
+      counter would inflate every DeepSeek reading without bound). **DONE 2026-08-10 (slot-28)** — finding recorded in
+      Progress Log below. token_total() is resident context, not cumulative.
+
+- [x] ✅ [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves
+      by more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed —
+      that oscillation is itself the signal a denominator is wrong. — agent-orchestrator@c730f46: `observe()` now
+      compares each model's `calibrated_window` against the value seen at the previous poll and logs a
+      `calibrated_window_abrupt_move` activity event when the movement exceeds `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION`
+      (0.4) — below the smallest measured DeepSeek oscillation (1.42x) and above the 0.15 revalidation tolerance. The
+      `last_seen_calibrated_window` baseline is tracked in the learned sidecar so it survives restart. Tests:
+      `test_abrupt_calibrated_window_move_emits_an_activity_event` (acceptance),
+      `test_the_measured_deepseek_oscillation_would_alert` (exact live 82,715→180,191 shape),
+      `test_small_calibrated_window_move_does_not_alert`, `test_first_calibration_establishes_a_baseline_without_alert`.
+      Verified QG-green on the merged LDR tree (slot-14).
+
+## Progress Log
+
+- **slot-14 2026-08-10 (`archive_exempt: true` bridge)**: this doc's own LAST open todo (item 5) made it
+  archive-eligible, so the flip commit carries `archive_exempt: true` per the `check_archive_candidates --only`
+  sanctioned flip-then-mv bridge — combining the checkbox flip with the `git mv` in one commit would defeat the AO
+  `/done` M3 cross-repo flip verification, and flipping alone trips this check. The immediately-following commit
+  `git mv`'s this doc to `plans/archive/issues/`, drops the field, flips `status: resolved` + adds the archive banner.
+- **slot-14 2026-08-10 (todo 5 — standing `calibrated_window` move invariant)**: implemented in
+  `server/context_probe.py` (agent-orchestrator@c730f46). New `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION = 0.4` +
+  `_check_calibrated_window_move()`, wired into `observe()` after every calibration write. It compares the model's final
+  `calibrated_window` against `last_seen_calibrated_window` recorded at the previous poll (persisted in the learned
+  sidecar, so the baseline survives restart) and logs a `calibrated_window_abrupt_move` activity event + warning when
+  the movement exceeds 40%. Threshold choice: below the smallest measured DeepSeek oscillation (flash 1.42x, pro 2.18x)
+  and above the 0.15 revalidation tolerance, so an honest within-tolerance correction stays quiet. The check is
+  direction-agnostic (max/min ratio) — it catches under-reporting AND over-reporting oscillations. Regression tests
+  cover the acceptance event, the exact live deepseek-v4-pro 82,715→180,191 shape (simulated via a sidecar change
+  between polls, since DeepSeek no longer calibrates from pane pct), a quiet 1.1x re-calibration, and baseline-seeding
+  on first calibration. QG green (3128 passed / 2 skipped).
+
+- **slot-28 2026-08-10 (todo 4 — verify `token_total()` is resident, not cumulative, for DeepSeek)**: Cross-validated
+  `token_total()` against the CLI's independent `compactMetadata.preTokens` across 3 compaction boundaries in session
+  `37e5fdac-…` (652 deepseek-v4-flash assistant turns). Results:
+
+  | Boundary | token_total() before | CLI.preTokens |      Δ | % of CLI |
+  | -------- | -------------------: | ------------: | -----: | -------: |
+  | 1        |              166,340 |       173,080 | -6,740 |    3.89% |
+  | 2        |              165,756 |       167,093 | -1,337 |    0.80% |
+  | 3        |              163,713 |       166,697 | -2,984 |    1.79% |
+
+  2 of 3 boundaries match within 2% of the CLI's independent measurement. The definitive cumulative-counter test: if
+  `cache_read_input_tokens` were a cumulative counter over a session's lifetime, `token_total()` before boundary #2
+  would equal ~166,340 (boundary-1 total) + growth in the second segment ≈ ~332K+. Instead it is 165,756 — near
+  boundary-1's level because the conversation re-stabilized at a similar size. A cumulative counter cannot explain
+  `token_total()` independently tracking `CLI.preTokens` at every boundary; a resident-context measure can.
+
+  **Verdict: `token_total() = input_tokens + cache_read_input_tokens + ephemeral_5m + ephemeral_1h` is the CORRECT
+  resident-context measure for DeepSeek.** `cache_read_input_tokens` is the live cached context, not a cumulative
+  counter. This confirms slot-19's fleet-wide finding (max delta 0.2%) at the single-session level, and means
+  `context_probe.context_used_pct()`'s denominator (`context_window_for()`) is the only remaining variable affecting
+  DeepSeek context accuracy — the numerator is sound.
+
+  **Raw per-turn series evidence** from session `000cdf56-…` (60 deepseek-v4-pro turns): `input_tokens` drops from
+  51,126 (turn 1, full prompt) to 5,730 (turn 3, cache active) while `cache_read` rises from 0 to 51,200 — confirming
+  the API's own decomposition splits total input into uncached+cached portions, and `token_total()` recombines them
+  correctly. Every turn's direction is monotonic (= or ↑) within a segment (conversation only grows), but the
+  per-boundary reset above proves the counter resets with compaction.
+
+- 2026-08-10 — Filed from a live operator-reported "context bloating" symptom. Impossible-window guard shipped
+  (`agent-orchestrator@4af78dc99`, write + read side) and the two contradictory entries were purged out-of-band, which
+  cleared the immediate 5x over-reporting. The purge deliberately left both models on the 1M prior, which todo 2 must
+  correct — that is a knowingly-temporary state, not a resolution.
+- **slot-19 2026-08-10 (todo 1 — usable-window measurement from evidence)**: scanned all 615 transcripts under
+  `~/.claude-configs/*/projects/**/*.jsonl` that carry a `compact_boundary` system record; for each boundary read
+  `compactMetadata.preTokens` (the CLI's own pre-compact token count) and cross-checked it against `token_total()` of
+  the last real assistant usage record before the boundary (same formula as `server/context_probe.py::token_total`);
+  model classified per-boundary from that assistant record's `message.model`; streamed line-by-line (bounded memory);
+  only `deepseek-v4-pro`/`deepseek-v4-flash` kept. Observations span 2026-08-04 → 2026-08-10.
+
+  | model             | boundaries | distinct sessions | max preTokens (CLI) | max computed token_total |  median |  auto (CLI) max | manual (AO) max |
+  | ----------------- | ---------: | ----------------: | ------------------: | -----------------------: | ------: | --------------: | --------------: |
+  | deepseek-v4-pro   |         57 |                26 |             325,175 |                  324,819 | 121,772 |   259,441 (n=5) |  325,175 (n=52) |
+  | deepseek-v4-flash |        266 |               117 |             468,339 |                  467,336 | 167,522 | 190,798 (n=139) | 468,339 (n=127) |
+
+  **Per-model usable-window figure (lower bound the provider enforced): `deepseek-v4-pro ≈ 325K`,
+  `deepseek-v4-flash ≈ 468K`** — the largest context each model's sessions demonstrably held immediately before a
+  compaction (pro: session `821c940a-…` @2026-08-10T09:37; flash: session `3e4676d0-…` @2026-08-07T01:24). Supporting
+  facts: (1) computed `token_total` matches the CLI's own `preTokens` within ~0.2% (max deltas pro 356 / flash 1,003) —
+  validates `token_total` as a resident-context measure and directly addresses todo 4's cumulative-counter concern (a
+  cumulative cache-read counter could not track the CLI's independent per-boundary count); (2) **zero** compact
+  boundaries ≥500K for either model — nothing in the corpus supports the current 1M prior; (3) auto-triggered (CLI's own
+  decision) boundaries cluster at 169-259K (pro) / 179-191K (flash) — consistent with the CLI defaulting the unknown
+  DeepSeek model string to a ~200K window (why DeepSeek panes read ~100% at ~200-227K, the opening symptom), while AO's
+  manual/forced compactions reached 325K/468K. Recommend todo 2 seed `model_tier.context_window()`'s DeepSeek prior from
+  these lower bounds (not 1M), and todo 3 treat the CLI's ~200K denominator as the mis-calibration source. Note: the
+  learned registry's current watermarks (pro 324,819 / flash 427,391) already match or under-cut these figures — the
+  live probe only reads current-session tails, so the historical max (flash 468,339) is not yet in the registry.
+
+- **slot-3 2026-08-10 (todo 3 — calibration decision)**: DECISION — **DeepSeek pane percentages must NOT calibrate**,
+  enforced in `observe()` (`agent-orchestrator@6be3454`, with the test fix on top of @e943d72). Evidence: todo 1
+  established the true lower bounds (pro ≈ 325K / flash ≈ 468K) and that auto-triggered CLI compactions cluster at
+  169-259K (pro) / 179-191K (flash) — the CLI defaulting the unknown DeepSeek model string to a ~200K window. So
+  `derive_calibration_pct` IS authoritative about the CLI (it returns the real rendered percentage), but the CLI's
+  divisor is not DeepSeek's real window: `tokens / (pct/100)` for DeepSeek yields that ~200K fallback and re-poisons the
+  registry on every one of its frequent CLI-rendered percentages (the 5x-over-report root: DeepSeek calibrates
+  constantly because its pane renders a real pct nearly every turn, where sonnet-5 almost never does). The 4af78dc99
+  plausibility guard cannot catch this — it only rejects a calibration SMALLER than the observed watermark, and a ~200K
+  calibration against a real ~325-468K window sails through. Implementation: `_is_deepseek(model)` substring gate on the
+  `pane_pct` calibration branch of `observe()`; the watermark path (a genuine lower bound) still applies — DeepSeek
+  learns from the watermark alone. Regression tests: `test_deepseek_pane_pct_never_calibrates` (a control model with the
+  identical `observe(model, 200_000, pane_pct=100)` still latches `calibrated_window=200K`, proving the exclusion is
+  DeepSeek-specific) + `test_deepseek_still_learns_from_the_watermark`. Full suite passed via `quality-gates.sh` (3114
+  passed, 2 skipped).
+
+- **slot-4 2026-08-10 (RESOLUTION — the window measured directly, not inferred)**: the operator challenged every
+  transcript-derived figure with the vendor spec ("deepseek flash is 1m token context and so is pro"), then asked for
+  empirical proof. Running a session up to 1M cannot provide it — the CLI auto-compacts DeepSeek at ~166-190K, so a
+  session measures Claude Code's assumption, which IS the bug. Instead, oversized prompts were POSTed straight to
+  `api.deepseek.com/v1/messages` with `max_tokens: 16` (credential from the VM's `deepseek-v4-pro.env`, read-only via
+  SSM), laddering the payload until the API refused:
+
+  | prompt payload | tokens presented | result                                                    |
+  | -------------- | ---------------: | --------------------------------------------------------- |
+  | 0.2 MB         |           35,309 | HTTP 200                                                  |
+  | 3.6 MB         |          635,309 | HTTP 200                                                  |
+  | 4.8 MB         |          847,074 | HTTP 200                                                  |
+  | 5.6 MB         |          988,249 | HTTP 200                                                  |
+  | 7.0 MB         |        1,235,325 | **HTTP 400 — "maximum context length is 1048565 tokens"** |
+
+  **The ceiling is 1,048,565 = 2^20 - 11.** The operator was right and every AO-derived estimate was wrong, including my
+  own recommendation of 200K. All three failed identically — a ceiling can only be measured by something free to reach
+  it, and nothing in our corpus was: 1 of 604 flash sessions and 0 of 756 pro sessions ever passed 468K, because the CLI
+  truncates them first. The lone flash session that read 917,159 was not the outlier it appeared to be; it was the only
+  honest sample.
+
+  Shipped `agent-orchestrator@905c21061`: 1M prior for both (pro/flash split deleted, `is_deepseek` consolidated as the
+  single public predicate); `context_window_for` takes the prior for DeepSeek outright — necessary because the
+  calibration exclusion only stopped NEW writes while the registry kept serving flash 240,211 / pro 177,703, and because
+  the watermark path was ONE confirming session away (flash 427,391 held 2 of 3) from resolving DeepSeek to ~438K; plus
+  the transcript-selection fix (probe was blind on 2 of 21 working slots) and the confirmed-watermark bound. Then
+  `@809c405d6` recorded the measured ceiling in the code. My duplicate oscillation alert was dropped in favour of
+  slot-14's `calibrated_window_abrupt_move` (`@c730f46`), which is better — it persists a baseline across restarts and
+  its threshold is tuned to the measured 1.42x/2.18x moves.

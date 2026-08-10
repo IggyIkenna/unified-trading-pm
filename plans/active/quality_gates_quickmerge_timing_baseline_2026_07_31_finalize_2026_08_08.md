@@ -3,9 +3,9 @@ doc_type: plan
 title: quality-gates.sh / quickmerge.sh timing baseline — finalize
 summary: >-
   Gated closeout for `quality_gates_quickmerge_timing_baseline_2026_07_31.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 5 of that doc's remaining todos (the CONFLICT-DEFERRED
-  `check_pm_script_path_refs.py` digest pointer aside — that one ships via `ci_satellite_ao_dispatch_batch6`, not here)
-  are done. Confirms the Phase-2 planning-vm concurrent-load numbers were actually captured before archiving.
+  `gate_on_depends: true` until the 1 remaining open todo (P3 `profile_qg_resources.py` on planning-vm; 14 of 15 are
+  `[x]` done as of 2026-08-09) is resolved. Confirms the Phase-2 planning-vm concurrent-load numbers were actually
+  captured before archiving.
 status: active
 nature: process
 asset_group: [infrastructure]

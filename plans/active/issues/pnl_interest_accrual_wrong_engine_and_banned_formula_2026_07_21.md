@@ -811,3 +811,13 @@ code.
   accrual-formula leg in this doc required. Incidental, not actioned: 2 untracked prose-only follow-on items (wire
   `ShareClassFxMatrix` to a real rate feed; un-orphan `convert_settlement_to_share_class`) — would also land NA if
   tracked given the same client-facing-NAV sensitivity. Doc stays `assigned_vm: NA`.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (1 open
+  `[CODE] P1` item at entry: Option B, the FX-noise-isolated true-native-staking-return metric). Checked against every
+  accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks now existing) —
+  none apply, and note this doc's own "Option B" (the operator-ruled true-native-staking-return metric, 2026-07-29) is
+  a different "Option B" from the round11-precedent one and is NOT retired — it is operator-ruled WHAT-to-build, still
+  gated on a HOW-to-build-safely money-path review (per the standing OPERATOR GATE this whole doc is filed under,
+  changes to live client NAV/PnL). Not eligible for satellite-extraction — a client-facing NAV correctness change is
+  inherently a judgment/3-lens-review task, not a bare mechanical build. Doc stays `assigned_vm: NA` (KEEP-NA valid,
+  round11).

@@ -23,8 +23,8 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-3, satellite-docs]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
-    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
@@ -216,10 +216,10 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Deferred — data-correctness finding surfaced during this audit (flagged, not batchable here)
 
-- **`/plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section asserts two
-  claims that are FALSE as measured live during this run (2026-07-31):** (1) it claims "the field is now REQUIRED
-  (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one" — but
-  `scripts/docs/docspec.py:136,160` both still read `FieldSpec("context_scope", Req.E, "free_list")` (elective, not
+- **`/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section
+  asserts two claims that are FALSE as measured live during this run (2026-07-31):** (1) it claims "the field is now
+  REQUIRED (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one" —
+  but `scripts/docs/docspec.py:136,160` both still read `FieldSpec("context_scope", Req.E, "free_list")` (elective, not
   required). (2) it claims the `context-scout` skill "backfilled the corpus" — but a live
   `generate_context_scope_inventory.py --json` run this session shows 626 in-scope docs, 616 still `NEVER_SCOUTED`, 10
   `STALE`, 0 `UP_TO_DATE`, i.e. the backfill has barely started, not completed. Both false claims match this batch's own
@@ -490,3 +490,14 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. Sole open todo (corpus-wide `context_scope` backfill) remains corpus-scale, incrementally
   progressing work correctly not bounded to a single-worker AO dispatch.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — re-checked against the full round7-10 precedent set
+  (IAM self-service default, D16 all-repos carve, S5.1 repo-type tiering, plan-destination-defaults-AO-dispatched,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retirement, DeepSeek/Slack-webhook credential
+  provisioning, self-service-on-sibling-precedent) — none apply; this is genuinely unbounded, ongoing corpus-scale work
+  (the backfill target moves as the corpus itself grows), not a defaulted judgment call. No whole-doc RECLASSIFY, no
+  extractable sub-item (the single todo IS the corpus-wide sweep itself, not a list of discrete items).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item (corpus-wide `context_scope` backfill). Genuinely unbounded, ongoing corpus-scale work — the backfill target
+  moves as the corpus itself grows, not a defaulted judgment call. 4 prior audits (08-01 through round11-08-09)
+  consistently agree with a well-reasoned round11 marker from the prior day; no new facts found.

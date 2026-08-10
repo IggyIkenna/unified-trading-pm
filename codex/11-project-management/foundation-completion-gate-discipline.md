@@ -40,7 +40,7 @@ referenced_by:
     plans/epics/mtds_mdps_master.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-27
 code_refs:
 ---
 

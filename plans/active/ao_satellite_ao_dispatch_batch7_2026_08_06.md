@@ -188,7 +188,9 @@ eyeballed).
   blocked on a separate repo's `RB-04f4f852` qg_red blocker (time/dependency-gated, different repo's problem). Full
   reasoning on the source doc's own Progress Log — re-check next iteration once
   `shared_ci_workflow_repo_extraction_2026_08_06.md` lands or `RB-04f4f852` clears (both are the specific named gates to
-  re-check per the skill's iterative-drain methodology, not a re-derivation from scratch).
+  re-check per the skill's iterative-drain methodology, not a re-derivation from scratch). **RESOLVED (per this batch's
+  own finalize doc, `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md` todo 3)**: both gates confirmed cleared,
+  and the underlying work independently landed + archived 2026-08-07 — no batch-8 spin-off needed after all.
 - **Too-large/unscoped-design** (declined as part of todo 1's own source doc, not a separate doc):
   `ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md`'s 3rd item ("consider a soft turn-count circuit
   breaker") — a "consider whether..." fork with no stated done-when, same class batch5/6 already declined elsewhere.

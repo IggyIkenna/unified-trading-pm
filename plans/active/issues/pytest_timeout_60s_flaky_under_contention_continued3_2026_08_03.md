@@ -534,3 +534,13 @@ checkboxes. No `assigned_vm` change.
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:39bc9a22662d6f04]: KEEP-NA,
 valid — both open items (track the ledger-coordination fork Phase 2-3; re-check the 4-doc chain once landed) remain
 gated on that external plan, consistent with the doc-chain family's established verdict. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:3d63d998f3f9b402]: KEEP-NA,
+valid — 3rd split of the same doc-chain (continued2 hit its 1000-line cap); 2 open checkboxes (matches phase0=2 and my
+grep; todo 2 already [x] RESOLVED 2026-08-08, same fix as the chain, correctly not re-implemented here). Todos 1 and 3
+are near-verbatim copies of continued2's todos 1/3 (same P3 items, same gate on
+qg_governor_glue_runner_ledger_coordination_2026_08_03.md Phase 2-3 landing AND holding) -- same analysis applies:
+independently verified that doc is archived/status: complete (direct grep), but this doc's OWN final Progress Log entry
+(2026-08-09 ~02:20-03:15Z, market-tick-data-service, a fresh corroborating pytest-timeout/typecheck-timeout occurrence
+under measured heavy host contention -- 9+ concurrent quality-gates.sh processes, 5.7-8.4GiB swap, 4-physical-core host
+per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the fix landing -- the archive-gate ('o...

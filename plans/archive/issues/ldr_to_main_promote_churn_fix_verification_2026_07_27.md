@@ -46,7 +46,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     scripts/quickmerge.sh,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
   ]
 resolved_by: 2026-08-05 verification (see Progress Log) — fix was already live, code + measurement confirm it

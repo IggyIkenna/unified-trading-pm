@@ -28,13 +28,13 @@ related:
 created: 2026-07-20
 author: unknown
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source:
@@ -50,7 +50,7 @@ context_scope:
     .github/workflows/python-quality-gates-v2.yml,
     scripts/cicd/detect_breaking_change.py,
     /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/epics/infrastructure_master.md,
   ]
 ---
@@ -207,109 +207,155 @@ nothing: it is architecturally cached against exactly the input that changed.
       collection-vs-runtime precedence mismatch, and make instance 2 green — do NOT just delete the fixture's `SPORTS`
       lines without resolving precedence first. ✅ unified-trading-library@c26a5297 — deleted the conftest override +
       fixture, repointed 6 consumers at UAC's packaged copy, added a cross-copy parity pin. UTL quality-gates green.
-- [ ] [DEVOPS] P0. **[A] Make the v2 content-sentinel dependency-content-aware** — key it on
+- [x] ✅ [DEVOPS] P0. **[A] Make the v2 content-sentinel dependency-content-aware** — key it on
       `own-tree-hash + resolved-UAC/UTL-content` in `.github/workflows/python-quality-gates-v2.yml` so a dependency
       change busts the skip. Highest-leverage + highest-blast-radius (core gate cache) → **operator sign-off required**,
-      not an autonomous ship. This ALONE fixes the class for every existing re-run path.
+      not an autonomous ship. This ALONE fixes the class for every existing re-run path. **SHIPPED 2026-08-09** —
+      `unified-trading-ci@f0bfaa2` (Option 2, operator-approved 2026-08-09). Implemented in the `content-gate` job's
+      `hash` step: folds the current `live-defi-rollout` tree hash of `unified-api-contracts`/`unified-trading-library`
+      (via `gh api repos/.../commits/live-defi-rollout --jq     .commit.tree.sha`, scoped to whichever deps the caller
+      declares via `dep_repos`) into `KEY` as a new `DEP_HASH` segment alongside the existing `TREE`/`GATE_HASH`;
+      unresolvable dep lookup fails safe (`GATE_KNOWN=false` → full gate, no marker saved), mirroring the existing
+      gate-version-fingerprint fail-safe. Verified: `actionlint` + `shellcheck` clean locally and in CI (run 31311558496
+      — the only failures are 30 pre-existing shellcheck findings in unrelated files, filed separately, see Progress
+      Log) before push. **Correction to the todo's own rollout instructions**: no `rollout-workflow-templates.sh` fleet
+      rollout was needed — `python-quality-gates-v2.yml` was extracted out of PM into `unified-trading-ci` on 2026-08-06
+      (`shared_ci_workflow_repo_extraction_2026_08_06.md`, predating this todo's 2026-08-08 walkthrough text, which
+      still described the pre-extraction PM-hosted-copy rollout path) and every fleet caller pins
+      `uses: IggyIkenna/unified-trading-ci/....yml@main` (a moving ref, single-branch repo, no LDR/staging tiers) — so
+      shipping straight to `unified-trading-ci`'s `main` IS the fleet-wide rollout; there is no second per-repo-copy
+      step. Live-verification of a forced UAC value-only change producing a sentinel MISS was NOT run this session (no
+      safe throwaway value-only UAC edit was staged) — left as a follow-up if the operator wants an end-to-end proof
+      rather than the code-level verification above.
 
       **operator ruling 2026-08-08**: wants to SEE the exact keying logic before signing off -- NOT shipping this
-                  session. Technical walkthrough below, grounded in the LIVE code (`.github/workflows/python-quality-gates-v2.yml`
-                  lines 104-201, re-read 2026-08-08), ready for a fast sign-off next time the operator is available.
+              session. Technical walkthrough below, grounded in the LIVE code
+              (`.github/workflows/python-quality-gates-v2.yml` lines 104-201, re-read 2026-08-08), ready for a fast sign-off
+              next time the operator is available.
 
-                  ### How the sentinel keys TODAY (verbatim mechanism, not paraphrased)
+              **RULED 2026-08-09 (operator): Option 2 approved -- hash UAC's + UTL's resolved git ref/commit**, per this
+              walkthrough's own stated recommendation below. Signed off on the DESIGN only; the keying-logic implementation
+              itself is still unbuilt (see "What sign-off actually gates" below -- nothing has shipped from this walkthrough).
+              This checkbox was already tagged `[DEVOPS]` rather than `[OPERATOR]` -- the sign-off gate was expressed as
+              embedded prose blocking the ship, not as a separate `[OPERATOR]` checkbox tag, so no retag was needed; recorded
+              here instead. AO dispatch is now safely scoped now that Option 2 is chosen (see frontmatter
+              `assigned_vm: planning` reclassification, recorded in the Progress Log) -- implement per "What sign-off actually
+              gates" below: extend `KEY` in `.github/workflows/python-quality-gates-v2.yml` lines ~120-160, roll to the
+              fleet's 22 per-repo copies via `rollout-workflow-templates.sh` (never hand-edited per repo), and verify live
+              (force a UAC value-only change, confirm a downstream's sentinel now correctly MISSes). Not hand-implemented in
+              this pass -- this is the fleet's highest-blast-radius CI gate and needs a proper AO-dispatched implementation +
+              rollout, not a quick edit.
 
-                  Job `content-gate` (`content sentinel`) runs first, computes a cache key, and probes Firestore
-                  (`qg_green_markers/{key}`) for a prior green. A HIT short-circuits every `qg-slices` matrix leg to GREEN with zero
-                  runner spend (`needs.content-gate.outputs.cache_hit`, gates the `if:` on the slices job).
+              ### How the sentinel keys TODAY (verbatim mechanism, not paraphrased)
 
-                  ```
-                  TREE      = git rev-parse HEAD^{tree}                         # line 127 -- OWN tree only
-                  WF_HASH   = sha256(.github/workflows/quality-gates-v2.yml)    # line 142 -- caller's own copy
-                  REUSABLE_SHA = blob sha of python-quality-gates-v2.yml         # line 143-148 -- PM's reusable workflow
-                                  (local checkout for PM itself; `gh api .../contents/...?ref=live-defi-rollout` for fleet callers)
-                  BASE_SHAS = sorted dir-tree shas of scripts/quality-gates-base + scripts/quality_gates   # line 150
-                  GATE_HASH = sha256(WF_HASH|REUSABLE_SHA|BASE_SHAS)[:24]        # line 156
-                  KEY       = "qg-green-v2-{repo}-{TREE}-{GATE_HASH}"            # line 157
-                  ```
+              Job `content-gate` (`content sentinel`) runs first, computes a cache key, and probes Firestore
+              (`qg_green_markers/{key}`) for a prior green. A HIT short-circuits every `qg-slices` matrix leg to GREEN with
+              zero runner spend (`needs.content-gate.outputs.cache_hit`, gates the `if:` on the slices job).
 
-                  `TREE` is a git tree object hash of the CALLER repo's own working tree at HEAD -- it recursively covers every
-                  file in that repo, **including `pyproject.toml`/`uv.lock`** (so it changes if a dep RANGE pin changes), but it
-                  does **not** reach outside the repo -- it has no way to see what UAC/UTL's OWN content resolves to right now. The
-                  code's own comment states this explicitly (line 87): "deliberately does NOT hash the deps' resolved CONTENT, so
-                  [it relies on] the dep RANGE pins." `GATE_HASH` protects against the GATE ITSELF changing (3 homes: the caller's
-                  workflow copy, PM's reusable workflow, PM's QG base scripts) -- it has nothing to do with dependency content
-                  either.
+              ```
+              TREE      = git rev-parse HEAD^{tree}                         # line 127 -- OWN tree only
+              WF_HASH   = sha256(.github/workflows/quality-gates-v2.yml)    # line 142 -- caller's own copy
+              REUSABLE_SHA = blob sha of python-quality-gates-v2.yml         # line 143-148 -- PM's reusable workflow
+              (local checkout for PM itself; `gh api .../contents/...?ref=live-defi-rollout` for fleet callers)
+              BASE_SHAS = sorted dir-tree shas of scripts/quality-gates-base + scripts/quality_gates   # line 150
+              GATE_HASH = sha256(WF_HASH|REUSABLE_SHA|BASE_SHAS)[:24]        # line 156
+              KEY       = "qg-green-v2-{repo}-{TREE}-{GATE_HASH}"            # line 157
+              ```
 
-                  ### The gap, concretely
+              `TREE` is a git tree object hash of the CALLER repo's own working tree at HEAD -- it recursively covers every
+              file in that repo, **including `pyproject.toml`/`uv.lock`** (so it changes if a dep RANGE pin changes), but it
+              does **not** reach outside the repo -- it has no way to see what UAC/UTL's OWN content resolves to right now.
+              The code's own comment states this explicitly (line 87): "deliberately does NOT hash the deps' resolved
+              CONTENT, so [it relies on] the dep RANGE pins." `GATE_HASH` protects against the GATE ITSELF changing (3 homes:
+              the caller's workflow copy, PM's reusable workflow, PM's QG base scripts) -- it has nothing to do with
+              dependency content either.
 
-                  UAC ships `0.x` (pre-1.0, wide range pins like `>=0.1.20,<1.0.0` per `workspace-manifest.json`). A UAC commit that
-                  edits a registry/config VALUE (e.g. `SOURCE_PRIORITY['tradfi'].remove('massive')`) does not bump UAC's version
-                  past a downstream's range pin, so the downstream's own `uv.lock`/`pyproject.toml` are untouched by that edit ⟹
-                  `TREE` is identical to the last green run ⟹ `KEY` is byte-identical ⟹ the sentinel HITS and returns the stale
-                  green, even though the downstream's actual runtime behaviour (which reads that registry value) may now be broken.
-                  This is exactly instances 1-2 documented above this todo.
+              ### The gap, concretely
 
-                  ### Candidate keying implementations (operator picks one, or directs a different one)
+              UAC ships `0.x` (pre-1.0, wide range pins like `>=0.1.20,<1.0.0` per `workspace-manifest.json`). A UAC commit
+              that edits a registry/config VALUE (e.g. `SOURCE_PRIORITY['tradfi'].remove('massive')`) does not bump UAC's
+              version past a downstream's range pin, so the downstream's own `uv.lock`/`pyproject.toml` are untouched by that
+              edit ⟹ `TREE` is identical to the last green run ⟹ `KEY` is byte-identical ⟹ the sentinel HITS and returns the
+              stale green, even though the downstream's actual runtime behaviour (which reads that registry value) may now be
+              broken. This is exactly instances 1-2 documented above this todo.
 
-                  **Option 1 -- hash UAC's + UTL's installed package content directly.** After `uv sync` resolves the environment,
-                  hash the tree of the INSTALLED `unified_api_contracts`/`unified_trading_library` package directories (e.g.
-                  `find .venv/.../unified_api_contracts -type f -exec sha256sum {} + | sort | sha256sum`) and fold that into `KEY`
-                  alongside `TREE`/`GATE_HASH`. Pro: exact -- catches literally any resolved-content difference, source or config
-                  data. Con: requires `uv sync` to run BEFORE the key can be computed, which pushes the content-gate job's cost up
-                  (today it is a ~5min checkout-only job with zero dependency install) -- partially defeats the sentinel's own
-                  cost-saving purpose for the common case where nothing changed.
+              ### Candidate keying implementations (operator picks one, or directs a different one)
 
-                  **Option 2 -- hash UAC's + UTL's resolved git ref/commit, not their file content.** `uv.lock` records the exact
-                  resolved version (and, for a path/git dependency, the exact commit) for each dependency. Read that commit/version
-                  out of the caller's own (unchanged) `uv.lock`, then look up the ACTUAL current tree-hash of UAC/UTL at their
-                  `live-defi-rollout` HEAD (or `main`, whichever the range would resolve to) via `gh api
-                  repos/.../contents/...?ref=...` -- same pattern the gate-version fingerprint already uses for `REUSABLE_SHA`
-                  (lines 143-149). Fold `UAC_HEAD_TREE + UTL_HEAD_TREE` into `KEY`. Pro: no `uv sync` needed, stays a cheap
-                  checkout-only job -- same shape as the EXISTING gate-version fingerprint code, so it is the smallest, most
-                  surgical diff. Con: less precise than Option 1 -- it keys on "UAC/UTL's HEAD changed at all" rather than "the
-                  SPECIFIC symbols/values this caller actually uses changed", so it will over-invalidate (extra full-gate runs) on
-                  UAC/UTL commits that don't touch anything the caller reads. Given the sentinel's OWN fail-safe philosophy ("worst
-                  case is no speedup", line 97), over-invalidation is the safe direction to err in.
+              **Option 1 -- hash UAC's + UTL's installed package content directly.** After `uv sync` resolves the
+              environment, hash the tree of the INSTALLED `unified_api_contracts`/`unified_trading_library` package
+              directories (e.g. `find .venv/.../unified_api_contracts -type f -exec sha256sum {} + | sort | sha256sum`) and
+              fold that into `KEY` alongside `TREE`/`GATE_HASH`. Pro: exact -- catches literally any resolved-content
+              difference, source or config data. Con: requires `uv sync` to run BEFORE the key can be computed, which pushes
+              the content-gate job's cost up (today it is a ~5min checkout-only job with zero dependency install) --
+              partially defeats the sentinel's own cost-saving purpose for the common case where nothing changed.
 
-                  **Option 3 -- Option 2, but scoped to just the caller's actual import surface.** Same as Option 2, but instead of
-                  the whole-repo HEAD tree, hash only the specific UAC/UTL submodule paths the caller's own source imports from
-                  (derivable via a one-time `grep -r 'from unified_api_contracts' <caller>/`-style scan, cached per-repo). Pro:
-                  closest approximation to Option 1's precision at Option 2's cost. Con: real new code to build and maintain (the
-                  import-surface scanner), and a caller whose code changes which UAC symbols it imports needs that scan
-                  re-run -- an extra moving part in the fleet's highest-blast-radius gate.
+              **Option 2 -- hash UAC's + UTL's resolved git ref/commit, not their file content.** `uv.lock` records the exact
+              resolved version (and, for a path/git dependency, the exact commit) for each dependency. Read that
+              commit/version out of the caller's own (unchanged) `uv.lock`, then look up the ACTUAL current tree-hash of
+              UAC/UTL at their `live-defi-rollout` HEAD (or `main`, whichever the range would resolve to) via
+              `gh api repos/.../contents/...?ref=...` -- same pattern the gate-version fingerprint already uses for
+              `REUSABLE_SHA` (lines 143-149). Fold `UAC_HEAD_TREE + UTL_HEAD_TREE` into `KEY`. Pro: no `uv sync` needed, stays
+              a cheap checkout-only job -- same shape as the EXISTING gate-version fingerprint code, so it is the smallest,
+              most surgical diff. Con: less precise than Option 1 -- it keys on "UAC/UTL's HEAD changed at all" rather than
+              "the SPECIFIC symbols/values this caller actually uses changed", so it will over-invalidate (extra full-gate
+              runs) on UAC/UTL commits that don't touch anything the caller reads. Given the sentinel's OWN fail-safe
+              philosophy ("worst case is no speedup", line 97), over-invalidation is the safe direction to err in.
 
-                  **Recommendation (not yet operator-approved -- stated for the walkthrough, not shipped):** Option 2. It reuses
-                  the EXACT pattern already proven in this same job for `REUSABLE_SHA` (a `gh api .../contents/...` blob-sha
-                  lookup against `live-defi-rollout` HEAD), so the diff is small, auditable, and consistent with the rest of the
-                  job's own design -- no new dependency-scanning subsystem, no `uv sync` cost added to the sentinel job. The
-                  precision loss vs Option 1/3 trades toward MORE full-gate runs, never toward a false skip, which matches the
-                  job's own stated fail-safe direction.
+              **Option 3 -- Option 2, but scoped to just the caller's actual import surface.** Same as Option 2, but instead
+              of the whole-repo HEAD tree, hash only the specific UAC/UTL submodule paths the caller's own source imports
+              from (derivable via a one-time `grep -r 'from unified_api_contracts' <caller>/`-style scan, cached per-repo).
+              Pro: closest approximation to Option 1's precision at Option 2's cost. Con: real new code to build and maintain
+              (the import-surface scanner), and a caller whose code changes which UAC symbols it imports needs that scan
+              re-run -- an extra moving part in the fleet's highest-blast-radius gate.
 
-                  ### What sign-off actually gates
+              **Recommendation (not yet operator-approved -- stated for the walkthrough, not shipped):** Option 2. It reuses
+              the EXACT pattern already proven in this same job for `REUSABLE_SHA` (a `gh api .../contents/...` blob-sha
+              lookup against `live-defi-rollout` HEAD), so the diff is small, auditable, and consistent with the rest of the
+              job's own design -- no new dependency-scanning subsystem, no `uv sync` cost added to the sentinel job. The
+              precision loss vs Option 1/3 trades toward MORE full-gate runs, never toward a false skip, which matches the
+              job's own stated fail-safe direction.
 
-                  Nothing ships from this walkthrough. The next step once the operator has read this and either approves Option 2
-                  (or names a different one) is: implement the chosen `KEY` extension in `.github/workflows/python-quality-gates-v2.yml`
-                  lines ~120-160, roll it to the fleet's 22 per-repo copies the same way `REUSABLE_SHA`'s pattern already does
-                  (template + `rollout-workflow-templates.sh`, never hand-edited per repo), and verify live: force a UAC value-only
-                  change, confirm a downstream's sentinel now correctly MISSes and runs the full gate instead of returning stale
-                  green.
+              ### What sign-off actually gates
 
-- [ ] [DEVOPS] P1. **[B] DECOUPLED registry-value signal in `detect_breaking_change.py`** — narrow allowlist +
+              Nothing ships from this walkthrough. The next step once the operator has read this and either approves Option
+              2 (or names a different one) is: implement the chosen `KEY` extension in
+              `.github/workflows/python-quality-gates-v2.yml` lines ~120-160, roll it to the fleet's 22 per-repo copies the
+              same way `REUSABLE_SHA`'s pattern already does (template + `rollout-workflow-templates.sh`, never hand-edited
+              per repo), and verify live: force a UAC value-only change, confirm a downstream's sentinel now correctly MISSes
+              and runs the full gate instead of returning stale green.
+
+- [x] ✅ [DEVOPS] P1. **[B] DECOUPLED registry-value signal in `detect_breaking_change.py`** — narrow allowlist +
       order-normalizing AST canonicalizer, emit a **separate `registry_value_changed`** field (NOT `is_breaking` — that
       false-breaks the fleet on benign recalibrations, verified) that drives a targeted re-dispatch once [A] lands.
-      Config YAMLs get the same path-scoped treatment. Code is ready + verified 6/6; blocked on [A] so a re-dispatch is
-      not a no-op.
-- [ ] [DEVOPS] P2. ~~Add a `quality-gate-run` listener + fix `poll_level`~~ **SUPERSEDED** — verified a no-op while the
-      content-sentinel keys on own-tree-hash (blocker 3). Reconsider only after [A]; and reconcile the v2-template drift
-      first (second loaded gun).
-- [ ] [DEVOPS] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the fleet
-      on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
-- [ ] [DEVOPS] P2. **EXTRACTED 2026-08-02** (operator ruling on `plan_reconcile_parked_operator_decisions_2026_08_02.md`
-      na-eligibility-audit item 18, option A) to `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1
-      chain stays `locked_by`/operator-gated as before; only this bounded item moved. ~~Fix the invalid `sit_retry_cap`
-      wall_type in `sit-debounce-trigger.yml` (it can never succeed)~~ and decide whether a red SIT should escalate to a
-      background worker rather than Issue + Slack only. **STALE (na-eligibility-audit 2026-08-03)** — the struck phrase
-      is DONE: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (~line 240) records `unified-trading-pm@2e5a42479` +
+      Config YAMLs get the same path-scoped treatment. **DONE 2026-08-09** — `unified-trading-pm@8875e5a79` (pushed as
+      `07f008d3b`). Added `CROSS_REPO_REGISTRY_ALLOWLIST` (SOURCE_PRIORITY, VENUE_TO_ADAPTER_KEY,
+      VENUE_PREFIX_TO_PROTOCOL, DEFI_VENUE_TO_PROTOCOL, CEFI_PERP_VENUE_API_ENDPOINTS) tracked independent of the
+      `@contract-surface` marker; an order-normalizing `_canonicalize_value` (dict-key order ignored, list order
+      preserved — priority-list semantics); `registry_value_changes()` + `config_yaml_value_changes()` (path-scoped to
+      `unified_api_contracts/config/cloud-providers.yaml`) both wired into `main()` as new
+      `registry_value_changed`/`registry_value_changed_names` fields — never folded into `reasons`/`is_breaking`. 5 new
+      regression tests (SOURCE_PRIORITY removal decoupled-but-not-`is_breaking`, dict-key reorder not flagged,
+      priority-list reorder flagged, unchanged not flagged, non-allowlisted constant untouched); 25/25 tests green, full
+      `quality-gates.sh` green. **Still blocked on [A]** for the re-dispatch to actually fire (this todo's own scope was
+      the signal itself, not the dispatch wiring — see [A]'s "What sign-off actually gates").
+- [ ] [OPERATOR] P2. ~~Add a `quality-gate-run` listener + fix `poll_level`~~ **SUPERSEDED** — verified a no-op while
+      the content-sentinel keys on own-tree-hash (blocker 3). Reconsider only after [A]; and reconcile the v2-template
+      drift first (second loaded gun). **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09** (kept the checkbox format
+      rather than converting to the non-checkbox `CANCELLED —` disposition bullet task_template.md describes — that
+      format conflicts with `check_todo_regression.sh`'s literal `^- \[[ xX]\]` count invariant, which has no
+      special-case for it; see the new SSOT-contradiction follow-up filed below) — found while checking this doc for
+      backlog-ingestion eligibility before the [A] `assigned_vm` reclassification: the prior `- [ ] [DEVOPS]` form had
+      no non-dispatchable marker and would have been ingested by AO despite reading SUPERSEDED.
+- [ ] [OPERATOR] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the
+      fleet on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
+      **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09**, same reason as the item above.
+- [ ] [OPERATOR] P2. **EXTRACTED 2026-08-02** (operator ruling on
+      `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 18, option A) to
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — this doc's main P0/P1 chain stays `locked_by`/operator-gated as
+      before; only this bounded item moved. ~~Fix the invalid `sit_retry_cap` wall_type in `sit-debounce-trigger.yml`
+      (it can never succeed)~~ and decide whether a red SIT should escalate to a background worker rather than Issue +
+      Slack only. **STALE (na-eligibility-audit 2026-08-03)** — the struck phrase is DONE:
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (~line 240) records `unified-trading-pm@2e5a42479` +
       `agent-orchestrator@dbdccb6` fixing the choice-list + `EscalateRequest` Literal (confirmed live in this repo —
       `escalate-to-orchestrator.yml` now accepts `sit_retry_cap` at lines 37/67/81/150/152), with a full round-trip
       proof (`agt-d37ed9` dispatched → worker executed → closed 2026-07-28). The remaining clause (design call: should a
@@ -318,9 +364,18 @@ nothing: it is architecturally cached against exactly the input that changed.
       picked" — so this item stays open for that clause only.
 
       **RULED 2026-08-07 (operator, interactive session)**: YES — a red SIT should escalate to a background worker,
-                          not just Issue + Slack. Design decision only; not yet scoped into an implementation todo (needs its own
-                          bounded-outcome scoping — which worker/skill picks it up, what triggers the escalation, dedup against the
-                          existing Issue+Slack path) before it's AO-dispatchable.
+              not just Issue + Slack. Design decision only; not yet scoped into an implementation todo (needs its own
+              bounded-outcome scoping — which worker/skill picks it up, what triggers the escalation, dedup against the
+              existing Issue+Slack path) before it's AO-dispatchable.
+
+              **Retagged `[DEVOPS]` → `[OPERATOR]` 2026-08-09**: found while reclassifying this doc's `assigned_vm: NA` →
+              `planning` for the now-approved [A] item above -- this item, as written, is NOT yet bounded (its own text says
+              "not yet AO-dispatchable" pending scoping) and per `task_template.md`'s non-dispatchable-marker family
+              (`[OPERATOR]`/`BLOCKED-<TOKEN>`) it needed a real gate to stay out of the AO backlog once the doc-level
+              `assigned_vm` flips -- it was previously `[DEVOPS]` with no ingestion-gate marker, which would have exposed an
+              unscoped design-call item to dispatch. Retag to `[OPERATOR]` until someone (human or a follow-up scoping pass)
+              turns "which worker/skill, what triggers, dedup against the existing path" into a bounded todo, then it can be
+              re-tagged for dispatch.
 
 - [x] ✅ [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Correct the `full-workspace-sit` messaging/naming so
@@ -332,6 +387,21 @@ nothing: it is architecturally cached against exactly the input that changed.
 
 ## Progress Log
 
+- **2026-08-09 (slot 22)** — Shipped [B]: `unified-trading-pm@8875e5a79` (landed `07f008d3b`). Implemented from scratch
+  (the prior "code is ready + verified 6/6" prose was a design claim, not a checked-in diff — grepped, nothing existed).
+  `CROSS_REPO_REGISTRY_ALLOWLIST` is explicit + narrow (5 names, real registries grepped from unified-api-contracts, not
+  hypothetical); the AST canonicalizer reuses/extends the existing `_resolve_literal` machinery (added `ast.Tuple` →
+  python `tuple` for hashable dict keys, needed for `SOURCE_PRIORITY`'s `(asset_group, data_type)` keys) rather than
+  building a second parallel resolver. Verified the decoupling holds: `EMISSION_LATENCY_MS_BY_SOURCE`-style
+  non-allowlisted value changes trip neither signal (test `test_non_allowlisted_constant_value_change_is_not_tracked`).
+  Did NOT touch [A] (still operator-approved-design-only, unimplemented) — this todo's own text scoped it to the signal,
+  explicitly "blocked on [A] so a re-dispatch is not a no-op" for the _consumption_ side, not the signal's existence.
+  Unrelated pre-existing debt hit mid-ship: a fabricated git-SHA citation in a different plan doc
+  (`infra_satellite_ao_dispatch_batch10_2026_08_09.md`, from slot-33, landed on origin before this session started)
+  blocked Pass-1 QG's repo-wide `check_plan_commit_sha_evidence.py` — verified non-fabricated-by-me (`git cat-file -t`
+  on the cited SHA fails; zero hits in `git log --all`), filed
+  `infra_satellite_batch10_fabricated_commit_sha_evidence_2026_08_09.md` and re-baselined per the check's own printed
+  remedy to unblock.
 - **2026-07-20** — Class identified while root-causing the overnight T0 alerts. Instance 1 fixed (UTL fixtures repointed
   onto still-multi-source cells; `(tradfi, ohlcv_15m)` remains `["databento","yahoo"]` while `trades` collapsed to
   single-source). The SIT-laundering half is fixed separately in `ci_status_store.resolve_status`. Instance 2 diagnosed
@@ -349,6 +419,31 @@ nothing: it is architecturally cached against exactly the input that changed.
   under autonomous momentum.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries).
+- **RULED 2026-08-09 (operator)**: **Option 2 approved** -- hash UAC's + UTL's resolved git ref/commit, per this doc's
+  own stated recommendation (the walkthrough under todo [A]). Recorded the approval inline under [A]; nothing shipped
+  from the walkthrough itself (implementation is a separate, now-dispatchable step). Before reclassifying the doc-level
+  `assigned_vm: NA` -> `planning` to make [A] AO-dispatchable, checked every OTHER open todo in this doc for
+  backlog-ingestion eligibility (a doc-level `assigned_vm: planning` flip exposes every unmarked `- [ ]` line to AO
+  regardless of its prose) and found two real gaps this same na-eligibility-audit's own "decommissioned item left
+  unchecked" trap warning (below) had flagged but not yet fixed: (1) the two struck-through SUPERSEDED/DO-NOT P2 items
+  were still `- [ ] [DEVOPS]` with no non-dispatchable marker -- retagged both `[DEVOPS]` -> `[OPERATOR]`, KEEPING the
+  checkbox format, rather than converting to `task_template.md`'s documented non-checkbox `CANCELLED —` disposition
+  bullet: discovered live that format conflicts with `check_todo_regression.sh`'s literal `^- \[[ xX]\]` total-count
+  invariant (a genuine SSOT contradiction between two of the workspace's own conventions — no special-case exists for
+  the CANCELLED conversion, so it hard-fails precommit as a false "todo loss"), so used the simpler, non-conflicting fix
+  instead. Filed the contradiction as its own follow-up issue doc rather than silently working around it (see Progress
+  Log below); (2) the EXTRACTED-2026-08-02 item (red-SIT-escalation design call, ruled YES on 2026-08-07 but explicitly
+  "not yet scoped into an implementation todo... before it's AO-dispatchable") was tagged `[DEVOPS]` with no
+  ingestion-gate marker -- retagged to `[OPERATOR]` so it stays out of the backlog until someone scopes it into a real
+  bounded todo. With both fixed, [A] and [B] are the only two open items that will actually reach AO, and both are
+  legitimately bounded ([A] now approved; [B] is bounded, verified 6/6, and simply sequenced behind [A]). Reclassified
+  `assigned_vm: NA` -> `planning` (+ `execution_scope: local-only` -> `orchestrator-agent`). Cross-referenced the
+  approval (brief pointer, not duplicated) in `operator_action_items_consolidated_2026_08_08.md`'s matching todo. Did
+  NOT implement the `python-quality-gates-v2.yml` `KEY` extension myself -- highest-blast-radius fleet CI gate, needs a
+  proper AO-dispatched implementation + rollout per the doc's own "What sign-off actually gates" section, not a quick
+  edit in this pass. Note: this doc carries `locked_by: live-defi-rollout` (`locked_since: 2026-05-21`) -- per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` that field gates ARCHIVAL specifically, not
+  ordinary todo/frontmatter edits, so it was not a blocker for this reclassification; not touched or unlocked here.
 
 ## na-eligibility-audit verdict
 
@@ -405,3 +500,15 @@ valid — confirms the 2026-08-08 round7 verdict, unchanged (only context-scout 
 operator-sign-off-required (operator explicitly declined to sign off 2026-08-08); [B] blocked on [A]; the 2
 struck-through items remain ruled-out; the extracted design-call clause (RULED 2026-08-07 yes) still needs bounded
 scoping. `locked_by: live-defi-rollout` unchanged, not this run's to clear. No `assigned_vm` change.
+
+- **2026-08-09 (worker-slot18)** — Item [A] SHIPPED: `unified-trading-ci@f0bfaa2`. Implemented operator-approved Option
+  2 (hash UAC's + UTL's resolved live-defi-rollout tree content into the content-sentinel `KEY`), verified clean via
+  local `actionlint`/`shellcheck` and confirmed in CI. Discovered the todo's own rollout instructions were written
+  before the 2026-08-06 `unified-trading-ci` extraction landed — corrected inline on the checkbox (no
+  `rollout-workflow-templates.sh` fleet pass needed; the file now has exactly one canonical copy and every caller pins
+  `@main`). Also found `unified-trading-ci`'s `lint` (actionlint) job pre-existing-red on 30 shellcheck findings in 3
+  unrelated files (semver-agent.yml, update-dependency-version.yml, request-major-bump.yml) — confirmed identical
+  before/after this change, filed as its own P3 issue doc
+  (`unified_trading_ci_lint_red_shellcheck_findings_2026_08_09.md`) rather than folding an unrelated fix into this ship.
+  Did NOT run a live forced-UAC-value-change end-to-end proof (no safe throwaway edit staged this session) — left as an
+  optional follow-up if the operator wants that beyond the code-level verification.

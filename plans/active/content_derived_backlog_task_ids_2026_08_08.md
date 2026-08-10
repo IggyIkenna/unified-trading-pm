@@ -202,16 +202,63 @@ Both were established by reading the code, and both are silent — neither raise
       asserting the new activity row's `old_id`/`new_id`/`trigger` fields, and that the hazard-1
       "not-cancelled-this-tick" no-op case still logs nothing. QG: 2889 passed, 2 skipped, basedpyright clean, ruff
       clean. Evidence: agent-orchestrator@7eb0203 (verified ancestor of origin/live-defi-rollout before this flip).
-- [ ] [BACKEND] P2. **Cover the derived-identifier namespaces in the map.** An old id surviving as a SUBSTRING of a
-      still-live key is silently orphaned: `BLK-op-{task_id}` (`bootstrap.py:854, :889`), `{task_id}--ruling`
-      (`regen_backlog_from_plan.py:2631`), `auto_unpark__{task_id}` (`auto_park.py:92-96`), `task:{task_id}` cooldown
-      keys (`auto_park.py:110, :192`), and the dedup keys in `dedup_state.py:418, :430`. Enumerate and remap each.
-      (repo: agent-orchestrator)
-- [ ] [BACKEND] P2. **Make the migration idempotent + resumable.** Follow the existing `_migrate_*` convention
-      (`bootstrap.py:147-159`) with a sentinel so a second run no-ops. Batch with a resumable checkpoint rather than one
-      giant transaction across ~1,728 rows (SQLite single-writer; reuse the `busy_timeout=120000` pattern `_prune_stale`
-      already uses). Persist the full old→new map BEFORE applying so the inverse can be replayed. **Do NOT wire it into
-      `create_all_tables()`'s automatic on-every-boot sequence.** (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-4, content_derived_backlog_task_ids-013)** — **Cover the
+      derived-identifier namespaces in the map.** Added `_DERIVED_KEY_NAMESPACES` (all six enumerated:
+      `blocked_row_id`/`BLK-op-{task_id}`, `ruling_task_id_suffix`/`{task_id}--ruling`,
+      `auto_unpark_prereq`/`auto_unpark__{task_id}`, `park_cooldown_key`/`task:{task_id}`,
+      `dispatch_priority_inversion_dedup`/`{plan_ref}:{task_id}`, and
+      `backlog_sibling_reset_guard_dedup`/`{task_id}:{incoming_brief_hash}`) +
+      `derived_keys_for_row(old_id, new_id,     plan_ref)` to `build_content_id_migration_map.py`, computing the
+      concrete old_key/new_key pair for the five DETERMINISTIC namespaces on demand per row (called by the
+      not-yet-written apply step), rather than pre-materializing 6 x ~2 338 extra entries into the checked-in artifact —
+      that would blow well past the 1000 KB pre-commit large-file gate the module's own docstring already flags. The
+      sixth namespace (`backlog_sibling_reset_guard_dedup`) is flagged `exact_remap_possible: false`: its
+      `incoming_brief_hash` (`bootstrap.py:832`'s `current_hash`) is the LIVE checkbox's brief hash at collision time,
+      never the row's own stored `brief_hash` and never persisted anywhere a static artifact can read — documented as
+      requiring an apply-time PREFIX scan of the seen-keys file (`f"{old_id}:"` -> `f"{new_id}:"`) instead of an exact
+      key. QG: 2896 passed, 2 skipped, basedpyright clean, ruff clean. New tests:
+      `test_derived_key_namespaces_enumerated_in_map`,
+      `test_derived_keys_for_row_computes_all_five_deterministic_pairs`,
+      `test_derived_keys_for_row_handles_missing_plan_ref`. Evidence: agent-orchestrator@84e8c98 (verified ancestor of
+      origin/live-defi-rollout). Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-22, backend_engineer)** — **Make the migration idempotent + resumable.**
+      Built `scripts/orchestrator/apply_content_id_migration.py`, the standalone APPLY step the two `[OPERATOR]` todos
+      below will invoke (NOT wired into `create_all_tables()`'s boot sequence, per this todo's explicit instruction).
+      Idempotent via a `content_id_migration_progress` sentinel table (`old_id` PRIMARY KEY, inserted in the SAME
+      transaction as the rename it records — "renamed" and "marked applied" can never disagree) plus every individual
+      sub-rename independently no-oping if already applied (belt-and-suspenders for a crash between a file write and the
+      DB commit that would have recorded it). Resumable: batches `--batch-size` rows (default 100) per transaction with
+      `PRAGMA busy_timeout=120000` (mirrors `_prune_stale`'s existing pattern), saving `backlog.yaml` + the two
+      seen-keys files after every batch rather than once at the end. Persists the planned old→new map to `--session-out`
+      BEFORE writing anything (the "so the inverse can be replayed" requirement); `--invert` replays it in reverse,
+      cross-checked against the progress table so only rows ACTUALLY renamed (not merely planned) are eligible to roll
+      back.
+
+      Renames every derived-key namespace `-013`'s `derived_keys_for_row` enumerated: `tasks.task_id`, `backlog.yaml`'s
+                  `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
+                  regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
+                  (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
+                  (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
+                  namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
+                  flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
+                  unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
+                  renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
+                  `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
+                  stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
+                  (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
+                  `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
+                  hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
+                  never rewrites history).
+
+                  15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
+                  transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
+                  remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
+                  real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
+                  `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
+                  passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
+                  (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
+                  Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
+
 - [ ] [OPERATOR] P1. **Dry-run the migration against a SCRATCH COPY of `state.db`, never the live file.** Operator-gated
       because it requires copying live orchestrator state and reading it outside the service. Assert: row-count
       preserved; `done_sha`/`done_at`/`done_evidence` byte-identical pre/post; every `completed_tasks` reference
@@ -222,12 +269,291 @@ Both were established by reading the code, and both are silent — neither raise
       identity that must not diverge (`remint_backlog_collision` already accepts this two-store risk for ONE row; this
       is ~1,728). Run at a quiet dispatch moment — per CLAUDE.md, maintenance-window scheduling is skipped
       pre-live-trading, so this means "not obviously busy", not a formal window. Verify against the Phase-2 assertions
-      immediately after. (repo: agent-orchestrator)
+      immediately after. **Done-when**: the live apply completes, the Phase-2 assertions (exact-match row count,
+      byte-identical `done_sha`/`done_at`/`done_evidence`, all `completed_tasks` references remapped-or-justified) all
+      re-pass against post-apply live state, and the result is attached to this plan's Progress Log. (repo:
+      agent-orchestrator)
 - [ ] [BACKEND] P2. **Re-verify the two live collisions are gone and stay gone.** `fleet_promoter_glue_runner_stall-001`
       (resolved 2026-08-08 by closing its last todo) and
       `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` (open at authoring time). Done-when:
       `journalctl -u orchestrator.service --since "1 hour ago" | grep -c "REFUSING to reset"` returns 0 across a full
       `PlanRegenLoop` cycle. (repo: agent-orchestrator)
+
+### Drafted commands for the two `[OPERATOR]` todos above (2026-08-09)
+
+Both prior `[OPERATOR]` todos were prose-only — no paste-ready command. This subsection drafts both. **Not run** against
+the live VM or the live `state.db`/`backlog.yaml` (per this task's instruction — drafting only). The command syntax +
+the whole verification methodology WAS exercised for real, end-to-end, against a synthetic scratch DB built locally with
+the real ORM schema (`server.bootstrap.create_all_tables()`, the same fixture pattern
+`test_apply_content_id_migration.py` uses — never hand-rolled DDL), seeded with one `done` row, one `queued` row whose
+`completed_tasks` references the done row, one `dispatched` row, one orphan `done` row, one `NULL brief_hash` legacy
+row, and one already-content-derived passthrough row — the same six shapes the real corpus has. Real output is quoted
+below, not fabricated.
+
+**Live paths** (from `server/config.py`: `db_path()` = `STATE_DIR/state.db`, `backlog_path()` =
+`CONFIG_DIR/backlog.yaml`, both relative to `REPO_ROOT`; confirmed against `orchestrator.service`'s
+`WorkingDirectory=`): `$AO_DIR/data/state/state.db` and `$AO_DIR/data/config/backlog.yaml`, where `$AO_DIR` resolves to
+`/home/ubuntu/unified-trading-system-repos/agent-orchestrator` (the planning VM's operator is `ubuntu` —
+`install-orchestrator-service.sh --operator ubuntu --restart`, `agent-orchestrator-single-vm-architecture.md:443` — even
+though the checked-in `orchestrator.service` template itself still shows the `hk` placeholder). **Derive it live instead
+of trusting that** (below) — the substitution is per-host and could drift.
+
+**Transport**: `check-ao-backlog-status.sh`'s read-only `aws ssm send-command` pattern doesn't cover file copies or
+running a script, so this needs an interactive AWS SSM Session Manager shell instead (`ssm:StartSession` IAM permission;
+needs the local `session-manager-plugin` — `brew install --cask session-manager-plugin` on macOS). Same instance as the
+read-only script: `i-0c9b283b31d6b5ca7`, `ap-northeast-1`.
+
+**Why the map is rebuilt fresh every time, never reused from the checked-in artifact**: todo `-010`'s own Progress Log
+entry above found the checked-in map artifact went stale in ~9h of live operation (82 unexplained `completed_tasks`
+references, from Phase-1 mints created after the map was last built) — exactly hazard 2. Both recipes below rebuild the
+map immediately before use, from the SAME snapshot being migrated, per `build_content_id_migration_map.py`'s own
+docstring guidance.
+
+**A. Connect + resolve paths** (both recipes start here):
+
+```bash
+aws ssm start-session --target i-0c9b283b31d6b5ca7 --region ap-northeast-1
+# on the VM:
+sudo -iu ubuntu bash -l
+AO_DIR="$(systemctl show orchestrator --property=WorkingDirectory --value)"
+cd "$AO_DIR"
+```
+
+**B. Dry-run recipe (todo 1)** — real writes, but ONLY to a scratch copy outside the git checkout (never the live files;
+every `--db`/`--backlog` below is an explicit scratch path, so the live files are never opened):
+
+```bash
+SCRATCH="$(mktemp -d ~/ao_content_id_dryrun.XXXXXX)"
+echo "scratch workspace: $SCRATCH"
+
+# 1. Live-consistent snapshot of state.db (WAL-mode DB — `.backup` uses SQLite's backup
+#    API, safe under a concurrent writer; a plain `cp` of a WAL db can miss unflushed
+#    -wal content and produce a torn read).
+sqlite3 "$AO_DIR/data/state/state.db" ".backup '$SCRATCH/state.db'"
+
+# 2. backlog.yaml is NOT written atomically (save_backlog() does path.open("w") + dump,
+#    no tmp+rename — server/backlog.py:162) — copy, validate it parses, retry once on a
+#    torn read.
+cp "$AO_DIR/data/config/backlog.yaml" "$SCRATCH/backlog.yaml"
+python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" "$SCRATCH/backlog.yaml" || {
+  echo "torn read, retrying once"; cp "$AO_DIR/data/config/backlog.yaml" "$SCRATCH/backlog.yaml"
+  python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" "$SCRATCH/backlog.yaml"
+}
+cp "$SCRATCH/state.db" "$SCRATCH/state.before.db"
+
+# 3. Fresh map from the scratch snapshot (never the checked-in artifact — see above).
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/build_content_id_migration_map.py" \
+  --db "$SCRATCH/state.db" --backlog "$SCRATCH/backlog.yaml" --out "$SCRATCH/id_map.json"
+
+# 4. Hazard-2 gate — MUST exit 0 (0 unexplained) before proceeding.
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/verify_prereq_remap_coverage.py" \
+  --db "$SCRATCH/state.db" --backlog "$SCRATCH/backlog.yaml" --map "$SCRATCH/id_map.json" \
+  --out "$SCRATCH/prereq_coverage.json"
+echo "hazard-2 gate exit=$?"
+
+# 5. The REAL apply (not --dry-run) against the scratch copy — this is what actually lets
+#    the byte-identical assertions below be checked; `--dry-run` alone writes nothing to
+#    diff against.
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/apply_content_id_migration.py" \
+  --db "$SCRATCH/state.db" --backlog "$SCRATCH/backlog.yaml" --map "$SCRATCH/id_map.json" \
+  --batch-size 100 --session-out "$SCRATCH/session_plan_run1.json"
+
+# 6. Save the invariants-checker below as $SCRATCH/verify_migration_invariants.py, then:
+python3 "$SCRATCH/verify_migration_invariants.py" \
+  --before-db "$SCRATCH/state.before.db" --after-db "$SCRATCH/state.db" --map "$SCRATCH/id_map.json"
+
+# 7. Idempotency: re-run apply a 2nd time (expect applied_this_run=0), then re-check with
+#    --expect-noop.
+cp "$SCRATCH/state.db" "$SCRATCH/state.after_run1.db"
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/apply_content_id_migration.py" \
+  --db "$SCRATCH/state.db" --backlog "$SCRATCH/backlog.yaml" --map "$SCRATCH/id_map.json" \
+  --batch-size 100 --session-out "$SCRATCH/session_plan_run2.json"
+python3 "$SCRATCH/verify_migration_invariants.py" \
+  --before-db "$SCRATCH/state.after_run1.db" --after-db "$SCRATCH/state.db" --map "$SCRATCH/id_map.json" --expect-noop
+
+# 8. Optional round-trip proof (rollback works):
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/apply_content_id_migration.py" \
+  --db "$SCRATCH/state.db" --backlog "$SCRATCH/backlog.yaml" --invert --session-in "$SCRATCH/session_plan_run1.json"
+
+echo "review $SCRATCH, then: rm -rf $SCRATCH   # cleanup, once the report is attached to this Progress Log"
+```
+
+`verify_migration_invariants.py` (stdlib-only, no repo import — save verbatim to
+`$SCRATCH/verify_migration_invariants.py` on the VM before step 6 above; this is the piece the migration script itself
+does NOT emit — it only prints applied/deferred counts, not per-row byte-identity):
+
+```python
+#!/usr/bin/env python3
+"""Invariant check for a Phase-2 content-id migration dry-run (content_derived_backlog_task_ids_2026_08_08.md).
+Checks: (1) row-count preserved, (2) done_sha/done_at/done_evidence byte-identical between each row's
+pre-migration and resolved post-migration id, (3) every pre-migration `dispatched` row keeps its EXACT
+task_id (hazard 1), (4) --expect-noop mode: after-db == before-db row-for-row (idempotency). Exits 1 on
+any failed assertion, prints a JSON report either way."""
+from __future__ import annotations
+import argparse, json, sqlite3
+from pathlib import Path
+
+
+def _load_map(map_path: Path) -> dict[str, str]:
+    raw = json.loads(map_path.read_text())
+    return {e["old_id"]: e["new_id"] for e in raw.get("entries", []) if e.get("old_id") and e.get("new_id") and e["new_id"] != e["old_id"]}
+
+
+def _load_rows(db_path: Path) -> dict[str, dict[str, object]]:
+    conn = sqlite3.connect(str(db_path)); conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute("SELECT task_id, status, done_sha, done_at, done_evidence FROM tasks").fetchall()
+    finally:
+        conn.close()
+    return {r["task_id"]: dict(r) for r in rows}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--before-db", required=True, type=Path)
+    ap.add_argument("--after-db", required=True, type=Path)
+    ap.add_argument("--map", required=True, type=Path)
+    ap.add_argument("--expect-noop", action="store_true")
+    args = ap.parse_args()
+
+    before, after = _load_rows(args.before_db), _load_rows(args.after_db)
+    old_to_new = _load_map(args.map)
+    failures: list[str] = []
+    renamed = unchanged = dispatched_touched = done_field_mismatches = missing_after = 0
+
+    if args.expect_noop:
+        if before.keys() != after.keys():
+            failures.append("idempotency violated: task_id set changed on a re-run")
+        else:
+            for tid, b in before.items():
+                if after[tid] != b:
+                    failures.append(f"idempotency violated: {tid} changed on a re-run: before={b} after={after[tid]}")
+    else:
+        for old_id, b in before.items():
+            expected_id = old_id if b["status"] == "dispatched" else old_to_new.get(old_id, old_id)
+            if expected_id not in after:
+                missing_after += 1
+                failures.append(f"{old_id}: expected {expected_id!r} not found in --after-db")
+                continue
+            a = after[expected_id]
+            if b["status"] == "dispatched" and expected_id != old_id:
+                dispatched_touched += 1
+                failures.append(f"{old_id}: dispatched row was renamed to {expected_id!r} -- hazard 1 violated")
+            elif expected_id != old_id:
+                renamed += 1
+            else:
+                unchanged += 1
+            for field in ("done_sha", "done_at", "done_evidence"):
+                if b[field] != a[field]:
+                    done_field_mismatches += 1
+                    failures.append(f"{old_id}->{expected_id}: {field} changed (before={b[field]!r} after={a[field]!r})")
+        if len(before) != len(after):
+            failures.append(f"row count changed: before={len(before)} after={len(after)}")
+
+    report = {"mode": "idempotency-noop" if args.expect_noop else "forward-apply", "before_row_count": len(before),
+              "after_row_count": len(after), "renamed": renamed, "unchanged": unchanged,
+              "dispatched_rows_touched": dispatched_touched, "done_field_mismatches": done_field_mismatches,
+              "missing_after": missing_after, "PASS": len(failures) == 0, "failures": failures}
+    print(json.dumps(report, indent=2, default=str))
+    return 0 if report["PASS"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+**Real captured output** (from the local synthetic-schema run, 6 rows: 1 done+yaml, 1 queued+`completed_tasks`-ref, 1
+dispatched, 1 orphan-done, 1 NULL-brief_hash legacy, 1 already-content-derived passthrough):
+
+```
+### map build ###
+wrote .../id_map.json (6 rows accounted for, matches live tasks count=6)
+  entries (map rows)               : 5
+    already content-derived (no-op): 1
+    derived (positional -> content) : 4
+  excluded (brief_hash NULL, permanent, NOT in entries): 1
+  new_id collisions                : 0
+
+### hazard-2 gate (pre-apply) ###
+checked 1 completed_tasks/prerequisites references
+  remapped: 1  unchanged: 0  legit_absent: 0  unexplained: 0    <- exit 0
+
+### apply (run 1, real writes to scratch only) ###
+[APPLY] planned=4  already_applied=0  applied_this_run=3  deferred(dispatched)=1
+
+### invariants check (before vs after run1) ###
+{"mode": "forward-apply", "before_row_count": 6, "after_row_count": 6, "renamed": 3, "unchanged": 2,
+ "dispatched_rows_touched": 0, "done_field_mismatches": 0, "missing_after": 0, "PASS": true, "failures": []}
+
+### apply (run 2, idempotency) ###
+[APPLY] planned=1  already_applied=3  applied_this_run=0  deferred(dispatched)=1
+
+### invariants check --expect-noop (after_run1 vs after_run2) ###
+{"mode": "idempotency-noop", "before_row_count": 6, "after_row_count": 6, "renamed": 0, "unchanged": 0,
+ "dispatched_rows_touched": 0, "done_field_mismatches": 0, "missing_after": 0, "PASS": true, "failures": []}
+
+### invert (round-trip proof) ###
+[INVERT (rollback)] planned=4  already_applied=0  applied_this_run=3  deferred=0
+  -> task_ids/done_sha restored to exact pre-migration values
+```
+
+The dispatched row (`demo_plan-003`) kept its exact `task_id` across both applies, never appeared in `deferred=0` until
+it went terminal in the invert pass (it wasn't dispatched anymore by then in this synthetic run) — confirms hazard 1.
+The `queued` row's `completed_tasks: [demo_plan-001]` correctly followed the rename to point at the NEW id — confirms
+hazard 2's remap. **One thing this run disproved**: do NOT re-run `verify_prereq_remap_coverage.py` against the SAME
+(now-stale, old-id-keyed) map after a successful apply expecting 0 unexplained — it will correctly report the renamed
+row's new id as `unexplained` (the old ids it knows about no longer exist post-migration). That check is a PRE-apply
+gate only; this doc originally assumed a post-apply re-check too and that assumption was wrong — caught by actually
+running it, not by design review.
+
+**C. Live-apply recipe (todo 2)** — same connect step (A), then:
+
+```bash
+BACKUP="$HOME/ao_content_id_migration_backup_$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$BACKUP"
+sqlite3 "$AO_DIR/data/state/state.db" ".backup '$BACKUP/state.db'"
+cp "$AO_DIR/data/config/backlog.yaml" "$BACKUP/backlog.yaml"
+python3 -c "import yaml,sys; yaml.safe_load(open(sys.argv[1]))" "$BACKUP/backlog.yaml" || {
+  cp "$AO_DIR/data/config/backlog.yaml" "$BACKUP/backlog.yaml"
+}
+echo "backup: $BACKUP"
+
+# Fresh map from the LIVE db (read-only query) — run this and the apply back-to-back
+# (minutes, not hours: -010's Progress Log measured the map going stale within ~9h).
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/build_content_id_migration_map.py" \
+  --db "$AO_DIR/data/state/state.db" --backlog "$AO_DIR/data/config/backlog.yaml" --out "$BACKUP/id_map_live.json"
+
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/verify_prereq_remap_coverage.py" \
+  --db "$AO_DIR/data/state/state.db" --backlog "$AO_DIR/data/config/backlog.yaml" --map "$BACKUP/id_map_live.json" \
+  --out "$BACKUP/prereq_coverage_live.json"
+echo "hazard-2 gate exit=$?  # MUST be 0 before the next command"
+
+# The real apply, against the LIVE files. --session-out is the durable rollback artifact.
+"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/apply_content_id_migration.py" \
+  --db "$AO_DIR/data/state/state.db" --backlog "$AO_DIR/data/config/backlog.yaml" \
+  --map "$BACKUP/id_map_live.json" --batch-size 100 --session-out "$BACKUP/session_plan_live.json" \
+  | tee "$BACKUP/apply_live.log"
+
+# Immediately after: the plan's own next todo's check.
+journalctl -u orchestrator.service --since "10 min ago" | grep -c "REFUSING to reset"   # expect 0
+```
+
+**Rollback if something goes wrong**:
+`"$AO_DIR/.venv/bin/python" "$AO_DIR/scripts/orchestrator/apply_content_id_migration.py" --db "$AO_DIR/data/state/state.db" --backlog "$AO_DIR/data/config/backlog.yaml" --invert --session-in "$BACKUP/session_plan_live.json"`
+— only rows this exact run actually renamed are eligible (cross-checked against `content_id_migration_progress`, not the
+plan blindly). `$BACKUP/state.db` is the belt-and-suspenders fallback (restore via
+`sqlite3 $AO_DIR/data/state/state.db ".restore '$BACKUP/state.db'"` while the service is stopped, if `--invert` itself
+is somehow unusable).
+
+**Known risk, not fixed here (out of this drafting task's scope)**: `apply_content_id_migration.py::run()` loads
+`backlog.yaml` ONCE at the top and saves it after each batch — a concurrent live write to `backlog.yaml` (an operator
+API call, or a `PlanRegenLoop` tick) landing BETWEEN two of this script's own saves would be silently lost on the next
+batch save (a lost-update race; state.db is unaffected — SQLite transactions serialize those writes correctly). Bounded,
+not a permanent-loss risk: `backlog.yaml` is "a pure projection of the active plans"
+(`agent-orchestrator-single-vm- architecture.md:387`) — a lost regen-tick write self-heals on the NEXT regen tick. A
+genuinely manual operator edit landing in that exact window would not self-heal. Mitigation is procedural (the todo's
+own "quiet dispatch moment" instruction), not structural. Filed as a follow-up below rather than patched here — patching
+a shipped, tested script mid-draft, without operator direction, is out of scope for this todo.
 
 ## Follow-ups
 
@@ -252,6 +578,17 @@ Both were established by reading the code, and both are silent — neither raise
       `defi_catalog_engine_config_key_contract_drift_*.md` plan checkbox to confirm/refute. Not fixed here — out of the
       fate-decision todo's scope and touches the same collision-sensitive minting path Phase 1/2 are already carefully
       sequencing around. (repo: agent-orchestrator)
+- [ ] [BACKEND] P2. **Found while drafting the live-apply commands (2026-08-09): `apply_content_id_migration.py::run()`
+      loads `backlog.yaml` once at the top of the run and re-saves it after each batch — a concurrent live write to
+      `backlog.yaml` (an operator API call, or a `PlanRegenLoop` regen tick) landing between two of this script's own
+      saves is silently lost (last-writer-wins on the in-memory `Backlog` object).** `state.db` is unaffected (real
+      SQLite transactions). Bounded, not a permanent-loss risk in the common case — `backlog.yaml` is "a pure projection
+      of the active plans" (`agent-orchestrator-single-vm-architecture.md:387`), so a lost REGEN-tick write self-heals
+      on the next tick; a genuinely manual operator edit landing in that exact window would not. Either (a) re-load
+      `backlog.yaml` fresh at the top of each batch instead of once for the whole run (read-modify-write per batch), or
+      (b) document + accept the current "run at a quiet moment" mitigation as sufficient given the bound. Not fixed as
+      part of this drafting task — the live-apply todo above's own "quiet dispatch moment" instruction is the interim
+      mitigation. (repo: agent-orchestrator)
 
 ## Codex SSOTs
 
@@ -498,3 +835,38 @@ Both were established by reading the code, and both are silent — neither raise
   2879 passed, 2 skipped (full suite, basedpyright clean, ruff clean — the same two pre-existing unrelated warnings as
   `-010`, not touched by this change). Evidence: agent-orchestrator@6b57503 (verified ancestor of
   origin/live-defi-rollout before this flip).
+
+- **2026-08-09 (drafting-only session)**: Drafted exact, ready-to-paste commands for both `[OPERATOR]` todos above (new
+  "Drafted commands" subsection right after them) — neither todo previously had an actual command, both were prose-only.
+  **Did not run anything against the live VM or the live `state.db`/`backlog.yaml`**, per this task's explicit
+  instruction. Instead verified the drafted command syntax end-to-end for real, locally, against a synthetic scratch DB
+  built with the actual ORM schema (`create_all_tables()`, same fixture pattern as `test_apply_content_id_migration.py`
+  — not hand-rolled DDL), seeded with the 6 representative row shapes the real corpus has (done+yaml, queued with a
+  `completed_tasks` ref, dispatched, orphan-done, NULL-brief_hash legacy, already-content-derived passthrough). All four
+  assertions the dry-run todo lists passed for real on that synthetic corpus: row-count preserved (6==6), `done_sha`/
+  `done_at`/`done_evidence` byte-identical pre/post (0 mismatches), the `completed_tasks` reference followed its
+  target's rename (hazard-2 gate: 0 unexplained), idempotent on a 2nd run (`applied_this_run=0`), and the dispatched
+  row's `task_id` never changed across two applies (hazard-1). Also proved `--invert` round-trips back to the exact
+  pre-migration ids. Wrote a new stdlib-only `verify_migration_invariants.py` (embedded in the doc, not committed to
+  agent-orchestrator — it's a drafting/verification aid the operator pastes onto the VM's scratch workspace) since
+  `apply_content_id_migration.py` itself only prints applied/deferred counts, not the per-row byte-identity checks the
+  todo requires.
+
+  **One assumption in my own draft was disproven by actually running it**: re-running `verify_prereq_remap_coverage.py`
+  against the SAME map after a successful apply does NOT report 0 unexplained — it correctly flags the now-renamed rows'
+  new ids as unexplained (their old ids the map knows about no longer exist post-migration). That check is a PRE-apply
+  gate only; removed a wrong post-apply re-check step I had planned to include before I actually tested it.
+
+  **New finding, filed as a Follow-up (not fixed here)**: `apply_content_id_migration.py::run()` loads `backlog.yaml`
+  once at the top and re-saves it after each batch — a concurrent live write in between (an operator API call or a
+  `PlanRegenLoop` regen tick) would be silently lost. Bounded (self-heals on the next regen tick for the common case,
+  per `backlog.yaml` being a pure plan-derived projection), not fixed as part of this drafting task.
+
+  Live paths confirmed by reading `server/config.py` (`db_path()`/`backlog_path()`) against `orchestrator.service`'s
+  `WorkingDirectory=` and the `install-orchestrator-service.sh --operator ubuntu` cron invocation noted in
+  `agent-orchestrator-single-vm-architecture.md:443`: `$AO_DIR/data/state/state.db` +
+  `$AO_DIR/data/config/backlog.yaml`, `$AO_DIR` derived live via
+  `systemctl show orchestrator --property=WorkingDirectory --value` rather than hardcoded (the checked-in
+  `orchestrator.service` template still shows the `hk` placeholder, not the live `ubuntu` substitution). Neither
+  `[OPERATOR]` todo flipped — still `[ ]`, ready for the operator to paste and run. No agent-orchestrator or
+  unified-trading-pm code changed; this is a doc-only change to this plan.

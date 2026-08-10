@@ -198,3 +198,14 @@ source:
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — re-checked all 3 open items against the round7-10
+  precedent set. The escalation-route-collision item cites the epic's own P1 todo as live tracking home (a citation fix,
+  not new work); the UI item is explicitly blocked-upstream-design, unchanged; the l2_book re-test gate is explicitly
+  void-pending-a-real-retest-condition (plan must return to `assigned_vm: planning` first), not a worker-executable
+  check today. None of IAM self-service/D16/S5.1/plan-destination-default/escalation-N/
+  reversibility-qualified-deletes/Option-B-retirement/DeepSeek-Slack-credentials apply. Corroborated same-day:
+  `/ag-closeout-audit ao` batch12 lists this doc under operator-gated (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11; all 3 items remain in the exact same state (citation-fix pending an epic todo, blocked-upstream-design UI
+  item, void-pending-retest l2_book gate). No new facts apply.

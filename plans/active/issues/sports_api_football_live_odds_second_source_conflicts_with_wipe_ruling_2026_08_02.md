@@ -153,10 +153,35 @@ history — the "free/no extra cost" framing that motivated the original todo is
 documented, twice-burned data-correctness risk, and the primary `odds_api` source already covers the
 LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
 
+## Resolution (2026-08-10, prose-findings formalization sweep)
+
+**Both open questions from this doc are already resolved — no todo needed, both were already actioned via the
+`/blocked` escalation mechanism this doc itself started.**
+
+1. **Recommended decision → RULED, option B (decline).** `BLK-b969f5f0` was answered "decision B" — confirmed via the
+   sibling tracker doc's own record: `plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md`
+   states (line 169) "**api_football `/odds` in-play second-source half STRUCK 2026-08-02 (`BLK-b969f5f0`, main,
+   decision B) — SUPERSEDED, not pursued**" and (line 415) "recommendation B (strike the api_football half as based on
+   incomplete information)." The sibling plan's P2 todo was corrected accordingly — a genuine second live-odds source
+   is now explicitly scoped as "its OWN new operator-gated design decision if ever wanted," not folded back into that
+   todo. Matches this doc's own recommendation exactly.
+2. **The separate, non-conflicting finding (live sports-odds VM not running) → RESOLVED 2026-08-03.** Same sibling
+   tracker doc, its coverage-matrix row for LIVE_ODDS/odds_horizon_bucket: "**LIVE — RUNNING**
+   (`mtds-live-sports-odds-api-trades-20260803-172841`, verified 2026-08-03: 35+ min of clean `run.log`, zero
+   errors/401s...)" — "RESOLVED 2026-08-03: the 2026-08-02 quota-exhaustion finding is closed... the live VM is
+   confirmed healthy, not just started."
+
+No content in this doc needs a fresh todo; `status`/`assigned_vm` left untouched per this sweep's scope (a
+close-out/archival pass, not this formalization pass, is the right place to flip `status: open` → `resolved`).
+
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into todos (0 new todos needed) — both
+  of this doc's open questions (the A/B recommendation, and the separate live-VM finding) were already resolved via the
+  `/blocked` mechanism this doc itself started; cited the evidence directly in a new "Resolution (2026-08-10)" section
+  above rather than adding checkboxes for already-settled questions.
 - **2026-08-02** — Filed by slot 3 (data_engineering) while working `infra_capture_and_devops_leftovers-001`. Reverted
   an in-progress UAC edit (`PipelineMode.LIVE_API_FOOTBALL` + `SOURCE_MODE_CAPABILITY["api_football"]` Mode.LIVE flip)
   before committing, once this conflict surfaced — no code shipped, tree clean. Escalating via `/blocked`; continuing on

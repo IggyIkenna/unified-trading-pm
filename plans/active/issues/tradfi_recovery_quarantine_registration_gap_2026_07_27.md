@@ -153,6 +153,29 @@ wound), but should be tracked rather than silently absorbed.
       `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27) if definitive identification is desired. The
       `_rel()` bug (stripping `_quarantine/` prefix on already-quarantined objects) is a latent correctness issue — file
       as a separate preventative fix. Repo: market-tick-data-service.
+- [x] ✅ [CODE] P3. **Fix the latent `_rel()` prefix-stripping bug** in `migrate_tradfi_canonical_2026_07.py` (line
+      160-163, `path.find("raw_tick_data/by_date/")`) — for an already-quarantined object
+      (`_quarantine/raw_tick_data/by_date/...`), this strips the `_quarantine/` prefix and computes the WRONG
+      bucket-relative path, causing the apply-phase to silently treat the object as `SRC_ALREADY_GONE` instead of
+      correctly identifying it as already-quarantined and skipping it. Confirmed non-destructive today (traced both
+      `A_COPY`/`A_QUARANTINE` code paths — neither deletes on this bug), but it's a real correctness defect, not just
+      cosmetic. Same bug is inherited by `rebundle_tradfi_chains_2026_07.py` (imports `_rel`) — fix both call sites.
+      Repo: market-tick-data-service. **Done when**: `_rel()` correctly detects the `_quarantine/` prefix (e.g. checks
+      for it explicitly before stripping `raw_tick_data/by_date/`), a regression test covers an already-quarantined
+      input path, and `quality-gates.sh` is green on both files. — market-tick-data-service@ff6c2f4a: already shipped
+      (found already on origin at task pickup, landed as part of the batch7 hardening pass — `rel_with_holding_prefix()`
+      in `_tradfi_migration_recurrence_fixes_2026_08_06.py`, explicitly citing this issue doc). Checks for
+      `_quarantine/raw_tick_data/by_date/` and `_content_repair/raw_tick_data/by_date/` markers BEFORE falling back to
+      the bare `raw_tick_data/by_date/` marker, so an already-held object's holding prefix is preserved instead of
+      stripped. `migrate_tradfi_canonical_2026_07.py` aliases `_rel` to this function (line 121);
+      `rebundle_tradfi_chains_2026_07.py` imports the same `_rel` symbol from the migrate module (one fix closes both
+      call sites, per the commit message). 5 regression tests cover it in
+      `tests/unit/scripts/test_migrate_tradfi_canonical_2026_07.py`: `test_rel_preserves_quarantine_holding_prefix`,
+      `test_rel_preserves_content_repair_holding_prefix`, `test_already_quarantined_object_recognized_and_left_in_place`
+      (asserts `D_ALREADY_HELD`/`A_SKIP`/no target),
+      `test_already_content_repair_held_object_recognized_and_left_in_place`,
+      `test_apply_one_already_quarantined_object_skips_cleanly_no_wrong_path_error` (asserts zero GCS calls on
+      already-quarantined re-run). No further code change needed — this was purely an unflipped checkbox.
 
 ## Progress Log
 
@@ -215,3 +238,13 @@ wound), but should be tracked rather than silently absorbed.
   a latent correctness issue even though it doesn't cause this specific problem.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+- **2026-08-09 (slot 23, worker)** — Flipped the final `_rel()` prefix-stripping-bug todo. Verified the fix (and its
+  regression tests) had already landed at market-tick-data-service@ff6c2f4a as part of the batch7 hardening pass
+  (`_tradfi_migration_recurrence_fixes_2026_08_06.py`'s `rel_with_holding_prefix()`), which explicitly cites this issue
+  doc in its own docstring — this task was purely an unflipped checkbox, no new code required. Confirmed the commit is
+  on `origin/live-defi-rollout` and both call sites (`migrate_tradfi_canonical_2026_07.py` aliasing `_rel`,
+  `rebundle_tradfi_chains_2026_07.py` importing the same symbol) share the fixed implementation, plus 5 passing
+  regression tests covering already-quarantined/content-repair-held input paths. All 4 todos in this issue doc are now
+  resolved — archival-eligible pending the `locked_by: live-defi-rollout` lock (set 2026-05-21; not unlocked here per
+  the ask-before-unlock rule).

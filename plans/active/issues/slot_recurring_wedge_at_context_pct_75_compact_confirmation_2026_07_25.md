@@ -376,7 +376,7 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
 - **Process finding, filed separately**: this session lost the same working file THREE times to concurrent prek
   stash/restore cycles in the shared checkout — silently, with no stash entry and a clean `git status`. Recovered only
   from a scratchpad backup. See
-  `/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
+  `/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
 
 ## 2026-08-08 validation window — measured result (partial pass, stated plainly)
 
@@ -416,3 +416,11 @@ data.
 ## Progress Log (cont.)
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of all 6 open
+  items. All touch core watchdog/context_lifecycle/worker_liveness machinery (compact-confirmation auto-submit,
+  kill-before-cap ordering, context-plateau detection, queued-message force-latch detection, learned-window re-check,
+  60-min validation re-run) — live-dispatch-critical-path code every AO worker (including this one) depends on. 5+ prior
+  audits (07-30 through 08-08) consistently kept this NA on this exact reasoning; the doc's own most recent entries
+  (2026-08-08) show it is still being actively characterized (a second, possibly-distinct wedge sub-mode found), not
+  settled enough for a bounded worker fix. Not re-litigated.

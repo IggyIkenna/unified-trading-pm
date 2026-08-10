@@ -26,7 +26,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-07-28
+last_updated: 2026-08-09
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -182,8 +182,79 @@ restated here.
   requires are NOT satisfied by this note or by the 2026-07-27 bucket-retention numbers cited above — the executing
   worker must re-query fresh.
 
+- [ ] [CODE] P2. **Fix `cleanup_legacy_twins.py::canonical_twin_path()` — it cannot reconstruct the canonical GCS path
+      for PRE-HIVE legacy shapes, which is why Part 5's twin-coverage measures 0% for all 900 tradfi class-B candidates
+      (root-caused 2026-08-09, see Progress Log entry below — a lookup-logic bug, NOT a manifest registration gap).**
+      All 900 tradfi legacy-B candidates share the pre-hive shape
+      `raw_tick_data/by_date/day=<date>/data_type=<dt>/<instrument_type_plural>/<VENUE>/<file>` (no
+      `asset_group=`/`venue=`/`instrument_type=` hive keys — venue/instrument_type are bare non-hive path segments).
+      `canonical_twin_path()` only renames `category=`→`asset_group=` (never present here) and inserts
+      `pipeline_mode=batch_<source>` after `day=`, producing a path missing
+      `asset_group=tradfi/venue=<V>/     instrument_type=<IT>/` entirely (confirmed via `gcs_describe_object` — the
+      derived path does not exist) instead of the real canonical shape from
+      `unified_api_contracts.canonical_path_templates("tradfi")`
+      (`raw_tick_data/by_date/day={date}/pipeline_mode=batch_{source}/asset_group=tradfi/venue={venue}/     instrument_type={instrument_type}/data_type={data_type}/<file>`).
+      Fix: reuse the SAME non-hive-tail venue/instrument_type derivation `migration_orphan_sweep.py::classify_object()`
+      step 3.5 already has (the shared `_backfill_parser()` from `backfill_orphan_class_e.py`) to derive
+      `(venue, instrument_type)` for a pre-hive legacy path, then build the canonical path by formatting the matched
+      `canonical_path_templates("tradfi")` entry (not a partial string splice) — so the two scripts derive the canonical
+      shape from the same SSOT instead of two independent (and now provably divergent) implementations. Also handle the
+      already-hive-shaped legacy case (the `category=`/`asset_group=` rename path `canonical_twin_path()` currently
+      targets) without regressing it — add a unit test covering both shapes. Once shipped, re-run this doc's dry-run
+      todo above fresh; a correct twin-coverage measurement is the real gate input, not assumed to hit 100% by this fix
+      alone (some candidates may still legitimately be registration gaps — this fix only removes the lookup-logic
+      false-negative). **Secondary (optional, same PR if convenient, not blocking)**: `_source_by_cell_from_manifest`
+      reads the manifest via a full-width `pd.read_parquet` + `to_dict("records")` over ~7M rows — slow; column-project
+      to the same 6 fields `migration_orphan_sweep.py::_load_manifested_cells` already uses. Repo: instruments-service.
+      **Done when**: `canonical_twin_path()` (or its replacement) correctly derives the canonical path for a
+      pre-hive-shape sample (regression test asserting the derived path matches a real captured canonical object), the
+      existing hive-shaped-legacy case still passes, and `quality-gates.sh` is green.
+
 ## Progress Log
 
+- **2026-08-09 (tradfi_satellite_ao_dispatch_batch7-003, root-cause investigation, diagnostic-only, no delete/apply
+  run)**: **ROOT CAUSE FOUND — this is a lookup-logic bug in `cleanup_legacy_twins.py`'s `canonical_twin_path()`, NOT a
+  manifest registration gap.** Read-only investigation against the live prod report
+  (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet`, 900 class-B
+  rows) + the live tradfi manifest (`_index/availability_index.parquet`, column-projected read — never the whole 40-col
+  frame):
+  1. **All 900 candidate rows share the identical PRE-HIVE legacy path shape** — e.g.
+     `raw_tick_data/by_date/day=2025-01-02/data_type=ohlcv_1m/equities/NYSE/NYSE:EQUITY:ABBV-USD.parquet` — verified by
+     grep across the full 900-row report: 0/900 carry an `asset_group=`/`category=` hive key, 0/900 carry a `venue=`
+     key, 0/900 carry an `instrument_type=` key (venue/instrument_type are bare non-hive path segments, e.g.
+     `equities/NYSE/`). This is the exact shape `migration_orphan_sweep.py::classify_object()` step 3.5 already has
+     special-cased handling for (derives venue/instrument_type from the non-hive tail via the shared
+     `_backfill_parser()`), which is HOW these 900 objects got correctly classified `B_legacy_duplicate` in the first
+     place — `migration_orphan_sweep.py`'s classifier proves the manifest DOES cover these cells.
+  2. **Reproduced the manifest cell lookup independently** (both the exact-match shape `cleanup_legacy_twins.py`'s own
+     `_source_by_cell_from_manifest`/`_canonical_source_for_cell` use, and the grain-aware `is_covered()` shape
+     `migration_orphan_sweep.py` uses) against all 900 rows: **both report 900/900 hits** — the manifest cell lookup
+     itself is NOT the defect (no venue-spelling / grain-wildcard mismatch found; ruled out as a hypothesis).
+     `_canonical_source_for_cell` correctly resolves `source="databento"` for every sampled cell.
+  3. **The actual defect is downstream, in `canonical_twin_path()`'s string-splice.** For the resolved `source`, it only
+     (a) renames `category=`→`asset_group=` if present (never present here) and (b) inserts
+     `pipeline_mode=batch_<source>` immediately after the `day=` segment — producing, for the ABBV example above:
+     `raw_tick_data/by_date/day=2025-01-02/pipeline_mode=batch_databento/data_type=ohlcv_1m/equities/NYSE/NYSE:EQUITY:ABBV-USD.parquet`.
+     Confirmed via `gcs_describe_object` this derived path **does not exist** in GCS. Confirmed via
+     `unified_api_contracts.canonical_path_templates("tradfi")` the REAL canonical v9 shape is
+     `raw_tick_data/by_date/day={date}/pipeline_mode=batch_databento/asset_group=tradfi/venue={venue}/instrument_type={instrument_type}/data_type={data_type}/<file>`
+     — `canonical_twin_path()`'s output is missing `asset_group=tradfi/venue=NYSE/instrument_type=equity/` entirely
+     (never derives them for the pre-hive shape) and additionally mis-orders `data_type=` (template has it LAST before
+     the venue/instrument_type keys, the splice leaves it where the legacy path had it). Every one of the 900 rows hits
+     this same defect (same pre-hive shape confirmed for all 900 in step 1), which is sufficient to explain the full 0%
+     Part-5 twin-coverage measurement without needing to invoke a registration gap. **Conclusion**: the manifest is NOT
+     missing these 900 canonical twins — `cleanup_legacy_twins.py`'s `canonical_twin_path()` cannot reconstruct the
+     canonical path for pre-hive legacy shapes (it silently assumes the legacy path is already hive-shaped with
+     `asset_group=`/`venue=`/`instrument_type=` keys present, which is false for this candidate set) and needs the same
+     non-hive-tail venue/instrument_type derivation `migration_orphan_sweep.py::classify_object()` already has
+     (`_backfill_parser()`), then to build the FULL canonical path from `unified_api_contracts.canonical_path_templates`
+     rather than a partial insert-only string splice. Filed as a properly-scoped follow-up todo below (fix stays
+     separate from this diagnostic-only todo — no delete/apply run, per the plan's own scope). **Secondary, non-blocking
+     observation**: `_source_by_cell_from_manifest` itself reads the manifest via `pd.read_parquet(io.BytesIO(raw))`
+     (all ~40 columns) then `.to_dict("records")` over ~7M rows — slow (a column-projected equivalent completed in ~40s
+     CPU vs. this pattern not finishing within a 2-minute bound in this session's own timing) but NOT the root cause of
+     the 0% measurement (the cell lookup itself, once it completes, correctly resolves 900/900 as shown in step 2) —
+     worth a P3 efficiency cleanup riding the same fix, not filed as its own todo to avoid a bundled/unscoped change.
 - **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA, valid — re-verified,
   unchanged.** Sole open checkbox (the legacy-twin bucket DELETE todo) re-read end-to-end via an independent sub-agent
   classification; count reconciled (1/1). The delete gate still correctly does not clear — twin-coverage remains
@@ -266,3 +337,14 @@ restated here.
   content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:1edcd67dbf5276f3]: **KEEP-NA,
+  valid -- fresh full read found a NEW item the hash-check timing gap hid from every prior pass.** The 08-09 marker
+  above reaffirmed via hash-diff only, computed BEFORE a same-day root-cause investigation
+  (`tradfi_satellite_ao_dispatch_batch7-003`) added a brand-new second todo
+  (`cleanup_legacy_twins.py:: canonical_twin_path()` pre-hive shape lookup bug) that no audit pass had yet assessed --
+  this pass is the first fresh full read since. Todo 1 (the destructive 3-bucket delete) stays DEPENDENCY_BLOCKED,
+  established reasoning unchanged (twin-coverage last measured 0% vs required 100%). Todo 2 is tagged
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE, high confidence (root cause fully diagnosed with before/after path evidence via
+  `gcs_describe_object`, fix reuses an existing derivation helper + an existing UAC SSOT, crisp done-when) -- but per
+  the whole-doc RECLASSIFY rule, 1-of-2 bounded keeps the doc KEEP-NA; flagging for a future `/ag-closeout-audit`
+  satellite-extraction pass (not this skill's mechanism) rather than promoting unilaterally. `assigned_vm` unchanged.

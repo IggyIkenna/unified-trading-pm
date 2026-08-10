@@ -353,3 +353,15 @@ still in flight.
   `agent-orchestrator/data/state/state.db`, read-only throughout, no writes to live server state.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, CONFLICT-PARKED, re-affirmed —
+  verified both `ao_satellite_ao_dispatch_batch5_2026_08_03.md` and `batch6_2026_08_04.md`: batch5 is now
+  `status: active`/`assigned_vm: planning` (its own `[DATA] P2` diagnostic todo for this doc, cited by name, is
+  already `[x]` done — see the 2026-08-08 diagnostic entry above). Batch6 is now fully `status: active` with all 10
+  of its own todos `[x]` done — but batch6's Deferred § "Conditionally gated" list still names this doc's remaining
+  `[CODE] P2` item (the actual root-cause fix, gated on the diagnostic) as NOT one of the 10 items batch6 drafted;
+  it stayed deferred there, unclaimed by any dispatched todo. The code fix itself remains genuinely gated: it touches
+  shared `/done`-handler ground (`_done_one_off`/`find_active_agent_for_session`), a fleet-wide dispatch-critical-path
+  change, and the diagnostic surfaced 3 distinct proximate mechanisms (slot-reuse collision, plain silent loss,
+  context-saturation wedge-kill) converging on one terminal event — the actual fix approach (widen the AgentRow status
+  filter vs. block the transition vs. something else) is still an open design call, not reduced to a single
+  mechanical change. Staying parked.

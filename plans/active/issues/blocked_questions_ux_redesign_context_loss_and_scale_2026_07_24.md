@@ -23,6 +23,7 @@ related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
     /plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md,
+    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 created: 2026-07-24
 author: unknown
@@ -44,6 +45,7 @@ context_scope:
     agent-orchestrator/server/transcript_log.py,
     agent-orchestrator/server/orm.py,
     /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    /plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md,
   ]
 ---
 
@@ -161,25 +163,26 @@ exists" section together before scoping the workstream.
       `tests/test_blocked_claude_session_id_capture.py` proves: capture at creation, survival across a simulated respawn
       (the exact BLK-f09e9ca9 failure mode), and NULL-safety when the slot has no session id. `quality-gates.sh` green.
       Repo: agent-orchestrator.
-- [ ] [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI**, using the
-      `claude_session_id` from the todo above and the already-working `server/transcript_log.py` retrieval primitive
-      (the dashboard's existing "Show log" render, keyed by `claude_session_id` — reuse it, don't rebuild it). Add a
-      "View asking session's transcript" link/button on each open `BlockedRow` card in whichever dashboard component
-      renders the blocked-questions queue (`deployment-ui`), so the operator can jump straight to what the asking agent
-      actually saw, even if that agent/slot is now dead or respawned to a different session. Handle the case where the
-      transcript file has itself rotated out (`claude_session_id` present but no matching JSONL) with a clear
-      "transcript no longer available" state, not a silent failure. **Done when**: a live blocked question shows a
-      working transcript-jump link, a dead-agent/respawned-slot case is manually verified to still resolve to the
-      ORIGINAL session's transcript (not the current occupant's), `pw:L2` Playwright coverage per this workspace's UI
-      gate, and `tsc`/`vitest` clean. Repo: deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column
-      populated first) — sequence via `sequential: true` if these are ever pulled into their own dispatched plan.
-- [ ] [BACKEND] P3. **Cross-question dedup/similarity surfacing.** Add a lightweight similarity signal across open
-      `BlockedRow` entries (per this doc's pain point 3: the same underlying question sometimes gets asked by multiple
-      different agents, or multiple times by different sessions on the same respawned slot) — start with an
-      exact/near-exact `question` text match (normalized whitespace/case) grouped and surfaced as "N other open
-      questions look like this one" on the dashboard queue, rather than a full embedding-similarity system (that's a
-      much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup proves
-      insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
+- [x] ✅ [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI** —
+      agent-orchestrator@c6273b2, using the `claude_session_id` from the todo above and the already-working
+      `server/transcript_log.py` retrieval primitive (the dashboard's existing "Show log" render, keyed by
+      `claude_session_id` — reuse it, don't rebuild it). Add a "View asking session's transcript" link/button on each
+      open `BlockedRow` card in whichever dashboard component renders the blocked-questions queue (`deployment-ui`), so
+      the operator can jump straight to what the asking agent actually saw, even if that agent/slot is now dead or
+      respawned to a different session. Handle the case where the transcript file has itself rotated out
+      (`claude_session_id` present but no matching JSONL) with a clear "transcript no longer available" state, not a
+      silent failure. **Done when**: a live blocked question shows a working transcript-jump link, a
+      dead-agent/respawned-slot case is manually verified to still resolve to the ORIGINAL session's transcript (not the
+      current occupant's), `pw:L2` Playwright coverage per this workspace's UI gate, and `tsc`/`vitest` clean. Repo:
+      deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column populated first) — sequence via
+      `sequential: true` if these are ever pulled into their own dispatched plan.
+- [x] ✅ [BACKEND] P3. **Cross-question dedup/similarity surfacing.** — agent-orchestrator@514df29c07. Add a lightweight
+      similarity signal across open `BlockedRow` entries (per this doc's pain point 3: the same underlying question
+      sometimes gets asked by multiple different agents, or multiple times by different sessions on the same respawned
+      slot) — start with an exact/near-exact `question` text match (normalized whitespace/case) grouped and surfaced as
+      "N other open questions look like this one" on the dashboard queue, rather than a full embedding-similarity system
+      (that's a much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup
+      proves insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
       grouped/flagged in the dashboard queue API response, a regression test covers the grouping logic, and
       `quality-gates.sh` is green. Repo: agent-orchestrator (+ `deployment-ui` render of the grouping signal, small).
 
@@ -236,3 +239,24 @@ exists" section together before scoping the workstream.
       this without a doc split — worth checking before hand-rolling the split).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **2026-08-10 (cross-link, slot-3 interactive)**: linked
+  [`/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`](/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md)
+  in both directions. That plan is a LOCAL/human companion covering a DISJOINT axis — blocked-question **payload
+  sufficiency** (the `plan_health` `doc_drift` path raises undecidable questions) and **condition-derived
+  auto-retirement** (a `doc_drift:<key>` row can never retire, since all three `classify_retirement` exits resolve a
+  `TaskRow`). This doc's remaining scope (transcript-jump, dedup/similarity) is untouched by it; neither supersedes the
+  other. **Correction owed to this doc, tracked as that plan's todo D**: the `[UI] P2` transcript-jump todo says "Repo:
+  deployment-ui" and `repos:` lists `deployment-ui`, but the blocked-question queue is rendered ONLY by
+  `agent-orchestrator/dashboard/src/layout.tsx` (`BlockedCard`) — `deployment-ui` has zero blocked-question code
+  (verified 2026-08-10; its only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx`). Both
+  `ui_developer` workers dispatched onto that todo (slot-11, slot-27, 2026-08-08) declined it as GATED on the backend
+  dependency and neither caught the wrong repo.
+- **2026-08-10 (slot-32, backend_engineer, dispatched onto `-003`)**: shipped the `[BACKEND] P3` dedup/similarity todo —
+  agent-orchestrator@514df29c07. Added `normalize_question_text()` + `group_similar_blocked()` in
+  `server/routes/state.py`, surfacing `BlockedView.similar_ids` (blocked_ids of OTHER open rows whose normalized
+  whitespace/case-folded question text matches) in the `/api/state` `blocked_queue` response, computed once per request
+  over the already-in-memory rows. Regression test `tests/test_blocked_question_similarity_grouping.py` covers the
+  grouping; small `BlockedCard` render flags "N other open questions look like this one". Also hardened
+  `tests/test_tmux_spawn_deepseek_context_window.py` (its two "left alone" tests spuriously failed under a
+  deepseek-worker session's ambient `CLAUDE_CODE_MAX_CONTEXT_TOKENS` — now unset inside the test scripts).
+  `quality-gates.sh` green incl. dashboard tsc + vitest (270 tests).

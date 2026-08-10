@@ -61,15 +61,16 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
 
 ## Todos
 
-- [x] ✅ [UI] P2. Investigate `BL-12` in `codex/.../block-list.md` (grep for it) vs `block-list.ts` — determine whether
-      the code is missing an entry that should exist (add it) or the codex doc is stale (correct the doc), then fix
-      whichever is wrong so both tests pass for the right reason. Gate: `block-list-parity.test.ts` green, `pw:L2 ✓` if
-      the fix touches UI-rendered content per the UI-testing-layers SSOT. **DONE (staleness-recheck 2026-08-09)** —
-      `block-list.ts` carries `BL-12` (comment: "added 2026-08-04, gmx_v2 venue removal") and codex `block-list.md`
-      carries `### BL-12: DeFi perp liquidation capture — no venue`; both id sets (`BL-1`..`BL-10`, `BL-12`, 11 total)
-      match exactly. Runtime-verified for real (not just git-evidence, per the 2026-08-06 audit's own caveat that this
-      was git-suggestive-but-unverified): `npx vitest run     __tests__/scripts/block-list-parity.test.ts` in
-      `unified-trading-system-ui` → **4/4 passed** live.
+- [x] ✅ [UI] P2. Investigate `BL-12` in `/codex/09-strategy/architecture-v2/block-list.md` (grep for it) vs
+      `block-list.ts` — determine whether the code is missing an entry that should exist (add it) or the codex doc is
+      stale (correct the doc), then fix whichever is wrong so both tests pass for the right reason. Gate:
+      `block-list-parity.test.ts` green, `pw:L2 ✓` if the fix touches UI-rendered content per the UI-testing-layers
+      SSOT. **DONE (staleness-recheck 2026-08-09)** — `block-list.ts` carries `BL-12` (comment: "added 2026-08-04,
+      gmx_v2 venue removal") and codex `block-list.md` carries `### BL-12: DeFi perp liquidation capture — no venue`;
+      both id sets (`BL-1`..`BL-10`, `BL-12`, 11 total) match exactly. Runtime-verified for real (not just git-evidence,
+      per the 2026-08-06 audit's own caveat that this was git-suggestive-but-unverified):
+      `npx vitest run     __tests__/scripts/block-list-parity.test.ts` in `unified-trading-system-ui` → **4/4 passed**
+      live.
 
 ## Progress Log
 

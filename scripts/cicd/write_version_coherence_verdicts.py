@@ -79,7 +79,8 @@ def write_verdicts(
                 project_id=project_id,
             )
             written += 1
-        except Exception as err:
+        except Exception as err:  # noqa: broad-except — shard-level isolation: one repo's Firestore
+            # write failure is logged and counted, not fatal — must never blank the other repos
             print(f"  FAILED to write verdict for {repo}: {type(err).__name__}: {err}", file=sys.stderr)
             errors += 1
     return written, errors

@@ -12,7 +12,9 @@
 # ungated. This gate bounds TOTAL concurrent script instances host-wide.
 #
 # Covers:
-#   (A) default cap = physical cores, floored at 4
+#   (A) default cap = floor(physical cores × 0.75), floored at 6 (tightened 2026-08-10,
+#       plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4
+#       — was a flat `cores` with no headroom discount)
 #   (B) QG_TOTAL_GOVERNOR_DISABLE makes acquire/release safe no-ops
 #   (C) acquire/release round-trip in the CURRENT process (token freed after release)
 #   (D) CONCURRENCY: cap=2 — two background holders fill both slots; a third
@@ -36,13 +38,28 @@ export QG_TOTAL_GOVERNOR_DIR="$TMP/total-gate"
     export QG_FORCE_CORES=8
     # shellcheck source=/dev/null
     source "$GOV"
-    eq "default cap == physical cores (8)" 8 "$(_qg_total_k)"
+    # Tightened 2026-08-10 (ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md
+    # todo 4): floor(8 × 0.75) = 6, down from the old flat-`cores` value of 8.
+    eq "default cap == floor(cores x 0.75) (8 cores -> 6)" 6 "$(_qg_total_k)"
+)
+(
+    export QG_FORCE_CORES=16
+    # shellcheck source=/dev/null
+    source "$GOV"
+    # floor(16 x 0.75) = 12 > the floor=6, so the multiplier (not the floor) binds here
+    # — proves the formula actually scales down for bigger hosts, not just clamps to 6.
+    eq "default cap == floor(cores x 0.75) (16 cores -> 12)" 12 "$(_qg_total_k)"
 )
 (
     export QG_FORCE_CORES=2
     # shellcheck source=/dev/null
     source "$GOV"
-    eq "default cap floored at 4 (cores=2)" 4 "$(_qg_total_k)"
+    # Floor raised 4 -> 6 (operator ruling 2026-08-09, see _qg_total_default_cap's own
+    # comment in qg-host-governor.sh) — this assertion was left stale by that change;
+    # fixed in passing while touching this test file for the repo-bucketing regression
+    # (qg_governor_repo_bucketing_falls_back_to_slot_number_2026_08_09.md), unrelated bug.
+    # floor(2 x 0.75)=1 < 6, so the floor still binds and is unchanged by today's tightening.
+    eq "default cap floored at 6 (cores=2)" 6 "$(_qg_total_k)"
 )
 (
     export QG_TOTAL_INSTANCE_CAP=3 QG_FORCE_CORES=8

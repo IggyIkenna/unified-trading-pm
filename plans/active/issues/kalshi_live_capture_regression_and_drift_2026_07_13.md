@@ -44,7 +44,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
+    /plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
     /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
     execution-service/execution_service/sports_execution/adapters/exchanges/kalshi.py,

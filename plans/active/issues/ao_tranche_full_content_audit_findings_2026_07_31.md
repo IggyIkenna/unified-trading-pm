@@ -135,7 +135,8 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
 ## Todos
 
 - [x] ✅ [OPERATOR] P2. **Rule on §1** — confirm the 26-doc exclusion list, or name which should be pulled back into the
-      ao tranche. **RULED 2026-08-06 (operator, interactive): BLANKET CONFIRMATION — all 26 exclusions stand, none
+      ao tranche. **RULED 2026-08-06 (operator, interactive), recorded here in
+      `ao_tranche_full_content_audit_findings_2026_07_31.md`: BLANKET CONFIRMATION — all 26 exclusions stand, none
       pulled back.** The gate offered "an explicit yes/no per contested doc, or a blanket confirmation"; the operator
       chose blanket. Basis: the audit read all 88 candidates individually rather than trusting the filter, and each of
       the 26 carries a stated reason grouped into four coherent categories (4 broad multi-repo audits, 9 PM/audit-
@@ -145,13 +146,14 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
       one. **This changes no work, only tracker ownership**: as §1 itself states, these are exclusions from the ao
       tranche's tracker, not a claim the underlying work does not matter.
 - [x] ✅ [OPERATOR] P2. **Rule on §2** — approve (or defer) the 23-doc `asset_group` retagging pass. **RULED 2026-08-06
-      (operator, interactive): APPROVED, folded into normal issue-doc work — NOT a bulk pass.** Both halves of the gate
-      are answered: go/no-go = GO; who does it = whichever agent next touches each doc for an unrelated reason.
-      Rationale for opportunistic over bulk: the retag is genuinely worth doing (mistagging is what forced this audit in
-      the first place, and every tranche-scoped audit keeps re-inheriting the noise), but a 23-file bulk edit landing
-      against ~15 concurrent slots is a collision magnet for zero urgency. Opportunistic folding reaches the same end
-      state with near-zero contention risk. Standing instruction captured as its own todo below so it survives as
-      tracked work rather than as a decision buried in a Progress Log.
+      (operator, interactive), recorded here in `ao_tranche_full_content_audit_findings_2026_07_31.md`: APPROVED, folded
+      into normal issue-doc work — NOT a bulk pass.** Both halves of the gate are answered: go/no-go = GO; who does it =
+      whichever agent next touches each doc for an unrelated reason. Rationale for opportunistic over bulk: the retag is
+      genuinely worth doing (mistagging is what forced this audit in the first place, and every tranche-scoped audit
+      keeps re-inheriting the noise), but a 23-file bulk edit landing against ~15 concurrent slots is a collision magnet
+      for zero urgency. Opportunistic folding reaches the same end state with near-zero contention risk. Standing
+      instruction captured as its own todo below so it survives as tracked work rather than as a decision buried in a
+      Progress Log.
 - [ ] [DOC] P3. **Standing (no deadline): when you touch any of §2's 23 mistagged docs for any other reason, correct its
       `asset_group` to include `ao` in the same commit.** The authoritative list is §2 of this doc — read it there, do
       not re-derive it. Do NOT open a doc solely to retag it, and do NOT batch these: the 2026-08-06 operator ruling
@@ -205,3 +207,9 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   genuinely open. §4 (flip 6 MOVED items + fix a stale count) is the one purely mechanical item, flagged separately
   below as MISCLASSIFIED_LIKELY_AO_ELIGIBLE — consistent with this doc's own established reasoning that the whole doc
   still correctly stays NA since `assigned_vm` is doc-granular and the other open items are judgment-gated.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — §3 and §4 are both now `[x]`
+  (done 2026-08-08). The sole remaining open item is the standing §2 opportunistic-retag todo, which is explicitly
+  NOT a standalone dispatchable task by its own text ("Do NOT open a doc solely to retag it, and do NOT batch these"
+  — the 2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file
+  collision magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted
+  without violating the instruction itself.

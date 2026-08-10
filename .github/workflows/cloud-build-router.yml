@@ -47,8 +47,9 @@ permissions:
 # repository_dispatch payload is permanently lost for the cancelled run).
 # Scoping to the repo name means same-repo builds serialise (only one {repo}-build can be
 # in-flight or pending at a time), while different repos build concurrently — no eviction risk.
-# The deployed_versions manifest write is per-repo-key (no cross-repo merge conflict) and
-# already has a soft push (`|| true`) — no regression from decoupling the manifest-update group.
+# (The deployed_versions manifest write was RETIRED 2026-08-10 — see dual-cloud-image-builds.md
+# Provenance; the per-repo-key note is historical. The manifest-update concurrency group was
+# already decoupled from the payload-routing group.)
 # SSOT: cicd_consolidated_remaining_2026_06_24.md § WS-B #27 "cloud-build-router manifest-update eviction".
 concurrency:
   group: cloud-build-router-${{ github.event.client_payload.repo || github.run_id }}
@@ -279,7 +280,9 @@ jobs:
 
           echo "Lower-level repos: $LOWER_LEVEL_REPOS"
 
-          # Check deployed_versions for each lower-level non-library repo
+          # Check released-version registry for each lower-level non-library repo. The old
+          # `.deployed_versions.prod` provenance signal was retired 2026-08-10 (never populated;
+          # field removed) — the released `.versions` registry is the live ordering signal now.
           BLOCKING_REPOS=""
           IFS=',' read -ra DEP_REPOS <<< "$LOWER_LEVEL_REPOS"
           for dep in "${DEP_REPOS[@]}"; do
@@ -289,15 +292,14 @@ jobs:
               continue
             fi
 
-            # Check if this dep has a deployed version in prod
-            DEPLOYED_VERSION=$(jq -r --arg dep "$dep" '.deployed_versions.prod[$dep].version // "none"' workspace-manifest.json 2>/dev/null || echo "none")
+            # Check if this dep has a released version
             MANIFEST_VERSION=$(jq -r --arg dep "$dep" '.versions[$dep] // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
 
-            if [ "$DEPLOYED_VERSION" = "none" ] || [ "$DEPLOYED_VERSION" = "null" ]; then
-              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no prod deployment recorded"
-              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-deployed) "
+            if [ "$MANIFEST_VERSION" = "unknown" ] || [ "$MANIFEST_VERSION" = "null" ]; then
+              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no released version recorded"
+              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-released) "
             else
-              echo "  OK: $dep deployed=$DEPLOYED_VERSION manifest=$MANIFEST_VERSION"
+              echo "  OK: $dep released=$MANIFEST_VERSION"
             fi
           done
 
@@ -547,7 +549,7 @@ jobs:
               --project="$GCP_PROJECT" \
               --region="$region" \
               --branch="$BRANCH" \
-              --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+              --substitutions="_VERSION=${VERSION},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading-system,_REPO_NAME=${REPO},_ENV=${ENV}" \
               --format="value(metadata.build.id)" \
               2>/tmp/build_trigger_err.txt; then
               trigger_output=$(cat /tmp/build_trigger_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
@@ -634,7 +636,44 @@ jobs:
               # was `source.revision must be specified` (the --branch gap fixed above). Surface the
               # RAW error text so a future genuinely-different failure isn't mis-diagnosed the same
               # way (single line, capped — this becomes a Slack message body).
-              ERR_DETAIL="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null | cut -c1-300 || echo "")"
+              # STRIP gcloud's credential preamble BEFORE setting the output (2026-08-10). gcloud
+              # appends "This command is authenticated as <SA-email> using the credentials in
+              # /home/runner/.../gha-creds-<id>.json" to every error. The SA email is a registered
+              # secret, so Actions MASKS it — and a masked value makes Actions refuse the output
+              # entirely: `##[warning]Skip output 'build_error_detail' since it may contain secret`.
+              # The output then arrives EMPTY, which is exactly what the 2026-07-27 fix above was
+              # added to prevent. Observed live 2026-08-10 13:09Z (run 31391433509): the real error
+              # was a clean `NOT_FOUND`, but the CRITICAL Slack alert rendered "Actual error: ``"
+              # and its own triage instructions ("If that says NOT_FOUND ... any OTHER error ...")
+              # were unusable, so the alert could not distinguish a deleted trigger from a broken
+              # invocation — the precise ambiguity it exists to resolve.
+              # Keep only the gcloud diagnostic itself: drop the preamble, and prefer the bare
+              # status code when one is present so the message stays short and secret-free.
+              # SECURITY — defence in depth, in this order:
+              #   1. Actions' own masking still runs AFTER everything below. This code cannot
+              #      "unmask" anything: if a secret survives the scrub, Actions still refuses the
+              #      output and the fallback fires. Stripping only decides whether the NON-secret
+              #      part reaches Slack; it can never widen what a secret-bearing string exposes.
+              #   2. The preamble strip is a DENYLIST keyed on gcloud's current wording, so a
+              #      future gcloud release that re-words or re-orders that sentence would slip
+              #      through it. The scrub below therefore redacts the two things that are
+              #      sensitive REGARDLESS of surrounding wording — the service-account identity and
+              #      the on-disk credential path — so a wording change degrades to a redacted
+              #      message rather than a leaked one.
+              # This message is posted to a Slack channel, so "fails closed to redacted" is the
+              # only acceptable failure mode.
+              ERR_RAW="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null || echo "")"
+              ERR_DETAIL="$(printf '%s' "$ERR_RAW" \
+                | sed -E 's/[[:space:]]*This command is authenticated as.*$//' \
+                | sed -E 's#[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}#<redacted-account>#g' \
+                | sed -E 's#(/[^[:space:],]*(gha-creds|credentials)[^[:space:],]*)#<redacted-credential-path>#g' \
+                | sed -E 's#/[^[:space:],]*\.json#<redacted-path>#g' \
+                | cut -c1-300)"
+              # Fall back to the status code alone if stripping left nothing usable.
+              if [ -z "${ERR_DETAIL// /}" ]; then
+                ERR_DETAIL="$(printf '%s' "$ERR_RAW" | grep -oE '(NOT_FOUND|INVALID_ARGUMENT|PERMISSION_DENIED|FAILED_PRECONDITION|RESOURCE_EXHAUSTED|UNAVAILABLE)' | head -1)"
+                [ -z "$ERR_DETAIL" ] && ERR_DETAIL="(gcloud error text was fully redacted — see the route-build step log)"
+              fi
               echo "build_error_detail=${ERR_DETAIL}" >> "$GITHUB_OUTPUT"
             fi
             exit 0
@@ -693,8 +732,7 @@ jobs:
       # ──────────────────────────────────────────────────────────────
       # Task 3 (hardening): Post-deploy health check polling
       # Polls /health endpoint for up to 5 min after Cloud Build
-      # success. Only proceeds to smoke test + deployed_versions
-      # update if health check passes.
+      # success. Only proceeds to smoke test if health check passes.
       # ──────────────────────────────────────────────────────────────
       - name: "Post-deploy: Health check polling (5 min timeout)"
         id: health-check
@@ -853,44 +891,6 @@ jobs:
           bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
           # Telegram alert migrated to notify-emergency-resume job
 
-      - name: Update manifest on build success (gated on health + smoke)
-        if: |
-          steps.route.outputs.repo_type != 'library' &&
-          steps.docker-build.outputs.build_exit_code == '0' &&
-          steps.docker-build.outputs.build_triggered == 'true' &&
-          (steps.health-check.outputs.health_check_passed == 'true' || steps.health-check.outputs.health_check_passed == 'skip') &&
-          (steps.smoke-test.outputs.smoke_test_passed == 'true' || steps.smoke-test.outputs.smoke_test_passed == '')
-        run: |
-          set -euo pipefail
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          VERSION="${{ steps.route.outputs.version }}"
-          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
-          BUILD_ID="${{ steps.docker-build.outputs.build_id }}"
-
-          # Write deployed_versions back to manifest (populate-deployed-versions)
-          cd "${GITHUB_WORKSPACE}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          jq --arg env "${ENV}" \
-             --arg repo "${REPO}" \
-             --arg version "${VERSION}" \
-             --arg tag "${IMAGE_TAG}" \
-             --arg ts "${DEPLOYED_AT}" \
-             --arg build_id "${BUILD_ID}" \
-             '(.deployed_versions[$env] //= {}) | .deployed_versions[$env][$repo] = {version: $version, image_tag: $tag, deployed_at: $ts, build_id: $build_id}' \
-             workspace-manifest.json > workspace-manifest.json.tmp \
-            && mv workspace-manifest.json.tmp workspace-manifest.json \
-            && echo "deployed_versions[${ENV}][${REPO}] = ${VERSION}" \
-            || echo "WARNING: failed to update deployed_versions (non-fatal)"
-          if ! git diff --quiet workspace-manifest.json; then
-            git add workspace-manifest.json
-            git commit -m "chore: update deployed_versions[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
-            git push origin main || true
-          fi
-
       # Telegram alerts migrated to separate notification jobs below
 
       - name: Trigger Cloud Build (Python wheel — library)
@@ -951,9 +951,10 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   # BUILD-ONLY PRE-CUTOVER gate (2026-06-24): the tier-order check flags every lower-tier dep whose
-  # `deployed_versions.prod[dep]` is unset — but PRE live-cutover NOTHING is deployed to prod by design
+  # released version (`.versions[dep]`, formerly `.deployed_versions.prod[dep]` — provenance field
+  # RETIRED 2026-08-10) is unset — but PRE live-cutover NOTHING is released to prod by design
   # (core service/trading repos are intentionally build-only: a `<repo>-build` trigger, no `<repo>-prod`
-  # deploy trigger). So "all deps (not-deployed)" is the EXPECTED steady state, not a tier-ORDER violation,
+  # deploy trigger). So "all deps (not-released)" is the EXPECTED steady state, not a tier-ORDER violation,
   # and the page fired on EVERY prod build for every service = pure noise about a known intentional posture
   # (e.g. deployment-service blocked by 13 not-deployed services). Gate it behind the SAME explicit opt-in
   # repo variable as the "trigger not configured" page below (`CLOUD_BUILD_PROD_DEPLOY_EXPECTED`, default
@@ -990,8 +991,7 @@ jobs:
       message:
         "Post-Deploy Health Check FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
-        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
-        NOT updated."
+        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min."
       # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
       # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
       subject_repo: ${{ needs.route-build.outputs.repo }}
@@ -1010,7 +1010,7 @@ jobs:
       message:
         "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
-        or response shape failed. deployed_versions NOT updated."
+        or response shape failed."
       # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
       # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
       subject_repo: ${{ needs.route-build.outputs.repo }}

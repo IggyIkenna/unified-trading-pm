@@ -13,8 +13,8 @@ summary: >-
   themselves, not orphans); 10 were deep-classified via a Phase-1 Workflow (10 agents, one per doc). All 10 verdicted
   `exclude_cross_cutting` — 9 are genuinely multi-AG content already claimed by sibling tranches' ACTIVE covering docs
   (cefi batch6/7/8, tradfi batch7, sports batch10, instruments batch1, infra batch1, cross-cutting closeout), 1
-  (`issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`, filed this morning) is orphaned
-  EVERYWHERE — no covering plan in any tranche claims it — but is cross-cutting-owned (parent_epic
+  (`/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`, filed this
+  morning) is orphaned EVERYWHERE — no covering plan in any tranche claims it — but is cross-cutting-owned (parent_epic
   infrastructure_master, 5-AG tag) and not AO-eligible as scoped (root-cause investigation needing VM-level/root
   access). The linkage-gate (`check_ag_closeout_linkage.py`) flags 9 defi docs; all 9 are accounted: 7 named in
   batch9/batch10 Deferred sections (deferred ≠ orphaned), 2 covered by batch9's own active todos (swaps-backfill-1/2
@@ -51,7 +51,7 @@ created: "2026-08-06"
 author: unknown
 last_updated: "2026-08-06"
 parent_epic: defi_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: local-only
 priority: P2
 estimate_class: infra
@@ -68,7 +68,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -94,7 +94,7 @@ the sibling workers' Phase 0s).
 
 ## New findings this run
 
-### 1. `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — orphaned EVERYWHERE, cross-cutting-owned (operator-gated investigation, re-scopable)
+### 1. `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — orphaned EVERYWHERE, cross-cutting-owned (operator-gated investigation, re-scopable)
 
 **Verdict**: orphaned_never_touched in every tranche's covering set; `exclude_cross_cutting` for defi (owner =
 cross-cutting via `parent_epic: infrastructure_master`, asset_group `[cefi, defi, tradfi, sports, prediction]`).
@@ -155,6 +155,32 @@ operator ruling.
   regression (`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`); its 9 defi-tagged flags are all
   accounted above (7 deferred + 2 batch9-covered), i.e. zero genuine defi orphans there.
 
+## Todos
+
+> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
+> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
+> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
+> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
+> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
+> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
+> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
+> plan's own todo 17 once the work lands — do not flip them early.
+
+- [ ] [DOC] P3. **Fix stale "0 open todos" claim for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
+      `tradfi_consolidated_closeout_2026_07_18.md`** (Finding 2/informational) — line 745 there still reads "— 0 open
+      todos (closed/archived/record-only)," but the doc actually carries 1 open `[SCRIPT] P2` todo (widen the phantom
+      audit to the full ~47-bucket kind×AG matrix). Verified 2026-08-10: still stale. Not defi's write (primary-owner
+      rule — the fix belongs to the tradfi tranche); flagging for its next `/ag-closeout-audit`/`/plan-reconcile` pass.
+      Note: the cefi closeout no longer references this doc at all (already resolved or removed there), only tradfi's
+      citation is stale.
+
+**Already resolved (Finding 1)**: `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was
+root-caused, fixed, and archived 2026-08-09
+(`plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`,
+`status: resolved`, companion finalize plan
+`mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`) — confirmed root cause was
+OOM (rc=137) on a dedicated VM, not the original shared-host kill mystery; no action needed.
+
 ## Ledger (HARD rule — assert equality)
 
 - parked_findings this run: **2** (1 operator-gated orphan finding + 1 informational cross-tranche note)
@@ -183,3 +209,20 @@ operator ruling.
   run report (findings ledger, not a task list). 2 findings: 1 orphaned-elsewhere item (cross-cutting-owned), 1
   informational note about sibling-tranche false-0-open-todos claims. Nothing to reclassify. Doc stays
   `assigned_vm: NA`.
+- **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (1 already resolved,
+  cited inline); Finding 1 (mtds_pipeline_check orphan) confirmed fully resolved + archived 2026-08-09, cited with
+  evidence; Finding 2 (stale tradfi closeout claim) confirmed still stale on re-verification, now a real `- [ ]`
+  checkbox tagged for the tradfi tranche's write.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: **RECLASSIFY,
+  `assigned_vm: NA -> planning`.** The doc's sole remaining open todo (fix the stale "0 open todos" claim for
+  `phantom_audit_estate_coverage_gap_2026_07_10.md` at `tradfi_consolidated_closeout_2026_07_18.md:745`) is a fully
+  bounded, mechanical `[DOC]` P3 single-line text fix — exact target file+line, exact stale text, exact correct fact all
+  independently re-verified live this pass (`tradfi_consolidated_closeout_2026_07_18.md:745` still reads "0 open todos";
+  `phantom_audit_estate_coverage_gap_2026_07_10.md` still carries exactly 1 open `- [ ] [SCRIPT] P2` checkbox, line
+  180). No judgment call, no operator gate. Conflict-check clear: `tradfi_consolidated_closeout_2026_07_18.md` is itself
+  `assigned_vm: NA`, unlocked, `status: active`; neither `defi_satellite_ao_dispatch_batch9_2026_08_06.md` nor
+  `…batch10_2026_08_06.md` carries any todo referencing this fix; `defi_satellite_ao_dispatch_batch11_2026_08_09.md`
+  only cites this doc's path in passing (line 434), no duplicate claim. The todo targets a different tranche's doc
+  (tradfi) per the doc's own stated primary-owner note, but that does not block AO-dispatch — it is still a bounded,
+  worker-executable edit, just not one `defi`'s own audit process would perform unilaterally mid-run.
+  `unified-trading-pm@<pending — see session push>`.

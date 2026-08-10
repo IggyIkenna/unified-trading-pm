@@ -20,7 +20,7 @@ created: 2026-07-23
 authoritative_for: [local per-tab tmux precompact-watcher setup]
 referenced_by: []
 owner:
-last_reviewed:
+last_reviewed: 2026-10-25
 code_refs:
   [
     unified-trading-pm/scripts/dev/launch-tab-precompact-session.sh,

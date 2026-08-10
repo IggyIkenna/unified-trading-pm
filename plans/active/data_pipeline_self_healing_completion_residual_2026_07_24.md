@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [data-pipeline, self-healing, actuators, monitoring, plan-split, residual]
 related:
   [
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
@@ -46,7 +46,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/data-pipeline-alerts.registry.yaml,
@@ -58,7 +58,7 @@ context_scope:
 # Data-Pipeline Self-Healing Completion — Residual Actuator Wiring
 
 > **Forked 2026-07-24** from
-> [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+> [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 > as 1 of a 4-way split (+ 1 excise) approved by the operator via the plan line-cap remediation triage
 > (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 9). The detect→auto_recover→file_issue→page loop
 > is LIVE end-to-end (see the parent plan's "Progress Log — LOOP LIVE END-TO-END (VERIFIED, 2026-06-23)"); this plan
@@ -116,13 +116,16 @@ context_scope:
       Secret Manager. Best-effort: a missing token (token-less Cloud Run Job) / SM-denied / network failure returns
       `{dispatched: False}` and NEVER breaks the finding (mirrors the alerting soft-gates) — Fix 2's PlanRegenLoop path
       still picks it up. — deployment-service@1b529e4
-- [ ] [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half** (frontmatter
+- [x] ✅ [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half** (frontmatter
       `parent_epic`/`assigned_vm` + `- [ ] [CODE] P1.` todo + `target_repo` routing + new
-      `test_file_escalation_issue_is_actionable`) — code is WRITTEN + QG-green (`quality-gates.sh --no-fix` exit 0 31s)
-      but quickmerge is **🟡 BLOCKED**: e2e's pre-flight refuses while peer `strategy-service` WIP is uncommitted (never
-      quickmerge with dirty deps). Re-run
-      `quickmerge --agent --files 'scripts/audit/_dp_common.py tests/unit/test_dp_audit.py'` from e2e-testing once
-      `strategy-service` is clean. Provenance: slot-3 escalation-loop 2026-06-23. — e2e-testing
+      `test_file_escalation_issue_is_actionable`). **RECONCILED 2026-08-09 from
+      `cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1 (slot-6) — PREMISE WAS STALE, already shipped,
+      no D16 carve-out push needed.** Re-verified in this slot's own fresh-pulled e2e-testing clone (HEAD `78f7f2b`):
+      `git merge-base --is-ancestor 821b73a HEAD` → true; `scripts/audit/_dp_common.py` carries the
+      `parent_epic`/`assigned_vm` frontmatter (lines 512-513) + `target_repo` routing (line 469) +
+      `tests/unit/test_dp_audit.py::test_file_escalation_issue_is_actionable` (line 1229) exists — all landed
+      **e2e-testing@821b73a** (2026-06-23), an ancestor of `origin/live-defi-rollout` HEAD. No code change —
+      verification only. — e2e-testing
 - [x] ✅ [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** — deployment-service@3045b7f: CLI
       `_launcher_for_vm` (wraps `resolve_launcher_for_vm`, None→"") now passed into BOTH
       `exit_code_fleet_monitor.sweep` + `heartbeat_stall_watcher.sweep` (was `None`) → stall/OOM findings carry
@@ -171,30 +174,30 @@ context_scope:
       (`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` todo 5, deployment-service@f2d094e).
 
       **⚠️ CORRECTED 2026-07-26 (`/ag-closeout-audit cross-cutting`) — the "already applied" claim below was MEASURABLY
-                                                                                                                                                                              FALSE; the OOM fix was NOT live at that point.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
-                                                                                                                                                                              and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH returned
-                                                                                                                                                                              `cpu=2;memory=4Gi`; (2) the tracked `.tf` still read `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
-                                                                                                                                                                              So the 4 dp-audit jobs remained OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
-                                                                                                                                                                              monitoring was silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
-                                                                                                                                                                              (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
-                                                                                                                                                                              **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
-                                                                                                                                                                              `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
-                                                                                                                                                                              clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
-                                                                                                                                                                              blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
-                                                                                                                                                                              `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
-                                                                                                                                                                              genuinely closed.
+                                                                                                                                                                                                          FALSE; the OOM fix was NOT live at that point.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
+                                                                                                                                                                                                          and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH returned
+                                                                                                                                                                                                          `cpu=2;memory=4Gi`; (2) the tracked `.tf` still read `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
+                                                                                                                                                                                                          So the 4 dp-audit jobs remained OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
+                                                                                                                                                                                                          monitoring was silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
+                                                                                                                                                                                                          (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
+                                                                                                                                                                                                          **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
+                                                                                                                                                                                                          `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
+                                                                                                                                                                                                          clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
+                                                                                                                                                                                                          blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
+                                                                                                                                                                                                          `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
+                                                                                                                                                                                                          genuinely closed.
 
-                                                                                                                                                                      **✅ MEMORY/CPU BUMP NOW SHIPPED 2026-07-26.** Re-measured before touching anything: ALL 4 jobs were live
-                                                                                                                                                                              OOM-killing on their most recent execution ("The configured memory limit was reached", confirmed via
-                                                                                                                                                                              `gcloud run jobs executions describe` on `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
-                                                                                                                                                                              `-dp-manifest-hygiene-full`, and `-dp-reprobe-empty` — the last one OOM-killed on 5 consecutive daily runs
-                                                                                                                                                                              2026-07-22..07-26). Bumped all 4 job modules in the `.tf` to `cpu="4"`/`memory="16Gi"`
-                                                                                                                                                                              (`dp_daily_digest_job`, `dp_manifest_hygiene_changed_job`, `dp_manifest_hygiene_full_job`,
-                                                                                                                                                                              `dp_reprobe_empty_job`). `ENV=prod ./tofu.sh plan -target=...` (all 4 modules) showed exactly
-                                                                                                                                                                              `0 to add, 4 to change, 0 to destroy` — additive in-place resource-limit change only, no
-                                                                                                                                                                              `[OPERATOR]` gate required per this todo's own scoping. Applied via `ENV=prod ./tofu.sh apply` (targeted).
-                                                                                                                                                                              Post-apply `gcloud run jobs describe` confirms all 4: `cpu=4;memory=16Gi`. `.tf` committed +
-                                                                                                                                                                              quickmerged — deployment-service@f2d094e, `quality-gates.sh` green (sentinel-verified). — deployment-service
+                                                                                                                                                                                                  **✅ MEMORY/CPU BUMP NOW SHIPPED 2026-07-26.** Re-measured before touching anything: ALL 4 jobs were live
+                                                                                                                                                                                                          OOM-killing on their most recent execution ("The configured memory limit was reached", confirmed via
+                                                                                                                                                                                                          `gcloud run jobs executions describe` on `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
+                                                                                                                                                                                                          `-dp-manifest-hygiene-full`, and `-dp-reprobe-empty` — the last one OOM-killed on 5 consecutive daily runs
+                                                                                                                                                                                                          2026-07-22..07-26). Bumped all 4 job modules in the `.tf` to `cpu="4"`/`memory="16Gi"`
+                                                                                                                                                                                                          (`dp_daily_digest_job`, `dp_manifest_hygiene_changed_job`, `dp_manifest_hygiene_full_job`,
+                                                                                                                                                                                                          `dp_reprobe_empty_job`). `ENV=prod ./tofu.sh plan -target=...` (all 4 modules) showed exactly
+                                                                                                                                                                                                          `0 to add, 4 to change, 0 to destroy` — additive in-place resource-limit change only, no
+                                                                                                                                                                                                          `[OPERATOR]` gate required per this todo's own scoping. Applied via `ENV=prod ./tofu.sh apply` (targeted).
+                                                                                                                                                                                                          Post-apply `gcloud run jobs describe` confirms all 4: `cpu=4;memory=16Gi`. `.tf` committed +
+                                                                                                                                                                                                          quickmerged — deployment-service@f2d094e, `quality-gates.sh` green (sentinel-verified). — deployment-service
 
 - [x] ✅ [PERF] P2. **DeFi/observability: `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` memory
       antipattern** — the digest reads the full index (`columns=None`) then count-EXPANDS into per-row Python lists
@@ -222,23 +225,44 @@ context_scope:
 
 ## Later-surfaced self-healing deployment residuals (2026-06-23/24, still open)
 
-- [ ] [INFRA] P1. **SCHEDULED consolidator asset_group guard — deliver via MTDS image (in flight 2026-06-23).** The ~40
-      `uts-prod-manifest-consolidator-*` Cloud Run jobs run `unified_trading_library.manifest_consolidator` from
-      `market-tick-data-service:latest` (NOT the deployment-service-jobs image). The v9 blank-asset_group self-heal
-      (`_asset_group_for_market_data_bucket`, UTL `7b2306c3`/`6acbb9ad`) is in UTL `:latest` (`3f2b47f2`) but NOT the
-      MTDS-pinned base `af5f6c1e`. Bumped MTDS `Dockerfile` base-digest `af5f6c1e`→`3f2b47f2`
-      (market-tick-data-service@81dbe37) + direct-built `market-tick-data-service:latest` from LDR `b3f67ac` (build
-      `beb0b08e`). **Flip when**: build SUCCESS + new MTDS:latest digest verified to differ + one consolidator execution
-      (e.g. `uts-prod-manifest-consolidator-instruments-defi`) runs exit 0 on the new image. — market-tick-data-service
+- [x] ✅ [INFRA] P1. **SCHEDULED consolidator asset_group guard — deliver via MTDS image (in flight 2026-06-23).**
+      **VERIFIED 2026-08-09 (slot-8), all 3 stated Done-when parts confirmed live** — the original build id `beb0b08e`
+      has aged out of Cloud Build's list retention, but the plan's own allowance ("or a fresher one has since landed")
+      covers this: `market-tick-data-service@81dbe37` (the `af5f6c1e`→`3f2b47f2` digest-bump commit) is a confirmed
+      ancestor (`git merge-base --is-ancestor 81dbe37 HEAD` → true) of every build since, and the current Dockerfile pin
+      has advanced further still (`bca66133...`, i.e. past `3f2b47f2` — the guard has been baked into every
+      `market-tick-data-service:latest` build for weeks). (a) build SUCCESS: build
+      `393127d5-b5f6-4a4e-9543-b1382e43eca2` (region `asia-northeast1`, commit `7f699fc`) SUCCESS, finished
+      2026-08-09T16:36:19Z, pushing the current `:latest` tag (digest `sha256:da82576a...`) — plus 10+ other SUCCESS
+      builds earlier the same day. (b) digest differs from pre-bump `af5f6c1e`: confirmed — every digest observed today
+      (`sha256:90a1c00e...`, `sha256:da82576a...`, etc.) is unrelated to the pre-bump base. (c) one consolidator
+      execution exit 0 on the new image: `uts-prod-manifest-consolidator-instruments-defi-pt6xw` completed
+      `2026-08-09T16:00:56Z` with `completionStatus: EXECUTION_SUCCEEDED`, running image digest `sha256:90a1c00e...`
+      built from commit `e24199d` — confirmed a descendant of the guard-bump commit
+      (`git merge-base --is-ancestor 81dbe37 e24199d` → true). Bonus finding: Cloud Run Jobs re-resolve the `:latest`
+      tag to a fresh digest AT EACH EXECUTION (not pinned at job-deploy time) — confirmed because that execution ran a
+      digest from a 13:22 build, not whatever was `:latest` when the job spec was last updated — so the guard has been
+      live in every consolidator run since the ordinary build pipeline first carried it past `81dbe37`, not just a
+      one-off manual verification. — market-tick-data-service (no code change — verification only) Evidence:
+      cloudbuild=393127d5-b5f6-4a4e-9543-b1382e43eca2
 
 - **Follow-up (tracked below)**: the e2e-audit Cloud Run image should be rebuilt from clean LDR so the daily reprobe
   cron runs with all 5 hooks wired (auto-flip is proof-gated → safely no-ops on the current image for tradfi/prediction,
   which both return reached_source=False, so this is a correctness-completeness rebuild, not an outage).
-- [ ] [INFRA] P2. **Rebuild e2e-audit:latest from clean LDR** so the daily reprobe cron loads all 5 per-AG hooks
+- [x] ✅ [INFRA] P2. **Rebuild e2e-audit:latest from clean LDR** so the daily reprobe cron loads all 5 per-AG hooks
       (currently the image predates `e2e-testing@5db3860`; tradfi/prediction hooks return reached_source=False so the
       missing load is a no-op for them today, but a defi/cefi/sports hook update needs the rebuild to take effect).
-      Reuse the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. — e2e-testing,
-      deployment-service
+      Reuse the `cloudbuild-e2e-audit.yaml` build→smoke→push from the IMAGE-GAP-CLOSED run. **RECONCILED 2026-08-09 from
+      `cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 (slot-18).** Built from clean
+      `e2e-testing@78f7f2b` (`origin/live-defi-rollout` HEAD, all 5 `_REPROBE_HOOK_MODULES` present). Build
+      `1057b974-93b2-4d54-8540-a9c18757f43a` (asia-northeast1) — independently re-verified `SUCCESS` via
+      `gcloud builds describe` this pass. Digest changed
+      `sha256:6b52baca...`→`sha256:0fc05321d5790b35875d1330424348abc0abc4be873b17a449b44b909458e3ce`; in-build smoke
+      confirmed all 3 audit scripts import + arg-parse OK; cron pickup confirmed via manual
+      `gcloud run jobs execute uts-prod-dp-reprobe-empty --wait` (execution `uts-prod-dp-reprobe-empty-r2gsn` ran the
+      new digest — that execution's own unrelated OOM failure is tracked separately in
+      `/plans/active/issues/dp_reprobe_empty_oom_regression_unbounded_manifest_read_2026_08_09.md`). — e2e-testing,
+      deployment-service. Evidence: cloudbuild=1057b974-93b2-4d54-8540-a9c18757f43a
 
 - [x] ✅ [CODE] P1. **Package the self-heal actuators (+ launchers) into the runtime image** so the `auto_recover` tier
       can actually ACTUATE a relaunch from the Cloud Run monitors —
@@ -300,3 +324,24 @@ context_scope:
   from clean LDR — the latter reads close to AO-eligible on its own, flagging as a MISCLASSIFIED_LIKELY_AO_ELIGIBLE
   candidate for a future pass); 1 is a bounded registry-mode flip gated on confirming each escalation tier is actually
   wired; 1 is an explicit `(stretch)` design item with no forcing function. Mixed doc, stays NA.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: extracted 3 of the 5 remaining open items to
+  [`cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md)
+  (+ gated finalize twin): the e2e `file_escalation_issue` half (now unblocked by today's D16 all-repos dirty-deps
+  direct-push carve-out ruling, 2026-08-08 — a worker can now direct-push past the peer-`strategy-service` dirty-dep
+  block instead of waiting), the `e2e-audit:latest` rebuild (already flagged 2026-08-07 above as
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE, never actioned until now), and the consolidator asset_group-guard MTDS-image
+  verify+flip (has a fully mechanical Done-when). The remaining 2 open items (registry-mode flip gated on tier-by-tier
+  confirmation; the explicit `(stretch)` launch-spec-persist item) are NOT extracted — genuine
+  dependency/no-forcing-function gates the D16/IAM/credential precedents don't touch. Doc stays `assigned_vm: NA`
+  (mixed, 2 genuinely-gated items remain). Source checkboxes for the 3 extracted items stay open here until batch 9's
+  finalize twin reconciles them.
+- **finalize reconciliation 2026-08-09 (`cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md` todo 1)**:
+  batch 9's 3 todos all reached done — flipped this doc's 2 still-open twin checkboxes (the e2e `file_escalation_issue`
+  half; the `e2e-audit:latest` rebuild) with independently re-verified evidence (the consolidator asset_group-guard twin
+  was already flipped by slot-8 in the same commit as batch9's own item 3). Doc now carries exactly 2 open items
+  (registry-mode flip, stretch launch-spec-persist) — does NOT reach 0, so it stays `assigned_vm: NA` and is NOT
+  archived per this todo's own scoping.
+- **batch9 archived 2026-08-09 (slot-11, finalize todo 2)**: `cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md`
+  reached 0 open todos and archived via the standard 6-step ritual to
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md` (finalize twin archived alongside).
+  Updated this doc's one path-shaped referrer link (above, round11 sweep entry) to the new archive location.

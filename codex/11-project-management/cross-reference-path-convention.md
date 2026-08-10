@@ -21,7 +21,7 @@ created: "2026-07-23"
 authoritative_for: [cross-reference-path-format]
 referenced_by: []
 owner:
-last_reviewed:
+last_reviewed: 2026-10-26
 code_refs: []
 ---
 

@@ -23,6 +23,25 @@ plans/archive/. Do not flag it.
 
 Usage:
     python3 scripts/plan-hygiene/check_depends_on_graph.py [--quiet]
+    python3 scripts/plan-hygiene/check_depends_on_graph.py --only <path> [<path> ...]
+
+``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
+precommit-time presence, only the full corpus-wide sweep — so a docs(plans) commit that
+introduced a `depends_on` cycle/self-dep had zero enforcement at commit time, same
+fast-path-blind-to-full-gate pattern as the other checks migrated this evening.
+
+Unlike a single-file content check, a cycle can SPAN multiple files (A depends_on B,
+B depends_on A, where only one of the two is in this commit's staged set) — scoping the
+graph build itself to just the staged files would miss a cycle that only exists when
+combined with the rest of the corpus's unchanged depends_on declarations. So `--only`
+still builds the FULL corpus graph (cheap: local frontmatter reads only, no network,
+~750 docs) exactly like the full-sweep mode, but reports a violation only if it
+ORIGINATES from one of the staged files: a self-dep on a staged file, or a cycle where at
+least one node in the cycle is a staged file. This is the blast-radius-safe shape (a
+pre-existing cycle entirely among files this commit doesn't touch never blocks it) while
+still catching "my edit introduced/is part of a cycle" — the actual growth signal. Since
+a cycle is binary (present/absent, no per-file baseline-debt concept), there is no
+HEAD-vs-current comparison needed here, unlike the growth-ratchet checks.
 """
 
 from __future__ import annotations
@@ -30,6 +49,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 PM = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 LIVE_DIRS = [
@@ -119,13 +139,11 @@ def _collect() -> tuple[dict[str, list[str]], set[str], set[str]]:
     return deps, live, archived
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--quiet", action="store_true")
-    args = parser.parse_args()
-
-    deps, live, archived = _collect()
-
+def _find_violations(deps: dict[str, list[str]], live: set[str]) -> tuple[list[str], list[list[str]]]:
+    """Corpus-wide self-deps + cycles over the LIVE subgraph. Shared by full-sweep mode and
+    `--only` mode so the two can never define "a violation" differently — `--only` filters
+    this SAME unrestricted result down to what touches a staged file, it does not recompute
+    the graph differently."""
     self_deps = sorted(s for s, ds in deps.items() if s in ds)
 
     # iterative DFS over the LIVE subgraph (recursion would risk a deep-corpus stack blowout)
@@ -157,6 +175,48 @@ def main() -> int:
                 stack.pop()
                 if path:
                     path.pop()
+    return self_deps, cycles
+
+
+def _staged_slugs(paths: list[str]) -> set[str]:
+    return {Path(p).stem for p in paths}
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    deps, live, _archived = _collect()
+    self_deps, cycles = _find_violations(deps, live)
+    staged = _staged_slugs(paths)
+
+    flagged_self = [s for s in self_deps if s in staged]
+    flagged_cycles = [cyc for cyc in cycles if staged & set(cyc)]
+
+    hard = len(flagged_self) + len(flagged_cycles)
+    if hard:
+        print(f"❌ check_depends_on_graph (--only): {hard} hard violation(s) touching a staged file:")
+        for cyc in flagged_cycles:
+            print("   CYCLE: " + " -> ".join(cyc))
+            print("      (depends_on gates archival — neither plan can ever close)")
+        for slug in flagged_self:
+            print(f"   SELF-DEPENDENCY: {slug} depends_on itself")
+        print("   Remedy: break the cycle — drop the weaker depends_on edge, or merge the plans.")
+        return 1
+
+    if not quiet:
+        print(f"✅ check_depends_on_graph (--only): 0 cycle/self-dep touching {len(staged)} staged file(s)")
+    return 0
+
+
+def main() -> int:
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    deps, live, archived = _collect()
+    self_deps, cycles = _find_violations(deps, live)
 
     unresolved = sorted({(s, d) for s, ds in deps.items() for d in ds if d not in live and d not in archived})
 

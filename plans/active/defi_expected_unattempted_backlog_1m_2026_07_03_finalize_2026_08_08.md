@@ -70,27 +70,27 @@ is done. Do not start manually before then.
       independently re-verified with cited evidence; any mis-citation found is corrected in the source doc directly.
 
       **DONE 2026-08-08 (slot 30)** — the gate is now genuinely satisfied: the source doc's `[SCRIPT]` todo was
-                                                      completed this session (`unified-api-contracts@768c6f93`), so this re-verification is against real shipped code,
-                                                      not a narrowing note. All 5 points independently re-verified against a fresh
-                                                      `git pull --ff-only origin live-defi-rollout` (`unified-api-contracts` HEAD `768c6f93`):
-                                                      (1) **mis-citation, corrected** — `_INSTRUMENT_TYPE_ALIASES` did NOT gain explicit `a_token`/`debt_token`
-                                                      entries (confirmed absent, `'a_token' in _INSTRUMENT_TYPE_ALIASES` → `False`) — slot 7's 2026-08-08 narrowing
-                                                      already found this unnecessary (the alias table's own identity fallback + `_LENDING_ATOKEN_DEBTTOKEN`'s
-                                                      already-lowercase enum values make an explicit entry redundant) and dropped it from the `[SCRIPT]` todo's scope;
-                                                      point (1) as originally worded does not apply to what was actually built. (2) **true** — live-verified all 5
-                                                      named protocols (AAVE_V3/FLUID/SPARK pre-existing; VENUS/SOLEND newly shipped this session) declare
-                                                      `oracle_prices` in their venue-narrowed `valid_data_types_for_venue_instrument_type` sets. (3) **true** —
-                                                      `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` both return non-`None` frozensets
-                                                      containing `oracle_prices` (live-tested). (4) **true** —
-                                                      `test_lending_a_token_debt_token_exclude_perp_trades` (added this session,
-                                                      `tests/test_valid_data_types_by_instrument_type.py::TestValidDataTypesForVenueInstrumentType`) passes,
-                                                      asserting `perp_trades` excluded from A_TOKEN/DEBT_TOKEN on AAVE_V3/VENUS/SOLEND. (5) **not attempted, per
-                                                      design** — `venue_mapping.DataTypeConfig` still exists; its deletion was correctly deferred (the source todo's
-                                                      own "do not do in this todo" scoping) and filed as its own tracked follow-up doc,
-                                                      `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`, so its absence here is not a finding.
-                                                      Full `quality-gates.sh` green (427s) covering the whole `unified-api-contracts` suite including
-                                                      `is_valid_shard_key`/enumerator tests. Evidence: `unified-api-contracts@768c6f93`,
-                                                      `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`.
+          completed this session (`unified-api-contracts@768c6f93`), so this re-verification is against real shipped code,
+          not a narrowing note. All 5 points independently re-verified against a fresh
+          `git pull --ff-only origin live-defi-rollout` (`unified-api-contracts` HEAD `768c6f93`):
+          (1) **mis-citation, corrected** — `_INSTRUMENT_TYPE_ALIASES` did NOT gain explicit `a_token`/`debt_token`
+          entries (confirmed absent, `'a_token' in _INSTRUMENT_TYPE_ALIASES` → `False`) — slot 7's 2026-08-08 narrowing
+          already found this unnecessary (the alias table's own identity fallback + `_LENDING_ATOKEN_DEBTTOKEN`'s
+          already-lowercase enum values make an explicit entry redundant) and dropped it from the `[SCRIPT]` todo's scope;
+          point (1) as originally worded does not apply to what was actually built. (2) **true** — live-verified all 5
+          named protocols (AAVE_V3/FLUID/SPARK pre-existing; VENUS/SOLEND newly shipped this session) declare
+          `oracle_prices` in their venue-narrowed `valid_data_types_for_venue_instrument_type` sets. (3) **true** —
+          `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` both return non-`None` frozensets
+          containing `oracle_prices` (live-tested). (4) **true** —
+          `test_lending_a_token_debt_token_exclude_perp_trades` (added this session,
+          `tests/test_valid_data_types_by_instrument_type.py::TestValidDataTypesForVenueInstrumentType`) passes,
+          asserting `perp_trades` excluded from A_TOKEN/DEBT_TOKEN on AAVE_V3/VENUS/SOLEND. (5) **not attempted, per
+          design** — `venue_mapping.DataTypeConfig` still exists; its deletion was correctly deferred (the source todo's
+          own "do not do in this todo" scoping) and filed as its own tracked follow-up doc,
+          `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`, so its absence here is not a finding.
+          Full `quality-gates.sh` green (427s) covering the whole `unified-api-contracts` suite including
+          `is_valid_shard_key`/enumerator tests. Evidence: `unified-api-contracts@768c6f93`,
+          `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`.
 
 - [ ] [OPERATOR] P2. **Ask the operator to unlock `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` for
       archival.** The doc carries a genuine `locked_by: live-defi-rollout` / `locked_since: 2026-07-03` lock (per
@@ -100,15 +100,16 @@ is done. Do not start manually before then.
       agents must never unlock a locked plan) and instead filed ephemeral `/blocked` questions (`BLK-3d18ef7c`, then
       `BLK-ce0fe830`) that each vanished from `blocked_queue` unanswered before a ruling landed — the
       pruning-without-resolution failure mode tracked in
-      `issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md`. This `[OPERATOR]` tag
-      replaces that ephemeral approach: per `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`, tagging
-      this todo `[OPERATOR]` auto-seeds a durable `BLK-op-*` blocked-queue row (`slot_id=0`) that survives regen ticks
-      instead of expiring, and the operator can answer it directly from the dashboard (canned option or a
-      reclassify/instruct ruling) rather than a worker re-filing the same question every redispatch. Recommendation:
-      approve — the lock's own value is the branch name (`live-defi-rollout`), not a distinguishing agent claim, and
-      every todo on both docs is genuinely done. Done-when: the operator's ruling is recorded (materializes as a
-      `--ruling` task per the SSOT) and, on approval, `locked_by`/`locked_since` are cleared on the source doc in the
-      same commit that strips this todo's `[OPERATOR]` tag.
+      `plans/archive/2026_08/issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md`
+      (resolved 2026-08-09, `agent-orchestrator@eba48f0`). This `[OPERATOR]` tag replaces that ephemeral approach: per
+      `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`, tagging this todo `[OPERATOR]` auto-seeds a
+      durable `BLK-op-*` blocked-queue row (`slot_id=0`) that survives regen ticks instead of expiring, and the operator
+      can answer it directly from the dashboard (canned option or a reclassify/instruct ruling) rather than a worker
+      re-filing the same question every redispatch. Recommendation: approve — the lock's own value is the branch name
+      (`live-defi-rollout`), not a distinguishing agent claim, and every todo on both docs is genuinely done. Done-when:
+      the operator's ruling is recorded (materializes as a `--ruling` task per the SSOT) and, on approval,
+      `locked_by`/`locked_since` are cleared on the source doc in the same commit that strips this todo's `[OPERATOR]`
+      tag.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` and this finalize doc itself: archive both to
@@ -194,11 +195,13 @@ is done. Do not start manually before then.
   still present** in `blocked_queue`, `answered_at: null`, `paged_at` set — genuinely pending, not pruned this time. Per
   RULES.md §5 (a pending human decision is not re-asked), did NOT re-file a duplicate. Also confirmed the meta-issue
   slot 19 flagged (blocked-questions silently vanishing before an answer lands) is already tracked as its own doc,
-  `issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md` (status open, P1, two `[BACKEND]`
-  todos against `agent-orchestrator/server/`) — no new doc needed. Re-verified the source doc's lock is still live
-  (`locked_by: live-defi-rollout` / `locked_since: 2026-07-03`) and did NOT unlock autonomously (same HARD RULE). No
-  other in-scope work exists on this specific gated todo. `[DOC]` todo remains open, gated on the operator's answer to
-  `BLK-ce0fe830` — re-dispatch once answered; no further action needed from this slot until then.
+  `issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md` (status open at the time, P1, two
+  `[BACKEND]` todos against `agent-orchestrator/server/`; both since completed and archived to
+  `plans/archive/2026_08/issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md`) — no new
+  doc needed. Re-verified the source doc's lock is still live (`locked_by: live-defi-rollout` /
+  `locked_since: 2026-07-03`) and did NOT unlock autonomously (same HARD RULE). No other in-scope work exists on this
+  specific gated todo. `[DOC]` todo remains open, gated on the operator's answer to `BLK-ce0fe830` — re-dispatch once
+  answered; no further action needed from this slot until then.
 - **2026-08-08 (DOC archival re-dispatch, slot 10)**: same `[DOC]` todo redispatched a sixth time (same recurring
   `gate_on_depends` wiring-gap bounce). Checked `GET /api/state` directly: `BLK-ce0fe830` (slot 19's question) **is
   still present** in `blocked_queue`, `answered_at: null`, `paged_at` set — genuinely pending, not pruned. Per RULES.md

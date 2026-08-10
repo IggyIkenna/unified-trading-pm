@@ -30,25 +30,56 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/ao_satellite_ao_dispatch_batch16_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md
+  - ../active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
+  - ../active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md
   - ../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md
+  - ../active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md
   - ../active/bucket_estate_consolidation_closeout_2026_07_24.md
   - ../active/bucket_fold_execution_strategy_2026_07_17.md
   - ../active/bucket_fold_features_2026_07_17.md
   - ../active/bucket_fold_ml_2026_07_17.md
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
   - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
-  - ../active/candle_canonical_path_migration_execution_2026_07_24.md
-  - ../archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - ../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md
+  - ../active/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md
+  - ../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md
+  - ../active/ci_vm_exposure_remediation_2026_08_06.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
+  - ../active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md
+  - ../active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md
+  - ../active/cross_cutting_consolidated_closeout_2026_07_25.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md
+  - ../active/cross_cutting_strategy_execution_determinism_2026_07_26.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
-  - ../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md
+  - ../active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md
+  - ../active/defi_compute_gcp_migration_2026_08_08.md
+  - ../active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md
+  - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md
+  - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md
+  - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
+  - ../active/infra_consolidated_closeout_2026_07_25.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md
+  - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
+  - ../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
-  - ../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md
+  - ../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
+  - ../active/self_hosted_runner_public_repo_revert_2026_08_05.md
+  - ../archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
-  - ../active/ui_build_warm_cache_2026_06_17.md
-  - ../archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md
 last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -495,7 +526,7 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-_19 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
+_50 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
 (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -509,6 +540,10 @@ residuals (6 forked mop-up todos)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Bucket fold — ml 5 kind-buckets → 1
 (ml-store-{env}-{pid})
+
+### [`lst_rate_honest_coverage_2026_07_21`](../active/lst_rate_honest_coverage_2026_07_21.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 
@@ -527,74 +562,199 @@ per-AG (features-{ag}-{env}-{pid})
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
 per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 
-### [`candle_canonical_path_migration_execution_2026_07_24`](../active/candle_canonical_path_migration_execution_2026_07_24.md)
+### [`cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08`](../active/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md)
 
-**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 
-### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
+### [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](../active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md)
 
-**status**: complete (archived 2026-07-31 — 29/29 todos done; durable SSOT is `/codex/08-workflows/ci-cd-flow.md`) ·
-**estimate**: 1.2 cal AI-days (class: refactor) **title**: CI/CD MVP — LDR→SIT→main, simplified single-path pipeline
-(supersedes the WS-L complex pipeline)
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: CI pipeline redesign — fast LDR→main
+(3-5min target), needs-driven cross-repo triggering, cost right-sizing
+
+### [`ci_vm_exposure_remediation_2026_08_06`](../active/ci_vm_exposure_remediation_2026_08_06.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra)
+
+### [`corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09`](../active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+
+### [`cross_cutting_closeout_observability_and_monitoring_2026_08_09`](../active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+
+### [`cross_cutting_consolidated_closeout_2026_07_25`](../active/cross_cutting_consolidated_closeout_2026_07_25.md)
+
+**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
+
+### [`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md)
+
+**status**: active · **estimate**: 0.64 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 1 —
+finalize (reconcile source docs + resolve deferrals + archive both parts)
+
+### [`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26`](../active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md)
+
+**status**: active · **estimate**: 2.8 cal AI-days (class: infra)
 
 ### [`data_pipeline_check_mdps_features_2026_07_20`](../active/data_pipeline_check_mdps_features_2026_07_20.md)
 
 **status**: active · **estimate**: 6.4 cal AI-days (class: infra)
 
-### [`defi_dedicated_bucket_shared_migration_2026_07_13`](../archive/2026_07/defi_dedicated_bucket_shared_migration_2026_07_13.md)
+### [`defi_compute_gcp_migration_2026_08_08`](../active/defi_compute_gcp_migration_2026_08_08.md)
 
-**status**: archived 2026-07-31 (na-eligibility-audit, tranche=defi — last open todo was a stale checkbox citing
-already-done work in `defi_satellite_ao_dispatch_batch2_2026_07_26.md`; fixed + archived, 6-step ritual) · **estimate**:
-1.6 cal AI-days (class: infra) **title**: Migrate dex-pools/lst-rates/perp-funding off dedicated buckets onto the shared
-DeFi tick bucket
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Move DeFi live/batch compute off AWS to GCP
+Cloud Run — data already lives in GCS
 
-### [`lst_rate_honest_coverage_2026_07_21`](../active/lst_rate_honest_coverage_2026_07_21.md)
+### [`defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08`](../active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: DeFi AWS-to-GCP compute migration —
+finalize
+
+### [`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07`](../active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: Jupiter DeFi venue registration
+(full-stack) + wire in 3 orphaned MTDS live-connector building blocks
 
 ### [`qg_host_adaptive_resource_governor_2026_07_14`](../active/qg_host_adaptive_resource_governor_2026_07_14.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Host-adaptive RAM+CPU QG admission governor —
 replace fixed-K with resource reservation
 
-### [`utl_uac_reuse_consolidation_remediation_2026_06_10`](../archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
+### [`self_hosted_runner_public_repo_revert_2026_08_05`](../active/self_hosted_runner_public_repo_revert_2026_08_05.md)
 
-**status**: archived 2026-07-27 (operator `[unlock-plan]` granted, `june_2026_vintage_audit_findings_2026_07_27.md`
-§5#34) · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
-reimplementations, strongest-combination merge. Its own 9 phases are fully shipped; the sole remaining action (remove
-the 5 Phase-0 banners below) lives in this epic's "Folded-in scope 2026-07-15" section, not the archived tracker.
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Revert self-hosted CI runners to
+GitHub-hosted for confirmed-public repos
+
+### [`shared_ci_workflow_repo_extraction_2026_08_06`](../archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Extract shared reusable CI workflows into a
+new dedicated public repo (unified-trading-ci)
 
 ## P2 — useful; opportunistic
+
+### [`ao_satellite_ao_dispatch_batch16_2026_08_09`](../active/ao_satellite_ao_dispatch_batch16_2026_08_09.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: refactor) **title**: AO satellite AO batch 16 — token-expiry
+early-warning for the git-health reporter (infrastructure_master epic)
+
+### [`ao_satellite_ao_dispatch_batch16_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 16 — finalize
 
 ### [`aster_and_cefi_rolling_adv_feature_2026_07_21`](../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md)
 
 **status**: active · **estimate**: 1.5 cal AI-days (class: brand-new) **title**: Rolling ADV (average daily volume)
 feature for CeFi instruments — strategy-side volume caps
 
+### [`backfill_smoke_write_path_canonical_audit_finalize_2026_08_08`](../active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Backfill-smoke write-path canonical audit
+— finalize (doc-comment correction + archive)
+
 ### [`bucket_fold_portfolio_state_2026_07_17`](../active/bucket_fold_portfolio_state_2026_07_17.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket fold — portfolio-state 6 stores → 1
 (portfolio-state-{env}-{pid}) — LAST
 
+### [`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27`](../active/bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
 ### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
 
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor)
+
+### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md)
+
+**status**: complete · **estimate**: 0.4 cal AI-days (class: infra)
+
+### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md)
+
+**status**: complete · **estimate**: 0.24 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 6 —
+finalize (reconcile source docs + archive)
+
+### [`cross_cutting_strategy_execution_determinism_2026_07_26`](../active/cross_cutting_strategy_execution_determinism_2026_07_26.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: Cross-cutting strategy/execution
+determinism + capability-registry — Track 24 extraction
+
+### [`data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27`](../active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
+### [`defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07`](../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — Jupiter DeFi venue
+registration + MTDS live-connector wire-in
+
+### [`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06`](../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: Convert the remaining fully-duplicated
+fleet workflow templates into unified-trading-ci reusable workflows
+
+### [`infra_consolidated_closeout_2026_07_25`](../active/infra_consolidated_closeout_2026_07_25.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
+
+### [`infra_satellite_ao_dispatch_batch13_2026_08_09`](../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Infra satellite AO batch 13 — diagnose +
+fix the unified-trading-system-ui mock dev-server crash under sustained Playwright load
+
+### [`infra_satellite_ao_dispatch_batch9_2026_08_09`](../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md)
+
+**status**: active · **estimate**: 0.64 cal AI-days (class: infra)
+
+### [`infra_satellite_ao_dispatch_batch9_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 9 —
+finalize (reconcile source-doc checkboxes + archive)
+
+### [`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08`](../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.3 cal AI-days (class: infra) **title**: PM bats-tests-never-invoked — finalize
+(reconcile + archive)
 
 ### [`repo_scripts_governance_audit_2026_06_18`](../active/repo_scripts_governance_audit_2026_06_18.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Repo scripts/ governance — ruff-lint pass +
 deprecate/delete audit + strict-quickmerge carve scope (D16)
 
-### [`ui_build_warm_cache_2026_06_17`](../active/ui_build_warm_cache_2026_06_17.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: UI build warm-cache — keep the UI QG build
-cache warm so only changed code rebuilds
-
 ## P3 — backlog; revisit quarterly
 
-### [`mtds_retry_safe_default_audit_2026_07_14`](../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md)
+### [`infra_satellite_ao_dispatch_batch12_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md)
 
-**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
+**status**: active · **estimate**: 0.15 cal AI-days (class: infra) **title**: Infra satellite AO batch 12 — managed-by
+launcher label standardization (batch1's last cleared deferral)
+
+### [`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO batch 12 — finalize
+(archive per the 6-step ritual)
+
+### [`infra_satellite_ao_dispatch_batch13_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 13 —
+finalize (reconcile source-doc checkbox + archive the batch)
+
+### [`infra_satellite_ao_dispatch_batch14_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: infra) **title**: Infra satellite AO batch 14 — add a
+`.pre-commit-config.yaml` to `unified-trading-ci`
+
+### [`infra_satellite_ao_dispatch_batch14_finalize_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 14 —
+finalize (reconcile source-doc checkbox + archive the batch)
+
+### [`infra_satellite_ao_dispatch_batch7_2026_08_04`](../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md)
+
+**status**: active · **estimate**: 0.56 cal AI-days (class: infra)
+
+### [`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04`](../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 7 —
+finalize (reconcile source-doc checkboxes + archive)
 
 ### [`stash_pile_workspace_cleanup_2026_06_03`](../active/stash_pile_workspace_cleanup_2026_06_03.md)
 

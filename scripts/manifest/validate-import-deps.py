@@ -98,7 +98,7 @@ def scan_imports(src_dir: Path) -> set[str]:
                         top = alias.name.split(".")[0]
                         if top in INTERNAL_PACKAGES:
                             imported.add(top)
-        except Exception:
+        except (OSError, UnicodeDecodeError, SyntaxError):
             pass
     return imported
 
@@ -119,7 +119,7 @@ def scan_banned_imports(src_dir: Path) -> list[tuple[Path, int, str]]:
                         top = alias.name.split(".")[0]
                         if top in BANNED_DIRECT_IMPORTS:
                             violations.append((f, node.lineno, top))
-        except Exception:
+        except (OSError, UnicodeDecodeError, SyntaxError):
             pass
     return violations
 

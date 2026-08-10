@@ -119,9 +119,29 @@ this is inference from timing + the workspace's own documented operational contr
       satisfies the substance of this todo (confirm intentional + a named resume owner/mechanism) even though it wasn't
       a direct answer from the VM's launcher — treating it as a duplicate confirmation, not re-asking. Todo 2 below
       (verify actual resume once the VM completes) remains the real open item.
-- [ ] [SCRIPT] P3. Once the rebuild VM completes/self-deletes, verify the consolidator scheduler was actually resumed
-      (state=ENABLED) and `CONSOLIDATOR_DOWN` clears — if it doesn't auto-resume, resume it manually and confirm a real
-      consolidator merge cycle runs clean.
+- [x] ✅ [SCRIPT] P3. **Alert-clearing half CLOSED 2026-08-10 (ag_closeout_auditor, tranche=defi) — the "wait for VM
+      completion" framing never actually happened; resumed early instead, confirmed SAFE.** Live checks today: (1) the
+      original VM `canonical-migration-defi-rebuild-20260806-223130` is GONE (`gcloud compute instances describe` → 404)
+      — but this is a **SPOT PREEMPTION, not natural completion**: its last `PROGRESS.json` shows
+      `last_completed_date=2024-09-05` against a `--start-date 2020-01-01 --end-date 2026-12-31` target, run.log's last
+      heartbeat `2026-08-09T15:33:06Z`, `date=2024-09-09: 13820 shards scanned` — nowhere near the end-date. (2) A
+      successor VM `canonical-migration-defi-rebuild-20260809-163511` (preemption-recovery relaunch) is RUNNING as of
+      this check — **the rebuild itself is still in-flight, not done**; its completion is tracked at
+      `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:180-234` (the R3-run item, "terminal state
+      (not yet)") — do not duplicate that tracking here. (3) The consolidator Cloud Scheduler job IS `state=ENABLED`
+      (`userUpdateTime=2026-08-09T11:25:02Z`) — resumed roughly **4 hours BEFORE** the original VM's last heartbeat
+      (11:25 vs 15:33 same day), i.e. genuinely concurrent with the still-running rebuild, not post-completion as this
+      todo assumed; who/what re-enabled it early vs the registered maintenance window's stated
+      `--ttl-minutes 4320`/2026-08-10T00:20:24Z expiry is unresolved but immaterial to safety (see next point). (4)
+      **Verified this is NOT a correctness race**: live Cloud Run logs for
+      `uts-prod-manifest-consolidator-market-data-defi` show every invocation over the last hour as
+      `success=True shards=0 rows_in=0 rows_out=0 ... error=locked` — "ManifestConsolidator: skipping cycle ... fresh
+      lock present (sibling cron still running)". The consolidator's own code defends against exactly this scenario
+      independent of the scheduler's enabled/paused state, so the early resume did not risk a merge race. (5)
+      `CONSOLIDATOR_DOWN` has genuinely cleared — zero occurrences in Cloud Logging over the trailing 24h, consistent
+      with the scheduler firing successfully (even as a no-op) every ~1 min again. **Residual**: none — the
+      rebuild-completion wait is covered by defi_track01's R3 item (see point 2); once that lands, a fresh consolidator
+      run should show real `shards>0`, which is defi_track01's concern to verify, not a new todo here.
 - [ ] [SCRIPT] P3. Separately (not blocking): decide whether `CONSOLIDATOR_DOWN`'s routing rule should gain a Slack
       channel so a real (non-known-cause) consolidator outage isn't silently undelivered end-to-end the way this one
       currently is with both PagerDuty and email failing — this is an open design question, not something to change
@@ -154,3 +174,9 @@ this is inference from timing + the workspace's own documented operational contr
 - **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 2 open todos, both non-worker-determinable today:
   todo 1 DEPENDENCY_BLOCKED on the in-flight canonical-migration-defi-rebuild VM's multi-day completion (~2 of 4-5+ days
   elapsed); todo 2 an explicit OPERATOR_QUESTION on CONSOLIDATOR_DOWN alert-routing design. Doc stays `assigned_vm: NA`.
+- **ag_closeout_auditor 2026-08-10** (tranche=defi, slot 14, DISPATCH_ID=agt-f508ad, iterative-drain step 1 re-check of
+  the 2026-08-08 defi parked-findings report's Finding 3): live-verified todo 2 — see the flipped checkbox above for the
+  full evidence trail (SPOT preemption + successor VM, scheduler resumed early but safe due to the consolidator's own
+  lock defense, `CONSOLIDATOR_DOWN` genuinely cleared). Closed the alert-clearing half; the rebuild-completion half was
+  never this doc's to track and is correctly owned by `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3
+  item. 1 todo remains open (todo 3, operator/design-gated Slack-routing question) — doc stays `assigned_vm: NA`.

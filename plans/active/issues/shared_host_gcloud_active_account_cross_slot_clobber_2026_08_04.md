@@ -19,7 +19,12 @@ summary: >-
   hard-abort instead of dying silently).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
+  # shared-host gcloud active-account race across concurrent slots -- generic multi-agent-shared-host/VM-launcher
+  # hazard, squarely infrastructure-tranche (per-tab-worktrees.md territory), not a cross-AG data/pipeline
+  # concern. Flagged as this exact mistag by 3 prior runs (2026-08-06, 08-07, 08-08 parked-findings docs) but
+  # never actually retagged until now -- this closes that gap.
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
@@ -29,7 +34,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
+    /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
@@ -131,16 +136,17 @@ Two independent fix directions, either or both:
       active-account pointer) are still shared/reused rather than re-authenticated per slot — the goal is isolating the
       MUTABLE selection, not duplicating the credentials themselves. (repo: unified-trading-pm, touches per-slot
       bootstrap tooling)
-- **[DOC] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.** Document the
-  `gcloud config set account` host-wide-mutation hazard in `/codex/05-infrastructure/per-tab-worktrees.md` §
-  "Multi-agent safety". See the batch doc for the full scoped todo; do not duplicate-dispatch from here. (repo:
-  unified-trading-pm)
+- **[DOC] P3. EXTRACTED 2026-08-09 -> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.
+  ✅ DONE 2026-08-09 — unified-trading-pm@de70cd5aa.** Documented the `gcloud config set account` host-wide-mutation
+  hazard as item 5 in `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover",
+  stating the hazard, the 2026-08-04 incident, and the per-invocation `--account=`/`CLOUDSDK_CORE_ACCOUNT` override
+  recommendation. See the batch doc for full evidence. (repo: unified-trading-pm)
 
 ## Progress Log
 
 - **data_engineering worker (slot 14) 2026-08-04**: filed while executing
-  `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md` job (2)'s launch-and-verify todo. Worked
-  around live by re-running
+  `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md` job (2)'s
+  launch-and-verify todo. Worked around live by re-running
   `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` each time the clobber
   was detected (via the launcher's own error-surfacing fix, deployment-service@b64e4a7) and relaunching the (idempotent,
   safe-to-resume) backfill script. Did not implement either fix above — out of this todo's scope, filed here per the

@@ -24,7 +24,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
@@ -46,7 +46,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
   ]
 supersedes:
 superseded_by:
@@ -96,7 +96,7 @@ stash-pile audit/cleanup runbook) ·
 [issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
-(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked) ·
+(ARCHIVED 2026-07-27, RESOLVED — execution-service@e00152b6, aiohttp-3.14 CVE bump unblocked) ·
 [issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md](/plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md)
 (28 shared QG checker scripts lack a `.claude` worktree-exclusion pattern, retagged in from `cross-cutting` 2026-08-07).
 
@@ -117,7 +117,7 @@ staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §
 [issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/archive/issues/managed_by_label_launcher_standardization_2026_07_13.md)
 (ARCHIVED 2026-08-03, RESOLVED — deployment-service@db67173 + deployment-api@95a7a19; generic VM/Cloud-Run launcher
 "managed-by" label convention adopted, deployment-api echoes it as `managed_by`) ·
-[issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
+[issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
 (fleet-wide VM-launcher billing-waste audit + pre-flight gate design) ·
 [issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md](/plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md)
 (3rd occurrence of green-CI-stale-traffic; drift check + canary-deploy alert shipped, Slack routing open — added
@@ -181,9 +181,9 @@ reference-path convention rollout complete corpus-wide.
 > this Track's close-out criterion no longer belongs to the infra tranche's own completeness measurement.
 
 **Source** (historical — now `ui`-tranche primary):
-[issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
+[issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
 (8 pre-existing deployment-ui smoke/playwright failures — Daily Costs page, mobile nav; generic product/UI bugs, not
-data-pipeline or CI mechanics) ·
+data-pipeline or CI mechanics; RESOLVED + ARCHIVED 2026-08-10) ·
 [artifact_pipeline_observability_2026_07_17.md](/plans/active/artifact_pipeline_observability_2026_07_17.md)
 (build→artifact→deploy lineage UI — Cloud Build images, VM tarballs, drift-vs-running; deployment-observability domain,
 not data-pipeline).
@@ -196,9 +196,18 @@ not data-pipeline).
 
 ## Todos
 
+> **Dispatch-vs-digest model: A (real todos on the hub itself), not B (a separate `..._aggregated_sources_*` sibling).**
 > Verification-only — measures whether the tranche is actually done, not new work to dispatch (`assigned_vm: NA`, not
 > itself AO-eligible). Added per `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38, so the next
-> infra audit measures a real covering set instead of re-deriving the same orphan verdict from a zero-todo hub.
+> infra audit measures a real covering set instead of re-deriving the same orphan verdict from a zero-todo hub. Model A
+> was chosen over Model B (the `<ag>_consolidated_closeout_aggregated_sources_*` sibling the 5 AGs use) because this
+> tranche's own Track close-out criteria (below) ARE genuinely hub-owned work (cross-Track verification, not a single
+> source doc's job) — a separate aggregated-sources sibling would just duplicate the Track membership already listed
+> above without adding a distinct role, whereas the 5 AGs' sibling docs exist because their hubs needed a place to list
+> sources SEPARATELY from dispatchable hub-owned work. Re-confirmed still the right model as of 2026-08-09
+> (`infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3): re-measured, this hub's 3 open Track todos are
+> what keeps `/ag-closeout-audit infra`'s covering-set discovery non-empty; converting to Model B would remove the only
+> hub-owned dispatchable work without adding new coverage.
 
 - [ ] [REVIEW] P2. Track 1 close-out: all CVE remediations landed (aiohttp/vcrpy, setuptools PYSEC-2026-3447,
       execution-service aioresponses migration); codex-violation ratchet green; `scripts/` governance sweep complete; uv
@@ -268,8 +277,8 @@ not data-pipeline).
   **29 orphaned** (28 `orphaned_never_touched` + 1 `orphaned_partial_coverage`), 5 not orphaned (the generated inventory
   dashboard, `task_template.md`, the self-referential rollout meta-plan, and the two operator-decision registers). Phase
   3 drafted
-  [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
-  [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+  [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
+  [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
   — **25 todos from 17 source docs, both `status: draft` (NOT ingested; the flip to `active` is the operator's call)**.
   The HARD conflict check ran against all 93 existing batch/finalize/closeout plans plus pairwise across the 25 drafted
   todos: 10 further AO-eligible items were deferred conflict-gated (notably `PYTEST_UNIT_DIR`, where a cefi doc
@@ -348,7 +357,7 @@ not data-pipeline).
   (`stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`) is a genuine orphan but
   guardrail-blocked operator-only work (non-batchable), and `codex_violations_ratchet_to_five` has 5 of 7 open items
   genuinely uncovered — 3 remain correctly gated by batch1's own pre-existing Deferred classification (unchanged), 1
-  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@89fbf99d`) with a stale checkbox, and
+  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@980a6ad0`) with a stale checkbox, and
   1 (`_solana_utils.py` line-cap split) was genuinely new, conflict-clear, and bounded. Phase 3 drafted a single-todo
   `infra_satellite_ao_dispatch_batch4_2026_07_31.md` (`status: draft`, no finalize twin per the single-todo carve-out)
   for that one item. The stale-checkbox finding plus a filesystem-vs-doc discrepancy on the stash-clone deletion (target
@@ -394,7 +403,7 @@ not data-pipeline).
   `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` mistag from this run's never-cited list purely
   because a prior Progress Log entry named the file in prose; and a second likely `asset_group: [meta]` mistag whose
   real owner is probably `ao`, not `infra`) — all recorded in
-  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
+  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
   per the parked-findings hard rule. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed the
   shrinking-ratchet count risen to 78 (baseline 69) — corpus-wide, mostly other tranches' concurrent activity (not this
   run's doing; this run's own 2 new docs are both correctly linked, verified). Of the 78, exactly 7 carry
@@ -490,7 +499,7 @@ not data-pipeline).
   investigation (relocated durably vs. an unrecovered loss). Both, plus a methodology caveat (15 of today's 42
   orphaned-verdict docs are already self-dispatched and do not need batch7 treatment — corroborated unprompted by 7 of
   the 45 Phase-1 agents) and 2 unscoped batch7 candidates, are recorded in full in
-  [issues/ag_closeout_audit_infra_parked_2026_08_03.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md).
+  [issues/ag_closeout_audit_infra_parked_2026_08_03.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md).
   Did not draft `infra_satellite_ao_dispatch_batch7` — of 42 orphaned docs, 15 are self-dispatched and the remaining 27
   are each operator/time/design/conflict-gated or this skill's own prior-run parked-findings docs; the 2 "maybe"
   candidates need dedicated scoping first, per the skill's own "report the residual, don't force a batch" allowance.
@@ -515,10 +524,10 @@ not data-pipeline).
   `na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`'s 2 todos and
   `deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s investigation-only half (its structural
   decision half stays operator-gated) were conflict-clear and bounded. Drafted
-  [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
+  [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
   its finalize twin (3 todos, both `status: draft`). **New finding**: 4 drafted batches (4/5/6/7) now sit unreviewed,
   oldest 4 days — see
-  [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
+  [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
   finding 14. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed 66 orphans corpus-wide (baseline
   69, still improving) — exactly 1 carried `asset_group: [infrastructure]`:
   `issues/fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md` (already `status: resolved`,
@@ -529,3 +538,16 @@ not data-pipeline).
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the parked-findings pointer from
   `ag_closeout_audit_infra_parked_2026_08_04.md` to the current `ag_closeout_audit_infra_parked_2026_08_07.md` (the
   08-04 doc's findings are now resolved/superseded by later runs; 08-07 reflects this tranche's live unresolved state).
+- **2026-08-09 (review-craft-per-task, `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3)** — Made the
+  dispatch-vs-digest model explicit above (was implicit in the operator-decision citation only): **Model A, re-confirmed
+  correct**. No structural change needed — this hub has carried real Track close-out todos since 2026-07-26 (same day
+  batch1 was drafted), so batch1-finalize's own todo 3(b) premise ("carries ZERO todos, orphaned by construction") was
+  already stale by the time it was read, having been drafted from the same-day pre-fix state. Full re-measurement
+  written up in the finalize plan itself (not duplicated here): orphan count dropped from the 2026-07-26 baseline
+  (29/34) to 0 genuinely-untriaged (11 never-cited-by-covering-doc candidates remain, but 7 are cross-tranche
+  ci/defi-owned mistags and 4 are already-carried, reason-stated parked findings, per today's own
+  `ag_closeout_audit_infra_parked_2026_08_09.md`). `check_ag_closeout_linkage.py` re-run fresh: 0 orphans carry
+  `asset_group=[infrastructure]` (28 orphans corpus-wide, all other tranches); both
+  `session_bound_vm_monitoring_ reliability_gap_2026_07_26.md` and `infra_plan_reconcile_parked_decisions_2026_07_26.md`
+  confirmed already registered above (2026-07-27 entry) with proper `[text](path)` links, not bare filenames — no edit
+  needed there.

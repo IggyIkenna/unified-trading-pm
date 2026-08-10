@@ -28,8 +28,8 @@ tags: [tradfi, ao-dispatch, close-out, batch-8, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
@@ -121,19 +121,23 @@ pass (not a delta) per this dispatch's autonomous-mode instructions.
 
 ## Todos
 
-- [ ] [DATA] P2. **Re-apply the TradFi combo/stock-class catalog canonicalization scripts against the residual rows
+- [x] ✅ [DATA] P2. **Re-apply the TradFi combo/stock-class catalog canonicalization scripts against the residual rows
       reintroduced by the self-refreshing catalogue roll-up.** Operator-approved 2026-08-06 (reconfirmed 2026-08-07).
-      Re-run `canonicalize_cboe_vx_combo_catalog_2026_07_08.py` and
-      `canonicalize_dbeq_stock_class_catalog_2026_07_08.py` (both `instruments-service/scripts/`) against
-      `prod/catalog.parquet`'s residual 91 CBOE + 312 DBEQ non-canonical rows (403 of 1,096,472 total rows) reintroduced
-      by `build_instrument_catalogue.py`'s self-refreshing roll-up. Dry-run first to confirm the row count still matches
-      (a `--apply` run should complete in well under 5 seconds per the doc's own prior dry-run timing), then `--apply`.
-      Note in the source doc's own Progress Log that this is not a one-time fix — it needs re-running after every rollup
-      cycle until the upstream by_date corpus migration lands (do not treat a clean re-run as closing this permanently).
-      Repo: instruments-service. **Done when**: a fresh dry-run confirms the exact residual row count, `--apply`
-      completes, a post-apply dry-run shows 0 residual non-canonical rows for these 2 scripts' scope, and
-      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s checkbox is flipped citing the run evidence.
-      Source: `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
+      **DONE 2026-08-09 (slot-9, data_engineering).** Re-ran both scripts against the live `prod/catalog.parquet`
+      (919,493 total rows — the plan's cited 1,096,472 figure was stale; treat the count each script logs at run time as
+      authoritative, per both scripts' own docstrings). Fresh dry-run found the residual population had shifted since
+      drafting: CBOE `SPOT_PAIR`→`COMBO` residual was **0** (natural rolloff — VX calendar spreads are short-dated and
+      the original 91-row residual had already expired out of the catalogue by run time), DBEQ
+      `SPOT_PAIR`→`EQUITY`/`ETF` residual was **318** (317→EQUITY, 1→ETF for IBIT via `KNOWN_ETFS`). `--apply` completed
+      for both (GATE passed: total rows unchanged 919,493→919,493, no unexpected (venue,instrument_type) drift).
+      Post-apply dry-run confirms **0 residual non-canonical rows** for both scripts' scope (CBOE: 0 candidates; DBEQ: 0
+      candidates, `KNOWN_ETFS: []`). No code changed — this is a data-only GCS rewrite
+      (`instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`), snapshots pre-existed from the
+      2026-07-08 original run and were kept. **Not durable** — per the source doc, this needs re-running after every
+      `build_instrument_catalogue.py` rollup cycle until the upstream `by_date` corpus migration lands
+      (`tradfi_canonical_path_migration_design_2026_07_19.md`); do not treat this clean re-run as closing the item
+      permanently. `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s checkbox flipped citing this
+      evidence (same commit). Source: `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
 
 - [ ] [DATA] P3. **Register TradFi ETF SchemaContract coverage and fix TradFi OPTION's caller-scoping crash — one
       combined todo (same underlying finding, same source doc, sequential sub-steps).** (1) `instrument_type=ETF` has

@@ -65,7 +65,7 @@ source:
   done anything
 assigned_vm: NA
 execution_scope: local-only
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
@@ -73,7 +73,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     .github/workflows/digest-drift-sweep.yml,
   ]
 resolved_by:
@@ -332,4 +332,13 @@ RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change
   body; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
-**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts stand
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts
+stand
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:319f03860ee93854]: KEEP-NA,
+valid — Doc carries a '3-of-4 FIXED (2026-07-26)' banner: recommendations 2b/2c/3 (GH_PAT token fix, silent-failure
+hardening, dispatch cap) all shipped and independently verified (unified-trading-pm@f6e98bbdd, @6cb21eca3), proven by a
+dedicated regression-test harness. Sole remaining item (line 313, P1 DEVOPS) is an open-ended root-cause investigation
+-- 'why has update-dependency-version.yml's primary cascade been dormant since 2026-06-28' -- with no stated bounded
+fix, exactly matching the KEEP-NA-valid pattern this skill already independently re-confirmed 3x (2026-07-30,
+2026-08-01, 2026-08-06: 'not RECLASSIFY-eligible, open-ended diagnosis, not a checkable fact or scoped change').

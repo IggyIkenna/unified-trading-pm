@@ -55,6 +55,23 @@ MIN_AGE_SEC="${RW_MIN_PROCESS_AGE_SEC:-30}"
 MAX_KILLS_PER_MIN="${RW_MAX_KILLS_PER_MIN:-1}"
 ORCHESTRATOR_URL="${RW_ORCHESTRATOR_URL:-http://localhost:8765}"
 DEPLOYMENT_API_URL="${RW_DEPLOYMENT_API_URL:-}"
+# deployment-api X-API-Key for the kill-event POST. Same GSM secret
+# `deployment-api-api-key` deployment-api validates against. Resolved in this
+# order: RW_DEPLOYMENT_API_KEY env (systemd override) → GSM `deployment-api-api-key`
+# (runtime fetch — the orchestrator VM's SA holds secretmanager.secretAccessor,
+# so no secret is ever written to the repo/service file). Empty → omit the
+# header (deployment-api's own "omit if empty" convention), so the watchdog
+# keeps working during rollout.
+DEPLOYMENT_API_KEY="${RW_DEPLOYMENT_API_KEY:-}"
+if [[ -z "${DEPLOYMENT_API_KEY:-}" && -n "${DEPLOYMENT_API_URL:-}" ]]; then
+  DEPLOYMENT_API_KEY="$(
+    timeout 10 gcloud secrets versions access latest --secret=deployment-api-api-key \
+      --project=central-element-323112 2>/dev/null | tr -d '\n'
+  )"
+  if [[ -z "${DEPLOYMENT_API_KEY:-}" ]]; then
+    echo "[resource-watchdog] WARN deployment-api key unset — kill-event POST will omit X-API-Key (auth will fail after enforcement flip)" >&2
+  fi
+fi
 VM_NAME="${RW_VM_NAME:-$(hostname 2>/dev/null || echo 'planning-vm')}"
 MARKER_DIR="${RW_MARKER_DIR:-/dev/shm/resource-watchdog/kills}"
 LOG_FILE="${RW_LOG_FILE:-/var/log/resource-watchdog.log}"
@@ -281,11 +298,13 @@ _rw_notify_deployment_api() {
 EOF
 )"
     # Fire-and-forget — don't block the watchdog loop on API calls
-    curl -s -X POST "${DEPLOYMENT_API_URL}/api/fleet/watchdog/kill-events" \
-        -H "Content-Type: application/json" \
-        -d "$payload" \
-        --connect-timeout 3 --max-time 5 \
-        >/dev/null 2>&1 || _rw_log_warn "deployment-api unreachable for kill notification (pid=$pid slot=$slot)"
+    local -a curl_args=( -s -X POST "${DEPLOYMENT_API_URL}/api/fleet/watchdog/kill-events" )
+    curl_args+=( -H "Content-Type: application/json" )
+    if [[ -n "${DEPLOYMENT_API_KEY:-}" ]]; then
+        curl_args+=( -H "X-API-Key: ${DEPLOYMENT_API_KEY}" )
+    fi
+    curl_args+=( -d "$payload" --connect-timeout 3 --max-time 5 )
+    curl "${curl_args[@]}" >/dev/null 2>&1 || _rw_log_warn "deployment-api unreachable for kill notification (pid=$pid slot=$slot)"
     _rw_log_info "deployment-api notified: pid=$pid slot=$slot reason=$reason killed=${killed}"
 }
 

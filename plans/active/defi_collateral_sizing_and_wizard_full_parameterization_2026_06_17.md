@@ -190,9 +190,11 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
 
 ## Phase A follow-ups (discovered during build)
 
-- [x] ✅ [SCRIPT] P2. **RULED 2026-08-08 (operator): keep 150 bps — no real calibration provided.** `archetypes_rank.py`
-      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` is now the CONFIRMED-STANDING value (operator ruling 2026-08-08),
-      not an unconfirmed placeholder awaiting calibration — the docstring above the constant was updated to reflect this
+- [x] ✅ [SCRIPT] P2. **RULED 2026-08-08 (operator): keep 150 bps — no real calibration provided.** Recorded here in
+      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`. `archetypes_rank.py`
+      `_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` is now the CONFIRMED-STANDING value (operator ruling 2026-08-08,
+      recorded in `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, the todo directly above), not
+      an unconfirmed placeholder awaiting calibration — the docstring above the constant was updated to reflect this
       (`strategy-service`, docs-only diff, affects opportunity RANKING only, never sizing/funds). The constant's own
       comment still notes it can be exposed as a config param in a future Phase C wizard pass if the operator wants a
       per-deployment override later; no further calibration work is tracked here.

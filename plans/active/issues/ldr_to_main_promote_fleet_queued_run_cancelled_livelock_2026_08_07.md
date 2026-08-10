@@ -49,7 +49,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "ci-reconcile sweep, 2026-08-07, waiting on semver-agent fix live verification"
@@ -285,3 +285,46 @@ hardening from this still-active incident's own investigating session — not de
 valid — confirms the 2026-08-07 verdict, unchanged since (only context-scout touch). Todo (a) is explicit `[OPERATOR]`,
 conditional/deferred; todo (the 60-min clean-window bar) is live-incident observation work, not yet confirmed cleared.
 No `assigned_vm` change.
+
+## Fleet-wide zombie-queued-run purge (2026-08-10, /ci-reconcile)
+
+`gh run list --status queued` was polluted fleet-wide by runs that will never start — which matters because that view is
+exactly what a human or agent checks when asking "is the runner pool starved?". A stale `queued` row is
+indistinguishable at a glance from live work waiting on a runner.
+
+**Purged 12 of 15** (cancel first, `DELETE .../actions/runs/<id>` where cancel 500s):
+
+| Repo                                                               | Run(s)      | Workflow                                      | Age           |
+| ------------------------------------------------------------------ | ----------- | --------------------------------------------- | ------------- |
+| unified-trading-pm                                                 | 30513367555 | `ldr-to-main-promote-fleet`                   | 2026-07-30    |
+| unified-trading-pm                                                 | 4 runs      | `ci-status-update`                            | 2026-05-15    |
+| deployment-api / features-service / market-data-processing-service | 1 each      | retired `quality-gates.yml` / `Quality Gates` | 2026-05-15    |
+| execution-service / market-tick-data-service / strategy-service    | 1 each      | retired `workspace-qg`                        | 2026-05-24/25 |
+| strategy-service                                                   | 25906785079 | retired `quality-gates.yml`                   | 2026-05-15    |
+
+The PM `ldr-to-main-promote-fleet` row is this doc's own failure mode, and `gh run cancel <id>` is the recovery
+`scripts/cicd/promote_fleet_startup_failure_monitor.py`'s header already prescribes. The `ci-status-update` rows were
+queued under the `manifest-update` concurrency group that WS-A Phase-3 RETIRED when that workflow stopped committing the
+manifest and moved to Firestore CAS — with the group gone, nothing could ever release them. The rest are runs of
+workflows that no longer exist.
+
+**3 could NOT be removed — GitHub-side, not ours.** `strategy-service` runs 31164709790 (`quality-gates-v2`),
+31164709402 (`Semver Agent`), 31164709423 (`main-backmerge-to-ldr`), all queued 2026-08-07T09:09:30Z with `jobs=0`.
+`cancel` returns HTTP 500 and `DELETE` returns HTTP 403 ("Could not delete the workflow run" — the delete API refuses a
+run that is not `completed`, and cancel cannot move it to `completed`). They are wedged server-side with no API escape.
+
+**They are cosmetic only — verified, not assumed.** strategy-service's live CI is healthy (every run on 2026-08-10
+succeeded). Neither standing monitor can be fooled by them: `promote_fleet_startup_failure_monitor.py` scopes to
+`WORKFLOW_FILES = ("ldr-to-main-promote-fleet.yml", "ldr-to-main-promote.yml")`, and these three are none of those;
+`glue_pool_starvation_monitor.py` keys on `glue`-labelled JOBS, and a run with `jobs=0` exposes no job to match. So no
+false page is possible — the only cost is the polluted `--status queued` view.
+
+**If you are checking for runner starvation**: age-filter, or expect those three strategy-service rows. They should age
+out with GitHub's run retention; re-attempt the purge after that.
+
+## Todos
+
+- [ ] [OPERATOR] P3. Re-attempt `gh run cancel` / run-delete on strategy-service 31164709790, 31164709402, 31164709423
+      once GitHub's retention has aged them out (or via support if they persist). Purely cosmetic — they pollute
+      `gh run list --status queued` but provably cannot trip either standing monitor (see above). Done-when:
+      `--status queued` is empty fleet-wide.

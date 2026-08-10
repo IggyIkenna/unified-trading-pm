@@ -30,6 +30,7 @@ busywork) — the goal is that the silent-default population does not grow unatt
 
 Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
   check_effort_signal_ratchet.py --only <path> [<path> ...]
+  check_effort_signal_ratchet.py --diff-base <ref> [--quiet]
   --update-baseline   regenerate effort_signal_baseline.yaml from the CURRENT corpus
                        state. Run this ONLY after actually reviewing the new plans this
                        run flagged (declare effort:/thinking_tier: on the ones that need
@@ -37,6 +38,21 @@ Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
                        plans. A genuine raise still writes (with a loud warning), so a
                        real spike stays visible in the commit history.
 Exit 0 = current count <= baseline. Exit 1 = grew beyond baseline.
+
+``--diff-base <ref>`` (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_
+velocity_2026_08_09.md): diff-scoped mode, same shape + rationale as
+check_reference_paths.py's own `--diff-base` (which itself mirrors check_archive_
+candidates.sh's, operator ruling 2026-08-06). The corpus-wide baseline mode attributes ANY
+concurrent agent's newly-authored silent-default plan, landing anywhere in the corpus
+between a worker's fix-push and the next CI re-run, to whoever happens to be re-triggering
+— on a high-churn branch this makes the check un-convergeable serially. Diff-scoped mode
+compares the silent-default-effort plan SET at HEAD vs the set at <ref> (e.g. origin/main)
+and fails only on plans new to that set at HEAD — pre-existing corpus debt at <ref> is
+tolerated exactly like baseline mode tolerates it, but the comparison point no longer races
+the corpus's live tip. Falls back safely to "no violations at base" (i.e. every current
+violation counts as new) if <ref> cannot be resolved locally — callers MUST verify the ref
+is fetched/resolvable before passing --diff-base (see run_hygiene_sweep.sh's DIFF_BASE_REF
+guard).
 
 ``--only <paths>`` (2026-08-09, precommit migration): checks ONLY the given staged files,
 no baseline math — same shape as check_terminal_status_archived.py --only. This ratchet
@@ -148,6 +164,96 @@ def _silent_default_plans() -> list[str]:
     return [fp.name for fp in sorted(ACTIVE_DIR.glob("*.md")) if _is_silent_default(fp)]
 
 
+def _tree_entries_active_md(ref: str) -> list[tuple[str, str]]:
+    """[(basename, blob_sha), ...] for immediate *.md children of plans/active/ at `ref`
+    (non-recursive — mirrors ACTIVE_DIR.glob("*.md")). One subprocess call regardless of
+    corpus size (same shape as check_reference_paths.py's _tree_entries_md)."""
+    result = subprocess.run(
+        # Trailing slash is load-bearing: `git ls-tree <ref> -- plans/active` (no slash)
+        # returns the SINGLE `tree` entry for the directory itself, not its children —
+        # confirmed live (0 entries returned, silently wrong) while validating this mode.
+        ["git", "-C", str(PM), "ls-tree", ref, "--", "plans/active/"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    entries: list[tuple[str, str]] = []
+    for line in result.stdout.splitlines():
+        meta, _, path = line.partition("\t")
+        parts = meta.split()
+        if len(parts) != 3 or parts[1] != "blob":
+            continue
+        if path.endswith(".md"):
+            entries.append((Path(path).name, parts[2]))
+    return entries
+
+
+def _batch_read_blobs(shas: list[str]) -> dict[str, str]:
+    """sha -> decoded text content, via ONE `git cat-file --batch` call for the whole
+    list (vs. one `git show` subprocess per file — mirrors check_reference_paths.py's
+    identical helper, added there after a per-file `git show` implementation measured
+    60s+ per run on this corpus)."""
+    if not shas:
+        return {}
+    proc = subprocess.run(
+        ["git", "-C", str(PM), "cat-file", "--batch"],
+        input=("\n".join(shas) + "\n").encode("utf-8"),
+        capture_output=True,
+        check=False,
+    )
+    out = proc.stdout
+    result: dict[str, str] = {}
+    pos = 0
+    while pos < len(out):
+        nl = out.index(b"\n", pos)
+        header = out[pos:nl].decode("utf-8", "replace").split()
+        if len(header) != 3:
+            break
+        sha, _obj_type, size_s = header
+        size = int(size_s)
+        start = nl + 1
+        result[sha] = out[start : start + size].decode("utf-8", "replace")
+        pos = start + size + 1  # +1 skips the trailing newline after object data
+    return result
+
+
+def _silent_default_plans_at(ref: str) -> set[str]:
+    """The full silent-default-effort plan-basename SET at `ref` — batched git reads,
+    same shape as check_reference_paths.py's _violations_at."""
+    entries = _tree_entries_active_md(ref)
+    blobs = _batch_read_blobs([sha for _, sha in entries])
+    out: set[str] = set()
+    for basename, sha in entries:
+        text = blobs.get(sha)
+        if text is None:
+            continue
+        if _is_silent_default_text(basename, text):
+            out.add(basename)
+    return out
+
+
+def _run_diff_base(base_ref: str, quiet: bool) -> int:
+    """Diff-scoped mode: fail only on plans that are silent-default at HEAD but were NOT
+    silent-default at `base_ref` — see the module docstring's --diff-base section for the
+    race this closes."""
+    head_set = set(_silent_default_plans())
+    base_set = _silent_default_plans_at(base_ref)
+    new_ones = sorted(head_set - base_set)
+
+    if not quiet:
+        for name in new_ones:
+            print(f"  SILENT-DEFAULT-EFFORT  {name}")
+
+    n = len(new_ones)
+    print(
+        f"{'✅' if n == 0 else '❌'} check_effort_signal_ratchet (--diff-base {base_ref}): "
+        f"{n} NEW violation(s) vs {base_ref}"
+    )
+    return 0 if n == 0 else 1
+
+
 def _run_only(paths: list[str], quiet: bool) -> int:
     """Precommit-scoped mode: check exactly the given staged files, no baseline math.
 
@@ -194,6 +300,10 @@ def main(argv: list[str] | None = None) -> int:
     if "--only" in args:
         idx = args.index("--only")
         return _run_only(args[idx + 1 :], quiet)
+
+    if "--diff-base" in args:
+        idx = args.index("--diff-base")
+        return _run_diff_base(args[idx + 1], quiet)
 
     flagged = _silent_default_plans()
     count = len(flagged)

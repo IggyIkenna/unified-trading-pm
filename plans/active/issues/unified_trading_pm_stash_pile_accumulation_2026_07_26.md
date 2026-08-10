@@ -277,3 +277,50 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   across `.tabs/1-4` + the root clone (the root was missed by every prior audit pass until this one).
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **2026-08-09 (operator-directed fresh re-audit, interactive session) — SUPERSEDES the 2026-08-08 counts above; do not
+  use them.** Live counts had already drifted from the 2026-08-08 figures by the time the operator asked (`.tabs/1`=104
+  not 96, `.tabs/2`=31 not 26, `.tabs/3`=49 not 42, `.tabs/4`=14 not 12) — confirming this doc's own standing warning
+  that counts cannot be trusted stale. Dispatched 5 parallel read-only audit agents (one per checkout, same methodology
+  as 2026-08-08) against fresh `git stash list` pulls. **One genuinely new, non-stash finding surfaced and was actioned
+  separately** (see below) — everything else is pure stash-pile bookkeeping.
+
+  | Checkout  | Entries at audit time                                     | SAFE | AMBIGUOUS | RECOVER | Notes                                                                                                                                                           |
+  | --------- | --------------------------------------------------------- | ---- | --------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `.tabs/1` | 108                                                       | 108  | 0         | 0       | 87% bare `autostash`; zero app/service code touched, docs/scripts only                                                                                          |
+  | `.tabs/2` | 35                                                        | 34   | 0         | 1       | **RECOVER item filed as a real issue doc — see below**                                                                                                          |
+  | `.tabs/3` | 49                                                        | 39   | 10        | 0       | 9 = never-committed full-repo reformat sweep (banned-pattern, still a preference call); 1 = a small never-landed CLAUDE.md pointer clause (trivial, not urgent) |
+  | `.tabs/4` | 16 audited (pile still growing live — 17+ by report time) | 16   | 0         | 0       | Pile regrowing faster than a single pass can fully keep up — re-check count before dropping                                                                     |
+  | root      | 12                                                        | 12   | 0         | 0       | Stable throughout the audit, no drift                                                                                                                           |
+
+  **RECOVER finding — `.tabs/2` `stash@{8}` ("foreign-wip-elysium-not-mine-preserved-during-quickmerge-3")**: contained
+  one never-committed file, `elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md` — a genuine P1 client-contract
+  finding (Elysium SLA v4's binding Initial Support Period reads 60 days in the substantive terms but 30 days in every
+  client-facing summary already sent; plus 5 stale June/May-2026 dates in a doc dated 2026-07-24). Drafted 2026-08-08,
+  swept into a protective autostash by a concurrent quickmerge before it could be committed, and sat undiscovered for a
+  day. Re-verified against the live codex docs (still accurate, unchanged) and filed as
+  `plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md` (`unified-trading-pm@41dc8afe9f`) —
+  not resolved here, operator ruling still needed on the 30-vs-60-day question.
+
+  **Exact drop instructions, current as of this audit** (re-run `git stash list` immediately before each `for` loop — if
+  the count has grown past the number below, STOP; the extra entries are unreviewed by this pass, do not include them in
+  a blind loop):
+
+  ```bash
+  cd /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm && for i in $(seq 1 108); do git stash drop stash@{0}; done
+  cd /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/2/unified-trading-pm && for i in $(seq 1 35); do git stash drop stash@{0}; done   # pull stash@{8}'s content out FIRST if you haven't already recovered it — see above, now moot since it's filed, just confirm the doc exists before dropping
+  cd /Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/4/unified-trading-pm && for i in $(seq 1 16); do git stash drop stash@{0}; done   # only drop the 16 audited — re-check count first, this pile was still growing live
+  cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm && for i in $(seq 1 12); do git stash drop stash@{0}; done
+  ```
+
+  `.tabs/3` is deliberately excluded from the blind-loop list above — 39 of its 49 are safe but the other 10 need a
+  human decision first (drop-from-the-bottom by content isn't index-safe to script blindly; see the 10 AMBIGUOUS
+  entries' descriptions in the audit agent reports for exactly which indices they are at the time you check).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — full re-read. Both remaining
+  `[OPERATOR] P3` todos are explicit "BLOCKED on the re-audit above — do not run as written" mechanical-drop
+  instructions that `git stash drop`/`clear` categorically blocks for agents via the local guardrail hook
+  (`block_destructive_commands.py`) regardless of review outcome — the operator must run the `for` loops directly,
+  outside any agent's tool-gated shell. This is the exact same class of hazard as the sibling doc
+  `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (confirmed still live today per this
+  sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to
+  the operator with a fresh count check immediately before each loop.

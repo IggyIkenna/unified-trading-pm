@@ -18,7 +18,7 @@ created: 2026-06-26
 role: ui_developer
 model: sonnet
 thinking: medium
-lifecycle: one_shot
+lifecycle: persistent
 does:
   - TypeScript/React UI — components, dashboards, fleet/activity views, state wiring against backend API contracts
   - Playwright L2 regression specs for every UI change; tsc/ESLint/Vitest green

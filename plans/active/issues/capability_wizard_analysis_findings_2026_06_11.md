@@ -1,9 +1,10 @@
 ---
 doc_type: issue
 title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
-summary:
-  "**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability
-  wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m..."
+summary: >-
+  Running log of bugs, gaps-in-understanding, conflicting truths, and dual-but-different implementations found while
+  building the capability wizard/manifest — companion to the gap-discovery tracker (which covers missing
+  capabilities/registries instead); each finding tagged OPEN / FIXED / TRIAGED with evidence.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -81,9 +82,12 @@ Establish which is generated from which and whether a drift check exists; if non
 
 ### F5 — Source-mode capability matrix: manual doc vs no registry
 
-**Status**: OPEN (Phase 1 codifies). `source-mode-capability-matrix_2026-06-07.md` encodes batch/live/replay × source ×
-transport truth as a hand-written audit doc only; `SOURCE_PRIORITY`/`default_transport_for_source` in UAC encode parts
-of it. Same fact, two homes, no reconciliation.
+**Status**: RESOLVED 2026-07-27 — verified by plan_reconciler 2026-08-10.
+`capability_wizard_gap_discovery_2026_06_11.md` (:95-99) shows this fixed via `unified-trading-pm@ce6eb1775`: a
+declarative `supports_mode` registry now backs the exporter's per-(source, mode) verdict, live-verified 0 remaining
+`missing_registry` gaps on this dimension (was ~56-66 of the manifest's total). This inline status was never updated to
+match — unlike F27/F42/F48 below, which each got a later corrective checkbox, this finding had none; not covered by this
+doc's own "Risk-domain index" roll-up table either (no F5 row there).
 
 ### F6 — strategy_master epic had a duplicated "Assigned active plans" section
 
@@ -216,7 +220,11 @@ The Phase-1 uic-openapi-sync shipping todo is therefore left UNticked (see plan 
 
 **Remedy**: either (a) extend `uic-openapi-sync.yml` to copy the registry JSONs (it would need UAC to publish them as a
 release artifact the workflow can fetch), or (b) re-word the plan todo to point at the `generate-unified-openapi.sh`
-sync block as the canonical delivery path. Decision deferred to the UI-phase owner.
+sync block as the canonical delivery path. Decision deferred to the UI-phase owner. **Confirmed real successor (plan\_
+reconciler, 2026-08-10)**: `plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` § "Residual
+1 — CI-runner-blocked full openapi regen (F12/F14)" tracks both findings by name (blocked until `.venv-workspace` is
+provisioned on a CI runner, an operator action) — its P1 item was itself extracted to
+`ci_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1. Both F12 and F14 are correctly owned, not orphaned.
 
 **Unit 3 CI-regen audit (2026-06-12):** Confirmed — no CI workflow exists in any repo that runs
 `generate-unified-openapi.sh`. Available UAC workflows: quality-gates-v2, schema-health, semver-agent, agent-audit,
@@ -714,8 +722,8 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
-- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
-      BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
+- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise
+      NotImplementedError). BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
 - [x] ✅ [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net
       delta; primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). **DONE 2026-06-15** —
       `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:

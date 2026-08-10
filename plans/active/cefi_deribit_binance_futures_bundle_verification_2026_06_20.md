@@ -134,10 +134,11 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       writing derivative_ticker/liquidations rows (104k rows/batch by 19:46 UTC). Hung BINANCE-FUTURES-2024 VMs from
       prior session (cefi-binance-futures-2024-heavy/light-20260623-193543) were confirmed zero-progress after 5.5h and
       deleted before relaunch.
-  > **GATED 2026-06-12 (slot-2, BLK-01710985)**: Re-queued with post-G4-apply prereq per operator ruling — same as
-  > manifest-completion gate (BLK-fb70523c). Pre-migration drain active;
-  > `Do NOT resume until migration verified-complete` constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do
-  > not launch cefi backfill VMs until G4 applies complete and drain is lifted.
+  > **GATED 2026-06-12 (slot-2, BLK-01710985)**: Re-queued with post-G4-apply prereq per operator ruling — same
+  > BLK-fb70523c gate tracked in `/plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`
+  > as the manifest-completion gate. Pre-migration drain active; `Do NOT resume until migration verified-complete`
+  > constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do not launch cefi backfill VMs until G4 applies
+  > complete and drain is lifted.
 - [x] ✅ [SCRIPT] P2. Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
       populated (not NaN-blanket). **DONE 2026-07-30 (doc-triage pass)** — corrected finding: greeks/IV live under
       `data_type=trades`, NOT `data_type=book_snapshot_5` (an initial check of `book_snapshot_5` found only bid/ask

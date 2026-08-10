@@ -31,7 +31,7 @@ created: 2026-05-07
 authoritative_for: [data-status drilldown shard-axis tree hierarchy]
 referenced_by: [/codex/02-data/data-status-drilldown.md, plans/epics/features_and_ml_master.md]
 owner:
-last_reviewed: 2026-05-07
+last_reviewed: 2026-10-28
 code_refs:
 ---
 

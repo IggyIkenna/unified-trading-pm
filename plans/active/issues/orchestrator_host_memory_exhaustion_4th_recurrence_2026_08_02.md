@@ -383,3 +383,8 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   `assigned_vm: planning` — do the work there, not here); `[DIAG] P2` is explicitly non-gating best-effort; the fresh
   `[OPERATOR] P2` dmesg/root-access todo (added earlier this session) is still unresolved as its own text states. No
   reclassification.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-verified the doc's
+  own citation: the kill-event dual-write todo IS already `[x]` done here (STALE-CHECKBOX FIX, round5), leaving 2
+  genuinely open items — `[DIAG] P2` (best-effort, non-gating, no bounded done-when) and `[OPERATOR] P2` (needs root
+  `dmesg`/`journalctl -k` access this identity does not have, or an operator to grant kernel-ring-buffer read access)
+  — both unresolved as of this pass, content otherwise unchanged since 2026-08-07.

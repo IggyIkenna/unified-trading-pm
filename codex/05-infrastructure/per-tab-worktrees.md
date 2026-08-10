@@ -283,6 +283,25 @@ is a known archived/consolidated repo. SSOT for the incident + remediation:
 | A slot clone's `git fsck` FAILS with `invalid sha1 pointer` / `invalid reflog entry` for an object "missing" from the store (VM git-health guard alerts "genuine missing/broken objects")                                                                                                                              | **Reference-clone prune hazard** (below): the base clone's default auto-gc pruned an unreachable object that a slot's stale ref/reflog still points at. The base's gc has no knowledge of slot refs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Prevent:** `git -C <base> config gc.pruneExpire never` on every base (asserted by `setup-tab-worktrees.sh` at clone time + `fleet-git-health-guard.sh` every 15 min). **Repair a broken slot:** reset the stale local ref off the missing object (`git update-ref refs/heads/<b> origin/<b>`) + `git reflog expire --stale-fix --all`, then re-fsck. See § below.        |
 | A repo's test/QG run fails with `ImportError: cannot import name 'X'` (or similar) while importing/probing a **sibling** repo's code (e.g. unified-trading-pm's capability-schema tests reading strategy-service's live engine registry) — even though that sibling's own quality-gates is green on its current branch | **Stale sibling `.venv` on THIS slot**: each slot's sibling clones have fully independent `.venv`s (3-tier isolation above). A fleet-wide dependency bump landing in the sibling's `pyproject.toml`/`uv.lock` does **not** retroactively refresh any slot's already-built venv — only the NEXT `uv sync` in that specific clone does. Confirmed 2026-07-31: `strategy-service/.venv` on slot 2 had `fastapi==0.135.1` installed while its own `pyproject.toml`/`uv.lock` already required `0.140.7` (a fleet-wide CVE-remediation bump shipped 2026-07-28, `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`) — a cross-repo probe in unified-trading-pm's tests hit `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` purely from the stale venv. | **Self-service first, don't escalate**: `cd <sibling-repo> && uv sync`, then verify — e.g. `.venv/bin/python -c "import <pkg>; print(<pkg>.__version__)"` should match the version pinned in that repo's own `uv.lock`. No code/pyproject change needed; this is a local environment refresh, not a dependency-resolution bug.                                             |
 
+| Repeated `index.lock` contention, edits needing recovery from an autostash TWICE, or a commit landing under the WRONG
+operator's author identity — even though Path-B's separate clones make CROSS-slot collisions unrepresentable |
+**Interactive-session slot collision — a DISTINCT failure mode from the cross-slot collision Path-B's separate clones
+already solve.** AO-dispatched workers get programmatic slot allocation; an INTERACTIVE session (a human opening a
+terminal/IDE tab) has none — the operator just `cd`s into whichever `.tabs/N` they have open, and nothing warns them if
+a different live session already occupies it. Multiple `claude` processes (potentially different operators) then share
+ONE slot's single `.git` — one index, one `HEAD`, one set of refs, and one `user.name`/`user.email` (§ "Commit
+attribution" below assumes one live session per slot — this incident breaks that premise). Confirmed live 2026-08-01: up
+to 6 concurrent `claude` processes on one slot, 3 collisions in ~15 min, one commit mis-attributed to the wrong operator
+despite correct content. Full incident:
+`plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`. | **Recovery**:
+`scripts/dev/safe-doc-push.sh` for the docs-only fast path (CLAUDE.md-mandated default —
+fetch/reconcile/stage-by-name/foreign-content-isolation/bounded retry, the same contention-hardening quickmerge.sh has
+for code). **Prevention (WARN, never hard-block — 2026-08-08 operator ruling)**: a live heartbeat on `.agent-claim`
+(`slot-git-status-report.sh`'s `refresh_agent_claim_heartbeat()`) distinguishes "claimed" from "claimed-and-alive"; a
+`SessionStart` hook (`cursor-configs/hooks/session-start-collision-check.sh`) checks that heartbeat plus a
+`/proc/<pid>/cwd` process scan and warns (non-blocking) naming the live occupant. Operator-side: before opening a new
+session, check `.agent-claim` liveness and pick an unclaimed slot. |
+
 ### Reference-clone prune hazard (codified 2026-07-13)
 
 **Failure mode.** Every slot is a `git clone --reference <base>` sharing the base's object store via
@@ -462,6 +481,37 @@ worktree-level (separate index/working tree). Separate clones drop the entire **
 (deleted fleet-wide), the tab-rebase/upstream self-heal in `slot-cron-ff-pull.sh`, and the diverged-tab recovery class.
 Contention moves to **LDR push-time** (rebase-on-reject), already handled by quickmerge STAGE 0.4.
 
+### Ship scripts run isolated on a DETACHED HEAD and push a refspec (codified 2026-08-10)
+
+That same "can't check out one branch in two worktrees of a clone" constraint governs the **ship scripts' own** isolated
+mode, and it is not optional: an isolated worktree of a slot clone can never `git checkout live-defi-rollout`, because
+the clone itself already holds it. Both `safe-doc-push.sh` and `quickmerge.sh` therefore:
+
+1. create the throwaway worktree with **`git worktree add --detach`**, and **stay detached** — no branch checkout at any
+   later stage; and
+2. push an **explicit refspec** — `git push origin "HEAD:refs/heads/<branch>"`, never `git push -u origin <branch>`.
+
+Step 2 is load-bearing, not stylistic. From a detached HEAD, `-u origin <branch>` pushes the **shared clone's**
+`refs/heads/<branch>` — a stale ref that does not contain the commit just made — and can **exit 0 having shipped none of
+your work**. A silent no-op ship is worse than a failure, so the refspec form is required.
+
+`safe-doc-push.sh` was built this way; `quickmerge.sh` was not, and its isolated mode consequently died on
+`fatal: '<branch>' is already used by worktree at '<main clone>'` for every ship until 2026-08-10
+(`unified-trading-pm@dad266ff61`, regression tests in `/tests/test_quickmerge_isolated_branch_collision.bats`). The
+practical cost was indirect: callers fell back to `--no-isolated`, which is precisely the shared-checkout mode where a
+peer's pull/rebase cycle can revert your uncommitted work mid-ship.
+
+**A corollary worth knowing before you add a stage:** anything reading `git rev-parse --abbrev-ref HEAD` gets the
+literal string `HEAD` in isolation, not a branch name. Fall back to the ship branch explicitly.
+
+**The isolated worktree must also be given a toolchain, or its gate is a lie.** Its `.venv` is a symlink to a per-repo
+cache that nothing else creates, and `quality-gates.sh` gates its PATH export on `[ -d .venv/bin ]` — **false for a
+dangling symlink**, so before 2026-08-10 the gate silently ran `pytest` on the _system_ interpreter and reported
+failures for a tree whose tests pass. quickmerge now provisions it (`uv sync`), and the gate now **fails closed** rather
+than degrading silently (`agent-orchestrator@8f1a08ad53`). Node deps are cached per repo and seeded by **copy, never a
+symlink** — `uv sync` pruned a shared `.venv` once already, and a linked `node_modules` would let `npm ci` do the same
+to the operator's real tree.
+
 ### What worktree isolation does NOT cover (codified 2026-07-30)
 
 Worktree/clone isolation covers exactly three things: the **working tree**, the **index**, and **HEAD**. Two surfaces
@@ -516,6 +566,50 @@ not shared), leaving `COMMIT_EDITMSG` as the confirmed, reproduced root cause.
   a FOREIGN process's staged files into the tree) — that one is a real index-sharing hazard requiring
   `git diff --cached --stat` + `git restore --staged <foreign-file>` before every commit (see "Within-slot ergonomics"
   below); this one (message-only) can happen even when the tree is provably clean.
+
+**4. prek's own stash/restore cycle around each hook run is also not race-safe in a shared checkout — a verified
+data-loss class, not a theoretical one (confirmed 2026-08-08,
+`/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`).** Each prek run stashes
+unstaged changes to a PID-namespaced patch (`~/.cache/prek/patches/<ts>-<pid>.patch`) at hook-batch start and restores
+them at the end. If a second session edits the SAME file while a first session's hooks are still running, the first
+session's restore reinstates its own STALE pre-edit snapshot over the second session's newer edit — silently: no error
+to the victim session, no conflict marker, and (unlike item 1 above) no `refs/stash` entry at all, since prek uses its
+own patch cache rather than a real git stash. The victim's `git status` reads clean immediately afterward, which
+actively confirms the wrong conclusion rather than merely omitting the right one. Reproduced on demand via
+`scripts/dev/repro-prek-stash-restore-race.sh`. Two code fixes now shrink the window (flock-serializing the `git commit`
+call in `safe-doc-push.sh`/`quickmerge.sh`, plus a checksum-verify hard-stop on those same call sites — see the issue
+doc's Progress Log) but do not close every path — a raw/manual `git commit` outside those two scripts can still hit it.
+
+- **HARD RULE — back up uncommitted WIP to the scratchpad BEFORE running any git-touching command in a shared checkout,
+  and verify the backup before trusting it.** Copy the file(s) you're mid-editing to your scratchpad
+  (`cp <file> <scratchpad>/<file>.bak` or equivalent) ahead of any `git commit` / `prek run` / `safe-doc-push.sh` /
+  `quickmerge.sh` invocation that could race with a concurrent session's hooks on the same clone, THEN confirm the copy
+  actually landed (`diff`/`ls -la` the backup — don't just trust the `cp` exit code). This is what recovered the
+  original incident's lost work; without it the edit would have been gone with no trace in any commit, stash, or on
+  disk.
+
+**5. `gcloud config set account` mutates HOST-WIDE state, not per-slot or per-session state — confirmed live twice in
+one session, 2026-08-04 (`plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`).**
+`~/.config/gcloud/` is deliberately excluded from the per-slot on-demand-artifact purge (§ "On-demand artifact pattern"
+above) so credential files aren't duplicated per slot — but that shared location also holds gcloud's mutable
+ACTIVE-SELECTION property (`core/account` / the active named configuration), not just static credential files. Any
+concurrent slot running `gcloud config set account <x>` (or any tool that mutates the active gcloud config) changes
+which identity EVERY OTHER slot's bare `gcloud` invocations use, immediately and silently — no lock, no warning, no
+per-process scoping. Confirmed live: a production VM-launching backfill's active account flipped between three different
+service accounts at least 4 times across ~2 hours with zero action from the affected session, twice landing on an
+identity that lacked `compute.instances.create` and aborting an in-progress launch mid-run.
+
+- **HARD RULE — prefer a per-invocation identity override over the ambient active account whenever the tooling supports
+  one.** Use `gcloud --account=<sa> ...` (per-command flag, does not mutate shared state) or
+  `CLOUDSDK_CORE_ACCOUNT=<sa>` exported only within the invoking script's own subshell, instead of relying on
+  `gcloud config set account` having "stuck." A per-slot NAMED configuration
+  (`gcloud config configurations create slot-<N>` + `CLOUDSDK_ACTIVE_CONFIG_NAME=slot-<N>`) is a further isolation
+  option where a per-invocation override isn't practical — it scopes the mutable active-selection pointer without
+  duplicating the underlying credential files.
+- **Any other concurrent slot may change the ambient identity at any time.** Never assume the account you last set (or
+  observed via `gcloud config list`) is still active by the time your next `gcloud` call runs — a sibling slot's own
+  legitimate `gcloud config set account` between your calls is enough to flip it out from under you, with no error or
+  warning at the point of mutation.
 
 ## Within-slot ergonomics
 
@@ -862,6 +956,13 @@ git config user.email "ikennaigboaka@gmail.com"
 clone → inherit the identity automatically. Do NOT hand-edit `~/.gitconfig`. **Consumers:** CI alert workflows attribute
 via `github.event.head_commit.author.name`; the slot-git-status-report cron can group by slot.
 
+**Caveat — this premise assumes ONE live session per slot.** If two interactive sessions/operators share the same slot's
+checkout (the "Interactive-session slot collision" row in § Troubleshooting above), `.git/config` is shared state too:
+commits from EITHER session land under whichever identity is currently stamped there, regardless of actual author
+(confirmed 2026-08-01 — a session's own content-correct commit landed under the other operator's identity). This is not
+a gap in the per-clone mechanism itself; it is a consequence of the interactive-session-collision gap and is mitigated
+the same way (WARN-only `.agent-claim` liveness + the `SessionStart` collision hook), not solved at the identity layer.
+
 ### Derivation SSOT + checker (rework 2026-07-09 — ao_task_lifecycle plan Phase D)
 
 The expected-identity rule lives in ONE sourced lib — `scripts/hooks/slot-identity-lib.sh`
@@ -953,15 +1054,26 @@ which already excludes gitignored content, so on-demand artifacts don't trigger 
 `.agent-claim` ownership file lives at `.tabs/<N>/.agent-claim` (slot root, above repos), never conflicts with per-repo
 build dirs.
 
-## Shared uv cache — one per-host cache, hardlinked venvs (codified 2026-07-17)
+## Shared uv cache — one per-host cache, hardlinked venvs (codified 2026-07-17; relocated INSIDE `.tabs/` 2026-08-09)
 
-**Rule**: `UV_CACHE_DIR = <workspace-root>/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
+**Rule**: `UV_CACHE_DIR = <workspace-root>/.tabs/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
 directory holding all repo clones (parent of `unified-trading-pm`). Derived, never a hardcoded home path — the cache
 MUST sit on the same filesystem as the venvs it links into, or hardlinks silently degrade to copies (failure mode B2 in
 `plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`; the fleet-wide dedup fix shipped 2026-06-29,
 measured proof: shared `.so` inodes at `links=81`, ~21 GB reclaimed).
 
-Three layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first
+**The cache dir must live INSIDE `.tabs/`, not as its sibling (RULED 2026-08-09,
+`/plans/archive/2026_08/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`).** This host presents
+`.tabs/` as its own mount/bind boundary — `stat -c %d` reports an identical device id for `.tabs/` and its siblings, but
+the kernel's `link()` syscall still refuses to cross the real boundary between them (`EXDEV`, confirmed via a raw `ln`
+probe; same mechanism independently found for pnpm's default store, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` item
+10). A cache dir placed as a sibling of `.tabs/` (the 2026-07-17-codified `<workspace-root>/.uv-cache`) silently
+degraded every cache→venv install to a full copy — `UV_LINK_MODE=hardlink` being correctly set did NOT save it, because
+the boundary was crossed regardless. Verified fix: a real `uv sync` against the relocated
+`<workspace-root>/.tabs/.uv-cache` shows installed `.so` files at `nlink=2` (was `nlink=1` fleet-wide, 1,800/1,800
+sampled, per the 2026-08-08 investigation this fix corrects).
+
+Four layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first
 wins consistently:
 
 1. **QG runs** — `scripts/quality-gates-base/base-service.sh` (every `quality-gates.sh` invocation, all hosts).
@@ -969,7 +1081,9 @@ wins consistently:
 3. **Interactive shells** — `scripts/dev/install-uv-cache-shell-env.sh` writes a managed block into the operator's
    `~/.bashrc`/`~/.zshrc`. Run ONCE per host (installed 2026-07-17 on the planning VM + hk dev host); without it,
    hand-run `uv` falls back to `~/.cache/uv`, which on split-filesystem hosts is cross-fs → silent copies + a second
-   cache on the wrong partition. Verify: interactive `uv cache dir` prints `<workspace-root>/.uv-cache`.
+   cache on the wrong partition. Verify: interactive `uv cache dir` prints `<workspace-root>/.tabs/.uv-cache`.
+4. **The prune cron** — `scripts/dev/prune-uv-cache.sh` / `install-prune-uv-cache-cron.sh` — must target the SAME
+   relocated dir, or it silently prunes an empty/unused directory while the real cache grows unbounded.
 
 **Growth is bounded by two crons on the planning VM** (`i-0c9b283b31d6b5ca7`): `vm-disk-guard.sh` (threshold 80%,
 cadence `0 */2` since 2026-07-17 — 6h let the host climb +19 points blind between firings) and
@@ -1108,3 +1222,117 @@ auth-fail boot prompts inline the same ff-only-when-behind + divergence-STOP blo
 - Bootstrap script: [`scripts/dev/setup-tab-worktrees.sh`](../../scripts/dev/setup-tab-worktrees.sh)
 - Teardown script: [`scripts/dev/teardown-tab-worktrees.sh`](../../scripts/dev/teardown-tab-worktrees.sh)
 - Drift invariant: `scripts/cicd/slot_drift_check.py`
+
+---
+
+## Committing from a contended checkout — isolated-worktree mode (2026-08-10)
+
+**Authoritative for**: how `safe-doc-push.sh` and `quickmerge.sh` behave under concurrency, what their exit codes mean,
+and when isolation is on. Root-cause evidence:
+[`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`](/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md).
+
+### The hazard, stated once
+
+Two processes committing out of **one checkout** interleave prek's patch save/restore and git's autostash push/pop. The
+loser's uncommitted edits are reverted to HEAD with **no error and nothing in `git status` to explain it**. This is not
+rare: measured 2026-08-10, six concurrent doc pushes from one shared checkout, with a peer session dirtying unrelated
+tracked files, landed **0 of 6** (every worker `rc=7`, prek stash/restore race). The same six from isolated worktrees
+landed **6 of 6** with every caller's working tree intact.
+
+It needs concurrent writers **in one checkout** — which is a laptop condition, not a fleet one. Two interactive Claude
+sessions routinely share one `.tabs/N` checkout (this doc's own multi-agent section documents that as accepted). The
+orchestrator's planning VM dispatches one task at a time per slot, and each slot is already its own clone, so there is
+no second writer to race.
+
+### What each script does for you now — you do not hand-roll any of this
+
+| Behaviour                               | `safe-doc-push.sh` | `quickmerge.sh`                         |
+| --------------------------------------- | ------------------ | --------------------------------------- |
+| Isolated worktree for stage+commit      | ✅ always          | ✅ laptop only (see gating below)       |
+| Retry loop w/ backoff (6 attempts)      | ✅                 | ✅                                      |
+| Per-repo push mutex + host governor     | ✅                 | ✅                                      |
+| Per-checkout `flock` around commit      | ✅                 | ✅                                      |
+| Drift gate made advisory for its commit | ✅                 | ✅                                      |
+| Detects your content being reverted     | ✅ exit 10         | ✅ loud warning + recovery instructions |
+| Recursion backstop                      | ✅ exit 11         | ✅ exit 11                              |
+
+**Do not** re-improvise fetch/reconcile/stage-by-name/retry logic in-context. Call the script.
+
+### Which race isolation actually solves — and which it does not
+
+Two separate hazards get conflated. Keep them apart when reasoning about a host:
+
+- **Shared-index race.** Two processes in ONE checkout: prek's patch save/restore interleaves with git's autostash
+  push/pop, and the loser's uncommitted edits are reverted with no error. Measured 0/6 landed vs 6/6 isolated.
+  **Isolation solves ONLY this**, and it requires a shared index to exist at all — a laptop condition, since interactive
+  sessions have no allocation mechanism and share a `.tabs/N` checkout. On the AO VM one task runs per slot and each
+  slot is its own clone, so the hazard is structurally absent and isolation would cost a full ~7,155-file worktree
+  checkout per commit for nothing.
+- **Push contention on the shared branch.** Many slots and hosts, one `live-defi-rollout`. Every host has this, AO
+  included. **Isolation does nothing for it either way.** It is handled by the per-repo+branch push mutex (K=1), the
+  rebase-and-retry loop, the advisory drift gate (which removed the livelock where a commit could never pass while
+  origin moved during the ~2min hook chain), and the exit-10 content-vanished guard — all host-independent, all active
+  regardless of the isolation gate.
+
+So turning isolation off on the VM removes overhead for a hazard it does not have, and removes none of the protection
+for the hazard it does. Both scripts therefore share ONE host gate: laptop → on, named VM → off, explicit flag/env wins
+either way.
+
+### Rebase-invalidated evidence citations reconcile themselves
+
+A worker commits (SHA X), records `<repo>@X` in a plan todo, and ships — but both shipping scripts rebase onto origin
+before pushing, which REWRITES the commit, so what lands is SHA Y and the citation resolves nowhere. This is not
+fabrication; the SHA aged out between `git commit` and `git push`. Live instance 2026-08-10:
+`unified-trading-pm@0f9b8a65ca`, whose work had really landed as `034cb4e2ad`. A pre-commit check structurally cannot
+catch it — at commit time the citation IS resolvable. `scripts/dev/reconcile-sha-citations.sh` therefore runs AFTER the
+last rebase and BEFORE the push, deriving the old→new mapping from `ORIG_HEAD` plus preserved commit subjects (ambiguous
+subjects are skipped, never guessed), rewriting citations in the named files and amending. Best-effort and non-blocking;
+`SHA_CITATION_RECONCILE=0` disables it.
+
+### quickmerge isolation gating
+
+`--isolated` forces it on, `--no-isolated` forces it off, `QUICKMERGE_ISOLATED=force|off` sets it non-interactively.
+Default is `auto`, which resolves by host label (`ORCHESTRATOR_VM_ID` / `VM_NAME` /
+`git config --global slotIdentity.host`, falling back to `laptop` — the same signal `slot-identity-lib.sh` already
+uses):
+
+- **Laptop (Ikenna / Harsh) → isolation is OPT-IN via `--isolated`, NOT automatic** (corrected 2026-08-10, same day it
+  shipped). It was briefly default-on and that was wrong: `quality-gates.sh` cannot resolve its dependencies inside a
+  fresh worktree — the end-to-end dogfood died with `ModuleNotFoundError: No module named 'unified_api_contracts'` and
+  `'pandas'`, because symlinking `.venv` is insufficient (editable/sibling installs resolve relative to the ORIGINAL
+  checkout, and the tooling re-resolves the environment from the worktree's own project dir). Default-on turned every
+  laptop quickmerge into a QG failure — strictly worse than the race it guarded against. Until the venv-resolution
+  problem is solved, use `--no-isolated` semantics by default and reach for `--isolated` deliberately.
+- **agent-orchestrator planning VM → isolation OFF.** One task per slot, each slot already its own clone. Isolation
+  would add a full worktree checkout per commit for zero safety gain.
+
+**Isolation forces a full QG re-gate in quickmerge, by design.** Your checkout's Pass-1 `quality-gates.sh` sentinel does
+NOT transfer into the worktree, and carrying it over would be a lie — the sentinel attests _your_ tree, whereas the
+worktree is your named files applied to `origin/HEAD`, a different tree. Re-gating is strictly stronger (it validates
+exactly what is being committed, rather than a sentinel a concurrent session may have invalidated since), and it earned
+its keep immediately: the first end-to-end run of this path caught a live P0 in F7's own `_pm_root` resolution that had
+already reached `live-defi-rollout`. But it costs a full QG run per quickmerge — use `--no-isolated` when you want the
+sentinel fast path and know no peer is writing your checkout.
+
+Isolation symlinks `.venv` / `.venv-workspace` / `node_modules` from the caller's checkout into the worktree, because
+`quality-gates.sh` resolves the repo's own `.venv` and a fresh worktree has none (gitignored). Without that symlink
+isolation would silently turn every quickmerge into a QG failure.
+
+### Exit codes worth recognising
+
+- **`safe-doc-push` exit 10** — retries exhausted **and** your named files no longer match what you handed the script.
+  Do NOT re-run: that would push whatever is on disk now. The script prints the recovering `git stash` ref. Prefer
+  `git show 'stash@{0}:<path>' > <path>` over `git stash pop` — these autostashes often also hold a peer session's WIP.
+- **`safe-doc-push` / `quickmerge` exit 11** — isolation recursion backstop. A defect in the script, not your
+  invocation; report it rather than retrying.
+- **`safe-doc-push` exit 5** — genuinely transient, and the script has verified your content is intact. Re-running is
+  safe.
+- **`safe-doc-push` exit 6** — deterministic content rejection. Fix the content; re-running cannot help. Note a hook
+  merely AUTOFIXING files is no longer classified here — that is retried automatically.
+
+### Verifying a change to any of this
+
+`scripts/dev/test-safe-doc-push-concurrency.sh <repo> <n-workers> <branch> [isolated 0|1]` is the regression harness.
+Acceptance is three-part per worker: content landed byte-identical, no exit-0-without-content, and the **caller's**
+working-tree copy unchanged. Its peer-noise writer is load-bearing — against a CLEAN checkout legacy mode scores 5/6 and
+proves nothing, because prek only does its patch save/restore when unstaged changes exist.

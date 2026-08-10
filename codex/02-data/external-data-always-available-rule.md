@@ -16,10 +16,13 @@ tags: [data-correctness, defi, cefi, tradfi, sports, prediction, escalation]
 related: [/codex/02-data/data-pipeline-correctness-hard-rule.md, /codex/02-data/honest-absence-downstream-handling.md]
 created: 2026-05-23
 authoritative_for:
-  [external-data-always-available HARD RULE, BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE status taxonomy]
+  [
+    external-data-always-available HARD RULE,
+    BLOCKED-CREDENTIALS/-PERMISSIONS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE status taxonomy,
+  ]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-21
 code_refs:
 ---
 
@@ -82,6 +85,9 @@ Replaces ad-hoc "deferred" language:
   logical unit
 - `BLOCKED-OPERATOR-DECISION` — closed-set design call needed (e.g. which vendor among 3 candidates); waits on operator
   pick
+- `BLOCKED-PERMISSIONS` — GCP IAM role/permission gap; names exact missing role + exact remedy command, no secret
+  needed; self-service per `unified-trading-pm/agents/RULES.md` § 5 (agent grants the missing role itself via
+  IAM-self-service, never escalates as a credential ask). Distinct from `BLOCKED-CREDENTIALS` (vendor API key/secret).
 - `BLOCKED-UPSTREAM-OUTAGE` — third-party degraded; ping logged; auto-resumes on health check
 - `DEFERRED` — only valid with NAMED successor plan in `plans/active/` + operator-acked migration line in current plan
 

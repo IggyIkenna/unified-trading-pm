@@ -125,6 +125,7 @@ def _check_gcp_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
     """Bulk-check GCS buckets using the Python client (one list call, then lookup)."""
     try:
         import google.cloud.storage as gcs  # type: ignore[import-untyped]  # noqa: TID251, RUF100 — bulk list_buckets has no UTL StorageClient equivalent (mirrors _check_aws_buckets_bulk below)
+        from google.api_core.exceptions import GoogleAPICallError  # noqa: imports-inside-functions
 
         client = gcs.Client(project=_DEFAULT_GCP_PROJECT_ID)
         existing: set[str] = {
@@ -132,7 +133,7 @@ def _check_gcp_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
             for b in client.list_buckets()  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
         }
         return {spec.name: spec.name in existing for spec in specs}
-    except Exception:
+    except (ImportError, GoogleAPICallError):
         # Fall back to subprocess per-bucket if GCS client unavailable
         return {spec.name: _check_gcp_bucket_subprocess(spec.name) for spec in specs}
 
@@ -156,6 +157,10 @@ def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
     """Bulk-check S3 buckets using boto3 list_buckets."""
     try:
         import boto3  # type: ignore[import-untyped]  # noqa: TID251, RUF100 — bulk list_buckets has no UTL StorageClient equivalent (AWS provider only implements per-bucket ops)
+        from botocore.exceptions import (  # type: ignore[import-untyped]  # noqa: imports-inside-functions
+            BotoCoreError,
+            ClientError,
+        )
 
         s3 = boto3.client("s3")  # pyright: ignore[reportUnknownMemberType]
         response = s3.list_buckets()  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
@@ -164,7 +169,7 @@ def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
             for b in response.get("Buckets", [])  # pyright: ignore[reportUnknownVariableType]
         }
         return {spec.name: spec.name in existing for spec in specs}
-    except Exception:
+    except (ImportError, BotoCoreError, ClientError):
         # Fall back to subprocess per-bucket
         return {spec.name: _check_aws_bucket_subprocess(spec.name) for spec in specs}
 

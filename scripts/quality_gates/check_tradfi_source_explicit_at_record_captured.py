@@ -197,7 +197,7 @@ def _load_source_required() -> object | None:
     Degrading to None makes the check a no-op WARNing rather than a false-fail
     when the scanning venv lacks UAC.
     """
-    try:
+    try:  # noqa: fallback-import — this checker script itself must degrade gracefully when the scanning venv lacks UAC
         from unified_api_contracts import source_required  # noqa: qg-inside-import — optional dep
 
         return source_required

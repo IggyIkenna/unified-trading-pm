@@ -196,14 +196,14 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
 
 ## Todos
 
-- [ ] [DATA] P2. **Precondition CLEARED 2026-08-09 (see Progress Log) — the fix reached `main` via `f706456a` on
+- [x] ✅ [DATA] P2. **Precondition CLEARED 2026-08-09 (see Progress Log) — the fix reached `main` via `f706456a` on
       2026-08-06T08:29:26Z, not "not yet deployed" as the 2026-08-07 audit believed.** Re-run the bounded, column-pruned
       `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any `venue=KAMINO_LENDING`
       rows captured in the now-bounded accumulation window 2026-08-05T17:42Z (last retire run) through 2026-08-06T08:29Z
       (deploy landed) — a ~15h window, not open-ended. If any exist, re-run
       `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` (already-proven, idempotent) to retire them. Done when:
       the check returns zero rows (either because none accumulated, or because the re-run retired them), with the row
-      count cited here.
+      count cited here. — **0 rows, verified 2026-08-09** (see Progress Log entry below).
 
 ## Codex SSOTs
 
@@ -267,3 +267,17 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
   `ag_closeout_audit_defi_parked_2026_08_07.md` Finding 6 recommended re-check (not extraction) and is itself superseded
   by the 2026-08-09 precondition-clear above. Companion gated finalize plan authored:
   `/plans/active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`.
+- **worker (slot 17) 2026-08-09**: **todo executed — 0 rows, checkbox flipped.** Ran the bounded, column-pruned
+  `read_availability_index(bucket, columns=["venue","date","chain","data_type","instrument_type","capture_status", "attempted_at","written_at"], filters=[("date",">=","2026-08-05")])`
+  check (memory-bounded via `run-bounded-analysis.sh --mem-cap 4G`, RSS-poll fallback — this host has no systemd --user
+  instance) against `gs://market-data-tick-defi-prd-central-element-323112`. Row-group pushdown on `date>=2026-08-05`
+  returned 399,456 rows total; case-insensitive `venue.upper()=="KAMINO_LENDING"` match found exactly **113 rows, all
+  `date=2026-08-05`, all already `capture_status=attempted_failed`** (the 2026-08-05 retire run's own output — matches
+  that run's cited 565-total/113-per-day population). **Zero rows with `date=2026-08-06`** (the only calendar day the
+  15h accumulation window 2026-08-05T17:42Z→2026-08-06T08:29Z could plausibly touch, given the ~00:45 UTC daily
+  collection-job cadence documented in `relabel_kamino_lending_venue_2026_08_05.py`) — confirms the writer-side fix was
+  already live for that day's run, so nothing new accumulated. **Zero `capture_status=="captured"` rows anywhere in the
+  `date>=2026-08-05` slice** (cross-checked precisely against both `attempted_at` and `written_at` timestamps inside the
+  exact window bounds too — 0 either way). Done-when condition met (zero rows, count cited) without needing to re-run
+  `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` — no remediation was required. Checkbox flipped above; no
+  code shipped (this was a read-only verification todo, not a code change).

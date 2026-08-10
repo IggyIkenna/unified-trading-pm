@@ -20,7 +20,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -47,7 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
@@ -60,13 +60,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P3. **Reconcile the source doc.** batch8's one todo cites
+- [x] ✅ [REVIEW] P3. **Reconcile the source doc.** batch8's one todo cites
       `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`. Confirm that doc's own remaining todo
       (the Progress-Log extraction) was actually updated with batch8's verdict + commit citation, per batch8's own
       Done-when clause: `wc -l` on `prediction_cross_venue_arb_and_coverage_2026_07_24.md` back under 500,
       `check_line_caps.sh` green, all 3 pre-extraction open checkboxes verbatim-preserved. Confirm the source issue
       doc's checkbox is flipped and its `status` moves toward `resolved` (0 open todos remaining). **Done when**: the
-      reconciliation is recorded in this plan's own Progress Log with the exact commit citation.
+      reconciliation is recorded in this plan's own Progress Log with the exact commit citation. — DONE 2026-08-09,
+      `unified-trading-pm@02ba8ea6c`.
 
 - [ ] [DOC] P3. **Archive batch8 + this finalize plan.** Once the source doc is confirmed reconciled and batch8's one
       todo + this plan's todo 1 are both done, archive both `prediction_satellite_ao_dispatch_batch8_2026_08_08.md` and
@@ -83,3 +84,19 @@ context_scope:
   coverage rule. `status: active` from the start (not draft) — `gate_on_depends: true` already fully holds both todos
   above until batch8's own todo is `done`, so no second manual flip is needed later (2026-07-30 no-double-gate finding,
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`).
+- **2026-08-09 (slot 19, review-tagged todo, `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize-001`) — todo 1
+  DONE.** Confirmed batch8's own todo is `[x]` with a commit citation (`unified-trading-pm@afd6891bb3`, 2026-08-09).
+  Confirmed the source issue doc's own todo was already `[x]` with a commit citation (same SHA). Completed the
+  reconciliation batch8's Progress Log had explicitly routed here: flipped the source issue doc's `status: open` →
+  `resolved`, filled `resolved_by:`, removed the now-moot `archive_exempt: true`, added the archive banner, and
+  `git mv`'d it to `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`.
+  Fixed all 6 active/archive corpus files carrying a leading-slash `/plans/active/issues/...` reference to the doc (this
+  plan's own `related:`+`context_scope:`, batch8's own `related:`+`context_scope:`, the source coverage doc's
+  `related:`, the 2026-08 history archive doc's `related:`+prose pointer, the sibling tradfi line-cap issue doc's
+  `related:`+prose mention, and `ag_closeout_audit_prediction_parked_2026_08_08.md`'s `related:`+markdown link) — 0
+  dangling references to the doc's pre-archival path remain corpus-wide (verified via corpus grep).
+  `check_reference_paths.py --only` clean on the touched set before committing. Shipped via `safe-doc-push.sh`:
+  `unified-trading-pm@02ba8ea6c` (7 files: the rename + 6 referrer path fixes). This commit (flipping this todo's own
+  checkbox) is a separate follow-up commit, per the archival-discipline rule against combining a checkbox flip with a
+  `git mv` in one commit — the `git mv` here was on a DIFFERENT file (the issue doc), so that specific hazard didn't
+  apply, but keeping the flip in its own commit still avoids ambiguity for todo 2's own `git mv`s of batch8 + this doc.

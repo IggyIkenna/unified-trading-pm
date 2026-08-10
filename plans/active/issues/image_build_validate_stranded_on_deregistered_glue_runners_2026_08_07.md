@@ -42,8 +42,8 @@ related:
   [
     /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
-    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 created: 2026-08-07
 last_updated: "2026-08-07"
@@ -54,7 +54,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.1
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source:
@@ -68,7 +68,7 @@ locked_since:
 context_scope:
   [
     /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
   ]
 ---
 
@@ -185,3 +185,15 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5dc1e65cce36b844]: KEEP-NA,
 valid — the sole open item (todo 2, standing-check design decision) remains a genuine, un-scoped design call. No
 `assigned_vm` change.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:3e4d55f31a632aea]: KEEP-NA,
+valid — 1 open todo (line 125, P3 INFRA: a standing check for 'workflow moved private->public / caller
+runner-registration changed' as a re-audit trigger). Re-confirmed as a genuine open design/architecture call, not a
+bounded spec -- it requires designing a NEW detection heuristic from scratch (there is no existing historical-state
+tracker for repo visibility or cross-repo runner registration to diff against), matching the 2 prior
+na-eligibility-audit confirmations (2026-08-08, 2026-08-09). Corroborating cross-reference found this run:
+plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's own todo 10 independently raises the
+SAME 'should we build a standing visibility-change alert' question and was itself independently classified 'genuine...
+design/priority call, not a bounded spec...

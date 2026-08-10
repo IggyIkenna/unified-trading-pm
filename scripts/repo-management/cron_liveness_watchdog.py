@@ -89,7 +89,7 @@ def gh_json(args: list[str]) -> list[dict[str, object]] | dict[str, object] | No
         if proc.returncode != 0:
             return None
         return json.loads(proc.stdout)
-    except Exception:
+    except (subprocess.SubprocessError, OSError, json.JSONDecodeError):
         return None
 
 
@@ -174,7 +174,7 @@ def check_workflow_liveness(wf: dict[str, object], now: _dt.datetime) -> dict[st
 
     try:
         ts = _parse_ts(ts_str)
-    except Exception:
+    except ValueError:
         return None
 
     age_min = int((now - ts).total_seconds() / 60)
@@ -189,9 +189,8 @@ def check_workflow_liveness(wf: dict[str, object], now: _dt.datetime) -> dict[st
         "threshold_min": staleness_threshold,
         "url": last_success.get("url") or "",
         "reason": (
-                    f"last success {age_min}m ago "
-                    f"(threshold {staleness_threshold}m = {interval_min}m x {STALE_MULTIPLIER})"
-                ),
+            f"last success {age_min}m ago (threshold {staleness_threshold}m = {interval_min}m x {STALE_MULTIPLIER})"
+        ),
     }
 
 
@@ -207,9 +206,7 @@ def build_alert_message(stale: list[dict[str, object]]) -> str:
     for s in stale:
         age_str = f"{s['age_min']}m ago" if s["age_min"] is not None else "unknown age"
         url_part = f" <{s['url']}|last run>" if s.get("url") else ""
-        lines.append(
-            f"  • `{s['label']}` (every {s['interval_min']}m) — last success: {age_str}{url_part}"
-        )
+        lines.append(f"  • `{s['label']}` (every {s['interval_min']}m) — last success: {age_str}{url_part}")
         lines.append(f"      ↳ {s['reason']}")
     return "\n".join(lines)
 
@@ -236,9 +233,7 @@ def post_slack(message: str, webhook_url: str, *, dry_run: bool = False) -> bool
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Off-GHA dead-man's-switch for GHA cron monitors (L1583)"
-    )
+    parser = argparse.ArgumentParser(description="Off-GHA dead-man's-switch for GHA cron monitors (L1583)")
     parser.add_argument("--dry-run", action="store_true", help="Check liveness but do not POST to Slack")
     parser.add_argument(
         "--stale-multiplier",

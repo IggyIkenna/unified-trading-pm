@@ -7,11 +7,11 @@ summary: >-
   narrowed to exactly the instruments needed for the equities-vs-perps basis strategy (Binance-listed equity perps
   launched 2026), **plus the macro/USD-strength backdrop instruments** (CBOE Treasury yield-curve INDEX, FRED macro
   series, KRW/USD, DXY) added by the 2026-08-09 (later same day) follow-up ruling below. Completing the REST of the
-  tradfi MVP universe (full-history equities beyond 2026, CME Treasury BOND FUTURES ZN/ZB/ZF/ZT, VIX futures) to 100% is
-  explicitly GATED until November 2026 — no plan/todo should drive that broader work before then. This doc is the SSOT
-  other tradfi plans point to; it supersedes the "MVP universe" framing in `tradfi_consolidated_closeout_2026_07_18.md`
-  for near-term dispatch purposes only (that doc's full 6-cell definition stays valid as the eventual November target,
-  it is not rewritten).
+  tradfi MVP universe (full-history equities beyond 2026, CME Treasury BOND FUTURES ZN/ZB/ZF/ZT) to 100% is explicitly
+  GATED until November 2026 — no plan/todo should drive that broader work before then. This doc is the SSOT other tradfi
+  plans point to; it supersedes the "MVP universe" framing in `tradfi_consolidated_closeout_2026_07_18.md` for near-term
+  dispatch purposes only (that doc's full 6-cell definition stays valid as the eventual November target, it is not
+  rewritten).
 status: open
 nature: process
 asset_group: [tradfi]
@@ -25,7 +25,7 @@ related:
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
   ]
 created: 2026-08-09
@@ -70,6 +70,7 @@ depends_on: []
 | Macro series (UST curve, TIPS, FedFunds/SOFR, CPI, breakevens, GDP, UNRATE, VIXCLS — ~25 series) | Full history from 2018                               | `yield_curve`/`ohlcv_1d` | FRED                     |
 | KRW/USD spot (FX)                                                                                | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
 | DXY (US Dollar Index)                                                                            | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
+| VIX futures (CBOE, VX.FUT)                                                                       | Full history (2018-11-04 → now, XCBF.PITCH L0 floor) | `ohlcv_1m`               | Databento (XCBF.PITCH)   |
 
 **Rationale**: Binance listed single-stock equity perps in 2026 — the equities-vs-perps basis strategy this is meant to
 feed only needs 2026-forward equities data to test against. S&P futures+options get the full window because the
@@ -85,6 +86,16 @@ sources** (not either/or) — FRED and the CBOE-Yahoo yield-curve index are two 
 third, separate Treasury surface (same Databento/CME venue as ES) — operator ruling 2026-08-09: **stays deferred to
 November**, not part of this in-scope list; do not confuse it with the now-in-scope CBOE yield-curve INDEX above.
 
+**Rationale — VIX futures, added 2026-08-10 (operator decision)**: VIX futures (CBOE/CFE, `XCBF.PITCH` `VX.FUT`) moved
+from the November-gated list into immediate scope. A dedicated launcher already exists —
+`deployment-service/scripts/vm/launch-tradfi-bf-cfe-ohlcv-1m.sh` (`CFE_INSTRUMENT_IDS="VX.FUT"`, window
+2018-11-04→today) — so this needs launch/verify only, not new code. Live-verified 2026-08-10: 57 real
+`XCBF.PITCH VX.FUT` rows pulled (`tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` § "Confirmed
+finding"). **Caveat**: `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (`status: open`) has a confirmed CBOE
+VIX canonical-name (`VIX`→`VX`/`VX.FUT`) translation bug in the CHECKER/sampler tooling — the dedicated launcher above
+uses the raw symbol `VX.FUT` directly and is unaffected, but post-launch coverage verification via the sampler/checker
+may misreport until that separate bug is fixed.
+
 ## Out of scope — gated until November 2026
 
 Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout_2026_07_18.md` § "MVP universe"):
@@ -94,7 +105,6 @@ Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout
 - CME Treasury **bond futures** (ZN/ZB/ZF/ZT, Databento `GLBX.MDP3`) — distinct from the now-in-scope CBOE Treasury
   yield-curve INDEX (Yahoo `ohlcv_24h`) above; registered + launcher-ready today (`CME_ROOTS` already has them) but not
   MVP-tagged in `/codex/02-data/mvp-scope-canonical.md`'s underlier set — deferred, operator ruling 2026-08-09.
-- VIX FUTURE (CBOE).
 - Any FX/commodity futures backfill not named above (the currently-running `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet —
   6A/6B/6C/6E/6J/6L currency futures, 6M/CL/CT/HG commodities — is **entirely out of this scope** and is being killed,
   not relaunched, per this ruling).
@@ -145,17 +155,32 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE A SECOND TIME (2026-08-09, later same day)** — still not fixed. Fix
-      `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME dispatch candidate keys
-      it computes internally, instead of only matching a VM-name-parsed "root group" label — currently causes CME
-      launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per "Disposition of
-      currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session, 2026-08-09):
-      `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart for the
-      identical shard — killed the newer (redundant) instance of each pair as a stopgap
-      (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original. **This is a
-      stopgap, not a fix** — the root cause in `wave_launcher.py` is still unaddressed and will keep recurring on every
-      future gap-scan wave; not attempted this session (out of scope for the instrument-scope-diff task), still the
-      top-priority follow-up.
+- [x] ✅ [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE A SECOND TIME (2026-08-09, later same day)** — was not fixed as of
+      that check. Fix `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME
+      dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
+      currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
+      "Disposition of currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session,
+      2026-08-09): `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart
+      for the identical shard — killed the newer (redundant) instance of each pair as a stopgap
+      (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original. **FIXED 2026-08-09
+      (round-9 combined RECLASSIFY + satellite-extraction sweep, found already-shipped by a concurrent session)**:
+      `deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35` ("fix(tradfi): CME --only-root VMs get a plain
+      single-root name, closing the wave-launcher dedup gap", slot-4·laptop, 2026-08-09T10:24:07+01:00) — the fix is on
+      the LAUNCHER side, not `wave_launcher.py` itself: `launch-tradfi-bf-cme-ohlcv-1m.sh`'s single-root mode now names
+      the VM `tradfi-bf-cme-ohlcv-1m-${root}-${year}-${run_ts}` (no `g${idx}-${first}-${last}` bundling artifact) so
+      `wave_launcher.py`'s existing `_VM_NAME_RE`/`running_cell_keys` regex parses the clean root string correctly and
+      recognizes a running single-root VM as covering its candidate — closing the gap without needing to touch
+      `wave_launcher.py` itself. Verified `git merge-base --is-ancestor bcf55c781... origin/live-defi-rollout` = YES
+      (real ancestor, not a local-only peer commit).
+- [ ] [SCRIPT] P1. **NEW (2026-08-09)** — confirm `wave_launcher.py`'s ACTUAL production deployment mechanism and that
+      it has picked up `deployment-service@bcf55c781` (the dedup fix above). The module's own docstring says it runs as
+      a "Cloud Run Job + Scheduler (every 2-3h)" (implying a built container image, needing an explicit rebuild to pick
+      up new code), but `_write_last_run_sentinel`'s comment says it runs as a "HOST cron... on the monitor host"
+      (implying a live git checkout that would pick up the fix on its next `git pull`) — these two descriptions of the
+      SAME script are in tension and were not reconciled this session. Done when: the actual invocation mechanism is
+      confirmed (Cloud Build/Cloud Run Job config vs. a host crontab entry), and — if it's an image-based Cloud Run Job
+      — either a redeploy has run or one is explicitly triggered. Until confirmed, do not assume the CME duplicate-VM
+      recurrence has actually stopped in production, only that the code fix is correct and shipped.
 - [x] ✅ [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live,
       violating the "equities = 2026 ONLY" scope. **Resolved itself** — by the instrument-scope-diff session
       (2026-08-09, several hours later), this VM was no longer running (self-deleted on completion or reaped; not
@@ -174,29 +199,47 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       completeness denominator. **Shipped `unified-api-contracts@e6c66c382`** — `MVP_SCOPE_CONFIG_VERSION` bumped to 23,
       3 new/updated tests in `test_mvp_scope.py` (`test_ice_index_dxy_is_mvp`, `test_ice_other_cells_not_swept_in`,
       `test_extra_mvp_cells_exact_membership` updated to 8-triple). QG green.
-- [ ] [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the FRED
-      macro backfill reportedly ran 2026-07-30 per
+- [x] ✅ [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the
+      FRED macro backfill reportedly ran 2026-07-30 per
       `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
       Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
-      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above).
+      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above). **EXTRACTED
+      2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (now `[x]` ✅, archived)** —
+      all 4 cells are Yahoo/FRED-sourced, not gated by the open Databento billing-suspension issue; the DXY launcher
+      shipped same-day (see todo above, now `[x]`). Completion recorded there. **(na-eligibility-audit 2026-08-10,
+      tradfi tranche, dispatch agt-a70469): closing here too — this doc's own Progress Log (round-9 entry below) already
+      confirmed this exact item done/archived elsewhere; the checkbox itself was never flipped to match.)**
 - [x] ✅ [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to `/codex/02-data/mvp-scope-canonical.md`,
       `/codex/02-data/cross-asset-canonical-target-ssot.md`, and `/codex/09-strategy/mvp-universe-per-asset-group.md`.
       **Shipped `unified-trading-pm@d5d0b75cc` / `@22d0a07d0` / `@ecddf76ad`**. The closeout doc
       (`tradfi_consolidated_closeout_2026_07_18.md`) was deliberately NOT touched further — already over its 1000L hard
       cap from prior growth, no scoped-append exception applies to a content addition; its existing banner pointing at
       this doc is sufficient.
-- [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
+- [x] ✅ [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
       `market-tick-data-service/scripts/pipeline_e2e_check.py:330-338` so the MTDS `--mvp-only` smoke test exercises DXY
       (Treasury-INDEX/CME and KRWUSD/FX cells are already covered in that hand-listed set). Repo:
-      market-tick-data-service.
-- [ ] [SCRIPT] P3. **NEW (2026-08-09)** — add `IBIT`/`ETHA` to `_DEFAULT_TICKERS` in
+      market-tick-data-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): confirmed
+      LANDED — independently read `market-tick-data-service/scripts/pipeline_e2e_check.py` line 337 live on
+      `origin/live-defi-rollout`:
+      `("ICE", "ohlcv_24h"),  # daily DXY (US Dollar Index, Yahoo-sourced) -- added 2026-08-09 scope ruling` is present
+      in the `_TRADFI_MVP_SHARDS` frozenset. Missed flip, closing.)**
+- [x] ✅ [SCRIPT] P3. **NEW (2026-08-09)** — add `IBIT`/`ETHA` to `_DEFAULT_TICKERS` in
       `features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py:52-75` so the
       corporate-actions (dividends/splits/earnings) sweep covers the newly-in-scope BTC/ETH spot ETFs — the production
       sharding config doesn't pass `--tickers`, so it silently falls through to this hardcoded default today. Repo:
-      features-service.
+      features-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): confirmed LANDED —
+      independently read `features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py` lines
+      77-78 live on `origin/live-defi-rollout`: both `"IBIT"` and `"ETHA"` are present in `_DEFAULT_TICKERS`. Missed
+      flip, closing.)**
 
 ## Progress Log
 
+- **2026-08-10**: operator ruling — VIX FUTURE (CBOE) moved from "gated until November" to in-scope, same window as ES
+  (full 2020-01-01-to-now history). Moved the line from "Out of scope" to "In scope" above. The launcher-level code gap
+  (VIX/VX venue routing existed as an unreachable stub; no Databento parent-symbol mapping) was already fixed same-day
+  (`deployment-service@5c95ac48`) — tracked launch sequence:
+  `/plans/active/issues/tradfi_vix_full_history_backfill_2026_08_10.md`.
 - 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope in
   progress — see this doc's `related` list and the per-doc scope notes added to each.
 - **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:6648d0c11c478b7d]: **KEEP-NA,
@@ -241,3 +284,21 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   (`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`) checked per operator question: still
   `status: draft`, not in the catalogue, blocked on an unresolved Cloudflare-bypass design decision — left as-is,
   already correctly tracked.
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read this doc end to end (2 remaining
+  open todos). The `wave_launcher.py` CME dedup fix (todo 1, flagged by this doc's own earlier na-eligibility-audit
+  entry as "a RECLASSIFY candidate for a follow-up pass that reads `wave_launcher.py` directly") was found ALREADY
+  SHIPPED by a concurrent session (`deployment-service@bcf55c781`, confirmed ancestor of `origin/live-defi-rollout`) —
+  flipped `[x]` with evidence above; the fix landed on the VM-naming side, not `wave_launcher.py` itself. The
+  FRED/CBOE/KRW/DXY backfill-verify todo (todo 2) extracted into
+  `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
+  Databento-billing-gated; now `[x]` ✅, archived). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both
+  remaining action items are now tracked/closed elsewhere.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:ac4c223a308148ee]: **KEEP-NA,
+  stale-items fixed.** Fresh full read, 4 open items. Closed 3 this pass: todo "check FRED coverage, launch/verify
+  CBOE/KRW/DXY" (this doc's own round-9 Progress Log entry above already confirmed it EXTRACTED + archived, checkbox
+  simply never flipped to match); todo "add (ICE, ohlcv_24h) to `_TRADFI_MVP_SHARDS`" (independently confirmed LANDED
+  via direct read of `market-tick-data-service/scripts/pipeline_e2e_check.py` line 337 live); todo "add IBIT/ETHA to
+  `_DEFAULT_TICKERS`" (independently confirmed LANDED via direct read of
+  `features-service/.../corporate_actions_handler.py` lines 77-78 live). Sole remaining open item (`wave_launcher.py`
+  production-deployment-mechanism confirmation) is GENUINE_WORK, not promoted — matches this doc's established pattern
+  of staying NA as an SSOT ruling doc, extract rather than self-dispatch. `assigned_vm` unchanged.

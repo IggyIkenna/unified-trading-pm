@@ -27,10 +27,24 @@ co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
   - ../active/ag_closeout_audit_rollout_2026_07_25.md
+  - ../active/ao_satellite_ao_dispatch_batch11_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch17_2026_08_10.md
+  - ../active/ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
+  - ../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md
+  - ../active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md
+  - ../active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md
+  - ../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
+  - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
+  - ../active/reference_path_convention_2026_07_23_finalize_2026_08_08.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -384,7 +398,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_6 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+_20 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -403,7 +417,41 @@ cefi/defi/tradfi/prediction (sports treatment, generalized)
 **status**: active · **estimate**: 9.6 cal AI-days (class: research) **title**: Data-pipeline E2E milestones gate — 14
 cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
+### [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](../active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+
+### [`one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08`](../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: one_shot_complete session-ownership desync
+— finalize
+
 ## P2 — useful; opportunistic
+
+### [`ao_satellite_ao_dispatch_batch11_2026_08_09`](../active/ao_satellite_ao_dispatch_batch11_2026_08_09.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: AO satellite AO batch 11 —
+fix_frontmatter.py's summary-truncation bug (agent_operating_framework_master epic)
+
+### [`ao_satellite_ao_dispatch_batch11_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 11 — finalize
+
+### [`ao_satellite_ao_dispatch_batch13_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: refactor)
+
+### [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 13 — finalize
+
+### [`ao_satellite_ao_dispatch_batch15_2026_08_09`](../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: refactor)
+
+### [`ao_satellite_ao_dispatch_batch15_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 15 — finalize
 
 ### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
 
@@ -415,9 +463,24 @@ enum only, cross-repo coordinated landing
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Complete context_scout plumbing + close a
 frontmatter-schema drift + add a plan-brainstorm skill
 
+### [`doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`](../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: check_doc_body_links.py backtick-citation
+blind spot — finalize
+
+### [`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08`](../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Multi-agent slot collision + safe-doc-push
+hardening — finalize
+
 ### [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)
 
 **status**: active · **estimate**: 14.4 cal AI-days (class: research) **title**: >-
+
+### [`reference_path_convention_2026_07_23_finalize_2026_08_08`](../active/reference_path_convention_2026_07_23_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Cross-reference path convention cleanup
+backlog — finalize
 
 ### [`task_template`](../active/task_template.md)
 
@@ -425,4 +488,15 @@ frontmatter-schema drift + add a plan-brainstorm skill
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`ao_satellite_ao_dispatch_batch17_2026_08_10`](../active/ao_satellite_ao_dispatch_batch17_2026_08_10.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: refactor) **title**: AO satellite AO batch 17 — rescue
+slot-4's orphaned mdps throttle-fix WIP (agent_operating_framework_master epic)
+
+### [`ao_satellite_ao_dispatch_batch17_finalize_2026_08_10`](../active/ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 17 — finalize
+
+### [`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10`](../active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-

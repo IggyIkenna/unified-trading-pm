@@ -78,6 +78,19 @@ class TestFalsePositiveFixed:
         block = "- [x] Shipped the fix — myrepo@04b19bd5, QG green, all tests passing.\n"
         assert _violations(block) == []
 
+    def test_hyphenated_success_reporting_compound_term_not_flagged(self) -> None:
+        # Regression for evidence_backed_completion_regression_24_vs_23_2026_08_09.md todo 1:
+        # "success-reporting" is a named dispatch mechanism used throughout the
+        # ci_satellite_ao_dispatch_batchN_* corpus (never a claim that anything succeeded), and
+        # `cloudbuild.yaml` here is a bare filename reference, not an infra deploy verb. The two
+        # incidentally co-occur in the same clause but neither is a runtime-green claim.
+        block = (
+            "- [x] ✅ [REVIEW] P1. DONE — D5-3 (F3 success-reporting — 12+ services' "
+            "`cloudbuild.yaml`/`buildspec.aws.yaml` `service-deployed` dispatch) — RESOLVED, no "
+            "longer a batch-6 candidate.\n"
+        )
+        assert _violations(block) == []
+
 
 class TestGenuineClaimsStillFlagged:
     def test_same_clause_redeploy_and_green_flagged(self) -> None:

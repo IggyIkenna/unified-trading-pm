@@ -37,7 +37,7 @@ related:
     /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/integration-testing-layers.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-09
 author: unknown
@@ -271,3 +271,16 @@ since the 2026-08-06 marker beyond a context-scout re-verification.
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:92a5d83adf1312ab]: KEEP-NA,
 valid — re-verified the sole open item, still parked as Deferred E8, unruled. Independently re-confirmed by today's
 `ci_satellite_ao_dispatch_batch7_2026_08_09.md` fresh full read. No `assigned_vm` change.
+
+> **Rationale correction (2026-08-10, plan_reconciler, ci tranche):** the stated rationale above is factually stale — E8
+> WAS ruled the day before this audit ran (2026-08-08, see todo 5, `[x]` DONE: "add the consumer QG gate"). The sole
+> open item as of this correction is todo 6 (`[SCRIPT] P2`, NEW 2026-08-08 — implement the consumer-QG promote fan-out
+> per the ruling), which is genuinely still open and correctly gives the same KEEP-NA verdict a valid basis — the
+> verdict itself is not disputed, only the cited reason for it.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:e5c4312406fb5fa2]: KEEP-NA,
+valid — 8 todos total, 7 closed [x] with verified SHA citations. The [DESIGN] P2 todo that anchored 7 consecutive prior
+KEEP-NA audit passes (parked as Deferred E8) was itself RESOLVED 2026-08-08 via explicit operator ruling ('yes, add the
+consumer QG gate') and closed [x]; a NEW [SCRIPT] P2 mechanical-implementation todo was created directly beneath it the
+same day -- that is the doc's real current sole open item, not the old DESIGN question (I am not re-litigating the
+ruling, which is settled; I am assessing the new implementation todo it spawned).

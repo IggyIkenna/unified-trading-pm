@@ -185,17 +185,25 @@ original audit and this measurement, not a discrepancy in method; both counts de
       rewritten to the resolved canonical venue+chain, legacy bare forms purged once canonical twins are verified) — not
       just a go-forward labeling fix. This closes the "Option A-vs-B design fork is still unruled" premise this doc's
       prior KEEP-NA verdicts (through 2026-08-07) relied on.
-- [ ] [SCRIPT] P1. **Execute the 2026-08-08 ruling** — wire RPC `factory()` lookup for the 206,107 bare
-      SUSHISWAP/UNISWAP rows, register the missing `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` UAC venues, then
-      migrate + purge the historical objects/manifest to canonical venue+chain naming. **Execution tracked at
-      `/plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md` (`[SCRIPT] P1`, `assigned_vm: planning`, active —
-      updated 2026-08-09; the intermediate hop at
+- [ ] [SCRIPT] P1. **Execute the remaining half of the 2026-08-08 ruling** — the RPC `factory()` resolver + UAC venue
+      registration half shipped 2026-08-09 (see Progress Log below); migrate + purge the historical objects/manifest to
+      canonical venue+chain naming, and resolve the UNISWAP-ETHEREUM cohort, still remain. **Execution tracked at
+      `/plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s follow-up `[SCRIPT] P1` todo
+      (`assigned_vm: planning`, active — split 2026-08-09 from the now-closed resolver todo; the intermediate hop at
       `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own `[SCRIPT] P1` todo was itself further
       extracted there the same day) — work the fix at batch11, not a second copy here; close all three together once it
       ships.**
 
 ## Progress Log
 
+- 2026-08-09 (slot 16, data_engineering worker): Closed batch11's resolver todo (RPC `factory()` resolver + resolution
+  script shipped `instruments-service@fa54f1d8`; UAC `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` venues registered,
+  closing the UAC gap section above, `unified-api-contracts@ed6b4c78`). Live run against SUSHISWAP-ARBITRUM:
+  12,910/12,910 pool addresses resolved, 100% V2 (classic) factory — first non-zero resolution against this doc's
+  "resolved=0 rows (0.0%)" measured baseline. UNISWAP-ETHEREUM cohort not yet run; the GCS-object/manifest migrate+purge
+  half of the 2026-08-08 ruling is unstarted — split into batch11's new follow-up todo (VM-scale full-corpus I/O, out of
+  interactive-session scope), which THIS doc's todo above now points at. This doc's own todo stays `[ ]` — the ruling
+  isn't fully executed yet, full detail in batch11's Progress Log.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - Option A (subgraph augmentation) vs Option B (on-chain RPC) is
   an explicitly undecided design fork; A needs a live-schema probe per fork before landing
 - **context-scout 2026-08-01**: populated context_scope (5 entries).

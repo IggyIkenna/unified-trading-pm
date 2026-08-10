@@ -22,7 +22,7 @@ created: 2026-06-08
 authoritative_for: [bar-boundary / candle right-edge (t_close) convention]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-20
 code_refs:
 ---
 

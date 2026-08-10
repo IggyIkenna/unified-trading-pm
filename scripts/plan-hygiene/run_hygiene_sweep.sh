@@ -14,9 +14,9 @@
 #                from a READ-ONLY context (e.g. plan-reconciler STEP 1 input gather) where dirtying
 #                master_to_live_defi_2026_05_23.md is undesirable. Flags may be combined: --ci --no-regen.
 #   --precommit: lean, fast, LOCAL-only gate for the prek hook (fires on staged plans/**) —
-#                runs ONLY the three local hard checks (frontmatter / todo-format / runbook-fields),
-#                NO origin fetch (todo-regression), NO soft/advisory checks, NO inventory regen, so a
-#                plan-touching commit is gated in <1s. The origin-compare + advisory checks stay at
+#                runs the staged-files-only hard checks (frontmatter / todo-format / runbook-fields /
+#                todo-regression / ...), NO soft/advisory checks, NO inventory regen, so a
+#                plan-touching commit is gated in <1s. The corpus-wide advisory checks stay at
 #                the daily cron / CI sweep, never pre-commit. Exit 1 on any hard failure.
 
 set -uo pipefail
@@ -172,6 +172,104 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Silent-default-effort (staged plans)" \
       || { echo "  ❌ A newly-staged living plan declares assigned_role but no effort:/thinking_tier: — declare it explicitly, or confirm the role's default effort is genuinely right for this plan's complexity"; PF=$(( PF + 1 )); }
+    # Todo regression, --only-scoped (2026-08-09): the module docstring's own precommit-exclusion
+    # rationale ("NO origin fetch") describes a network call this check never actually makes — it
+    # only reads the LOCAL origin/live-defi-rollout ref via `git show`, which is cheap and available
+    # offline. Root-caused after a promote-PR full-QG run caught a plan that lost a todo hours after
+    # it landed via safe-doc-push.sh, which never ran this check at all (unified-trading-pm PR #2670,
+    # 2026-08-09) — same fast-path-blind-to-full-gate pattern as the checks above.
+    bash "$SCRIPT_DIR/check_todo_regression.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Todo regression (staged plans)" \
+      || { echo "  ❌ A staged plan lost todos (total open+done shrank) vs origin/live-defi-rollout — restore the missing line(s), a checkbox flip never shrinks the total"; PF=$(( PF + 1 )); }
+    # Evidence-backed-completion, --only-scoped (2026-08-09): sub-rule B (a `- [x]` runtime-green
+    # claim with no `Evidence: cloudbuild=<id>`) previously had NO precommit-time presence, only
+    # the full corpus-wide baseline mode. Root-caused after a push to live-defi-rollout (sha
+    # 42c50b4b3) blocked on this exact ratchet — a claim added via safe-doc-push.sh sailed through
+    # clean and only surfaced on the next unrelated full CI run. Sub-rule A (Cloud Build API
+    # verification) stays CI-only — needs gcloud/network/auth, incompatible with a <1s local hook.
+    python3 "$SCRIPT_DIR/../quality_gates/check_evidence_backed_completion.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Evidence-backed-completion (staged plans)" \
+      || { echo "  ❌ A staged plan's '- [x]' runtime-green claim (build/deploy/promote) has no Evidence: cloudbuild=<id> — add the citation, or confirm this genuinely isn't a runtime claim"; PF=$(( PF + 1 )); }
+    # Prosewrap-padding, --only-scoped (2026-08-09): this shrinking ratchet (baseline: corpus-wide
+    # violation_count, 4472 lines at time of writing) previously had NO precommit-time presence,
+    # only the full corpus-wide baseline mode — so a docs(plans) commit landing a NEW prettier
+    # proseWrap corruption instance had zero enforcement at commit time and only surfaced hours/
+    # days later on the next unrelated full quality-gates.sh run, misattributed to whichever
+    # commit happened to trigger it. --only does NOT compare a staged file's total against the
+    # corpus-wide baseline (a handful of staged-file violations would never approach 4472,
+    # defeating the point) — it compares, per staged file, the SET of violation signatures
+    # (detector-type + content, not line number) at current content vs `git show HEAD:<path>`,
+    # flagging only what THIS commit introduces. Same HEAD-vs-current growth-ratchet shape as
+    # check_effort_signal_ratchet.py --only above.
+    # Unresolved evidence placeholder guard (2026-08-10). `<repo>@PENDING` is filled in by the
+    # push that creates the commit (resolve_pending_citations in reconcile-sha-citations.sh), so
+    # one surviving into a staged plan means the flip is being committed before, or without, the
+    # ship it claims — exactly the false-progress the Commit+Push+Flip rule exists to prevent.
+    # Cheap literal grep; no effect on any plan that does not use the convention.
+    # The array-length test is belt-and-braces: this block is already inside a `-gt 0` guard, but
+    # a `grep -F pat` that word-splits to ZERO file arguments reads STDIN instead — which would
+    # hang the pre-commit hook, fleet-wide, with no timeout to save it. Cheap insurance against a
+    # future edit moving this block.
+    if [ "${#STAGED_PLANS[@]}" -gt 0 ] && grep -l -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | grep -q .; then
+      echo "  ❌ A staged plan still carries an unresolved '<repo>@PENDING' evidence placeholder:"
+      grep -n -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | sed 's/^/       /' | head -5
+      echo "       PENDING is resolved by the quickmerge push that creates the commit. Ship the work first, then commit the flip — or replace it with the real sha."
+      PF=$(( PF + 1 ))
+    fi
+
+    # AUTO-REPAIR, then re-verify (2026-08-10). Agents were hand-repairing this corruption on
+    # every occurrence — a peer did so today — even though fix_prosewrap_padding.py already knew
+    # the repair, because the fixer was whole-file scoped and unsafe to run unattended. Now that
+    # `--only --emit-lines` can name exactly the lines THIS commit introduced, the repair is
+    # scoped to those lines and can run here. The re-check is the gate: nothing passes because we
+    # ran a fixer, only because the check agrees afterwards. Files are re-staged individually and
+    # only if they were flagged, mirroring prettier-autostage.sh's contract.
+    if bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}"; then
+      echo "  ✅ Prosewrap-padding (staged plans)"
+    else
+      _psw_scope="$(bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only --emit-lines "${STAGED_PLANS[@]}" 2>/dev/null || true)"
+      if [ -n "$_psw_scope" ]; then
+        printf '%s\n' "$_psw_scope" | python3 "$SCRIPT_DIR/fix_prosewrap_padding.py" --scoped || true
+        if bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}"; then
+          _psw_n=0
+          while IFS= read -r _psw_f; do
+            [ -n "$_psw_f" ] || continue
+            git -C "$PM_DIR" add -- "$_psw_f" 2>/dev/null && _psw_n=$(( _psw_n + 1 ))
+          done < <(printf '%s\n' "$_psw_scope" | sed 's/:[0-9]*$//' | sort -u)
+          echo "  ✅ Prosewrap-padding (staged plans) — auto-repaired and re-staged ${_psw_n} file(s); no hand-repair needed"
+        else
+          echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance that the scoped auto-repair could not resolve — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 ))
+        fi
+      else
+        echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 ))
+      fi
+    fi
+    # depends_on DAG, --only-scoped (2026-08-09): the full-sweep cycle/self-dep check (below,
+    # corpus-wide) previously had NO precommit-time presence, so a docs(plans) commit introducing
+    # a cycle (depends_on gates archival — neither plan can ever close) had zero enforcement at
+    # commit time. Unlike a single-file check, a cycle can SPAN two files (A depends_on B, B
+    # depends_on A) where only one is staged — --only still builds the FULL corpus graph (cheap,
+    # local reads only, ~750 docs) exactly like the full-sweep mode below, but reports a violation
+    # only if it involves an edge ORIGINATING from a staged file (a self-dep, or a cycle with at
+    # least one staged node) — catches "my edit introduced/is part of a cycle" without blocking on
+    # a pre-existing cycle entirely among files this commit doesn't touch.
+    python3 "$SCRIPT_DIR/check_depends_on_graph.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ depends_on DAG (staged plans)" \
+      || { echo "  ❌ A staged plan's depends_on introduces a cycle or self-dependency — depends_on gates archival, so this would permanently stasis the plan(s) involved. Break the cycle: drop the weaker depends_on edge, or merge the plans."; PF=$(( PF + 1 )); }
+    # AG-closeout linkage, --only-scoped (2026-08-09): this shrinking ratchet (baseline: 49
+    # corpus-wide orphans at time of writing) previously had NO precommit-time presence, only the
+    # full corpus-wide baseline mode. Cross-file like the depends_on check above (a doc's orphan
+    # status depends on the related: graph, which can path through OTHER docs, and on the
+    # closeout family's own body text — a DIFFERENT file) — --only builds the FULL corpus
+    # graph/closeout-family/body-blob (cheap, local reads only), never a staged-only subgraph
+    # (which could miss a real path through an unstaged intermediate doc). Per staged file: if it
+    # is currently an orphan, was it ALSO an orphan when evaluated with its OWN `git show
+    # HEAD:<path>` content (rest of today's corpus held fixed)? If yes, pre-existing debt in a
+    # file this commit merely touches — skip. If this file's OWN content change (a dropped
+    # related: link, a changed asset_group) newly created the orphan status, flag it.
+    python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ AG-closeout linkage (staged plans)" \
+      || { echo "  ❌ A staged single-asset-group plan/issue doc has no path (related: graph or closeout-doc mention) to its AG's consolidated closeout plan — add a related: link, or a mention in the closeout doc"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
@@ -203,6 +301,65 @@ fi
 HARD_FAIL=0
 SOFT_WARN=0
 RESULTS=()
+
+# ── Diff-scoped ratchet base (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_
+# ci_fix_velocity_2026_08_09.md) ──
+# Corpus-wide ambient ratchet checks (archive-candidates, reference-paths) attribute ANY
+# concurrent agent's new violation — landing anywhere in the corpus between a worker's
+# fix-push and the next CI re-run — to whoever happens to be re-triggering. On a
+# high-churn branch this makes the checks un-convergeable serially (the issue doc above
+# measured 4+ consecutive distinct-check regressions chasing one CI wall). Diff-scoped
+# mode (`--diff-base <ref>`) fixes the shape: only a violation NEW at HEAD vs <ref> fails
+# the gate; pre-existing corpus debt at <ref> is tolerated exactly like baseline mode.
+# ONLY set DIFF_BASE_REF when the ref is actually resolvable locally — both checkers'
+# diff-base mode is fail-UNSAFE on an unresolvable ref (git ls-tree/show against a
+# missing ref returns nothing, so EVERY current violation reads as "new"), and
+# `cron_hygiene_sweep_entrypoint.sh`'s shallow single-branch clone never fetches
+# origin/main, so this guard is what keeps that periodic path on baseline mode instead of
+# silently hard-failing on the corpus's entire pre-existing debt.
+# PROMOTION PRs GET NO DIFF BASE AT ALL (2026-08-10). A promote PR's diff IS the entire
+# LDR→main accumulation, so `--diff-base origin/main` there measures the whole unpromoted
+# backlog rather than the change under test — and the further behind main falls, the more
+# it measures, so the gate blocks the promote, main falls further behind, and the reported
+# violation count GROWS. Measured on the NA-corpus check the same day: 51→53→55 new docs
+# and 116→151→181 new todos across three runs on distinct HEADs while main went 1180→1440
+# commits behind. A count that climbs across distinct HEADs is definitionally not a fixable
+# regression, and no amount of retrying converges it.
+#
+# 4c964f8447 established this rule and the promote/ detection, scoped to the NA-corpus
+# check. It is set HERE instead so the SAME rule covers every DIFF_BASE_REF consumer —
+# reference-paths, archive-candidates and effort-ratchet carry the identical latent bug and
+# were already tripping it (`check_reference_paths (--diff-base origin/main): 2 NEW
+# violation(s)` hard-failed the 11:25Z promote-path run). Setting it once also avoids four
+# copies of one rule, which is precisely the shape that rotted the tranche lists (see
+# scripts/scheduled_job_already_ran.py's header). Falling back to baseline+buffer on the
+# promote path is safe: every commit in that batch already passed these same checks
+# diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
+#
+# A WHOLE-BRANCH RUN AGAINST THE INTEGRATION BRANCH GETS NO DIFF BASE EITHER (2026-08-10).
+# `cascade-qg-ordering.yml` (and `ldr-to-staging-promote.yml`) `workflow_dispatch` this gate
+# directly at `live-defi-rollout` to answer "is LDR healthy?" — LDR has no push-triggered CI of
+# its own. On a dispatch `GITHUB_HEAD_REF` is EMPTY (it is a PR-only variable), so the promote
+# rule above cannot fire, and the diff once again spans the entire unpromoted backlog. Measured
+# 2026-08-10: EIGHT such runs failed in one day (07:33/08:33/09:01/09:33/10:29/11:25/12:18/13:31Z),
+# each paging #ci-failures CRITICAL, each reporting the same backlog-scale number
+# (`61 new NA-population doc(s); 198 new open todo(s)`) that no commit under test caused.
+# The cost is not just noise — it is MASKING. The 13:31Z run also carried a REAL hard failure
+# (`No conflict markers (mid-line + mangled)` — genuine, transient corpus corruption, since
+# resolved), and it was buried under a permanent false failure that fires every hour. An alert
+# that always fires trains everyone to ignore the one time it means something.
+# "Is this whole branch healthy?" is an ABSOLUTE question, so baseline+buffer is its correct
+# shape; a diff base only makes sense when there is a specific change under test.
+#
+# NOT a blanket disable — a normal PR into main still gets full diff-scoping, which is where
+# these checks actually catch a specific change's new violations.
+DIFF_BASE_REF=""
+if [ -n "$CI_MODE" ] \
+  && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
+  && [ "${GITHUB_REF_NAME-}" != "live-defi-rollout" ] \
+  && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
+  DIFF_BASE_REF="origin/main"
+fi
 
 run_check() {
   local label="$1"
@@ -259,7 +416,15 @@ run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_
 # as the fallback-import/DTZ ratchets: hard-fails only on a NEW violation above the
 # pre-existing count, never on the corpus's existing debt. Supersedes check_codex_refs.sh's
 # narrower existence-only scope (kept below for its standalone fast path).
-run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet
+# In CI-gate mode with a resolvable diff base (DIFF_BASE_REF above), run diff-scoped
+# instead of baseline-scoped — closes the concurrent-commit race this check was one of the
+# confirmed repeat offenders for. Baseline mode remains the fallback (periodic cron sweep,
+# interactive/local runs) — no behavior change there.
+REFPATH_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  REFPATH_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" "${REFPATH_DIFF_ARGS[@]}"
 # AG-closeout linkage (operator request 2026-07-25) — every single-asset-group plan/issue
 # doc must have a findable path (related: graph, either direction, or a body-text mention)
 # to its AG's consolidated closeout plan, so a finding can never silently become an
@@ -293,7 +458,23 @@ run_check "Create-only archival guard (archive/active duplicate pairs)" hard pyt
 # shrinking-ratchet shape as the three checks above (na_corpus_baseline.yaml): hard-fails only when
 # the CURRENT count exceeds the baseline on either axis. SSOT:
 # codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4.
-run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" --quiet
+# Uses the same DIFF_BASE_REF guard as the reference-path/archive-candidates checks above
+# (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md) —
+# diff-scoped in CI-gate mode with a resolvable base, baseline+buffer mode otherwise (periodic
+# cron sweep, interactive/local runs unchanged).
+NACORPUS_DIFF_ARGS=()
+# Promotion PRs (LDR→main) carry the entire LDR accumulation as their diff, which
+# will always include legitimate new NA docs/todos from normal work.  `--diff-base
+# origin/main` on a promotion PR is therefore structually fail-unsafe: it catches
+# ALL growth, not just unattended growth, and the check becomes un-convergeable on
+# the promote path.  Use baseline+buffer mode instead (the same mode the periodic
+# cron sweep and interactive/local runs already use), which tolerates routine
+# accumulation within the buffer while still catching a genuine spike.
+# Detect promotion PRs via GITHUB_HEAD_REF (e.g. "promote/unified-trading-pm/4840cdac0125").
+if [ -n "$DIFF_BASE_REF" ] && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]]; then
+  NACORPUS_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" "${NACORPUS_DIFF_ARGS[@]}"
 # Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
 # operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
 # shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails
@@ -309,7 +490,14 @@ run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_s
 # with nobody having deliberately chosen that for THIS plan. Same shrinking-ratchet
 # shape as the hard ratchets above (effort_signal_baseline.yaml): hard-fails only when
 # the CURRENT count exceeds the baseline, never on the pre-existing 211-plan debt.
-run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet
+# Uses the same DIFF_BASE_REF guard as the checks above (2026-08-09,
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md) — diff-scoped
+# in CI-gate mode with a resolvable base, baseline mode otherwise.
+EFFORT_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  EFFORT_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" "${EFFORT_DIFF_ARGS[@]}"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
@@ -335,9 +523,17 @@ run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3
 # candidate NEW since origin/main (i.e. introduced by this promote PR's diff) fails the gate;
 # pre-existing corpus debt at origin/main is tolerated. Operator ruling 2026-08-06 —
 # /plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md.
+# Uses the same DIFF_BASE_REF guard as the reference-path check above (2026-08-09 fix) —
+# was previously gated on bare `[ -n "$CI_MODE" ]`, which also fires for
+# cron_hygiene_sweep_entrypoint.sh's periodic sweep. That entrypoint does a shallow
+# single-branch clone with no origin/main fetch, so --diff-base origin/main against an
+# unresolvable ref degraded to "every current candidate is new" (fail-unsafe, not the
+# intended baseline-tolerant behavior) — this was a live latent bug in the 2026-08-06 fix,
+# just never triggered because the periodic sweep already tolerates hard failures
+# (exit 0 always, Slack-only).
 ARCHIVE_DIFF_ARGS=()
-if [ -n "$CI_MODE" ]; then
-  ARCHIVE_DIFF_ARGS=(--diff-base origin/main)
+if [ -n "$DIFF_BASE_REF" ]; then
+  ARCHIVE_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh" "${ARCHIVE_DIFF_ARGS[@]}"
 

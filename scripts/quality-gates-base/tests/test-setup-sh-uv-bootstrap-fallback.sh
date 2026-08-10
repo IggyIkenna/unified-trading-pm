@@ -31,30 +31,41 @@ fail() { echo "FAIL: $*"; FAIL=$((FAIL + 1)); }
 SETUP_SH="$(cd "$(dirname "$0")/../.." && pwd)/setup.sh"
 [ -f "$SETUP_SH" ] || { echo "FATAL: setup.sh not found at $SETUP_SH"; exit 2; }
 
-# ── Extract the REAL "[3] BOOTSTRAP UV" if/elif/else/fi block ────────────────────
-# The literal `if [ "$IN_CI" = true ]; then` opener recurs across several unrelated
-# setup.sh steps, so anchor on the UNIQUE preceding step comment first, then start
-# capturing only once we reach the `if` immediately after it.
+# ── Extract the REAL "[3] BOOTSTRAP UV" block ─────────────────────────────────────
+# Anchor on the UNIQUE preceding step comment, then capture from the UV_VERSION
+# extraction line (the canonical-pin lookup) through the matching if/elif/else/fi —
+# both are needed together since $UV_VERSION is now computed once, outside the if,
+# and referenced by every branch (single-canonical-source refactor,
+# infra_satellite_ao_dispatch_batch9_2026_08_09.md item 1).
 BLOCK=$(awk '
   /^# ── \[3\] BOOTSTRAP UV/ { seen_marker = 1; next }
-  seen_marker && /^if \[ "\$IN_CI" = true \]; then$/ { c = 1 }
+  seen_marker && /^UV_VERSION=/ { c = 1 }
   c { print }
   c && $0 ~ /^fi$/ { exit }
 ' "$SETUP_SH")
 [ -n "$BLOCK" ] || { echo "FATAL: could not extract the bootstrap-uv block from setup.sh"; exit 2; }
 
-# Structural anchor: the extracted block must carry the astral-installer branch ahead
-# of the pip fallback — so a future edit that removes/reorders the fix fails here even
-# if the fixtures below don't.
+# Structural anchor: the extracted block must carry the canonical-pin extraction ahead
+# of the astral-installer branch ahead of the pip fallback — so a future edit that
+# removes/reorders the fix fails here even if the fixtures below don't.
 case "$BLOCK" in
-  *"grep -q '0\\.10\\.8'"*"command -v curl"*"astral.sh/uv/0.10.8/install.sh"*"UV_UNMANAGED_INSTALL"*"hash -r"*"pip install uv==0.10.8"*"--quiet"*)
-    pass "structural: extracted block carries the pinned-version check + astral installer + pip-last-resort (--quiet, no quotes), in order" ;;
+  *"UV_VERSION="*"resolve-canonical-versions.py"*"grep -q \"\$UV_VERSION\""*"command -v curl"*'astral.sh/uv/${UV_VERSION}/install.sh'*"UV_UNMANAGED_INSTALL"*"hash -r"*'pip install "uv==$UV_VERSION"'*"--quiet"*)
+    pass "structural: extracted block carries the canonical-pin lookup + pinned-version check + astral installer + pip-last-resort, in order" ;;
   *)
     fail "structural: extracted block missing an expected contract element"; echo "--- block ---"; echo "$BLOCK" ;;
 esac
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
+
+# Stub canonical-versions source ($UV_VERSION is now read from here, not a setup.sh
+# literal) — exercises the real grep-extraction mechanism, offline, against a fake
+# WORKSPACE_ROOT rather than the real workspace.
+FAKE_WS="$WORK/fake-workspace"
+mkdir -p "$FAKE_WS/unified-trading-pm/scripts/workspace"
+cat >"$FAKE_WS/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" <<'EOF'
+UV_VERSION = "0.10.8"
+EOF
 
 # Minimal log_* stubs — setup.sh defines these as trivial one-liners; the block itself
 # is what's under test, not the logging cosmetics.
@@ -106,7 +117,7 @@ INSTALLER
 EOF
 chmod +x "$fakebin1/curl"
 
-out1=$(HOME="$home1" PATH="$fakebin1:$bindir1:$PATH" IN_CI=false CHECK_ONLY=false PYTHON_CMD=python3 run_block)
+out1=$(HOME="$home1" PATH="$fakebin1:$bindir1:$PATH" WORKSPACE_ROOT="$FAKE_WS" IN_CI=false CHECK_ONLY=false PYTHON_CMD=python3 run_block)
 rc1=$?
 if [ "$rc1" -eq 0 ] && printf '%s\n' "$out1" | grep -q "SUBSHELL_COMPLETED"; then
   pass "case1: block completed (exit 0) on a drifted-version uv"
@@ -138,7 +149,7 @@ chmod +x "$bindir2/uv"
 # astral branch, `command -v curl` would resolve the REAL system curl and this test
 # would (harmlessly) attempt a real network call, which is itself the regression this
 # case exists to catch, so we assert on the skip message instead of relying on that.
-out2=$(HOME="$home2" PATH="$bindir2:$PATH" IN_CI=false CHECK_ONLY=false PYTHON_CMD=python3 run_block)
+out2=$(HOME="$home2" PATH="$bindir2:$PATH" WORKSPACE_ROOT="$FAKE_WS" IN_CI=false CHECK_ONLY=false PYTHON_CMD=python3 run_block)
 if printf '%s\n' "$out2" | grep -q "uv 0.10.8 already installed (pinned)"; then
   pass "case2: already-pinned uv is skipped, no reinstall attempted"
 else

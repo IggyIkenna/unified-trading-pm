@@ -42,7 +42,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     unified-trading-library/unified_trading_library/streaming/live_aggregator.py,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
   ]
 ---

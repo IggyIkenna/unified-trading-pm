@@ -69,14 +69,19 @@ related:
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
   ]
 created: 2026-08-07
+last_updated: "2026-08-09"
 author: unknown
-priority: P1
+priority: P3
 parent_epic: observability_master
 source: >-
   Traced from a live #data-pipeline-alerts Slack reconciliation session, 2026-08-07 — the mirror_live fix
   (unified-api-contracts@8f670c459 + alerting-service@60d525fc6) was verified correct in code but ineffective live.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+estimate_class: infra
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.16
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -108,11 +113,16 @@ context_scope:
       as of ~13:09Z and again ~14:48Z — DP_FLEET_MONITOR_RUN_STARTED/COMPLETED have genuinely stopped. (The
       `dp-alerting-subscriber`-still-crashes-on-mirror_live half of this todo — confirming a real CRITICAL DP event
       mirrors cleanly post-fix — is still open pending the Dockerfile fix reaching `main` + a redeploy; see above.)
-- [ ] [SCRIPT] P3. Once confirmed stable for a few days, consider deleting `uts-prod-alerting-paging` +
-      `uts-prod-alerting-paging-cron` outright rather than leaving them paused indefinitely (dead infra).
+- [x] ✅ [SCRIPT] P3. Deleted `uts-prod-alerting-paging` + `uts-prod-alerting-paging-cron` — both confirmed NOT FOUND
+      via `gcloud run jobs describe` + `gcloud scheduler jobs list` as of 2026-08-10 (~3 days stable since scheduler
+      pause on 2026-08-07). Dead infra cleaned up.
 
 ## Progress Log
 
+- 2026-08-10 (slot 16, infra): Confirmed both `uts-prod-alerting-paging` (Cloud Run Job) and
+  `uts-prod-alerting-paging-cron` (Cloud Scheduler) are already deleted (NOT FOUND / no matching scheduler jobs).
+  Scheduler had been PAUSED since 2026-08-07; dp-alerting-subscriber remains the sole lifecycle-events-sub consumer.
+  Flipped final P3 todo — all items done, doc eligible for archival.
 - 2026-08-07: Filed after tracing the real root cause via Cloud Logging (dual Pub/Sub consumers on
   `lifecycle-events-sub`) + a direct `docker run` inspection of the deployed image (confirmed the base-image UAC
   staleness). Proceeding to fix in this same session per operator direction ("Consolidate onto dp-alerting-subscriber").
@@ -125,3 +135,12 @@ context_scope:
   Job/scheduler outright) is deliberately time-gated ("once confirmed stable for a few days"), not blocked on anything
   external; genuine unscheduled follow-up.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: RECLASSIFIED `assigned_vm: NA -> planning`.
+  The sole open item's time-gate ("once confirmed stable for a few days") is now live-confirmed: the scheduler has been
+  `PAUSED` and the Job has had ZERO executions for ~2 days since the last in-flight execution drained
+  (`2026-08-07T14:50:53Z` -> now), per fresh `gcloud` checks this run — evidence added to the todo above.
+  Conflict-checked: no other active plan/issue tracks deletion of `uts-prod-alerting-paging`/`-cron` (2 incidental
+  mentions found, `june_2026_vintage_audit_findings_2026_07_27.md` and
+  `issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`, both read-only context references, not
+  trackers). Finalize twin authored:
+  `alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md`.

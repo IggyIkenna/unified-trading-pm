@@ -169,3 +169,13 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — re-read end-to-end; sole open item (`[REVIEW] P3`)
+  remains explicitly observation-gated ("act only if this scenario is ever observed live," not yet observed). Checked
+  against the round7-10 precedent set — none apply (this is a live-fleet-observation condition, not a
+  credential/plan-destination/delete-safety question). Not found in any batch1-15 citation list, but the item's own
+  gating condition (unobserved-so-far) means there is nothing bounded to extract yet.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ([REVIEW] P3) remains explicitly observation-gated ("act only if this scenario is
+  ever observed live") — no bounded fix is writable for a not-yet-observed failure shape. Not found in any batch1-17
+  citation list; the gating condition itself (unobserved-so-far) means there is nothing extractable yet.

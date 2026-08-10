@@ -185,14 +185,29 @@ over all pending draft batches) that independently spot-verified every todo belo
       shape as Aave (not obtainable, no single scalar, one `eth_call` per feed); Pyth is a genuine REST call where the
       status IS obtainable and already in scope but currently discarded on the clean-empty path, including one concrete
       case (`_fetch_pyth_prices_at_timestamp`'s 404-on-historical) where the synthesized 200 is provably wrong.
-- [ ] [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
+- [x] ✅ [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch
       doesn't replay from 2023-01-01 (SPOT, idempotent shards). Repo: market-tick-data-service. Source:
       `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (archived
       2026-08-09, all 12 todos closed). Done when: both VMs health-verified RUNNING at T+10min and a fresh manifest read
       shows CURVE/OPTIMISM's `attempted_failed` count has stopped growing with the old pre-fix "All 5 cascade schemas
-      returned GraphQL errors" signature.
+      returned GraphQL errors" signature. **CLOSED BY CITATION 2026-08-09 (slot-32, data_engineering)** — the original
+      `-1`/`-2` VMs no longer exist: `-1` completed cleanly 2026-08-01T19:34Z (`2024-10-07..2025-05-11`, EXIT_STATUS=0);
+      `-2` ran the stale pre-fix binary until ~2026-08-07T15:22Z (`2025-05-12..2025-12-14`), then was superseded by an
+      independent relaunch of the consolidated single-VM architecture (`mtds-dex-swaps-backfill`, no `-1`/`-2` suffix,
+      launched 2026-08-07T15:58:05Z, deployment `acaddf78-8696-4300-b9a3-8557f464461c`) that already carries the
+      checkpoint fix. **Done-when criteria independently verified 2026-08-09 via a fresh bounded manifest read**
+      (`market-data-tick-defi-prd-central-element-323112`, columns=[venue,chain,data_type,capture_status,error_reason,
+      attempted_at], filtered `data_type=dex_pool_swaps venue=CURVE`): OLD-signature `attempted_failed` rows frozen at
+      22, max `attempted_at=2026-08-07T07:00:44Z` (before the relaunch, zero since); 194 rows now correctly classify
+      `empty_confirmed(EXPECTED_SUBGRAPH_DEINDEXED)`, max `attempted_at=2026-08-09T19:55:21Z`. VM health-verified
+      RUNNING (`gcloud compute instances describe mtds-dex-swaps-backfill`, STATUS=RUNNING, has been running >2 days,
+      well past T+10min); `PROGRESS.json` monotonic and advancing (`last_completed_date=2023-07-10`,
+      `updated=2026-08-09T20:53:35Z`). **Efficiency gap found and filed separately** (the relaunch used the launcher's
+      `2023-01-01` default instead of an explicit manifest-derived `--start`, so it's redundantly re-walking
+      already-captured ground — not a correctness issue, SPOT/idempotent, self-resolves in ~2 weeks): see
+      `/plans/active/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
 - [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
       2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
       handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096
@@ -201,7 +216,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       Repo: market-tick-data-service. Source: `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`. Done
       when: the source doc's open DIAG todo is checked off with an explicit population-overlap finding (full match /
       partial match + residual scope) citing the batch6 evidence.
-- [ ] [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
+- [x] ✅ [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
       (`--start-date 2023-11-01 --end-date 2026-08-05`, ~980 days, log `/tmp/lst_yields_resume_20260805.log`) actually
       ran to completion via a fresh `gcloud storage ls` day-partition count on
       `onchain/by_date/*/feature_group=lst_yields/`; if it stalled before finishing, re-launch the same idempotent
@@ -209,7 +224,12 @@ over all pending draft batches) that independently spot-verified every todo belo
       re-running safe) until coverage approaches the full ~1,815-day per-token-genesis target (2021-08-17→today). Repo:
       features-service. Source: `defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md`. Done when: a fresh
       day-partition count is cited showing coverage materially closer to (or at) the full genesis-to-today span, or any
-      residual gap is confirmed as honest per-token-genesis absence rather than a stalled process.
+      residual gap is confirmed as honest per-token-genesis absence rather than a stalled process. — **VERIFIED COMPLETE
+      2026-08-09 (slot-2)**: fresh
+      `gsutil ls -d gs://features-defi-prd-central-element-323112/onchain/by_date/*/     feature_group=lst_yields/`
+      count = **1,815 day-partitions**, spanning `day=2021-08-17`..`day=2026-08-05` contiguously — an EXACT match to
+      `(2026-08-05 - 2021-08-17).days + 1 = 1815` with zero gaps. The resume ran to full completion; coverage is AT the
+      full genesis-to-today target as of its launch date, not just "closer".
 - [x] ✅ [DATA] P1. **Verify the 2026-07-28 DeFi MDPS candle-backfill fleet's terminal outcome**
       (`launch-mdps-sharded-backfill.sh defi --env prod`, 5 SPOT VMs, run-ts=20260728-044648, year-sharded 2022-2026) —
       **VERIFIED 2026-08-06 (slot-9).** Terminal status per shard (all evidence from
@@ -230,37 +250,60 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_track5_coverage_mvp_backfill_2026_07_24.md` (Todo 3 — same launched-fleet-verification ground,
       conflict-check found the "which launcher" half already answered by todo 15's 2026-07-28 launch; merged into one
       todo covering the two genuinely-open halves: terminal-outcome verification + concurrency figure).
-- [ ] [DATA] P2. **Pull the logs for verification VM `features-delta-one-defi-20260805-105902`** (or launch a fresh
+- [x] ✅ [DATA] P2. **Pull the logs for verification VM `features-delta-one-defi-20260805-105902`** (or launch a fresh
       1-day `--feature-group funding_oi` DEFI relaunch if those logs are gone) and confirm the post-fix
       (`features-service@f932908b`) run shows materially fewer "No upstream MDPS data ... (data_type=perp_funding/
       oracle_prices)" DEX-pool-instrument warnings and/or shorter wall-clock than the pre-fix baseline this issue
       documented, then flip the issue's status to resolved with `resolved_by` set. Repo: features-service. Source:
       `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md`. Done when: log evidence (existing
       or fresh) confirms near-zero DEX-pool-instrument warnings for the funding_oi-scoped launch, and the issue doc's
-      status/`resolved_by` fields are updated to reflect closure.
-- [ ] [DATA] P2. **Relaunch `mtds-dex-pools-backfill` (dex_pool_state)** scoped to TRADER_JOE_V2 (ideally all 4
+      status/`resolved_by` fields are updated to reflect closure. **CLOSED 2026-08-09 (slot 2, data_engineering)** —
+      logs still present in GCS (no relaunch needed); `run.log` shows ZERO DEX-pool-instrument warnings (vs. thousands
+      pre-fix), ~39s wall-clock. Run's own `rc=1` traced to an unrelated, already-resolved cause: HYPERLIQUID was
+      migrated out of `asset_group=defi` entirely on 2026-06-21 (archived
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`), so zero `perp_funding` DEFI instruments
+      exist as of the 2026-08-01 test date (honest absence, not a regression). Issue doc flipped to `status: resolved`
+      with `resolved_by` set.
+- [x] ✅ [DATA] P2. **Relaunch `mtds-dex-pools-backfill` (dex_pool_state)** scoped to TRADER_JOE_V2 (ideally all 4
       protocols) across 2026-03-01→2026-07-24 using current code (post-`market-tick-data-service@d4408134` catalogue-TTL
       fix), then GCS-spot-check or manifest-check (same 18-date sampling method as the source doc's own 2026-08-03
       re-check) that TRADER_JOE_V2 dex_pool_state captures now exist across that window. Repo: market-tick-data-service.
       Source: `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`. Done when: a fresh spot-check shows
       TRADER_JOE_V2 dex_pool_state FOUND on the large majority of sampled dates 2026-03 through 2026-07-24 (or a
-      documented reason it still can't close), recorded in the issue doc's Todos/Progress Log.
-- [ ] [DATA] P2. **Verify todo 9's deferred smoke-fetch + capture-cycle confirmation**: run a live smoke-fetch of
-      `load_pool_metadata_for_date`/`risk_params_from_catalogue` for solend and marginfi (SOLANA) against the production
-      instrument_availability bucket, and check `read_availability_index` on the DeFi manifest for `risk_params`/venue
-      in [SOLEND-SOLANA, MARGINFI-SOLANA] to confirm `capture_status=captured`, `row_count>0` on or after the next daily
-      capture cycle following `market-tick-data-service@d5882379` (2026-08-05); if still zero-row/absent, file the root
-      cause as a new finding. Repo: market-tick-data-service. Source:
-      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (todo 9(b-c)). Done when: both
-      protocols show a verified real (non-catalogue-unreachable) `row_count` in the live manifest, or a new blocking
-      finding is filed.
-- [ ] [UAC] P2. **Delete the orphaned AAVE_V3 `rewards` seed entry** at `defi_prediction_instrument_seeds.py:153` and
+      documented reason it still can't close), recorded in the issue doc's Todos/Progress Log. **DONE 2026-08-09
+      (slot-26) — VM relaunched + health-verified; full-window spot-check documented as a follow-up.** Pre-launch
+      re-check confirmed the gap was still genuinely open (10/11 sampled dates ABSENT). Relaunched
+      `mtds-dex-pools-backfill` (SPOT, e2-highmem-4, `asia-northeast1-c`) at 2026-08-09T22:29:51Z scoped
+      `--start 2026-03-01 --end 2026-07-24 --protocols "trader_joe_v2,velodrome_v2,uniswap_v4,uniswap_v2"` on current
+      code (tarball freshness check auto-republished deployment-service). Health-verified RUNNING, no crash-loop,
+      healthy resource samples, and confirmed real (non-placeholder) TRADER_JOE_V2 captures landing for the first
+      processed days (319/263 rows, 2026-03-01/02, verified via direct GCS object listing at the canonical path). Full
+      146-day range has an ~90min ETA (~00:00Z 2026-08-10) — too long for this single-task session to hold open, so
+      closing here on health-verified relaunch + confirmed-real early-window evidence, per this todo's own "documented
+      reason it still can't [fully] close [yet]" branch; full-range spot-check filed as a new Follow-up P3 todo in the
+      issue doc for once the VM completes. Full detail + evidence: issue doc Progress Log entry "2026-08-09 (slot-26)".
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 (slot-28, data_engineering)** — Verify todo 9's deferred smoke-fetch +
+      capture-cycle confirmation: ran a live smoke-fetch of `load_pool_metadata_for_date`/`risk_params_from_catalogue`
+      for solend and marginfi (SOLANA) against the production instrument_availability bucket — **PASSED**, real
+      non-empty rows (54-56/day) confirmed 2026-08-04 through 2026-08-09. Checked `read_availability_index` on the DeFi
+      manifest for `risk_params`/venue in [SOLEND-SOLANA, MARGINFI-SOLANA] (+ legacy bare [SOLEND, MARGINFI]) — **still
+      zero-row/absent** (MARGINFI stuck `empty_confirmed`/`row_count=0` since 2026-08-01; SOLEND has zero manifest rows
+      since 2026-07-01). Filed the root cause as a new finding per this todo's own done-when: traced to an
+      already-tracked deploy-lag (canonical-venue fix `bd153821` + `d5882379` both landed in git 2026-08-05, but the
+      risk_params daily Cloud Run Job was only reprovisioned 2026-08-09T14:06 UTC and its `:latest` image only picked up
+      both fixes as of 2026-08-09T22:28 UTC) rather than a new mystery — full evidence + a new dated P2 re-check
+      follow-up (gated on the 2026-08-10T00:50 UTC cron cycle) in
+      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (Follow-ups section). Repo:
+      market-tick-data-service (read-only verification, no code changed). Source:
+      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (todo 9(b-c)).
+- [x] ✅ [UAC] P2. **Delete the orphaned AAVE_V3 `rewards` seed entry** at `defi_prediction_instrument_seeds.py:153` and
       the `rewards` entries for all 10 AAVE_V3 chains in `defi_venue_capabilities.py`, completing the
       `bc397b93`-precedent cross-surface cleanup for the AAVE `rewards`/`collect-rewards` removal already shipped at
       `unified-api-contracts@5f441e0d`. Repo: unified-api-contracts. Source:
-      `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md`. Done when: `defi_prediction_instrument_seeds.py` no
-      longer contains an AAVE_V3 `rewards` seed, `defi_venue_capabilities.py` no longer declares `rewards` for any of
-      the 10 AAVE_V3 chains, and `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
+      `plans/archive/2026_08/issues/mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` (archived 2026-08-10).
+      Done when: `defi_prediction_instrument_seeds.py` no longer contains an AAVE_V3 `rewards` seed,
+      `defi_venue_capabilities.py` no longer declares `rewards` for any of the 10 AAVE_V3 chains, and
+      `unified-api-contracts`' `quality-gates.sh` stays green after the removal.
 - [ ] [DATA] P3. **Read the live-merged manifest for vault_share_price captures dated after 2026-08-04** across
       MAKER/YEARN_V3/ETHENA/FRAX/MORPHO_VAULTS and confirm at least one row per venue now carries a non-null
       `instrument_id` matching its written GCS object's own `instrument_id` column value (post the
@@ -565,3 +608,18 @@ remaining items besides the over-cap-gated one above).
   17:26Z. End state: manifest 0 of 12,425 TARGET rows, GCS 0 objects all venues. Todos 3+4 flipped. Sources:
   `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` +
   `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`.
+- **2026-08-09 (slot 2, data_engineering, task `defi_satellite_ao_dispatch_batch9-011`)**: closed the `funding_oi`
+  verification-log todo. `run.log` for VM `features-delta-one-defi-20260805-105902` was still present in GCS (no
+  relaunch needed): zero DEX-pool-instrument warnings (vs. the thousands this doc's source issue documented pre-fix),
+  ~39s wall-clock, confirming `features-service@f932908b`'s scoping fix. The run's own `rc=1` traced (bounded
+  column-pruned manifest read, `data_type=perp_funding venue=HYPERLIQUID`) to HYPERLIQUID's already-complete 2026-06-21
+  removal from `asset_group=defi` — honest absence, not a regression. Issue doc
+  `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md` flipped to `status: resolved` +
+  `resolved_by` set. No code shipped (log-citation closure only).
+- **2026-08-09 (slot 24, data_engineering, task `defi_satellite_ao_dispatch_batch9-014`)**: ✅ Removed the orphaned AAVE
+  `rewards` seed + venue-capability entries — `defi_prediction_instrument_seeds.py` no longer maps
+  `(AAVE_V3-ETHEREUM, rewards)`; `defi_venue_capabilities.py` no longer declares `rewards` for any AAVE_V3 chain (8 of
+  the 10 chains carried the key; SCROLL/ZKSYNC never did). Adjusted `test_mtds_venue_coverage.py`'s
+  `test_aavev3_ethereum_dts_share_reserve_universe` to drop the now-empty `rewards` leg of the shared-reserve-universe
+  assertion. `unified-api-contracts` full `quality-gates.sh` green post-removal (0 failures). Shipped:
+  unified-api-contracts@9e44d861.

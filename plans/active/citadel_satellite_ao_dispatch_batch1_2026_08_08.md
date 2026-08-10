@@ -290,6 +290,78 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
 
 ## Progress Log
 
+- 2026-08-10 (slot 30, citadel_satellite_ao_dispatch_batch1-004, P2.11.16 "BTC trend feature corpus recompute"): **in
+  flight — backfill VM running, NOT yet done.** Verified the P2.11.16 recompute is genuinely needed: `returns`
+  feature_group is ABSENT from `gs://features-cefi-prd-central-element-323112/delta_one/by_date/` for all paper-window
+  dates (2026-04-22, 2026-05-01..03), and the existing `volatility_realized` parquet (866 cols) does NOT contain
+  `btc_realized_vol` either — so both target columns are missing. Confirmed the fix chain from
+  `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md` is LIVE and working: bounded local preflight
+  (`--preflight-only`, canonical `BITGET-FUTURES:PERPETUAL:BTCUSDT`, 2026-05-03, returns) →
+  **`Lookback validation passed: 1/1 instruments OK`** (id-form normalization + venue-collapse bypass confirmed).
+  Launched the backfill via
+  `launch-features-vm.sh --feature-family delta_one --asset-group CEFI --start-date 2026-04-22 --end-date 2026-05-03 --launch-mode full --env prod`
+  with `FEATURE_GROUP=returns`:
+  - Attempt 1 (`features-delta-one-cefi-20260810-140712`): booted (heartbeat "running" 14:09Z) but GONE ~14:14Z with
+    ZERO progress (no run.log, no parquet written) — SPOT preemption on the heavily-contended host (822 VMs running); no
+    `LAUNCH_PARAMS.json` was captured so no exact auto-relaunch; deleted-no-op.
+  - Attempt 2 (`features-delta-one-cefi-20260810-141704`): first create failed `asia-northeast1-c` STOCKOUT
+    (`e2-standard-8` resource_availability); retried 15s later → **CREATED + RUNNING** (SPOT, e2-standard-8,
+    asia-northeast1-c). Watcher armed for terminal state (run.log marker / TERMINATED). **Attempt 2 outcome: PREEMPTED
+    at boot ~14:21Z (2026-08-10 07:21:28-07:00 `compute.instances.preempted` system event, "Instance was preempted") —
+    ZERO progress again (no run.log, no EXIT_STATUS, no parquet written).** Verified via
+    `gcloud compute operations list --filter="targetLink~features-delta-one-cefi-20260810"` that BOTH attempts
+    (140712 + 141704) carry genuine `compute.instances.preempted` DONE events — root cause closed, preemption-recovery
+    path (fresh relaunch from START_DATE) is the correct response since no measured progress exists.
+  - Attempt 3 (`features-delta-one-cefi-20260810-142400`): relaunched 2026-08-10 14:24Z, **CREATED + RUNNING** (SPOT,
+    e2-standard-8, asia-northeast1-c), same exact params + `FEATURE_GROUP=returns`. Watcher re-armed with the CORRECT
+    log convention (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` + `EXIT_STATUS` marker — not
+    the features bucket, per launcher_common.sh:1516). Per spot-vms-for-backfill.md, SPOT stays correct (on-demand for
+    backfill is "a bug, not a default"; this is a presence-skip backfill, not a verify-script carve-out). **NEXT STEP
+    for whoever resumes**: wait for terminal state, then (a) verify run.log `rc=0` / `EXIT_STATUS=0`, (b) manifest-row
+    check that the delta_one feature corpus carries non-null `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol`
+    for the paper window (`_index/availability_index.parquet` under features-cefi, or a parquet-schema probe), (c) flip
+    this todo `[x]` with the VM name + manifest evidence, per the plan's done-when. Note: the launcher's printed
+    post-backfill manifest rebuild snippet uses `prefix='sports_features/by_date'` (sports template) — the cefi
+    delta_one verify must use the actual `delta_one/by_date` prefix / availability_index read, not copy that string. If
+    attempt 3 also preempts at boot, escalate: document the 3×-preemption in an issue doc + request operator ruling on
+    `--on-demand` for this tiny bounded 4-date window.
+
+  - **Attempt 3 OUTCOME: PREEMPTED at boot too — 3× total, task escalated to `[OPERATOR]`.** Watcher fired with
+    `STATUS_EMPTY`; ground-truthed: `compute.instances.preempted` DONE 2026-08-10 07:28:03-07:00 (3.5 min after insert),
+    VM gone, zero progress (only `TARBALL_PINS.json` written). Three identical boot-stage preemptions in 18 min on the
+    same hardcoded `asia-northeast1-c` zone (822 VMs running) = stable-condition signal, not flapping. Launcher `ZONE`
+    is a hard literal (no env override), so sibling-zone isn't a clean autonomous option (would require editing shared
+    infra code + quickmerge). Per this entry's own escalation note + the
+    `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md` precedent (operator ruled ON_DEMAND after repeated
+    preemption), filed `plans/active/issues/features_delta_one_cefi_btc_trend_3x_preempted_2026_08_10.md` with a
+    `[OPERATOR] P1` ruling todo: (A) approve `--on-demand` for this 4-date window (features launcher's `--on-demand`
+    verified functional — `launch-features-vm.sh:188` sets `ON_DEMAND=true` after init, not the cefi launcher's
+    pre-2026-08-06 env-var bug) or (B) park for a less-contended window. **This todo is now BLOCKED on the operator
+    ruling** — checkboxes P2.11.16/P2.11.20 remain `- [ ]` (corpus genuinely absent, no false progress). Resume after
+    ruling: relaunch (with `--on-demand` if approved) → verify terminal state → manifest-row check → flip → /done.
+
+- 2026-08-09 (slot 9, citadel_satellite_ao_dispatch_batch1-006, "features-service: recompute the corpus for the intraday
+  BTC mean-reversion cs-ML feature"): **item remains OPEN — blocked, not done.** Attempted the `returns` +
+  `statistical_anomaly` backfill for cefi/BTC over the existing paper-trading window (`day=2026-04-22`,
+  `day=2026-05-01..2026-05-03`) and hit a real, cross-cutting correctness bug: the CEFI availability manifest stores
+  BITGET-sourced instrument ids in raw vendor form (`BITGET-FUTURES:PERPETUAL:BTC-USDT@LIN`), while the features
+  MVP-universe filter + the already-shipped feature-output filenames use the canonical form
+  (`BITGET-FUTURES:PERPETUAL:BTCUSDT`) — neither form lets `DependencyChecker`'s lookback pre-flight AND the
+  MVP-universe filter both pass, so the backfill cannot start. Confirmed real candle data exists (both GCS and manifest)
+  for the target window, ruling out an honest-absence explanation. Filed
+  `/plans/active/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`
+  (unified-trading-pm@62dff90443) with a P1 fix todo (translate canonical↔raw instrument-id forms in
+  `DependencyChecker._count_candles_for_lookback`) and P2 re-run todos for this item + its sibling P2.11.16. Escalated
+  via `/blocked`; main confirmed (option A): leave this todo open pending the P1 fix landing as its own properly-scoped
+  change, rather than patching the shared dependency-checker inline from this task. Along the way, shipped two small
+  REAL bugs discovered while attempting the live compute (both independent of the id-mapping blocker, both verified via
+  a real preflight run before/after): (1) `features-service@9629787f` — CLI parser's `FEATURE_GROUPS` never listed
+  `statistical_anomaly`, so `--feature-group statistical_anomaly` failed argparse outright; (2)
+  `features-service@af75a3236` — the delta_one orchestrator's own calculator map (distinct from
+  `calculators/__init__.py`'s registry) was still missing the `statistical_anomaly` → `anomaly.StatisticalAnomaly`
+  entry, so even past argparse every date failed with "No calculator for feature group: statistical_anomaly". Both fixes
+  are real prerequisites for this todo's eventual re-run once the id-mapping P1 fix lands, but do not by themselves
+  unblock the backfill.
 - 2026-08-08 (slot 2, citadel_satellite_ao_dispatch_batch1-003): shipped the GroupC smart-fill / execution-alpha P1.6
   todo — execution-service@b2b41038. Verified the shipped `replay_run` Layer-3 entrypoint end-to-end via the e2e-testing
   in-memory proof (real code path, deterministic, all assertions pass). Discovered CRA had no code path actually

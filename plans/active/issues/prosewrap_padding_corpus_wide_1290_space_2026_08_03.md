@@ -117,12 +117,16 @@ Mechanical, bounded remediation — not a design/judgment call:
       `bash scripts/plan-hygiene/check_prosewrap_padding.sh` for the live list), collapsing over-indented continuation
       lines back to their structurally-correct indent and any 3+-space run inside a backtick span back to a single
       space. Verify content-only via `git diff -w` per file before committing. Fine to split across multiple
-      commits/sessions — not a single-commit requirement. **Known narrow overlap (na-eligibility-audit 2026-08-03,
-      conflict-check § 3): `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` carries its own P3 todo to
-      hand-fix ONE of these 82 files (`issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`,
-      still flagged as of this run's live check). Not treated as a blocking conflict — both fixes converge on the
-      identical whitespace-only repair, so whichever lands first makes the other a no-op; skip re-touching that file if
-      batch3's todo has already landed by the time this todo executes.** (repo: unified-trading-pm)
+      commits/sessions — not a single-commit requirement. **Automation available (2026-08-10, 18th promote-wall dispatch
+      agt-e56165): `scripts/plan-hygiene/fix_prosewrap_padding.py` automates exactly this repair for a given set of
+      files — run it on the live-flagged list, then verify with the gate. Read its docstring first (it encodes the
+      `--only`-mode trap, the anchor-indent rule, and the formatter-mangling trap).** **Known narrow overlap
+      (na-eligibility-audit 2026-08-03, conflict-check § 3): `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`
+      carries its own P3 todo to hand-fix ONE of these 82 files
+      (`issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`, still flagged as of this run's live
+      check). Not treated as a blocking conflict — both fixes converge on the identical whitespace-only repair, so
+      whichever lands first makes the other a no-op; skip re-touching that file if batch3's todo has already landed by
+      the time this todo executes.** (repo: unified-trading-pm)
 - [ ] [BACKEND] P3. Once the flagged-line count reaches 0 (or a deliberately-accepted lower plateau), run
       `check_prosewrap_padding.sh --update-baseline` to lower the ratchet from 4472 toward 0 and commit the updated
       `scripts/plan-hygiene/prosewrap_padding_baseline.yaml`. (repo: unified-trading-pm)
@@ -147,3 +151,15 @@ Mechanical, bounded remediation — not a design/judgment call:
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`'s hand-fix todo (noted inline above, not blocking — an
   idempotent mechanical fix). No finalize-plan companion needed (`doc_type: issue`, structurally exempt per
   `check_finalize_plan_coverage.py`). Flipped `assigned_vm: NA -> planning`, `execution_scope` to `orchestrator-agent`.
+
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: refining the trigger condition while
+  hand-fixing several NEW instances this run (unrelated to this doc's own todos — found while adding my own notes to
+  other plan docs). Confirmed concretely: the corruption is NOT random — it specifically triggers on a multi-paragraph
+  note **nested as a continuation of a checkbox list item** (2+ levels of list/checkbox indent), and gets WORSE on each
+  successive `prettier --write` pass on the same content (non-idempotent, monotonically increasing indent — matches
+  `check_prosewrap_padding.sh --only`'s own doc comment about this). Repro'd live: writing the identical prose as a
+  **top-level blockquote** (`> **...**` immediately before the checkbox, not nested under it) survives repeated
+  `prettier --write` passes with zero padding growth — 0 violations both before and after. Practical takeaway for any
+  agent hand-authoring a multi-paragraph annotation near a checkbox: use a top-level blockquote banner (matching the
+  style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
+  paragraph, or expect to re-fight this bug on every commit attempt.

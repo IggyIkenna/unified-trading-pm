@@ -33,7 +33,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-22
 code_refs:
 ---
 
@@ -66,11 +66,9 @@ per-strategy intra-client transfers into ONE `TransferIntent` per
 `client × {unordered venue pair} × asset × transfer_type` (signed sum, drop zero-nets, bidirectional flows collapse) and
 raises `CrossClientTransferForbiddenError` on any cross-client `add_request` (defence-in-depth alongside the
 execution-service consume-time raise; logs `CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR for alert-on-attempt). Both
-runtime raises (layer 2 execution-service consume
-
-- layer 3 strategy-service emit) are now live; the strategy-service raise is on the coordinator, not yet on a live
-  per-strategy emit loop (no live transfer-emit pipeline exists in strategy-service today — the coordinator is the
-  tested, importable primitive future rebalance code builds on).
+runtime raises (layer 2 execution-service consume + layer 3 strategy-service emit) are now live; the strategy-service
+raise is on the coordinator, not yet on a live per-strategy emit loop (no live transfer-emit pipeline exists in
+strategy-service today — the coordinator is the tested, importable primitive future rebalance code builds on).
 
 ## Why this is a HARD rule, not a preference
 

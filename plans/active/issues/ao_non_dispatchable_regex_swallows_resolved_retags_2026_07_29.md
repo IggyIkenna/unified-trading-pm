@@ -238,3 +238,13 @@ past tense rather than deleting it outright.
   2 grep hits are fenced-code excerpts, per the doc's own 2026-08-02 Counting note) was RECLASSIFY'd 2026-07-30 then
   explicitly REVERTED by the dated `unified-trading-pm@14478ca26` operator directive, a standing ruling not
   re-litigated.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked "plan-destination defaults to AO-dispatched
+  going forward" (round7 ruling) against this doc specifically: that is a default for cases NEVER explicitly decided,
+  and this exact item already has a dated, explicit, case-specific operator revert (`unified-trading-pm@14478ca26`) — a
+  specific ruling is not overridden by a later general default, same logic the 2026-08-07 marker already applied. No
+  other round7-10 precedent applies. Not re-litigated.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -c '^- \[ \]'` = **3** (2 fenced-
+  code-block false positives + the 1 real `[DATA] P1` item, per this doc's own long-standing 2026-08-02 Counting note).
+  The sole real item's own dated, explicit operator revert (`unified-trading-pm@14478ca26`) is a standing ruling, not
+  re-litigated — same specific-ruling-beats-later-default logic already applied across every prior pass on this doc
+  (2026-08-02 through round11).

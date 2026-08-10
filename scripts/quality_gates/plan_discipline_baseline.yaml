@@ -1,6 +1,4 @@
-violation_count: 1
+violation_count: 0
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
-baseline_files:
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/10/unified-trading-pm/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
+baseline_files: []

@@ -84,6 +84,24 @@
 #   Same reasoning as check_terminal_status_archived.py --only: a file YOU are actively staging
 #   that's 0-open/some-done/unlocked/not-exempt is unconditionally wrong regardless of the rest of
 #   the corpus's backlog — no baseline needed for a single-file check.
+#
+#   `archive_exempt: true` is the SANCTIONED BRIDGE for the flip-then-mv two-commit archival
+#   pattern this mode otherwise deadlocks against (found 2026-08-09,
+#   check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md). A doc whose own
+#   LAST open todo is its own archival trigger has no legal single commit: combining the checkbox
+#   flip with the `git mv` archival in ONE commit makes the diff at the original plan_ref path show
+#   only a file deletion, which defeats the AO server's cross-repo `/done` M3 checkbox-flip
+#   verification (plan-completion-and-archival-discipline.md's own HARD RULE) — but flipping ALONE,
+#   unexempted, trips THIS check. Resolution: set `archive_exempt: true` in the SAME commit as the
+#   checkbox flip (this mode already treats it as a skip, see the `archive_exempt` grep below — no
+#   separate code path needed), then `git mv` the file to `plans/archive/[issues/]` in the
+#   IMMEDIATELY FOLLOWING commit, dropping the now-moot `archive_exempt: true` line as part of that
+#   same move (an archived doc is no longer in this check's scanned population at all, so the field
+#   has nothing left to bridge once the mv lands). If the follow-up mv is ever forgotten, the doc is
+#   still caught — just not at commit time: the corpus-wide baseline / `--diff-base` modes (run in
+#   the full `quality-gates.sh`, the daily hygiene cron, and the LDR→main promote gate) re-scan and
+#   flag it as a NEW candidate above baseline the next time either runs. See
+#   `tests/test_check_archive_candidates_flip_then_mv.bats` for the regression coverage.
 
 set -uo pipefail
 
@@ -341,7 +359,9 @@ if [ -n "$DIFF_BASE" ]; then
       # Find the file path for reporting
       for d in "plans/active" "plans/active/issues"; do
         if [ -f "$PM_DIR/$d/${slug}.md" ]; then
-          local status
+          # Top-level script scope here (not inside a function) — `local` is invalid
+          # (SC2168, pre-existing, found while shellcheck-verifying an unrelated change
+          # to this file 2026-08-09).
           status="$(grep '^status:' "$PM_DIR/$d/${slug}.md" 2>/dev/null | head -1 | sed 's/status: //')"
           status="${status:-unknown}"
           FOUND+=("$d/${slug}.md  status=${status}")

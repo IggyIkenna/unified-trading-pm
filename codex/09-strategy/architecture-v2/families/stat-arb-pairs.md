@@ -15,7 +15,7 @@ tags: [strategy, stat-arb, pairs, ml, execution, tradfi]
 related:
   [
     /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
-    ml-directional.md,
+    /codex/09-strategy/architecture-v2/families/ml-directional.md,
     /codex/09-strategy/architecture-v2/families/vol-trading.md,
     ../archetypes/stat-arb-pairs-fixed.md,
   ]
@@ -157,6 +157,69 @@ etc.).
   p-value kill switches.
 - **Kill switches**: cointegration p-value breach (relationship broken), one-leg liquidity collapse, extreme z-score
   without reversion after hold period
+
+## Latency Requirements
+
+**Category: `Low`** — sub-second total E2E, live mode only (batch mode has no latency requirements; it replays
+historical data at compute speed). Baseline: the archived
+[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
+table — SUPERSEDED as a doc, but its **Statistical Arb** row (`< 100 ms` tick-to-signal / `< 100 ms` signal-to-order /
+venue-dep. fill / `< 200 ms` total E2E, `Low`) is the operative baseline and is **confirmed, not corrected**, here: the
+2026-08-10 operator correction (arbitrage-based archetypes must be in the ms realm) agrees with — rather than changes —
+the archived doc's existing `Low` categorization.
+[`arbitrage-structural.md`](/codex/09-strategy/architecture-v2/families/arbitrage-structural.md) § "Latency
+Requirements" already notes this family shares that same archived Statistical Arb row as its baseline; this family's own
+content carries the execution-side facts those numbers imply — the **Atomic multi-leg execution** shared primitive
+("enter/exit both legs simultaneously via ATOMIC or near-atomic with tight timing") and the `execution_policy_ref`
+("paired execution preference, e.g. leader-lagger for cross-venue") — so nothing here contradicts a sub-second budget.
+
+| Expression                                                                         | Tick-to-Signal | Signal-to-Order | Order-to-Fill | Total E2E | Category |
+| ---------------------------------------------------------------------------------- | -------------- | --------------- | ------------- | --------- | -------- |
+| Fixed pairs, same-venue (equity pairs IBKR, index pairs CME, crypto pairs one CEX) | < 100 ms       | < 100 ms        | Venue-dep.    | < 200 ms  | Low      |
+| Fixed pairs, cross-venue / cross-asset (crypto cross-CEX legs, IBKR + CME CL-ES)   | < 200 ms       | < 100 ms        | Venue-dep.    | < 300 ms  | Low      |
+| Cross-sectional baskets (universe ranking, long / short baskets)                   | < 200 ms       | < 100 ms        | Venue-dep.    | < 300 ms  | Low      |
+
+The cross-venue row borrows the archived **Cross-Exchange Arb** row's `< 300 ms` E2E as its decision ceiling — the legs
+are two different underlyings on two different venues, so there is no venue-side atomicity to lean on. The
+cross-sectional row's tick-to-signal is dominated by the **ranking-model leg** (cross-sectional ML ranks the universe),
+and its decision cadence is rank-update-driven (crypto top-N hourly, Russell 1000 daily per the Typical instance
+examples) rather than tick-driven — the `< 200 ms` figure applies to the execution-emission path once a rotation fires,
+not to signal detection on every tick.
+
+**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
+`deployment_profiles` category mapping (bundled services on one VM for low-latency handoff), matching the market-making
+and arbitrage-structural families' derivation. Note this is NOT yet reflected in
+[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
+§ 6's `STAT_ARB_PAIRS` `topology_requirements` row (execution isolated / strategy shared OK / co-location `no` / min SLA
+`standard`), which predates this latency categorization — that row's `no` co-location + `standard` SLA tier conflicts
+with the Low→`co_located_vm` rubric, a discrepancy this audit surfaces for the derivation todo that writes
+`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`.
+
+### Decision latency vs. inter-leg execution gap
+
+The `< 200–300 ms` figures above are the **decision budget** — dislocation detected (spread z-score crossing the entry
+band) → a single paired instruction emitted. They are NOT the whole requirement. For this family the binding constraint
+is the **inter-leg execution gap** (2026-08-10 operator ruling: "we are executing two legs of a trade... how are we
+ensuring the lag leg followed by the lead leg is ms timing"), and the expressions split into two very different risk
+surfaces:
+
+- **Same-venue pairs / ATOMIC**: both legs enter on the same venue (equity pairs on IBKR, index pairs on CME, crypto
+  pairs on one CEX), so the **Atomic multi-leg execution** primitive bounds the gap — enter/exit both legs
+  simultaneously, ATOMIC or near-atomic with tight timing. There is no measurable cross-venue gap; the binding budget is
+  the decision latency (`< 200 ms` per the archived Statistical Arb row).
+- **Cross-venue / cross-asset pairs — the real risk surface**: two legs on **two different venues** (crypto cross-CEX
+  pairs, CL-ES on IBKR + CME), and no venue supports a simultaneous cross-CEX fill, so execution runs leader-lagger —
+  the lead leg fills on venue A, the lag leg chases on venue B (the `execution_policy_ref`'s "paired execution
+  preference, e.g. leader-lagger for cross-venue"). The gap between the lead fill and the lag follow is where the edge
+  lives or dies: if the lag leg falls beyond ms timing the spread can converge, or one leg can partially fill leaving a
+  naked directional position on a single underlying — the partial-fill / one-leg liquidity-collapse tail risk the Risk
+  profile section warns about. The operating target is ms-realm (well under 100 ms).
+- **Cross-sectional baskets**: when a rank rotation fires, the long-basket and short-basket legs must move together — a
+  rotation gap leaves the old and new baskets misaligned mid-transition. Same-venue-per-universe (IBKR equities, one CEX
+  per crypto universe) keeps the rotation near-atomic; a cross-venue universe inherits the leader-lagger surface above.
+
+So for Stat Arb / Pairs, "Low" means the **inter-leg execution timing budget is ms-realm for every cross-venue /
+leader-lagger expression**, while same-venue ATOMIC pairs are bounded by the (still sub-second) decision budget.
 
 ## UI dashboard (shared)
 

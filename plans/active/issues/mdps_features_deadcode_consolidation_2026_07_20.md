@@ -84,20 +84,42 @@ launcher deletions. Other: free-text.
 
 ## Todos
 
-- **1. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (S1-a —
-  `launch-prediction-features-vm.sh` BROKEN, superseded by
-  `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION`; DELETE + repoint registry — no
-  longer operator-gated per the round5-cefi-question-resolution annotation above.)
+- [x] ✅ 1. [SCRIPT] P2. S1-a — `launch-prediction-features-vm.sh` BROKEN, superseded by
+      `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION`; DELETE + repoint registry.
+      **DONE (cefi_satellite_ao_dispatch_batch12_2026_08_09.md todo 1, 2026-08-09)** — `deployment-service@4150c6c2`:
+      `launch-prediction-features-vm.sh` deleted; `launcher_registry.py`'s `"prediction-features-"` key now maps to
+      `launch-features-vm.sh` (documented comment for the `--feature-family cross_instrument --asset-group PREDICTION`
+      invocation, per the registry's bare-filename value convention). `test_launcher_registry.py` (9/9) +
+      `quality-gates.sh` green on the shipped SHA.
 - [ ] 2. [SCRIPT] P2. S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch;
       `VM_SERVICE=market_data_processing_service+features_service` → ModuleNotFoundError; plan archived) but registered
       in `vm_prefix_registry.py:841-851` (5 rows). DELETE launcher + 5 rows OR finish the dispatcher branch (pending
-      operator).
-- [ ] 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but registered
-      in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie watchdog +
-      no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket `_TICK_SPORTS`,
-      EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a launcher→emitted-name
-      test.
+      operator). **RE-CHECKED 2026-08-09T21:47Z (slot-17, review,
+      `cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md` todo 2) — the "finish the dispatcher branch" option
+      (B) has since been chosen and COMPLETED, this todo's own premise is now stale.** Two related issue docs —
+      independent of this one, surfaced via unrelated
+      `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` work — show the exec-dispatch branch was built
+      out end-to-end and PRODUCTION-VERIFIED:
+      `plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` (exec-dispatch branch
+      shipped `deployment-service@e7d17f2`, archived 2026-08-07, all todos done) and
+      `plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md` (the CLI
+      bridging + OOM + live-mode defects the first fix didn't catch, all 11 todos done, CEFI 117-shard + DeFi
+      3,535-shard production launches both verified RUNNING with ZERO OOM as of 2026-08-07, archived same day). Live
+      registry confirms the 5 `mdps-features-live-{ag}-` rows in `vm_prefix_registry.py` are unchanged (still
+      registered) and the launcher script itself is present with no deletion. **Not flipping this checkbox here** —
+      that's a citation-reconciliation task matching todo 1's pattern (this doc's own "Recommended (A): delete" section
+      also needs updating since B, not A, is what actually happened) — better scoped as its own batch13 todo, not folded
+      into this re-check. Batch13 candidate: reconcile this checkbox + the "Big findings" recommendation section with
+      the evidence above.
+- [x] ✅ 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but
+      registered in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie
+      watchdog + no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket
+      `_TICK_SPORTS`, EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a
+      launcher→emitted-name test. **DOC-HYGIENE CORRECTION 2026-08-09 (cefi batch12 finalize) — already fixed, checkbox
+      was stale**: `deployment-service@c79f984c` ("fix(vm): wire SPOT preemption auto-recovery fleet-wide + register
+      mdps-sports- prefix", 2026-07-20) registered `mdps-sports-` (bucket `_TICK_SPORTS`, `EPHEMERAL_BATCH`) in BOTH
+      `launcher_registry.py` and `vm_prefix_registry.py`, plus a guard test that no SPOT launcher may be
+      preemption-blind. Verified via direct commit-content read (not re-implemented).
 - [x] ✅ 4. [SCRIPT] P3. S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable
       dead body; duplicate `lc_verify_tarball_freshness` 274-278/280-284; pre-consolidation module names in
       `_python_module_for`). **DONE (na-eligibility-audit 2026-08-03)** — closed via
@@ -173,3 +195,20 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms round7 (2026-08-08)
   whole-doc-only-flip ruling: todo 8 (sports dual-entrypoint) remains an un-superseded design adjudication that traps
   otherwise-bounded todos 1-3.
+- **cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md todo 1, 2026-08-09** (review): reconciled checkbox
+  pointers with verified shipping evidence — todo 1 (S1-a) flipped `[x]`, `deployment-service@4150c6c2`; todo 3 (S1-c)
+  flipped `[x]` as a doc-hygiene correction, `deployment-service@c79f984c` (already fixed pre-existing, checkbox was
+  stale). Both commits confirmed reachable on `origin/live-defi-rollout` before citing. **Remaining open in this doc:
+  2** — todo 2 (S1-b, still design-gated by real successor work) and todo 8 (S3-b, still a genuine sports-dual-
+  entrypoint design adjudication). Neither re-checked for newly-cleared status here — that is finalize todo 2's scope,
+  not this todo's.
+- **cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md todo 2, 2026-08-09T21:47Z** (slot-17, review): re-checked
+  both remaining open items for newly-cleared status. **S1-b (todo 2) — CLEARED, batch13 candidate**: see the dated note
+  on the todo itself above — the dispatcher branch was finished + production-verified (CEFI 117-shard + DeFi 3,535-shard
+  live launches, zero OOM, 2026-08-07) via unrelated successor work, so this todo's "non-runnable" premise is stale; the
+  actual checkbox reconciliation (+ updating the "Big findings" recommendation from A to what B actually delivered) is
+  left as a batch13 todo, not done here. **S3-b (todo 8) — unchanged, still genuinely blocked**: grepped the corpus for
+  any newer operator/design ruling on the sports dual-entrypoint question (fold `--tables`/sfi-progressive behind
+  `--feature-family sports` vs bless the submodule) — none found; `launch-features-sports-backfill-vm.sh`'s DEPRECATION
+  NOTE is unchanged since 2026-05-08. Doc's remaining-open count stays 2, but todo 2 is now evidence-annotated and ready
+  for a mechanical citation-only close in batch13.

@@ -178,7 +178,8 @@ def _backfill_df_vectorized(
         try:
             derived = derive_pipeline_mode_for_row(venue, asset_group, data_type)
             key_to_pm[k] = derived.value if derived is not None else None
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — shard-level (per-key) isolation: one
+            # unexpected (venue, data_type) combo must not abort the whole vectorized backfill
             logger.warning("Derivation error for venue=%r data_type=%r: %s", venue, data_type, exc)
             key_to_pm[k] = None
 
@@ -207,7 +208,8 @@ def _list_per_vm_blobs(storage: object, bucket: str) -> list[str]:
     try:
         blobs = storage.list_blobs(bucket, prefix=_PER_VM_PREFIX)  # type: ignore[attr-defined]
         return [b.name for b in blobs if b.name.endswith(".parquet")]
-    except Exception as exc:
+    except Exception as exc:  # noqa: broad-except — bucket-level isolation: one bucket's list
+        # failure must not abort processing of other buckets in the same --all run
         logger.warning("Could not list per-VM shards in %s: %s", bucket, exc)
         return []
 
@@ -371,7 +373,8 @@ def main() -> int:
             )
             for k in grand_total:
                 grand_total[k] += result.get(k, 0)
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — bucket-level isolation: one bucket's
+            # failure must not abort processing of the remaining --all targets
             logger.exception("Bucket %s failed: %s", bucket, exc)
             exit_code = 1
 

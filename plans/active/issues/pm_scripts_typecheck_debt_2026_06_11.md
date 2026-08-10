@@ -98,8 +98,9 @@ shipping):
       2026-06-24, shipped `unified-trading-pm@22b2f89d7` via PR #523). Removed `BASEDPYRIGHT_MAX_ERRORS=1555` from PM's
       `quality-gates.sh` → base-service runs basedpyright + reports the count as a WARNING but never FAILS the gate, so
       the four-time `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap (1511→…→1555) can never recur (was: "can never red the
-      LDR→main PR / starve the fleet" — NARROWED 2026-07-12 per operator ruling finding 87, see the retagged todo below
-      for the reconciliation-doc citation: this fix closed only the `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap.
+      LDR→main PR / starve the fleet" — NARROWED 2026-07-12 per operator ruling finding 87, cited in
+      `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (see the retagged todo below for
+      the full reconciliation-doc citation): this fix closed only the `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap.
       `base-service.sh` carries a SEPARATE, unconditional zero-warning-policy block —
       `scripts/quality-gates-base/base-service.sh:882-885`
       (`if [ "${WARN_COUNT:-0}" -gt 0 ]; then ... log_fail "Type     check FAILED — $WARN_COUNT warning(s) ..."; exit 1; fi`)
@@ -108,15 +109,17 @@ shipping):
       on `QG slice (typecheck)` with ~3082 `reportAny`/`reportUnknown*` errors, observed 2026-06-27 (`last_updated`) —
       three days AFTER this fix shipped). Aligns with the lifecycle-marker SSOT (scripts = ruff-only). DO-NOT-re-add
       note is in the gate file.
-- [x] ✅ [CICD] P1. **bumped per operator ruling 2026-07-12 (finding 87)** (was: P3 "NICE-TO-HAVE" — no longer accurate:
-      the zero-warning-policy block in `base-service.sh` (see narrowed claim above) means this is a live path to red the
-      LDR→main promotion PR, not a no-urgency cleanup). **Longer-term: fully exclude `scripts/` from the basedpyright
-      SCAN, or annotate the debt down.** Warn-only (above) ends the `BASEDPYRIGHT_MAX_ERRORS` ratchet-bump trap but
-      still RUNS basedpyright on `scripts/` (~240s), and the SEPARATE unconditional zero-warning-policy block still
-      FAILS the gate on any `WARN_COUNT>0`. If the ~240s docs-repo cost is worth removing, exclude the scan (e.g. point
-      `SOURCE_DIR` off `scripts/` or a pyrightconfig exclude) — vs. opportunistically annotating the `scripts/`
-      `reportUnknown*`/`reportAny` if PM tooling ever wants real type-checking back. Ruling + rationale:
-      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding 87: "Narrow 'can never
+- [x] ✅ [CICD] P1. **bumped per operator ruling 2026-07-12 (finding 87, cited in
+      `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2)** (was: P3 "NICE-TO-HAVE" — no
+      longer accurate: the zero-warning-policy block in `base-service.sh` (see narrowed claim above) means this is a
+      live path to red the LDR→main promotion PR, not a no-urgency cleanup). **Longer-term: fully exclude `scripts/`
+      from the basedpyright SCAN, or annotate the debt down.** Warn-only (above) ends the `BASEDPYRIGHT_MAX_ERRORS`
+      ratchet-bump trap but still RUNS basedpyright on `scripts/` (~240s), and the SEPARATE unconditional
+      zero-warning-policy block still FAILS the gate on any `WARN_COUNT>0`. If the ~240s docs-repo cost is worth
+      removing, exclude the scan (e.g. point `SOURCE_DIR` off `scripts/` or a pyrightconfig exclude) — vs.
+      opportunistically annotating the `scripts/` `reportUnknown*`/`reportAny` if PM tooling ever wants real
+      type-checking back. Ruling + rationale:
+      `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 (finding 87: "Narrow 'can never
       red' claim + bump off P3"). Provenance: same incident. Provenance:
       orchestrator_self_healing_hardening_2026_06_21.md § Operator review (2026-06-23) incident-cluster, verified
       2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`). **DONE 2026-07-27 (slot-5)** —

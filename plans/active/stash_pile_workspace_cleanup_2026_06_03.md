@@ -38,7 +38,7 @@ context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     scripts/dev/audit-stash-pile.sh,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]

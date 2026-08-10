@@ -45,6 +45,23 @@ from typing import cast
 
 import yaml
 
+
+def _pm_root_or_legacy(workspace_root):
+    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
+
+    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
+    named checkout; fixes resolution when running from a git worktree."""
+    import pathlib as _pathlib
+    import sys as _sys
+
+    _d = str(_pathlib.Path(__file__).resolve().parent)
+    if _d not in _sys.path:
+        _sys.path.insert(0, _d)
+    from _pm_root import pm_root_or_legacy as _impl
+
+    return _impl(workspace_root)
+
+
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "evidence_backed_completion_baseline.yaml"
 DEFAULT_REGION = "asia-northeast1"
 DEFAULT_PROJECT = "central-element-323112"
@@ -76,7 +93,11 @@ _RUNTIME_VERB_RE = re.compile(
     r"ldr[\s/→-]+main\s+promot|promotion[\s-]?(?:lag|pr|gate))\b",
     re.IGNORECASE,
 )
-_GREEN_TOKEN_RE = re.compile(r"\b(green|SUCCESS|succeeded)\b", re.IGNORECASE)
+# Hyphen-guarded on both sides (not just `\b`, which treats `-` as a boundary) so a domain
+# compound term like "success-reporting" (a named dispatch mechanism used throughout the
+# ci_satellite_ao_dispatch_batchN_* corpus, never a claim that anything succeeded) doesn't match
+# — confirmed false-positive, evidence_backed_completion_regression_24_vs_23_2026_08_09.md todo 1.
+_GREEN_TOKEN_RE = re.compile(r"(?<!-)\b(?:green|SUCCESS|succeeded)\b(?!-)", re.IGNORECASE)
 
 # Sentence/clause boundary for the same-clause proximity check below: a `.`/`!`/`?` followed by
 # whitespace and then an uppercase letter or a backtick (prose/markdown convention — a new clause
@@ -298,6 +319,72 @@ def _check_claims_without_evidence(blocks: list[TodoBlock]) -> list[EvidenceViol
     return out
 
 
+def _rule_b_signatures_for_text(text: str, path: Path) -> set[str]:
+    """Sub-rule B violation signatures for one file's TEXT — shared by the corpus-wide scan and
+    ``--only`` mode's HEAD-vs-working-tree comparison so the two can never define "a claim
+    without evidence" differently."""
+    blocks = _iter_todo_blocks(text, path)
+    return {v.detail for v in _check_claims_without_evidence(blocks)}
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode (2026-08-09): checks ONLY the given staged files' sub-rule B —
+    flags only a claim-without-evidence this commit INTRODUCES, never pre-existing debt in a
+    plan the commit merely touches elsewhere. Same shape as check_effort_signal_ratchet.py
+    --only: compare violation signatures at HEAD vs the current working-tree content, flag only
+    what's new. Sub-rule A (Cloud Build API verification) is deliberately NOT run here — it
+    needs `gcloud` + network + auth, incompatible with a <1s local precommit hook; it stays
+    CI/full-sweep-only, same as it always has been.
+
+    Root-caused after this check's corpus-wide baseline (23->24) blocked an UNRELATED commit's
+    quickmerge on `push to live-defi-rollout` (2026-08-09, sha 42c50b4b3) — a plan-doc `- [x]`
+    claim added via safe-doc-push.sh (which never runs sub-rule B at all) sailed through clean
+    and only surfaced on the next full CI run, misattributed to whichever unrelated commit
+    happened to trigger it. Same fast-path-blind-to-full-gate pattern as the 6 checks migrated
+    earlier tonight.
+    """
+    flagged: list[str] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_file() or p.suffix != ".md":
+            continue
+        try:
+            current_text = p.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        current_sigs = _rule_b_signatures_for_text(current_text, p)
+        if not current_sigs:
+            continue
+        proc = subprocess.run(
+            ["git", "show", f"HEAD:{_relpath_for_git(p)}"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        head_sigs = _rule_b_signatures_for_text(proc.stdout, p) if proc.returncode == 0 else set()
+        new_sigs = current_sigs - head_sigs
+        for sig in sorted(new_sigs):
+            flagged.append(f"{p.name}: {sig}")
+
+    if not quiet:
+        for line in flagged:
+            print(f"  EVIDENCE-MISSING  {line}")
+    n = len(flagged)
+    print(f"{'✅' if n == 0 else '❌'} check_evidence_backed_completion (--only): {n} new violation(s) in staged files")
+    return 0 if n == 0 else 1
+
+
+def _relpath_for_git(p: Path) -> str:
+    """Best-effort repo-relative path for a `git show HEAD:<path>` lookup — walks up to find the
+    nearest ancestor directory containing `.git`, matching how the other --only checks in this
+    corpus resolve staged paths without assuming a fixed cwd."""
+    resolved = p.resolve()
+    for parent in (resolved, *resolved.parents):
+        if (parent / ".git").exists():
+            return str(resolved.relative_to(parent))
+    return p.name
+
+
 def _load_baseline(baseline_path: Path) -> int:
     if not baseline_path.exists():
         return 0
@@ -343,6 +430,9 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
     ns = _parse_args()
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
     baseline_path: Path = cast(Path, ns.baseline_path)
@@ -352,7 +442,7 @@ def main() -> int:
     include_issues: bool = cast(bool, ns.include_issues)
     require_verification: bool = cast(bool, ns.require_verification)
 
-    active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
     if not active_dir.is_dir():
         print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
         return 2

@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -45,7 +45,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

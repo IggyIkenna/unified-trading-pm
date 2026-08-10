@@ -220,22 +220,25 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/plans/**"
 )
 BE_EXCLUDE_GLOBS=(
-    "**/smoke-test-dev.py"
-    "**/validate-buildspec.py"
-    "**/validate-cloudbuild.py"
-    "**/validate-internal-editable.py"
-    "**/validate-manifest-dag.py"
-    "**/check-integration-dep-coverage.py"
-    "**/generate_ui_reference_data.py"
-    "**/generate_unified_spec.py"
-    "**/migrate_sports_gcs_to_hive.py"
-    "**/validate-import-deps.py"
-    "**/audit_dead_code.py"
-    "**/reap_stale_blockers.py"
-    "**/verify_env_tiered_buckets_provisioned.py"
-    "**/pin_branch_protection_rulesets.py"
-    "**/check_emission_policy_paired_callsites.py"
-    "**/qg_audit.py"
+    # smoke-test-dev.py, validate-buildspec.py, validate-cloudbuild.py,
+    # validate-internal-editable.py, validate-manifest-dag.py removed 2026-08-09:
+    # none of these files contain `except Exception:` any more (fixed upstream at
+    # some point after their exclude entry was added; verified via
+    # `rg -c "except Exception:" <file>` == 0 for all five) — stale bypass entries
+    # that were silently masking the check's ability to catch a NEW broad-except
+    # reintroduced in any of these files. Removed as part of
+    # pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md's false-negative
+    # investigation (root cause: undocumented/stale bypass-glob entries, not a check bug).
+    #
+    # check-integration-dep-coverage.py, generate_ui_reference_data.py,
+    # generate_unified_spec.py, migrate_sports_gcs_to_hive.py, validate-import-deps.py,
+    # reap_stale_blockers.py, verify_env_tiered_buckets_provisioned.py,
+    # pin_branch_protection_rulesets.py, check_emission_policy_paired_callsites.py,
+    # qg_audit.py removed 2026-08-09 (same doc, P3 todo): every `except Exception:` in
+    # these 10 files was narrowed to the specific exception type(s) its surrounding
+    # try-block actually expects — verified `rg -c "except Exception:" <file>` == 0 for
+    # all ten. The bypass is no longer needed; genuinely fixed, not just excluded.
+    "**/audit_dead_code.py"                 # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9 (false positive — string literal)
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_data_completeness.py"
@@ -262,20 +265,16 @@ PYRIGHT_EXCLUDE_GLOBS=("!**/generate-cicd-diagram.py")
 EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
-BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
-# tier_c_promotion_gate.py: except Exception is a Firestore-unavailable fallback guard —
-# documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
-BE_EXCLUDE_GLOBS+=("**/tier_c_promotion_gate.py")
-# promotion_lag_monitor.py + ci_failure_watcher.py: except Exception guards Firestore
-# best-effort writes so SDK/credential absence never blocks the monitors —
-# documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
-BE_EXCLUDE_GLOBS+=("**/promotion_lag_monitor.py")
-BE_EXCLUDE_GLOBS+=("**/ci_failure_watcher.py")
-BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
-# cron_liveness_watchdog.py: except Exception in gh_json() (network/subprocess errors)
-# and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
-# Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
-BE_EXCLUDE_GLOBS+=("**/cron_liveness_watchdog.py")
+# generate-cicd-diagram.py, tier_c_promotion_gate.py, reconcile_release_tags.py: their
+# BE_EXCLUDE_GLOBS entries removed 2026-08-09 — none of the three currently contains
+# `except Exception:` (already fixed upstream; verified via `rg -c` == 0 for all three).
+# Stale bypass entries silently masked the check's ability to catch a reintroduced
+# broad-except in any of them. See pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md.
+# promotion_lag_monitor.py, ci_failure_watcher.py, cron_liveness_watchdog.py: their
+# BE_EXCLUDE_GLOBS entries removed 2026-08-09 (pm_qg_broad_except_ratchet_red_finops_
+# regression_2026_08_09.md's P3 todo) — every `except Exception:`/`except Exception as
+# X:` in all three was narrowed to the specific exception type(s) actually expected;
+# verified `rg -c "except Exception:" <file>` == 0 for all three.
 # sync-catalogue-yaml.py: B608 (SQL injection) is a false positive — bucket param comes from CLI arg, not user input
 BANDIT_EXTRA_ARGS="--exclude scripts/catalogue/sync-catalogue-yaml.py"
 # PM is not a service — ServiceBootstrap (5.61) and Health API (5.62) don't apply.
@@ -349,6 +348,10 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/audit_venue_coverage.py"
     # check_base_image_digest_drift: benign JSON .get("repositories", {}) for manifest parsing.
     "!**/check_base_image_digest_drift.py"
+    # check_extraction_count_regression: benign JSON .get("_meta", {}) / .get("paths", {}) /
+    # .get("configs_by_repo", {}) defaults for config-registry.json / openapi.json parsing —
+    # same category as check_base_image_digest_drift.py above.
+    "!**/check_extraction_count_regression.py"
 )
 EMPTY_STR_EXCLUDE_GLOBS+=(
     # check_base_image_digest_drift: benign JSON .get("name", "") / .get("version", "") for
@@ -392,6 +395,15 @@ fi
 # from every CI leg (the 2026-06-10 typecheck-leg false-green class).
 python3 "${REPO_ROOT}/scripts/quality_gates/check_qg_slice_completeness.py" \
     || { echo "❌ QG_SLICE partition broken — CI slicing no longer covers the full local gate" >&2; exit 1; }
+
+# ── Promote-prefix contract guard (2026-08-10) ────────────────────────────
+# run_hygiene_sweep.sh skips --diff-base for every DIFF_BASE_REF ratchet on a promotion PR,
+# detected purely by branch NAME (`^promote/`). That is a naming contract with the two promote
+# bots, and a half-rename would silently re-arm the exact deadlock that cost 22h / 1180
+# unpromoted commits on 2026-08-10 — with no other test failing, because a gate that stops
+# recognising a promote PR just looks like an ordinary red gate.
+python3 "${REPO_ROOT}/scripts/quality_gates/check_promote_prefix_contract.py" \
+    || { echo "❌ promote-prefix contract broken — the promote gate would silently disarm (see the check's output)" >&2; exit 1; }
 
 # ── Pre-commit gate: validate strategy-manifest.json ──────────────────────
 STRATEGY_MANIFEST="${REPO_ROOT}/strategy-manifest.json"
@@ -734,6 +746,36 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Conflict-marker gate (plan hygiene — catches committed git conflict markers) ──
+# check_conflict_markers.sh lives ONLY in the pre-commit hook (run_hygiene_sweep.sh --precommit)
+# and in no CI/CD workflow or quality-gates.sh path. A pre-commit bypass (--no-verify, git rebase
+# --continue, a prek race condition, or a quickmerge sentinel-invalid re-gate that skips the hook)
+# lets committed conflict markers reach LDR undetected — committed_conflict_marker_plan_doc_2026_
+# 08_10.md. This is the second line of defense, scoped to your changeset (same pattern as the
+# frontmatter schema check above).
+# SSOT: plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md
+CONFLICT_MARKER_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_conflict_markers.sh"
+if [ -f "$CONFLICT_MARKER_CHECKER" ]; then
+    echo "Running conflict-marker check (plans/codex in your changeset)..."
+    _cm_files=""
+    for _f in $_fm_scoped_list; do
+        [ -f "$REPO_ROOT/$_f" ] || continue
+        _cm_files="${_cm_files} $REPO_ROOT/$_f"
+    done
+    if [ -z "${_cm_files// /}" ]; then
+        log_success "Conflict-marker check skipped (no doc changes in your changeset)"
+    else
+        if bash "$CONFLICT_MARKER_CHECKER" --quiet $_cm_files; then
+            log_success "Conflict-marker check passed (no conflict markers in your changeset)"
+        else
+            echo "❌ Conflict-marker check failed — a staged/changed plan/codex doc has committed" >&2
+            echo "   git conflict markers (<<<<<<<, >>>>>>>, or prettier-mangled form)." >&2
+            echo "   Resolve the markers before committing. See check_conflict_markers.sh header." >&2
+            _post_gate_fail "conflict-markers"
+        fi
+    fi
+fi
+
 # ── Post-gates: Doc retrieval-layer parity (L0 index <-> schema; cross-agent doctrine) ──
 # SSOT: codex/11-project-management/doc-frontmatter-schema.md + plans/active/docs_retrieval_layer_reconcile_2026_07_23.md.
 # Guards two things nothing else checks: (1) scripts/docs/gen_doc_index.py's hand-maintained
@@ -1002,6 +1044,70 @@ if [ -f "$WS_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "❌ .code-workspace repo-list drift — see plans/active/workspace_config_drift_remediation_2026_06_01.md" >&2
         echo "   Sync cursor-configs/unified-trading-system-repos.code-workspace folders[] to the active repo set." >&2
         _post_gate_fail "code-workspace-drift"
+    fi
+fi
+
+# ── Post-gates: Dispatch-listener orphan scanner (batch-1 todo 1) — baselined ratchet ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md F1/F3.
+# A repository_dispatch POST returns 204 whether or not any workflow is actually
+# subscribed to the dispatched event_type — this statically catches the "nobody
+# subscribed" case (dispatched event_type with no listener in the resolved target
+# repo). Current baseline 38 — ratchet down as orphan dispatch sites get fixed.
+DISPATCH_LISTENERS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_dispatch_listeners.py"
+if [ -f "$DISPATCH_LISTENERS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running dispatch-listener orphan scanner (ratchet mode)..."
+    if python3 "$DISPATCH_LISTENERS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Dispatch-listener orphan scanner passed (at-or-below baseline)"
+    else
+        echo "❌ Dispatch-listener orphan regression — a dispatched event_type has no listener in its resolved target repo." >&2
+        echo "   Either add the missing listener, delete the dead dispatch call, OR" >&2
+        echo "   if intentional/tracked debt, re-baseline with: python3 ${DISPATCH_LISTENERS_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "dispatch-listeners"
+    fi
+fi
+
+# ── Post-gates: Cloud Build template-vs-consumer drift ratchet (batch-1 todo 1) ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md.
+# A consumer's committed cloudbuild.yaml can carry content its mapped
+# configs/cloudbuild-*-template.yaml render does NOT — the next
+# rollout-cloudbuild.py --apply on that repo would either be refused (would-drop-
+# content guard) or, if the guard is ever bypassed, silently regress it. Baseline
+# is per-repo (scripts/quality_gates/cloudbuild_template_drift_baseline.yaml) —
+# ratchet down as templates are forward-ported / consumers reconciled.
+CLOUDBUILD_TEMPLATE_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_cloudbuild_template_drift.py"
+if [ -f "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Cloud Build template-vs-consumer drift ratchet..."
+    if python3 "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Cloud Build template-vs-consumer drift ratchet passed (at-or-below baseline)"
+    else
+        echo "❌ Cloud Build template drift regression — a consumer's cloudbuild.yaml carries content its template does not." >&2
+        echo "   Forward-port the fix into the template, OR" >&2
+        echo "   if intentional per-repo customization, re-baseline with: python3 ${CLOUDBUILD_TEMPLATE_DRIFT_CHECKER} --update-baseline" >&2
+        _post_gate_fail "cloudbuild-template-drift"
+    fi
+fi
+
+# ── Post-gates: Swallowed-credential-fetch idiom ratchet (batch-1 todo 1) — baselined ratchet ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md.
+# Bans the discarded-stderr-then-truthy-fallback idiom around a credential fetch
+# in any repo's scripts/ dir (without a `# noqa: swallowed-credential-fetch`
+# marker) — that idiom degrades a real credential failure to an empty string
+# instead of failing loud. Baseline is
+# per-repo (scripts/quality_gates/no_swallowed_credential_fetch_baseline.yaml) —
+# ratchet down as swallow sites are fixed.
+SWALLOWED_CREDENTIAL_FETCH_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_no_swallowed_credential_fetch.py"
+if [ -f "$SWALLOWED_CREDENTIAL_FETCH_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running swallowed-credential-fetch idiom ratchet..."
+    if python3 "$SWALLOWED_CREDENTIAL_FETCH_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Swallowed-credential-fetch idiom ratchet passed (at-or-below baseline)"
+    else
+        echo "❌ Swallowed-credential-fetch regression — a NEW discarded-stderr-then-truthy-fallback-wrapped credential fetch landed." >&2
+        echo "   Surface the real error (log it, exit non-zero) instead, OR add # noqa: swallowed-credential-fetch with a reason, OR" >&2
+        echo "   if intentional debt, re-baseline with: python3 ${SWALLOWED_CREDENTIAL_FETCH_CHECKER} --workspace-root \$WORKSPACE_ROOT --update-baseline" >&2
+        _post_gate_fail "swallowed-credential-fetch"
     fi
 fi
 

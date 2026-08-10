@@ -29,6 +29,11 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/citadel_paper_batch_live_reconciliation_2026_06_19.md
+  - ../active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md
+  - ../active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md
+  - ../active/daily_trading_analyst_llm_job_design_2026_07_29.md
+  - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md
+  - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md
   - ../active/pipeline_mode_partition_migration_2026_06_01.md
 last_updated: 2026-07-12 # was: 2026-07-08 -- corrected 2026-07-14, verify-rerun-2 finding 14: body carries a dated "Count corrected 2026-07-12" entry (finding id 311, §A2 B-queue ruling) that postdated the recorded last_updated
 locked_by: live-defi-rollout
@@ -65,12 +70,15 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority
+_7 active plans declare `parent_epic: batch_live_symmetry_master` in their frontmatter. Workers pick up in priority
 order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31`](../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Recover the live event-log warm-sink
+Pub/Sub subscriptions + build the cold-compaction job
 
 ## P1 — important; post-current-gate
 
@@ -79,7 +87,26 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 38 cal AI-days (class: infra) **title**: Citadel-grade Paper ⟷ Batch ⟷ Live
 Reconciliation — the Determinism Spine
 
+### [`citadel_satellite_ao_dispatch_batch1_2026_08_08`](../active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+
+**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
+
+### [`citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize`](../active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Citadel satellite AO batch 1 — finalize
+(reconcile source doc + re-check the held-back conflict + archive)
+
+### [`daily_trading_analyst_llm_job_design_2026_07_29`](../active/daily_trading_analyst_llm_job_design_2026_07_29.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design) **title**: Daily cross-cutting LLM "trading analyst"
+job — design
+
 ## P2 — useful; opportunistic
+
+### [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize`](../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: Live event-log warm-sink recovery +
+cold-compaction — finalize (reconcile parent checkboxes + archive)
 
 ### [`pipeline_mode_partition_migration_2026_06_01`](../active/pipeline_mode_partition_migration_2026_06_01.md)
 

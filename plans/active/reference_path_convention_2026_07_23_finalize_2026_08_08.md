@@ -18,6 +18,7 @@ related:
     /plans/active/issues/reference_path_convention_2026_07_23.md,
     /plans/epics/agent_operating_framework_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

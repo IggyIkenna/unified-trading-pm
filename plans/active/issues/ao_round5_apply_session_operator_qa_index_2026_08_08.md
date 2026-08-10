@@ -20,7 +20,7 @@ tags: [operator-decisions, round5, index, plan-operator-ruling-evidence, governa
 related:
   [
     /plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md,
-    /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
+    /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
   ]
 created: 2026-08-08
 parent_epic: plan_hygiene_master

@@ -26,14 +26,14 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, plan-reconcile, false-unchecked, parked-findings, dispatch-gap, meta-fold-in]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
-    /plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
+    /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
+    /plans/archive/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
+    /plans/archive/2026_08/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/issues/production_readiness_checklist_file_missing_2026_07_24.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -65,7 +65,7 @@ source: >-
   fan-out) over the pre-existing 39 members, plus direct classification of the 4 net-new members.
 context_scope:
   [
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -177,7 +177,7 @@ All 6 findings in `issues/ag_closeout_audit_infra_parked_2026_08_01.md` (3 new t
 were re-checked live this run and remain open, no drift:
 
 1. **`codex_violations_ratchet_to_five_2026_06_10.md`'s `delta_proxy_repricer.py` checkbox** — still `- [ ]` at
-   line 380. Still false-unchecked per the original finding (`execution-service@89fbf99d` already wires it in).
+   line 380. Still false-unchecked per the original finding (`execution-service@980a6ad0` already wires it in).
 2. **`issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` todo 3** — still `- [ ]`.
    Re-checked the filesystem again this run: `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` and
    `.tabs/3/stash-bundles/` are STILL absent from this sandbox — no new information, the original finding's caveat
@@ -214,9 +214,10 @@ both still awaiting operator approval to flip to `active`. Neither has been acti
 - [x] ✅ [DOCS] P2. Flip `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm: NA` → `planning` (finding 7)
       — **CLOSED 2026-08-06 (na-eligibility-audit)**: now in place — live `assigned_vm: planning` with the 2026-08-02
       correction comment (operator ruling, finding 7 — see
-      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md`), verified in batch3 frontmatter. OPERATOR
-      CONFIRMATION NEEDED first (this changes live dispatch state). Done when: the field is flipped and the remaining
-      `[BACKEND] P3` todo appears in the live AO backlog (verify via `/check-agent-orchestrator` or equivalent).
+      `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md`), verified in batch3 frontmatter.
+      OPERATOR CONFIRMATION NEEDED first (this changes live dispatch state). Done when: the field is flipped and the
+      remaining `[BACKEND] P3` todo appears in the live AO backlog (verify via `/check-agent-orchestrator` or
+      equivalent).
 - [x] ✅ [DOCS] P3. Drop the redundant `meta` co-tag from
       `issues/git_health_not_clean_since_pinned_constant_2026_07_27.md` **CLOSED 2026-08-06 (na-eligibility-audit)**:
       resolved by the broader 2026-08-02 operator-ruled retag — live `asset_group: [ao, meta]` with the multi-value kept

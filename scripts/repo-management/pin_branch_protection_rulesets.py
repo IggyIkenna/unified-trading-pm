@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import json
 import subprocess
 import sys
@@ -157,7 +158,7 @@ def get_file(repo: str, path: str, ref: str) -> str | None:
         return None
     try:
         return base64.b64decode(json.loads(r.stdout)["content"]).decode()
-    except Exception:
+    except (json.JSONDecodeError, KeyError, binascii.Error, UnicodeDecodeError):
         return None
 
 
@@ -273,7 +274,7 @@ def derive_codebuild_context(repo: str, ref: str) -> str | None:
             ctx = s.get("context")
             if isinstance(ctx, str) and ctx.startswith("AWS CodeBuild"):
                 return ctx
-    except Exception:
+    except (json.JSONDecodeError, AttributeError):
         return None
     return None
 
@@ -285,7 +286,7 @@ def classic_enforce_admins(repo: str, branch: str = "staging") -> bool | None:
         return None
     try:
         return bool(json.loads(r.stdout).get("enabled"))
-    except Exception:
+    except (json.JSONDecodeError, AttributeError):
         return None
 
 

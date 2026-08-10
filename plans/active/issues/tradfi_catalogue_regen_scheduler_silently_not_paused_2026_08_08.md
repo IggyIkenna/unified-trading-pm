@@ -121,14 +121,62 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
       fix THERE, not here, to avoid a double-dispatch; this checkbox stays open as a pointer, not independent scope.
 - [ ] [INFRA] P2. **Once the filter above ships + is verified (dry-run a manual regen, confirm the 4 legs stay
       excluded), re-enable both schedulers** (`gcloud scheduler jobs resume`). Do not re-enable before the filter lands.
-- [ ] [DIAG] P2. **Determine WHEN the daily job actually got re-enabled** (was it ever truly paused via the Scheduler
-      API, or did the 2026-06-25 session pause it manually out-of-band via a mechanism that didn't persist — e.g. a
-      `gcloud` command that failed silently, or a subsequent Terraform apply/redeploy that reset it to its
-      Terraform-declared default state). `gcloud logging read` for
-      `resource.type="cloud_scheduler_job"     resource.labels.job_id="lifecycle-catalogue-regen-tradfi-daily"` over a
-      longer window (90d) would show the actual pause/resume history if Cloud Audit Logs retention covers it. This
-      determines whether the root cause is "the pause never took" or "something later silently re-enabled it" —
-      different fixes (a script bug vs. a deploy-time reset gap in whatever pauses schedulers).
+- [x] ✅ [DIAG] P2. **ANSWERED 2026-08-09** (data_engineering worker, slot 18, via
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2): **"something later silently
+      re-enabled it" — confirmed, and it was NOT a Terraform/deploy-time reset.** Pulled the Cloud Audit Logs (Admin
+      Activity) full history for `lifecycle-catalogue-regen-tradfi-daily` — the `resource.type="cloud_scheduler_job"`
+      execution log (the 90d window named in this todo) only carries fire records, not admin state-changes; the real
+      history lives under
+      `logName="...cloudaudit.googleapis.com%2Factivity" protoPayload.serviceName="cloudscheduler.googleapis.com"     protoPayload.resourceName:"lifecycle-catalogue-regen-tradfi-daily"`:
+
+      ```
+                      2026-08-08T12:35:05Z  PauseJob   ikenna@odum-research.com                (this doc's todo 1 protective pause)
+                      2026-06-27T19:46:45Z  ResumeJob  unified-trading-sa@...iam.gserviceaccount.com   <-- the silent re-enable
+                      2026-06-25T01:39:46Z  PauseJob   ikenna@odum-research.com                (the claimed pause — CONFIRMED REAL)
+                      2026-06-23T16:32:23Z  ResumeJob  ikenna@odum-research.com
+                      2026-06-14T12:18:26Z  PauseJob   ikenna@odum-research.com
+                      2026-06-11T01:36:18Z  ResumeJob  ikenna@odum-research.com
+                      2026-06-11T01:36:17Z  CreateJob  ikenna@odum-research.com
+                      ```
+
+                      **The 2026-06-25 pause DID genuinely take effect via the real Scheduler API** — ruling out "the pause never
+                      took" entirely (2 confirmed `PauseJob` calls, ~0.4s apart — GCP's own audit-log duplication artifact, not 2
+                      separate pause attempts; the same doubling pattern appears on every other Pause/ResumeJob pair in this history,
+                      confirming it's a logging quirk, not a retry). It stayed paused for exactly 2 days, then was explicitly
+                      **RESUMED at 2026-06-27T19:46:44 UTC**, authenticated as `unified-trading-sa` (the ambient identity agent
+                      workers run as — not a human's own gcloud session, and not a Terraform service-account identity). Pulling the
+                      full audit-log JSON for that event surfaces the smoking gun in `protoPayload.requestMetadata
+                      .callerSuppliedUserAgent`: `google-cloud-sdk gcloud/572.0.0 agent-name/claude_code
+                      command/gcloud.scheduler.jobs.resume invocation-id/a5f144cd031848748b6ec0cdfa8e79ae ... callerIp/35.76.120.160`
+                      — **a Claude Code agent session ran a raw `gcloud scheduler jobs resume` directly against this job.** Widening
+                      the query to the surrounding 15-second window shows it was not an isolated action:
+                      `uts-prod-manifest-consolidator-instruments-tradfi-cron` was ALSO resumed by the same identity 1.8s earlier
+                      (19:46:43-44Z) — i.e. this was a targeted "resume the tradfi jobs" sweep (2 tradfi-scoped jobs, back-to-back;
+                      not a blanket all-schedulers resume, and not a single-job mistake). Checked commit history across
+                      unified-trading-pm/deployment-service/instruments-service/market-tick-data-service/agent-orchestrator in the
+                      surrounding 30-minute window for a task that would explain it — no commit lands at the exact timestamp; the
+                      closest correlated activity is unrelated sports-plan-flip churn, so the specific task/plan behind that agent
+                      session could not be pinned down further within this todo's diagnostic scope. Notably, 2026-06-27 is also the
+                      date CLAUDE.md cites for the single-VM-architecture consolidation — plausible (not confirmed) that a
+                      multi-VM-to-single-VM migration/consolidation pass resumed "our" tradfi schedulers as routine post-migration
+                      cleanup, unaware the 2026-06-25 pause was protecting a specific in-flight data-correctness concern (the §7.3
+                      false-delistings issue, a DIFFERENT and earlier concern than the G1-retirement issue this doc's own todo 1
+                      re-paused it for on 2026-08-08 — i.e. this job has now been silently un-paused by an untargeted resume at least
+                      once before, for an unrelated reason, which is exactly the "Finding 1" cron-collision failure mode
+                      `deployment_service/data_pipeline_monitors/scheduler_maintenance.py`'s docstring was later built to prevent —
+                      that module did not exist yet on 2026-06-27).
+
+                      **Root cause classification**: not a script bug (the pause API call succeeded and held), not a deploy-time
+                      Terraform reset (`lifecycle_catalogue_scheduler.tf`'s `google_cloud_scheduler_job` resource declares no
+                      `paused`/`state` attribute at all, so Terraform doesn't manage or reset this field on `apply`) — it was a raw,
+                      untargeted `gcloud scheduler jobs resume` run by an agent session, 2 days after the protective pause, with no
+                      visible link to the reason the job was paused. **Practical implication for todo 3** (re-enable once the
+                      build-time filter ships): a raw `gcloud scheduler jobs resume` remains exactly as unsafe today as it was on
+                      2026-06-27 unless the re-enabling session first checks for/respects an intentional-pause marker — which is
+                      precisely what `scheduler_maintenance.py`'s `pause_for_maintenance`/`resume_after_maintenance` (built 2026-07-13,
+                      after this incident, per its own docstring) now provides. Todo 3 should use that module rather than a raw
+                      `gcloud` resume, though adopting it here is that todo's own scope, not this one's.
+
 - [ ] [SCRIPT] P3. **Consider whether Cloud Scheduler `state` should be asserted in a standing health-check** (similar
       to the fleet's other "assert the intended state actually holds" monitors) for any job a plan explicitly claims is
       paused for data-correctness reasons — this exact silent-drift class (a plan's stated state diverging from live
@@ -142,6 +190,21 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   completed successfully (see `instruments_completion_tracker_2026_07_06.md`'s todo for full evidence). This doc tracks
   the residual root-cause fix (build-time filter) + re-enable path, kept separate from the purge todo itself since it's
   a distinct, cross-cutting infra-correctness finding.
+- **2026-08-09 (cross-check, this session)**: An operator batch-ruling session tasked filing a NEW issue doc for
+  "`lifecycle-catalogue-regen-tradfi-daily` paused sometime between 08-08's run and today, no documented reason found
+  anywhere in the corpus (grepped, no hits)" — live-verified `lifecycle-catalogue-regen-tradfi-daily` IS currently
+  `PAUSED` while its 4 siblings (prediction/sports/cefi/defi) are `ENABLED`
+  (`gcloud scheduler jobs list --location=asia-northeast1 --project=central-element-323112` grep, 2026-08-09), matching
+  the premise exactly. But a grep for `lifecycle-catalogue-regen` across `codex/`+`plans/active/` immediately surfaces
+  THIS doc, which already documents the identical event in full: both `lifecycle-catalogue-regen-tradfi-daily` and
+  `lifecycle-catalogue-full-tradfi-weekly` were protectively paused 2026-08-08 (todo 1 above) as a direct consequence of
+  the tradfi §8 4-leg catalogue retirement purge — the reason is not "unexplained," it's the G1-pollution re-baking risk
+  described in full above. Filing a second duplicate issue doc would have fragmented this exact finding across two
+  trackers; not filed. This doc's own todo 4 (DIAG P2, "determine WHEN the daily job actually got re-enabled") already
+  covers the deeper "was the 2026-06-25 pause ever real" question, and todo 3 (re-enable once the build-time filter
+  ships) already covers the path back to `ENABLED`. No new tracked work added here — this entry exists so a future
+  cold-start agent hitting the same "unexplained pause" premise finds the answer immediately via context_scope/grep
+  instead of re-investigating or re-filing.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:5dc4d63f3807f9b1]:
   **KEEP-NA-STALE (already-duplicated), first audit -- 1 citation added.** All 4 open items read end-to-end via a
@@ -154,3 +217,16 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   run since item 1's citation fix was this pass's priority). Item 4 ("consider whether scheduler state should be
   asserted...") stays a genuine open design/scoping question, not yet a committed bounded task. Doc stays NA --
   whole-doc RECLASSIFY does not apply (items 2-4 remain open scope).
+- **2026-08-09 (data_engineering worker, slot 18, via
+  `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2)**: todo 4 (DIAG) answered — see
+  checkbox evidence above. Root cause: not a script bug, not a Terraform reset; a Claude Code agent session ran a raw
+  `gcloud scheduler jobs resume` against this job (+ the tradfi manifest-consolidator cron, back-to-back) on
+  2026-06-27T19:46:44Z, 2 days after the 2026-06-25 protective pause, with no traceable link to the pause reason.
+  Remaining open count: 3 (todos 2, 3, 5 — the durable filter, the gated re-enable, and the standing-health-check design
+  question).
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:e7434ca03456fd3e]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed.** Fresh full read, 3 open todos. Todo 1 (durable build-time
+  exclusion filter) is duplicated verbatim in `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (status:
+  active, `assigned_vm: planning`) -- a 3-way convergence confirmed with
+  `instruments_completion_tracker_2026_07_06.md`'s own "EXTRACTED 2026-08-09" note. Todo 2 sequenced behind todo 1; todo
+  5 (standing-health-check design question) is GENUINE_WORK, not yet a committed task. `assigned_vm` unchanged.

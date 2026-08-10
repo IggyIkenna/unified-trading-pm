@@ -228,7 +228,9 @@ context_scope:
       advisory.
     - **[DATA] P1.** Migrate/restate the historical non-canonical live objects (1,697 colon_wire cefi) as part of the
       surface-A re-run.
-  - [`plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`](/plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md)
+  - [`plans/archive/2026_08/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`](/plans/archive/2026_08/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md)
+    — **ARCHIVED 2026-08-10** (plan_reconciler, cross-cutting tranche): both items resolved, see the archived doc's own
+    banner for evidence.
     - **[CODE] P3.** Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain
       shards (gated on v6 canonicalisation landing).
     - **[UI] P3.** Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API
@@ -813,6 +815,18 @@ here is NOT dispatch, per this doc's own standing convention.
 - [`mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`](/plans/active/issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md)
   — sole remaining item is a standing observability tripwire, not actionable now (classified 2026-08-06,
   orphaned_never_touched, not AO-eligible).
+
+## Digest additions for cefi-tagged linkage orphans (added 2026-08-10, ag-closeout-audit cefi run)
+
+`check_ag_closeout_linkage.py` flagged these cefi-tagged docs as having no graph/mention path to the cefi closeout
+family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27, dispatch agt-dab448).
+
+- [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_10.md) —
+  parked findings from the 2026-08-10 audit run; 0 parked findings, 1 orphaned doc extracted into batch18.
+- [`cefi_satellite_ao_dispatch_batch18_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md) —
+  batch18 draft (status: draft, single-item extraction from `mdps_manifest_staleness_check_inverted_2026_08_10.md`).
+- [`cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md)
+  — paired finalize plan (status: active, gate_on_depends: true).
 
 ## Todos
 

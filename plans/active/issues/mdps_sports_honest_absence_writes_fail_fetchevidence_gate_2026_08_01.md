@@ -134,12 +134,13 @@ findings 3 and 4 have concrete bounded next steps, tracked as todos below.
       loses the "legitimate calendar absence" framing — accepted, matches the precedent already set for the other 3
       asset groups on 2026-06-22). Not option B (threading real `league_id` down both call sites) — more invasive,
       deferred. (repo: `market-data-processing-service`)
-- [ ] [DATA] P2. **Implement the ruled option A above** in `live_workers_chain.py::_write_or_record_empty_timeframe` and
-      `live_workers_streaming.py::_record_streaming_empty_timeframe` — route the `SOURCE_RETURNED_ZERO`-fallback case to
-      `record_failed_for_shard` instead of `record_empty`, matching the CEFI/DEFI/TRADFI reference implementation
-      (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real manifest row
-      (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B gate. (repo:
-      `market-data-processing-service`)
+- [x] ✅ [DATA] P2. **Implement the ruled option A above** in `live_workers_chain.py::_write_or_record_empty_timeframe`
+      and `live_workers_streaming.py::_record_streaming_empty_timeframe` — route the `SOURCE_RETURNED_ZERO`-fallback
+      case to `record_failed_for_shard` instead of `record_empty`, matching the CEFI/DEFI/TRADFI reference
+      implementation (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real
+      manifest row (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B
+      gate. (repo: `market-data-processing-service`) — **DONE 2026-08-09 (slot-29)**:
+      `market-data-processing-service@9c23178`. See Progress Log below for the re-run-day proof.
 - [x] ✅ [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
       crash.** **RESOLVED 2026-08-06 (slot-4, batch9 findings-3+4 pass) — `_collect_future_result` lead DISCONFIRMED,
       findings 3+4 = same root cause as finding 1.** Grepped the failing VM's `run.log` (`134301`, date `2025-12-18`)
@@ -368,17 +369,24 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
 
 ### Finding 5 todos
 
-- [ ] [CODE] P2. In `candle_write_mixin.py::_build_candle_output_path`, gate the `input_venue.upper()` shortcut
+- [x] ✅ [CODE] P2. In `candle_write_mixin.py::_build_candle_output_path`, gate the `input_venue.upper()` shortcut
       (line 286) on `category != MarketAssetGroup.SPORTS` so SPORTS always resolves `venue` via
       `_venue_token_from_canonical_id(instrument_id, asset_group=category)` regardless of whether `input_venue` is
       truthy. Done-when: a from-scratch `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket`
       force run against day=2026-04-14 produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
       (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells (this finding's repro instruments). (repo:
-      `market-data-processing-service`)
-- [ ] [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check whether
-      any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming findings
-      3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the findings) or
-      the grep comes back empty (confirmed independent). (repo: `market-data-processing-service`)
+      `market-data-processing-service`) — **Code shipped 2026-08-09 (slot-2)** (`551ca82`), the deeper structural
+      multi-venue-batch bug it exposed was fixed by `market-data-processing-service@53344df` + `@e4fc0fd` (see
+      `mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`), **e2e leg now GREEN 2026-08-10**: see
+      Progress Log below.
+- [x] ✅ [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check
+      whether any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming
+      findings 3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the
+      findings) or the grep comes back empty (confirmed independent). (repo: `market-data-processing-service`) — **DONE
+      2026-08-09 (slot-2)**: confirmed independent — grepped both implicated VM run.logs
+      (`mdps-backfill-sports-pcskip-20260801-130846-2bf067`,
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`, 175,912 / 184,214 lines respectively) for
+      `partition_mismatch` — 0 hits in both.
 
 ## Progress Log
 
@@ -469,3 +477,113 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   `results=50 failed=0`. Both match the post-fix expectation. No code change needed in this pass — the fix was already
   shipped (`market-data-processing-service@33b323c`); this pass closes the findings-3+4 investigation the batch9 [DIAG]
   P1 todo tracked.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked all 4 open items against today's
+  accumulated precedents (RECLASSIFY-eligibility, not just staleness). All 4 are already extracted and actively
+  dispatched via `sports_satellite_ao_dispatch_batch9_2026_08_04.md`: the `[DATA] P2` implement-option-A todo and the
+  combined finding-5 `[CODE] P2` fix+grep todo are both still open there, in-flight; the `[SCRIPT] P3` no-relaunch hold
+  is correctly NOT batched (a standing prohibition, not itself executable work) and stays sequenced behind that same
+  batch9 item. Independently reconfirmed the same day by
+  `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked — dependency-gated" entry ("its
+  `[SCRIPT] P3` relaunch-and-confirm todo is explicitly sequenced after its own `[DATA] P2` fix, which is itself already
+  claimed by an active `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo. Re-check once batch9 lands."). Flipping
+  or re-extracting here would duplicate live AO dispatch. No flip.
+
+- **2026-08-09 (slot-29, data_engineering — `sports_satellite_ao_dispatch_batch9-007`): SHIPPED — ruled option A
+  implemented.** `market-data-processing-service@9c23178`. Both call sites now branch on the
+  `classify_sports_empty_reason` result rather than assuming category:
+  `live_workers_chain.py:: _write_or_record_empty_timeframe` (previously hardcoded
+  `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` unconditionally for every asset_group, never actually calling
+  `classify_sports_empty_reason`) now gates on `category.value.upper() == "SPORTS"` and, within that branch, calls
+  `classify_sports_empty_reason(league_id="", ...)` — when it resolves `SOURCE_RETURNED_ZERO` (always, today, since
+  `league_id` is unresolvable at this layer), routes to
+  `record_failed_for_shard(error=RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD)` instead of `record_empty_for_shard`;
+  any other typed calendar reason still routes to `record_empty_for_shard` (future-proofs a later caller that threads
+  real `league_id` context down). `live_workers_streaming.py::_record_streaming_empty_timeframe` already called
+  `classify_sports_empty_reason` — added the same reason-based branch inside its existing `category == SPORTS` arm (it
+  previously always called `record_empty_for_shard` for SPORTS regardless of the resolved reason). Non-SPORTS
+  asset_groups are unaffected in both files.
+
+  **Re-run-day proof (done-when's explicit ask), against the real SPORTS `-test-` bucket
+  (`market-data-tick-sports-test-central-element-323112`, `MDPS_OUTPUT_BUCKET_SPORTS`-style test isolation via
+  `resolve_bucket_name(..., deployment_env="test")`), synthetic clearly-non-prod instrument/date
+  (`FOOTBALL:TESTVENUE:h2h:sports_batch9_007_verify:2099/2100:*`, `date=2099-01-01` — cannot collide with real captured
+  data), run under `scripts/dev/run-bounded-analysis.sh --mem-cap 2G` per the memory-bounding guardrail:**
+  - OLD-behaviour repro (`record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)`, the exact call this doc's finding 2
+    describes): raised inside `ManifestWriter.record_empty` with the EXACT `WARNING` text this doc quotes
+    (`record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence...`), caught by shard-level-failure-isolation,
+    **zero manifest rows written** — confirmed via a filtered
+    `read_availability_index(..., filters=[("date","==", "2099-01-01")])` read (single-walk-safe, columns-projected)
+    returning an empty frame for that instrument_id.
+  - NEW (fixed) behaviour (`record_failed_for_shard(error=NO_RAW_TICK_DATA_FOR_SHARD)`): no warning, **one real
+    `attempted_failed` manifest row landed** in the live GCS-backed availability index (confirmed: "ManifestWriter:
+    updated availability index (906 total entries, 1 new)"; the filtered read-back shows
+    `capture_status=attempted_failed, error_reason=NO_RAW_TICK_DATA_FOR_SHARD` for the synthetic instrument/date).
+
+  This directly proves the done-when: a SPORTS honest-absence candle timeframe now produces a real manifest row instead
+  of a WARNING log with zero rows written. 2 new unit tests (`TestWriteOrRecordEmptyTimeframeSportsRoutesFailed`) + 1
+  updated test (`test_empty_tf_candles_sports_records_failed`, renamed from `..._records_empty`) + 1 updated test
+  (`TestRunAdapterAndWriteHonestAbsenceIsNotFailure`, now mocks both verbs) assert the routing directly at the mock
+  boundary — `tests/unit/test_live_workers_coverage2.py`. Full `quality-gates.sh` green on the shipped SHA
+  (sentinel-verified). Finding 5's separate `[CODE] P2` fix+grep todo remains open (untouched by this pass) —
+  `_build_candle_output_path`'s asset-group venue-correction gate is a different bug in a different function.
+
+- **2026-08-09 (slot-2, data_engineering — `sports_satellite_ao_dispatch_batch9-009`): Finding 5's CODE fix SHIPPED, e2e
+  verification leg BLOCKED on a newly-discovered tooling gap.** `market-data-processing-service@551ca82`: gated the
+  `input_venue.upper()` shortcut on `category != MarketAssetGroup.SPORTS` exactly as this todo specified. Added
+  regression test `test_sports_ignores_sport_token_input_venue_uses_bookmaker`
+  (`tests/unit/test_orchestration_workers.py`) reproducing this finding's exact repro instrument
+  (`FOOTBALL:SPORT888:MATCH_ODDS:SERIE_B:2026-27:US_CATANZARO_1929-MODENA::AWAY` with truthy sport-token
+  `input_venue="FOOTBALL"`) — asserts the output path now carries `venue=SPORT888/`, not `venue=FOOTBALL/`. Full
+  `quality-gates.sh` green, shipped via quickmerge (sentinel-verified on origin). The sibling `[DIAG] P3` grep-check
+  todo above is also DONE (flipped) — confirmed independent of findings 3/4.
+
+  **The todo's own done-when's e2e leg could NOT be completed this pass**: ran
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket` (force+skip) twice
+  (first attempt blocked on an unrelated dirty-uv.lock tarball-staleness abort, resolved via a dirty-deps carve-out
+  commit `market-data-processing-service@bc19bac`). The retry's launched VM
+  (`mdps-backfill-sports-pipelinecheck-20260809-214758-d0c755`) exited 0 but processed ZERO candles — a
+  `SPORTS staleness guard: refusing derived output` false-trip, root-caused to `check_sports_raw_source_captured`
+  reading the instruments-store manifest bucket from the ambient `DEPLOYMENT_ENV=staging` (the launcher's
+  `--env staging` export) instead of the explicit prod tier the raw-tick read already uses — this fires BEFORE any
+  candle-write code (including this finding's fix) ever runs, for ANY SPORTS `pipeline_e2e_check.py` invocation, not
+  just this one. Filed as its own issue with root-cause + a fix-option A/B recommendation + a follow-up re-verify todo:
+  [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md)
+  (now archived — both its todos are done). Left this todo's checkbox UNCHECKED (its done-when is not yet met) rather
+  than premature-flip it — the unit test above proves the fix is correct at the function level, but the plan's stricter
+  real-VM e2e proof is genuinely outstanding, blocked on the linked issue's fix landing first.
+
+- 2026-08-09 (slot-31, data_engineering,
+  `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496`): the staleness-guard blocker above
+  is now fixed (`market-data-processing-service@d653a42`) — re-ran the exact prescribed verification
+  (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket`, force+skip, VM
+  `mdps-backfill-sports-pipelinecheck-20260809-222203-d0c755`). Staleness guard confirmed fixed (0 hits), but this
+  todo's own done-when (0 `[partition_mismatch]` rejects) is STILL not met: 78 reject events at write@15m/write@1h.
+  `551ca82` genuinely fixed the specific SPORT888/BETONLINEAG/CORAL/UNIBET rows this finding originally cited (none
+  reappear), but exposed a deeper, still-unfixed root cause one level down — `_process_chain_timeframe` combines ALL
+  bookmakers for a match into one DataFrame, and `_build_candle_output_path`'s row-0 fallback derives one venue for that
+  whole multi-bookmaker batch, so a DIFFERENT subset of rows (6 new wrong-venue pairs: DRAFTKINGS/BETSSON,
+  CASUMO/BETSSON, MATCHBOOK/BETONLINEAG, PINNACLE/MATCHBOOK, BETONLINEAG/PINNACLE, VIRGINBET/CASUMO) on the SAME two
+  matches now reject instead. Filed as its own issue with root-cause + fix-option recommendation + a follow-up re-verify
+  todo (which supersedes this todo's own re-verify step):
+  [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+  Left this todo's checkbox UNCHECKED — its done-when is still not met, and won't be until the linked issue's deeper fix
+  lands.
+
+- 2026-08-10 (slot-31, data_engineering, `mdps_sports_chain_bundle_multi_venue_partition_mismatch-05aa5ad81aad`): the
+  linked issue's deeper fix has now landed (`market-data-processing-service@53344df` — non-streaming chain path — plus a
+  sibling streaming-path fix `@e4fc0fd` discovered+fixed by another slot mid-chain). Re-ran the prescribed verification
+  once more
+  (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`, VM
+  `mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755`, `EXIT_STATUS=0`). **This todo's done-when is now MET**:
+  `run.log` shows 0 `[partition_mismatch]` hits (grep -c = 0), 0 `ERROR` lines, 90/90 candle cells succeeded, 14,790
+  candles written; the written objects carry real per-bookmaker `venue=` partitions (SPORT888, BETONLINEAG, CORAL,
+  UNIBET, BETSSON, MATCHBOOK, PINNACLE, DRAFTKINGS, VIRGINBET, CASUMO all observed) confirming the multi-venue split is
+  live and correct. This run's specific day=2026-04-14 test-bucket data didn't happen to reproduce the exact
+  `US_CATANZARO_1929-MODENA`/`SOUTHAMPTON-BLACKBURN` match/bookmaker pairs the original repro cited (test-bucket content
+  varies run to run), but the fix is structural (every multi-bookmaker batch is split per real venue before write,
+  verified across all 90 cells this run), not match-specific, so 0 rejects fleet-wide is the correct done-when signal.
+  Flipping this todo. Note: the checker's own post-hoc report still shows `failed`/`skipped` for this shard for an
+  UNRELATED reason (a stale SPORTS-wide measured-root template assumption in `pipeline_e2e_check.py` itself, not a
+  write-correctness defect) — filed separately, not blocking this todo:
+  [`mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md`](/plans/active/issues/mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md).

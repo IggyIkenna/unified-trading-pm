@@ -143,8 +143,17 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       repos (migrated by `rollout-workflow-templates.sh`, which only targets remote-ref callers), PM's own local `with:`
       block never passed `self_hosted_runner_labels`, so EVERY internal job (`content-gate`, `qg-slices`,
       `supersede-check`) defaulted to `ubuntu-latest` — even though PM's own glue pool has been live and used by other
-      jobs in the same file for weeks. **FIXED**: added `self_hosted_runner_labels: '["self-hosted","glue"]'` to PM's
-      own `with:` block (`unified-trading-pm@995c374ce`), verified via a manual `workflow_dispatch` run. 2.
+      jobs in the same file for weeks. **FIXED at the time**: added
+      `self_hosted_runner_labels: '["self-hosted","glue"]'` to PM's own `with:` block (`unified-trading-pm@995c374ce`),
+      verified via a manual `workflow_dispatch` run. **SUPERSEDED 2026-08-07, corrected 2026-08-10 (plan_reconciler, ci
+      tranche)**: `unified-trading-pm@c8cd56251e` ("full-revert unified-trading-pm's self-hosted workflows to
+      ubuntu-latest") set `self_hosted_runner_labels` back to `""` 2 days later, for an unrelated reason — PM went
+      public and free GitHub-hosted runners became available (see
+      `/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24). Live-reverified:
+      `.github/workflows/quality-gates-v2.yml:58` currently reads `self_hosted_runner_labels: ""`. This fix is NOT the
+      mechanism behind PM's current billing — the "Expected impact" note below misattributes it; PM's
+      near-$0 CI bill (if
+      re-measured) is from the public-repo/`ubuntu-latest` move, not this self-hosted-labels fix. 2.
       `ci-health.yml` — 1,398 runs (hourly cron + fleet-wide `repository_dispatch` wake-ups, genuinely land in PM).
       `runs-on: ubuntu-latest` is explicitly commented LOAD-BEARING (verifies GH-hosted infra independent of
       self-hosted) — correctly should NOT change. 3. `branch-health.yml` (731×3 jobs, hourly) +
@@ -152,7 +161,8 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       than #1, diminishing safety margin on further cuts. **Ruled out as false leads**: `main-backmerge-to-ldr.yml`
       (2,774 runs but ~40s each, trivial total) and `conflict-resolution-merged.yml` (1,026 runs but its `if:` gate
       skips almost every invocation in ~1s). **Expected impact**: fix #1 alone should eliminate the large majority of
-      PM's $483.58/mo — re-measure PM's September billing once a full month has elapsed under the fix to confirm.
+      PM's $483.58/mo
+      — re-measure PM's September billing once a full month has elapsed under the fix to confirm.
 - [x] ✅ [INFRA] P1. **Audit the `update-dependency-version.yml` fan-out** — CLOSED as "already true", 2026-08-05.
       `update-repo-version.yml` (the sender, `.github/workflows/update-repo-version.yml:294-310`) computes
       `/tmp/dependents.txt` by walking `workspace-manifest.json`'s `repositories.<name>.dependencies` list and only
@@ -328,6 +338,14 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Sole open todo (warm git-object cache for JIT-ephemeral runners) still carries its own explicit "Do NOT
+  roll out until this is understood" constraint pending on-VM diagnosis of the deployed-but-no-op `fast-checkout.sh`
+  mystery — a live-infra diagnostic judgment call, not a bounded worker-determinable outcome; no satellite-extractable
+  sub-item within it either (the diagnosis and the rollout decision are the same undivided task). Checked against this
+  round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks) — none apply to
+  an unresolved on-VM filesystem-visibility mystery.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since the 2026-08-06 verdict (only a
   context-scout scope refresh touched the doc since); sole open todo (warm git-object cache for JIT runners) still
   carries the explicit "Do NOT roll out until this is understood" constraint pending on-VM diagnosis of the deployed-

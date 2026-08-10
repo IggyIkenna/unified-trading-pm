@@ -35,7 +35,7 @@ related:
   [
     /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
 author: claude (interactive session, /ci-reconcile)
@@ -46,7 +46,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source:
@@ -127,3 +127,13 @@ valid — confirms the 2026-08-08 round7 verdict. Todo 1 (dedup-key fix) stays t
 explicitly gates on "LDR goes quiet," unconfirmed. Independently re-confirmed by today's
 `ag_closeout_audit_ci_parked_2026_08_09.md` ("too_large_or_risky / live-incident... re-confirmed unchanged a day
 later"). No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:decf447e0673ce26]: KEEP-NA,
+valid — Full read confirms 2 open items on a doc documenting a LIVE incident from 2026-08-08 (SIT-gate treadmill under
+high LDR commit velocity, plus a cooldown-suppressed stuck-detector alert). Two prior audit passes (2026-08-08 round7,
+2026-08-09) both kept KEEP-NA on 'too hot to touch while live' grounds for item 1 (dedup-key fix to the alerting
+mechanism actively instrumenting the ongoing diagnosis), and item 2 is explicitly self-gated in its own todo text on a
+live precondition ('once LDR goes quiet... confirm SIT completes an uninterrupted round and both repos' streak resets to
+0'). As a read-only text-classification pass with no cloud/network access, I cannot independently verify whether LDR has
+since gone quiet or the streak has reset -- the doc's own remediation path requires exactly that live check before
+either item can responsibly move.

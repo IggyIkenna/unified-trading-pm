@@ -27,6 +27,7 @@ related:
   [
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
 author: interactive session (/autonomous)
@@ -104,9 +105,13 @@ defect (phantom-venue emission) without touching a registry other code may depen
 
 - [x] [CODE] P2. Canonicalise `venue_label` + dedup emitted `(chain, venue)` pairs in `_yield_v2_defi_pre_launch_rows` —
       `instruments-service@2b2e9f124`, QG-verified + regression test added.
-- [ ] [OPERATOR] P2. Purge/re-key the 46,300 bare-`AAVEV3` `empty_confirmed` manifest rows via the human-gated `--apply`
-      delete path (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), after confirming no twin-exists
-      collision against real `AAVE_V3`-ETHEREUM pre-launch rows for the same 2018-01-01..2023-01-26 window.
+- [ ] [OPERATOR] P2. Purge the 46,300 bare-`AAVEV3` `empty_confirmed` manifest rows via the human-gated `--apply` delete
+      path (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) against bucket
+      `market-data-tick-defi-prd-central-element-323112`. **Twin-exists-collision precondition CONFIRMED SATISFIED
+      2026-08-09** (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
+      correct-key `AAVE_V3`-ETHEREUM twin; this is a pure duplicate-row purge, not a re-key. Still needs the operator's
+      `--apply` run (Part 1 "0 backing GCS objects" not independently re-verified this session — re-confirm fresh per
+      §3a before executing, or cite the original investigation's finding).
 - [ ] [DESIGN] P3. Decide whether `chain_env.py`'s `PROTOCOL_LAUNCH_DATES` should keep alias dict-keys at all vs.
       resolving aliases inside a `get_protocol_launch_date()`-style accessor, removing the defensive- canonicalisation
       burden from every future iterator-style consumer of the raw dict.
@@ -125,3 +130,77 @@ defect (phantom-venue emission) without touching a registry other code may depen
   manifest-row purge (46,300 rows, delete-safety hard-stop) and a `[DESIGN]` judgment call on alias dict-keys.
   Corroborated by sibling doc `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`. Doc stays
   `assigned_vm: NA`.
+- **2026-08-09 (interactive session, twin-collision confirmation — read-only, no `--apply` run)**: dispatched to answer
+  the `[OPERATOR]` todo's blocking precondition ("confirm no twin-exists collision against real `AAVE_V3`-ETHEREUM
+  pre-launch rows"). **Verdict: CONFIRMED SAFE — no collision, purge is unblocked for operator go-ahead on `--apply`.**
+
+  **Bucket correction**: the 46,300 rows do NOT live in `instruments-store-defi-prd-{pid}` (checked first, 0 hits —
+  `enumerate_expected_universe.py`'s `service_name=instruments-service` attribution refers to the WRITER, not the
+  bucket). The actual manifest is `market-data-tick-defi-prd-central-element-323112` — `_default_bucket_for("defi")`
+  resolves `resolve_bucket_name(kind="market-data", asset_group="defi")` for the DeFi v2 pre-launch pass
+  (`instruments-service/scripts/enumerate_expected_universe.py:392-419`).
+
+  **Live re-confirmation of the 46,300 figure**: read `_index/availability_index.parquet` directly (3,003,002,411 bytes,
+  generation 1786282240969913, last_modified 2026-08-09T13:30:40Z) via `gcs_describe_object` +
+  `gcs_read_object_with_generation` — row-group-filtered
+  `pyarrow.parquet.read_table(filters=[("venue","in", ["AAVEV3","AAVE_V3"])])`, no whole-corpus walk.
+  `venue=AAVEV3, chain=ETHEREUM, capture_status=empty_confirmed` = exactly 46,300 rows, live, today — the doc's figure
+  is current, not stale.
+
+  **Twin-collision check — FULL POPULATION, not a sample** (cheap enough once the parquet was fetched: 1,208,829
+  matching rows total). Built `(date, data_type)` cell sets: bare `AAVEV3` = 46,300 unique cells; correct
+  `AAVE_V3`+`chain=ETHEREUM` = 53,506 unique cells (superset spanning full historical + post-launch range). **Bare cells
+  lacking a correct-key twin: 0.** Every one of the 46,300 bare `(date, data_type)` cells already has a matching
+  correct-key `AAVE_V3`-ETHEREUM row.
+
+  **Content-verify (delete-safety Part 2, not just existence)**: restricting correct-key rows to exactly the bare cells'
+  `(date, data_type)` set gives 48,176 rows — `capture_status=empty_confirmed`: **exactly 46,300**, a perfect 1:1 match
+  against the bare rows. The remaining 1,876 are `capture_status=captured` (real data) for a subset of cells —
+  specifically `data_type=lending_indices` on dates late Dec 2022/early Jan 2023, `written_at=2026-08-07*` — i.e.
+  genuine early capture success shortly before the registered 2023-01-27 launch date, filed under the CORRECT key and
+  entirely untouched by any purge of the wrong-key duplicates (worth a separate note that `PROTOCOL_LAUNCH_DATES`'s
+  2023-01-27 AAVE_V3-ETHEREUM date may be a few weeks conservative for `lending_indices` specifically — not a
+  delete-safety concern, not filed as a new todo since it doesn't block or need this purge). **Root-cause
+  corroboration**: the correct-key `empty_confirmed` rows' `written_at` set includes `2026-08-05T04:08:15.957401+00:00`
+  — the IDENTICAL bulk-write timestamp as the 46,300 bad bare rows. This directly confirms the original root-cause
+  mechanism: the pre-fix enumerator run iterated BOTH the canonical `("ETHEREUM","AAVE_V3")` and alias
+  `("ETHEREUM","AAVEV3")` `PROTOCOL_LAUNCH_DATES` entries in the SAME pass, correctly seeding the real pre-launch
+  placeholders AND erroneously seeding the duplicate bare sweep in one shot — the "twin" is the sibling of the very same
+  buggy run, not a coincidence or later backfill.
+
+  **Why this means SAFE, not just "twin exists"**: manifest rows are keyed independently — deleting a row at the WRONG
+  key (`venue=AAVEV3`) cannot affect a row at a DIFFERENT key (`venue=AAVE_V3`); the correct-key rows stay untouched
+  regardless of the bare-key purge. Since every bare cell's data is already fully and correctly represented under the
+  right key (both `empty_confirmed` pre-launch placeholders 1:1, and, where applicable, real `captured` data), the purge
+  is a **pure duplicate-row delete, not a re-key** — nothing needs migrating first.
+
+  **Independent re-verification of the "fix shipped" claim (task step 4, not just trusting the doc)**:
+  `git merge-base --is-ancestor instruments-service@2b2e9f124 HEAD` → yes, ancestor of current HEAD (`56243ea1`). Read
+  the LIVE `_yield_v2_defi_pre_launch_rows` (lines 1411-1505,
+  `instruments-service/scripts/enumerate_expected_universe.py`): canonicalises
+  `venue_label = VenueMapping._canonicalise_defi_protocol_spelling(protocol.upper())` and dedups via an
+  `_emitted_chain_venues: set[tuple[str,str]]` guard before emitting, with an inline comment citing this doc by name.
+  Ran the regression test directly (not just confirmed it exists):
+  `pytest tests/unit/scripts/test_enumerate_expected_universe_v2.py::test_defi_v2_pre_launch_alias_key_not_duplicated` →
+  **1 passed**. Confirmed `chain_env.py:198-199` still carries both `("ETHEREUM","AAVE_V3")` and `("ETHEREUM","AAVEV3")`
+  exactly as documented (deliberately kept). Grepped every live `PROTOCOL_LAUNCH_DATES.items()` consumer workspace-wide:
+  only 3 hits — the now-fixed enumerator, a `derive_protocol_launch_dates.py` validation script (not a manifest writer),
+  and a `chain_env.py` internal ghost-alias-to-canonical dict-normalization comprehension (not a manifest writer
+  either). No other live writer at risk of reproducing this specific bug. (The broader "any future protocol given a
+  similar alias key" risk is the still-open `[DESIGN]` todo below — untouched, out of scope here.)
+
+  **Informational, for the eventual `--apply` (not used this session — read-only, no delete executed)**:
+  `gcs_bucket_soft_delete_retention_seconds("market-data-tick-defi-prd-central-element-323112")` → `604800`s (7 days,
+  fresh-checked 2026-08-09) — qualifies for the §3a reversibility carve-out if the operator wants an agent-autonomous
+  execution path; re-check fresh at actual `--apply` time per §3a discipline, never reuse this session's number.
+
+  **Caveat — what this session did NOT do**: did not independently re-verify "0 live GCS objects back the bare `AAVEV3`
+  path" (Part 1 of the 5-part proof for the bare side) — relied on the original 2026-08-08 investigation's finding. That
+  is a different question from the twin-collision check this session was scoped to answer (which is about the CORRECT
+  side), so it doesn't block this precondition's SATISFIED verdict, but the operator's `--apply` run should still
+  independently confirm it fresh (or explicitly cite the 2026-08-08 finding) before executing, per the delete-safety
+  doc's "fresh, never assumed" discipline.
+
+  Sanctioned mechanics only: `gcs_describe_object`, `gcs_read_object_with_generation`,
+  `gcs_bucket_soft_delete_retention_seconds` (all from `unified_trading_library.cloud_interface`); no
+  `gcs_delete_object`/`gcs_conditional_delete` call made; no `gsutil`/`gcloud storage` subprocess.

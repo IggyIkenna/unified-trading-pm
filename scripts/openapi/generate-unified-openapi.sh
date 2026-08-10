@@ -75,6 +75,28 @@ echo ""
 echo "=== Generating Config Registry ==="
 python "$SCRIPT_DIR/generate_config_registry.py" \
     --output-dir "$WORKSPACE_ROOT/unified-api-contracts/openapi"
+
+# ---------------------------------------------------------------------------
+# Extraction-count regression checkpoint (formalizes the manual "fresh count
+# LOWER than committed baseline = DO NOT commit" rule from
+# venv_workspace_openapi_regen_batch11_findings_2026_08_09.md). Compares the
+# just-regenerated config-registry.json / unified-trading-system.openapi.json
+# against their git-committed baseline; a genuine regression (e.g. a broken
+# .venv-workspace silently under-extracting) must not be committed. Does NOT
+# abort the rest of this script (later steps' outputs are independent) — the
+# script's own exit code reflects this checkpoint's verdict at the end.
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Checkpoint: Extraction-Count Regression Gate ==="
+EXTRACTION_GATE_STATUS=0
+python "$SCRIPT_DIR/../quality_gates/check_extraction_count_regression.py" \
+    --workspace-root "$WORKSPACE_ROOT" || EXTRACTION_GATE_STATUS=$?
+if [[ $EXTRACTION_GATE_STATUS -ne 0 ]]; then
+    echo ""
+    echo "⚠️  EXTRACTION-COUNT REGRESSION DETECTED — DO NOT commit config-registry.json /"
+    echo "    unified-trading-system.openapi.json until investigated (see checker output above)."
+fi
+
 # Run the system topology generator (repos, deployment, strategies, data flows)
 echo ""
 echo "=== Generating System Topology ==="
@@ -241,3 +263,11 @@ if [[ $SYNCED -eq 0 ]]; then
 fi
 
 echo "=== All Done ==="
+
+if [[ $EXTRACTION_GATE_STATUS -ne 0 ]]; then
+    echo ""
+    echo "❌ generate-unified-openapi.sh completed but the Extraction-Count Regression Gate FAILED"
+    echo "   (see 'Checkpoint: Extraction-Count Regression Gate' above) — exiting non-zero. DO NOT"
+    echo "   commit config-registry.json / unified-trading-system.openapi.json until investigated."
+    exit "$EXTRACTION_GATE_STATUS"
+fi

@@ -261,3 +261,22 @@ was already closed 2026-07-31). No RECLASSIFY, no ARCHIVE.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sequencing ruling, cross-doc MTDS blockers, prior
 verdicts stand
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply. The one residual open
+item (Resolution-checklist item 3's MTDS half) remains deliberately sequenced behind the same unresolved MTDS
+DEPLOYMENT_ENV race documented in `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` /
+`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (both re-confirmed KEEP-NA in this same round-11 pass) —
+a 2026-07-26 operator sequencing ruling, not a stale gate any of today's precedents touch. No RECLASSIFY, no
+satellite-extraction. No ARCHIVE.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:a75fad86ecf310c3]: KEEP-NA,
+valid — Resolution-checklist item 3's unified-trading-library half is shipped+verified; deployment-api/strategy-service
+half is confirmed clean (no fix needed, 2026-07-31). The sole remaining open sub-item is the market-tick-data-service
+half, deliberately sequenced behind an explicit dated 2026-07-26 operator sequencing ruling (cited: 'resolved
+autonomous_session_operator_decisions_2026_07_25.md entry #29, option A') that holds this half until the MTDS
+DEPLOYMENT_ENV race investigation's own next step runs, since the 2 MTDS tests are the only known reproducer of a real
+env-leak and fixing them first risks masking the leak before its cause is confirmed. Verified both cited blocker docs
+are real and still open: mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md (status: open) and
+mtds_deployment_env_race_survives_single_worker_2026_07_23.md (status: open).

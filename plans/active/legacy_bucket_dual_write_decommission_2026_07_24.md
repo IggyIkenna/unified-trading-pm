@@ -27,7 +27,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-07-24
+last_updated: 2026-08-09
 locked_by:
 locked_since:
 supersedes:
@@ -149,10 +149,11 @@ context_scope:
       shard-key dupes. Per-asset_group A3 manifest-divergence check clean. **(MIGRATED FROM:
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- **[INFRA] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Remove the 8
-  already-paused (cefi/defi/tradfi/sports) legacy consolidator cron Terraform blocks from
-  `manifest_consolidator_scheduler.tf` (prediction's pair already removed 2026-07-13). See the batch doc for the full
-  scoped todo; do not duplicate-dispatch from here.
+- [x] ✅ [INFRA] P0. **VERIFIED ALREADY DONE via `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` todo 7 -- no
+      code change needed.** `manifest_consolidator_scheduler.tf` at live-defi-rollout HEAD already carries no `-legacy`
+      keys; the live Cloud Run Jobs/crons themselves were removed via direct `gcloud` on 2026-07-12/13/16, all PREDATING
+      this doc's own 2026-07-24 creation -- the item's premise was already stale when written. Live-reverified
+      2026-08-09: `gcloud scheduler jobs list` returns zero `-legacy`-named or orphaned manifest-consolidator jobs.
 
 - [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
       canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
@@ -266,3 +267,9 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
   fan-out item, but the doc's other 9 open todos remain gated behind prod-bucket deletes (human-only hard stop) or
   per-AG L3-plan C-GREEN gates this plan only coordinates -- whole doc stays NA.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **cross_cutting_satellite_ao_dispatch_batch3 finalize reconciliation, 2026-08-09 (slot 15)**: reconciled the remaining
+  `EXTRACTED 2026-08-09 -> batch3` pointer (the 8 legacy manifest-consolidator cron Terraform blocks item, todo 7) --
+  verified already done, no code change needed, flipped to `[x]`. The other batch3-related item in this doc (Migration
+  data-copy fan-out, RESOLVED-MOOT) was already correctly reconciled by a prior session -- no further edit needed there.
+  Doc keeps 8 open `- [ ]` items (L6 decommission gates, version-aware delete, manifest-completion coordination,
+  relaunch/verify chain) -- `status` stays `active`, all real prod-bucket-delete/per-AG-gate work.

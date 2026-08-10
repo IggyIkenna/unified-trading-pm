@@ -325,13 +325,13 @@ job's per-category input adapters for the reconciliation-derived categories, per
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality
       is sonnet/hourly-retry per the 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1
       build recipe step 5), not as a separate pass. (repo: `unified-trading-pm`)
-- [x] ✅ [DATA] P2. **RESOLVED 2026-08-08 (operator ruling, NA-corpus blocker digest, cross-cutting round 5, id=48)**:
-      escalation-N = **3 days** recurring unremediated before severity escalates (§3, "N days recurring before severity
-      escalates"); initial `assigned_vm` default for freshly auto-filed finding issue docs = **`planning`**
-      (auto-dispatch to AO by default, not `NA`). Both policy calls now settled — wire these two constants into the §3
-      dedup/escalation logic and the §"Issue-doc creation + dedup" frontmatter template (§2.7's
-      `assigned_vm:     planning (or NA if...)` line above) when building todo 1's `trading-analyst` skill. (repo:
-      `unified-trading-pm`)
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-08 (operator ruling, NA-corpus blocker digest, cross-cutting round 5, id=48)** —
+      cross-referenced in `/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md`: escalation-N = **3
+      days** recurring unremediated before severity escalates (§3, "N days recurring before severity escalates");
+      initial `assigned_vm` default for freshly auto-filed finding issue docs = **`planning`** (auto-dispatch to AO by
+      default, not `NA`). Both policy calls now settled — wire these two constants into the §3 dedup/escalation logic
+      and the §"Issue-doc creation + dedup" frontmatter template (§2.7's `assigned_vm:     planning (or NA if...)` line
+      above) when building todo 1's `trading-analyst` skill. (repo: `unified-trading-pm`)
 
 ## Codex SSOTs
 

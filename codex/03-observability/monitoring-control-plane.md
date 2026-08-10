@@ -23,7 +23,7 @@ created: 2026-06-10
 authoritative_for: [monitoring control plane read surfaces, CI dashboard + fleet git-health]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-08-10
 code_refs:
 ---
 
@@ -61,9 +61,12 @@ Code: `deployment_api/routes/repo_ci.py` + `_repo_ci_{types,stuck,manifest,githu
   rate-limit → 503 + `retry_after`, never silent-stale): branch heads, 3-way compare (content delta = changed-file
   count, never squash-skewed commit counts), commit history, check runs, open PRs (+ per-PR `mergeable_state`).
 - **workspace-manifest.json** (PM `main` via contents API, TTL 120 s) through ONE accessor —
-  `_repo_ci_manifest.ManifestView`: repo registry, `ci_status` (9-state), `staging_status.breaking_pending` + lock,
-  `deployed_versions`. **`ManifestView.ci_status_for` is THE Firestore swap point** for
-  `ci_status_firestore_side_store_2026_06_10.md` Phase 2 — no other consumer changes at cutover.
+  `_repo_ci_manifest.ManifestView`: repo registry, `ci_status` (9-state), `staging_status.breaking_pending` + lock.
+  (`deployed_versions` RETIRED 2026-08-10 — the manifest field + its write step were removed; see
+  `dual-cloud-image-builds.md` Provenance section. `ManifestView.deployed_version_for` in deployment-api still exists
+  but reads a removed field → always `None`; a deployment-api-side follow-up is tracked.) **`ManifestView.ci_status_for`
+  is THE Firestore swap point** for `ci_status_firestore_side_store_2026_06_10.md` Phase 2 — no other consumer changes
+  at cutover.
 - **Cloud builds** (image-level deploy signal v1): reuses `_cloud_builds_*` plumbing; `image_stale` = main HEAD sha ≠
   last successful build sha; honest-unknown (None) when build data unavailable; AWS/CodeBuild parity tracked in the
   sub-plan (cloud-toggle).
@@ -103,11 +106,14 @@ with a fleet surface (`fleet_git_health_orchestrator_2026_06_10.md`, agent-orche
   it.
 - **Orchestrator dashboard** `/fleet-git` page (`dashboard/src/FleetGit.tsx`) — summary chips, per-host slot rows with
   worst-first badges (reporter-dead / ff-pull-dead / N drift / N dirty / N behind), expandable per-repo detail.
-- **Single-pane (operator decision v2)**: deployment-api `GET /api/repo-ci/fleet-git-health` (`_repo_ci_fleet.py`,
-  deployment-api@2b6b424) proxies the orchestrator endpoint server-side (SM token `ORCHESTRATOR_API_TOKEN`; honest
-  degradation `available=False`+reason+`orchestrator_url` deep-link when unreachable/untokened) → deployment-ui `/fleet`
-  Fleet Git landing tab (deployment-ui@8a9d1bd). The orchestrator dashboard keeps its own `/fleet-git` page for
-  worker-ops use.
+- **Single-pane (operator decision v2, PARTIALLY SUPERSEDED 2026-07-27)**: the original v2 design routed this through
+  deployment-api `GET /api/repo-ci/fleet-git-health` (`_repo_ci_fleet.py`, deployment-api@2b6b424) proxying to a
+  deployment-ui `/fleet` Fleet Git landing tab (deployment-ui@8a9d1bd) — **that tab is DELETED**
+  (`/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`: predated the single-VM architecture
+  (2026-06-27); with ~11 VMs down to 1, the cross-VM landing page this decision's click-through relied on stopped being
+  daily-use). Fleet git-health's only home now is the **orchestrator dashboard's own `/fleet-git` page**
+  (`dashboard/src/FleetGit.tsx`, worker-ops use — see line above). The CI/CD half of the v2 decision (Repos CI page,
+  per-service CI tab staying in deployment-ui) is UNCHANGED — this reversal is fleet-git-health-scoped only.
 
 ## Click-through to the existing UIs (operator add 2026-06-10)
 

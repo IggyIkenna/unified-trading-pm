@@ -50,7 +50,7 @@ related:
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     /plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md,
-    /plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
+    /plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md,
     /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
@@ -118,15 +118,24 @@ context_scope:
       no residual gap. Flipped Phase C in `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` to
       DONE-BY-FAIT-ACCOMPLI citing CF-11's actual conclusion (option (a) — no genuine residual gap found on closer
       reading). Source: `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C).
-- [ ] [DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444) wire-vs-canonical filename
-      collisions on the 6 flagged dates** (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02, 2026-01-03, 2026-07-11) named
-      in `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 8/10. Sample-compare row counts
-      / capture-time ranges / tick content per colliding pair to determine whether one capture is a strict subset of the
-      other. **Audit only — do NOT rename/delete/merge anything.** Source:
+- [x] ✅ **DONE 2026-08-09.** [DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444)
+      wire-vs-canonical filename collisions on the 6 flagged dates** (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02,
+      2026-01-03, 2026-07-11) named in `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding
+      8/10. Sample-compare row counts / capture-time ranges / tick content per colliding pair to determine whether one
+      capture is a strict subset of the other. **Audit only — do NOT rename/delete/merge anything.** Source:
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Finding 8/10). **Done when**: each sampled
       pair is classified subset-confirmed (recommend a safe merge path, but do not execute it) or
       genuinely-distinct-content (recommend permanent leave-as-is), with results appended to the issue doc's Findings —
       or the sample proves inconclusive and is escalated to the operator for a decision, with the evidence attached.
+      **DONE**: re-ran the shipped script's own discovery/resolve logic (read-only, no downloads) for the 6 dates × 2
+      venues — live population is now 522 candidates (not 1104; `2025-11-01`/`02` show zero today, a corpus-drift fact
+      flagged in the finding). Sample-compared 26 pairs (all 9 HYPERLIQUID candidates + a diverse ASTER sample): **0/26
+      are genuinely-distinct content** once `symbol`/`instrument_type`-casing/`available_at` label-convention columns
+      are normalized — 23 identical_content, 3 subset_confirmed (old wire-form ⊆ new canonical, ASTER `trades` truncated
+      at exactly 1000 rows). Recommends a safe automated fix (extend `_confirm_would_patch_duplicate`'s exclusion set)
+      rather than the prior "leave as-is forever" default. Evidence:
+      `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 11 (2026-08-09), same commit as
+      this checkbox flip.
 - [x] ✅ [DATA] P2. **Check the terminal state of VM `mdps-backfill-cefi-20260807-130321` and re-run the per-cell
       symbol-count bundle audit** against the 84 targeted (6 BYBIT + 6 DERIBIT day) cells named in
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`. If the VM was preempted again, relaunch (SPOT
@@ -143,24 +152,30 @@ context_scope:
       relaunch todo added to the Track-7 doc for once it terminates. Evidence:
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` § "2026-08-08 84-cell audit" +
       unified-trading-pm@<sha>, market-data-processing-service@e9f9819.
-- [ ] [SCRIPT] P3. **Remove `BINANCE-DELIVERY` from `VENUES_BY_ASSET_GROUP["cefi"]`** in
-      `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py` to stop the daily zombie cron (704 wasted
-      `attempted_failed`/`empty_confirmed` rows/day). The venue was deliberately excluded from MVP scope by operator
-      decision #3 (2026-06-27, `mvp_scope.py` v10) — this todo does not reopen that decision, it only stops the
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-10 (slot-32)** — **Remove `BINANCE-DELIVERY` from `VENUES_BY_ASSET_GROUP["cefi"]`**
+      in `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py` to stop the daily zombie cron (704
+      wasted `attempted_failed`/`empty_confirmed` rows/day). The venue was deliberately excluded from MVP scope by
+      operator decision #3 (2026-06-27, `mvp_scope.py` v10) — this todo does not reopen that decision, it only stops the
       forward/cron pipeline from continuing to iterate a venue that's already MVP-excluded (code wiring, symbol_rules,
       and the Tardis adapter all stay intact for a future MVP re-add). Source:
       `issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (P3 BINANCE-DELIVERY item) +
       `issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` (duplicate todo, keep both docs' checkboxes
       in sync). **Done when**: the venue is removed from the cefi iteration list, `quality-gates.sh` is green, and a
       fresh manifest check on the next cron cycle confirms no new BINANCE-DELIVERY `attempted_failed` rows are written.
-- [ ] [INFRA] P3. **Fix the LONG_LIVED_LIVE VM heartbeat status field so it transitions past `"starting"`** once boot
-      completes, and root-cause + fix the `_publish_boundary_event` exception for `ASTER:PERPETUAL:1000LUNC-USDT@LIN`
-      seen after `_record_empty_window` succeeds (both from
-      `issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`'s Open Questions). Source:
-      `issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`. **Done when**: the heartbeat
-      status field reflects real VM state post-boot (verified via a live VM's heartbeat blob) AND the
-      `_publish_boundary_event` exception is root-caused with either a fix shipped or a documented non-issue verdict,
-      both with `quality-gates.sh` green.
+      **DONE**: venue removed from `VENUES_BY_ASSET_GROUP["cefi"]` AND `tardis_to_venue`/`all_tardis_exchanges` (the
+      forward-poll's actual iteration source — the group removal alone would not stop the attempts, bare-OKX
+      precedent) + `VENUE_DATA_TYPE_CAPABILITIES`; QG green (12,637 passed); wiring kept for re-enable. Evidence:
+      `unified-api-contracts@56db28e6` (verified ancestor of `origin/live-defi-rollout`, current tip) — source issue doc
+      archived 2026-08-10 (`plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`).
+- [x] ✅ [INFRA] P3. **DONE 2026-08-10 (slot-3).** **Fix the LONG_LIVED_LIVE VM heartbeat status field** — created
+      `deployment-service/scripts/vm/vm_heartbeat_sidecar.sh` (writes `"running"` from the first tick, replacing the
+      GCS-hosted version that hardcoded `"starting"`) + added it to `create-code-tarballs.sh`'s upload set. **Root-cause
+      of `_publish_boundary_event` exception** — the `publish_boundary_event` helper in `_ws_window_helpers.py` passed
+      raw `str` values for `asset_group` and `data_type` to `CandleBoundaryCrossedEvent`, which declares them as
+      `AssetGroup`/`DataType` `StrEnum` fields; pydantic v2 coerces matching strings at runtime but the implicit
+      coercion is fragile. Fixed with explicit `AssetGroup(asset_group)` + `DataType(data_type)` construction, removing
+      the `pyright: ignore[reportArgumentType]` suppressions. Both repos `quality-gates.sh` green. Evidence:
+      deployment-service@88f8834c, market-tick-data-service@f6b7f8b7.
 - [ ] [SCRIPT] P3. **Fix the confusing `FORCE="${FORCE:-250}"` default** in
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (line ~61) to
       `FORCE="${FORCE:-false}"` — a copy-paste artifact from the adjacent `DRY_RUN` default; harmless today (only the
@@ -202,14 +217,18 @@ context_scope:
   upgrade, or alternatively an operator judgment call accepting reduced scope; neither is worker-bounded.
 - **`issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`** — the shipped fix's residual todo
   is an operator sign-off/verification step, not further code work.
-- **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — remaining item explicitly reads "Operator should
-  confirm and close this todo" — no further worker-determinable investigation remains.
+- **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — **RESOLVED + ARCHIVED 2026-08-09**: re-verified
+  the HYPERLIQUID VMs are no longer running (live `aws ec2 describe-instances` returns zero results, consistent with
+  both multi-year backfills having completed since the 08-04 confirmation); closed and moved to
+  `/plans/archive/2026_08/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`.
 - **`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`** — near-fully [x] (946 lines, ~50 todos almost all done); the
   residual prose item is operator-judgment-gated, not a fresh worker task.
 - **`issues/fail_hard_canonical_enforcement_design_2026_07_20.md`** — `[DESIGN] P1` item is an undecided
   architecture/design call (reconciling two id-derivation paths, a new column-value gate, a new on-disk convention).
-- **`issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** — `[OPERATOR]`-tagged strategy-desk
-  judgment call on committing capital/infra to an active paper run.
+- **`/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** — RESOLVED + archived
+  2026-08-09 (superseded this listing; see that doc's finalize plan). The `[DECISION]` was ruled by the operator
+  2026-08-08 ("start it, conditionally"); the follow-on completeness gate is now tracked in
+  `/plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`.
 - **`issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md`** — `[OPERATOR]`-tagged, explicitly needs a
   decision among 3 named options before implementation.
 - **`issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`** — all 3 items human-gated (operator's own

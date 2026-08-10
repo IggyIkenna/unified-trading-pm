@@ -27,7 +27,7 @@ tags: [tradfi, scope-ruling, vm, backfill, possible-violation]
 related:
   [
     /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
   ]
 created: "2026-08-09"
 author: slot-28
@@ -129,19 +129,19 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
 
 ## Action items
 
-- [ ] [INFRA] P1. **`BLOCKED-OPERATOR-DECISION`: pause or fix the `wave_launcher.py` cron on `planning`** (PID pattern
-      confirmed via `ps aux | grep wave_launcher`, log at `/home/ubuntu/wave_launcher_cron.log`) so it (a) respects the
-      2026-08-09 MVP-of-MVP scope ruling — skip CBOE/NASDAQ/NYSE/FX/commodity cells entirely until November 2026 rather
-      than dispatching them with `--force`, and (b) fixes the dedup key-mismatch bug so it stops duplicating
-      already-running CME shards. Options: (1) comment out / disable the cron entry until the code fix ships — fastest,
-      fully reversible, but pauses legitimate CME progress too; (2) patch `wave_launcher.py`'s cell-selection to consult
-      the scope-ruling doc's in-scope table before dispatch — correct fix, more code. Recommend (1) as an immediate
-      stopgap + (2) as the follow-up fix, but this needs operator/infra sign-off since the cron is shared infra outside
-      any one worker's task scope — not unilaterally touched by this session. Repo: deployment-service (fix) + whichever
-      host/repo owns the cron install script (stopgap).
+- [x] ✅ [INFRA] P1. **`BLOCKED-OPERATOR-DECISION`: pause or fix the `wave_launcher.py` cron on `planning`** — STOPGAP
+      (option 1) confirmed LIVE 2026-08-09 ~13:06Z:
+      `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron     --location=asia-northeast1` reads
+      `state: PAUSED` (job at `deployment-service/terraform/gcp/wave_launcher_scheduler.tf`). No audit-log entry was
+      retrievable to attribute who/when paused it, and the follow-up code fix (option 2 — patch cell-selection to
+      consult the scope-ruling table) is still NOT shipped, so this is the reversible stopgap only, not the durable fix
+      — if anyone re-enables the job before option 2 lands, the exact same violation reproduces. Leaving option 2 as a
+      still-open follow-up (not re-added as a new checkbox here since it duplicates this item's own text — track it via
+      re-opening this line if the job is ever re-enabled without the code fix).
 - [ ] [INFRA] P2. **Determine whether the NASDAQ/NYSE 2023/2024 relaunch (and the CME duplicates) should be individually
       killed** once the cron itself is paused/fixed (3-signal staleness check + operator sign-off — don't blind-kill
-      live in-progress work). Repo: deployment-service.
+      live in-progress work). Repo: deployment-service. **3-signal check DONE 2026-08-09 ~13:07Z (slot-7) — see Progress
+      Log; escalated final kill/no-kill call to operator via `/blocked` BLK-19380fd8, not resolved here.**
 
 ## ACTION TAKEN (2026-08-09 ~06:08Z) — killed the live `wave_launcher.py` process (not any VM)
 
@@ -200,3 +200,77 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   staleness-check posture as before). This is now a **confirmed-recurring** pattern (2 occurrences, ~3h apart: ~06:08Z
   and ~09:00Z) — the reactive kill is a stopgap that will need to repeat every cycle until the P1 fix lands; flagging
   this doc's P1 as higher-urgency given the repeat, not re-triaging the priority itself (already P1).
+- **2026-08-09 ~12:47Z, slot-28 (dispatched todo 2 — determine whether the relaunch/duplicates should be individually
+  killed)**: root-caused the actual mechanism (prior entries hadn't identified it):
+  `deployment-service/terraform/gcp/ wave_launcher_scheduler.tf` wires this as a **GCP Cloud Scheduler job
+  (`0 */3 * * *` UTC) → Cloud Run Job**, not a local cron/systemd timer on the `planning` host — confirmed no matching
+  systemd timer (`systemctl list-timers --all`, 26 timers, none named wave/tradfi), no crontab entry visible, no GH
+  Actions workflow reference. The observed local `ps aux` shell-wrapper PIDs in the prior two entries are the Cloud Run
+  Job's container process, which happens to be reachable/visible from this shared host (same GCP project ambient
+  credentials) — the 3h recurrence cadence (~06:08Z/~09:00Z/now) matches the Terraform schedule exactly, confirming this
+  IS the wired scheduler, not an unknown rogue process. **Current live state (12:47Z), no wave_launcher process running
+  (this tick already completed and exited — one-shot Cloud Run Job task, not a persistent daemon)**: 27 `tradfi-bf-*`
+  VMs running — the highest count observed across all entries in this doc. Breakdown: 2 confirmed CME duplicate pairs
+  (same root+year, two different launcher naming shapes both RUNNING: `cme-ohlcv-1m-es-2020` +
+  `cme-ohlcv-1m-g01-es-es-2020`; `cme-ohlcv-1m-met-2023` + `cme-ohlcv-1m-g01-met-met-2023`) + 4 non-duplicated CME
+  shards (mbt-2024, met-2024, met-2025 — met-2025 is a NEW out-of-scope year not seen in prior entries) + 19
+  out-of-scope equities VMs: NASDAQ 2023(×3)/2024(×4)/**2025(×4, NEW — first appearance of 2025 in this doc)** + NYSE
+  2023(×4)/2024(×5). The out-of-scope footprint is GROWING each cycle (12→18-19→27), not stabilizing, and has now spread
+  to a 3rd out-of-scope year (2025) beyond the ruling doc's original 2023/2024 observation. **Did NOT kill anything this
+  pass** (no process is currently live to kill; the reactive-kill stopgap only ever catches the process mid-run, and per
+  the 3-signal staleness rule + this doc's own repeated "operator sign-off needed" framing, individually killing the 19+
+  already-running out-of-scope VMs is a judgment call this session should not make unilaterally, even though I now have
+  the technical means to (the ambient `unified-trading-sa` GCP identity that ran `gcloud compute instances list` above
+  also holds `cloudscheduler.admin` + `compute.admin`, so pausing the Cloud Scheduler job and/or deleting the VMs are
+  both mechanically self-service per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` —
+  deliberately not exercised here because the gap is a SCOPE/AUTHORIZATION judgment call, not a permission gap that
+  doc's self-service rule covers). Filing a `/blocked` question now (see next entry) since three independent occurrences
+  (06:08Z, 09:00Z, this one) have each independently deferred the actual pause-or-fix decision without ever routing it
+  to a real operator answer — the passive doc-logging pattern was not surfacing this for a decision.
+- **2026-08-09 ~13:07Z, slot-7 (dispatched todo 2 fresh — no evidence a prior `/blocked` call from the ~12:47Z entry
+  above actually landed; no answer visible on this slot's boot/heartbeat, no BlockedRow reachable to confirm one way or
+  the other)**: **Prerequisite now met** —
+  `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` confirms
+  `state: PAUSED` (checked into P1 above). **Fresh fleet snapshot (13:06Z)**: 21 `tradfi-bf-*` VMs running (down from
+  the 27 at 12:47Z — some completed naturally in the interim, consistent with the paused cron meaning no new launches):
+  2 confirmed CME duplicate pairs (`cme-ohlcv-1m-es-2020` + `cme-ohlcv-1m-g01-es-es-2020`; `cme-ohlcv-1m-met-2023` +
+  `cme-ohlcv-1m-g01-met-met-2023`) + 3 non-duplicated CME (mbt-2024, met-2024, met-2025) + 8 NASDAQ (2023×2, 2024×3,
+  2025×3) + 6 NYSE (2023×3, 2024×3) = 19 out-of-scope equities. **Ran the 3-signal staleness check** (heartbeat blob
+  age, run.log tail, active data writes) on one sampled VM per category
+  (`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260809-090109`, `tradfi-bf-nasdaq-ohlcv-1m-2023-d01-20260809-120319`,
+  `tradfi-bf-nyse-ohlcv-1m-2023-d01-20260809-120502`, plus `tradfi-bf-cme-ohlcv-1m-es-2020-20260809-120142` for the
+  other CME-duplicate lineage): ALL FOUR signal ALIVE, not stale —
+  `gs://deployment-scripts-central-element-323112/vm-heartbeat/<vm>.txt` mtimes within 60s of check time on every
+  sample; `vm-logs/<vm>/run.log` actively growing (new bytes every check) with real `PIPELINE_HEARTBEAT` +
+  `StreamingParquetWriter: uploaded ... ticks.parquet (N rows)` lines timestamped seconds before the check — i.e. these
+  are genuinely mid-backfill, not zombied/orphaned processes. **Determination**: none of the 21 qualify for an
+  autonomous staleness-based kill (all alive + progressing); the remaining question — whether to kill genuinely-alive
+  but out-of-scope/duplicate work now that the cron can't spawn more — is a scope/cost-tradeoff judgment call, not a
+  technical one, so per this doc's own standing framing (and the craft's VM-delete guardrail) it stays operator-gated.
+  Filed a fresh `/blocked` (`BLK-19380fd8`) with this evidence + 3 options (kill all 21 / let all finish naturally since
+  the cron is paused so no further violation accrues / kill only the 2 confirmed CME duplicate pairs and let the 19
+  NASDAQ/NYSE finish), recommending option C (duplicates are unambiguous double-spend; the NASDAQ/NYSE premature-year
+  work is out-of-scope-but-not-wasteful once already in flight). Did not touch any VM or the scheduler job. This P2 todo
+  stays open pending the operator's answer — the determination (documented above) is complete, the kill DECISION is not
+  mine to make.
+- **2026-08-09 ~13:15Z, slot-7 — operator INTERIM answer on `BLK-19380fd8` (final decision on the non-duplicate VMs
+  still PENDING separately)**: operator split the decision by risk category. (1) **CME duplicate pairs are a
+  DATA-CORRECTNESS issue, not just scope** — two processes concurrently writing the same shard risks a race / silently
+  corrupted or overwritten output, independent of the scope ruling; directed to kill the duplicate side now since the
+  legitimate/already-running `g01-*` side is confirmed progressing and nothing legitimate is lost. (2) The remaining
+  purely-out-of-scope, non-duplicate VMs are a sunk-cost-vs-ongoing-violation budget tradeoff the operator is deciding
+  separately (already flagged to them directly outside this doc) — explicitly NOT auto-resolved by the scope ruling
+  alone; leave them running pending that separate answer. **Action taken**: re-confirmed both duplicate pairs still
+  RUNNING (`tradfi-bf-cme-ohlcv-1m-es-2020-20260809-120142` + `tradfi-bf-cme-ohlcv-1m-met-2023-20260809-120247` were the
+  later-started (`12:0x` UTC) duplicate side vs. the earlier-started (`09:0x` UTC) `g01-*` originals), then
+  `gcloud compute instances delete tradfi-bf-cme-ohlcv-1m-es-2020-20260809-120142 tradfi-bf-cme-ohlcv-1m-met-2023-20260809-120247 --zone=asia-northeast1-c --quiet`
+  — both confirmed `Deleted`. The `g01-es-es-2020` / `g01-met-met-2023` originals are untouched and still RUNNING.
+  **Current fleet for the operator's pending sunk-cost decision (13:16Z, post-dedup-kill)**: 16 `tradfi-bf-*` VMs total
+  — 2 in-scope `g01-*` (keep) + **14 out-of-scope, non-duplicate** (down from the 19 cited to the operator ~15min prior
+  — 5 completed naturally in the interim under the now-paused cron): 3× CME new-year (mbt-2024, met-2024, met-2025) + 6×
+  NASDAQ (2023-d01, 2024-d02/d04/d05, 2025-d02/d04) + 5× NYSE (2023-d01/d03, 2024-d02/d04/d05). All 14 are
+  `e2-highmem-16` (16 vCPU / 128GB) on SPOT provisioning. Rough burn estimate (SPOT e2-highmem-16 list-price-derived,
+  NOT a Billing-API-verified figure): ~$0.25-0.35/VM-hr → **~$3.50-4.90/hr aggregate** for the 14, on top of whatever
+  Databento API-call spend they're each individually accruing (not measured here). No further action taken on these 14 —
+  waiting on the operator's separate answer. This P2 todo's duplicate-VM sub-item is now closed (evidence above); the
+  NASDAQ/NYSE/CME-new-year sub-item stays open pending that answer.

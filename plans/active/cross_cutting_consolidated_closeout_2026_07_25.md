@@ -22,8 +22,13 @@ summary: >-
   same-day light-residual-closeout workflow executed ~12 bounded fixes + an archival sweep against named items below;
   every one of its `[IN FLIGHT 2026-07-25]` markers was then re-verified against reality on 2026-07-26 by a
   `/plan-reconcile cross-cutting` pass and replaced with its measured outcome, so no unresolved in-flight prose remains
-  below — the per-marker breakdown is in the Progress Log, deliberately not re-tallied here (a hardcoded count re-stales
-  on the next pass). Keep doing that: re-verify a dated marker before trusting it.
+  below — the per-marker breakdown is in the history companion (see below), deliberately not re-tallied here (a
+  hardcoded count re-stales on the next pass). Keep doing that: re-verify a dated marker before trusting it.
+  **2026-08-09 line-cap trim** (had grown to 1007 lines, over the 1000L hard cap): Tracks 14/18-22 (still-open,
+  observability/self-monitoring-themed) forked verbatim to
+  `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md`; Track 15 (closed/retriage-only) + the full
+  Progress Log through 2026-08-08 forked verbatim to `cross_cutting_consolidated_closeout_history_2026_08_09.md` — see
+  the Split notice section below.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -69,9 +74,14 @@ related:
     /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -94,7 +104,20 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/honest-coverage-model.md,
   ]
-depends_on: []
+depends_on:
+  [cross_cutting_closeout_observability_and_monitoring_2026_08_09, citadel_satellite_ao_dispatch_batch1_2026_08_08]
+gate_on_depends:
+  false # tracking-only linkage (task_template.md finding I) — none of this parent's remaining Tracks
+  # depend on either listed doc's open work landing first. First entry is a line-cap fork (0 open todos in its own
+  # history companion, not listed separately). Second entry (added ag-closeout-audit cross-cutting 2026-08-10,
+  # iterative-drain round) is a content-named satellite batch (citadel_*, not cross_cutting_*-prefixed) that
+  # generate_ag_closeout_audit_candidates.py's filename-pattern discovery structurally cannot see — listing it here
+  # is the documented mechanism (see that script's _covering_paths() docstring) for its depends_on:-resolution path
+  # to pick it up, closing a real discoverability gap: citadel_satellite_ao_dispatch_batch1_2026_08_08.md (+its
+  # finalize) already actively extracts citadel_paper_batch_live_reconciliation_2026_06_19.md's agent-shippable
+  # items (14 citations in the batch body, 5 in the finalize) but was invisible to every prior audit round as a
+  # covering doc for it. The history companion carries 0 open todos so it is not listed here (mirrors how tradfi's
+  # history companion is related:-only, not depends_on).
 source: >-
   5-agent parallel triage of the epic-filtered cross-cutting candidate corpus (unified-trading-pm, 2026-07-25) at
   operator request ("build the cross-cutting-AG layer in canonical form, same as the 5 existing AGs, so
@@ -112,6 +135,23 @@ source: >-
 > scoping (2 single-AG-content-tagged-cross-cutting, 1 bare-cross-cutting-mistag, 4 forks that inherited a parent
 > coordinator's tag verbatim — all now correctly retagged; see `cursor-configs/skills/ag-closeout-audit/ SKILL.md`'s
 > Orthogonality HARD CHECK for the full pattern).
+
+## Split notice (2026-08-09 — plan-hygiene line-cap remediation)
+
+> **This plan was trimmed from 1007 lines and forked 2 ways**, dispatched via
+> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2, mirroring the split pattern
+> already used by `tradfi_consolidated_closeout_2026_07_18.md` / `sports_consolidated_closeout_2026_07_19.md` /
+> `prediction_consolidated_closeout_2026_07_18.md`. Every Track and every Progress Log line was moved **verbatim** to
+> its destination, nothing was summarized, rewritten, or dropped.
+>
+> | Child plan                                                                                                                                             | Carries                                                                                                                                                                             |
+> | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | [`cross_cutting_closeout_observability_and_monitoring_2026_08_09.md`](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md) | Tracks 14, 18-22 — scheduled-job reliability, manifest-consolidator throughput, self-monitoring, data-status, alerting, manifest-hygiene/phantom-capture (all still genuinely open) |
+> | [`cross_cutting_consolidated_closeout_history_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md)        | Track 15 (closed/retriage-only) + the full 2026-07-25 through 2026-08-08 Progress Log — pure historical record                                                                      |
+>
+> **Retained here**: Tracks 1-13, 16-17, 23 (still-open, not observability-themed), Track 24 (already a pointer stub
+> since its own 2026-07-26 extraction), the Reachability map, the "Known non-orphan dispositions" section (its own text
+> requires it stay here permanently — see that section), the ground-truth MVP-scope context, and the Codex SSOT index.
 
 ## How this AG differs from the other 5
 
@@ -476,65 +516,15 @@ todo instead.
 
 ## Track 14 — Scheduled-job reliability + concurrency/OOM defects + manifest reprocessing tooling · P1/P2
 
-**Sources**: `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (fully open, unresolved — the
-`uts-prod-cf-manifest-audit` Cloud Run Job has never successfully produced output, failing daily since 2026-07-04;
-affects all 5 AGs' daily CF-audit) + `issues/pipeline_smoke_sweep_findings_2026_07_20.md` (mostly done — 3 tooling
-false-green defects fixed, a 15h CeFi outage caught + a watchdog added; residual: prediction/sports staleness
-re-checks) + `issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md` (3 of 4+ findings fixed
-same-day; open: DeFi handlers have zero concurrency at any level, needs an `asyncio.gather`+`Semaphore` refactor, plus
-per-site verification across ~12 DeFi handlers — not a mass edit, needs care) +
-`issues/manifest_index_read_oom_ canonical_cache_2026_06_24.md` (operationally mitigated; the durable fix — bound
-`_CANONICAL_CACHE` per bucket — is undone, touches the LIVE cefi/sports/tradfi manifest path, validate carefully) +
-`issues/manifest_reprocessing_ generic_utility_2026_07_07.md` (fully open, 4 todos — design → implement
-`select_shards_for_reprocess()` → wire as an IS CLI subcommand → optionally retire 13 near-identical one-off scripts;
-concrete design already specified) +
-[issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
-(self-dispatched, `assigned_vm: planning` — `vm-exec-with-gcs-tee.sh`'s `STALL_PROGRESS_REGEX=checkpoint` self-kills any
-real backfill VM across all 20 launchers using that wrapper; regex fix identified, VM relaunch/verify in flight).
-
-**Close-out criterion**: the CF-manifest-audit job green for all 5 AGs with cited evidence; the smoke-sweep residuals
-re-verified (not re-fixed if already resolved elsewhere); the DeFi concurrency refactor shipped; the manifest-OOM bound
-implemented (Option A minimum) and measured to not regress the sports warm-cache win; the generic reprocessing utility
-designed+implemented+wired.
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 14 for Sources + close-out criterion.
 
 ## Track 15 — Test/CI hygiene + closed/retriage-only · P2/P3
 
-**Sources (hygiene — ✅ all 3 RESOLVED + ARCHIVED 2026-07-25, nothing left in flight)**: was "(hygiene, all [IN FLIGHT
-2026-07-25])"; verified 2026-07-26 that every one of the three has landed in `plans/archive/issues/` —
-[`local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md`](/plans/archive/issues/local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md)
-(bind to pytest `tmp_path`; archived `unified-trading-pm@e1580ac0a`) +
-[`pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md`](/plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md)
-(archived `unified-trading-pm@74df80162`) +
-[`instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`](/plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md)
-(archived `unified-trading-pm@e1580ac0a`).
-
-**Sources (closed or needs-retriage only, no active work)**:
-
-- [`cross_ag_never_seeded_backlog_scan_2026_07_06.md`](/plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md)
-  — **DONE + ARCHIVED** (`unified-trading-pm@b5805e7aa`, all 7 markers closed). Was self-contradictory here, reading
-  both "(ARCHIVED)" and "a workflow is … archiving it now" in the same sentence; the archival is finished.
-- `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` — **RESOLVED-IN-PLACE 2026-07-25**: all 4
-  originally-flagged files (book_microstructure_handler.py / perp_funding_handler.py / honest_coverage.py /
-  source_priority.py) confirmed non-regressions (baseline already regenerated by `unified-trading-pm@ba098a7cc`,
-  re-verified this pass) — `status: resolved`, all 4 todos closed, no code change needed. **ARCHIVED 2026-07-26 to
-  [`plans/archive/issues/`](/plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md) by
-  `unified-trading-pm@57ed9271c` — but WITHOUT the `[unlock-plan]` approval the doc's own `locked_by: live-defi-rollout`
-  is supposed to require, and the archived copy still carries that lock (ritual step 6 skipped).** This pass had
-  deliberately parked the archival for exactly that approval; a concurrent escalation-driven remediation archived it
-  anyway. Root cause filed as
-  [`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)
-  — the gate lives only in `quality-gates.sh`, which `docs(plans):` commits are explicitly routed away from.
-- `issues/empty_reprobe_ disagreement_2026_06_22.md` (stale — auto-filed over a month ago, `locked_by` looks like an
-  abandoned lock; likely much of its scope superseded by Track 12's audits; recommend a fresh re-probe or archive rather
-  than direct dispatch).
-- `issues/instruments_remaining_work_audit_2026_07_10.md` (a CeFi-consolidated-closeout-style discoverability index, now
-  15 days stale relative to 2026-07-25 — several docs it indexed have since split/archived; valuable as a structural
-  template for THIS doc, but needs a "historical snapshot" banner, not treated as current inventory).
-
-**Close-out criterion**: **the hygiene items are all closed ✅ (3 archived 2026-07-25)**;
-`mtds_uac_adapter_contract_baseline_regression` ✅ resolved + archived, with the un-cleared lock retro-fix tracked in
-the gate issue doc above; `empty_reprobe_disagreement` re-triaged or archived; `instruments_remaining_work_audit` gets a
-historical-snapshot banner.
+**EXTRACTED 2026-08-09** (line-cap trim, closed-only content) into
+[cross_cutting_consolidated_closeout_history_2026_08_09.md](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md)
+— pure historical record, nothing left in flight; see that doc's own Track 15 for the full close-out narrative.
 
 ## Track 16 — UAC/manifest/catalogue schema-wide audits · P1/P2
 
@@ -585,103 +575,33 @@ branch, and a shard/family-iteration mode neither service's CLI currently suppor
 
 ## Track 18 — Manifest-consolidator throughput + data-feed SLA/self-healing · P1/P2
 
-**Sources**:
-[consolidator_throughput_backlog_monitor_2026_07_09.md](/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md)
-(per-AG manifest-consolidator backlog/throughput + "did the run produce its expected data" verdict; open: the v2
-truthful merged-per-tick histogram, currently DESCOPED pending WS-H's structured-progress spine, + the deployments-page
-split) +
-[data_feed_sla_registry_and_active_self_healing_2026_06_19.md](/plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md)
-(open: build the single declarative SLA registry consolidating scattered freshness thresholds, plus active
-re-fetch-on-stale self-healing).
-
-**Close-out criterion**: both open items ship or are explicitly re-deferred to WS-H's spine landing first.
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 18 for Sources + close-out criterion.
 
 ## Track 19 — Data-pipeline hardening/self-monitoring family · P0/P1
 
-**Sources**:
-[data_pipeline_hardening_self_monitoring_2026_06_22.md](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
-(the canonical anti-silent-misclassification hardening doc, explicitly "across all 5 asset groups" — an otherwise-
-shipped detect→auto_recover→file_issue→page loop) + its 3 residual forks (all 2026-07-24):
-[data_pipeline_ag_residual_backfill_decisions_2026_07_24.md](/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)
-(tradfi `attempted_failed` retries, a UAC image-packaging bug, tradfi `ohlcv_15s` spurious-aggregation bug, defi
-DIVERGENT_EMPTY backfill-vs-scope campaign) ·
-[data_pipeline_alert_substrate_residual_2026_07_24.md](/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md)
-(alert-substrate/digest/writer-invariant residuals, alerting-service app-log visibility) ·
-[data_pipeline_self_healing_completion_residual_2026_07_24.md](/plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md)
-(Phase 6-C self-heal actuator wiring/packaging/scheduling).
-
-**Close-out criterion**: all 3 forks' residual items closed; the parent's detect→recover→file→page loop verified live
-end-to-end for all 5 AGs.
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 19 for Sources + close-out criterion.
 
 ## Track 20 — Data-status family · P1
 
-**Sources**:
-[data_status_catalogue_true_source_phase2_2026_07_24.md](/plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md)
-(Phase-2 true-catalogue/expected-universe source via instruments-service) ·
-[data_status_cell_grid_rearchitecture_2026_07_18.md](/plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md)
-(bound/stream/precompute cell-grid rewrite to kill a deployment-api OOM reading the whole manifest) ·
-[data_status_page_ux_and_canonicalisation_2026_07_16.md](/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md)
-(honest-coverage fix + P1-P8 UX/canonicalisation: instrument-type canonicalisation, catalogue explorer, cefi chain-axis
-drift, sports league-drilldown) ·
-[data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
-(data-status tab bugs + instruments CSV download regressions, gated on the v9 manifest migration) ·
-[/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md](/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md)
-(cherry-picks from a superseded branch: triage panel, dark-theme default, `reason_summary`/`reason_category`, mock-mode
-coverage-summary, flat `capture_status` matrix endpoint — all data-status/API items).
-
-**Close-out criterion**: all 5 docs' open P1/P2 items ship; the v9-migration gate on `_tab_and_downloads_remediation`
-re-checked before dispatch (do not surface pre-migration data through the UI, per the data-pipeline-correctness rule).
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 20 for Sources + close-out criterion.
 
 ## Track 21 — Data-pipeline alert/monitoring bugs · P1
 
-**Sources**:
-[/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md](/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md)
-(DP_NOT_V9/rate-limit alert false-positives tied to the manifest schema v9 migration + consolidation lag) ·
-[/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md](/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md)
-(DP_* events have no PubSub→subscriber→router path to `#data-pipeline-alerts`) ·
-[archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/archive/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
-(nightly cron VM undersized + launcher SSOT drift across 4 conflicting launcher artifacts → partial `coverage.json`) ·
-[issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
-(fleet-wide latent bug: live-mode lifecycle event sink publishes to non-existent PubSub topics, MTDS/MDPS).
-
-**Close-out criterion**: all 4 alerting bugs fixed + verified live (the false-positive fix, the missing PubSub route,
-the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic creation for live-mode launches).
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 21 for Sources + close-out criterion.
 
 ## Track 22 — Manifest-hygiene / phantom-capture monitor instances · P2
 
-**Sources**: dated outputs of 2 standing cross-cutting monitors —
-[issues/manifest_hygiene_red_2026_06_27.md](/plans/archive/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
-[issues/manifest_hygiene_red_2026_06_29.md](/plans/archive/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
-both from `manifest_hygiene_daily.py`;
-[issues/phantom_captures_prediction_2026_06_28.md](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md) from
-the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`). (`phantom_captures_tradfi_2026_06_28.md`
-retagged `[tradfi]` 2026-08-07 — see cross-reference below, no longer claimed here.)
-
-**Close-out criterion**: each candidate CSV triaged (real gap → backfill, code bug → fix adapter/writer, intentional new
-venue → extend the UAC oracle); the prediction/tradfi phantom rows reconciled via `--apply` flips to `attempted_failed`.
-
-**Cross-reference**:
-[issues/phantom_captures_tradfi_2026_06_28.md](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md) — same G3
-phantom-manifest monitor as the 3 docs above, but tradfi-owned (`asset_group: [tradfi]`) since 2026-08-07; tracked in
-`tradfi_consolidated_closeout_2026_07_18.md`'s own aggregated-source list, not this Track. Listed here only because it
-shares the monitor, not as a Track-22 close-out obligation.
-
-**Ownership note (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #20, 2026-07-26; PARTIALLY
-OVERRIDDEN 2026-08-07)**: the remaining 3 docs (2× `manifest_hygiene_red`, `phantom_captures_prediction`) stay tagged
-`[cross-cutting]` because the underlying MONITOR (`manifest_hygiene_daily.py` /
-`reconcile_phantom_manifest_rows_all.py`) is shared fleet-wide, even though each instance's content/fix is single-AG
-(defi/cefi/prediction respectively). **Kept `[cross-cutting]` deliberately for these 3, NOT retagged** — retagging
-during concurrent per-tranche audits is still the greater hazard (a standing condition, not a one-time rollout risk,
-since the audits run on a permanent cron). **The 4th, `phantom_captures_tradfi_2026_06_28.md`, was retagged `[tradfi]`
-2026-08-07** — operator explicitly overrode the 2026-07-26 ruling for this one doc after seeing the rationale (see
-`tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 6 for the override record); its prior double-claim
-(also named in tradfi's own batch2 Deferred section) is now resolved — tradfi is its sole home, this Track no longer
-claims it. `phantom_captures_prediction_2026_06_28.md`'s 1 remaining open todo (the 15-month re-fetch/backfill) was
-**SUPERSEDED 2026-07-29 (BLK-eb3f4765, main Option A) and the doc archived** — extracted into the operator-driven
-(`assigned_vm: NA`), gated plans that own it: `/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
-(P0 MVP-backfill-readiness gate, only after A–D smoke-green) + `/plans/active/data_completion_prediction_2026_07_15.md`.
-No open todo remains under this Track for it; nothing was launched (running it ahead of the canonical-migration +
-smoke-green foundation gate would be premature).
+**EXTRACTED 2026-08-09** (line-cap trim) into
+[cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md)
+— see that doc's own Track 22 for Sources, close-out criterion, the tradfi cross-reference, and the ownership note.
 
 ## Track 23 — Manifest schema bump: write-time MVP precompute · P2
 
@@ -731,7 +651,8 @@ batch)
   [`slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`](/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md)
   — evidence for the latter 3: `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
 - **ci**:
-  [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md),
+  [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md)
+  (archived 2026-08-09, resolved),
   [`deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md`](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md),
   [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
   [`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md),
@@ -795,213 +716,16 @@ batch)
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
-- **2026-08-07** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
-  dispatch `agt-a2b8a4`, slot 5). Phase 0: 83 tranche members, 6 covering docs, 11 never-cited (net -3 vs 2026-08-06's
-  86, matching that run's 2 retags-out + 1 archival). Iterative-drain re-check of batch1/1b/3's Deferred sections: no
-  new clearances. Orthogonality HARD CHECK: 0 new dual-tag mistags (the 1 pre-existing hit,
-  `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`, unchanged). Phase 1 (`Workflow`, 7 agents, one per
-  genuinely-new candidate): **all 7 verdicted `exclude_cross_cutting`** (real owners: ci ×5, ui ×1, infrastructure ×1 —
-  the same same-day-issue-doc-cluster mistag pattern as 2026-08-06) — reported, not retagged, per the
-  concurrent-sharded-worker owning-tranche rule; full evidence in
-  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md).
-  **Zero genuine new orphans found — no Phase 3 batch draft this run.** Confirmed
-  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` is now `status: active` (operator-approved since
-  2026-08-06), 7/8 todos done via a governance-sweep activation-readiness check, 1 genuinely open and already
-  dispatched. Bonus: re-measured the corpus-wide `check_ag_closeout_linkage.py` ratchet regression (87→72→71, still +2
-  over the 69 baseline) in `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` — see that doc for detail.
-- **2026-08-06** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
-  dispatch `agt-681f2d`, slot 6). Phase 0: 86 tranche members, 6 covering docs, 6 never-cited. Orthogonality HARD CHECK
-  (corpus-wide): found + fixed 2 genuine mistags directly (drop-cross-cutting-keep-sibling-tag cases), found 1 more
-  mistag-on-both-axes parked (`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`). Phase 1 (`Workflow`, 6
-  agents): all 6 verdicted `exclude_cross_cutting` — 2 fixed directly, 4 parked. **Zero genuine new orphans — no Phase 3
-  batch draft.** A same-day na-eligibility-audit follow-up independently retagged + archived one of the 4 parked targets
-  (`resource_watchdog_host_guardian_2026_08_05.md`, singly-tagged cross-cutting so genuinely this tranche's own to act
-  on). Full evidence in
-  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md)
-  — **backfilled here 2026-08-07** since this entry was missed at the time.
-- **2026-08-05** — **Membership-scope gap recorded (batch2 finalize finding 1).** The 2026-07-26 audit's own Progress
-  Log entry documented this but it wasn't actioned as a durable process change. **The tranche-membership derivation for
-  cross-cutting MUST use
-  `(asset_group: cross-cutting AND parent_epic in DATA_EPICS) UNION (explicit membership in this doc's Tracks/Sources lists)`**
-  — never the epic filter alone. The epic-filter-only scope caused batch1's Phase-1 to pick up 59 docs against a real
-  membership of 142 (104 non-peer-claimed); the `UNION` rule would have caught Tracks 16-24 (added by the 2026-07-25
-  corpus-wide sweep AFTER batch1's candidate corpus was scoped). The skill doc at
-  `cursor-configs/skills/ag-closeout-audit/SKILL.md` § cross-cutting membership rule already carries the
-  `OR explicit membership in Tracks 16-24` clause — this entry confirms the `UNION` is the authoritative derivation, not
-  a fallback.
-- **2026-08-02** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
-  dispatch `agt-f23055`, slot 12). Phase 0 via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (94
-  tranche members, 8 covering docs — batch3 now counted — 1 never-cited, down from 90/11 on 2026-08-01 since batch3's
-  own todos now cite most of that day's never-cited set). Orthogonality HARD CHECK re-run: clean (0 new dual-tag mistags
-  — same 4 legitimate multi-AG coordination docs as 2026-08-01). Iterative-drain re-check of batch1's/batch2's
-  conflict-gated Deferred items: no new clearances (both spot-checked batch2 items —
-  `defi_collateral_sizing_and_ wizard_full_parameterization`, `phantom_captures_tradfi` — remain gated on their owning
-  tranche's action, unchanged). Phase 1 (`Workflow`, 1 agent): the sole never-cited candidate,
-  `issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`, verdicted `exclude_cross_cutting` (real content
-  is agent-orchestrator boot/spawn read-confirmation-gate mechanics — the `ao` tranche's definition, not cross-cutting
-  data-pipeline work, despite carrying a `[ci, cross-cutting]` tag) — reported, not retagged, per the
-  concurrent-sharded-worker owning-tranche rule; full evidence in
-  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md).
-  **Zero genuine new orphans found — no Phase 3 batch draft this run.**
-  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` remains `status: draft`, still awaiting operator approval
-  to dispatch (untouched by this run, per the never-auto-flip HARD RULE).
-- **context-scout 2026-08-03**: trimmed context_scope from 9 to 6 entries (dropped 3 Track-specific/narrower pointers —
-  `bucket_estate_consolidation_closeout_2026_07_24.md`, `data_pipeline_reconciliation_skill_2026_07_20.md` (now fully
-  DONE per its own Progress Log), `bucket-isolation-model.md` — to stay within the intended 2-6 MVI range; kept the
-  broadly-applicable process/codex SSOTs).
-- **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
-- **2026-08-01** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
-  dispatch `agt-a5c7d6`, slot 13). Phase 0 used `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (90
-  tranche members, 6 covering docs, 11 never-cited) plus a manual `asset_group: meta`-sweep gap check that found 1 more
-  genuine member the generator's DATA_EPICS filter misses (`data_pipeline_alerts_batch_remediation_2026_07_15.md` —
-  `parent_epic: observability_master`, admitted only via this doc's own Track-adjacent content, not the epic filter).
-  Orthogonality HARD CHECK re-run: clean (0 genuine dual-tag mistags — 4 hits were all legitimate multi-AG coordination
-  docs). Phase 1 (`Workflow`, 12 agents, one per candidate): **6 verdicted `exclude_cross_cutting`** (asset_group
-  mistags — real content is genuinely ao ×3, ui-or-infra ×1, infrastructure ×1, tradfi ×1; 4 of the 6 independently
-  corroborated by other tranches' own recent audits reaching the same conclusion) — reported, NOT retagged, per the
-  2026-07-30 concurrent-sharded-worker owning-tranche rule; full evidence in
-  [`issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md`](/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md).
-  **6 verdicted `orphaned_never_touched`** (genuinely cross-cutting, zero coverage in any of the 6 covering docs) —
-  drafted
-  [`cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md)
-  (8 conflict-cleared todos across 5 of the 6 docs) +
-  [its finalize](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01_finalize.md), **both
-  `status` correctly split per the 2026-07-30 no-double-gate finding — batch3 stays `draft` pending operator approval,
-  the finalize ships `active` immediately** (`gate_on_depends` alone already holds it). The 6th orphaned doc,
-  `issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`, is 100% operator-gated (a 3-way OrderStatus
-  enum-contract decision) — parked in batch3's own Deferred section, not drafted. **Side note for future runs**:
-  `check_ag_closeout_linkage.py`'s `closeout_family_for("cross-cutting")` only resolves the ONE main
-  `cross_cutting_consolidated_*` doc's own body/related-graph as this tranche's "family" — it does NOT include satellite
-  batch/finalize docs the way `generate_ag_closeout_audit_candidates.py`'s `covering_paths` correctly does, so citing a
-  doc only from within batch3 (as this run did for 5 of its 8 todos' source docs) does not clear that checker's orphan
-  flag for them — verified the checker's baseline count (69) is unchanged by this run either way, not a regression, just
-  a narrower-scoped sibling tool; not chased further as a fix here (out of this skill's own `does_not` scope, mirrors
-  the same call other tranches' recent parked-findings docs made about this exact script family).
+> **Full history through 2026-08-08 moved to**
+> [`cross_cutting_consolidated_closeout_history_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md)
+> (2026-08-09 line-cap trim) — verbatim, nothing summarized or dropped. New entries append here going forward.
 
-- **2026-07-30** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
-  dispatch `agt-06bfb0`, slot 10). **A sibling dispatch (slot-7) had already run this exact tranche ~31 min earlier**
-  (`unified-trading-pm@19a014e29`, 04:10 UTC vs this run's 04:41 UTC boot — flagging the apparent double-dispatch for
-  the operator/main-agent to check the scheduler for a double-fire on the same tranche) and filed
-  [`issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`](/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md):
-  `check_ag_closeout_linkage.py`'s "0 orphans" is a false-clean for cross-cutting/ao/ci/infrastructure (hardcoded
-  `REAL_AGS` + a hyphen-vs-underscore glob bug), measuring 29/119 cross-cutting-tagged docs with zero citation anywhere
-  (28 with real open work), ~20 of them `ci`/`ao` content under a habitual `cross-cutting` tag, parked as a
-  BLOCKED-OPERATOR-DECISION (options A/B/C on when/how to retag). Rather than duplicate that sweep, this run
-  independently re-derived the same headline via `generate_ag_closeout_audit_candidates.py` (91 DATA_EPICS-filtered
-  candidates, 7 never-cited) + a direct frontmatter sweep for cross-cutting-tagged docs outside DATA_EPICS (13 more) —
-  Orthogonality HARD CHECK re-run, still clean (0 dual-tag mistags) — then ran a full Phase-1 `Workflow` (one agent per
-  doc) against 7 of the 29 as independent verification: **6/7 confirmed `exclude_cross_cutting`** (real content is
-  CI-runner/Cloud-Build/GH-Actions-billing/AO-slot-policy mechanics — corroborates slot-7's ~20-doc estimate) and **1/7
-  is genuinely cross-cutting, genuinely orphaned, but NOT AO-eligible**:
-  `issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` (shared UTL `ManifestWriter`
-  per-VM-shard flush cost-scaling bug — affects every asset group's long-running backfill VMs — but both its fix options
-  are explicitly design-review/operator-risk-tolerance calls, not a bounded worker todo; stays a pointer, not a batch
-  candidate). **No batch3 drafted** — concur with slot-7: the residual needs the standing-gate fix + the ci/ao retag
-  operator ruling, not fresh AO-dispatch work.
-
-- **2026-07-26** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous), run after this tranche's
-  batch1/batch1b pair. **Headline: a MEMBERSHIP gap, not a fresh-orphan gap.** Tranche membership re-derived
-  mechanically per the skill's cross-cutting rule (`asset_group: cross-cutting` AND a data-relevant `parent_epic`,
-  **OR** explicit membership in this doc's Tracks) = **142 docs**, of which 38 are claimed by the sibling
-  `ao`/`ci`/`infra` closeouts → **104 in-tranche**. batch1+batch1b's todos cover 37 source docs and their Deferred
-  sections name a further 19, leaving **49 members with no coverage from any cross-cutting covering plan** — almost
-  exactly **Tracks 16-24**, which the 2026-07-25 corpus-wide sweep added to this doc AFTER batch1's candidate corpus had
-  already been scoped from the earlier 68-doc epic filter (batch1's own stated Phase-1 scope was 59 docs). **Lesson for
-  the next pass: derive membership from this doc's Track/Sources lists UNION the epic filter, never the epic filter
-  alone.** All 49 were classified by per-doc read (single-threaded — no `Workflow`/`Task` tool exists in that runtime).
-  Drafted
-  [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
-  (14 conflict-cleared todos) +
-  [its finalize](/plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize.md), **both
-  `status: draft` pending operator approval — neither is dispatched.** Three measured corrections landed directly rather
-  than being left for a worker to trip over: (1) Track 19's
-  `data_pipeline_self_healing_completion_residual_2026_07_24.md` claimed the dp-audit OOM fix was "ALREADY APPLIED to
-  live prod state" — **false**: `gcloud run jobs describe` returns `cpu=2;memory=4Gi` for `uts-prod-dp-daily-digest` and
-  `uts-prod-dp-reprobe-empty`, and the tracked `.tf` still reads 4Gi at :91-92/:148-149/:267-268, so those 4 monitoring
-  jobs remain OOM-killable (the image-default half DID land, :57); (2) the same doc's `--reclassify-apply` scheduling
-  item and `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item
-  were both still marked 🟡 BLOCKED-ON-DIRTY-DEP from 2026-06-22/23 but have in fact LANDED (`.tf:281`;
-  `config.run_subscriber_in_api` + the `api/main.py` lifespan in-tree), as has that doc's prose-only "codify
-  `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions + subscriber IAM in terraform" item
-  (`alerting_relay_pubsub.tf` carries both subscriptions, both IAM members, and import blocks) — dropped from the batch
-  rather than re-dispatched; (3) `issues/gcs_data_access_audit_log_cost_2026_07_24.md` exists in `plans/active/issues/`
-  (`status: open`, 1 open todo) **and** `plans/archive/2026_07/` (`status: resolved`,
-  `resolved_by: operator … 2026-07-25`, 0 open) **simultaneously** — Track 6 above was right that it is done; the batch1
-  finalize's instruction to "archive it via the 6-step ritual" would have overwritten the resolved archived copy with
-  the stale one, so that todo was corrected in place to delete the active duplicate instead. Also confirmed by direct
-  probe, so a later pass need not re-check: `v2_engine_venue_buildout_2026_06_15.md`'s dispatchable work is genuinely
-  covered by its 2026-07-13 5-child split (3 archived — incl. `uac_venue_registry_completion_2026_07_13` — and 2 still
-  active), so its 37 open boxes are mostly `→ SPLIT to …` bookkeeping plus a Tier-2/Tier-3 remainder the plan itself
-  marks do-not-dispatch. **Orthogonality HARD CHECK: CLEAN** — zero single-AG-plus-`cross-cutting` dual tags across all
-  215 `cross-cutting`-tagged docs. 2 items parked for the operator (Track-24's ~121-todo strategy/determinism family
-  needing its own extraction+triage rather than another batch slot; and the batch1 membership-scope question).
-
-- **2026-07-26** — `/plan-reconcile cross-cutting` (autonomous, topic-scoped shard; 104 tranche docs inventoried).
-  **Every `[IN FLIGHT 2026-07-25]` marker in this doc was re-verified against the filesystem + git and replaced with its
-  measured outcome** — the doc's own frontmatter asked for exactly this re-check. Measured: **5 landed** (Track 5
-  `bucket_fold_features` redeploy+verify `@e3a1174aa`; Track 5 `bucket_estate_consolidation_closeout` 2 of 3
-  `@a9b57d752`; Track 12 census refresh `@b2b170cd6`; Track 12 `aave_rate_impact` backfill `@b6ab05bd5`; Track 13
-  recon-skill's last 2 todos `@7ae64f4c2`); **1 RESOLVED+ARCHIVED** (Track 9's ⚠️ URGENT honest-coverage
-  `instrument_type`-case hazard — `resolved_by: instruments-service@867b68f6`, archived `@4c42f71b7` — **the CeFi
-  migration cutover is no longer blocked on it**, which the stale prose was still warning about); **3 archived hygiene
-  docs** in Track 15 (`@e1580ac0a` ×2, `@74df80162`) plus `cross_ag_never_seeded_backlog_scan` (`@b5805e7aa`), whose
-  entry had been self-contradictory ("(ARCHIVED)" and "archiving it now" in one sentence); **2 never started** (Track
-  1's `uts-prod-cf-manifest-audit`, which also contradicted Track 14's own "fully open, unresolved"; Track 9's
-  `mtds_retry_safe_default_audit`, untouched since `@98090f60a` 2026-07-23 — both were advertising work nobody did); **1
-  deliberately NOT archived** (Track 3's `infra_capture_and_devops_leftovers_finalize` — archiving it regresses
-  `check_finalize_plan_coverage.py` 1→2 and hard-fails PM `quality-gates.sh` for everyone; the old prose said a workflow
-  was archiving it _now_); **1 superseded-not-actioned** (Track 12's 23 sports-cell UAC registration). Track 13
-  side-finding, verified not assumed: `issues/strategy_store_split_brain_2026_07_13.md`'s named tracker archived without
-  carrying its 4c/4d loose ends — both reader legs are in fact LANDED (deployment-api + UAC `enumerate_envelope.py` code
-  reads) and all 3 per-AG buckets probe **404**, but the per-service Terraform stack still GCSFuse-mounts those deleted
-  buckets; captured as a new P1 `[INFRA]` todo in that doc. **2 decisions parked** (not auto-applied) in
-  `issues/autonomous_session_operator_decisions_2026_07_25.md` #10-#11: archiving the 2 fully-done-but-soft-evidenced
-  docs (`data_pipeline_e2e_milestones_gate_2026_07_24.md`, `data_pipeline_reconciliation_skill_2026_07_20.md`), and the
-  `[unlock-plan]` needed to archive `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`.
-
-- **2026-07-25** — Doc authored from a 5-agent parallel triage (Agent tool, not Workflow — this session's ultracode flag
-  was off at triage time) of the 68-doc epic-filtered candidate corpus. Scoping itself surfaced + fixed 7 real
-  orthogonality mistags (2 single-AG-tagged-cross-cutting, 1 bare-mistag, 4 fork-inherited-parent-tag — see
-  `cursor-configs/skills/ag-closeout-audit/SKILL.md` for the pattern + `check_frontmatter_yaml.py`-verified fixes, all
-  shipped `unified-trading-pm@a49e5a249`/`7a1df0a74`). IAM-credential-gated commands (Track 6) handed to the operator
-  directly (bucket enumeration + an `auditConfigs` read-modify-write recipe), awaiting their run + report. A same-day
-  Workflow (`wf_1290040b-63e`) launched immediately after authoring to close ~12 bounded residual todos named across
-  Tracks 4/5/9/10/12/13/15 above + archive 3+ confirmed-fully-done docs — re-verify every `[IN FLIGHT 2026-07-25]`
-  marker against that workflow's actual result before trusting this doc's prose. **This doc is `status: active` /
-  `assigned_vm: NA` (LOCAL track) — per the operator's explicit 2026-07-25 gate, do NOT flip to `assigned_vm: planning`
-  until they confirm they've personally run `/ag-closeout-audit` + `/plan-reconcile` for this AG (and the other 5) on
-  the planning VM.**
-
-- **2026-07-27** — Discoverability fix (`na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 4): 4
-  cross-cutting-tagged docs reclassified `assigned_vm: NA → planning` this session were not mentioned anywhere in this
-  hub — the "orphan invisible to sweep" bug class fixed twice before. Added here for future tranche-sweep
-  discoverability: `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md` (archived 2026-07-30, all
-  todos done), `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`,
-  `issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (the adjacent already-tracked gap doc itself, now
-  AO-eligible), `archive/issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None
-  were tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog. This entry itself
-  does not change this hub's own `assigned_vm: NA` gate noted above — that stays operator-controlled.
-- **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
-  KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator gate (2026-07-25): do not flip to
-  planning until operator personally runs /ag-closeout-audit + /plan-reconcile for this AG; sole open item is a
-  meta-note about untracked digest items, not dispatchable work itself.
-- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
-- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): explicit 2026-07-25 operator
-  gate blocks flipping assigned_vm until the operator personally runs /ag-closeout-audit + /plan-reconcile for this AG.
-- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): explicit dated 2026-07-25
-  operator gate ("do NOT flip to `assigned_vm: planning` until they confirm they've personally run
-  `/ag-closeout-audit` + `/plan-reconcile` for this AG... on the planning VM") still governs; the sole open todo (line
-  ~708, a meta-note that Track open items aren't tracked as checkboxes in this digest) is not itself dispatchable work.
-- **2026-08-08** — `/ag-closeout-audit cross-cutting` run (dispatch `agt-58625b`, slot 3). 90 members, 19 never-cited +
-  4 found only via a `check_ag_closeout_linkage.py` cross-check (invisible to the mechanical pre-filter's "member" test
-  — non-data `parent_epic` + zero citations). Widened the Orthogonality HARD CHECK to the full 9-tranche peer set
-  (`ao`/`ci`/`infrastructure`/`ui` were missing from every prior run's check; SKILL.md updated) — found 5 more dual-tag
-  hits. 13 of 14 triaged docs were `exclude_cross_cutting` mistags (ci ×6, ao ×3, infrastructure ×3, meta ×1); 1 genuine
-  new orphan (`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`, mostly operator-gated — no batch drafted,
-  its 1 bounded item is too small alone). Added the "Known non-orphan dispositions" section above (permanent
-  markdown-link citations) to fix the citation-loss-on-archival bug also diagnosed this run (batch3's archival
-  resurfaced 3 already-classified docs as false orphans). `check_ag_closeout_linkage.py` now PASSES: 65 (baseline 69),
-  down from 71-87 on 08-06/07; cross-cutting's share 37→29. Full evidence:
-  `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
-- **na-eligibility-audit 2026-08-08**: KEEP-NA, valid — reaffirms prior passes; 2026-07-25 operator gate still stands.
+- **2026-08-09** — Line-cap trim (dispatched via
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2; parent had grown to 1007
+  lines, over the 1000L hard cap). Forked Tracks 14/18-22 (still-open, observability/ self-monitoring-themed) verbatim
+  into
+  [cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md);
+  forked Track 15 (closed/retriage-only) + the full 2026-07-25 through 2026-08-08 Progress Log verbatim into
+  [cross_cutting_consolidated_closeout_history_2026_08_09.md](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md).
+  Each forked Track's header stays in place as a short pointer stub (mirroring how Track 24 was already extracted
+  2026-07-26) so existing cross-references by Track number stay valid. See the "Split notice" section above.

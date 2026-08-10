@@ -113,7 +113,8 @@ def migrate_raw_data(dry_run: bool = True) -> list[str]:
             df.to_parquet(dst, index=False)
             actions.append(f"OK {src} → {dst} ({len(df)} rows)")
             logger.info("Migrated %s: %d rows", old_path, len(df))
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — per-item migration isolation: one bad
+            # source file must not abort the whole one-shot batch migration
             actions.append(f"FAIL {src}: {exc}")
             logger.warning("Failed to migrate %s: %s", old_path, exc)
 
@@ -175,7 +176,7 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
                 try:
                     df = pd.read_parquet(league_path)
                     dfs.append(df)
-                except Exception:
+                except (OSError, ValueError):
                     pass
 
             if dfs:
@@ -183,7 +184,8 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
                 merged.to_parquet(f"{dst}ticks.parquet", index=False)
                 actions.append(f"OK {date_str}: {len(merged)} rows from {len(dfs)} leagues")
                 logger.info("Migrated odds %s: %d rows", date_str, len(merged))
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — per-date migration isolation: one bad
+            # date's merge/write must not abort the whole one-shot batch migration
             actions.append(f"FAIL {date_str}: {exc}")
 
     return actions
@@ -211,7 +213,8 @@ def migrate_mappings(dry_run: bool = True) -> list[str]:
             df = pd.read_csv(src)
             df.to_parquet(dst, index=False)
             actions.append(f"OK {src} → {dst} ({len(df)} rows)")
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — per-item migration isolation: one bad
+            # mapping file must not abort the whole one-shot batch migration
             actions.append(f"FAIL {src}: {exc}")
 
     return actions
@@ -244,7 +247,8 @@ def migrate_features(dry_run: bool = True) -> list[str]:
         try:
             old_bucket.copy_blob(blob, new_bucket, dst_name)
             actions.append(f"OK {blob.name}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: broad-except — per-blob migration isolation: one bad
+            # blob copy must not abort the whole one-shot batch migration
             actions.append(f"FAIL {blob.name}: {exc}")
 
     return actions

@@ -55,6 +55,14 @@ FAILED=0
 while IFS= read -r plan_file; do
     [[ -z "$plan_file" ]] && continue
     LOCKED_BY=$(git show "HEAD:$plan_file" 2>/dev/null | grep -oP '^\s*locked_by:\s*\K.*' | head -1 || :)
+    # Normalize: a literal "" or '' value means semantically unlocked (the
+    # grep extracts the quote characters themselves as a non-empty string,
+    # which would false-trip the [[ -n ]] check below).  Strip
+    # leading/trailing whitespace, then strip one layer of matching double
+    # or single quotes — a bare quoted value like "plan_reconciler" still
+    # resolves to a non-empty lock-holder; an empty quoted value ("") does
+    # not.  Unbalanced quotes are treated conservatively (stays locked).
+    LOCKED_BY=$(echo "$LOCKED_BY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//; s/"$//' -e "s/^'//; s/'$//")
     if [[ -n "$LOCKED_BY" ]] && ! grep -q '\[unlock-plan\]' <<<"$COMMIT_MSG"; then
         echo "❌ BLOCKED: $plan_file is locked by '$LOCKED_BY'."
         echo "   To delete a locked plan, include [unlock-plan] in your commit message."

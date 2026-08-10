@@ -201,3 +201,8 @@ this, each time invisible until someone reads the backlog by hand.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 0 open todos, `archive_exempt: true` re-confirmed accurate
   (archival still routes through `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` todo, not
   standalone); citation re-checked and real.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — 0 open todos,
+  `archive_exempt: true`. Independently re-verified the routing plan
+  (`ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) still carries its own open `[REVIEW] P0` archival todo
+  naming this doc — routing still valid, not stale. Consistent with 6+ prior markers.

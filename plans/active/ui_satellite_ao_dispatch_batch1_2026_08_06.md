@@ -29,7 +29,7 @@ related:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -199,16 +199,18 @@ these; they need a ruling, then they become normal batch candidates):
    snapshot worker (net-new component, not started); Phase 3d tarball-lane display fix (itself blocked pending a net-new
    VM-launch deploy provider); Phase 4 absorb/retire `CloudBuildsTab` (×2, real UI deletion + route retirement in a live
    multi-phase build); Phase 6 stretch items (3 of 4 still open, explicitly optional/lower-priority); Phase 7
-   `[REVIEW] P0` "STILL OPEN — prod is silent even with all three fixes live," an active investigation explicitly
-   operator-paused since 2026-07-24 pending an untested CPU-throttling hypothesis. **Precedent**:
-   `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred section independently flagged this SAME doc (then
-   still infra-tagged, 23 open items at the time) as too-large-or-risky, stating "folding even its cleanest candidate
-   risks colliding with its own in-flight state." This batch judged the 2 items it DID extract (both `[REVIEW]`-tagged
-   meta/doc actions — filing an issue doc, correcting a codex doc — neither touching the pipeline's actual running code)
-   as a narrower, lower-risk exception to that general caution; everything implementation-shaped or touching the live
-   build stays deferred, consistent with the prior audit's judgment. A future batch (or a dedicated standalone plan, per
-   the prior audit's own recommendation) should pick this doc up once Phase 7's investigation resolves and the doc's
-   churn rate settles.
+   `[REVIEW] P0` **RESOLVED 2026-08-07** (operator ruling + live verification: `cpu-throttling: false` on the live Cloud
+   Run service, `/api/artifacts/images` now returns full real data, 39 repos, 0 empty — resolved independently of any
+   covering doc). Remaining open items: 9 known + 1 newly-found prose-only item
+   (`ag_closeout_audit_ui_parked_2026_08_08.md` Finding 2, now converted to a proper checkbox) ≈ still ~10.
+   **Precedent**: `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred section independently flagged this
+   SAME doc (then still infra-tagged, 23 open items at the time) as too-large-or-risky, stating "folding even its
+   cleanest candidate risks colliding with its own in-flight state." This batch judged the 2 items it DID extract (both
+   `[REVIEW]`-tagged meta/doc actions — filing an issue doc, correcting a codex doc — neither touching the pipeline's
+   actual running code) as a narrower, lower-risk exception to that general caution; everything implementation-shaped or
+   touching the live build stays deferred, consistent with the prior audit's judgment. A future batch (or a dedicated
+   standalone plan, per the prior audit's own recommendation) should pick this doc up now that Phase 7 has resolved (9
+   known + 1 newly-found ≈ still ~10 open items) and the doc's churn rate settles.
 9. **`data_status_tab_and_downloads_remediation_2026_06_16.md`'s 8 remaining items** — a large (455-line), multi-phase,
    `locked_by: live-defi-rollout` doc spanning UI polish (gated on a fresh pw:L2 full-suite re-run), a DATA scope
    investigation (Yahoo/Kalshi out-of-scope check), an explicitly-still-owned deferred phantom-row audit gated on this

@@ -40,7 +40,9 @@ def _load_snapshot(bucket: str, snapshot_date: str) -> dict[str, float] | None:
         return dict(json.loads(raw))
     except FileNotFoundError:
         return None
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # noqa: broad-except — best-effort snapshot load, any failure
+        # (auth/network/GCS SDK) degrades to "no prior snapshot", never crashes the regression check
+        # pragma: no cover
         print(f"WARNING: could not load snapshot from {bucket}: {exc}", file=sys.stderr)
         return None
 
@@ -52,7 +54,9 @@ def _save_snapshot(bucket: str, snapshot_date: str, data: dict[str, float]) -> N
         client = get_storage_client()
         path = f"_index/snapshots/honest_coverage/{snapshot_date}.json"
         client.upload_bytes(bucket, path, json.dumps(data).encode())
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # noqa: broad-except — best-effort snapshot save; any failure must
+        # not crash the regression check itself, just skip persisting today's snapshot
+        # pragma: no cover
         print(f"WARNING: could not save snapshot to {bucket}: {exc}", file=sys.stderr)
 
 
@@ -94,7 +98,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         current = _compute_coverage(args.bucket, args.asset_group)
-    except Exception as exc:
+    except Exception as exc:  # noqa: broad-except — top-level CLI guard: any GCS/compute failure
+        # either SKIPs (local dev, --skip-on-no-gcs) or reports a clean ERROR, never a raw traceback
         if args.skip_on_no_gcs:
             print(f"SKIP (no GCS): {exc}", file=sys.stderr)
             return 0

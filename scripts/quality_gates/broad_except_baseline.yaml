@@ -1,0 +1,69 @@
+# Baseline for QG STEP 5.5 — broad `except Exception[ as X]:` ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# `except Exception:` / `except Exception as X:` sites (WITHOUT a
+# `# noqa: broad-except` marker) the gate tolerates in that repo (tests/
+# excluded; scripts/ INCLUDED). A repo whose live count EXCEEDS its
+# baseline fails CI — a NEW broad-except site landed; narrow to the
+# specific exception type(s) the block actually expects, or add
+# `# noqa: broad-except` on the `except` line with a one-line reason.
+#
+# LOWER a count (re-run `--update-baseline`) the moment sites are narrowed.
+# NEVER raise a count. Repos not listed default to count=0.
+#
+# SSOT: plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md,
+# plans/active/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md.
+note: Seeded 2026-08-09 — broad_except_as_binding_form_blind_spot (QG STEP 5.5).
+repos:
+  agent-orchestrator:
+    count: 298
+  alerting-service:
+    count: 33
+  batch-live-reconciliation-service:
+    count: 1
+  client-reporting-api:
+    count: 22
+  deployment-api:
+    count: 148
+  deployment-service:
+    count: 147
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 147
+  execution-service:
+    count: 160
+  features-service:
+    count: 192
+  fund-administration-service:
+    count: 2
+  greeks-service:
+    count: 8
+  ibkr-gateway-infra:
+    count: 2
+  instruments-service:
+    count: 394
+  market-data-processing-service:
+    count: 77
+  market-tick-data-service:
+    count: 576
+  ml-service:
+    count: 15
+  strategy-service:
+    count: 84
+  system-integration-tests:
+    count: 3
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 12
+  unified-trading-api:
+    count: 7
+  unified-trading-ci:
+    count: 0
+  unified-trading-library:
+    count: 283
+  unified-trading-pm:
+    count: 0
+  unified-trading-system-ui:
+    count: 3

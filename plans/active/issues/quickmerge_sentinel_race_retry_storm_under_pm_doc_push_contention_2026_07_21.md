@@ -19,7 +19,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [quickmerge, ship-pipeline, sentinel-race, retry-storm, contention, quality-gates, throughput, efficiency, fleet]
-related: [plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md]
+related: [/plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md]
 created: "2026-07-21"
 author: unknown
 parent_epic: agent_operating_framework_master
@@ -151,3 +151,21 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — in-doc dispatch prohibition, operator sign-off required on shared
 ship infra
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply or override the doc's own
+explicit, still-present in-doc dispatch prohibition ("for operator / careful review — do NOT dispatch blind: quickmerge
+is high-blast-radius shared ship infra") — the AO-dispatch-by-default precedent governs new plans' own `assigned_vm`
+default, it does not override an existing, reasoned, high-blast-radius dispatch prohibition already written into a
+specific doc. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:15d1ddb1d1009554]: KEEP-NA,
+valid — Fix 2 (backoff+jitter) already shipped and landed via a sibling doc. The sole remaining open todo (implement fix
+1: content-hash QG green-tree fast-path, plus fix 3 only if needed) sits under a section explicitly headed 'for operator
+/ careful review -- do NOT dispatch blind: quickmerge is high-blast-radius shared ship infra' -- an explicit, verbatim,
+still-present DO-NOT-DISPATCH banner in the doc body (confirmed present at read time). The Notes section reiterates
+operator sign-off is required on the fast-path predicate because an over-eager 'unchanged tree' skip could bypass a
+genuinely-needed gate.

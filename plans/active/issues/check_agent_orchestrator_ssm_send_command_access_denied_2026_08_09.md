@@ -97,3 +97,24 @@ on shared AWS infra, not something to self-grant.
 - **2026-08-09 (slot-5, data_engineering)** — Filed after `/check-agent-orchestrator` failed AccessDenied while checking
   for new queued work (original session scope already fully shipped/archived). Not self-fixable — an IAM policy change
   on shared AWS infra is operator territory.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. The sole `[OPERATOR]`
+  item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS infra, distinct from
+  the "AO/operator cloud identities are IAM-self-service" precedent (that precedent covers the orchestrator's OWN
+  service accounts granting themselves a missing role, not a human-named IAM user needing a grant from another identity)
+  — the doc's own text explicitly frames this as "not something to self-grant." No new facts apply.
+- **2026-08-09 (slot-18, backend_engineer)**: re-confirmed live — `aws sts get-caller-identity` still resolves to
+  `arn:aws:iam::427895769566:user/ikenna-worker` from this checkout, and both `check-ao-backlog-status.sh` and its
+  sibling `query-ao-state-db-readonly.sh` (same SendCommand call, different payload) fail the identical
+  `AccessDeniedException` on `ssm:SendCommand` against
+  `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7`. Also confirmed `ikenna-worker` cannot even
+  read its own attached/inline policies (`iam:ListAttachedUserPolicies`/`iam:ListUserPolicies` both AccessDenied) —
+  there is no self-inspection path either, let alone self-grant. This is now also the blocker for
+  `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`'s `[BACKEND] P2` historical-sample audit, which needs the
+  exact same SSM read path to query `escalation_queue` directly (no HTTP endpoint exposes historical/resolved escalation
+  rows — only `POST /api/escalate` and `GET /api/escalations/active`, the latter active-only). Flagging the
+  cross-dependency here so the `[OPERATOR]` grant below is understood to unblock two independent tasks, not one.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round9. The sole open item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS
+  infra — the doc's own text is explicit this is "not something to self-grant," and the IAM-self-service precedent
+  (orchestrator service accounts granting themselves a missing role) does not extend to a human-named IAM user
+  needing a grant from a different identity, which also cannot read its own attached policies to self-diagnose.

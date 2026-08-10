@@ -121,20 +121,26 @@ context_scope:
         `pipeline_mode=batch_onchain_subgraph/` partitions under `asset_group=defi/venue=<CHAIN>/` (source-aware
         canonical form, post-GATE-0); canonical index confirmed comprehensive (27.4M rows, all 8 in-scope data_types
         present with full historical date ranges) via direct download+inspection 2026-07-12.
-  - [ ] [DATA] P0. C0f — **delete legacy originals** — operator authorized 2026-07-12 ("delet legacy buckets if data is
-        migrated"); mostly executed, 1 kind deferred. **Correction to this todo's own original framing**: not all 8
-        kinds' `-prd` buckets are "legacy originals" — `migrate_defi_full_v9_canonical.py`'s own
+  - [x] ✅ [DATA] P0. C0f — **delete legacy originals — CLOSED 2026-08-09 (round11 sweep, citation-fix).** operator
+        authorized 2026-07-12 ("delet legacy buckets if data is migrated"). **Correction to this todo's own original
+        framing**: not all 8 kinds' `-prd` buckets are "legacy originals" — `migrate_defi_full_v9_canonical.py`'s own
         `base_prd = f"{stem}-prd-{project_id}"` write target IS the live canonical production bucket for
         `dex-pools`/`lst-rates`/`perp-funding` (real callers confirmed: strategy-service, `e2e-testing`), not a rollback
         copy — deleting those would have been a regression, caught before it happened (see
         `gcs_bucket_estate_cleanup_2026_07_10.md` §5i). **Deleted 2026-07-12** (12 of 14 genuinely-legacy buckets):
         `dex-swaps` + `dex-swaps-prd`, `oracle-prices` + `oracle-prices-prd`, `gas-fees` + `gas-fees-prd`,
         `liquidations` (no `-prd` variant), plus the FLAT (source-only) forms of `dex-pools`/`lst-rates`/ `perp-funding`
-        — their `-prd` forms correctly KEPT (live). **Deferred**: `lending-indices` + `lending-indices-prd` (2 of 14) —
-        a live GCE VM (`mtds-lending-indices-20260712-112557`, `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s Morpho
-        follow-up) was actively running against this kind at deletion time; revisit once it completes. See
-        `gcs_bucket_estate_cleanup_2026_07_10.md` §5f + §5i for the full re-verification and execution log. **(MIGRATED
-        FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+        — their `-prd` forms correctly KEPT (live). **The last deferred kind is also done**: `lending-indices` +
+        `lending-indices-prd` (2 of 14) — this todo's own text left them open pending
+        `mtds-lending-indices-20260712-112557` (the Morpho follow-up VM) completing. Per
+        `plans/active/bucket_estate_consolidation_closeout_2026_07_24.md` (line ~119-128, 2026-07-31 re-correction):
+        **CONFIRMED DELETED** — `gcloud storage buckets delete --quiet` on both `lending-indices-central-element-323112`
+        and `lending-indices-prd-central-element-323112` succeeded, "STATUS: COMPLETE 2026-07-15", both confirmed 404 via
+        `buckets describe`; that doc also found the Morpho VM referenced here wrote to the unrelated canonical shared
+        bucket, so its completion was never actually a gate on this specific deletion. All 14 of 14 kinds now confirmed
+        deleted — nothing left open on C0f. See `gcs_bucket_estate_cleanup_2026_07_10.md` §5f + §5i for the original
+        re-verification and execution log. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13
+        per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. C2 data_type alias dedup across buckets — **canonical is the ON-DISK form (operator-locked 2026-06-01,
       see C0-CN + codex `defi-canonical-naming-ssot.md`)**: hyphen→underscore (`lending-indices`→`lending_indices`),
@@ -1003,3 +1009,15 @@ The index-stamp is the re-runnable interim mitigation.
   C-GREEN-gated canonicalisation walks, DEPENDENCY_BLOCKED sub-steps of the same single-walk migration,
   operator-launched wallet/promote/paper-trade steps (HUMAN-only per CLAUDE.md hard-stop list), or a market-condition
   trigger (G8, TVL probe). No RECLASSIFY-eligible items found. Doc stays `assigned_vm: NA`.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (18 open
+  items at entry). Checked whole-doc RECLASSIFY against every accumulated round11 precedent (IAM self-service, D16
+  all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified
+  deletes, Option B retired, GSM secret + 5 Slack webhooks now existing) — none apply here: this doc's open scope is a
+  bundled single-walk canonicalisation migration (B0, C2-C12, gated on each other + C-GREEN, not independently
+  dispatchable), human-only wallet/promote/paper-trade steps (G3/G4, CLAUDE.md hard-stop list), operator-launched
+  long-wall-clock VM launches (G1/G2), and a market-condition trigger (G8). No satellite-extraction candidate found —
+  every remaining item is either part of the single coordinated walk or explicitly human/operator-gated, so none meets
+  the "independently worker-determinable" bar. **One genuine find, fixed in this pass**: C0f's "1 kind deferred"
+  framing was stale — `bucket_estate_consolidation_closeout_2026_07_24.md` (2026-07-31 re-correction) confirms the
+  deferred `lending-indices`/`lending-indices-prd` pair was actually deleted 2026-07-15, so C0f is now fully done
+  (flipped above, citation added). Doc stays `assigned_vm: NA` (KEEP-NA valid, round11).

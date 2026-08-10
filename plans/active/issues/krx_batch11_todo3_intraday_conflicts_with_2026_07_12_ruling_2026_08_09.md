@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [krx, yahoo-finance, tradfi, ssot-contradiction, honest-coverage, manifest-integrity, ao-dispatch]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -126,11 +126,26 @@ ever cover the trailing 28-730 days, never deep history) — not a re-litigation
 
 ## Todos
 
-- [ ] [DATA] P2. Root-cause + fix the KRX `ohlcv_24h` manifest `row_count=0`-on-`captured` bug in
+- [x] ✅ [DATA] P2. Root-cause + fix the KRX `ohlcv_24h` manifest `row_count=0`-on-`captured` bug in
       market-tick-data-service's Yahoo write path (the writer correctly marks `capture_status=captured` but doesn't
       populate `row_count` for the row actually written — confirmed via direct GCS parquet read vs. manifest label
       mismatch above). Repo: market-tick-data-service. **Done when**: newly-written KRX ohlcv_24h shards carry a correct
-      non-zero `row_count`, `quality-gates.sh` green.
+      non-zero `row_count`, `quality-gates.sh` green. — market-tick-data-service@ca93d553. **Root cause was NOT the live
+      Yahoo daily writer** (`_umi_yahoo.py` → `partitioned_writer.py` → `manifest_finalize.py` already correctly counts
+      `len(group_df)` per shard — confirmed via manifest read: the 18 rows written by the daily scheduled path all carry
+      `row_count=1`). The 2925 zero-`row_count` rows all share one `written_at=2026-08-02T17:40:20` timestamp — a single
+      bulk run of `market_tick_data_service/scripts/rebuild_tradfi_manifest.py` (the
+      `mtds_available_at_cross_asset_backfill` manifest-rebuild script, object-scan reconstruction from live GCS paths).
+      Its non-bundled `_emit_shard_row` hardcoded `row_count=0` on every `target.add()` call — a genuine metadata bug,
+      not just a display artifact, since the row's own blob existing means ≥1 row was genuinely written. Fixed to
+      `row_count=1` (`rebuild_tradfi_manifest.py:551`), mirroring the sibling `_emit_bundled_shard_row`'s pre-existing
+      `row_count=1` placeholder convention (same PERF rationale: skip the parquet download, stamp a non-zero value so
+      the row doesn't read as a `captured & row_count<=0` phantom). Added regression test
+      `test_scan_rebuild_apply_non_bundled_row_count_is_nonzero`
+      (`tests/unit/scripts/test_rebuild_tradfi_manifest_coverage.py`). `quality-gates.sh` green (sentinel=ca93d553).
+      **Scope note**: this fixes the code path going forward (future rebuild-script runs); it does NOT repair the 2925
+      already-written zero-`row_count` manifest rows in place — that would need a fresh `rebuild_tradfi_manifest.py`
+      re-run over the affected range, a separate (larger, infra-scale) action out of this todo's 1-hour scope.
 - [ ] [DATA] P3. Clean up the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate (~8261 rows, 0 real
       captures, predates the current `derive_tradfi_row_instrument_id`-based writer). Confirm it's genuinely dead (no
       writer emits it anymore), then either exclude it from future enumeration or purge the manifest rows per
@@ -144,3 +159,10 @@ ever cover the trailing 28-730 days, never deep history) — not a re-litigation
   conflict via `plans/archive/issues/` grep (batch11's own conflict-check only covered `plans/active/`), confirmed live
   against current `expected_coverage.py` + `_umi_yahoo.py` code and the live manifest + a real GCS parquet read.
   Resolution applied same-day: todo 3 narrowed + closed citing this doc (see batch11's Progress Log entry).
+- **2026-08-09** (slot-7) — Flipped todo 1. Read-verified the manifest split by `written_at`: the daily live Yahoo
+  writer (`_umi_yahoo.py`) already stamps correct `row_count=1` (18/18 sampled rows); the 2925 zero-`row_count` rows all
+  trace to one bulk `rebuild_tradfi_manifest.py` run (2026-08-02T17:40:20Z, the `mtds_available_at_cross_asset_backfill`
+  manifest rebuild). Root cause: that script's non-bundled object-scan `.add()` call hardcoded `row_count=0`. Fixed to
+  `row_count=1` (matches the sibling bundled-shard code path's existing convention) + regression test. Shipped
+  market-tick-data-service@ca93d553, QG green. Todo 2 (P3, duplicate instrument_id cleanup) remains open — doc stays
+  active.

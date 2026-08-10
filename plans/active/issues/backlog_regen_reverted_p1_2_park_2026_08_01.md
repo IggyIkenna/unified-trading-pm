@@ -28,7 +28,7 @@ tags: [agent-orchestrator, backlog, regression, park, prerequisites, plan-regen,
 related:
   [
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md,
-    /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
   ]
 created: "2026-08-01"
 author: unknown
@@ -180,3 +180,21 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed. Sole open item ([SCRIPT] P2, standing park-drift
   hygiene assertion) remains an unscoped design fork (repo ownership + mechanism both undecided), matching the
   2026-08-04 verdict and batch6's independent same-day classification. No content drift since the last marker.
+
+- **2026-08-09 (slot 20, data_engineering, cross-referencing new evidence — no reclassification, out of craft scope)**:
+  Flagging fresh evidence relevant to this doc's still-open item 3 ([SCRIPT] P2, standing park-drift hygiene assertion).
+  `/plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`'s Progress
+  Log records the SAME `already_in_progress: true` / `dispatch_reason: "resume"` bypass pattern this doc investigates —
+  but that task was parked via the sanctioned `POST /api/backlog/{task_id}/park` API (`auto_park.manual_park`), a
+  DIFFERENT code path than the `backlog.yaml` hand-edit case this doc's item 2 already root-caused ("the park was never
+  actually WRITTEN to disk"). It has now recurred 3 consecutive dispatches (slots 19→29→20) against a park that DID
+  persist (`GET /api/backlog/parked` confirms `reason_code: "PARKED"` each time) — so whatever causes the `resume`
+  bypass here is not explained by that prior root-cause. Not reclassifying this doc (still a genuine unscoped design
+  fork per the last 3 audit passes) — leaving this as a pointer for whoever eventually scopes item 3, since it's now
+  evidence the bug class spans both the hand-edit AND the API-park mechanisms.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ([SCRIPT] P2, standing park-drift hygiene assertion) remains an unscoped design fork
+  (repo ownership agent-orchestrator-vs-unified-trading-pm AND mechanism hygiene-sweep-vs-periodic-check both
+  undecided), matching every prior pass and batch6's independent same-day classification. New 2026-08-09 evidence
+  (cross-referenced in this doc, not reclassifying) shows the bug class now spans both the hand-edit AND
+  sanctioned-API-park mechanisms — widening the eventual fix's scope, not narrowing today's classification.

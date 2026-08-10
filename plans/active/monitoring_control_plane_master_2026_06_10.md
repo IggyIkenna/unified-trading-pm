@@ -13,13 +13,13 @@ scope: [engineer, admin]
 tags: [monitoring, ci-dashboard, fleet-health, observability, coordinator, deployment-ui, orchestrator]
 related:
   [
-    plans/active/ci_dashboard_deployment_ui_2026_06_10.md,
-    plans/active/fleet_git_health_orchestrator_2026_06_10.md,
-    plans/active/ci_status_firestore_side_store_2026_06_10.md,
-    plans/active/cicd_contract_hardening_2026_06_01.md,
-    plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
-    plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_06/ci_dashboard_deployment_ui_2026_06_10.md,
+    /plans/archive/2026_06/fleet_git_health_orchestrator_2026_06_10.md,
+    /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md,
+    /plans/archive/2026_06/cicd_contract_hardening_2026_06_01.md,
+    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-06-10
 parent_epic: observability_master
@@ -55,7 +55,7 @@ context_scope:
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-BY-HEADROOM` annotation next to its `- [x]` item for the specific successor / blocker — that item
-now lives in `plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` (split out 2026-07-24; see the split banner
+now lives in `/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md` (split out 2026-07-24; see the split banner
 further below in this doc).
 
 # Monitoring control-plane master
@@ -392,7 +392,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       implicit via `stuck_class`. **Pure deployment-ui derivation — no backend change, no new GitHub calls** (kept the
       overview's API budget bounded; a precise success/in-progress split would need a per-PR fetch, deliberately not
       done). Repo: deployment-ui (`repoCi.ts`/`RepoCi.tsx`). SSOT:
-      `plans/active/issues/dashboard_promotion_drain_visibility_2026_06_11.md`.
+      `/plans/archive/issues/dashboard_promotion_drain_visibility_2026_06_11.md`.
 - [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 (v1 deep-link). **Repo detail ⇄ fleet worktree presence** —
       the repo drill-down deep-links the `/fleet` Fleet Git page (the sub-plan B endpoint shipped: deployment-api
       `/api/repo-ci/fleet-git-health` + orchestrator `/api/fleet/git-health`). The per-repo FILTER (highlight "is this
@@ -453,7 +453,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       history (`8134134 feat(cockpit): health rollup + consolidator drill-down...`), and re-confirmed live in the doc
       (§91 `assert_consolidator_healthy(bucket)` + `CONSOLIDATOR_DOWN` watchdog, §419/446 the consolidated `_index`
       heartbeat reused as `health_consolidator.consolidator_posture`).
-      `active/consolidator_throughput_backlog_monitor_     2026_07_09.md` (status: active) then built a further
+      `/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` (status: active) then built a further
       "Consolidators tab" per-AG backlog/throughput view directly on top of that same cockpit endpoint, as a
       pre-existing SSOT, with no cross-reference back to this G3 item.)** **CLOSING THIS PASS (2026-07-31)**: both the
       "standing element on a monitoring surface" (the cockpit's health-rollup + consolidator drill-down,
@@ -504,9 +504,12 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `crit` with no warn tier (while dormancy holds, every OTHER signal on the strip stops being self-correcting).
       Complementary to `CriticalHealth` (ao_dashboard_critical_health_visibility_2026_08_07), not a duplicate: this
       rides the `/api/state` poll the strip already makes, rather than the extra fetches CriticalHealth needs — worth a
-      look at folding it into `CriticalHealth` if that surface becomes the standard home. Operator ruling 2026-08-08.
-      Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest (3
-      new). (repo: agent-orchestrator)
+      look at folding it into `CriticalHealth` if that surface becomes the standard home. **[unsourced "Operator ruling
+      2026-08-08" citation struck 2026-08-09 (slot 31, check_plan_operator_ruling_evidence gate)** — the phrase had no
+      traceable `/plans/…`/`/codex/…`/`.md` pointer within 300 chars either here or in its origin commit (`bc22b0ebd`);
+      the item's completion evidence below (SHA + QG-green) is unaffected and sufficient on its own.] Evidence:
+      `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest (3 new).
+      (repo: agent-orchestrator)
 - [x] ✅ [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
@@ -536,7 +539,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `FAILING(main)` branch chip (alert-parity). Repos: agent-orchestrator + unified-trading-pm.
 
 > **Split 2026-07-24 (plan line-cap remediation, operator-approved unlock+split — see
-> `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`)** — the "Orchestrator e2e control-plane validation +
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`)** — the "Orchestrator e2e control-plane validation +
 > main-agent first-responder" section (agent-orchestrator bootstrap/watchdog/memory-guardrail hardening +
 > VM-from-scratch e2e) moved verbatim to `orchestrator_vm_e2e_hardening_2026_07_24.md`. That content was a file-disjoint
 > scope-creep track vs. this master's CI-dashboard/fleet-git-health mission — nothing was dropped or summarized, see the
@@ -740,10 +743,19 @@ stand
 pass, unchanged. Still 3/3 open items, still [UI]-role-mismatch (rollout-ratchet panels, E13) / needs-a-design-pass
 (runtime-level deploy signal v2, E14) / dependent-on-the-first-item (G4 ruleset drift, explicitly stated to fold into
 the rollout-ratchet panels as a third column). Same independently-corroborated citation chain as every prior pass; no
-RECLASSIFY candidates.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 6th consecutive pass, unchanged. Checked
-all 9 of today's operator-Q&A precedents against the 3 open items — none apply. Deliberately did not overturn 5
-independently-corroborated prior KEEP-NA passes without a matching precedent — "requires a `[UI]`-capable
-`assigned_role`" is not itself disqualifying for AO dispatch, but the standing citation chain's real basis (role-mismatch
-framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not re-litigated here — a
-fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No `assigned_vm` change.
+RECLASSIFY candidates. **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 6th consecutive
+pass, unchanged. Checked all 9 of today's operator-Q&A precedents against the 3 open items — none apply. Deliberately
+did not overturn 5 independently-corroborated prior KEEP-NA passes without a matching precedent — "requires a
+`[UI]`-capable `assigned_role`" is not itself disqualifying for AO dispatch, but the standing citation chain's real
+basis (role-mismatch framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not
+re-litigated here — a fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No
+`assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:89b0d764539e5bed]: KEEP-NA,
+valid — Full read of this 753-line plan confirms 3 open items, with 6 independent prior audit passes (2026-07-30 through
+2026-08-08) all KEEP-NA, each re-deriving from a large corpus of dozens of already-SHIPPED near-identical items in this
+same doc (all tagged [CODE][UI], each requiring pw:L2 + a cited regression spec -- the doc's own established, successful
+AO-dispatch convention for this exact class of work). The most recent (2026-08-08 round7) verdict explicitly states that
+'requires a [UI]-capable assigned_role is not itself disqualifying for AO dispatch' and calls for 'a fresh scoping pass,
+not a mechanical precedent match' to responsibly reconsider -- I performed a partial one here rather than mechanically
+re-confirming.

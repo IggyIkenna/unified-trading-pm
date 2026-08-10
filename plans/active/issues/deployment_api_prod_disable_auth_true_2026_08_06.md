@@ -29,15 +29,20 @@ summary: >-
 status: open
 resolved_by:
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ui]
 stage: [meta]
 repos: [deployment-api, unified-trading-library]
 scope: [engineer, admin]
 tags: [security, auth, prod, deployment-api, cloud-run, disable-auth, misconfiguration]
-related: [/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md]
+related:
+  [
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
+  ]
 created: 2026-08-06
 author: sub-agent (service-deployed dispatch listener task)
-last_updated: 2026-08-06
+last_updated: 2026-08-10
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -165,3 +170,29 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
   service (`uts-shared-deployment-api`) reachable with ZERO authentication right now (`DISABLE_AUTH=true` defeats the
   guard via an `ENVIRONMENT`/`DEPLOYMENT_ENV` name mismatch) — re-flagged here since no Progress Log entry since
   2026-08-06 shows this was fixed or operator-acknowledged.
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: re-verified live — all 4 `[BACKEND] P1`
+  todos still open, 4+ days since creation with no fix/ack in between (2026-08-08's `ag-closeout-audit` parked-findings
+  runs re-flagged this same gap twice more, still unresolved). Given the severity (live unauthenticated prod endpoint)
+  and staleness, escalated NOW rather than waiting for this run's end-of-pass routing: filed `BLK-46b42d75` asking the
+  operator to pick fix shape (a) vs (b) vs (c) (see this doc's own "Recommended fix shape" section above for a/b).
+  Before recommending, grepped the whole workspace for other consumers of `UnifiedCloudConfig.environment` (7 total,
+  across `deployment-api`/`strategy-service`/`alerting-service`/`unified-trading-api`) — confirmed neither fix shape (a)
+  nor (b) touches any of the other 6, since both are self-contained to `deployment-api`'s own guard/env (fix (a) adds a
+  second string check inside `auth.py` without changing what `UnifiedCloudConfig.environment` resolves to anywhere else;
+  fix (b) only sets an env var on `deployment-api`'s own Cloud Run revision). Recommended (A) on that basis — it fixes
+  the actual root-cause name mismatch rather than papering over it with a value that happens to satisfy the current
+  check. Did not attempt the live-traffic caller audit (todo 3) or the actual fix (out of scope for a
+  plan-reconciliation pass — this is application code + live infra, not a plan doc). Not flipping any of the 4 todos;
+  this remains genuinely operator-gated per the 2026-08-07 verdict above, now with a narrower, evidence-backed choice in
+  front of the operator instead of an open-ended one.
+- **2026-08-10 (meta_plan_corpus_hygiene_ao_dispatch_batch1 todo 1)**: retagged `asset_group: [cross-cutting]` → `[ui]`
+  - added `related:` links to `ui_consolidated_closeout_2026_07_30.md` and the P0 escalation plan
+    `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (linkage-graph reachability per
+    `check_ag_closeout_linkage.py`). **Fix-steps status report (per the batch plan's done-when)**: all 4 `[BACKEND] P1`
+    fix-steps in this doc's Resolution section remain OPEN `- [ ]`, and the live prod exposure is confirmed again by the
+    P0 escalation plan's own 2026-08-10 live re-verification (broader than recorded here: `ingress: all` + `allUsers`
+    bound to `roles/run.invoker`). This IS the P1 security finding the batch plan asked to escalate — it has already
+    been escalated to its own active P0 plan (`deployment_api_unauthenticated_prod_p0_2026_08_10.md`,
+    `assigned_vm: planning`, `sequential: true`; step 1 "Decide the env SSOT + fix the guard" DONE via
+    `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`, 4 follow-on todos open), so no further escalation is needed from
+    this retag — the retag is what finally gives the fix a owning tranche to be claimed under.

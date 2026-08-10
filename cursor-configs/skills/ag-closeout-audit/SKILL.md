@@ -80,7 +80,7 @@ result. It now genuinely derives its covered set from docspec's live `ASSET_GROU
 `plans/active` and `plans/archive` for each tranche's closeout family (closing the `ao`/`ci` gap for real — both are
 archived-only and now resolve non-empty, 11/44 and 11/38 enforced respectively), and reports any tranche with no
 discoverable closeout family LOUDLY instead of skipping it in silence. Baseline re-seeded 32 → 69 at the honest measured
-count. Track: `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+count. Track: `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
 `/plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (resolved, see below) — repointed
 2026-08-06 (/plan-reconcile ao).
 
@@ -197,7 +197,23 @@ a cycle:
   the dispatch-scope rule excludes). No amount of re-triage resolves this — it needs the operator to actually rule, same
   as any entry in `autonomous_session_operator_decisions_<date>.md`. Once ruled, it becomes a normal batch candidate
   (see the Kamino/Solend precedent, 2026-07-25: queued, operator ruled, folded into `defi_satellite_ao_dispatch_batch1`
-  directly rather than waiting for a batch2).
+  directly rather than waiting for a batch2) — **but "operator-ruled" and "worker-determinable" are two separate tests,
+  not one** (added 2026-08-10, from the `ui` tranche's 2026-08-08 Finding 4): a ruled item still has to pass the
+  ordinary bounded-outcome check before it is drafted into a batch. A ruling that says "yes, do this eventually" on an
+  otherwise open-ended design task does not make it dispatchable.
+  - **Apply `task_template.md` finding U's POSITIVE test before parking anything here — do not inherit the source doc's
+    own `[OPERATOR]` tag** (added 2026-08-10; finding U, operator ruling 2026-07-27, exists precisely because a 65-doc
+    audit found dozens of reflexive `[OPERATOR]` tags on work that was clear-scope and read-only or
+    reversibility-qualifiable). Park as operator-gated ONLY for: **(i)** a business/spend/value judgment with no
+    data-derivable answer (activate a paid tier, accept a compliance risk) — a _standing_ ruling already on record is
+    not a live gate; **(ii)** work structurally requiring a credential/access only a human holds (tag it a
+    credential-ask; once the credential exists the todo is dispatchable); **(iii)** a whole-bucket destroy or a target
+    failing a fresh reversibility check (finding T). Everything else is NOT gated. In particular: **a read-only
+    audit/census/diagnostic todo can never be operator-gated** regardless of subject; **"relaunch/resume a named
+    launcher or VM" is not operator-gated** by itself (findings Q/T/U narrowed the finding-O VM-launch clause to genuine
+    prior-approval-and-validation gaps — AO workers already drive the `DP-VM-*` launchers routinely); and a **named-doc,
+    named-field retag / stale-claim fix / checkbox reconciliation is never operator-gated** — that is mechanical corpus
+    hygiene, see the in-run rule below.
 - **Time-gated.** Work that depends on elapsed real time (an accrual/backfill window not yet reached, a pending external
   event, a cron cadence that hasn't fired enough cycles to have data yet). Re-triage will keep finding the same "not
   yet" until the clock actually passes — track it, don't keep re-surfacing it every batch cycle.
@@ -412,7 +428,12 @@ runs 50-90+ AG-primary docs per AG, well past what's worth doing serially or by 
 3. Enumerates genuinely remaining open work (checkbox AND prose-form) as of now.
 4. For each remaining item, greps the AG's consolidated-closeout doc AND every discovered batch/finalize plan (Phase
    0.1/0.2 — pass their paths into the agent's context) for this doc's filename/basename, reads any citing todo, and
-   judges whether it fully closes the item or only partially covers it.
+   judges whether it fully closes the item or only partially covers it. **The coverage bar is a dispatched `## Todos`
+   entry, nothing weaker** (added 2026-08-10, from the `ui` tranche's 2026-08-08 Finding 1): only an open `- [ ]` in a
+   covering doc's own `## Todos` section, on a doc that is actually dispatchable (`assigned_vm: planning` +
+   `status: active`), counts as coverage. A mention in a `## Deferred` section, a `related:` link, a narrative/analysis
+   paragraph, or a citation inside a `status: draft` doc is NOT coverage — those are exactly the shapes that produce a
+   false `archivable_after_planned_work` verdict on work nothing is actually going to do.
 5. Sanity-checks real scope vs the asset_group tag (catches Phase 0.3's imperfect deterministic filter).
 6. Returns a structured verdict: `archivable_now` / `archivable_after_planned_work` / `orphaned_partial_coverage` /
    `orphaned_never_touched` / `exclude_cross_cutting`, each with `reasoning` citing the specific evidence found.
@@ -449,11 +470,61 @@ durable surface, and an AO-dispatched run has no human reading its chat at all.
   carries: the doc/finding, which taxonomy category it is parked under, and an options block with a marked
   recommendation (`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § escalation format). **ASK > PARK still applies** — if
   the operator is reachable, ask; the issue doc is for a genuinely absent operator, not a mode flag.
+
+  **HARD — check `plans/archive/**` for the slug BEFORE writing it (added 2026-08-10).** "APPEND to a same-day doc if
+  one already exists" only ever looked at `plans/active/issues/`. A doc archived EARLIER THE SAME DAY is not there, so
+  the write re-creates it at the active path and the corpus ends up with two different documents sharing one slug —
+  which breaks `[[wikilink]]` resolution, defeats the create-only duplicate guard's basename matching, and makes "which
+  one is authoritative?" unanswerable. Measured 2026-08-10: this produced **3 of the 10 live duplicate pairs** on origin
+  (`42247c0405`, `064019f77f`, `6b7ddb7944` each `A`-added a doc an earlier commit had archived that morning).
+
+  ```bash
+  # BEFORE writing plans/active/issues/ag_closeout_audit_<tranche>_parked_<DATE>.md:
+  git ls-tree -r --name-only origin/live-defi-rollout plans/archive/ | grep -F "ag_closeout_audit_<tranche>_parked_<DATE>.md"
+  ```
+
+  A hit means today's report is a SECOND run of a tranche already closed out today. Do **not** re-create the active
+  path. Either append your new findings to the archived doc (and un-archive it deliberately, with the 6-step ritual in
+  reverse and a banner saying why), or — if the findings are genuinely new work rather than a re-report — write to a
+  distinct slug that says so (`…_parked_<DATE>_run2.md`) and cite the archived doc. Never resurrect a slug silently.
+
 - **`all` mode** → each tranche writes its OWN doc; the aggregated report cites every one by path.
 - **Count it, don't eyeball it.** Mirror `/plan-reconcile`'s Phase 5.9(a) ledger: assert
   `parked_findings == entries_actually_written_to_the_issue_doc(s)` and print BOTH numbers in the final report. That
   reconciliation is the specific defence against the 30-of-41 class — a run whose two numbers do not balance is NOT
   done; go write the difference before reporting.
+
+### Three things that must NOT reach a parked doc (HARD, added 2026-08-10)
+
+**The failure this closes**: a 2026-08-10 operator review of all 28 live `ag_closeout_audit_*_parked_*.md` docs found 62
+open todos of which only ~⅓ were real, uncovered, human-needing work. The rest were mechanical fixes the run could have
+just done, informational tombstones that are not tasks at all, and the same unresolved finding re-parked into a new
+dated doc every single day (one carried 7 days across 5 docs, self-labelling "carried, 7th day"). A parked doc whose
+open count is mostly noise cannot be triaged by anyone, which is the same practical outcome as not writing it down.
+
+1. **Mechanical corpus hygiene is FIXED IN-RUN, never parked.** If the finding is a named-doc, named-field edit whose
+   correct value the run has already determined — an `asset_group` retag, a stale "0 open todos"/"STILL OPEN" claim in
+   another doc, a checkbox whose resolving evidence you just cited, a `related:`/linkage edge — **do it, ship it, and
+   record it under "Resolved this run" instead of `## Todos`**. Precedent already in this corpus: the `ao` tranche's
+   2026-08-10 run fixed its own mistags in-run under the Orthogonality HARD CHECK and shipped them
+   (`unified-trading-pm@60b2953cc5`); the same day, the `cross-cutting` and `ci` runs parked the identical class of work
+   as `[DOCS] P3` todos, where they then sat for 3-9 days. Same work, two dispositions — the in-run one is correct. Only
+   park a hygiene fix if it collides with another agent's live claim (`locked_by`, mtime <120s), and say so explicitly.
+   **Retagging a doc OUT of your tranche is still your fix to make** — "leave it to the `<other>` tranche's own audit"
+   is how a wrong tag survives 9 days without any tranche ever owning it.
+2. **An informational finding is NOT a todo.** "No action needed on Finding N unless/until X", "re-check when Y next
+   moves", "left unchecked for continuity/audit-trail only" — these have no done-when and no actor, so they can never be
+   closed and they inflate the corpus open count (and the NA ratchet) forever. Write them as prose in the findings body.
+   A `- [ ]` line requires a named actor and a checkable done-when, per `plans/PLAN_FORMAT.md`. If a finding's real
+   content is "the NEXT worker to touch this file should also check Z", that belongs in the target doc, not as a
+   standing todo here.
+3. **A carried finding lives in ONE doc — re-date it, never re-park it.** The existing "APPEND to a same-day doc" rule
+   dedupes WITHIN a day but says nothing across days, so an unresolved P3 got copied into a fresh dated doc on every
+   run. **Before writing any entry, grep `plans/active/issues/ag_closeout_audit_<tranche>_parked_*.md` for the finding's
+   subject.** If a prior doc already carries it and it is still unresolved: append a dated `> **<date> re-confirmed**`
+   line to THAT doc's existing entry and leave today's doc silent on it. A finding may appear in exactly one parked doc
+   at a time. If a finding survives 3 re-confirmations, stop re-confirming and escalate it — ASK the operator, or file
+   it as its own issue doc with a real owner; a 4th "still true" is not new information.
 
 ## Phase 3 — draft the next batch (only if the operator wants this AG progressed, not just measured)
 

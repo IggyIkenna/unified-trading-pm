@@ -146,7 +146,8 @@ if cloud_mock in ("1", "true", "yes"):
 
         cfg = UnifiedCloudConfig()
         _pass("UnifiedCloudConfig instantiated", f"project={cfg.gcp_project_id}")
-    except Exception as exc:
+    except Exception as exc:  # noqa: broad-except — smoke-test check: any init failure is a
+        # recorded FAIL, never a crash of the rest of the smoke suite
         record_fail("UnifiedCloudConfig instantiation", str(exc))
 else:
     record_warn(
@@ -218,7 +219,8 @@ try:
     _pass("setup_events() executed", "no real Pub/Sub connection required")
     log_event("smoke_test_check", severity="INFO", details={"check": 6, "status": "pass"})
     _pass("log_event() executed")
-except Exception as exc:
+except Exception as exc:  # noqa: broad-except — smoke-test check: any init failure is a
+    # recorded FAIL, never a crash of the rest of the smoke suite
     record_fail("setup_events() / log_event()", str(exc))
 
 # ── Check 7: ruff check unified-trading-library/ ─────────────────────────────

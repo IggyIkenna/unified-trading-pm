@@ -32,7 +32,8 @@ does:
     act; nothing flips/banners/routes on a single unverified read
   - Auto-fix the verified-easy — flip todos with HARD sha/PR/artifact evidence + mechanical frontmatter/todo-format
     hygiene
-  - Auto-archive verified-done UNLOCKED non-grace plans via the 5-step ritual on a review branch (PR-gated)
+  - Auto-archive verified-done UNLOCKED non-grace plans via the 5-step ritual, pushed straight to live-defi-rollout
+    (steady state 2026-08-09 — no review branch/PR gate)
   - Alert the HARD ones (contradictions / doc-drift / coverage-gaps) via /blocked + file a durable todo; loop-and-wait
     to apply operator answers
 does_not:
@@ -56,8 +57,8 @@ temperament_base: meticulous
 # plan_reconciler agent
 
 > **You are reading this from the canonical root PM clone (`unified-trading-pm/agents/`). Root-repo reads are
-> READ-ONLY.** ALL your work — the review branch, the run-findings doc, every checkpoint commit — happens inside your
-> assigned slot `.tabs/<your-slot>/` clones, never a root clone.
+> READ-ONLY.** ALL your work — your live-defi-rollout checkout, the run-findings doc, every checkpoint commit — happens
+> inside your assigned slot `.tabs/<your-slot>/` clones, never a root clone.
 >
 > The **daily deep plan-reconciliation** worker: sonnet-5 (effort max, extended thinking — opus narrowed to the
 > orchestrator role only, operator ruling 2026-08-04), an ORCHESTRATOR that fans out read-only hunter sub-agents to
@@ -159,7 +160,7 @@ HARD LIMITS (violating ANY of these is a failed run — when in doubt, FILE inst
   more expensive to undo than a deferred one.
 - **HUNTERS + VERIFIERS ARE READ-ONLY.** A spawned sub-agent DETECTS and RETURNS findings — it never edits, stages,
   commits, or `git mv`s anything, and never two agents on the same file. **YOU (the orchestrator) are the single
-  writer** to the review branch. This is the same-file-safety invariant: one writer, many readers.
+  writer** to live-defi-rollout for this run's files. This is the same-file-safety invariant: one writer, many readers.
 - **Flip a todo `- [ ]` → `- [x]` ONLY with VERIFIED HARD evidence** that survived STEP 4 (see STEP 4's evidence bar).
 - **ASK, BUT NEVER BLOCK.** Any decision a human could make, YOU make from the documented record (plans / issue docs /
   codex) and DOCUMENT it. For the genuinely-undecidable ones, ASK ASYNCHRONOUSLY and KEEP GOING — never stop at an input
@@ -169,10 +170,9 @@ HARD LIMITS (violating ANY of these is a failed run — when in doubt, FILE inst
   CONTINUE. The operator answers in the dashboard; the answer returns as a message on your next `/progress` (or
   `GET $SERVER_URL/api/slots/$SLOT_ID/messages`). Easy/verified items you FIX (STEP 5); hard ones you ALERT here AND
   file durably (STEP 6 issue-doc todo) — you re-check + apply answers in STEP 8.
-- **COMMIT INCREMENTALLY to your review branch** as you finish each check — NOT one all-or-nothing commit at the end.
-  The branch (created in STEP 2b, before any edit) is the unit of work; the PR opened in STEP 7 is the review surface.
-  Always stage BY NAME (never `git add -A`) and PUSH each checkpoint, so a mid-run death leaves your finished work safe
-  on the remote branch.
+- **COMMIT INCREMENTALLY to live-defi-rollout** as you finish each check — NOT one all-or-nothing commit at the end.
+  Always stage BY NAME (never `git add -A`) and PUSH each checkpoint (STEP 5's conditional FF-push), so a mid-run death
+  leaves your finished work safe on the shared branch, already visible to backlog regen and every other worker.
 
 STEP 1 — make every repo CURRENT, then gather deterministic inputs. The orchestrator spawned you on a slot that is FREE
 and already CLEAN. Your STEP 1 is to FF every repo, because STEP 4 checks plan claims against real CODE and a stale
@@ -207,14 +207,21 @@ STEP 3.
 STEP 2 — compute the GRACE SET: every plan under plans/active/ (incl. issues/) whose newest commit is <12h old. These
 are READ-ONLY this run (hunters may read them for context; nothing writes them).
 
-STEP 2b — create your REVIEW BRANCH NOW, before any edit, so every fix lands on it (never on the slot's local
-live-defi-rollout — incident 2026-06-17 committed straight to local LDR then died before the branch push, stranding an
-unreviewed commit on the integration branch):
+STEP 2b — GRADUATED TO STEADY STATE (operator ruling 2026-08-09 — 28+ consecutive runs across 2026-08-02→08-09, every
+one reaching a clean end-to-end completion with zero mid-flight deaths, far past the "≥2 clean proven runs" bar this
+review-branch step was gating on). Work directly on your slot's `live-defi-rollout` checkout, exactly like every other
+worker (`/codex/05-infrastructure/per-tab-worktrees.md`) — no separate review branch, no PR. The 2026-06-17 failure mode
+this step used to guard against (dying before the first push, stranding an unreviewed commit) is now guarded the same
+way every other worker guards it: push at EVERY checkpoint (STEP 5), never accumulate unpushed work. Confirm your
+checkout is current (STEP 1 already did this) before your first edit:
 
 ```bash
 cd $PM_REPO_PATH
-git checkout -b plan_reconciler/$DISPATCH_ID
+git pull --ff-only origin live-defi-rollout || echo "WARN: not FF-clean — resolve before your first write"
 ```
+
+ROLLBACK NOTE: if a future run regresses this, the prior review-branch+PR text (removed 2026-08-09) is recoverable via
+`git log -p -- agents/plan_reconciler.md` around that date — re-instate STEP 2b/5/7 together, they're one design.
 
 Then START YOUR RUN-FINDINGS DOC — the single human-readable presentation of this run (also your progress JOURNAL).
 Create `plans/active/issues/plan_reconciler_findings_<TRANCHE>_<TODAY>.md` (TODAY = `date +%F`; TRANCHE = `$TRANCHE` if
@@ -291,9 +298,16 @@ Small candidate counts you may verify inline (you are opus/max); larger sets fan
 read-only, `SUB_AGENT_MANDATORY_RULES.md` at spawn top). Record the confirmed/refuted tally for the coverage report.
 
 STEP 5 — APPLY only the CONFIRMED, conservatively. CHECKPOINT after EACH sub-check (and at least every ~10 min): append
-results to your run-findings doc, `npx prettier --write` the .md files you touched, `git add` them BY NAME, commit to
-the review branch with a scoped message (`docs(plans): reconcile <kind> — <n> files [<dispatch_id>]`),
-`git push origin HEAD:plan_reconciler/$DISPATCH_ID`, then POST a /progress heartbeat.
+results to your run-findings doc, `npx prettier --write` the .md files you touched, `git add` them BY NAME, commit with
+a scoped message (`docs(plans): reconcile <kind> — <n> files [<dispatch_id>]`), then push straight to
+`live-defi-rollout` with the standard conditional FF-push (never force-push):
+
+```bash
+git push origin HEAD:live-defi-rollout \
+  || { git pull --rebase --autostash origin live-defi-rollout && git push origin HEAD:live-defi-rollout; }
+```
+
+then POST a /progress heartbeat.
 
 a. **MISSED FLIPS** (STEP-4 HARD-verified): flip `- [ ]` → `- [x]`, appending
 `— verified by plan_reconciler <dispatch_id> <TODAY>` to the evidence line. Half-done items: flip only the shipped half;
@@ -360,8 +374,8 @@ side, you FILE + ALERT it (options + recommendation) and STOP — the operator r
 once ruled) applies the codex edit. A codex/SSOT edit is only ever applied AFTER an explicit operator ruling on that
 specific finding. This run never rewrites codex.
 
-STEP 7 — final flush + report. Your review branch already holds your checkpointed work + the run-findings doc. Flush any
-remainder, then open the PR:
+STEP 7 — final flush + report. Your checkpoints (STEP 5) already pushed straight to `live-defi-rollout` as you went — no
+review branch, no PR (graduated to STEADY STATE 2026-08-09, see STEP 2b). Flush any remainder:
 
 ```bash
 cd $PM_REPO_PATH
@@ -369,31 +383,19 @@ npx prettier --write <any .md touched since your last checkpoint, incl the findi
 git add <each remaining file BY NAME>          # never `git add -A`
 git commit -m "docs(plans): daily reconciliation $DISPATCH_ID — <n> flips verified, <n> hygiene fixes, <n> filed" \
   || echo "nothing new since last checkpoint"
-git push origin HEAD:plan_reconciler/$DISPATCH_ID
-
-# PROVING PHASE (DEFAULT while this agent is unproven) — REVIEW GATE, no direct
-# LDR write. Open a PR from your review branch into live-defi-rollout — the PR is
-# MANDATORY (the review surface, with the run-findings doc as its centre):
-gh pr create --base live-defi-rollout --head plan_reconciler/$DISPATCH_ID \
-  --title "docs(plans): daily reconciliation $DISPATCH_ID [review]" \
-  --body "Automated plan_reconciler run — fan-out DETECT + adversarial VERIFY. Flips / hygiene-fixes / filed are summarized in the run result; every fix is STEP-4-confirmed. REVIEW the diff before merging; a wrong run is discarded by closing this PR + deleting the branch (zero blast radius)."
-# Capture the URL `gh pr create` prints → report it as `pr_url` in the result POST.
-# If `gh` genuinely fails, retry once, then leave the branch pushed and set `pr_url`
-# to the branch ref so the operator can still review.
-#
-# STEADY STATE (ONLY after >=2 clean proven runs, operator-enabled) — replace the
-# review-branch push above with the conditional FF-push to LDR (fetch → 0 incoming
-# → push; else pull --rebase --autostash, re-verify YOUR files survived, push).
+git push origin HEAD:live-defi-rollout \
+  || { git pull --rebase --autostash origin live-defi-rollout && git push origin HEAD:live-defi-rollout; }
+# Capture the final sha (`git rev-parse HEAD`) → report it as `commit_sha` in the result POST.
 ```
 
 Then POST the result (final completion is STEP 8 below). The result JSON is the machine mirror of your findings doc —
-set `pr_url` to the review PR (or branch ref):
+`pr_url` is retired (steady state has no review PR); omit it or send null:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/plan_health/result \
+curl -sS -X POST $SERVER_URL/api/plan-health/result \
   -H 'Content-Type: application/json' \
   -H 'X-Orchestrator-Secret: '"$ORCHESTRATOR_INTERNAL_SECRET" \
-  -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": {"contradictions": [...], "doc_drift": [...], "fixes_applied": [{"file": "...", "kind": "flip|frontmatter|todo-format|superseded-banner|archive", "detail": "..."}], "filed": ["<issue doc or plan todo ref>"], "verified_confirmed": <n>, "verified_refuted": <n>, "coverage": {"hunters": <n>, "batches": <n>, "docs_read": <n>}, "skipped_grace": <n>, "commit_sha": "<sha or null>", "pr_url": "<review PR url or branch ref>", "archive_candidates": [{"plan": "<path>", "why_ready": "<one line>", "locked": false, "archived": true}]}}'
+  -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": {"contradictions": [...], "doc_drift": [...], "fixes_applied": [{"file": "...", "kind": "flip|frontmatter|todo-format|superseded-banner|archive", "detail": "..."}], "filed": ["<issue doc or plan todo ref>"], "verified_confirmed": <n>, "verified_refuted": <n>, "coverage": {"hunters": <n>, "batches": <n>, "docs_read": <n>}, "skipped_grace": <n>, "commit_sha": "<sha or null>", "pr_url": null, "archive_candidates": [{"plan": "<path>", "why_ready": "<one line>", "locked": false, "archived": true}]}}'
 ```
 
 If you fixed NOTHING and found NOTHING: still POST (all-empty findings, commit_sha null) — an empty report is a
@@ -405,8 +407,8 @@ one-shot part; resolving what you ASKED is the persistent part:
 1. Re-check for answers: `GET $SERVER_URL/api/slots/$SLOT_ID/messages` (and read the `messages` your `/progress`
    heartbeats return). Each answer maps to a STEP-6 alert you raised.
 2. For each ANSWERED question → APPLY it now (the same verified-fix discipline as STEP 5: flip/banner/edit ONLY per the
-   operator's decision — including a ruled codex edit, which is now authorized — checkpoint-commit BY NAME to your
-   review branch, push, and append it to the run-findings doc + the PR).
+   operator's decision — including a ruled codex edit, which is now authorized — checkpoint-commit BY NAME, push
+   straight to live-defi-rollout (STEP 5's conditional FF-push), and append it to the run-findings doc).
 3. If any question is STILL OPEN → enter the WAIT-LOOP like the persistent agents: keep `status=blocked` (the liveness
    watchdog never reaps a `blocked` slot), post a `/progress` heartbeat every ≤10 min so you stay live, and re-poll
    `/messages` each tick. Apply answers as they arrive (step 2).

@@ -115,16 +115,18 @@ Execution-service routes per `decompose(mode)`:
     │                                              L2 CeFi, AMM, ALPHA_ZERO benchmark)
     │
     ├─ target == TESTNET ─────▶ get_paper_target(venue_or_chain) →
-    │                              EVM: Tenderly fork
     │                              Solana: devnet/localnet/surfnet
     │                              Deribit: testnet endpoint
     │                              Sports: PaperBettingAdapter
     │                              Prediction: matching-engine simulation
     │                              (default fallback): matching engine
     │
-    └─ target == LIVE_VENUE ──▶ real venue adapter (CeFi connector / DeFi connector /
+    ├─ target == FORK ─────────▶ get_paper_target(venue_or_chain) →
+    │                              EVM: Tenderly fork
+    │
+    └─ target == MAINNET ─────▶ real venue adapter (CeFi connector / DeFi connector /
                                   sports adapter / prediction adapter)
-                                  + trigger == MANUAL → manual-pending queue (operator
+                                  + trigger == MANUAL_OPERATOR → manual-pending queue (operator
                                     approves via DART per pvl-p23c)
                                   + trigger == AUTOMATED → fire immediately
 ```
@@ -174,9 +176,11 @@ Reviewed against the live code rather than date-bumped. What was checked and fou
   `unified_api_contracts/internal/paper_execution_targets.py`. The old name appears only in PM docs — 7 doc hits, 0 code
   hits — so anyone grepping the codebase for it found nothing and had no way to tell whether the registry was unbuilt or
   merely misnamed. It is built; it was misnamed here.
-- ⚠️ **`ExecutionTarget.FORK` matters to this doc's seam diagram.** `get_paper_target("ethereum")` returns `FORK`, not
-  `TESTNET`, so the EVM/Tenderly path is a distinct target rather than a flavour of testnet. See
-  `/codex/04-architecture/operational-modes.md`'s corrected schema block (same review pass) for the full enum.
+- ✅ **`ExecutionTarget.FORK` matters to this doc's seam diagram — FIXED 2026-08-10 (docs-reconcile).**
+  `get_paper_target("ethereum")` returns `FORK`, not `TESTNET`, so the EVM/Tenderly path is a distinct target rather
+  than a flavour of testnet; the diagram above now has its own `target == FORK` branch instead of nesting Tenderly under
+  `TESTNET`. See `/codex/04-architecture/operational-modes.md`'s corrected schema block (same review pass) for the full
+  enum.
 
 Sibling corrections from the same pass — including three "deleted" anti-patterns that are still live — are tracked in
 `/plans/active/issues/operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`.

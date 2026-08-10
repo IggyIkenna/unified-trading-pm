@@ -14,15 +14,23 @@ description:
   timers on the CI runner boxes that page via `repository_dispatch` — invisible to the GH Actions catalog entirely),
   never a hand-picked list of "other alert sources I happened to notice," because that whack-a-mole pattern already
   produced two false "all quiet"/"unblocked" declarations this skill had to walk back — once for a monitor the catalog
-  never listed, once for a monitor that doesn't run in GitHub Actions at all. Needs no Slack read access at all — every
+  never listed, once for a monitor that doesn't run in GitHub Actions at all. Doesn't NEED Slack read access — every
   signal it checks has a directly-queryable system of record via `gh`/`gcloud`, so it runs identically whether invoked
-  interactively or dispatched to AO (which has no Slack access and can't be pasted into). Always auto-fixes — no
+  interactively or dispatched to AO; both now also have direct Slack read access (`scripts/dev/slack-read-channel.py`,
+  `/codex/05-infrastructure/agent-slack-read-access.md`) usable as an optional § 0 bootstrap accelerant, never as a
+  substitute for the gh/gcloud re-verification. Always auto-fixes — no
   separate `--fix` flag, no propose-then-wait; it ships corrections directly (quickmerge / reprovenance_bypass.sh / a
   reviewed template rollout) the same way this workspace's background agents already do, and reports what it found + did
   + verified, closing with a visible checklist of every repo and monitor swept so "unblocked" doesn't have to be taken
   on faith. A genuinely foreign/bulk/design-level decision (bulk-blessing someone else's bypass commits, a
   branching-model change) still stops for an operator decision with structured options — auto-fix means "don't ask
-  before shipping an obvious fix," not "never ask." Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
+  before shipping an obvious fix," not "never ask." Also classifies + fixes two structural classes beyond the original
+  five (2026-08-09): (f) a corpus-wide check that exists only in a repo's full gate, invisible to whatever fast path
+  most commits take — migrate it to a staged-files-only `--only` mode as part of the fix, not just re-baseline it; (g)
+  a whole-repo scalar ratchet tripped by a high-velocity promote-PR batching many commits at once, none of which
+  individually crossed it locally — check whether it's already fixed on current LDR before re-bumping. Under
+  `/autonomous` this polls on an interval rather than doing one pass and stopping, since neither class has an
+  automated detector elsewhere. Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
   Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
   actually unblocked", "check if CI escalation caught this", "check the runner fleet / Cloud Build health", "make sure
   nothing is left unresolved".
@@ -58,6 +66,11 @@ gh run list --repo IggyIkenna/<repo> --branch live-defi-rollout --limit 3 --json
 A repo named in an old alert may have already self-recovered (measured: 6/8 repos in the 2026-08-07 incident were green
 again within 90 minutes, via a fix commit nobody re-announced). Build the CURRENT red/lagging list from this sweep, not
 from the alert text — the alert text tells you where to START looking, not what's still true.
+
+**That starting alert text no longer needs the operator to paste it** —
+`python3 scripts/dev/slack-read-channel.py ci-failures <hours>` pulls `#ci-failures` directly (GSM-backed, works
+identically on AO — see `/codex/05-infrastructure/agent-slack-read-access.md`). It is still only a starting pointer: the
+gh/gcloud sweep above is what decides truth, never the Slack text itself.
 
 ## 0b. The completeness contract — sweep EVERY standing monitor via the generated catalog, not a hand-picked list
 
@@ -196,6 +209,41 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   for the actual state-machine transition logic. If it's a real inconsistency (a "resolved" status posted while the
   same-sha gate is still red), that's a template bug — see § 3. If it's a real but confusingly-worded distinct signal,
   fix the message wording, same path.
+- **(f) Precommit/fast-path blind to a full-gate-only check** — the failing selector is a corpus-wide validator (a
+  ratchet, a link check, a frontmatter/todo-format rule) that exists ONLY in the full `quality-gates.sh` / full
+  hygiene-sweep path, with no equivalent in whatever FAST path most commits for that repo actually take (a docs-only
+  fast-path like `safe-doc-push.sh`, a `--precommit` prek hook). A violation introduced by an earlier fast-path commit
+  sails through clean and only surfaces hours/days later on an unrelated commit's full CI run — CI correctly names the
+  triggering SHA, but that SHA usually didn't cause the violation. Tell: `git blame`/`git log -p` on the violating
+  line(s) points at an EARLIER commit than the one CI flagged, and that earlier commit shipped via the fast path. Root
+  fix: give the checker an `--only <staged-files>` (or `--diff-base <ref>`) mode that validates ONLY the commit's own
+  diff, no corpus-wide baseline math, and wire it into the fast path's checklist — same pattern as
+  `check_terminal_status_archived.py --only` / `check_finalize_plan_coverage.py --only` / the 6 checks migrated
+  2026-08-09 (`check_plan_operator_ruling_evidence.py`, `check_archive_candidates.sh`, `check_reference_paths.py`,
+  `check_effort_signal_ratchet.py`, `check_todo_regression.sh`). **Migrate every NEW instance you find the same way, as
+  part of the same fix — don't just re-baseline/file-it-and-move-on** (operator ruling 2026-08-09, after this skill
+  missed this class the first several times it recurred in one night — `unified-trading-pm` PR #2670). This is the
+  single highest-value thing this skill can do beyond firefighting the reported alert: every instance closed here is one
+  fewer future 2-6AM page.
+- **(g) Promote-batch snapshot race on a whole-corpus SCALAR ratchet** — the failing check compares a repo-wide TOTAL
+  count (not per-file, not diff-scoped) against a single hardcoded/frozen baseline, and the repo ships via
+  `quickmerge.sh` at high commit velocity (batches of dozens to 100+ LDR commits can land in one promote-PR). Each
+  commit's local `quality-gates.sh` run only ever sees a SNAPSHOT of the corpus at that developer's pull time, so
+  individually-legitimate additions from DIFFERENT concurrent commits accumulate past the frozen ceiling with no single
+  local run ever seeing a violation — the promote-PR's aggregate CI run is the first point anything crosses the line,
+  and it blocks whichever unrelated commit happens to be in that batch. Tell:
+  `git log -S '<baseline var>=' \ --format="%h %ad %s" -- <the QG script>` shows a recurring history of "re-measure and
+  bump" commits, each citing "N unrelated commits since the last catch-up" (measured on `market-tick-data-service` STEP
+  5.94/5.95 type:ignore/pyright-suppression ratchets: 3 separate re-measure commits in under 2 weeks, PR #885
+  2026-08-09). **Before manually re-bumping the baseline: `git pull --ff-only` the target repo and re-check** — another
+  concurrent session may already have landed the same catch-up bump on LDR, in which case the failing promote-PR is just
+  a stale pre-bump snapshot that clears on its own next scheduled cycle (`*/15`) and needs no action beyond confirming
+  that. If it genuinely hasn't been fixed, the in-the-moment unblock is the repo's own established "re-measure, cite the
+  drift count, never silently hand-raise" pattern — but log the RECURRENCE itself as a structural finding: converting
+  the check to diff-scoped/attributed (only fail if files the commit/batch actually touches show MORE occurrences than
+  at the diff base) stops it recurring, same philosophy as (f)'s `--only` mode applied to a scalar-count check. That
+  conversion is careful surgery on a script every commit depends on — dispatch it as its own scoped task, don't rush it
+  inline while firefighting the active block.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 
@@ -303,11 +351,21 @@ not a prose summary that asks the reader to trust the sweep happened. This is th
 motivated § 0b/§ 0c: the reader should be able to look at the list and see for themselves that nothing was skipped,
 rather than taking "unblocked" on faith.
 
-## Under `/autonomous`
+## Under `/autonomous` — poll, don't wait to be pasted an alert
 
-No-pause loop: after the full-fleet sweep clears, don't stop and wait for the next Slack alert — re-sweep once more to
-confirm stability, then stop (this is an on-demand reconciliation, not a standing watcher; for continuous monitoring
-that's `ci_failure_watcher.py`'s job, not this skill's).
+**Operator correction (2026-08-09)**: earlier wording here said "re-sweep once more, then stop — continuous monitoring
+is `ci_failure_watcher.py`'s job." That undersold this skill's own value: `ci_failure_watcher.py` has automated recovery
+for classes (a)-(e); it has NO detector for (f) or (g) above, because those require reading the actual violating content
+and its shipping-path history, not just a QG conclusion. Relying on being handed a pasted Slack alert to trigger this
+skill means (f)/(g) instances sit undiscovered until they happen to block someone — which is exactly what happened
+repeatedly in one night before this skill's classification list even named them.
+
+**When invoked under `/autonomous` or any standing/looping context, don't do one pass and stop**: after a clean sweep,
+wait on a bounded interval (10-20 min is reasonable — matches the `*/15` promote cadence § 4 already polls) and re-run §
+0's ground-truth sweep fresh, watching every repo's full-gate failures for classes (f)/(g) specifically, not just
+whatever the current Slack channel happens to show. Exit the loop only on an explicit stop condition (operator says
+stop, or the session/dispatch itself ends) — a quiet window is a reason to widen the poll interval, never a reason to
+stop polling.
 
 ## What this skill does NOT do
 

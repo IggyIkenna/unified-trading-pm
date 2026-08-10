@@ -970,3 +970,15 @@ doc's own note.
 valid — the sole open item (todo 2, whether other repos beyond features-service warrant the same `PYTEST_TIMEOUT` raise)
 remains an open-ended "consider whether" judgment call, unchanged since the 2026-08-04 verdict. Doc at 972L, still under
 the 1000L hard cap. No `assigned_vm` change.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:1ea48ee2902325e5]: KEEP-NA,
+valid — Sole open item is todo 2: "consider whether other repos in the parent doc's repos: list with recurring...
+sustained-red occurrences would benefit from the same repo-local PYTEST_TIMEOUT raise." 4 consecutive prior audit rounds
+(2026-08-04/06/07/09) all confirm KEEP-NA valid, calling it an open-ended 'consider whether' judgment call. My own full
+read of this doc's 28+ cicd-escalation Progress Log entries (spanning lines 152-957) shows 8 of the 9 repos in the
+repos: list have in fact already been individually assessed one way or another via separate organic escalations:
+unified-trading-api/features-service/deployment-service/execution-service/market-data-processing-service all received
+the identical PYTEST_TIMEOUT=300 mitigation; instruments-service/ml-service/alerting-service were each explicitly
+checked against the 'sustained non-self-clearing red' bar and found NOT to qualify (self-clea...

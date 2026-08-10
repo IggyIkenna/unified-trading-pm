@@ -53,15 +53,24 @@ context_scope:
 
 ### From `prediction_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- Prediction manifest + data canonicalisation (legacy->canonical single-walk, L3 owner for prediction))
 
-- [ ] [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd`
-      at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed
-      empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this
-      walk** (CODE side — writers emit `asset_group=` — already shipped via archived
+- [x] ✅ [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical
+      `pred-prd` at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows
+      to v9; typed empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index`
+      ROWS in this walk** (CODE side — writers emit `asset_group=` — already shipped via archived
       `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only). Server-side
       `gcs_copy_object` (layout-aware: prediction = `raw_tick_data/`/`processed_candles/`). RUN ON A VM via
       `VM_TASK=canonical-migration` (gated on L0 tarball-prune fix) OR locally if object count is small (P0 audit
       decides). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** — ✅ **na-eligibility-audit 2026-08-10: KEEP-NA-STALE-ITEM, closed.** See this same doc
+      (`data_completion_prediction_2026_07_15.md`)'s own 2026-07-13 "Plan A `canonical_question_group` OBJECT-LAYER
+      migration" section directly below, which states it "supersedes the C0/E-checklist copy-walk above for the _object
+      shape_ question; the copy-walk itself already ran" and confirms the legacy
+      `market-data-tick-prediction-…`/`instruments-store-prediction-…` buckets are CONFIRMED GONE (404, version-purged)
+      — "there is no legacy-bucket input left to map". This item's copy-FROM source (the legacy bucket) no longer exists
+      because the copy already ran as E4 (2026-06-29, pre-dating this doc). Closing on the doc's own superseding
+      evidence; the sibling rider/verification items directly below (pipeline_mode rider, source rider, post-walk
+      comparison, CF-7 relabel) are NOT closed by this — their own text leaves genuine ambiguity about whether they
+      completed alongside E4, left open pending a closer per-item read.
 
 - [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
       `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately). **(MIGRATED FROM:
@@ -439,3 +448,20 @@ range never overlaps a still-in-flight per-market-only day).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 19 open items, matches the 2026-08-06 count; consistent with 3
   prior audit passes and 4-5 `/ag-closeout-audit` "0 AO-eligible" rulings on the Phase-B CQG-bundle migration. No change
   in substance.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
+  none bound any of the 19 open items. This is a cross-repo CQG-bundle object-layer migration + 5 downstream-service
+  C-walks, gated on a coordinated MTDS+UAC+MDPS writer-code ship, a pre-migration writer drain, a registered-launcher VM
+  walk, and a content-verified prod-object delete — genuinely design/VM/delete-shaped, not IAM/tiering/secret-shaped.
+  Consistent with 4 prior audit passes and 4-5 independent `/ag-closeout-audit` "0 AO-eligible" rulings. No
+  reclassification.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA-STALE-ITEM — closed 1 of 19 open items (C0 "copy
+  legacy objects" walk, this doc's own line-133 "supersedes"/operator-ruling text confirms the legacy bucket is
+  404/version-purged and the copy already ran as E4 2026-06-29 — a "later dated section overrides an earlier checkmark"
+  case, not fresh work). 19 -> 18 open. Remaining 18 items re-confirmed genuinely NA (design/VM/delete-gated cross-repo
+  CQG-bundle migration + downstream C-walks), consistent with 5 prior audit passes. No RECLASSIFY candidates. Sibling
+  rider items (pipeline_mode/source riders, post-walk comparison, CF-7 relabel) deliberately left open pending a closer
+  per-item read — see this doc's Phase-1 classification detail in the 2026-08-10 prediction- tranche
+  na-eligibility-audit run report.

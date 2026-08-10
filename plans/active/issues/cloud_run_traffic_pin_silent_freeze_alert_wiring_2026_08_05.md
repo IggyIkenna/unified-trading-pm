@@ -211,6 +211,19 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   (`cloud-run-traffic-pin-alert`, `alert_type=cloud_run_traffic_pinned`) to validate the Cloud Logging → Cloud
   Monitoring → Pub/Sub → bridge pipeline. Flipped INFRA todo [x] with evidence. Created [OPERATOR] P2 todo for webhook
   URL population + e2e Slack delivery verification (exact gcloud command included).
+- **2026-08-10 (ci_reconciler, slot 7, hourly fleet sweep)**: found the drift-check MONITOR ITSELF silently blind since
+  debut — `cloud-run-traffic-drift-check.yml` (the scheduled job built for this doc's todo 2,
+  `deployment-service@74fb6ac`) had **0 green runs out of its last 40** (every hourly tick failed since creation
+  2026-08-06), so the exact "manual traffic pin → green CI but stale traffic, zero alert" incident this doc documents
+  could recur undetected. Root cause (read from the failing run's log): `cloud_run_traffic_drift_check.py` in `--json`
+  mode printed the JSON payload to stdout and then APPENDED human-readable status lines (⚠️ errors / ❌ drifted list /
+  ✅ all-clear) to the SAME stream; the workflow writes stdout to `/tmp/drift_result.json` and parses with `json.load`,
+  so any non-empty status line raised `JSONDecodeError: Extra data` and failed the `check` job — the notify job never
+  fired. Fixed (`deployment-service@3cd2d0f7c6`): every non-JSON status line now routes to stderr in `--json` mode;
+  stdout carries only the JSON array. Added 4 regression tests (`tests/unit/test_cloud_run_traffic_drift_check.py`).
+  Verified with a fresh `workflow_dispatch` on the fixed HEAD (run 31403341423) — see the run's conclusion. This is the
+  same coverage hole from the other direction: a red monitor that pages nobody (ldr-docs-gate) and a monitor whose own
+  output is unparseable so it fails before it can alert (this one) are the same class.
 
 ## Follow-ups
 

@@ -154,6 +154,10 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — Phases 1-2 shipped; Phase 3 backend
   already extracted 2026-08-09 to cefi_satellite_ao_dispatch_batch12_2026_08_09.md todo 2. Sole remaining open item is
   an explicit judgment-call stretch item (book_depth.py).
+- **cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md todo 1, 2026-08-09** (review): Phase 3's citation-pointer
+  line replaced with the verified shipping commit, `strategy-service@73aa792f` (confirmed reachable on
+  `origin/live-defi-rollout` before citing). **Remaining open in this doc: 1** — the Phase-3 `[DATA] P3` stretch item
+  (`book_depth.py` → Phase-1 utility wiring), an explicit judgment call, out of scope for this reconciliation pass.
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 
@@ -215,10 +219,14 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - [x] ✅ [DESIGN] P2. Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of
       ADV, and the min-7-day-history-to-trade gate the operator asked for. **RULED (operator, 2026-08-08)**: cap applies
       **at order-sizing time**, ceiling **10% of ADV** — filed as `[BACKEND]` below.
-- **[BACKEND] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 2 for AO
-  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Implement the
-  10%-of-ADV position-size cap at order-sizing time in `AllocationSizer.size_signal()`, per the 2026-08-08 ruling
-  above.)
+- [x] ✅ [BACKEND] P2. Implement the 10%-of-ADV position-size cap at order-sizing time in
+      `AllocationSizer.size_signal()`, per the 2026-08-08 ruling above. **DONE
+      (cefi_satellite_ao_dispatch_batch12_2026_08_09.md todo 2, 2026-08-09)** — `strategy-service@73aa792f`: clamps
+      `PerClientSignal.allocation_amount_usd` to `min(computed_size, 0.10 * adv_usd)` via a new T4-local
+      `strategy_service/engine/core/rolling_adv_reader.py` (mirrors features-service's verified-correct `adv.py` logic
+      locally, since T4 services have no service-to-service import path per
+      `/codex/04-architecture/tier-and-import-architecture.md`), fail-closed on `INSUFFICIENT_HISTORY`/`NO_DATA`.
+      Covered by 8 new/updated unit tests, `quality-gates.sh` green (sentinel-verified).
 - [ ] [DATA] P3. _(stretch, optional)_ Consider whether `book_depth.py`'s currently-unfilled `adv_30d_usd` input should
       be wired to call the SAME Phase-1 utility with `window_days=30`, now that a real producer exists — out of scope
       for this plan, a candidate follow-up once Phase 1 ships.

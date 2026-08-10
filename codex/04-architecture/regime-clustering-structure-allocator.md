@@ -18,7 +18,7 @@ created: 2026-05-30
 authoritative_for: [regime-clustering factor-targeted structure allocator pipeline]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-23
 code_refs:
 ---
 
@@ -74,12 +74,11 @@ features-service          ml-service / strategy-service      strategy-service / 
 
 Three independent layers applied in order. A breach at any layer vetoes the structure.
 
-| Layer                                                | Module                                                                               | Trigger                             |                                                  | -------------------------------------- | ------------------------------------------------ |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------ | -------------------------------------- | ------------------------------------------------ |
-| ---------------------------                          |                                                                                      | **Risk gates** (pre-score)          | `RiskGates` in `discrete_structure_allocator.py` |                                        | Δ                                                | ,                        |
-| Vega                                                 | ,                                                                                    | Γ                                   | caps; premium floor/ceiling                      |                                        | **Portfolio gate** (post-construction)           | `portfolio_risk_gate.py` |
-| Margin ceiling, per-tenor vega/gamma, liquidity cost |                                                                                      | **Analog execution gate** (Phase 5) | `analog_gate.py`                                 |
-| `KnnAnalogGate`                                      | kNN of historical analogs; size down/veto on bad execution history; cluster-filtered |
+| Layer                                  | Module                                           | Trigger                                                                              |
+| -------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **Risk gates** (pre-score)             | `RiskGates` in `discrete_structure_allocator.py` | Δ, Vega, Γ caps; premium floor/ceiling                                               |
+| **Portfolio gate** (post-construction) | `portfolio_risk_gate.py`                         | Margin ceiling, per-tenor vega/gamma, liquidity cost                                 |
+| **Analog execution gate** (Phase 5)    | `analog_gate.py` (`KnnAnalogGate`)               | kNN of historical analogs; size down/veto on bad execution history; cluster-filtered |
 
 **Slippage model**: `options_slippage.py` — size/depth-aware. Legs that walk past top-of-book depth are penalised by
 `price_impact_per_contract × qty_beyond²`. Plugged into `DiscreteStructureAllocator` via `slippage_fn`.

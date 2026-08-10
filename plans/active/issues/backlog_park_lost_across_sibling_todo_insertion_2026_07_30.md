@@ -166,3 +166,10 @@ not the dispatch-tooling gap). Suggested next steps:
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-affirmed. Sole open item ([BACKEND] P3, whether the park
   mechanism should emit a warning/alert on id-change) remains an undecided design question, not a specified change; no
   content drift since the last marker.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the round7-10 precedent set; none
+  apply ("consider whether to build an alerting surface at all" has no stated done-when, a genuine open question, not a
+  defaulted judgment call). Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under
+  genuinely-human-only (4).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11. Sole open item ([BACKEND] P3, whether to build a park-id-change alerting surface at all) remains an
+  undecided open question with no stated done-when.

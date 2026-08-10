@@ -38,20 +38,37 @@ codex_ssots:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 related_plans:
+  - ../active/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - ../active/ao_satellite_ao_dispatch_batch10_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch12_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch14_2026_08_09.md
+  - ../active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md
   - ../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md
+  - ../active/ao_satellite_ao_dispatch_batch5_2026_08_03.md
   - ../active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md
+  - ../active/ao_satellite_ao_dispatch_batch6_2026_08_04.md
   - ../active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md
+  - ../active/ao_satellite_ao_dispatch_batch7_2026_08_06.md
   - ../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md
+  - ../active/ao_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md
+  - ../active/ao_satellite_ao_dispatch_batch9_2026_08_08.md
+  - ../active/ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md
+  - ../active/ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md
+  - ../active/content_derived_backlog_task_ids_2026_08_08.md
+  - ../active/content_derived_backlog_task_ids_2026_08_08_finalize.md
   - ../active/deepseek_claude_blended_provider_routing_2026_07_28.md
   - ../active/deepseek_flash_ab_routing_test_2026_08_05.md
-  - ../archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md
-  - ../active/omniroute_multi_provider_routing_evaluation_2026_08_03.md
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md
+  - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md
+  - ../active/review_agent_evidence_gated_write_capability_2026_08_09.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -325,7 +342,7 @@ trail. Two corrections landed since: `vm-orchestrator` → `planning` (2026-07-1
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_31 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -335,6 +352,23 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
+
+### [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 10 — finalize
+
+### [`ao_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 12 — finalize
+
+### [`ao_satellite_ao_dispatch_batch19_2026_08_10`](../active/ao_satellite_ao_dispatch_batch19_2026_08_10.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 19 —
+dispatch-ordering unpark + TmuxPruner
+
+### [`ao_satellite_ao_dispatch_batch19_finalize_2026_08_10`](../active/ao_satellite_ao_dispatch_batch19_finalize_2026_08_10.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 19 — finalize
 
 ### [`ao_satellite_ao_dispatch_batch2_2026_07_30`](../active/ao_satellite_ao_dispatch_batch2_2026_07_30.md)
 
@@ -354,47 +388,120 @@ batch extracted from the AO tranche's satellite docs
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 3 — finalize
 
+### [`ao_satellite_ao_dispatch_batch5_2026_08_03`](../active/ao_satellite_ao_dispatch_batch5_2026_08_03.md)
+
+**status**: active · **estimate**: 1.4 cal AI-days (class: refactor) **title**: AO satellite AO batch 5 — fifth dispatch
+batch extracted from the AO tranche's satellite docs
+
 ### [`ao_satellite_ao_dispatch_batch5_finalize_2026_08_03`](../active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 5 — finalize
+
+### [`ao_satellite_ao_dispatch_batch6_2026_08_04`](../active/ao_satellite_ao_dispatch_batch6_2026_08_04.md)
+
+**status**: active · **estimate**: 1.4 cal AI-days (class: refactor) **title**: AO satellite AO batch 6 — sixth dispatch
+batch extracted from the AO tranche's satellite docs
 
 ### [`ao_satellite_ao_dispatch_batch6_finalize_2026_08_04`](../active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 6 — finalize
 
+### [`ao_satellite_ao_dispatch_batch7_2026_08_06`](../active/ao_satellite_ao_dispatch_batch7_2026_08_06.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: refactor) **title**: AO satellite AO batch 7 — seventh
+dispatch batch extracted from the AO tranche's satellite docs
+
 ### [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](../active/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md)
 
 **status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 7 — finalize
+
+### [`ao_satellite_ao_dispatch_batch8_2026_08_08`](../active/ao_satellite_ao_dispatch_batch8_2026_08_08.md)
+
+**status**: active · **estimate**: 1.68 cal AI-days (class: research) **title**: AO satellite AO batch 8 — eighth
+dispatch batch extracted from the AO tranche's satellite docs
+
+### [`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08`](../active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: AO satellite AO batch 8 — finalize
+
+### [`ao_satellite_ao_dispatch_batch9_2026_08_08`](../active/ao_satellite_ao_dispatch_batch9_2026_08_08.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: AO satellite AO batch 9 — ninth
+dispatch batch, one gate-clearance finding from batch6-finalize's re-check
+
+### [`ao_satellite_ao_dispatch_batch9_finalize_2026_08_08`](../active/ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: AO satellite AO batch 9 — finalize
+
+### [`content_derived_backlog_task_ids_2026_08_08`](../active/content_derived_backlog_task_ids_2026_08_08.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: refactor)
 
 ### [`deepseek_claude_blended_provider_routing_2026_07_28`](../active/deepseek_claude_blended_provider_routing_2026_07_28.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: DeepSeek/Claude blended provider routing
 for agent-orchestrator
 
+### [`review_agent_evidence_gated_write_capability_2026_08_09`](../active/review_agent_evidence_gated_write_capability_2026_08_09.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design) **title**: Review agent gets evidence-gated write
+capability — revert false-done claims + patch small fixes
+
 ## P2 — useful; opportunistic
+
+### [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](../active/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: refactor) **title**: audit-false-done 14 false-done rows +
+1,013 unresolved plan_refs — finalize
+
+### [`ao_satellite_ao_dispatch_batch10_2026_08_09`](../active/ao_satellite_ao_dispatch_batch10_2026_08_09.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO satellite AO batch 10 — 6 bounded items
+extracted from 3 non-qualifying `ao`-tranche NA docs
+
+### [`ao_satellite_ao_dispatch_batch12_2026_08_09`](../active/ao_satellite_ao_dispatch_batch12_2026_08_09.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: AO satellite AO batch 12 — 11 bounded items
+extracted from 4 non-covered `ao`-tranche docs (orchestrator_master)
+
+### [`ao_satellite_ao_dispatch_batch14_2026_08_09`](../active/ao_satellite_ao_dispatch_batch14_2026_08_09.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: AO satellite AO batch 14 — re-source
+ANTHROPIC_AUTH_TOKEN from the now-live GSM secret (orchestrator_master epic)
+
+### [`ao_satellite_ao_dispatch_batch14_finalize_2026_08_09`](../active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 14 — finalize
 
 ### [`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01`](../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: AO satellite AO batch 4 — finalize
+
+### [`ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09`](../active/ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: AO scheduled-jobs review-gate backlog
+drain + cross-job sharding/health audit
+
+### [`content_derived_backlog_task_ids_2026_08_08_finalize`](../active/content_derived_backlog_task_ids_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Content-derived backlog task ids — gated
+finalize (verify the migration actually held, then archive)
 
 ### [`deepseek_flash_ab_routing_test_2026_08_05`](../active/deepseek_flash_ab_routing_test_2026_08_05.md)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: DeepSeek flash-vs-pro A/B routing test —
 cost, throughput, and completion-quality comparison
 
-### [`omniroute_multi_provider_routing_evaluation_2026_08_03`](../active/omniroute_multi_provider_routing_evaluation_2026_08_03.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: research) **title**: OmniRoute multi-provider LLM routing —
-evaluation, per-provider benchmark matrix, go/no-go
-
 ### [`quality_gates_quickmerge_timing_baseline_2026_07_31`](../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: research) **title**: quality-gates.sh / quickmerge.sh timing
 baseline (PM repo) — single-host vs planning-vm
 
+### [`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08`](../active/quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: quality-gates.sh / quickmerge.sh timing
+baseline — finalize
+
 ## P3 — backlog; revisit quarterly
 
-### [`omniroute_llm_gateway_pilot_design_2026_07_30`](../archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md)
-
-**status**: active · **estimate**: 0.6 cal AI-days (class: research) **title**: OmniRoute multi-provider LLM-gateway
-pilot — deployment-api pipeline-UAT commentary (human execution)
+_(no plans currently assigned at this priority)_

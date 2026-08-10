@@ -30,9 +30,9 @@ tags: [tradfi, ao-dispatch, close-out, batch-7, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
-    /plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
     /plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md,
     /plans/active/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md,
     /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
@@ -122,58 +122,81 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
 
 ## Todos
 
-- [ ] [DATA] P2. **Build + run a manifest-metadata reconciliation script for CME chain-bundle rows with a blank
-      `instrument_id`.** Confirmed 28,307 `ohlcv_1m` + 111 `ohlcv_1s` rows for ES alone (same pattern confirmed present
-      for CL/GC/HG/NG/SI, exact per-root counts not yet censused) — these predate the 2026-07-30
-      `_resolve_chain_bundle_manifest_id` writer fix (`market-tick-data-service@65beaeaf`), which only prevents new
-      occurrences going forward. None of the 3 existing tradfi migration scripts
-      (`recover_tradfi_garbage_underlying_2026_07.py` / `migrate_tradfi_canonical_2026_07.py` /
-      `rebundle_tradfi_chains_2026_07.py`) touch manifest metadata — they operate on GCS parquet objects only, so this
-      is net-new tooling, not a re-run. Build a script that: (1) reads the manifest index
-      (`_index/availability_index.parquet`), (2) selects rows where `instrument_id==""` AND `row_count>0` AND a valid
-      `underlying` for CME futures_chain/options_chain shards, (3) derives the canonical per-(venue,underlying) bundle
-      id via the already-shipped `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)`
-      (e.g. `CME:FUTURE:SP500`), (4) CAS-rewrites (`if_generation_match`) those manifest rows — dry-run first, `--apply`
-      only after a snapshot-before-write. Repo: market-tick-data-service. **Done when**: a full per-root census (ES +
-      all other affected CME roots) is recorded, the script exists with a dry-run mode, and after `--apply` a fresh
-      census shows 0 remaining blank-`instrument_id` rows for the affected (venue, data_type) shards, with
-      `quality-gates.sh` green. Source: `issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — `market-tick-data-service@63cff354`.** Build + run a manifest-metadata
+      reconciliation script for CME chain-bundle rows with a blank `instrument_id`. **Live census (2026-08-09) differs
+      materially from this todo's original 28,307+111-for-ES-alone figure**: a fresh count against the LIVE manifest
+      (not the 2026-07-30 snapshot) found only 3,267 candidate rows across 41 distinct (underlying, data_type) roots —
+      10 days of continued backfill/recapture activity with the fixed writer had already superseded most of the original
+      population with correctly-tagged twins (confirmed: 2,492 of the 3,267 restamped rows deduped against a
+      pre-existing correctly-tagged row for the same (date, data_type, instrument_id) key). Full per-root breakdown in
+      the Progress Log below. Script: `scripts/restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` —
+      reads the manifest index, selects `venue=CME` + `instrument_type in {futures_chain, options_chain}` +
+      `data_type in {ohlcv_1m, ohlcv_1s}` + `capture_status=captured` + blank `instrument_id` + non-blank `underlying` +
+      `instrument_count>0`, derives the canonical bundle id via the already-shipped
+      `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)`, CAS-rewrites
+      (`if_generation_match`) with a pre-write snapshot
+      (`_index/backups/availability_index.pre_cme_chain_bundle_blank_id_restamp_20260809T144613Z.parquet`). Applied to
+      production: 3,267/3,267 resolved (0 quarantined), 2,492 deduped, generation `1786286566278323→1786286789218193`.
+      **Fresh independent post-apply census confirms 0 remaining blank-`instrument_id` rows** for this exact scope and 0
+      duplicate (date, data_type, instrument_id) keys. 12 regression tests added
+      (`tests/unit/scripts/test_restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py`), `quality-gates.sh`
+      green. Repo: market-tick-data-service. **Scope note — 2 adjacent larger populations found, deliberately NOT
+      touched**: `instrument_type=combo` (~301K rows) is by-design id-less (confirmed via `_tradfi_manifest_shard.py`'s
+      own comment — a spread bundle has no single resolvable per-bundle id); `instrument_type=FUTURE` (~19.6K rows,
+      singular/canonical-cased — a DIFFERENT, non-chain-bundle write path) is a distinct root cause outside this todo's
+      literal wording ("CME futures_chain/options_chain shards") — follow-up issue doc:
+      `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`. Source:
+      `issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`.
 
-- [ ] [DATA] P2. **Harden `migrate_tradfi_canonical_2026_07.py` against 2 confirmed recurrence risks — combined into ONE
-      todo because both edit the same file.** (1) `_rel()` (lines ~159-163) unconditionally does `path.find(marker)`
-      with no `_quarantine/`-prefix guard, so re-running the migration against an already-quarantined object silently
-      reverts its computed rel-path to the pre-quarantine location instead of recognizing it's already quarantined —
-      confirmed still live via direct source read 2026-08-06. Add a `_quarantine/`-prefix-aware branch so an
-      already-quarantined object's rel path is computed correctly. This bug is inherited by
-      `rebundle_tradfi_chains_2026_07.py` too (confirmed: it imports `_rel` directly from this module), so the one-file
-      fix closes both. (2) The script has zero venue-token validation against `VENUES_BY_ASSET_GROUP['tradfi']` — unlike
-      its predecessor `migrate_tradfi_to_hive.py`, which has a `_VENUE_REMAP` dict (confirmed via grep diff 2026-08-06:
-      zero hits in the current script, present in the predecessor) — so a future run that encounters a wrong/stray venue
-      token (as already happened once for the KRW-USD FX case) would again promote it verbatim into a canonical GCS
-      path + manifest row with no guard. Add a `_VENUE_REMAP`-equivalent normalization/validation step mirroring the
-      predecessor's pattern. Repo: market-tick-data-service. **Done when**: both fixes are shipped with regression tests
-      (one exercising an already-quarantined-object `_rel()` call, one exercising a non-canonical venue token being
-      rejected/remapped instead of silently promoted), and `quality-gates.sh` is green. Source:
-      `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — `market-tick-data-service@ff6c2f4a` (hardening) +
+      `market-tick-data-service@e72feb7c` (unrelated STEP 5.95 unblock, pushed sha for the locally-committed `8c5fe244`,
+      amended by quickmerge to add the `Quickmerge:` trailer).** Harden `migrate_tradfi_canonical_2026_07.py` against 2
+      confirmed recurrence risks — combined into ONE todo because both edit the same file.** (1) `_rel()` (lines
+      ~159-163) unconditionally does `path.find(marker)` with no `_quarantine/`-prefix guard, so re-running the
+      migration against an already-quarantined object silently reverts its computed rel-path to the pre-quarantine
+      location instead of recognizing it's already quarantined — confirmed still live via direct source read 2026-08-06.
+      Add a `_quarantine/`-prefix-aware branch so an already-quarantined object's rel path is computed correctly. This
+      bug is inherited by `rebundle_tradfi_chains_2026_07.py` too (confirmed: it imports `_rel` directly from this
+      module), so the one-file fix closes both. (2) The script has zero venue-token validation against
+      `VENUES_BY_ASSET_GROUP['tradfi']` — unlike its predecessor `migrate_tradfi_to_hive.py`, which has a `_VENUE_REMAP`
+      dict (confirmed via grep diff 2026-08-06: zero hits in the current script, present in the predecessor) — so a
+      future run that encounters a wrong/stray venue token (as already happened once for the KRW-USD FX case) would
+      again promote it verbatim into a canonical GCS path + manifest row with no guard. Add a `_VENUE_REMAP`-equivalent
+      normalization/validation step mirroring the predecessor's pattern. Repo: market-tick-data-service. **Done when**:
+      both fixes are shipped with regression tests (one exercising an already-quarantined-object `_rel()` call, one
+      exercising a non-canonical venue token being rejected/remapped instead of silently promoted), and
+      `quality-gates.sh` is green. Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
       `issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`.
 
-- [ ] [DATA] P2. **Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
-      instead of the expected near-100% — root-cause only, no delete/apply.** The 2026-07-30 dry-run of
-      `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
-      loaded 900 class-B legacy-twin candidate rows and found 0 deletable — every single row reported reason "canonical
-      twin NOT captured in manifest," reconfirmed unchanged by na-eligibility-audit passes on 2026-07-31 and 2026-08-02.
-      A genuine manifest-registration gap is the leading hypothesis (per the gating doc's own Progress Log) but has
-      never been directly investigated. Trace a representative sample of the 900 blocked rows: confirm whether their
-      claimed canonical twins genuinely are absent from the manifest (a real registration gap — identify which
-      writer/backfill should have registered them and didn't), or whether the twin-lookup logic in
-      `cleanup_legacy_twins.py` itself has a matching bug (e.g. an id-shape mismatch between the legacy row's derived
-      canonical id and how the manifest actually stores the twin). Do NOT run `--apply` or any delete — this todo is
-      diagnostic only; the delete stays gated on this investigation's outcome plus a fresh 100%-coverage re-run. Repos:
-      instruments-service, market-tick-data-service. **Done when**: a dated finding is recorded in
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log identifying the root cause (registration
-      gap vs. lookup-logic bug) for a representative sample, with enough detail that a follow-up fix (in whichever repo
-      owns the actual defect) can be scoped as its own todo. Source:
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — root cause found: lookup-logic bug in `canonical_twin_path()`, NOT a manifest
+      registration gap.** Investigated all 900 class-B tradfi legacy-twin candidates against the live prod report +
+      manifest (read-only): all 900 share an identical pre-hive legacy path shape (no `asset_group=`/`venue=`/
+      `instrument_type=` hive keys). The manifest cell lookup itself resolves 900/900 correctly (verified both the
+      exact-match shape `cleanup_legacy_twins.py` uses and the grain-aware shape `migration_orphan_sweep.py` uses — both
+      hit 900/900; `_canonical_source_for_cell` correctly resolves `source="databento"`). The actual defect is
+      `canonical_twin_path()`'s string-splice: for a pre-hive legacy path it never derives `asset_group=`/`venue=`/
+      `instrument_type=`, producing a derived canonical path (confirmed via `gcs_describe_object`) that does not exist
+      in GCS — versus the real canonical shape from `unified_api_contracts.canonical_path_templates("tradfi")`. Full
+      finding + a scoped follow-up `[CODE]` fix todo recorded in
+      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log / Todo section (2026-08-09 entries).
+      Original text preserved below for context.
+
+  Original todo text: Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
+  instead of the expected near-100% — root-cause only, no delete/apply. The 2026-07-30 dry-run of
+  `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
+  loaded 900 class-B legacy-twin candidate rows and found 0 deletable — every single row reported reason "canonical twin
+  NOT captured in manifest," reconfirmed unchanged by na-eligibility-audit passes on 2026-07-31 and 2026-08-02. A
+  genuine manifest-registration gap is the leading hypothesis (per the gating doc's own Progress Log) but has never been
+  directly investigated. Trace a representative sample of the 900 blocked rows: confirm whether their claimed canonical
+  twins genuinely are absent from the manifest (a real registration gap — identify which writer/backfill should have
+  registered them and didn't), or whether the twin-lookup logic in `cleanup_legacy_twins.py` itself has a matching bug
+  (e.g. an id-shape mismatch between the legacy row's derived canonical id and how the manifest actually stores the
+  twin). Do NOT run `--apply` or any delete — this todo is diagnostic only; the delete stays gated on this
+  investigation's outcome plus a fresh 100%-coverage re-run. Repos: instruments-service, market-tick-data-service.
+  **Done when**: a dated finding is recorded in `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log
+  identifying the root cause (registration gap vs. lookup-logic bug) for a representative sample, with enough detail
+  that a follow-up fix (in whichever repo owns the actual defect) can be scoped as its own todo. Source:
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
 
 - [ ] [CODE] P3. **Relax `_filter_market_state`'s gap-tolerance check for the sparse dev-tier TRADFI candle corpus.**
       features-service's delta_one `orchestrator.py::_filter_market_state` uses `boundary_tolerance = max(2, 4)` (4 NaN
@@ -365,6 +388,67 @@ mirroring the batch1-6 finalize pattern.
   own "Codex SSOTs" list to stay within the 6-entry cap — this batch's 4 todos are post-capture manifest/migration
   fixes, not databento vendor-sourcing content.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **slot-15 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-001`): shipped todo 1
+  (`market-tick-data-service@63cff354`). Full per-root census (live manifest, immediately pre-apply,
+  `venue=CME`/`instrument_type in {futures_chain,options_chain}`/`data_type in {ohlcv_1m,ohlcv_1s}`/`capture_status= captured`/blank
+  `instrument_id`/non-blank `underlying`/`instrument_count>0`), 3,267 rows / 41 roots: `SP500` ohlcv_1m=797 ohlcv_1s=797
+  · `BTC` ohlcv_1m=221 ohlcv_1s=145 · `ETH` ohlcv_1m=206 ohlcv_1s=145 · `COPPER` ohlcv_1m=145 ohlcv_1s=146 · `CRUDE`
+  ohlcv_1m=146 ohlcv_1s=145 · `GOLD` ohlcv_1m=145 ohlcv_1s=146 · `MET` ohlcv_1m=34 · `MBT` ohlcv_1m=24 · then 27 roots
+  at 1 row each (AUD/CORN/EC6E/ECCL/ECGC/ECNQ/ECRTY/EUR/
+  GASOLINE/HEATINGOIL/JPY/MICRO-SP500/MXN/NATGAS/SILVER/SOYBEAN/SOYMEAL/SOYOIL/TBOND×2/TNOTE10Y×2/TNOTE2Y/TNOTE5Y/ WHEAT
+  — mostly options_chain, ohlcv_1m and ohlcv_1s each). This is dramatically smaller than the todo's own
+  28,307+111-for-ES-alone figure (from the issue doc's 2026-07-30 investigation) — re-verified this is NOT a methodology
+  gap: the 10 days between that snapshot and this run saw substantial CME backfill/recapture activity with the
+  already-fixed writer, naturally superseding most of the original blank-id population with fresh correctly-tagged twins
+  for the same (date, underlying, data_type) keys (confirmed directly: 2,492 of 3,267 restamped candidates deduped
+  against exactly such a pre-existing twin). Applied 100% resolved / 0 quarantined; independent fresh post-apply census
+  (separate `read_availability_index_safe` call, not just the script's own self-report) confirms 0 remaining in-scope
+  blank rows, 0 duplicate keys. Memory note: the live manifest is ~7.02M rows/~50 cols — an early unbounded local run
+  (before the fix below) climbed to ~9.5GB RSS and was killed on this shared host; root cause was a defensive
+  `df.copy()` plus several redundant full-column `.map()` re-computations in my own first draft, not the underlying data
+  volume — fixed by narrowing to cheap categorical masks before any per-row string coercion and mutating the manifest
+  DataFrame in place; both the dry-run and the real `--apply` then completed cleanly under `run-bounded-analysis.sh`
+  (10G/14G caps, peak measured ~9.4GB). **Side-finding, NOT part of this todo**: the same live query surfaced two
+  adjacent blank-`instrument_id` populations in the identical (CME, ohlcv_1m/1s, captured) shape —
+  `instrument_type=combo` (~301K rows, confirmed BY DESIGN id-less per `_tradfi_manifest_shard.py`'s own comment, not a
+  bug) and `instrument_type=FUTURE` (~19.6K rows, singular/ canonical-cased, a DIFFERENT non-chain-bundle write path,
+  actively growing — ~50K rows/day written across the broader unscoped population in the days immediately before this
+  session). Filed as `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` rather than fixed here (outside
+  this todo's literal "CME futures_chain/options_chain shards" wording; different, not-yet-understood root cause).
+- **slot-3 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-002`, IN PROGRESS — not yet flippable, both
+  fixes committed locally but NOT YET PUSHED): both hardening fixes (`_rel()` quarantine-prefix guard +
+  `_VENUE_REMAP`-equivalent validation) implemented in `migrate_tradfi_canonical_2026_07.py` with 33 tests (12 new), all
+  passing — committed as `market-tick-data-service@ff6c2f4a`. A separate, unrelated pre-existing STEP 5.95 TID251
+  ratchet regression (in `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`, a DeFi one-off — not part of this
+  todo's scope) blocked Pass-1 QG on this repo; root-caused as a `noqa: TID251` comment landing on the wrong physical
+  line of a multi-line/parenthesized `google.cloud import storage` — fixed by collapsing to one line
+  (`market-tick-data-service@8c5fe244`, second attempt — see trap below). **Trap hit twice, worth flagging for anyone
+  else who touches a `noqa: TID251`/`noqa: DTZ00x` comment near this repo's 120-char ruff line-length**: a single-line
+  import + a sufficiently long noqa reason exceeds the line-length limit, so ruff's own formatter (which pre-commit runs
+  automatically) silently re-wraps the import into multi-line parenthesized form — which moves the noqa comment off the
+  diagnostic's anchor line and **reintroduces the exact ratchet violation the fix was meant to close**, with no error at
+  commit time (ruff's formatter treats it as a normal reformat, not a lint failure). First attempt at fixing this file
+  looked correct standalone (`ruff check` passed) but broke again the moment `git commit` ran pre-commit's auto-format
+  hook. Fix: keep the noqa reason short enough that `import line + comment` stays under the line-length limit as a
+  single physical line (verified via `ruff format --diff` showing zero diff, not just `ruff check` passing — the format
+  check is the one that actually predicts what pre-commit will do to the line). **Status at time of this note**: a fresh
+  Pass-1 `quality-gates.sh` re-run is in progress (background, `PYRIGHT_TIMEOUT=420` per the same host-contention
+  mitigation used for todo 1's basedpyright timeouts) to re-validate against the new HEAD before quickmerge; both
+  commits are ahead of `origin/live-defi-rollout` by 2, not yet pushed. Next worker/session: check `.qg_last_passed_sha`
+  in market-tick-data-service against current HEAD — if it matches, proceed straight to
+  `scripts/quickmerge.sh --agent --files 'scripts/one_offs/verify_defi_glued_ids_2026_07_24.py'` (ships both commits),
+  verify `git rev-list --count origin/live-defi-rollout..HEAD == 0`, then flip todo 2 above with both SHAs (`ff6c2f4a` +
+  `8c5fe244`) and call `/done` for `tradfi_satellite_ao_dispatch_batch7-002`.
+- **slot-3 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-002`, DONE): fresh Pass-1 `quality-gates.sh`
+  re-run (`PYRIGHT_TIMEOUT=420`) went fully green against HEAD `8c5fe244` — STEP 5.95 (TID251 ratchet) explicitly passed
+  this time, sentinel `.qg_last_passed_sha` written matching HEAD. Pass-2
+  `scripts/quickmerge.sh --agent --files 'scripts/one_offs/verify_defi_glued_ids_2026_07_24.py'` shipped both commits;
+  quickmerge amended the tip commit to add the missing `Quickmerge: agent` trailer (local `8c5fe244` → pushed
+  `e72feb7c`, content unchanged — verified via `git show --stat HEAD`: 1 file, 1 insertion/3 deletions, matches the
+  intended noqa-shortening diff exactly, despite quickmerge's own benign message-mismatch WARN which only flags the
+  commit SUBJECT text, not tree content). Post-push: `git rev-list --count origin/live-defi-rollout..HEAD` = 0,
+  `git status --porcelain` empty. Both fixes (quarantine-prefix `_rel()` guard + `_VENUE_REMAP`-equivalent venue
+  validation, 33 tests) and the STEP 5.95 unblock are now on `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 

@@ -180,6 +180,46 @@ for the sports exchange (back/lay) family.
 - **Kill switches**: price move > N × recent ATR (e.g., 5× 1h ATR), spread blow-out (exchange book goes wide
   unexpectedly), inventory breach, latency spike, venue outage
 
+## Latency Requirements
+
+**Category: `Low`** — sub-second total E2E, live mode only (batch mode has no latency requirements; it replays
+historical data at compute speed). Baseline: the archived
+[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
+table — SUPERSEDED as a doc, but its **Market Making** row is the operative baseline and is **confirmed, not
+corrected**, here: nothing in this family doc's existing (informal) latency content contradicts it. The doc's
+`sub-ms quoting` local shadow + delta-proxy repricer fast path (Shared primitives) are exactly what keeps the
+tick-to-signal and signal-to-order segments inside these budgets, and the `latency spike` kill switch (Risk profile)
+enforces them operationally.
+
+| Segment         | Budget       | Notes                                                                                                                                                                                     |
+| --------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tick-to-Signal  | < 50 ms      | Market event → normalized tick → feature → signal.                                                                                                                                        |
+| Signal-to-Order | < 50 ms      | StrategyInstruction → routing → algo → venue submit, incl. cancel/replace on book change.                                                                                                 |
+| Order-to-Fill   | Venue-dep.   | Matching-engine latency per venue (archived venue-baselines table: Binance 20–50 ms order submission / 10–30 ms fill notification; Deribit 15–40 ms / 10–25 ms). Not a budget we control. |
+| **Total E2E**   | **< 100 ms** | Baseline: archived Market Making row. `Latency distribution (quote post → exchange ack → any fill)` in the UI dashboard is the monitor for this number.                                   |
+
+**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
+`deployment_profiles` category mapping, matching
+[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
+§ 6's `MARKET_MAKING_CONTINUOUS` `topology_requirements` row (execution + strategy co-located on the same VM, min SLA
+tier `premium`).
+
+### Decision latency vs. inter-leg execution gap
+
+The `< 100 ms` figures above are the **decision budget** — tick → a single quote instruction. They are NOT the whole
+requirement for this family's multi-leg expressions, where the binding constraint is the **inter-leg execution gap**
+(2026-08-10 operator ruling: "we are executing two legs of a trade... how are we ensuring the lag leg followed by the
+lead leg is ms timing"):
+
+- **Options MM** (Deribit options): the option quote is the lead leg; the **delta hedge on the underlying** is the lag
+  leg. The hedge must follow the fill at ms timing — an unhedged inventory delta left for seconds is exactly the
+  adverse-move exposure the Risk profile section warns about.
+- **Cross-venue / cross-CEX MM** (shared reference price): the second venue's quote refresh is the "leg" that must
+  follow the reference move at ms timing, so no venue quotes stale against another.
+
+So for multi-leg MM, "Low" means the **inter-leg execution timing budget is ms-realm**, not merely a sub-100ms
+decision-to-signal number.
+
 ## UI dashboard (shared)
 
 - Inventory per (instrument, venue) over time

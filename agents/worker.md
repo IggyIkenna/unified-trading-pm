@@ -284,6 +284,15 @@ now the COMMON case, not the exception:
   40-65%+ context across many same-plan tasks. This is the fix: one task, one bounded session, spawned at sonnet-4.6 by
   default (`model_tier.resolve_sonnet_snapshot`) since a single-task session is small enough to trust the lighter
   snapshot.
+  - **DeepSeek carve-out (2026-08-05 refinement, `_maybe_plan_switch_reset` in
+    `agent-orchestrator/server/routes/ slots_worker.py`).** The reset is skipped — session stays alive, `next_task`
+    dispatches normally in-place — ONLY when BOTH (a) `candidate.sequential` is true and the next task is a
+    same-plan/role/repo continuation, AND (b) `provider == "deepseek"`. The provider check is load-bearing: DeepSeek's
+    context cache is disk-based and survives hours-to-days, so a realistic same-plan dispatch gap almost never falls
+    outside it — session reuse is a real cost win there. Claude's own cache is ~5min (up to 1hr extended); skipping the
+    reset for a Claude/unknown provider risks the NEXT turn paying full cache-miss price on the whole accumulated
+    context instead of a cheap cold boot — a plausible net LOSS, not a win — so every non-DeepSeek session (and any
+    DeepSeek session on a non-sequential or cross-plan task) still resets exactly as described above.
 - **Plan/role/repo switch** (`ao_worker_session_continuity_and_resume_threshold_2026_07_27`,
   `plan_continuity_reset_enabled`, default ON) — the narrower, older check: fires even with the hard rule OFF, whenever
   the picked next task belongs to a different plan (or role, or repo set) than the one you just finished.
@@ -422,6 +431,21 @@ escalation fires for this kind (there's no CI failure to fix).
 
 3. Then: same posture as `qg_red` — if you have other dispatchable work, do that; otherwise send ONE heartbeat and WAIT
    QUIETLY. The resolution arrives as an outbox message on your next `/progress` or `/heartbeat`.
+
+### 4c) SKIPPING A TIME-GATED task (e.g. a monitoring window not yet closed) — always pass `reason_code`
+
+**`POST /skip-current-task`'s `reason_code` defaults to `OTHER`, which is per-SLOT only — it arms NO fleet-wide cooldown
+at all** (`server/routes/slots_ops.py::skip_current_task`, agent-orchestrator repo: only `BLOCKED`/`PARKED`/ `GATED`
+call `register_cooldown`). A worker that skips a not-yet-actionable task (e.g. a "watch until `<date>`" P2/P3 monitoring
+todo) with a bare `reason` string and no `reason_code` leaves the task IMMEDIATELY re-dispatchable to the very next slot
+that heartbeats — confirmed live 2026-08-09: `pytest_timeout_60s_flaky_under_contention`'s post-fix monitoring-window
+todo was dispatched 5× in ~45 minutes (5 separate slots, each re-observing run IDs the immediately prior pass had
+already logged) because every releasing worker used the default `reason_code`. **When your skip reason is "this task's
+own done-when condition isn't met yet, not a genuine blocker" (a monitoring window, a wait-for-a-date todo), pass
+`reason_code: "GATED"`** (+ `estimated_unblock_minutes` when you have a real estimate, capped at
+`tuning.dispatch_cooldown_max_eta_minutes` — default 180) so the fleet cooldown actually arms (base 12min on the first
+decline in a window, extended 60min on repeats) instead of the task re-dispatching to the very next heartbeat anywhere
+in the fleet.
 
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
@@ -719,9 +743,16 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/heartbeat \
 
 2. Then WAIT QUIETLY. **Do NOT enter an aggressive client-side poll loop** (the retired every-60s bash self-poll burned
    Claude credits polling an empty queue for nothing). Server-owned liveness already covers you: the watchdog reaps an
-   idle session in ~2 minutes, and AutoSpawn respawns a worker within ~60s the moment dispatchable work lands. Respond
-   promptly if the server kicks you (a one-shot tmux nudge / a `new_task` on a heartbeat you're prompted to make); until
-   then, stay quiet.
+   idle session in ~2 minutes, and AutoSpawn respawns a worker within ~60s the moment dispatchable work lands. **Sending
+   more heartbeats does NOT defer this reap** (`_reclaim_idle_lingering_sessions` in
+   `agent-orchestrator/server/worker_liveness_watchdog.py`) — that specific reaper counts consecutive watchdog ticks
+   (`watchdog_interval_seconds`, default 60s) where your slot's status sits `idle` with a still-live tmux session, and
+   kills it after `watchdog_idle_session_ticks` (default 2, i.e. ~120s) — it never reads `last_ping`/heartbeat recency
+   at all. The step-1 heartbeat is for DASHBOARD VISIBILITY only (so the operator/main/review see your last-known
+   state); it buys you zero extra session lifetime. This is a genuinely different mechanism from the heartbeat-SILENCE
+   trigger (`effective_silence_seconds`, ~900s/15min) that reaps a wedged-but-still-dispatched worker — that one does
+   key off `last_ping`, but it doesn't apply to this idle case at all. Respond promptly if the server kicks you (a
+   one-shot tmux nudge / a `new_task` on a heartbeat you're prompted to make); until then, stay quiet.
 
 If a heartbeat you make DOES return a brand-new `new_task` you didn't expect while you were MID-TASK, that means the
 operator (or main agent) called `/api/slots/<N>/skip-current-task` while you were /blocked or paused — they've judged

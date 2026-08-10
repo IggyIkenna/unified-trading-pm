@@ -169,3 +169,22 @@ fleet-wide CI concurrency cap) remains a genuine judgment call: high-blast-radiu
 sizing from real measurements, not a checkable fact. Corrected a stale sub-detail: the todo's own recommended mechanism
 (`qg-host-governor.sh` TOKEN mode) is superseded by a later sibling-doc amendment (reservation mode) — added an inline
 correction so a future implementer doesn't build against the wrong mode. No `assigned_vm` change.
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply — this todo's blocker is
+not a missing grant, a script-push carve-out, or a stale operator-decision gate, it is an unresolved host-hook rollout
+across 25 self-hosted runner pools still needing (1) a runner-version support confirmation, (2) a canary on one
+low-traffic pool, and (3) K sized from real per-run measurements — none of which is a checkable fact a worker can
+resolve alone. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:8f715348bf4afe64]: KEEP-NA,
+valid — Full read + grep confirm 1 open todo (line 107, fleet-wide CI concurrency cap; matches phase0=1). Doc shows real
+live-measured investigation: 2 candidate mechanisms (TasksMax cap, io-controller delegation) investigated and REJECTED
+with real numbers (TasksCurrent 274-326 idle baseline, ~46 tasks/run measured via a real dispatched quality-gates-v2 run
+31076459850); the recommended mechanism (host-side runner hook wrapping qg-host-governor.sh) needs (1) confirming
+ACTIONS_RUNNER_HOOK_JOB_STARTED support for the pinned runner version + JIT-ephemeral runners, (2) a canary on ONE
+low-traffic pool of 25, (3) K sized from real per-run measurements -- a genuinely unresolved live-production-infra
+judgment call across a fleet-wide shared resource, not a single checkable fact.

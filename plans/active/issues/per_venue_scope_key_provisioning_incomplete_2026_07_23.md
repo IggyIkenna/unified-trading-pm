@@ -160,9 +160,19 @@ All three are real design/priority calls, not something determinable from code o
       means separate agent wallets with different on-chain authorizations, not three Secret Manager entries. Scope the
       exact per-venue mechanism (client-scoped OKX sub-keys vs. multi-wallet Hyperliquid) before estimating — this is a
       genuine build task once scoped, not a config change. Repo: execution-service.
-- **[BACKEND] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: execution_master). See that doc for the live checkbox + evidence.** (Build the Aster execution
-  adapter, operator-approved 2026-08-08. Repo: execution-service.)
+- [x] ✅ [BACKEND] P2. **Build the Aster execution adapter** — extracted 2026-08-09 to
+      `cefi_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 for AO dispatch (parent_epic: execution_master), now
+      archived at `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch14_2026_08_09.md`; shipped 2026-08-09 —
+      `execution-service@05b425e6` ("feat(execution): add Aster CCXT execution adapter"), verified reachable on
+      `origin/live-defi-rollout`. New `aster_ccxt.py` (477 lines) mirrors `upbit_ccxt.py`'s CCXT-wrapper shape
+      (perpetual-only per UAC `ASTER -> {"PERPETUAL"}`, apiKey/secret credentials, Binance-futures symbol convention);
+      `"aster"` wired into `factory.py`'s CCXT dispatch + Venue mapping; `aster-api-key`/`aster-secret-key` wired into
+      `live_execution_handler.py`'s credential loader via new `service_config.py` fields; 44 unit tests added
+      (`test_aster_ccxt.py`); `quality-gates.sh` green (sentinel=05b425e6c313cb87d606893e544ab6c0fb9ff587). **Remaining
+      open count in this doc: 3, all human/operator-gated** — the `[HUMAN] P1` Bybit key-creation todo (operator's own
+      exchange login), the `[BACKEND] P2` OKX/Hyperliquid scope-separation todo (operator-approved to build but still
+      gated on an unresolved per-venue design call), and the `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget-provisioning todo
+      (open priority call) — none touched by this Aster shipment.
 - [ ] [HUMAN] P3. **Decide whether to provision Upbit/Kraken/Bitfinex/Bitget credentials**, given none of the 4
       currently have any live trading volume. **NOT part of the 2026-08-08 "build both" ruling** — that answer named
       only OKX/Hyperliquid scope-separation and the Aster adapter; this credential-provisioning question stays an open
@@ -217,3 +227,10 @@ All three are real design/priority calls, not something determinable from code o
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms
   2026-07-30/08-04/08-06/08-07/08-08 verdicts. Item 1 needs the operator's own Bybit exchange-side API-key login (not
   GCP-IAM-self-serviceable); items 2-3 are credential/design-scoping calls.
+- **review (slot-4) 2026-08-09**: reconciled the line-163 Aster-adapter pointer —
+  `cefi_satellite_ao_dispatch_batch14_2026_08_09.md`'s todo 1 landed (`execution-service@05b425e6`, verified reachable
+  on `origin/live-defi-rollout`, `quality-gates.sh` green per that plan's Progress Log). Flipped the todo to `[x]` with
+  the verified commit + evidence in place of the "see that doc" indirection. Remaining open count in this doc: **3, all
+  human/operator-gated** (Bybit key creation `[HUMAN P1]`, OKX/Hyperliquid scope-separation design `[BACKEND P2]` gated
+  on an unresolved design call, Upbit/Kraken/Bitfinex/Bitget provisioning `[HUMAN P3]`) — unchanged by this Aster
+  shipment.

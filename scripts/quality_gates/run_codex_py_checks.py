@@ -42,7 +42,8 @@ def _run(path: Path, modname: str, argv: list[str]) -> int:
         except SystemExit as e:  # a checker that sys.exit()s inside main()
             c = e.code
             return 0 if c is None else (c if isinstance(c, int) else 1)
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — per-checker isolation: one broken sub-checker
+        # module (import error, uncaught exception in its main()) must not abort the whole in-process run
         print(f"[codex-py] {modname} ERRORED: {e}")
         return 1
     finally:

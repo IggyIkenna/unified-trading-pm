@@ -139,6 +139,23 @@ Any codex/plan line framing KRX, ICE, or FX as Databento, operator-blocked, or r
 STALE — the data is freely available via Yahoo and the adapters exist. (This was an explicit operator correction; do not
 re-introduce the "ICE → Databento" or "KRX blocked" framing.)
 
+### CBOE is DUAL-SOURCED — Databento VX-futures AND Yahoo Treasury INDEX, data-type-scoped (fixed 2026-08-09)
+
+Unlike the venues above, **CBOE is not exclusively Databento.** `CBOE:INDEX:US3M/US5Y/US10Y/US30Y-USD` (the Treasury
+yield-curve `ohlcv_24h` payload) is Yahoo-routed, same as KRX/ICE/FX — only CBOE's `ohlcv_1s`/`ohlcv_1m` VX-futures
+payload (§ above, `XCBF.PITCH`) is Databento. Until `market-tick-data-service@af2c53ce`,
+`tick_data_handler.py::_resolve_source()`'s `--source databento REQUIRED` gate was VENUE-scoped only and missing CBOE
+from the Yahoo-routed exemption FX/KRX/ICE/FRED already had — every CBOE `ohlcv_24h` payload silently wrote a
+blank-instrument `empty_confirmed` placeholder since the launcher's creation (2026-07-21), with ZERO real coverage ever
+captured. The fix is **data-type-scoped** (only the `ohlcv_24h` INDEX payload is exempted), so it does not
+blanket-exempt CBOE's VX-futures `ohlcv_1s`/`ohlcv_1m` traffic, which still correctly requires `--source databento`.
+
+**Known follow-on limitation**: `is_venue_available()` (the discovery-floor check) is venue-level, not venue+data_type —
+CBOE's registered floor is the Databento VX-futures genesis (2020-06-01, table below), so CBOE `ohlcv_24h` dates before
+that are honest-absence-skipped even though the real Yahoo Treasury series has genuine history back to 2000-01-03 (4 of
+5 tenors) / 2018-08-13 (US2Y). Tracked separately:
+`/plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`.
+
 ### Per-venue genesis / discovery-start floors — never backfill below them (expected-absent)
 
 The authoritative per-venue lower bound is UAC `get_instrument_discovery_start(venue)` (=`get_venue_start_date` unless
@@ -175,21 +192,31 @@ Databento bundles a **rolling, trailing-from-today** free history window per sch
 metered. We enforce a hard per-level lookback floor: a request whose `start` predates the floor raises
 `DatabentoLookbackExceededError`.
 
-| Level | Schemas                                                      | Free window | Lookback floor (`LEVEL_MAX_LOOKBACK_DAYS`) |
-| ----- | ------------------------------------------------------------ | ----------- | ------------------------------------------ |
-| L0    | `ohlcv-1s`, `ohlcv-1m`, `definition`, `statistics`, `status` | 16 years    | `16 * 365` days                            |
-| L1    | `trades`, `tbbo`, `mbp-1`, `bbo-1s`, `bbo-1m`                | 1 year      | `365` days                                 |
-| L2    | `mbp-10`                                                     | 1 month     | `30` days                                  |
-| L3    | `mbo`                                                        | 1 month     | `30` days                                  |
+| Level | Schemas                                                      | Free window                             | Lookback floor (`LEVEL_MAX_LOOKBACK_DAYS`) |
+| ----- | ------------------------------------------------------------ | --------------------------------------- | ------------------------------------------ |
+| L0    | `ohlcv-1s`, `ohlcv-1m`, `definition`, `statistics`, `status` | no rolling metered boundary (see below) | `5908` days                                |
+| L1    | `trades`, `tbbo`, `mbp-1`, `bbo-1s`, `bbo-1m`                | 367 days                                | `367` days                                 |
+| L2    | `mbp-10`                                                     | 33 days                                 | `33` days                                  |
+| L3    | `mbo`                                                        | 33 days                                 | `33` days                                  |
 
-The floor constants are **conservative approximations** of Databento's rolling boundary (which may be calendar-based) —
-if any metered charge ever appears, **reduce** the relevant value in the allowlist module.
+**Exact boundary, binary-searched live 2026-08-09 (`metadata.get_cost` on GLBX.MDP3/ES.c.0, a cost-estimate endpoint —
+no data fetched, no billing risk;** `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4,
+full evidence in that doc's Progress Log — supersedes the 2026-06-24 conservative spot-check below): **L1 (trades)
+exactly 367d free / 368d metered** (prior conservative constant was 365d); **L2 (mbp-10) and L3 (mbo) exactly 33d free /
+34d metered** (prior conservative constant was 30d) — L1's boundary cross-checked identical on DBEQ.BASIC/AAPL,
+confirming the boundary is LEVEL-scoped, not per-dataset. **L0 has NO rolling metered boundary at all**: probed
+5850d-5908d back on GLBX.MDP3, every point $0.0000, then 5909d+ raises a hard 422 `data_start_before_available_start`
+(GLBX.MDP3's own archive starts 2010-06-06) — never a metered charge.
+`_FULL_HISTORY_DAYS`/`LEVEL_MAX_LOOKBACK_DAYS["L0"]` updated from the arbitrary `16*365=5840` approximation to the
+measured 5908d (exact distance from 2026-08-09 to GLBX.MDP3's inception — the oldest of the 3 subscribed datasets, so
+the widest value safe for all three; XCBF.PITCH starts 2018-11-04, DBEQ.BASIC equities 2023-04-15, both cross-checked
+live).
 
-**Live-measured cost boundary (2026-06-24 via `get_cost`, `stype_in="continuous"` — cost>0 ⟺ billable):** L1 free at
-364d ($0) → charged at 371d ($0.12); L2/L3 free at 28d ($0) → charged at 35d ($2.23); L0 $0 at 2000d. These empirical
-spot-checks confirm the documented values (L1 365d, L2/L3 30d) match the billing boundary and are safe
-`LEVEL_MAX_LOOKBACK_DAYS` bounds. **The ~241k beyond-free cells in the historical backfill universe stay clipped**
-(fetching them would be charged at metered PAYG rates) — the guardrail FAILS-CLOSED so they are never fetched.
+**Prior (2026-06-24) conservative spot-check, for provenance**: `get_cost` at `stype_in="continuous"` — L1 free at 364d
+($0) → charged at 371d ($0.12); L2/L3 free at 28d ($0) → charged at 35d ($2.23); L0 $0 at 2000d. That earlier pass only
+established the constants were SAFE (inside the true boundary), not exact — the 2026-08-09 binary search above found the
+precise boundary and the constants now match it. **The ~241k beyond-free cells in the historical backfill universe stay
+clipped** (fetching them would be charged at metered PAYG rates) — the guardrail FAILS-CLOSED so they are never fetched.
 
 ### OHLCV policy — fetch `ohlcv-1s` + `ohlcv-1m`
 

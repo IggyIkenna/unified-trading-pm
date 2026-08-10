@@ -15,6 +15,7 @@ summary:
   tracks this. This is a scoping judgment (should S5.1 tier its required set by repo type?), not a bounded worker todo —
   captured here per the findings-closure HARD RULE."
 status: open
+archive_exempt: true # 0-open-todos 2026-08-10 (last todo closed per operator ruling BLK-2b076fa9); archival blocked by codex_vs_repo_docs_ssot_audit_2026_06_01.md (active, parent audit plan) still referencing this doc — archive_exempt bridges until the parent plan reaches a terminal status
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -40,7 +41,7 @@ thinking_tier: medium
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-last_updated: 2026-07-29
+last_updated: "2026-08-10"
 supersedes:
 superseded_by:
 drift_direction: advance-code
@@ -104,8 +105,13 @@ the dispatch-scope-eligibility ruling):
       not-applicable instead of missing; every other repo keeps the full S5.1 set. Codified in
       `/codex/06-coding-standards/documentation-standards.md` new § S5.1a (+ S5.7/S5.10 cross-refs updated to match).
       (repo: unified-trading-pm)
-- [ ] [DOCS] P2. **Fill the genuine data-service gaps** now that tiering is decided: market-data-processing-service
-      `DEPLOYMENT_GUIDE.md` + `TESTING.md` (real service, docs genuinely absent). (repo: market-data-processing-service)
+- [x] ✅ [DOCS] P2. **CLOSED 2026-08-10 — operator ruling BLK-2b076fa9 option A: DELETE wins.** The
+      `codex_vs_repo_docs_ssot_audit_2026_06_01.md` 2026-07-27 refreshed registry classifies
+      market-data-processing-service's `DEPLOYMENT_GUIDE.md` + `TESTING.md` as DELETE — that ground-truthed audit is the
+      more recent, more authoritative verification. The existing stubs (`DEPLOYMENT_GUIDE_FEMI.md` / `TESTING_GUIDE.md`)
+      already cover whatever real content existed. No redirect stubs needed; the DELETE classification stands. If the
+      FILL direction's author had newer evidence the two files became load-bearing again since 2026-07-27, that would
+      need to be stated explicitly — which it is not. (repo: unified-trading-pm)
 - [x] ✅ [DOCS] P3. **DECIDED + DONE 2026-08-08 — Reconcile instruments-service's reorganized docs against the S5.1
       filename set.** OPERATOR RULING: add thin redirect stubs at the canonical filenames pointing at the reorganized
       docs. Added 6 stub files under `instruments-service/docs/` (`ARCHITECTURE.md` → `ADAPTER_ARCHITECTURE.md`;
@@ -117,6 +123,18 @@ the dispatch-scope-eligibility ruling):
 
 ## Progress Log
 
+- **plan_reconciler infra tranche 2026-08-10 (BLK-2b076fa9 resolved)**: Operator ruled option A — DELETE wins.
+  `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s 2026-07-27 ground-truthed registry is the authoritative
+  classification. Todo 2 (FILL/redirect-stubs for MDPS `DEPLOYMENT_GUIDE.md`/`TESTING.md`) closed as moot — the existing
+  content under different names is sufficient, and the SSOT audit's DELETE classification stands.
+  `unified-trading-pm@<pending-sha>`.
+- **ag-closeout-audit 2026-08-10 (infra tranche)**: Resolved the 2026-08-08 conflict by logic, not escalation — the
+  competing claim (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s dated, specific 2026-07-27 refreshed registry entry,
+  still `status: active`) is the more authoritative, more recent, more direct evidence, and it matches the
+  already-executed instruments-service precedent exactly (same redirect-stub pattern, same operator ruling session).
+  Corrected the open todo below from "fill genuine gaps" to "verify + add redirect stubs," citing both sources. Not
+  itself extracted into a batch this run (the corrected todo is bounded/conflict-clear, but a live per-file content
+  verification is warranted before dispatch — see `infra_satellite_ao_dispatch_batch15_2026_08_10.md` if drafted).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — but with a real conflict found, not a
   clean RECLASSIFY. Re-read end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the market-data-processing-service
   `DEPLOYMENT_GUIDE.md`/`TESTING.md` fill item). Today's operator ruling (item 76) is a strong candidate for closing the

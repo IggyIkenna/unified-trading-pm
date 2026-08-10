@@ -80,8 +80,9 @@ depends_on: []
       2026-07-14 instruments-service@853cef81 (`scripts/recency_masked_adjudication_2026_07_13.py`): all 143 probed
       objects exist + parse with >=1 row → verdict `restamp-captured`, re-stamped at the masking empty row's identity
       via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing), and per
-      operator ruling absent-object atoms would have stayed masked (no delete/retype). `--verify` green twice (02:41Z +
-      02:52Z 2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
+      operator ruling (recorded here in `sports_index_recency_masked_captured_atoms_2026_07_13.md`) absent-object atoms
+      would have stayed masked (no delete/retype). `--verify` green twice (02:41Z + 02:52Z 2026-07-14, >=2 consolidator
+      cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
       `availability_index.20260714-023838.recency_masked_adjudication_pre_apply.parquet` = 0 lost keys.
 - [x] [DATA] P1. Subclass (b) — 46 FIXTURES atoms: adjudicate truthset-flip vs captured row (row_count 1-11,
       venue=API_FOOTBALL). The 2026-06-28 truthset says no fixtures; the captured parquet says rows exist. Decide per

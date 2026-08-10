@@ -411,7 +411,12 @@ the merge cycle, and the error message ("behind or DOWN") actively misleads the 
       `manifest_consolidator_cadence_cost_audit_2026_07_20.md` (both `status: open`, both about staleness-budget config,
       the closest related docs) — neither addresses this specific error-message-text distinction, and no other doc or
       code hit surfaced for it. The staleness-budget VALUE was already fixed (§ J item above), but the misleading
-      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session.
+      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session. **Already extracted —
+      see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~343, `assigned_vm: planning`, still `- [ ]`
+      open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep (2026-08-09) live-verified the code is
+      unchanged: `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:288` still raises the
+      single generic "the manifest consolidator is behind or DOWN" message unconditionally — the fix is genuinely still
+      needed.
 
 ---
 
@@ -639,12 +644,14 @@ Residual: **61 `rateLimit` rows** from the 5-VM window (15:27-15:57Z). They are 
 the key was saturated. They will heal the same way if their (date, entity) cells are re-attempted; otherwise re-attempt
 explicitly once the key has a single owner.
 
-- [ ] [DATA] P2. Confirm the residual 61 `rateLimit` rows reach captured/empty (they should heal via normal re-attempt);
-      only force an explicit re-attempt if they persist after the enrichment fleet completes its range. — GENUINELY
-      OPEN: no later doc in the corpus reports re-checking this specific 61-row residual from the 2026-07-18
+- [x] ✅ [DATA] P2. Confirm the residual 61 `rateLimit` rows reach captured/empty (they should heal via normal
+      re-attempt); only force an explicit re-attempt if they persist after the enrichment fleet completes its range. —
+      GENUINELY OPEN: no later doc in the corpus reports re-checking this specific 61-row residual from the 2026-07-18
       15:27-15:57Z 5-VM window. Confirming it needs a fresh manifest census on the exact (date, entity) cells, which
       this reconciliation pass did not run (out of scope — this todo is a data-verification action, not a checkbox
-      classification). Left open.
+      classification). Left open. **Already extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo
+      (line ~349, `assigned_vm: planning`, still `- [ ]` open there too as of 2026-08-09) — not duplicating here.** —
+      **RESOLVED 2026-08-10 (slot 23, batch9-021): ALL 61 HEALED — census recorded in this doc's Progress Log.**
 
 ## M. Why we get rate-limited: the divisor was a PROMISE, not a measurement — **FIXED** (deployment-service@e85d570)
 
@@ -686,7 +693,13 @@ launch.
       that same M-FIXED text explicitly says "already-running VMs keep the budget they computed at their own launch, so
       the key stays oversubscribed until they drain... the remaining fix is runtime re-division" — i.e. a VM that is
       ALREADY mid-flight does not dynamically re-throttle when a later VM joins the fleet. No later doc reports this
-      specific mid-flight rebalancing as shipped. Left open, narrowed to that residual.
+      specific mid-flight rebalancing as shipped. Left open, narrowed to that residual. **Round-9 sweep (2026-08-09,
+      sports tranche): considered for satellite extraction, not extracted.**
+      `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s Deferred ledger considered this item too (its own text is
+      garbled/truncated in that doc, corpus-wide corruption unrelated to this sweep) but did not extract it — consistent
+      with this pass's own read: the fix requires choosing a mechanism (VMs periodically re-polling live fleet size vs.
+      leasing shares from a central budget service) — an architecture/design call, not a mechanical patch, so it stays a
+      genuine judgment-gated item, not AO-eligible as written.
 - [x] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
       per-VM share — same root cause as § G-ops (replaying stale launch params). — SUPERSEDED: § M-FIXED item 2 below
       (same doc, dated later) — `deployment-service@cb499b7`: `RelaunchPreemptedVm` now STRIPS
@@ -730,7 +743,9 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
       forfeits presence-skip resume (§ G-ops). — GENUINELY OPEN: grepped `/codex/12-agent-workflow/` and
       `/codex/05-infrastructure/vm-launcher-runbook.md` for this lesson — no hit. Unlike item 2's watchdog-artifact
       lesson (codified into `async-wait-and-poll-discipline.md` + `CLAUDE.md`), this "check for a surgical filler before
-      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap.
+      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap. **Already extracted
+      — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~356, `assigned_vm: planning`, still `- [ ]`
+      open there too as of 2026-08-09) — not duplicating here.**
 
 ## M-FIXED. Both rate-governance gaps CLOSED (operator: "donot just file them fix them")
 
@@ -773,7 +788,9 @@ into the same fix — carried forward here so it isn't lost with the archive:
       FIXTURE_LINEUPS/PLAYER_STATS) this todo names. The two other `emit_empty_gaps_for_entity` hits found elsewhere in
       the corpus (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) are about a DIFFERENT concern on the same
-      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open.
+      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open. **Already
+      extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~363, `assigned_vm: planning`,
+      still `- [ ]` open there too as of 2026-08-09) — not duplicating here.**
 
 ## Progress Log
 
@@ -790,3 +807,34 @@ into the same fix — carried forward here so it isn't lost with the archive:
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 7 open items: 2 dependency-blocked, 2 lower-confidence
   AO-eligible candidates not yet promoted, 1 genuine work, 2 operator questions.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — re-verified all 7 open todos. 2 (§G "Step 4"
+  line ~211, §G-RESOLVED line ~251) are correctly owned by `sports_consolidated_closeout_2026_07_19.md` Track V (still
+  `- [ ]` open there, unchanged). 4 (§J error-text line ~408, §L rateLimit-residual line ~642, §N PROCESS-codify line
+  ~734, §O emit_empty_gaps line ~764) are already claimed as open todos in
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md` (`assigned_vm: planning`, status: active, all 4 still `- [ ]`
+  there too) — added inline "Already extracted" citations at each so this doesn't get re-derived as a fresh extraction
+  candidate next pass. 1 (§M Runtime re-division, line ~677) reconfirmed genuinely design-gated (mechanism choice, not a
+  mechanical patch) — not extracted. No new work found; doc stays `assigned_vm: NA`.
+- **batch9-021 rateLimit-residual census 2026-08-10 (slot 23)**: **ALL 61 HEALED — ZERO remaining `rateLimit`
+  `attempted_failed` rows attributable to the 2026-07-18 15:27-15:57Z api-football 5-VM concurrency window.** Live
+  canonical (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, read via
+  `read_availability_index_safe`, column-pruned + row-group filter pushdown, fresh read) as of 2026-08-10:
+  - `capture_status=attempted_failed AND error_reason=rateLimit` in the 4 incident entities (FIXTURE_EVENTS /
+    FIXTURE_LINEUPS / FIXTURE_STATS / PLAYER_STATS): **0 rows**.
+  - `capture_status=attempted_failed` (any reason) in the 4 entities with `attempted_at` in 2026-07-18
+    15:27:00-15:57:00Z: **0 rows**.
+  - Whole-corpus `rateLimit` attempted_failed: 103 rows, ALL `STANDINGS` (attempted_at 2026-08-05..08-10), produced by
+    the tracked in-flight `af-backfill-20260810-103218` campaign (owned by
+    `sports_af_full_entity_completion_2026_08_03.md`) — **NOT** attributable to the 07-18 window.
+  - Residual attempted_failed in the 4 entities (6,294 rows) all carry documented pre-existing non-`rateLimit` reasons:
+    4,996 `fixture_events_phantom_manifest_reflip_2026_07_26` + 1,210 Defect-3 pre-2021 writer-generation artifact + 88
+    stale bare-`player_stats.parquet` migration rows — none window-attributable.
+  - Reconstruction note (honest): the exact (date, entity) cell list for the 61 is NOT recoverable from history — no
+    2026-07-18 manifest snapshot exists (closest: `20260717-012712.pre_t6_1` pre-incident and `20260724-202648`
+    post-heal), and the incident VMs' per-VM shards were pruned by the consolidator. The verdict therefore rests on the
+    current-state census, which is dispositive: the 19:12Z 07-18 measurement (this doc's §H-UPDATE) established the 61
+    `rateLimit` rows as the ONLY `rateLimit` rows in these 4 entities at that time, and the current manifest shows ZERO
+    `rateLimit` rows there (the only residual `rateLimit` rows anywhere are `STANDINGS`, from a later tracked campaign)
+    — so all 61 have transitioned to `captured`/`empty_confirmed`.
+  - **No explicit re-attempt needed.** Batch9 todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md` item) flipped
+    same-turn.

@@ -67,14 +67,14 @@ from unified_api_contracts.internal.architecture_v2.enums import StrategyArchety
 
 _CAPABILITY_REGISTRY_DICT: dict = {}  # type: ignore[type-arg]
 _REGISTRY_AVAILABLE = False
-try:
+try:  # noqa: fallback-import — optional UAC registry import, degrades to empty dict, not a dependency-hiding shim
     from unified_api_contracts.internal.architecture_v2.archetype_capability import (
         ARCHETYPE_CAPABILITY_REGISTRY as _RAW_REGISTRY,
     )
 
     _CAPABILITY_REGISTRY_DICT = {item.archetype_id: item for item in _RAW_REGISTRY}
     _REGISTRY_AVAILABLE = True
-except Exception as _exc:
+except (ImportError, AttributeError) as _exc:
     logger.warning("ARCHETYPE_CAPABILITY_REGISTRY unavailable: %s", _exc)
 
 # F22 leg-truth SSOT: archetypes whose cell prose implies multi-leg structure
@@ -83,14 +83,14 @@ except Exception as _exc:
 # lives only as free text. The audit (d) flags them.
 _LEG_STRUCTURES_KEYSET: set = set()  # type: ignore[type-arg]
 _LEG_REGISTRY_AVAILABLE = False
-try:
+try:  # noqa: fallback-import — optional UAC registry import, degrades to empty set, not a dependency-hiding shim
     from unified_api_contracts.internal.architecture_v2.archetype_leg_spec import (
         ARCHETYPE_LEG_STRUCTURES as _RAW_LEG_STRUCTURES,
     )
 
     _LEG_STRUCTURES_KEYSET = {a.value for a in _RAW_LEG_STRUCTURES}
     _LEG_REGISTRY_AVAILABLE = True
-except Exception as _exc:
+except (ImportError, AttributeError) as _exc:
     logger.warning("ARCHETYPE_LEG_STRUCTURES unavailable: %s", _exc)
 
 # Prose pattern implying an unmodelled multi-leg structure (ATOMIC bundle, a

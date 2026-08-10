@@ -75,8 +75,12 @@ codex_ssots:
 related_plans:
   - ../active/data_completion_to_100_all_ag_2026_06_21.md
   - ../active/data_source_provenance_enforcement_2026_07_24.md
+  - ../active/defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md
   - ../active/legacy_bucket_dual_write_decommission_2026_07_24.md
+  - ../active/mtds_file_size_refactor_2026_06_08.md
   - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
+  - ../active/solana_dex_pool_swaps_indexer_2026_08_08.md
+  - ../active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md
 last_updated:
   2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
   # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
@@ -724,7 +728,7 @@ layer**, not a re-statement of the work.
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
+_8 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -750,15 +754,28 @@ decommission (split from M-1)
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`defi_cf2_cf3_legacy_canonical_backfill_2026_08_08`](../active/defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md)
+
+**status**: active · **estimate**: 1.8 cal AI-days (class: research) **title**: DeFi CF-2/CF-3 legacy-vs-canonical
+cell-diff gaps — scope + backfill/relabel campaign
 
 ## P2 — useful; opportunistic
 
-_(no plans currently assigned at this priority)_
+### [`solana_dex_pool_swaps_indexer_2026_08_08`](../active/solana_dex_pool_swaps_indexer_2026_08_08.md)
+
+**status**: active · **estimate**: 1.0 cal AI-days (class: brand-new) **title**: Solana ORCA/RAYDIUM dex_pool_swaps
+indexer — signature-walk + swap decoder + manifest write
+
+### [`solana_dex_pool_swaps_indexer_2026_08_08_finalize`](../active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.1 cal AI-days (class: refactor) **title**: Solana dex_pool_swaps indexer — finalize
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`mtds_file_size_refactor_2026_06_08`](../active/mtds_file_size_refactor_2026_06_08.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: refactor) **title**: MTDS/MDPS tech-debt & coverage — file-size
+splits + polars seam + coverage/QG residuals (survivor M-2)
 
 ## Archived plans
 

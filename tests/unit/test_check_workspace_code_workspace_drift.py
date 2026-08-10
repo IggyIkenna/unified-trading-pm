@@ -25,6 +25,18 @@ def _load_module() -> types.ModuleType:
 MOD = _load_module()
 
 
+# 2026-08-10 (55a43797a4): PM-root resolution is content-based from __file__ and ignores an
+# explicit workspace_root, so a test passing a synthetic tmp_path fixture would otherwise be
+# silently redirected to the REAL checkout. Redirect _pm_root_or_legacy to the fixture root so
+# these tests exercise the drift logic against their tmp_path corpus. SSOT:
+# plans/active/issues/pm_root_content_resolution_breaks_checker_unit_test_fixtures_2026_08_10.md
+def _fixture_pm_root(root: Path) -> Path:
+    return root / "unified-trading-pm"
+
+
+MOD._pm_root_or_legacy = _fixture_pm_root  # type: ignore[attr-defined]
+
+
 def _write_workspace(
     root: Path,
     *,

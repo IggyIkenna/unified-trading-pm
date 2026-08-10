@@ -31,9 +31,9 @@ repos: [market-tick-data-service]
 scope: [engineer]
 tags: [ci, testing, pytest-xdist, flake, quickmerge-blocker, test-isolation, monkeypatch]
 related:
-  - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
-  - /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md
+  - /plans/active/defi_consolidated_closeout_2026_07_18.md
+  - /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+  - /plans/active/ci_consolidated_closeout_2026_07_25.md
 created: 2026-07-23
 author: unknown
 parent_epic: infrastructure_master
@@ -361,3 +361,22 @@ batch1 D3(3), and batch4-draft D4-12. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — root-cause hunt with 14+ occurrences, mechanism not identified
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply — this is not an
+IAM/credential/secret gap, it's an unconfirmed cross-process race with 14+ occurrences, two empirically falsified
+test-level fixes, and a falsified "structural guarantee" claim. The sibling doc
+(`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`) it must be read together with is in this same tranche
+and reaches the identical conclusion below. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:5ed3016a3a236391]: KEEP-NA,
+valid — grep confirms exactly 1 open todo (line 335), matching the phase0 figure. Sole todo is an open-ended,
+non-deterministic root-cause hunt for a flaky DEPLOYMENT_ENV env-var leak in MTDS's pytest suite: 14+ confirmed
+occurrences across multiple independent sessions, TWO test-level fixes empirically falsified by quickmerge's own
+re-gate, a 'PYTEST_WORKERS=1 is a structural guarantee' claim directly falsified (5 more failures reproduced under
+confirmed single-worker serial execution), and a leading-but-unconfirmed 'quickmerge cascade-step' theory (correlated
+with, not proven by, several cross-referenced sibling-session data points). Outcome is not determinable by a worker
+alone -- this is investigative, not bounded/deterministic work.

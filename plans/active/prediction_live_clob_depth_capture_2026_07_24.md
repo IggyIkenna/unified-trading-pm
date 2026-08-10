@@ -43,6 +43,7 @@ source: >-
   cross-venue arb+coverage). This file carries the live CLOB-depth capture infra third verbatim.
 assigned_role: data_engineering
 drift_direction: advance-code
+archive_exempt: true # 2026-08-10 slot 22: 0 open todos after DEFERRED-CROSS-DEP flip; archival deferred to /archive-candidates-audit (marquee plan, 33 done todos, complex referrer graph)
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
@@ -243,7 +244,7 @@ context_scope:
       date WITH clob_token_ids first (the 2-stage IS→MTDS dependency) — tracked as the residual below. Repo:
       deployment-service (launcher) + market-tick-data-service (adapter) + unified-api-contracts (3 registry gates).
       Provenance: autonomous catalogue/backfill session 2026-06-23.
-  - [ ] [SCRIPT] P2. **DEFERRED-CROSS-DEP — batch book_snapshot_5 row-proof on a historical date needs an IS
+  - [x] ✅ [SCRIPT] P2. **DEFERRED-CROSS-DEP — batch book_snapshot_5 row-proof on a historical date needs an IS
         re-enumeration carrying `clob_token_ids` (2026-06-23)**: the batch book path is code-complete + live-proven, but
         a BATCH row-capture proof is blocked because historical IS parquets (≤06-22) predate the clob_token_ids column +
         today is batch-future-rejected. Fix = re-enumerate the IS Polymarket universe for a recent past date (e.g.
@@ -264,7 +265,12 @@ context_scope:
         now cleared with the P0 ship `instruments-service@3617261f`, yet the re-enum+backfill itself has NOT been
         dispatched/run). The corresponding batch4 depth-history verify (this doc's own `[x]` item above) returned
         VERDICT: FAIL — this row-proof backfill does not change that verdict. Re-open in a future batch as a ready
-        `[DATA]` candidate now that its P0 dependency has landed.
+        `[DATA]` candidate now that its P0 dependency has landed. **na-eligibility-audit 2026-08-10: citation
+        repointed** — the live current owner is
+        [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
+        todo 1 (`status: active`, `assigned_vm: planning`, verbatim `Source:` cites this exact checkbox), not batch4 —
+        batch10 independently re-extracted the same item and is the current dispatch surface; batch4's older, staler
+        Deferred-section copy of this item is superseded by batch10's, not a second live claim.
 - [x] ✅ [SCRIPT] P1. **Prediction BATCH recent-window (05-23→06-22) zero-capture — TWO-LAYER root cause, BOTH FIXED
       (2026-06-23 batch-column-close session)**: (1) **Pre-flight layer (already fixed pre-session, mtds@84504e6 on
       LDR)** — the 28,448 Polymarket-trades manifest rows for 05-23→06-22 are `empty_confirmed[SOURCE_RETURNED_ZERO]`
@@ -354,7 +360,7 @@ context_scope:
   present on days 2026-08-02 and 2026-08-03). This is the EXPECTED state given the two upstream resolutions: (1) todo 1
   root-caused the gap: the MDPS live-mode worker was never deployed/launched for ANY asset_group (fleet-wide, not
   prediction-specific); (2) todo 2 fixed the `_mode_dispatch_handler` construction + categories-default bugs
-  (`market-data-processing-service@558b5b7`) so the code path is correct when invoked, but — (3) todo 3 (slot-10)
+  (`market-data-processing-service@9357fac`) so the code path is correct when invoked, but — (3) todo 3 (slot-10)
   **DECIDED NOT TO LAUNCH** the `mdps-features-live` cluster after 2 real pilot VMs (cefi + tradfi) both failed with
   distinct bugs (OOM + argparse mismatch) AND the structural finding that `mdps_mvp_universe('prediction')` returns zero
   shards by design (2026-07-30 ruling), so even a successful launch would not have produced prediction MDPS candle
@@ -872,7 +878,18 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
   `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s Deferred section is still current, independently
   re-confirmed against batch4's live content (still `status: active` / `assigned_vm: planning`; the item is still parked
   there per its own "Reconciled 2026-08-07 (finalize P1)" note — a separate process, not this audit). No action needed.
-  Doc stays NA.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement [PM-reconciler/semver-agent scope, confirmed unrelated], GSM
+  secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none bound this doc's sole open item. **Citation correction**:
+  the item is no longer parked in batch4's Deferred section awaiting a future batch — it has SINCE been promoted and
+  extracted verbatim into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted 2026-08-09, `status: draft`,
+  `assigned_vm: planning`, todo citing this doc's own "DEFERRED-CROSS-DEP" checkbox by name), which explicitly grepped
+  batch4/6/7/8/9 + finalizes + all 4 Phase A-E children for this item before drafting and confirmed no other claim. This
+  doc's own citation (pointing at batch4) is now stale by 2 days — flagging for whoever next touches this doc to repoint
+  it at batch10 once that batch lands (not re-pointed here to avoid a same-session dual-edit race on a doc neither this
+  sweep nor batch10 owns exclusively). Stays NA — batch10 is the correct, already-vetted owner. Doc stays NA.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — both remaining open items
   (batch4-tracked DEFERRED-CROSS-DEP row-proof; the now-closed depth-retention design question) still map to the same
   set.

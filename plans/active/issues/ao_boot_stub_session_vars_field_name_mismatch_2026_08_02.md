@@ -39,7 +39,7 @@ related:
   [
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
@@ -74,7 +74,7 @@ context_scope:
     agent-orchestrator/server/models/worker_api.py,
     agent-orchestrator/server/plan_health.py,
     unified-trading-pm/agents/worker.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
   ]
 ---
 
@@ -194,3 +194,14 @@ Two independent, complementary fixes — either alone helps, both together close
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. All 3 open todos remain in the fleet-wide worker-boot critical path the 2026-07-31 operator
   directive (`unified-trading-pm@14478ca26`) routed to `execution_scope: local-only`.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the round7-10 precedent set (including
+  plan-destination-defaults-AO-dispatched); it does not override the standing, dated, case-specific 2026-07-31 operator
+  directive routing live-dispatch-critical-path work (this doc's exact class) to local-only — a general forward-looking
+  default does not re-litigate an existing specific ruling, per this skill's own never-re-litigate convention. All 3
+  todos still touch `_compose()`/`_session_vars_block()`/`BootRequest`, the fleet-wide worker-boot path every slot spawn
+  reads first. Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated
+  (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-affirmed on citation alone.
+  The 2026-07-31 operator directive routing this exact live-dispatch-boot-critical-path class to local-only still
+  stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same fleet-wide worker-boot
+  files.

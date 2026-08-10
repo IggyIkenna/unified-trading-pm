@@ -50,7 +50,7 @@ related:
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
     /plans/archive/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
 parent_epic: infrastructure_master
@@ -60,7 +60,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.5
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "reconcile-release-tags stall alert (13 repos), investigated 2026-08-07"
@@ -534,3 +534,13 @@ open-ended (this doc's own history shows 2 prior "follow-up regression" cascades
 
 - fleet-wide-fix scope from this same investigation area) — not confident enough to RECLASSIFY the whole doc on one
   read; flag for next round once the classification-only sub-scope could be split out. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:3b146def3dee9bca]: KEEP-NA,
+valid — MANDATORY RE-ASSESSMENT applied against the RECLASSIFY bar per the carry-forward instruction. The sole open todo
+bundles two halves into one stated 'done when': (1) classify each of the 7 residually-stalled repos' commit ranges since
+baseline tag as 'correctly quiet' vs a genuine gap -- bounded, worker-determinable, a checkable fact; and (2) IF a
+genuine gap is found, root-cause it AND fix it -- open-ended, outcome-contingent on an unknown. Applying the whole-scope
+test (the doc qualifies for RECLASSIFY only when its ENTIRE remaining scope clears the bar, not just one half): this
+doc's OWN history documents two real, concrete 'follow-up regression' cascades from this exact investigation area within
+the same 48 hours -- both times a GitHub Actions ~21,000-char run-block cap silently broke the fleet-wide semver-agent
+pipeline (zero-jobs parse failure across ~21 repos), first via the origin...

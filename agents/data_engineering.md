@@ -18,7 +18,7 @@ created: 2026-06-26
 role: data_engineering
 model: sonnet
 thinking: high
-lifecycle: scheduled
+lifecycle: persistent
 does:
   - Data-pipeline code — manifests, capture_status, sourcing/pipeline_mode partitions, GCS writers/readers, backfills
   - Optimize for efficiency — single-walk, incremental + resumable, prune-don't-scan, idempotent backfills, cost-aware

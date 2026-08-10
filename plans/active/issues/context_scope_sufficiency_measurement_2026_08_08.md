@@ -89,3 +89,10 @@ properly (likely via `/plan-brainstorm`) before authoring any implementation wor
   design-question-3 prose into a tracked todo per the archival ritual's "never let a deferral evaporate" step.
 - **context-scout 2026-08-09**: populated context_scope (3 entries) — mirrors this doc's own "Codex SSOTs" section (a
   genuinely code-free design/proposal doc, no source paths).
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. Sole open item is
+  explicitly self-flagged "Genuinely open-ended — resolve via `/plan-brainstorm` before any implementation todo is
+  authored." No new facts apply.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item, self-flagged in its own text as 'genuinely open-ended — resolve via /plan-brainstorm before any implementation
+  todo is authored.' No concrete spec exists yet. Agrees with round9 (2026-08-09).

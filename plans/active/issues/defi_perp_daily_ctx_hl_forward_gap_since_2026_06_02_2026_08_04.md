@@ -132,7 +132,7 @@ is the open question below.
       Target row schema (from the dead backfill script's own `_records_for_day`, adapted to the live per-coin `/info`
       response shape instead of the CSV archive): `coin`/`mark_price`/`day_ntl_vlm`/`open_interest`/
       `timestamp`/`instrument_id`/`venue`/`chain`/`instrument_type`/`data_type=perp_daily_ctx`.
-- [ ] [CODE] P2. **Implement the perp_daily_ctx forward-write per the ruled approach (a) scoping above.** In
+- [x] N. ✅ [CODE] P2. **Implement the perp_daily_ctx forward-write per the ruled approach (a) scoping above.** In
       `market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py`: add a new fetch step alongside
       `_fetch_coin_funding` that calls HL `/info` for the day's per-coin mark price / day notional volume / open
       interest (the live equivalent of the `asset_ctxs` archive
@@ -186,3 +186,20 @@ is the open question below.
 - **context-scout 2026-08-09**: re-scouted; context_scope refreshed to 5 entries (added the gated finalize companion
   `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md`, authored during the
   2026-08-08 RECLASSIFY sweep, since the prior 2026-08-05 marker's 4-entry list).
+- **2026-08-09 (AO worker, slot 13)**: `[CODE] P2` shipped — market-tick-data-service@f5753479.
+  `_perp_funding_hyperliquid.py`'s `_collect_hyperliquid()` now also fetches HL `/info` `metaAndAssetCtxs` (confirmed
+  against the module's own `activeAssetCtx` WS ticker channel field shape — `markPx`/`dayNtlVlm`/`openInterest`, same
+  fields the retired S3 `asset_ctxs` backfill read) and writes `perp_daily_ctx` rows via the SAME CeFi partition-path
+  sharding `perp_funding` uses (refactored into a shared `_write_hyperliquid_cefi_rows` helper, parameterised by
+  `data_type`), registered through the SAME `DefiManifestRecorder` already threaded through `_dispatch_protocol` →
+  `_collect_hyperliquid`, with `record_captured`/`record_zero_rows`/`record_failed` honest-absence semantics isolated
+  from `perp_funding`'s own row count/exceptions (a `perp_daily_ctx` fetch failure never aborts or mis-attributes to the
+  `perp_funding` shard). Rides the existing daily cron run — no new scheduled job. Evidence: `quality-gates.sh` green on
+  the shipped SHA (10324 passed, 0 failed); new coverage in `tests/unit/test_perp_funding_hyperliquid.py`
+  (`TestPerpDailyCtxForwardWrite`, `TestFetchAssetCtxs`) asserts a `perp_daily_ctx` shard is written per instrument,
+  honest-absence on an empty response, `record_failed` on a genuine fetch error (not conflated with a zero-row day), and
+  a malformed `metaAndAssetCtxs` response shape raises rather than silently returning empty. **Not verified here**: an
+  actual live/backfill run producing real `perp_daily_ctx` manifest rows in production — this todo's own scope is the
+  code + unit-level proof; the finalize plan's `[REVIEW] P2` todo re-verifies against a real fresh-date manifest read
+  once this deploys and the next daily cron cycle runs. `[DIAG] P3` (CeFi Tardis writer re-check) remains open —
+  separate scope, not part of this todo.

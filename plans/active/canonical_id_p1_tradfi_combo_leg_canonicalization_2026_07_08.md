@@ -192,7 +192,7 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       `include_venue: bool = True` parameter (`unified-api-contracts@e1023c80`) and migrated all 3 TradFi combo-leg call
       sites (`instruments-service@de870864`) to it, deleting the local `_build_leg_key()` helper. Full detail:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s corresponding todo.
-- [ ] [DATA] P2. **RULED 2026-08-06 (operator): go-ahead to run --apply.** `[DATA]` tag (was `[OPERATOR]`),
+- [x] ✅ [DATA] P2. **RULED 2026-08-06 (operator): go-ahead to run --apply.** `[DATA]` tag (was `[OPERATOR]`),
       AO-dispatchable — 403 of 1,096,472 rows, dry-run-verified, sub-5-second. Note this is not durable long-term; needs
       re-running after every rollup cycle until the upstream by_date corpus migration lands. **Re-apply the historical
       catalog canonicalization scripts** (`canonicalize_cboe_vx_combo_catalog_2026_07_08.py`,
@@ -200,10 +200,41 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       by `prod/catalog.parquet`'s self-refreshing roll-up (see the "Scope migration mechanics" todo above) — a small,
       safe, sub-5-second single-file `--apply` (403 of 1,096,472 total rows), pending operator go-ahead per this plan's
       rollout methodology. Not durable on its own; needs re-running after every rollup cycle until the upstream
-      `by_date` corpus is migrated (`tradfi_canonical_path_migration_design_2026_07_19.md`).
+      `by_date` corpus is migrated (`tradfi_canonical_path_migration_design_2026_07_19.md`). **DONE 2026-08-09 (slot-9,
+      data_engineering) via `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` todo 1.** Fresh dry-run against live
+      `prod/catalog.parquet` (919,493 total rows, not the stale 1,096,472 figure) found the residual had shifted since
+      drafting: CBOE 91→**0** (natural rolloff, short-dated VX spreads expired), DBEQ 312→**318** (317→EQUITY,
+      1→ETF/IBIT). `--apply` completed for both scripts, GATE passed (rows unchanged, no unexpected drift), post-apply
+      dry-run confirms 0 residual for both. **Not closing this permanently** — still not durable against the
+      self-refreshing roll-up; needs re-running again after the next rollup cycle until
+      `tradfi_canonical_path_migration_design_2026_07_19.md`'s upstream `by_date` migration lands. See the standing
+      re-check todo directly below, which tracks that recurrence explicitly instead of leaving it as prose.
+
+- [ ] [DATA] P3. **Standing reconciliation — re-check `prod/catalog.parquet` for residual CBOE `SPOT_PAIR`/DBEQ
+      `SPOT_PAIR` rows after each future `build_instrument_catalogue.py` roll-up cycle.** This is the recurring
+      counterpart to the item above: the CODE fix (2026-07-09) is durable for all future captures, but the historical
+      catalogue rewrite is NOT — every roll-up cycle re-derives the catalogue from the still-unmigrated per-day
+      `by_date` corpus and can reintroduce non-canonical rows. Not durable until
+      `tradfi_canonical_path_migration_design_2026_07_19.md`'s upstream `by_date` corpus migration lands (that doc is
+      the actual permanent fix; this todo is the interim mitigation). Last re-applied 2026-08-09 (0 CBOE + 318 DBEQ
+      residual cleared, 0 residual confirmed post-apply). **Done when** (each cycle): re-run
+      `canonicalize_cboe_vx_combo_catalog_2026_07_08.py` and `canonicalize_dbeq_stock_class_catalog_2026_07_08.py`
+      dry-run against live `prod/catalog.parquet`; if either reports >0 candidates, `--apply` per this doc's rollout
+      methodology, re-verify 0 residual, and re-flip this checkbox citing the fresh run evidence (mirrors the pattern of
+      the item above across batch1-8). Repo: instruments-service.
 
 ## Progress Log
 
+- **2026-08-09 (slot-9, data_engineering, via `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` todo 1)**: Re-applied
+  both historical catalog canonicalization scripts against live `prod/catalog.parquet`. Fresh dry-run found the residual
+  population had shifted since the plan was drafted: CBOE 91→0 (short-dated VX spreads rolled off), DBEQ 312→318
+  (317→EQUITY, 1→ETF/IBIT). `--apply` completed for both, GATE passed (rows unchanged 919,493, no unexpected
+  (venue,instrument_type) drift), post-apply dry-run confirms 0 residual for both. Flipped the sole open todo, but added
+  a new standing re-check todo (P3) rather than letting this doc reach 0-open-todos archive-eligible — the underlying
+  non-durability (self-refreshing roll-up vs. still-unmigrated `by_date` corpus) is real and unresolved; archiving this
+  doc would silently drop the only tracked place this recurring reconciliation lives, since
+  `tradfi_canonical_path_migration_design_2026_07_19.md` (the doc that owns the actual permanent fix) doesn't yet
+  reference this interim mitigation loop itself.
 - **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid — the 2026-08-07 entry
   below's flagged contradiction is now RESOLVED, not open.** Independently traced via commit timestamps + a direct
   re-read of both referenced docs' CURRENT live text (not just the 08-06/08-07 self-reports): a later same-day commit
@@ -291,3 +322,16 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   context_scope refresh) -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full
   re-read; see `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying
   false-positive class this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:1c528fd3236a536e]: **KEEP-NA,
+  valid -- fresh full read; considered and DECLINED promoting to RECLASSIFY.** The sole open todo (standing
+  reconciliation: re-run 2 already-built/tested scripts dry-run after each future catalogue roll-up cycle, `--apply`
+  only if residual >0, small/idempotent, operator go-ahead already on record and executed 8x) reads as bounded for any
+  SINGLE execution, but its own framing is explicitly a perpetual "after each future roll-up cycle" check, not a
+  one-shot outcome -- flipping `assigned_vm` here would let the backlog derive ONE dispatch from this ONE checkbox; a
+  worker would run it once, flip the checkbox `[x]`, and the standing safety net for every LATER roll-up cycle would
+  have no open item left to catch it. That is a structural mismatch between "standing/recurring" checks and the
+  checkbox-driven one-shot dispatch mechanism, not a judgment call this doc's content itself resolves. Independently
+  corroborated same-day: `/ag-closeout-audit tradfi`'s `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (drafted
+  hours earlier) evaluated this exact doc/item and reached the same conclusion under its own criteria -- filed under
+  "Deferred -- standing/recurring (not a single bounded AO outcome)." Two independent audit mechanisms agreeing today is
+  a strong signal, not a coincidence to re-litigate; staying KEEP-NA. `assigned_vm` unchanged.

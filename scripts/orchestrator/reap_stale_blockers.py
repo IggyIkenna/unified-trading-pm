@@ -90,7 +90,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
 
         tasks = load_backlog(path)
         return [t.model_dump() for t in tasks]
-    except Exception:
+    except (ImportError, OSError, ValueError, AttributeError):
         pass
 
     print(
@@ -143,7 +143,7 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
             method="POST",
         )
         urllib.request.urlopen(req, timeout=5)  # nosec: B310 — HTTPS webhook URL from env var, not user input
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — best-effort Slack notify, must never crash the reaper
         print(f"Slack notify failed: {e}", file=sys.stderr)
 
 

@@ -867,4 +867,14 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
   since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop
   archetype design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own
-  text. Doc stays `assigned_vm: NA`.
+  text.
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (2 open
+  checkboxes at entry: the `RecursiveLoopOrchestrator` new-trading-logic gap for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+  /`CARRY_BASIS_PERP_INV`, needing operator-supplied risk-threshold/entry-signal decisions; the MVP_SCOPE
+  catalog-identity precondition, needing an operator scope/sequencing decision across ~26-29 archetypes). Checked
+  against every accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM
+  secret + 5 Slack webhooks now existing) — none bear on either item: both are open-ended trading-logic/architecture
+  design calls (dispatch-scope-eligibility rule: "figure out how X should look" is a human decision, not a checkable
+  worker todo), not blocked by any infra/credential/process precedent this round settled. No satellite-extraction
+  candidate found. Doc stays `assigned_vm: NA` (KEEP-NA valid, round11). Doc stays `assigned_vm: NA`.

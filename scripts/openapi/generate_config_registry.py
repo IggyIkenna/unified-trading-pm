@@ -216,7 +216,8 @@ def extract_config(repo_name: str, module_path: str, class_name: str) -> dict[st
     except json.JSONDecodeError as e:
         logger.warning("  BAD JSON: %s.%s: %s", repo_name, class_name, e)
         return None
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — per-class extraction isolation: one class's
+        # subprocess/introspection failure must not abort the whole registry generation
         logger.warning("  ERROR: %s.%s: %s", repo_name, class_name, e)
         return None
 

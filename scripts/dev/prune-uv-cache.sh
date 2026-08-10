@@ -6,8 +6,9 @@
 #
 # plans/active/issues/host_root_disk_full_transient_2026_07_13.md: the host's root
 # filesystem hit 100% full (0 bytes free) TWICE in one session. Investigation found
-# the shared UV_CACHE_DIR (${WORKSPACE_ROOT}/.uv-cache — every one of the 16 slots'
-# `uv sync` calls reads/writes it) had grown to 12G with no prune schedule. A single
+# the shared UV_CACHE_DIR (${WORKSPACE_ROOT}/.tabs/.uv-cache — every one of the 16 slots'
+# `uv sync` calls reads/writes it) had grown to 12G with no prune schedule. (Relocated
+# INSIDE .tabs/ 2026-08-09 — see tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md.) A single
 # manual `uv cache prune` run (2026-07-13) reclaimed 5.7GiB in ~3s — `uv cache prune`
 # (no `--force`) only removes objects unreachable from any current lockfile/environment
 # and does its own in-use checks, so it's safe to run unconditionally on a schedule
@@ -38,7 +39,12 @@
 set -euo pipefail
 
 QUIET=0
-CACHE_DIR="${UV_CACHE_DIR:-${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}/.uv-cache}"
+# INSIDE .tabs/ (tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09): a cache
+# dir sibling of .tabs/ sits on a different mount boundary than .tabs/<N>/<repo>/.venv on
+# this host — hardlink() returns EXDEV across it and uv falls back to a full copy per slot.
+# Must match base-service.sh's / install-uv-cache-shell-env.sh's relocated default or this
+# prunes a directory the fleet no longer writes to.
+CACHE_DIR="${UV_CACHE_DIR:-${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}/.tabs/.uv-cache}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [agent-orchestrator, cost-optimization, worker-prompt, tool-use, turn-count, cache-read]
 related:
   [
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
   ]
@@ -45,7 +45,7 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agents/worker.md,
     cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/ao_satellite_ao_dispatch_batch7_2026_08_06.md,
   ]
 ---
@@ -99,8 +99,8 @@ them"), but the instruction is not being followed in practice, at least in this 
 ## Codex / related
 
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`
-- `plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` — the DeepSeek pro/flash A/B test this finding originated
-  alongside (different question — model choice — but the same investigation).
+- `plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md` — the DeepSeek pro/flash A/B test this finding
+  originated alongside (different question — model choice — but the same investigation).
 
 ## Progress Log
 
@@ -197,3 +197,8 @@ them"), but the instruction is not being followed in practice, at least in this 
   Shipped `unified-trading-pm@a20e52125`.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ("Consider a soft turn-count circuit breaker") uses the same "Consider" hedge phrasing
+  this sweep treats as a judgment call, not a mandate, elsewhere in this tranche — no committed threshold or mechanism,
+  a genuine design fork. Items 1-2 already correctly executed + closed via
+  `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.

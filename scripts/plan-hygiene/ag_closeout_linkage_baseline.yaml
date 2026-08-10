@@ -7,4 +7,4 @@
 # landed with no path back to its AG's closeout, fix it (add a related: link or a
 # closeout-doc mention), don't raise the number. LOWER it (re-run
 # --update-baseline) the moment orphans get fixed. NEVER hand-raise it.
-orphan_count: 49
+orphan_count: 0

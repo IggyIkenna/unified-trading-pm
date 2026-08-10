@@ -141,6 +141,15 @@ denominator Layer 1 verified:
 violation (the Phase-0 fix); see
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md#proof-of-honest-absence).
 
+> **Known exception — `captured` is not always genuine (found 2026-08-09).** 90 sports `day=2026-04-14` manifest rows
+> (30 leagues × `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES`/`FIXTURES`) read `capture_status=captured` while the underlying
+> GCS parquet is a known-corrupted instrument-catalogue schema (a write-path contamination event, unrelated to this
+> model). Layer-2 counts these as real coverage today — numerically negligible (90 rows) but structurally dishonest, and
+> no existing state cleanly fits: not `attempted_failed` (rows genuinely WERE produced, just wrong content). A real fix
+> needs either reclassification off `captured` or a new honest-corruption state — both out of scope where this was
+> found. Full root cause, the affected-league list, and why no existing state fits:
+> `/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`.
+
 ---
 
 ## Layer-2 read grain (manifest shard atom)

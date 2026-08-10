@@ -70,10 +70,10 @@ context_scope:
 > and migrate every consumer in the same change. Ruled: **author it, and make the sports taxonomy chain its first
 > governed case** — that chain performs exactly this operation twice (`trades` → `odds`, and the whole 19-token
 > uppercase→lowercase instruments-service vocabulary), so the rule gets validated by real use instead of being written
-> abstractly. Authored by `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`. Concrete evidence for
-> why the rule is needed, found by the 2026-08-08 audit: `features-service`'s sports feature loader reads bucketed odds
-> by **GCS path prefix** (`_ODDS_BUCKETED_PREFIXES`), not by the `data_type` column — so a `data_type` grep does not
-> find it, and a rename would silently break it.
+> abstractly. Authored by `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`. Concrete
+> evidence for why the rule is needed, found by the 2026-08-08 audit: `features-service`'s sports feature loader reads
+> bucketed odds by **GCS path prefix** (`_ODDS_BUCKETED_PREFIXES`), not by the `data_type` column — so a `data_type`
+> grep does not find it, and a rename would silently break it.
 
 # Sports features-layer findings sweep — PART 3 of 3 (2026-07-18/19, split 2026-07-26)
 
@@ -937,3 +937,7 @@ overwrite.
   marker also tracked are both now `[x]` in this doc (shipped since) — not part of today's open count. No
   reclassification: this doc's remaining open work is a citation, not new dispatchable content.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — reconfirmed both open `[DIAG] P0` todos
+  (line ~407, ~462) still correctly cite `sports_consolidated_closeout_2026_07_19.md` Track E as the owning doc; that
+  Track's matching `[CODE] P1` ("repoint the remaining stale `entity=fixtures` consumers, 7-file list") re-verified
+  still `- [ ]` open there (live-read today). No new work surfaced; doc stays `assigned_vm: NA`.

@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-13, satellite-docs, item-level-extraction, na-audit]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -46,7 +46,7 @@ source: >-
 context_scope:
   [
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
   ]
 ---
 
@@ -59,13 +59,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [CODE] P2. **Replace the taker/IOC fill-sim path in `e2e-testing/scripts/paper_trading/_ledgers.py`** with a
+- [x] ✅ [CODE] P2. **Replace the taker/IOC fill-sim path in `e2e-testing/scripts/paper_trading/_ledgers.py`** with a
       volume-weighted walk through the recorded live order-book depth (already pulled at $250k/$1M notionals) instead of
       filling the whole order at first-1m-open + flat slip. Repo: e2e-testing. Source:
       `crypto_alpha_research_2026_07_24.md` line 181 (`[CODE] P2.5`, "Taker = VWAP-walk the live depth"). **Done when**:
       the taker fill price for a simulated order is the volume-weighted average price walked through the recorded book
       depth, a unit test verifies it against a hand-computed VWAP for a synthetic order book, and `quality-gates.sh` is
-      green.
+      green. — **DONE, `e2e-testing@06c709e`**: added `_book_depth_levels`/`_vwap_walk` (mirrors `paper_engine.py`'s
+      live $250k/$1M-notional book pull); the taker branch in `simulate_fills` now VWAP-walks that depth, falling back
+      to the old open+flat-slip fill only when the live book fetch/walk fails; `_fillrow` skips the flat `TAKER_SLIP_BP`
+      when the price already reflects a real walk (avoids double-counting slippage). Unit test
+      `tests/unit/test_ledgers_taker_vwap.py` (5 cases) verifies `_vwap_walk` against hand-computed VWAPs for synthetic
+      order books (single-level, multi-level partial-fill, thin-book, empty-book). `quality-gates.sh` green (174
+      passed), sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`.
 - [ ] [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
       (market-tick-data-service) for the 5 already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES,
       OKX-SWAP) so it lands under `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types
@@ -109,3 +115,58 @@ context_scope:
   one adjacent doc, `v2_engine_venue_buildout_2026_06_15.md` (`assigned_vm: NA`), discusses `depth_of_book_10` as an
   "honest-absent" input to a DIFFERENT derived-microstructure feature path — complementary, not duplicative (that doc's
   derived metrics would consume the raw capture this todo produces, not compete with it).
+- **2026-08-09** — Todo 1 shipped: `e2e-testing@06c709e`. Found the "recorded live order-book depth" precedent already
+  live in this same repo — `paper_engine.py`'s `slip()` function pulls Binance futures depth and walks it at $250k/$1M
+  notionals for its execution-realism model; `_ledgers.py`'s taker path had no equivalent, just a flat first-1m-open +
+  2bp slip. Added `_book_depth_levels` (the live depth pull, mirroring `paper_engine.py`) + `_vwap_walk` (the pure
+  walk-and-average math) to `_ledgers.py`; the taker branch now uses these, falling back to the old open+flat-slip model
+  only on fetch/walk failure. `_fillrow` gained a `real_slip` flag so the flat `TAKER_SLIP_BP` isn't double- counted
+  once the price already reflects a genuine book walk. Unit test `tests/unit/test_ledgers_taker_vwap.py` covers
+  `_vwap_walk` against 5 hand-computed synthetic order books (single-level, multi-level, thin-book, empty).
+  `quality-gates.sh` green, 174 passed. Todo 2 (this doc's `depth_of_book_10` wiring item) is untouched by this change —
+  no file overlap, per the doc's own conflict-check above.
+- **2026-08-09, slot-23** — Todo 2 worked; **the dispatcher-wiring gap itself is CLOSED and verified end-to-end**, but
+  the done-when's second half ("rows landing for at least the 5 capable venues") is only proven true for 1 of 5, so the
+  checkbox stays correctly unflipped. Full detail + the 4 remaining per-venue debug todos (now archived — see the
+  2026-08-09 slot-22 entry below):
+  [`/plans/archive/2026_08/issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](/plans/archive/2026_08/issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md).
+  Summary: the connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed
+  by direct read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
+  (`deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh`) never had a `depth_of_book_10` entry — fixed,
+  `deployment-service@28e64163`; (b) an adjacent `FORCE` env-var bug in the sibling launcher script, found+fixed in the
+  same pass — `deployment-service@778ee0e3`; (c) a SECOND wiring gap only visible once the shards actually ran: the
+  `persist-cefi-depth-of-book-10` Pub/Sub topic + GCS warm-sink subscription had never been created (Terraform,
+  `deployment-service/terraform/gcp/live_event_log/{main.tf,warm_sink.tf}`) — added + applied to live prod
+  (`2 to add, 1 to change, 0 to destroy`; source committed `deployment-service@5821d4da`; the issue doc has a caution
+  for future appliers of this module about its `create_bq_external_tables` var-default trap). Cycled the live
+  `mtds-live-cefi-consolidated-*` VM (old instance confirmed healthy via fresh heartbeat + active writes before
+  deletion, per infra.md's staleness-check discipline — this was a deliberate deploy-cycle, not a stale-VM cleanup) to
+  pick up both fixes; verified real `capture_status=captured` rows landing in the manifest AND real parquet objects
+  landing under `gs://central-element-323112-events/live-events/warm/cefi/depth_of_book_10/` for BINANCE-FUTURES. The
+  other 4 venues (BYBIT-FUTURES/DERIBIT/COINBASE-SPOT/OKX-SWAP) are confirmed connected and flushing on the same VM in
+  the same window (their OTHER data_types capture normally) but produce only `empty_confirmed`/zero rows specifically
+  for `depth_of_book_10` — a venue-connector-level data-correctness bug the wiring fix surfaced, not a wiring problem
+  itself (this is the first time any of these 5 connectors has ever run live, per the source plan's own todo-6 note).
+  Also found, non-fatal: `CandleBoundaryCrossedEvent` publish fails every flush cycle for all 5 venues because
+  `depth_of_book_10` isn't in the MDPS `DataType` enum — caught+logged, doesn't block persistence, but is a real open
+  design question (does depth_of_book_10 feed MDPS candles or not) captured as a P3 todo in the issue doc rather than
+  guessed at inline.
+- **2026-08-09, slot 11**: worked todo 2 via the issue doc's per-venue debug todos (concurrently with slots 6/23/27 also
+  on this doc — Coinbase/Deribit/Bybit all landed by others while I was mid-investigation; my own first-pass Coinbase
+  fix independently re-derived the same root cause but was discarded in favor of the already-landed, more-thorough fix).
+  Closed the LAST remaining P2 item, OKX-SWAP: SSH'd into the live production VM
+  (`mtds-live-cefi-consolidated-20260809-121034`) for real signal, ruled out connectivity/universe/batch-size causes via
+  a live wire probe of the full 438-instrument production shape, then found via the shard's own log that production
+  canonical instrument_ids carry an `@LIN`/`@INV` margin marker `_instrument_to_okx_inst_id` never stripped — building a
+  malformed wire `instId` OKX silently never matched. Fixed + shipped `market-tick-data-service@52383e877`, full
+  detail + regression tests in the issue doc's Progress Log. **Todo 2's own checkbox stays correctly unflipped**: all 4
+  per-venue connector bugs are now code-fixed but NONE have been live-verified past deploy yet — a VM cycle + fresh
+  manifest read across all 5 venues is still needed before this todo's done-when ("rows landing for at least the 5
+  capable venues") is actually met. See the issue doc for the full per-venue fix ledger.
+- **2026-08-09, slot-22**: closed the issue doc's last open todo (the P3 MDPS `DataType`-enum question — decision: skip
+  on the caller side, `market-tick-data-service@55fac6f5`) and archived the issue doc per the 6-step ritual (all its own
+  todos done, unlocked). Removed the now-stale `BLOCKED-ON:` tag from this todo's own line above — the blocker
+  (per-venue debugging) is resolved, so this todo is now unblocked and can proceed. **This todo's own done-when is still
+  NOT met**: the actual VM cycle + fresh manifest read across all 5 venues (BYBIT-FUTURES/DERIBIT/
+  COINBASE-SPOT/OKX-SWAP still unverified past their code fixes) remains this todo's own remaining work — the archived
+  issue doc's Progress Log carries the full per-venue fix ledger for whoever picks this up next.

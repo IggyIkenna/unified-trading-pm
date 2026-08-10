@@ -189,17 +189,18 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 ## New from 2026-08-08 sweep — 1 dead link with no confident target, 1 script root-cause finding
 
 - [ ] [DOCS] P3. `.cursor/rules/core/plans-prompts-index.mdc` (`alwaysApply: false`, self-branded "SSOT for where agent
-      prompts and task entry points live") — its "Task Entry Points" table cites
-      `unified-trading-pm/plans/tasks/cursor/START_HERE.md` and `unified-trading-pm/plans/tasks/claude-code/START.md`;
-      `plans/tasks/` does not exist anywhere in the repo (confirmed via `find`). Every OTHER table in this same file
-      (Phase Prompts ×3, Sports ×1, the `CODEX:` pointer) resolves correctly — this is an isolated staleness, not a
-      wholesale-obsolete rule. Not auto-fixed: unlike the `04-architecture/README.md` ToC cluster above, there's no
-      equivalent doc elsewhere in the corpus using this "Cursor vs Claude Code START_HERE/START" convention to confirm
-      whether the right fix is (a) write the two missing onboarding docs, (b) repoint to `plans/active/task_template.md`
-      (the CLAUDE.md-current plan-authoring entry point, but not a strict semantic match — that's for authoring a NEW
-      plan, not general "task entry"), or (c) strip the table because the per-tool-onboarding-doc concept itself was
-      retired without anyone updating this index. Needs a human who knows whether these were ever built.
-- [ ] [SCRIPT] P2. **Root cause of most of this doc's own truncated-summary findings, identified 2026-08-08**:
+      prompts and task entry points live") — its "Task Entry Points" table cites `START_HERE.md` under
+      `unified-trading-pm/plans/tasks/cursor/` and `START.md` under `unified-trading-pm/plans/tasks/claude-code/`; the
+      `plans/tasks/` directory does not exist anywhere in the repo (confirmed via `find`). Every OTHER table in this
+      same file (Phase Prompts ×3, Sports ×1, the `CODEX:` pointer) resolves correctly — this is an isolated staleness,
+      not a wholesale-obsolete rule. Not auto-fixed: unlike the `04-architecture/README.md` ToC cluster above, there's
+      no equivalent doc elsewhere in the corpus using this "Cursor vs Claude Code START_HERE/START" convention to
+      confirm whether the right fix is (a) write the two missing onboarding docs, (b) repoint to
+      `plans/active/task_template.md` (the CLAUDE.md-current plan-authoring entry point, but not a strict semantic match
+      — that's for authoring a NEW plan, not general "task entry"), or (c) strip the table because the
+      per-tool-onboarding-doc concept itself was retired without anyone updating this index. Needs a human who knows
+      whether these were ever built.
+- [x] ✅ [SCRIPT] P2. **Root cause of most of this doc's own truncated-summary findings, identified 2026-08-08**:
       `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` (used to auto-backfill a missing
       `summary:` field) hard-truncates at char 197 + `"..."` with NO sentence/word-boundary awareness (the function
       body: `if len(result) > 200: result = result[:197] + "..."`). Harmless when a doc's first paragraph is under 200
@@ -211,7 +212,41 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       doc with a long first paragraph. Recommended fix (not implemented): truncate at the last sentence or word boundary
       before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
       review before it ships, rather than silently landing a partial sentence. **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — do NOT action here.**
+      `ao_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — SHIPPED 2026-08-10: unified-trading-pm@2022f4142f
+      (slot-24). Fix replaces hard `result[:197] + "..."` with sentence/word-boundary-aware truncation (sentence
+      boundary `.`/`!`/`?` + space → word boundary (last space) → hard-cut fallback). 6/6 regression tests pass
+      (`tests/unit/test_fix_frontmatter_summary_truncation.py` — sentence-boundary, word-boundary, short/no-op,
+      exactly-200, unbroken-token hard-cut, no-paragraph-returns-None). VERIFIED 2026-08-10 (slot 27, review).**
+
+## New from 2026-08-09 sweep — 3 genuinely-new dead links, 1 self-consistency content-investigation finding
+
+- [ ] [DOCS] P3. `/codex/14-customer-journeys/shared-core/strategy-version-governance.md` cites a template under
+      `codex/12-incidents/` named `post-mortem-template.md` — that directory does not exist anywhere in the repo. The
+      citing doc already self-flags this as a known gap ("no leading slash — template not yet created; see
+      `/codex/15-runbooks/incidents/README.md` instead") — not stale rot, a documented forward-reference to a template
+      never written. Needs a human to either write the template under `codex/12-incidents/` (or the existing
+      `15-runbooks/incidents/` tree the doc already points readers to as the interim) or drop the forward-reference.
+- [ ] [DOCS] P2. `plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` (line 441)
+      proposes a new file, `sports-canonical-league-cup-registry.md`, under `codex/02-data/` — never created. This is an
+      active plan's own stated deliverable, not stale rot; if the plan doesn't already track it as a `- [ ]` todo, one
+      should be added there (not fixed here — out of this skill's `does_not: touch the plans corpus` charter).
+- [ ] [DOCS] P3. `plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md`'s R14 finding
+      proposes a new file, `manifest-writer-ssot.md`, under `codex/02-data/` — never created under this name.
+      `/codex/02-data/availability-manifest-and-data-status.md` is a plausible conceptual successor but the scope isn't
+      a confirmed 1:1 match (this is an archived audit result, not a live plan) — needs a human to confirm scope before
+      repointing.
+- [ ] [DOCS] P1. `/codex/09-strategy/mvp-universe-per-asset-group.md` states TWO different "Total" backtest worker-run
+      counts for what both passages frame as the same complete Tier-A (May-23 cutover) config-grid: line 215 ("**Total
+      backtest scope**: ~580K-1.3M worker-runs", derived from the per-asset-group table, used at line 219 to compute
+      "~28K seconds ≈ 8 hours per full Tier A") vs. line 329 ("**Total**: ~2.6M backtest worker-runs across Tier A by
+      May-23", derived from the per-archetype table, used at line 332 to compute "≈ 1.3 days wall-clock for full Tier A
+      backtest"). The two totals diverge ~2-4.5x and the doc never reconciles the gap or flags that the two tables
+      likely use different accounting (e.g. CeFi coins plausibly counted once under the per-asset-group "CeFi" row AND
+      again inside the per-archetype "arbitrage-funding-rate" row). Not auto-fixed: picking a number, or writing a
+      reconciliation note asserting WHY the two differ, requires re-deriving both tables' underlying counts — a
+      content-accuracy investigation beyond a mechanical doc-health fix. Needs someone with the archetype/asset-group
+      sizing context to either reconcile the two totals or add an explicit "these measure different things because X"
+      caveat.
 
 ## Progress Log
 
@@ -399,3 +434,47 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
      `README.md` in the codex (checked 8 siblings: `02-data`, `03-observability`, `04-architecture`, `09-strategy`,
      `11-project-management`, `12-agent-workflow`, `13-codex-governance`, `14-customer-journeys` — all carry only
      `scope:` + no title/summary).
+- **docs-reconcile 2026-08-09** (one-off `docs_reconciler` boot, slot 27, no `pm_repo_path` in the boot message so this
+  slot's own `unified-trading-pm` clone was treated as the target). Phase 0 all clean (frontmatter 1951 docs, body-links
+  1997 docs, retrieval-parity, gen_doc_index 1797 docs; freshness `--strict` = 0/0 across the 4 gated dirs, and a
+  report-only sweep of the 570 non-gated codex docs found 515 missing `last_reviewed` — expected, the field isn't
+  required outside the 4 gated dirs — plus 1 doc 1 day past the 90d window and 7 deliberately future-stamped). Phase 1:
+  7 parallel read-only hunters (1 collision, 1 summary-quality/self-consistency, 1 doctrine-consistency, 1 broken-link
+  triage covering all 28 `doc_body_link_baseline.yaml` entries, 3 structural-integrity batches covering all 69 codex
+  docs touched in the last 24h). Every candidate independently re-verified by direct file read before acting (not
+  trusted from hunter reports alone). **Auto-fixed and shipped this run** (mechanical, no authority call): the mvp-scope
+  summary's stale `config version 14` (body says 16); a broken-paren/blank-line/bullet corruption in
+  `client-funds-isolation.md`; a garbled 3-column table in `regime-clustering-structure-allocator.md` reconstructed from
+  its own fragments; a stale "All three functions produce" claim in `agent-orchestrator-slack-notifications.md`
+  (contradicted by the same doc's own 13-Slack/9-Telegram inventory 2 paragraphs above); a table row in
+  `per-tab-worktrees.md` exploded across 19 unlinked physical lines, rejoined into one pipe-delimited row; the
+  `codex/README.md` Pipeline DAG mermaid diagram, whose `fs` node claimed "consolidated 2026-05-08" while its own edges
+  three lines below still referenced 5 undeclared pre-consolidation phantom nodes — routed through `fs`; and a stale
+  `LIVE_VENUE`/`MANUAL` enum reference in `paper-vs-live-execution-seam.md`'s own execution-seam diagram, where the
+  sibling `operational-modes.md` doc (same 24h review window) already explicitly states "no such member" for both. Also
+  applied the 6 `doc_body_link_baseline.yaml` PROVABLY-MOVED repoints the broken-link-triage hunter found (2×
+  `orchestrator-multi-vm-topology.md`→`agent-orchestrator-single-vm-architecture.md`, 2× the `naming-convention.md`
+  historical citations unlinked rather than repointed since the doc being cited no longer exists as a separate entity —
+  it was merged INTO its sibling, so "repointing" would misrepresent the merge as still describing two live docs; 2×
+  `codex/.../block-list.md` and 1× `codex/.../defi-canonical-naming-ssot.md` ellipsis-shorthand citations expanded to
+  their real full paths); baseline ratcheted 28→22 via `--update-baseline`, verified the drop was exactly those 6 keys
+  (git diff), zero unexpected entries added or removed. Re-ran full Phase 0 after all edits — still all clean. Appended
+  3 genuinely-new dead-link findings above (not previously tracked) and 1 new content-investigation finding
+  (`mvp-universe-per-asset-group.md`'s two-different-totals contradiction — real, verified by direct read, but
+  reconciling which total is right needs archetype/asset-group sizing context beyond a mechanical doc fix, so filed
+  rather than guessed at). Filed the collision hunter's 1 confirmed P0 finding (`plan-hygiene.md` duplicated verbatim in
+  `codex/12-agent-workflow/` and `codex/11-project-management/`, both `status: current`, neither cross-referencing the
+  other) as `docs_reconcile_operator_decisions_2026_08_02.md` BLOCKED-OPERATOR-DECISION 5 rather than here (that's the
+  doc this corpus already uses for authority calls). Summary-quality and doctrine-consistency hunters: both clean (849
+  codex + 719 plans summaries checked; 150 `.cursor/rules/*.mdc` + 22 `agents/*.md` doctrine references checked, none
+  stale). Structural-integrity hunters found 8 total candidates across the 69 touched docs (7 fixed above,
+  `mvp-universe-per-asset-group.md`'s total-count one filed as a new finding since it needs investigation not a
+  mechanical fix) — zero false positives on independent re-verification.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — read end-to-end;
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **16**, matching. Confirmed the one item this doc's own text flagged
+  `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (the `fix_frontmatter.py` truncation-bug item) is already correctly
+  `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch11_2026_08_09.md` (verified live: that batch exists,
+  `status: active`, `assigned_vm: planning`, its sole todo still genuinely `- [ ]` open — not a stale/dead pointer). The
+  remaining 15 items are the same accumulated set of genuine VALID_JUDGMENT calls (ambiguous dead-link successors, a
+  root-README pass explicitly scoped out, a design observation the doc's own text says "not proposing a fix here")
+  re-verified across 6+ prior audit passes since 2026-08-02 — no new bounded item found on this independent re-read.

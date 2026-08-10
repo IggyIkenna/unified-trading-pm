@@ -255,9 +255,11 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       (`sanitize_file_stem`). Migration population measured 0 (§ 6.1a); reader tolerates the legacy form (§ 6.1b).
 - [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints the
       double-wrapped `VENUE:ITYPE:<raw wire>` ids — tolerance is the mechanism that polluted the corpus. (Provenance:
-      operator ruling 2026-07-20. Tracked in the batch=live divergence issue doc.) **DONE
-      `unified-api-contracts@502ef57e`**: the actual mechanism lives in the SHARED builder, not any one caller — the
-      real caller (`market-tick-data-service/.../adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s bare
+      operator ruling 2026-07-20. Tracked in
+      `/plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`, the batch=live divergence
+      issue doc.) **DONE `unified-api-contracts@502ef57e`**: the actual mechanism lives in the SHARED builder, not any
+      one caller — the real caller
+      (`market-tick-data-service/.../adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s bare
       `return build_instrument_id(venue, instrument_type, symbol)` fallback, `[SERVICE]`-tagged as a MTDS file, out of
       this session's repo scope) was left untouched, but `build_instrument_id` itself now FAILS LOUD (`ValueError`) on
       any `symbol` carrying an embedded `:` for every asset group except sports/prediction (whose `symbol` is itself a

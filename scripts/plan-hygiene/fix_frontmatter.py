@@ -93,7 +93,7 @@ def _load_enum_sets() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
             cast("frozenset[str]", mod.STAGE),
             cast("frozenset[str]", mod.SCOPE),
         )
-    except Exception as exc:  # any import failure must degrade to a no-op, never crash the fixer
+    except Exception as exc:  # noqa: broad-except — any import failure must degrade to a no-op, never crash the fixer
         print(
             f"  WARN fix_frontmatter: could not load docspec enums ({exc}); skipping enum-normalisation",
             file=sys.stderr,
@@ -276,9 +276,21 @@ def get_first_paragraph_after_heading(body_text: str) -> str | None:
 
     if paragraph_lines:
         result = " ".join(paragraph_lines)
-        # Truncate to reasonable length
+        # Truncate to reasonable length, respecting word/sentence boundaries
         if len(result) > 200:
-            result = result[:197] + "..."
+            truncated = result[:197]
+            # Prefer sentence boundary: period/exclamation/question-mark followed by space
+            last_sentence = -1
+            for punct in (". ", "! ", "? "):
+                pos = truncated.rfind(punct)
+                if pos > last_sentence:
+                    last_sentence = pos
+            if last_sentence > 0:
+                result = truncated[: last_sentence + 1] + " ..."
+            else:
+                # Fall back to last whole-word boundary
+                last_space = truncated.rfind(" ")
+                result = truncated[:last_space] + " ..." if last_space > 0 else truncated + "..."
         return result
     return None
 
@@ -406,7 +418,7 @@ def frontmatter_yaml_error(text: str) -> str | None:
     raw = ("".join(fm_lines)) if not opening_extra.strip() else (opening_extra + "\n" + "".join(fm_lines))
     try:
         yaml.safe_load(raw)
-    except Exception as exc:
+    except yaml.YAMLError as exc:
         return " ".join(str(exc).split())[:200]
     return None
 
@@ -705,22 +717,29 @@ def _apply_field_defaults(  # noqa: C901
         if val and val not in VALID_ASSIGNED_VM:
             print(f"  WARN {filename}: assigned_vm={val!r} is not in {VALID_ASSIGNED_VM} - leaving as-is")
 
-    # 15. execution_scope
+    # 15. execution_scope — derive the default FROM assigned_vm (assigned_vm: NA means "not
+    # dispatched", so its default must be local-only, never orchestrator-agent; blindly
+    # defaulting to orchestrator-agent regardless of assigned_vm previously produced the exact
+    # NA + orchestrator-agent contradiction manually corrected once already, see
+    # plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md
+    # referenced in _clear_field_continuations's docstring above).
+    assigned_vm_val = get_field_value(new_fm, "assigned_vm") or ""
+    default_execution_scope = "local-only" if assigned_vm_val == "NA" else "orchestrator-agent"
     cleaned = _clear_field_continuations(new_fm, "execution_scope")
     if cleaned != new_fm:
         new_fm[:] = cleaned
         changes.append("stripped stray execution_scope continuation lines")
     if not has_field(new_fm, "execution_scope"):
-        new_fm.append("execution_scope: orchestrator-agent\n")
-        changes.append("added execution_scope=orchestrator-agent")
+        new_fm.append(f"execution_scope: {default_execution_scope}\n")
+        changes.append(f"added execution_scope={default_execution_scope}")
     elif is_field_empty(new_fm, "execution_scope"):
         new_fm[:] = [
-            re.sub(r"^execution_scope:\s*$", "execution_scope: orchestrator-agent\n", ln)
+            re.sub(r"^execution_scope:\s*$", f"execution_scope: {default_execution_scope}\n", ln)
             if re.match(r"^execution_scope:\s*$", ln)
             else ln
             for ln in new_fm
         ]
-        changes.append("set execution_scope=orchestrator-agent")
+        changes.append(f"set execution_scope={default_execution_scope}")
 
     # 16. priority
     if not has_field(new_fm, "priority"):
@@ -992,7 +1011,8 @@ def main() -> None:
             try:
                 if fix_active_plan(fp):
                     plan_fixed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: broad-except — top-level per-file CLI guard: any failure
+                # aborts with a clear message rather than a raw traceback
                 print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
                 sys.exit(2)
 
@@ -1003,7 +1023,8 @@ def main() -> None:
             try:
                 if fix_epic(fp):
                     epic_fixed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: broad-except — top-level per-file CLI guard: any failure
+                # aborts with a clear message rather than a raw traceback
                 print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
                 sys.exit(2)
 

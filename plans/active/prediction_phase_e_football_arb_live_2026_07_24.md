@@ -181,3 +181,16 @@ context_scope:
   neither gate cleared. 3 open items independently re-verified as a bounded verification (E1) plus genuine
   arb-engine-wiring/correctness-guard design work (E3) — informational only, the gate citation alone already decides the
   verdict. Doc stays NA.
+
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) —
+  none clear the double `depends_on`+`gate_on_depends: true` gate; both prerequisites
+  (`prediction_phase_ab_residuals_2026_07_24` 7 open, `prediction_phase_d_formal_smoke_and_backfill_2026_07_24` 5 open)
+  re-confirmed still open. No reclassification.
+- **na-eligibility-audit 2026-08-10 (prediction tranche)**: KEEP-NA, valid — re-verified live, 3 open, unchanged. Double
+  `depends_on`+`gate_on_depends: true` gate still open (both prerequisites still status:active, 7 and 5 open todos
+  respectively). E3's arb-engine identity-wiring + correctness-guard items also independently confirmed as genuine
+  multi-file design/build work on live dispatch-critical machinery, not RECLASSIFY-eligible even setting the gate aside.
+  Doc stays NA.

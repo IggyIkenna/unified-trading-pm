@@ -94,6 +94,15 @@ on a different endpoint or a cached/stale read. Evaluate the result:
   2026-08-08: a `dispatched` row, `attempts=2`, `created_at` ~96min old but `dispatched_at` ~43min old, was healthy and
   mid re-escalation, not stuck).
 
+  **The same reasoning extends to a `queued` row reached via re-escalation, not just fresh enqueues.**
+  `_mark_unresolved_and_maybe_reescalate` flips a still-red `dispatched` row to `status=queued` with
+  `resolution="still_red_reescalated"`, `dispatched_at` cleared to null, and `resolved_at` stamped to the flip time —
+  `retry_queued_escalations` then picks it up oldest-first on a later tick. A `queued` row with an old `created_at` but
+  `resolution=still_red_reescalated` and a recent `resolved_at` (the actual last-touched timestamp) is the SAME
+  mid-cycle pattern as above, not stuck — judge it by `resolved_at`, not `created_at` (confirmed live 2026-08-10: a
+  `queued` row, `created_at` ~2h9min old, `resolved_at` ~4min old, `reescalations=1`, was healthy and awaiting its next
+  dispatch tick).
+
 **Connection failure ≠ regression by itself.** If the curl fails (`exit status 7` / connection refused), first rule out
 a benign service restart before calling it a finding — this has happened twice in one 6-hour observation window and both
 times was ordinary maintenance, not a bug:

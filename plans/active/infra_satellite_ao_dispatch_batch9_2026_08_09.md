@@ -13,7 +13,7 @@ summary: >-
   possible orphaned trigger pair, and a dead provenance write-path. That source doc's own 4th item (AWS IAM read access)
   is operator-gated and NOT extracted here. Two of the four todos below (2 and 4) both touch
   `.github/workflows/cloud-build-router.yml`, so this plan runs `sequential: true`.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -25,9 +25,9 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -117,62 +117,92 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
 
 ## Todos
 
-- [ ] [INFRA] P2. **Centralize the UV version pin.** Add a single canonical `UV_VERSION` constant (natural home:
-      `scripts/workspace/resolve-canonical-versions.py`, alongside its existing dependency-version resolution logic, or
-      `canonical-dependency-manifest.json` if that's a better fit for how `resolve-canonical-versions.py` already reads
-      its other pins — worker's call, consistent with how the existing `uv_sources` mechanism is structured) and update
-      all 6 hardcoded `"0.10.8"` sites to read from it instead of a literal: `scripts/setup.sh` (2 call sites: the
-      `pip install "uv==$UV_VERSION"` fallback path and the curl-install path),
-      `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
-      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install     "uv==..."` step —
-      a GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared
-      env/step output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the
-      install-fallback, the drift-check comparison, the drift-warning message),
-      `scripts/quality-gates-base/base-library.sh` (same 3 sites, mirrored). Done when: exactly ONE file defines the
-      literal `0.10.8`, all 6 consumer sites derive from it (grep confirms zero remaining bare `"0.10.8"` string
-      literals outside the new canonical definition site and any test fixtures that intentionally assert against it),
-      and `quality-gates.sh` stays green on at least one repo touched by `base-service.sh` (confirms the drift-guard
-      still fires correctly post-refactor). Source: `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (G2) /
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred item 3. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. **Fix the stale `_AR_REPO` default in the 2 dead/orphaned template sites.** (1)
-      `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` substitution default reads `"unified-trading"` but
-      the real Artifact Registry repo is `unified-trading-system` (verified live 2026-08-08: `unified-trading` returns
-      `NOT_FOUND`) — update the default, or confirm the template is fully superseded by the per-repo `_REGISTRY_REPO`
-      convention (check whether `rollout-workflow-templates.sh --template cloudbuild.yaml` is still ever invoked) and
-      delete/retire it instead. (2) `.github/workflows/cloud-build-router.yml`'s `gcloud builds triggers run` call
-      hardcodes the same stale `_AR_REPO=unified-trading` in its `--substitutions` list — remove or correct it (confirm
-      first that no per-repo `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO` before deleting).
-      Done when: no live code path can produce a build using the stale `unified-trading` AR-repo name. Source:
+- [x] ✅ [INFRA] P2. **Centralize the UV version pin.** — unified-trading-pm@e5697ac5c. `UV_VERSION = "0.10.8"` added to
+      `resolve-canonical-versions.py` (single canonical source); all 6 sites now derive from it via
+      `grep -oP '^UV_VERSION = "\K[^"]+'` (bash sites) or a direct raw-fetch + grep (the GHA YAML site, since the
+      dependency-clone step hasn't run yet at "Install uv" time). Verified: corpus-wide grep for `0.10.8` shows zero
+      hits outside the canonical definition + plan/issue-doc prose; `test-setup-sh-uv-bootstrap-fallback.sh` updated to
+      match the new shape and passes (5/5); `quality-gates.sh` ran green on alerting-service (a `base-service.sh`
+      consumer) with the drift-guard confirmed resolving `_uv_pin=0.10.8` correctly; `quality-gates.sh` also green on
+      unified-trading-pm itself. NOTE: `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` is a
+      point-in-time snapshot (per `hosted-baseline.sh`'s own header) — the truly-live copy of this reusable workflow
+      lives in the separate `unified-trading-ci` repo and still has the old literal; out of this plan's
+      `repos: [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
+      single canonical `UV_VERSION` constant (natural home: `scripts/workspace/resolve-canonical-versions.py`, alongside
+      its existing dependency-version resolution logic, or `canonical-dependency-manifest.json` if that's a better fit
+      for how `resolve-canonical-versions.py` already reads its other pins — worker's call, consistent with how the
+      existing `uv_sources` mechanism is structured) and update all 6 hardcoded `"0.10.8"` sites to read from it instead
+      of a literal: `scripts/setup.sh` (2 call sites: the `pip install "uv==$UV_VERSION"` fallback path and the
+      curl-install path), `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
+      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install "uv==..."` step — a
+      GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared env/step
+      output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the install-fallback, the
+      drift-check comparison, the drift-warning message), `scripts/quality-gates-base/base-library.sh` (same 3 sites,
+      mirrored). Done when: exactly ONE file defines the literal `0.10.8`, all 6 consumer sites derive from it (grep
+      confirms zero remaining bare `"0.10.8"` string literals outside the new canonical definition site and any test
+      fixtures that intentionally assert against it), and `quality-gates.sh` stays green on at least one repo touched by
+      `base-service.sh` (confirms the drift-guard still fires correctly post-refactor). Source:
+      `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (G2) / `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
+      § Deferred item 3. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P3. **Fix the stale `_AR_REPO` default in the 2 dead/orphaned template sites.** —
+      unified-trading-pm@809d6b8d22. (1) `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` substitution
+      default reads `"unified-trading"` but the real Artifact Registry repo is `unified-trading-system` (verified live
+      2026-08-08: `unified-trading` returns `NOT_FOUND`) — update the default, or confirm the template is fully
+      superseded by the per-repo `_REGISTRY_REPO` convention (check whether
+      `rollout-workflow-templates.sh --template cloudbuild.yaml` is still ever invoked) and delete/retire it instead.
+      (2) `.github/workflows/cloud-build-router.yml`'s `gcloud builds triggers run` call hardcodes the same stale
+      `_AR_REPO=unified-trading` in its `--substitutions` list — remove or correct it (confirm first that no per-repo
+      `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO` before deleting). Done when: no live
+      code path can produce a build using the stale `unified-trading` AR-repo name. Source:
       `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` findings 1-2. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP Cloud
-      Build triggers.** These look like a pre-rename leftover from before the repo became `unified-api-contracts` — a
-      separate `unified-api-contracts-live-defi-rollout` trigger already exists and covers current naming. Confirm via
-      each trigger's GitHub repo binding
-      (`gcloud builds triggers describe <name> --project=central-element-323112     --region=asia-northeast1`) whether
-      either still fires on real pushes; if confirmed dead, delete both (`gcloud builds triggers delete`). Done when:
-      both triggers are either confirmed-live (leave as-is, note why) or confirmed-dead-and-deleted, with the
-      verification command output cited as evidence. Source:
-      `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo: unified-trading-pm / GCP
-      project central-element-323112)
-- [ ] [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
+- [x] ✅ [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP
+      Cloud Build triggers.** Both confirmed dead + deleted 2026-08-10 (GCP-only todo; no repo commit). Evidence:
+      `gcloud builds triggers describe api-contracts-build` / `api-contracts-feature-build`
+      (`--project=central-element-323112 --region=asia-northeast1`) both bind to the stale `repositories/api-contracts`
+      in connection `iggyikenna-github` — the GitHub repo was renamed `api-contracts`→`unified-api-contracts`
+      (`IggyIkenna/unified-api-contracts`; `gh api repos/IggyIkenna/api-contracts` redirects to the new name).
+      `api-contracts-build` (`^main$`): last build 2026-06-19, and `main` is pushed daily (2026-08-10T08:42Z, 07:06Z)
+      with zero trigger builds — stale binding receives no webhook events — while the current
+      `unified-api-contracts-live-defi-rollout` trigger fires SUCCESS daily (2026-08-10 10:21, 10:16, 09:56…).
+      `api-contracts-feature-build` (`^feat/.*`): **0 builds ever**. Deleted both via
+      `gcloud builds triggers delete <name> --project=central-element-323112 --region=asia-northeast1 --quiet` →
+      `Deleted [.../triggers/api-contracts-build]` + `Deleted [.../triggers/api-contracts-feature-build]`; verified both
+      absent from `gcloud builds triggers list` and the current `unified-api-contracts-live-defi-rollout` trigger
+      intact. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo:
+      unified-trading-pm / GCP project central-element-323112)
+- [x] ✅ [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
       `cloud-build-router.yml` and `cloud-build-router-aws.yml` write-intend these `workspace-manifest.json` fields on a
       successful build, but live state (verified 2026-08-08) shows `deployed_versions` present-but-empty
-      (`{"dev": {},     "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path
-      is broken or was never fully wired. Either (a) fix the write path so both fields actually populate on a successful
+      (`{"dev": {}, "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path is
+      broken or was never fully wired. Either (a) fix the write path so both fields actually populate on a successful
       build (the workflows already contain the intended `jq` write logic per the grep evidence in the source doc — trace
       why it isn't landing, e.g. a `[skip ci]`-triggered commit not actually pushing, a stale manifest read before the
       write, a race with a concurrent build), or (b) remove the dead write-intent code and stop presenting the manifest
       as a build-provenance source anywhere in the codebase/docs. Done when: a real build's `deployed_versions` entry is
       confirmed populated post-fix (option a), or all dead write-intent code + any doc claiming provenance-via-manifest
       is removed (option b) — worker's call on which, since the doc's own "why it matters" note argues (a) is more
-      valuable (provenance should be answerable), but either resolves the finding. Source:
-      `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 5 / todo 4. (repo:
-      unified-trading-pm)
+      valuable (provenance should be answerable), but either resolves the finding. **Chose option (b) — RETIRED
+      2026-08-10.** Root cause of the dead write path: (1) both workflows declare `permissions: contents: read`, so the
+      manifest `git push origin main` can never succeed (silently swallowed by `|| true`); (2) `main` branch protection
+      requires `Quality Gates (unified-trading-pm) / quality-gates-v2`, so a `[skip ci]` direct push from the non-admin
+      `GITHUB_TOKEN` is rejected anyway; (3) the write step is gated on `build_triggered == 'true'`, which never fired
+      for most repos (trigger-name mismatch, e.g. `greeks-service-prod` vs actual `greeks-service-build`); (4) the field
+      was empty for 5 months (created 2026-03-11, never populated). Removed: the `Update manifest on build success` step
+      in both router workflows (+ hosted-baseline copies), the `deployed_versions` field in `workspace-manifest.json` (+
+      `deployed_versions_aws` which never existed), and the now-dead `deployed_versions` entry in
+      `reconcile_manifest_backmerge.py`'s `_TOPLEVEL_CI_FIELDS`; updated codex docs (dual-cloud-image-builds.md
+      Provenance section, monitoring-control-plane.md) and the GCP router's tier-check to read `.versions` instead of
+      the removed field. Cross-repo dead reads (deployment-api `deployed_version_for`, UI mock, openapi docstrings)
+      filed as `issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status` remains
+      the live-SSOT for deploy state. Verified: `grep deployed_versions` clean in both router workflows + manifest;
+      reconcile unit test still green (no `deployed_versions`/`_TOPLEVEL_CI_FIELDS` assertions); QG green on
+      unified-trading-pm. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 5 /
+      todo 4. (repo: unified-trading-pm)
 
 ## Operator approval gate
 
-**This plan is `status: draft` — awaiting operator review.** Flip to `status: active` only after explicit approval (its
-finalize twin is already `status: active` per the no-double-gate ruling and will stay correctly gated either way).
+**RULED 2026-08-09 (operator): approved.** Flipped `status: draft` → `status: active`; its finalize twin was already
+`status: active` per the no-double-gate ruling and stays correctly gated either way.
 
 ## Codex SSOTs (read before touching a todo)
 
@@ -187,3 +217,25 @@ finalize twin is already `status: active` per the no-double-gate ruling and will
 - **2026-08-09** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 22, dispatch
   agt-3b6f6b). Paired with `infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` in the same run per the
   finalize-plan-coverage rule.
+- **2026-08-10 (slot 14, infra)**: Todo 2 shipped. Deleted dead `scripts/propagation/templates/cloudbuild.yaml` (fully
+  superseded by `configs/cloudbuild-*-template.yaml` using `_REGISTRY_REPO`; not referenced by
+  `rollout-workflow-templates.sh`). Fixed `_AR_REPO=unified-trading`→`unified-trading-system` in
+  `.github/workflows/cloud-build-router.yml` +
+  `scripts/self-hosted-runners/hosted-baseline/{cloud-build-router,image-build-validate}.yml`. Also fixed
+  plan-discipline ratchet in `codex_vs_repo_docs_ssot_audit` (added Deferred banner). unified-trading-pm@809d6b8d22.
+- **2026-08-10 (slot 17, infra)**: Todo 3 shipped (GCP-only, no repo commit). Confirmed + deleted the orphaned
+  `api-contracts-build` / `api-contracts-feature-build` Cloud Build triggers in project central-element-323112 (region
+  asia-northeast1). Both bound to the stale `repositories/api-contracts` connection binding (repo renamed
+  `api-contracts`→`unified-api-contracts` in IggyIkenna org); `api-contracts-build` silent since 2026-06-19 despite
+  daily `main` pushes while the current `unified-api-contracts-live-defi-rollout` trigger builds SUCCESS daily;
+  `api-contracts-feature-build` had zero builds ever. Deleted both via `gcloud builds triggers delete --quiet` and
+  verified them absent from `gcloud builds triggers list` with the current trigger intact.
+- **2026-08-10 (slot 17, infra)**: Todo 4 shipped — **option (b): retired the
+  `deployed_versions`/`deployed_versions_aws` manifest provenance**. Root cause of the never-working write: workflow
+  `permissions: contents: read` (blocked the `git push origin main`, swallowed by `|| true`) + `main` branch-protection
+  QG gate + write step gated on `build_triggered` which never fired for most repos (trigger-name mismatch) + field empty
+  since 2026-03-11. Removed the write step from both router workflows (+ hosted-baseline copies), the manifest
+  `deployed_versions` field, and the dead `reconcile_manifest_backmerge.py` `_TOPLEVEL_CI_FIELDS` entry; retargeted the
+  GCP router tier-check to `.versions`; updated dual-cloud-image-builds.md + monitoring-control-plane.md. Cross-repo
+  dead reads filed as `issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status`
+  remains live-SSOT.

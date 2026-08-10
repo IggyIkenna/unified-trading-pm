@@ -49,7 +49,7 @@ tags:
   [ci-cd, github-actions, reusable-workflows, workflow-templates, fleet-dedup, unified-trading-ci, incident-followup]
 related:
   [
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
@@ -67,7 +67,7 @@ drift_direction: advance-code
 depends_on: [shared_ci_workflow_repo_extraction_2026_08_06]
 context_scope:
   [
-    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
     unified-trading-pm/scripts/workflow-templates/self-hosted-qg-repos.txt,
@@ -383,12 +383,12 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `unified-api-contracts` (needed 3 attempts total), `unified-trading-library` (needed 3 attempts total), and
       `unified-trading-system-ui` — every one recovered via `git log --all --oneline --grep=...` + `git cherry-pick`,
       re-verified independently after each retry. Deleted the now-redundant
-      `scripts/workflow-templates/     staging-lock-check.yml` template source and updated
-      `rollout-workflow-templates.sh`'s header comment + stale usage examples (dry-run verified: only
-      `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` still process). Shipped:
-      `unified-trading-ci@686bca7` (hosted reusable workflow, final content after the debug session),
-      `unified-trading-pm@79223bec17` (make_stub.py fix), `unified-trading-pm@b7e41849d6` (template deletion + script
-      update, landed as a rebased sha on origin), plus one commit per fleet repo (24 total).
+      `scripts/workflow-templates/staging-lock-check.yml` template source and updated `rollout-workflow-templates.sh`'s
+      header comment + stale usage examples (dry-run verified: only `image-build-gate.yml`, `notify-slack.yml`,
+      `quality-gates-v2.yml.tmpl` still process). Shipped: `unified-trading-ci@686bca7` (hosted reusable workflow, final
+      content after the debug session), `unified-trading-pm@79223bec17` (make_stub.py fix),
+      `unified-trading-pm@b7e41849d6` (template deletion + script update, landed as a rebased sha on origin), plus one
+      commit per fleet repo (24 total).
 
 ## Todo 1 findings (2026-08-06)
 
@@ -421,12 +421,19 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 
 - `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / reusable-workflow rollout mechanism; needs todo 9's
   update once this plan ships.
-- `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` — the prior plan this one directly follows; its
-  "Confirmed technical facts" + Progress Log document the base state (the 2-file extraction, the revert incident, the
-  dangling-reference sweep) this plan's own facts build on.
+- `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` — the prior plan this one directly follows;
+  its "Confirmed technical facts" + Progress Log document the base state (the 2-file extraction, the revert incident,
+  the dangling-reference sweep) this plan's own facts build on.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Sole open todo (todo 10, `[INFRA] P3`, "add a branch-protection/visibility-change alert on
+  `unified-trading-ci`") is still explicitly self-described as "genuinely optional... consider whether... warrants a
+  standing guard" — a design/priority call on WHETHER to build it, not a spec a worker can execute without that decision
+  being made first; not satellite-extractable as-is. Checked against this round's accumulated-precedent list (IAM
+  self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default, escalation-N=3-days, reversibility-qualified
+  deletes, Option B retired, GSM secret + 5 Slack webhooks) — none resolve the "should we build this at all" question.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
   end-to-end; `grep -cE '^- \[ \]'` = 1, matching (todo 10 only). Checked against today's operator-Q&A rulings cheat
   sheet: no precedent matches a "should we build a standing visibility-change alert" question, and a fresh grep for any

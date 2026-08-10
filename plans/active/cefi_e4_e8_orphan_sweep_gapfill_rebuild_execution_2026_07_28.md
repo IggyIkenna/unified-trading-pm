@@ -336,3 +336,8 @@ todo's isolated wording. No reclassification.
   verdict. Not a delete (ruling #6 doesn't apply), not IAM, not a scripted-flag gap — a genuine real-write VM-scale
   step this corpus has historically kept human-supervised given its track record of hidden production surprises on
   this exact migration.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked same-day
+  against the round11 precedent set (identical core rulings to the round7 pass immediately above, plus
+  plan-destination-default-to-AO for auto-filed findings and the specific GSM secret/webhook additions) — none newly
+  bound Phases D/E. Phase D is a real-production `_index` rebuild `--apply`; Phase E is its verify gate; both remain
+  VM-scale prod-writes this doc's own banner reserves for human execution. No reclassification.

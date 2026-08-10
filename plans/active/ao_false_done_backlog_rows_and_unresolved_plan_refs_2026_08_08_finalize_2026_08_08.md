@@ -88,3 +88,18 @@ context_scope:
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
   `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
   via `depends_on` + `gate_on_depends: true` until the parent doc's 17 remaining todos are done.
+- **2026-08-10T16:20Z (slot 22, backend_engineer, task
+  `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize-28aa3f5fc829`)**: **Todo 1 (re-run
+  audit_false_done.py) is NOT done — the audit is genuinely RED. NOT flipping.** Re-ran
+  `scripts/orchestrator/audit_false_done.py` against the LIVE DB
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, 306MB, the file the running
+  orchestrator process holds open), plans read at `origin/live-defi-rollout`:
+  **`false_done 16 · honest 914 · UNAUDITABLE 11 · unresolved 1528`, exit code 1**. The `.service` unit has NO
+  `SuccessExitStatus=1`, so exit 1 is the genuine-breach signal — the finalize premise ("confirm audit exits 0 ...
+  before archiving") is NOT met. The 16 rows are a RECURRENCE + growth vs the parent's 14: 2 overlap the triaged set
+  (`defi_cefi_venue_chain_axis_contamination-011` now `done_sha=no-code:gate-still-unmet-verified`,
+  `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` now `done_sha=0e9185d2c` — both re-done
+  with checkbox still `- [ ]`), 14 are NEW, and unresolved grew 1,013→1,528. **Do NOT archive the parent doc** — the
+  audit is not clean. Filed the full finding + per-row reopen/FLIP todos in
+  `plans/active/issues/audit_false_done_16_rows_still_red_2026_08_10.md`. This todo stays `- [ ]` until a fresh audit
+  re-run exits 0 after the 16 rows are triaged.

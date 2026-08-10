@@ -35,7 +35,14 @@ created: 2026-05-07
 name: features_and_ml_master
 tier: L1
 priority: P1
-assigned_vm: vm-ml
+assigned_vm:
+  vm-ml # REVERTED 2026-08-10 (plan_reconciler) -- my own 2026-08-10 edit to NA was WRONG, self-caught same run:
+  # `instruments_master.md`/`sports_master.md` carry an explicit, on-the-record ruling
+  # (finding 123/262, 2026-07-12, §A2 B-queue) that legacy vm-<id> epic values are RETAINED WORKSPACE-WIDE, no value
+  # change, migration out of scope -- distinct from the "was: planning" pattern the 2026-08-02/06 § 2e fixes actually
+  # addressed (agent_operating_framework_master/orchestrator_master/plan_hygiene_master all had the MISLEADING
+  # `planning` value, not a legacy vm-id). PLAN_FORMAT.md's "a legacy vm-<id> still validates... archaeology, never
+  # dispatch-resolved" already covers this value as sanctioned, not stale.
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:

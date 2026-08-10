@@ -96,6 +96,24 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # Fallback: .act-secrets at repo root (e.g. single-repo dev)
 [ ! -f "${WORKSPACE_ROOT}/.act-secrets" ] && [ -f "${REPO_ROOT}/.act-secrets" ] && WORKSPACE_ROOT="$REPO_ROOT"
 
+# push-host-governor.sh (2026-08-09, cross-slot push contention): stubs defined FIRST,
+# unconditionally, so `set -e` above can never trip on "command not found" if the PM checkout
+# is missing/stale relative to this copy of quickmerge.sh -- source only OVERRIDES them with the
+# real implementation when found. Resolved via WORKSPACE_ROOT/unified-trading-pm (not SCRIPT_DIR)
+# because quickmerge.sh is a per-repo SYMLINK to PM's canonical copy: SCRIPT_DIR resolves to the
+# CALLING repo's scripts/ dir (a real, non-symlinked directory), not PM's -- WORKSPACE_ROOT is the
+# one path that resolves to PM's checkout regardless of which repo's symlink invoked this script
+# (same rule already used by PM_DIR below).
+push_gov_acquire_validate() { :; }
+push_gov_release_validate() { :; }
+push_gov_acquire_push() { :; }
+push_gov_release_push() { :; }
+_QM_PUSH_GOV_FILE="$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/push-host-governor.sh"
+if [ -f "$_QM_PUSH_GOV_FILE" ]; then
+  # shellcheck disable=SC1090
+  source "$_QM_PUSH_GOV_FILE"
+fi
+
 # Act secrets: prefer UNIFIED_TRADING_WORKSPACE_ROOT when set (portable across team); else use computed WORKSPACE_ROOT
 ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
 [ -f "${ACT_SECRETS_ROOT}/.act-secrets" ] && export ACT_SECRETS_FILE="${ACT_SECRETS_ROOT}/.act-secrets"
@@ -103,6 +121,11 @@ ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
 # ── PARSE ARGUMENTS ───────────────────────────────────────────────────────────
 COMMIT_MSG="chore: automated update"
 FILES_ARG=""
+# --isolated / --no-isolated (2026-08-10, operator ruling). "auto" resolves by HOST below.
+ISOLATED_MODE="${QUICKMERGE_ISOLATED:-auto}"
+# Original argv, captured BEFORE the parse loop shifts it away -- isolation re-execs this
+# script verbatim and would otherwise pass an empty "$@".
+_QM_ORIG_ARGS=("$@")
 DEP_BRANCH=""
 TO_STAGING=true
 HOTFIX=false
@@ -243,6 +266,14 @@ QM_USAGE
       FILES_ARG="$2"
       shift 2
       ;;
+    --isolated)
+      ISOLATED_MODE=force
+      shift
+      ;;
+    --no-isolated)
+      ISOLATED_MODE=off
+      shift
+      ;;
     --dep-branch)
       DEP_BRANCH="$2"
       shift 2
@@ -379,6 +410,254 @@ if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
   echo "   This prevents committing another agent's partial work, .env files, or artifacts."
   exit 1
 fi
+
+# ── ISOLATED-WORKTREE MODE (2026-08-10, operator ruling) ─────────────────────────────────
+# WHY GATED, unlike safe-doc-push.sh where isolation is unconditional: the hazard is a SHARED
+# INDEX -- two processes committing out of one checkout interleave prek's patch save/restore
+# and git's autostash push/pop, and the loser's uncommitted edits are reverted with no error.
+# Measured 2026-08-10 in this repo: 6 concurrent doc pushes from one shared checkout landed
+# 0/6 (every worker rc=7, prek stash/restore race); the same 6 from isolated worktrees landed
+# 6/6 with every caller's tree intact.
+#
+# That hazard requires CONCURRENT WRITERS IN ONE CHECKOUT, which is a laptop condition, not a
+# fleet one:
+#   * Laptop (Ikenna / Harsh): interactive sessions have no allocation mechanism -- two
+#     Claude sessions routinely share one .tabs/N checkout (CLAUDE.md documents this as an
+#     accepted operating mode). Isolation ON.
+#   * agent-orchestrator planning VM: the dispatcher assigns ONE task at a time per slot, and
+#     each slot is already its own clone. There is no second writer to race, so isolation
+#     would add a full worktree checkout per commit for zero safety gain. Isolation OFF.
+# Host detection reuses slot-identity-lib.sh's existing signal rather than inventing one:
+# ORCHESTRATOR_VM_ID / VM_NAME / `git config --global slotIdentity.host`, falling back to
+# "laptop". Explicit --isolated / --no-isolated always win; QUICKMERGE_ISOLATED sets the
+# default non-interactively.
+_qm_host_label() {
+  local h="${ORCHESTRATOR_VM_ID:-${VM_NAME:-$(git config --global slotIdentity.host 2>/dev/null || true)}}"
+  echo "${h:-laptop}"
+}
+
+_qm_should_isolate() {
+  case "$ISOLATED_MODE" in
+    force) return 0 ;;
+    off) return 1 ;;
+  esac
+  # auto resolves to OFF (2026-08-10, same-day correction). Isolation was briefly default-ON
+  # for laptops and that was WRONG: quality-gates.sh cannot resolve its dependencies inside a
+  # fresh worktree. Measured in the end-to-end dogfood -- the re-gate died with
+  # `ModuleNotFoundError: No module named 'unified_api_contracts'` and `... 'pandas'`, because
+  # symlinking .venv is not sufficient (the venv resolves editable/sibling installs relative to
+  # the ORIGINAL checkout, and the tooling re-resolves the environment from the worktree's own
+  # project dir). Isolation therefore turns every laptop quickmerge into a QG failure, which is
+  # strictly worse than the shared-index race it was protecting against.
+  #
+  # Kept as an EXPLICIT opt-in (--isolated) so the path stays testable while the venv-resolution
+  # problem is solved; see the todo in
+  # plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md.
+  # safe-doc-push's isolation is UNAFFECTED and remains default-on: the docs fast path runs prek
+  # only, never quality-gates.sh, so it has no dependency-resolution problem to solve.
+  return 1
+}
+
+# Depth backstop -- learned the hard way on 2026-08-10: safe-doc-push's env handshake broke
+# and its isolation recursed to 116 nested invocations / 722 stray worktrees before anything
+# stopped it. A counter that survives an env-propagation bug is the only real bound.
+_QM_ISO_DEPTH="${QM_ISO_DEPTH:-0}"
+if [ "$_QM_ISO_DEPTH" -ge 1 ] && [ -z "${QM_IN_ISOLATION:-}" ]; then
+  echo "❌ quickmerge isolation recursion detected (depth=$_QM_ISO_DEPTH) — handshake broken; refusing to nest." >&2
+  exit 11
+fi
+
+# ── CONTENT FINGERPRINT (2026-08-10, pm_repo_commit_rate_exceeds_precommit_hook_duration) ──
+# quickmerge destroyed a caller's uncommitted edits on 2026-08-10 the same way safe-doc-push
+# did: STAGE 0.4's reconcile / prek's patch save-restore reverted the named files to HEAD
+# mid-run, and the script carried on with no indication. safe-doc-push grew an entry
+# fingerprint + exit 10 for exactly this; quickmerge had NO equivalent detection at all, so
+# the loss was silent here in a way it no longer is there.
+#
+# Full isolation (committing from a throwaway worktree, safe-doc-push's fix) is NOT applied
+# here on purpose: quickmerge runs quality-gates.sh, which depends on the repo's own .venv and
+# per-repo tooling layout, so relocating its working directory is a materially larger and
+# riskier change than the doc fast path's. Detect-and-report is the proportionate fix; a
+# separate todo tracks whether full isolation is worth it for quickmerge.
+_QM_ENTRY_FINGERPRINT=""
+if [ -n "$FILES_ARG" ]; then
+  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+  for _qm_f in $FILES_ARG; do
+    if [ -f "$_qm_f" ]; then
+      _QM_ENTRY_FINGERPRINT="${_QM_ENTRY_FINGERPRINT}$(git hash-object -- "$_qm_f" 2>/dev/null || echo MISSING)  ${_qm_f}
+"
+    else
+      _QM_ENTRY_FINGERPRINT="${_QM_ENTRY_FINGERPRINT}ABSENT  ${_qm_f}
+"
+    fi
+  done
+fi
+
+# Returns 1 when the caller's named files no longer match what they handed us.
+_qm_content_vanished() {
+  [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
+  local now=""
+  # shellcheck disable=SC2086
+  for _qm_f in $FILES_ARG; do
+    if [ -f "$_qm_f" ]; then
+      now="${now}$(git hash-object -- "$_qm_f" 2>/dev/null || echo MISSING)  ${_qm_f}
+"
+    else
+      now="${now}ABSENT  ${_qm_f}
+"
+    fi
+  done
+  [ "$now" = "$_QM_ENTRY_FINGERPRINT" ] && return 0
+  {
+    echo
+    echo "🛑 YOUR NAMED FILE(S) CHANGED CONTENT DURING THIS QUICKMERGE RUN."
+    echo "   They no longer match what you handed this script. This is the silent-revert"
+    echo "   failure mode from pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md"
+    echo "   (measured: a concurrent session's prek/autostash cycle reverting a tracked file)."
+    echo "   Do NOT simply re-run — that would ship whatever is on disk now."
+    echo "   Your content is most likely recoverable:"
+    git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+    echo "     git stash show -p 'stash@{0}'"
+    echo "     Extract ONE file (these autostashes often hold a peer session's WIP):"
+    echo "       git show 'stash@{0}:<path>' > <path>"
+    echo "     Also check: ls -t ~/.cache/prek/patches/ | head"
+  } >&2
+  return 1
+}
+
+# ── isolation execution ──────────────────────────────────────────────────────────────────
+# Re-exec THIS script inside a throwaway worktree at the CURRENT HEAD, with the caller's named
+# files copied in. Only the working directory changes; the script, its stages and its gates are
+# identical. Two details that are load-bearing:
+#   * `.venv` is symlinked from the caller's checkout. quality-gates.sh resolves the repo's own
+#     `.venv`, and a fresh worktree has none (it is gitignored) -- without this, isolation would
+#     silently turn every quickmerge into a QG failure. This is exactly why safe-doc-push's
+#     unconditional isolation is NOT simply copied here.
+#   * We re-exec "$_QM_SELF" (resolved before any cd), never the worktree's own copy, or a
+#     caller running a locally-fixed script would silently get the committed version instead.
+_QM_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
+_QM_ISO_ROOT=""
+_qm_cleanup_isolation() {
+  [ -n "$_QM_ISO_ROOT" ] || return 0
+  git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  git worktree prune 2>/dev/null || true
+}
+
+if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; then
+  _qm_repo_name="$(basename "$(pwd)")"
+  _qm_iso_parent="${TMPDIR:-/tmp}/qm-iso-$$"
+  _qm_iso_wt="$_qm_iso_parent/$_qm_repo_name"
+  _qm_caller_repo="$(pwd)"
+  if git worktree add --detach -q "$_qm_iso_wt" HEAD 2>/dev/null; then
+    _QM_ISO_ROOT="$_qm_iso_parent"
+    trap _qm_cleanup_isolation EXIT
+    # ---- make the worktree a COMPLETE MINIATURE WORKSPACE -------------------------------
+    # quality-gates.sh computes WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/.." and is
+    # NOT env-overridable, then installs LOCAL_DEPS (unified-api-contracts, unified-trading-
+    # library) as editable SIBLINGS from there. A bare tmpdir worktree has no siblings, so those
+    # installs silently no-op and the re-gate dies with ModuleNotFoundError. Symlink every
+    # sibling repo of the caller's workspace next to the worktree so the derivation resolves.
+    _qm_ws_root="$(cd "$_qm_caller_repo/.." && pwd -P)"
+    for _qm_sib in "$_qm_ws_root"/*; do
+      [ -d "$_qm_sib" ] || continue
+      [ -e "$_qm_sib/.git" ] || continue
+      _qm_sib_name="$(basename "$_qm_sib")"
+      [ "$_qm_sib_name" = "$_qm_repo_name" ] && continue   # the worktree IS this repo
+      [ -e "$_qm_iso_parent/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_parent/$_qm_sib_name" 2>/dev/null
+    done
+
+    # ---- private, CACHED venv -- never the caller's -------------------------------------
+    # Symlinking the caller's .venv was WRONG and measurably harmful: base-service.sh runs
+    # `UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen`, and `uv sync` PRUNES packages absent from
+    # the lock -- so an isolated run stripped unified_api_contracts / unified_trading_library /
+    # pandas out of the operator's real environment (observed 2026-08-10; restored by hand).
+    # Give isolation its own venv, cached per repo so the uv sync cost is paid once rather than
+    # per commit, and keep it entirely outside any checkout the operator uses.
+    _qm_iso_venv="${QM_ISO_VENV_CACHE:-$HOME/.cache/qm-iso-venv}/$_qm_repo_name"
+    mkdir -p "$(dirname "$_qm_iso_venv")" 2>/dev/null
+    ln -sfn "$_qm_iso_venv" "$_qm_iso_wt/.venv" 2>/dev/null
+    # PROVISION it, don't just point at it (2026-08-10). The symlink above was created but the
+    # cache directory never was, so `.venv` DANGLED — and a dangling link is not a loud failure:
+    # quality-gates.sh gates its PATH export on `[ -d .venv/bin ]`, which is false for one, so it
+    # silently ran `python -m pytest` against the SYSTEM interpreter. That produced "6 failed,
+    # 3168 passed" on a tree whose tests all pass (verified: same worktree, working interpreter →
+    # 4 passed), and pip-audit skipped itself for the same missing python while the test step just
+    # ran on the wrong one. Creating the directory is what makes base-service.sh's
+    # `UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen` populate a REAL venv here instead.
+    # POPULATE it too — an empty directory is still an unusable venv. Repos whose
+    # quality-gates.sh sources base-service.sh get `uv sync` for free; ones that deliberately do
+    # not (agent-orchestrator says so in its header) have nothing that would ever create this,
+    # which is why the cache stayed absent. Sync once per repo; later runs reuse it.
+    if [ ! -x "$_qm_iso_venv/bin/python" ] && command -v uv >/dev/null 2>&1; then
+      echo "  isolation: provisioning private venv for $_qm_repo_name (first run — one-time cost)"
+      ( cd "$_qm_iso_wt" && UV_PROJECT_ENVIRONMENT="$_qm_iso_venv" uv sync --frozen ) >/dev/null 2>&1 ||
+        ( cd "$_qm_iso_wt" && UV_PROJECT_ENVIRONMENT="$_qm_iso_venv" uv sync ) >/dev/null 2>&1 ||
+        echo "  isolation: uv sync failed — the re-gate will abort on it (by design, not silently)" >&2
+    fi
+    # Node deps: same problem, same shape, and the reason a UI change could pass an isolated
+    # quickmerge without tsc/vitest/Playwright ever running. Cached per repo and symlinked in —
+    # NEVER a link to the caller's node_modules, for exactly the reason the venv above is private:
+    # a tool that prunes (npm ci) would strip the operator's real tree, which is precisely what
+    # `uv sync` did to a shared .venv on 2026-08-10. Only linked when the cache is already
+    # populated; quality-gates.sh now FAILS CLOSED on absent node_modules, so an unprovisioned
+    # cache surfaces as a loud, actionable error rather than a silent skip.
+    _qm_iso_nm="${QM_ISO_NODE_CACHE:-$HOME/.cache/qm-iso-node-modules}/$_qm_repo_name"
+    if [ -d "$_qm_iso_wt/dashboard" ] && [ -f "$_qm_iso_wt/dashboard/package.json" ]; then
+      if [ -d "$_qm_iso_nm/node_modules" ]; then
+        ln -sfn "$_qm_iso_nm/node_modules" "$_qm_iso_wt/dashboard/node_modules" 2>/dev/null
+      elif [ -d "$_qm_caller_repo/dashboard/node_modules" ]; then
+        # First run for this repo: seed the cache from the caller by COPY (not link), so the
+        # isolated gate has real node deps and the operator's tree can never be mutated by it.
+        mkdir -p "$_qm_iso_nm" 2>/dev/null
+        if cp -R "$_qm_caller_repo/dashboard/node_modules" "$_qm_iso_nm/node_modules" 2>/dev/null; then
+          ln -sfn "$_qm_iso_nm/node_modules" "$_qm_iso_wt/dashboard/node_modules" 2>/dev/null
+        else
+          echo "  isolation: could not seed dashboard node_modules cache — the re-gate will FAIL" >&2
+          echo "  closed on it (by design). Use --no-isolated, or 'npm --prefix dashboard install'." >&2
+        fi
+      fi
+    fi
+
+    _qm_copy_ok=true
+    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+    for _qm_f in $FILES_ARG; do
+      if [ ! -f "$_qm_f" ]; then
+        echo "  isolation: named file absent in caller tree, skipping copy: $_qm_f" >&2
+        continue
+      fi
+      mkdir -p "$_qm_iso_wt/$(dirname "$_qm_f")" 2>/dev/null || true
+      cp "$_qm_f" "$_qm_iso_wt/$_qm_f" || _qm_copy_ok=false
+    done
+    if [ "$_qm_copy_ok" = true ]; then
+      echo "🔒 quickmerge isolated-worktree mode (host=$(_qm_host_label)) — your working tree is NOT touched"
+      echo "   NOTE: a FULL quality-gates.sh re-gate will run here. Your checkout's Pass-1 sentinel"
+      echo "   does not transfer: it attests YOUR tree, and this worktree is your named files on"
+      echo "   origin/HEAD — a different tree. Re-gating is the correct behaviour (it validates"
+      echo "   exactly what is being committed, not a sentinel a peer may have since invalidated),"
+      echo "   but it costs a full QG run. Use --no-isolated to keep the sentinel fast path."
+      echo "   disable with --no-isolated; see codex/05-infrastructure/per-tab-worktrees.md"
+      cd "$_qm_iso_wt" || exit 2
+      # QG_ALLOW_SKIP_DASHBOARD=1 (2026-08-10): quality-gates.sh fails closed when a repo with
+      # dashboard/package.json has no dashboard/node_modules (agent-orchestrator@8f1a08a). An
+      # isolated worktree NEVER has node_modules (gitignored; isolation provisions a venv but no
+      # node deps), so the full re-gate here would hard-fail on every dashboard-carrying repo.
+      # The isolated worktree IS the "deliberately python-only environment" the override exists
+      # for — the explicit exemption (not the silent skip the commit closed). CI runs the real
+      # UI checks: the shared QG template installs dashboard deps when dashboard/package.json is
+      # present, so a UI regression is still caught at push/promote, just not at the local fast path.
+      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
+      _qm_rc=$?
+      cd "$_qm_caller_repo" || true
+      exit "$_qm_rc"
+    fi
+    echo "  isolation: could not stage caller files into the worktree — continuing in the shared checkout" >&2
+    _qm_cleanup_isolation
+    _QM_ISO_ROOT=""
+  else
+    echo "  isolation: worktree setup unavailable — continuing in the shared checkout" >&2
+  fi
+fi
+
 
 # B (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix is an auditable break-glass. Require an
 # explicit [hotfix] marker in the commit message so a queue-jumping immediate staging promote is
@@ -754,9 +1033,28 @@ else
       echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
-      if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
+      # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
+      # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
+      # "working-tree overlap" and a RECOVERY line telling the agent to `git stash push -- <file>`,
+      # when the real cause was three unmerged index entries left by an earlier stash-apply. That
+      # advice fixes nothing, and the whole quickmerge run was wasted before the agent worked out
+      # that git had said something else entirely.
+      # The `&& … || …` form is load-bearing: `set -e` is active here (line 89), and a bare
+      # assignment whose command substitution fails would abort quickmerge outright. The old
+      # `if git pull …; then` was safe only because a condition suppresses errexit.
+      _QM_FF_ERR="$(git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>&1)" \
+        && _QM_FF_RC=0 || _QM_FF_RC=$?
+      if [ "$_QM_FF_RC" -eq 0 ]; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
+      elif printf '%s' "$_QM_FF_ERR" | grep -q 'unmerged files\|unresolved conflict'; then
+        # A DIFFERENT condition with a DIFFERENT fix. The index still holds conflict stages from
+        # an earlier interrupted merge/stash-apply; no amount of stashing a file by name helps.
+        echo "QUICKMERGE_BLOCKED code=PRECOMMIT_UNMERGED_INDEX repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH} behind=${_QM_BEHIND} ahead=${_QM_AHEAD}"
+        echo "RECOVERY: your index has unmerged entries from an earlier interrupted merge or stash-apply — git refuses to pull until they are resolved. Inspect with 'git ls-files -u', resolve the file's content (search it for <<<<<<< markers), 'git add' it by name, then re-run. Do NOT 'git checkout --theirs/--ours' a file you do not own."
+        echo "[$REPO_NAME] ❌ BLOCKED: unmerged index entries — git said: ${_QM_FF_ERR%%$'\n'*}"
+        exit 1
       elif [ "${_QM_AHEAD:-0}" = "0" ]; then
+        echo "[$REPO_NAME]    git's own reason: ${_QM_FF_ERR%%$'\n'*}"
         # Pre-commit case (autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md,
         # decided fix 2026-08-01): ahead=0 means there is no local commit for `--rebase` to
         # replay, so ff-only's failure here can ONLY be a working-tree content OVERLAP (a
@@ -1227,6 +1525,10 @@ for dep in deps:
     # the backmerge so the NEXT attempt self-heals, and print a remedy that matches the
     # actual checkout.
     _PM_BRANCH=$(cd "$PM_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    # A detached HEAD reports the literal "HEAD", and `git pull origin HEAD` is not the pull we
+    # want. Reachable since 2026-08-10: isolated mode now stays detached (see
+    # _qm_checkout_ship_branch), so shipping PM itself lands here. Use the ship branch instead.
+    [ "$_PM_BRANCH" = "HEAD" ] && _PM_BRANCH="$BRANCH"
     echo "[$REPO_NAME] auto-pulling PM manifest (PM checkout: ${_PM_BRANCH:-unknown}) to pick up promoted versions..."
     if [ "$_PM_BRANCH" = "main" ]; then
       (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null) || \
@@ -1731,10 +2033,29 @@ fi
 
 git fetch origin main --quiet
 
-# Create branch
-if [ -n "$DEP_BRANCH" ]; then
-  BRANCH="$DEP_BRANCH"
-  echo "[$REPO_NAME] Using specified branch: $BRANCH"
+# Check out the ship branch -- EXCEPT in isolation, where doing so is fatal (2026-08-10).
+#
+# The isolated worktree is created `--detach` at the caller's HEAD on purpose, but this stage
+# then ran `git checkout "$BRANCH"` inside it, and git REFUSES to check out a branch another
+# worktree already holds:
+#     fatal: 'live-defi-rollout' is already used by worktree at '<main clone>'
+# Since every agent ships to that one branch, isolated mode could never complete a ship at all
+# -- callers were silently pushed back onto `--no-isolated`, which is precisely the mode whose
+# shared checkout lets a peer's pull/rebase cycle revert your working tree mid-ship (measured
+# 3 reverts in ~20 min on 2026-08-10).
+#
+# safe-doc-push.sh has always been immune because it never checks the branch out: it detaches
+# and pushes an explicit refspec (`git push origin "HEAD:${BRANCH}"`). Do the same here rather
+# than invent a second mechanism. Staying at the existing detached HEAD -- rather than
+# re-detaching onto origin/$BRANCH -- is deliberate: the caller's named files have ALREADY been
+# copied into this worktree as uncommitted modifications, and moving HEAD underneath them risks
+# a checkout conflict against files we are about to commit. Being behind origin is handled
+# downstream anyway, by the existing push-retry rebase.
+_qm_checkout_ship_branch() {
+  if [ -n "${QM_IN_ISOLATION:-}" ]; then
+    echo "[$REPO_NAME] isolation: staying on detached HEAD (the shared clone holds $BRANCH); will push HEAD:$BRANCH"
+    return 0
+  fi
   if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
     git checkout "$BRANCH" --quiet
   elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
@@ -1742,6 +2063,13 @@ if [ -n "$DEP_BRANCH" ]; then
   else
     git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
   fi
+}
+
+# Create branch
+if [ -n "$DEP_BRANCH" ]; then
+  BRANCH="$DEP_BRANCH"
+  echo "[$REPO_NAME] Using specified branch: $BRANCH"
+  _qm_checkout_ship_branch
 else
   # Read active_feature_branch from PM manifest (SSOT for feature branch name)
   MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
@@ -1756,13 +2084,7 @@ else
     BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
     echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
   fi
-  if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
-    git checkout "$BRANCH" --quiet
-  elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
-    git checkout -B "$BRANCH" "origin/$BRANCH" --quiet
-  else
-    git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
-  fi
+  _qm_checkout_ship_branch
 fi
 echo ""
 
@@ -1949,6 +2271,58 @@ _qm_restage_target_files() {
   fi
 }
 
+# _qm_locked_git_commit -- serialise `git commit` (which runs the prek/pre-commit hook chain
+# synchronously) against any OTHER concurrent commit in this SAME checkout, in this or any
+# other process (e.g. safe-doc-push.sh, which wraps its own commit calls the same way).
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08: prek stashes unstaged
+# changes to a patch at hook-batch START and restores it at the END; two overlapping
+# `git commit` calls in one checkout can interleave those windows, and the first session's
+# restore silently reverts a second session's newer edit to HEAD -- no error, no conflict
+# marker, no stash entry to recover from. A flock scoped to this checkout's .git dir closes
+# the interleaving window without touching prek itself -- a distinct lock file/FD from the
+# cascade lock above (different critical section, same degrade-to-unlocked convention).
+# Held ONLY around the single `git commit` call, never across the retry loop below (up to
+# _QM_COMMIT_RETRY_MAX attempts) -- each retry re-acquires+releases cleanly, no self-deadlock.
+_qm_locked_git_commit() {
+  local lock_fd=222 lock_file rc
+  lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
+  # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (P0): the pre-commit drift
+  # gate is ADVISORY for quickmerge's own commit -- STAGE 0.4 already reconciles against origin
+  # and the push path re-reconciles on rejection, so "your commit sits on current origin" is
+  # enforced AFTER the commit, where it costs seconds instead of re-paying a 118s hook chain.
+  # Measured 2026-08-10 in unified-trading-pm: hook chain 118s vs 60-80s commit inter-arrival,
+  # so the gate fired on essentially every attempt. Scoped to this call and unset right after,
+  # so it never leaks; a bare human `git commit` keeps the hard block.
+  export DRIFT_GATE_ADVISORY=1
+  # push-host-governor.sh (2026-08-09): host-wide validation-phase token (K=8 default) around
+  # the hook-chain-running commit call itself, nested OUTSIDE this pre-existing per-checkout
+  # flock (that one only prevents the prek-stash-restore race WITHIN one checkout; this one
+  # bounds how many checkouts host-wide run prek's synchronous hook chain at once).
+  push_gov_acquire_validate
+  if [ -z "$lock_file" ] || [ "$lock_file" = "/quickmerge-commit.lock" ]; then
+    git commit "$@"
+    rc=$?
+    unset DRIFT_GATE_ADVISORY
+    push_gov_release_validate
+    return "$rc"
+  fi
+  if command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
+    flock "$lock_fd"
+    git commit "$@"
+    rc=$?
+    flock -u "$lock_fd" 2>/dev/null || true
+    eval "exec ${lock_fd}>&-" 2>/dev/null || true
+    unset DRIFT_GATE_ADVISORY
+    push_gov_release_validate
+    return "$rc"
+  fi
+  git commit "$@"
+  rc=$?
+  unset DRIFT_GATE_ADVISORY
+  push_gov_release_validate
+  return "$rc"
+}
+
 # Bounded retry for a commit-time branch-drift race (ao_quickmerge_stage5_
 # branch_drift_retry_2026_07_27): STAGE 0.4 already pulled us current before QG
 # ran, but on a busy shared branch a peer can push AGAIN in the seconds between
@@ -1980,6 +2354,36 @@ _qm_restage_target_files() {
 # pre-existing foreign WIP (which we must never touch per the multi-agent safety rule), so
 # it is safe to auto-revert.
 _QM_PRE_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3, "make the loss
+# loud"): the flock in _qm_locked_git_commit closes the interleaving window for commits made
+# THROUGH this script/safe-doc-push.sh, but it can't cover a `git commit` invoked some other
+# way in this same checkout (a manual dev commit, a future call site). Checksum every
+# already-unstaged file BEFORE the commit call — exactly the set prek's own stash captures —
+# so a silent revert (the stash/restore race reinstating a stale snapshot over a newer edit)
+# is DETECTABLE even when the lock didn't prevent it, instead of reporting a clean tree.
+_QM_PRE_HOOK_CHECKSUMS=""
+if [ -n "$_QM_PRE_HOOK_UNSTAGED" ]; then
+  while IFS= read -r _qm_snap_path; do
+    [ -z "$_qm_snap_path" ] && continue
+    [ -f "$_qm_snap_path" ] || continue
+    _QM_PRE_HOOK_CHECKSUMS="${_QM_PRE_HOOK_CHECKSUMS}${_qm_snap_path}	$(git hash-object -- "$_qm_snap_path" 2>/dev/null)
+"
+  done <<EOF
+$_QM_PRE_HOOK_UNSTAGED
+EOF
+fi
+
+# push-host-governor.sh (2026-08-09): from here through the post-push ancestry check below is
+# the actual git-remote critical section (commit-retry's own fetch+rebase reconciliation, then
+# push-retry's own fetch+rebase+push) -- everything ABOVE this point (STAGE 0-5, the Pass-1 QG
+# re-verification) stays UNGATED and runs with real cross-slot concurrency, exactly per the
+# operator-agreed split: only the part that actually collides on GitHub's single-writer ref
+# gets serialised. Released once, on the success path after ancestry verification; every exit 1
+# between here and there auto-releases via the OS closing the FD on process death (see the
+# governor file's own header) so a failure never leaves the next queued slot waiting forever.
+push_gov_acquire_push "$REPO_NAME" "$BRANCH"
+
 _QM_FRESH_COMMIT=0
 _QM_COMMIT_RETRY_MAX=15
 _QM_COMMIT_ATTEMPT=0
@@ -2005,14 +2409,14 @@ while true; do
     else
       _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
       { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
-      git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
+      _qm_locked_git_commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
       rm -f "$_QM_AMEND_MSG_FILE"
       echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
     fi
     break
   fi
 
-  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+  if _qm_locked_git_commit -m "$_QM_COMMIT_MSG" --quiet; then
     _QM_FRESH_COMMIT=1
     break
   fi
@@ -2024,7 +2428,7 @@ while true; do
   # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
   _qm_restage_target_files
-  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+  if _qm_locked_git_commit -m "$_QM_COMMIT_MSG" --quiet; then
     _QM_FRESH_COMMIT=1
     if [ -n "$FILES_ARG" ]; then
       echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
@@ -2102,6 +2506,42 @@ EOF
     done
     echo "[$REPO_NAME]     See plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
   fi
+
+  # prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3): compare the
+  # checksums snapshotted BEFORE this commit's hook chain ran against the SAME files now.
+  # Unlike the new-foreign-dirt check above, a changed checksum here means a file that was
+  # ALREADY unstaged-dirty (something's real WIP) has different content than before we
+  # started — the silent-revert signature (prek's restore reinstating a stale patch over a
+  # newer edit). There is no safe auto-fix (we don't know which version is "right", and this
+  # script must never overwrite foreign WIP either way) — HARD-STOP so the loss is loud
+  # instead of a clean-looking tree hiding it.
+  if [ -n "$_QM_PRE_HOOK_CHECKSUMS" ]; then
+    _QM_RACE_REVERTED=""
+    while IFS=$'\t' read -r _qm_race_path _qm_race_hash_before; do
+      [ -z "$_qm_race_path" ] && continue
+      if [ -f "$_qm_race_path" ]; then
+        _qm_race_hash_after="$(git hash-object -- "$_qm_race_path" 2>/dev/null)"
+      else
+        _qm_race_hash_after="__deleted__"
+      fi
+      if [ "$_qm_race_hash_after" != "$_qm_race_hash_before" ]; then
+        _QM_RACE_REVERTED="${_QM_RACE_REVERTED}${_qm_race_path}
+"
+      fi
+    done <<EOF
+$_QM_PRE_HOOK_CHECKSUMS
+EOF
+    if [ -n "$_QM_RACE_REVERTED" ]; then
+      echo "[$REPO_NAME] ❌ prek stash/restore race detected — these unstaged file(s) changed content DURING the commit (not something this script did):" >&2
+      printf '%s' "$_QM_RACE_REVERTED" | while IFS= read -r _qm_race_path; do
+        [ -z "$_qm_race_path" ] && continue
+        echo "  - $_qm_race_path" >&2
+      done
+      echo "[$REPO_NAME]     A concurrent commit's prek restore likely reinstated a stale snapshot over a newer edit." >&2
+      echo "[$REPO_NAME]     See plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md — do NOT re-run blindly; inspect the file(s) above (git diff / reflog on whoever owns that edit) before continuing." >&2
+      exit 1
+    fi
+  fi
 fi
 
 # shared_clone_concurrent_commit_message_swap_2026_07_28: on a shared per-tab clone, two
@@ -2137,7 +2577,27 @@ _qm_push_attempt=0
 _qm_push_ok=0
 while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
   _qm_push_attempt=$((_qm_push_attempt + 1))
-  _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
+  # Heal evidence citations that a rebase invalidated -- INSIDE the loop, because the
+  # push-retry path below rebases again and re-orphans whatever the previous pass fixed.
+  # Same reconciler safe-doc-push uses; no-ops (one grep) when the staged files cite nothing.
+  if [ -n "$FILES_ARG" ] && [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+    if declare -F reconcile_sha_citations >/dev/null 2>&1; then
+      # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+      RSC_CALLER_REPO="${QM_CALLER_REPO:-$(git rev-parse --show-toplevel 2>/dev/null)}" \
+        reconcile_sha_citations "$BRANCH" $FILES_ARG || true
+    fi
+  fi
+  # In isolation we are on a detached HEAD by design (see _qm_checkout_ship_branch), so there is
+  # no local branch for `-u` to bind and `git push -u origin $BRANCH` would push the SHARED
+  # clone's stale refs/heads/$BRANCH instead of the commit we just made. Push the explicit
+  # refspec, exactly as safe-doc-push.sh does.
+  if [ -n "${QM_IN_ISOLATION:-}" ]; then
+    _qm_push_err=$(git push origin "HEAD:refs/heads/$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
+  else
+    _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
+  fi
   echo "[$REPO_NAME] ⚠️  push rejected (attempt $_qm_push_attempt/$_QM_PUSH_RETRIES) — rebasing onto the new remote tip and retrying (no QG re-run needed, content unchanged)..." >&2
   if ! git pull --rebase --autostash origin "$BRANCH" --quiet 2>/dev/null; then
     echo "[$REPO_NAME] ❌ rebase during push-retry hit a real conflict — resolve manually (git status)." >&2
@@ -2171,6 +2631,23 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# The SHA to put in the plan checkbox. Stated explicitly because the SHA a worker sees at
+# `git commit` time is NOT the one that lands: every push here rebases first, which rewrites
+# it. Citing the pre-rebase SHA is the single most common source of a FALSE
+# check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
+# silent on the authoring machine, where the orphaned object still resolves.
+echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
+# ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
+# resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
+# a second edit pass afterwards.
+if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+  if declare -F resolve_pending_citations >/dev/null 2>&1; then
+    resolve_pending_citations "$REPO_NAME" "$_QM_PUSHED_SHA" "$WORKSPACE_ROOT/unified-trading-pm" || true
+  fi
+fi
+push_gov_release_push
 
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")

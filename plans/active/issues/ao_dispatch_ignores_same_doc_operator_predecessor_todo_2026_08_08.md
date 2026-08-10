@@ -18,7 +18,10 @@ summary: >-
   the underlying [OPERATOR] decision item remains correctly tracked separately and is unaffected by the park.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100%
+  # agent-orchestrator dispatch/backlog-mechanism internals (same-doc predecessor-todo gating), not a
+  # cross-AG data-pipeline concern -- repos:[agent-orchestrator] only.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -26,6 +29,7 @@ tags: [agent-orchestrator, dispatch, todo-ordering, task-affinity, live-incident
 related:
   - /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
   - /plans/active/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
+  - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
 author: agt-22de53 (main)
 parent_epic: infrastructure_master
@@ -79,10 +83,15 @@ Live, directly-observed during routine blocked-queue sweeps:
       [INFRA]/[BACKEND] todo textually depends on an earlier [OPERATOR] todo in the SAME doc, so the dispatcher can skip
       it automatically rather than relying on a worker to self-discover the block. Repo: agent-orchestrator (dispatch
       logic) + unified-trading-pm (template convention).
-- [ ] [OPERATOR] P1. Decide (a)/(b)/(c) in
-      `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (unchanged, tracked
-      there — not duplicating the decision item here) so
-      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` can be `POST /api/backlog/.../unpark`ed.
+- [x] ✅ [DOC] P1. **RULED 2026-08-09** — option (a) decided + implemented in
+      `plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (see that doc's
+      Progress Log for the full ruling + `unified-trading-pm@d765b4cfb1` implementation evidence; not duplicated here).
+      Retagged from `[OPERATOR]` in the same edit. **Standing follow-up, not done here**: the parked backlog task
+      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` still needs a live
+      `POST /api/backlog/.../unpark` call against the running AO server — this doc-editing session has no dashboard
+      JWT/API access to actually issue that call. Whoever next has AO API access should unpark it now that the decision
+      has landed — its remaining work (the sibling doc's now-unblocked "complete the deferred archival" `[INFRA]` todo)
+      is ready to dispatch/execute.
 - [ ] [REVIEW] P3. Once the decision lands and the task is unparked, verify it dispatches and completes cleanly without
       re-triggering a blocked-nudge. Repo: unified-trading-pm (verification + checkbox flip only).
 
@@ -96,3 +105,7 @@ Live, directly-observed during routine blocked-queue sweeps:
   separate `BLK-op-...-182a19732410` [OPERATOR] item remains correctly tracked and unaffected — the park only stops the
   wasteful [INFRA]-todo redispatch, not the actual decision-tracking.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (2 entries), still accurate.
+- **2026-08-09 (operator ruling batch, this session)**: The underlying decision landed — see
+  `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`'s Progress Log for the full ruling +
+  `unified-trading-pm@d765b4cfb1`. Flipped this doc's `[OPERATOR]` todo accordingly. The live `unpark` API call itself
+  is left as a standing follow-up (no AO dashboard/API access from this session) — noted inline on the todo.

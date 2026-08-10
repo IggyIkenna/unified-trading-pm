@@ -6,7 +6,7 @@ summary: >-
   Morpho with NO perp leg — recursion amplifies the lending spread R_lend, not delta (net ETH-equivalent exposure = base
   for all ltv,d). Closed-form R_lend, top-7 May-23 per-chain per-lender cells; shares the recursive-loop engine via
   config flags.
-implementation_status: design
+implementation_status: code-shipped
 status: current
 nature: ssot
 asset_group: [meta]
@@ -146,6 +146,16 @@ gate (`LOOP_ABORTED_HF_LOW`) is checked inside `LegController.on_pre_leg_check()
 already implements the persistent+flash drivers (execution-service@2a185b7e8). The receiver contract
 `RecursiveLeverageReceiver.sol` is deployed to Sepolia at `0x668BC0C59F434D7cE2498416E7eF9095b840c7cF`
 (deployment-service@602feaf).
+
+**Translation-layer status (2026-08-09):** SHIPPED — `CarryRecursiveStakedEngine.on_tick()` in
+`strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py` now builds a real
+`n_loops`-iteration STAKE→TRANSFER→LEND→BORROW `AtomicInstruction` for this archetype (previously an unconditional
+`return []` stub) using catalog-resolved `ltv_per_loop`/`n_loops` params (strategy-service@817bb4e0).
+Execution-service's new `execution_service/algo_library/recursive_loop_runner.py` reconstructs a `RecursiveLoopRequest`
+from that `AtomicInstruction` and calls `RecursiveLoopOrchestrator.open()`/`.unwind()` — its first real production
+caller (execution-service@2352a17e). Not yet wired into `atomic_instruction_router.py`'s dispatch-by-`execution_mode`
+routing (separate follow-up, outside this wiring's scope). Full plan:
+`/plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`.
 
 ## Kill-switch surface
 

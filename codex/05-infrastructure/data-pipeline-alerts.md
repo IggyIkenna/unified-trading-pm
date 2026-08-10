@@ -40,7 +40,7 @@ code_refs:
 > is the SSOT for **every way the data pipeline can go wrong** and how each surfaces in the `#data-pipeline-alerts`
 > Slack channel. Modeled on the agent-orchestrator and CI/CD alert dynamics: **start verbose** (every failure mode
 > emits), then **drive the alert count to zero** by fixing root causes — a persistent alert is a bug to close, not noise
-> to mute. Companion plan: `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` (parent epic
+> to mute. Companion plan: `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md` (parent epic
 > `observability_master`).
 
 ## Channel + credentials
@@ -237,7 +237,7 @@ not a silent miss). A prefix with no entry fails the guard test (every launchabl
 > GAP (P1):** because `scripts/recovery` + `scripts/vm` are not in the image, the `auto_recover` tier currently CANNOT
 > actuate a relaunch from the Cloud Run monitors — it always degrades to `file_issue` there. To make self-heal actually
 > actuate, package the actuators (+ launchers) into the image (or run the monitors where `scripts/` exists). Tracked in
-> `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+> `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
 >
 > **REGRESSION (2026-07-13, fixed `deployment-service@b3826fea`) — `find_spec()` on a DOTTED name is itself a raising
 > call.** Same packaging class, new mechanism: `data_pipeline_monitors/cli.py::_zombie_watchdog` probed
@@ -261,7 +261,7 @@ When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** wr
 > **PARTIAL (2026-06-23)**: the deployment-service `escalation.py::_write_issue_doc` actionable-frontmatter half is
 > SHIPPED; the e2e `_dp_common.file_escalation_issue` actionable-frontmatter half is code-complete + QG-green but **not
 > yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain
-> (non-actionable) issue. Tracked in `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+> (non-actionable) issue. Tracked in `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
 
 ## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
 
@@ -296,7 +296,7 @@ dead-man's-switch above them.
 > mechanism from Slack = true defense-in-depth (a native-Slack channel needs a one-time interactive OAuth that can't be
 > provisioned non-interactively; `# TODO(operator): optionally swap to native Slack`). The fleet-monitor scheduler jobs
 > also gained `retry_count=2` so a transient invocation failure never drops a tick. SSOT:
-> `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` § "Watch-the-watchers SPOF".
+> `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md` § "Watch-the-watchers SPOF".
 
 ## Daily digests (also posted to the channel, INFO)
 

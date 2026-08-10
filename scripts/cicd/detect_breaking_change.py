@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -58,6 +59,46 @@ a data contract changed (``/codex/02-data/availability-manifest-and-data-status.
 this marker is the same idea applied to a plain Python data registry — an explicit,
 grep-able tag rather than a name/path heuristic the differ would have to guess at.
 """
+
+CROSS_REPO_REGISTRY_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        "SOURCE_PRIORITY",
+        "VENUE_TO_ADAPTER_KEY",
+        "VENUE_PREFIX_TO_PROTOCOL",
+        "DEFI_VENUE_TO_PROTOCOL",
+        "CEFI_PERP_VENUE_API_ENDPOINTS",
+    }
+)
+"""Narrow, explicit set of cross-repo registry constants whose resolved VALUE (not just
+its name/export status) drives a downstream consumer's runtime behaviour purely by being
+looked up at import time — the exact class root-caused in
+``uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`` (``a2beed46`` removed
+``massive`` from ``SOURCE_PRIORITY``'s tradfi list; every other check in this differ reads
+that as "same exported name, same annotation" = non-breaking).
+
+Deliberately **decoupled from ``is_breaking``** — see that doc's blocker 1: a routine
+recalibration (e.g. ``EMISSION_LATENCY_MS_BY_SOURCE``, not in this allowlist) is a value
+edit too, and coupling value-detection to ``is_breaking`` would false-break the fleet on
+every benign tweak to an allowlisted-adjacent constant. This signal only ever feeds the
+separate ``registry_value_changed``/``registry_value_changed_names`` fields (see
+``main()``), which a caller can use to trigger a *targeted re-dispatch* of direct
+dependents — never the promotion-blocking gate itself.
+
+Extend this set only for a constant that is genuinely READ by another repo at runtime
+(grep its consumers before adding) — this is not a general "track every constant" switch,
+it stays narrow by design.
+"""
+
+_CONFIG_YAML_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        "unified_api_contracts/config/cloud-providers.yaml",
+    }
+)
+"""Repo-relative paths of non-Python config files that get the SAME decoupled
+value-changed treatment as ``CROSS_REPO_REGISTRY_ALLOWLIST`` (path-scoped, not
+AST-scoped — these aren't Python so there's no AST to canonicalize). Path-scoped: a repo
+that doesn't carry a given path here is silently skipped (``_git_show`` returns None),
+so this list is safe to share verbatim across every repo's copy of this script."""
 
 
 def _git_show(ref: str, path: str) -> str | None:
@@ -89,6 +130,46 @@ def _git_changed_py(base_ref: str, head_ref: str, source_dir: str) -> list[str]:
     except subprocess.CalledProcessError:
         return []
     return sorted({ln for ln in out.splitlines() if ln.endswith(".py")})
+
+
+# A changed path matching one of these is DEFINITELY not release-worthy on its own — pure
+# CI/docs/lockfile/metadata churn. Deliberately SHORT and conservative: anything not matched
+# here counts as "real" (biases toward false-positive "something changed", never a silent
+# false-negative miss — the exact failure class this signal exists to close, see
+# `_source_touched`'s docstring).
+_NON_FUNCTIONAL_PATH_RE = re.compile(
+    r"^(\.github/|docs/|\.gitleaks\.toml$|\.gitignore$|README\.md$|CHANGELOG\.md$|"
+    r"uv\.lock$|poetry\.lock$|package-lock\.json$|pyproject\.toml$)"
+)
+
+
+def _source_touched(base_ref: str, head_ref: str) -> bool:
+    """True if ANY file changed between base and head that isn't pure CI/docs/lockfile noise.
+
+    Deliberately REPO-WIDE, not scoped to ``--source-dir`` — unlike every other check in this
+    module. `--source-dir` is derived by convention (``<repo>-name`` -> ``<repo>_name``) and
+    that convention does not hold for every repo (e.g. e2e-testing's real content lives under
+    `scripts/`/`tests/`, not a package dir named `e2e_testing/`); a squash-promote commit
+    (`chore(promote): LDR -> main`) also destroys the individual feat:/fix: commit-message
+    prefixes semver-agent's message-based classifier depends on. Both signals can go blind on
+    the SAME promotion, at which point a repo that keeps shipping real work never tags again —
+    measured live 2026-08-09 as a fleet-wide RELEASE TAG STALL on 6 repos where genuinely
+    nothing shippable changed (correct: no bump) and a 7th (e2e-testing) where real `scripts/
+    *.py` changes were invisible to the source-dir-scoped check (bug: should have bumped).
+    This denylist-based, repo-wide check is the single content-based signal both semver-agent
+    (bump decision) and reconcile_release_tags.py (stall-alert decision) key off of, so the two
+    scripts' notions of "did anything shippable change" cannot silently diverge again.
+    """
+    try:
+        out = subprocess.check_output(
+            ["git", "diff", "--name-only", f"{base_ref}..{head_ref}"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        return True  # fail-safe: an unresolvable diff must never silently suppress a real signal
+    changed = [ln for ln in out.splitlines() if ln.strip()]
+    return any(not _NON_FUNCTIONAL_PATH_RE.match(p) for p in changed)
 
 
 @dataclass
@@ -160,6 +241,7 @@ class PublicSurface:
     fields: dict[str, str] = field(default_factory=dict)  # Class.field -> annotation
     routes: set[str] = field(default_factory=set)  # "GET /path" decorators
     registry: dict[str, object] = field(default_factory=dict)  # tagged constant -> literal snapshot
+    registry_values: dict[str, object] = field(default_factory=dict)  # allowlisted constant -> literal snapshot
 
 
 def _annotation_str(node: ast.AST | None) -> str:
@@ -219,7 +301,12 @@ def _resolve_literal(node: ast.expr, env: dict[str, str]) -> object:
         if node.id in env:
             return env[node.id]
         raise ValueError(f"unresolved name {node.id!r}")
-    if isinstance(node, (ast.List, ast.Tuple)):
+    if isinstance(node, ast.Tuple):
+        # tuple, not list: a dict key must be hashable (e.g. SOURCE_PRIORITY's
+        # `(asset_group, data_type)` tuple keys) — a plain `ast.List` value stays a
+        # python list below since list-VALUE order is itself meaningful (priority lists).
+        return tuple(_resolve_literal(e, env) for e in node.elts)
+    if isinstance(node, ast.List):
         return [_resolve_literal(e, env) for e in node.elts]
     if isinstance(node, ast.Set):
         return {_resolve_literal(e, env) for e in node.elts}
@@ -255,6 +342,18 @@ def _resolve_registry_dict(node: ast.expr, env: dict[str, str]) -> dict[str, obj
         if isinstance(key, str):
             out[key] = val
     return out
+
+
+def _resolve_allowlisted_value(node: ast.expr, env: dict[str, str]) -> object | None:
+    """Best-effort full literal snapshot of an allowlisted constant's value (any shape —
+    dict, list, set, tuple-keyed dict — unlike ``_resolve_registry_dict`` this is not
+    restricted to top-level-dict-with-str-keys). Returns None on anything non-literal
+    (e.g. a constructor call like ``CollateralAcceptance(...)``) rather than raising —
+    that constant is simply not diffable this way, not a differ crash."""
+    try:
+        return _resolve_literal(node, env)
+    except ValueError:
+        return None
 
 
 def _process_class_def(node: ast.ClassDef, surf: PublicSurface) -> None:
@@ -300,6 +399,10 @@ def _process_module_annassign(node: ast.AnnAssign, lines: list[str], env: dict[s
         snapshot = _resolve_registry_dict(node.value, env)
         if snapshot is not None:
             surf.registry[node.target.id] = snapshot
+    if node.target.id in CROSS_REPO_REGISTRY_ALLOWLIST:
+        value = _resolve_allowlisted_value(node.value, env)
+        if value is not None:
+            surf.registry_values[node.target.id] = value
 
 
 def _process_module_assign(node: ast.Assign, env: dict[str, str], surf: PublicSurface) -> None:
@@ -307,6 +410,10 @@ def _process_module_assign(node: ast.Assign, env: dict[str, str], surf: PublicSu
     for tgt in node.targets:
         if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":
             surf.exports.add(tgt.id)
+        if isinstance(tgt, ast.Name) and tgt.id in CROSS_REPO_REGISTRY_ALLOWLIST and len(node.targets) == 1:
+            value = _resolve_allowlisted_value(node.value, env)
+            if value is not None:
+                surf.registry_values[tgt.id] = value
     if (
         len(node.targets) == 1
         and isinstance(node.targets[0], ast.Name)
@@ -383,6 +490,7 @@ def merge(a: PublicSurface, b: PublicSurface) -> PublicSurface:
     out.fields = {**a.fields, **b.fields}
     out.routes = a.routes | b.routes
     out.registry = {**a.registry, **b.registry}
+    out.registry_values = {**a.registry_values, **b.registry_values}
     return out
 
 
@@ -425,6 +533,73 @@ def _diff_registry_value(name: str, old: object, new: object) -> list[str]:
         if removed:
             reasons.append(f"registry {name}: removed member(s) {removed}")
     return reasons
+
+
+def _canon_key(k: object) -> str:
+    """Stable sort/compare key for a (possibly non-str, e.g. tuple) dict key."""
+    return repr(k)
+
+
+def _canonicalize_value(v: object) -> object:
+    """Order-normalize a resolved literal for the DECOUPLED value-changed comparison:
+    dict KEY ORDER never matters (a reorder in source is not a value change — sorted by
+    ``repr`` of the key), but LIST ORDER IS PRESERVED (a registry like
+    ``SOURCE_PRIORITY``'s per-cell vendor list is a priority order — reordering it *is*
+    a behavior change, unlike a dict-key reorder). Sets/frozensets are already
+    order-free. Returns a hashable, ``==``-comparable structure."""
+    if isinstance(v, dict):
+        return tuple(sorted(((_canon_key(k), _canonicalize_value(val)) for k, val in v.items()), key=lambda kv: kv[0]))
+    if isinstance(v, list):
+        return tuple(_canonicalize_value(x) for x in v)
+    if isinstance(v, tuple):
+        return tuple(_canonicalize_value(x) for x in v)
+    if isinstance(v, (set, frozenset)):
+        return frozenset(_canonicalize_value(x) for x in v)
+    return v
+
+
+def registry_value_changes(old: PublicSurface, new: PublicSurface) -> list[str]:
+    """DECOUPLED signal (deliberately NOT folded into ``is_breaking`` / ``diff_surfaces`` —
+    see ``CROSS_REPO_REGISTRY_ALLOWLIST``'s docstring for why). Returns the sorted names of
+    every allowlisted constant whose order-normalized resolved value differs between
+    ``old`` and ``new``. A constant only present on one side (added/removed entirely) is
+    NOT reported here — that's already covered by the export-name diff above; this signal
+    is specifically for "same name, same shape, different content"."""
+    changed: list[str] = []
+    for name in sorted(CROSS_REPO_REGISTRY_ALLOWLIST):
+        if name not in old.registry_values or name not in new.registry_values:
+            continue
+        if _canonicalize_value(old.registry_values[name]) != _canonicalize_value(new.registry_values[name]):
+            changed.append(name)
+    return changed
+
+
+def config_yaml_value_changes(base_ref: str, head_ref: str) -> list[str]:
+    """Same decoupled treatment as ``registry_value_changes``, path-scoped to
+    ``_CONFIG_YAML_ALLOWLIST`` instead of AST-scoped (these aren't Python). Normalizes
+    away comment-only lines, trailing whitespace, and blank lines before comparing, so a
+    pure reformat/comment edit is not flagged — a real key/value change is. A path absent
+    from THIS repo (``_git_show`` returns None) is silently skipped, so the same allowlist
+    is safe to share verbatim across every repo's copy of this script."""
+    changed: list[str] = []
+    for path in sorted(_CONFIG_YAML_ALLOWLIST):
+        old_text = _git_show(base_ref, path)
+        new_text = _git_show(head_ref, path)
+        if old_text is None or new_text is None:
+            continue  # not present on one side in this repo -- out of scope for this signal
+        if _normalize_yaml_text(old_text) != _normalize_yaml_text(new_text):
+            changed.append(path)
+    return changed
+
+
+def _normalize_yaml_text(text: str) -> list[str]:
+    lines: list[str] = []
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        lines.append(stripped)
+    return lines
 
 
 def diff_surfaces(old: PublicSurface, new: PublicSurface) -> list[str]:
@@ -515,6 +690,13 @@ def main() -> int:
     new = surface_at(head_ref, scan)
     reasons = diff_surfaces(old, new)
     is_breaking = bool(reasons)
+    source_touched = _source_touched(base_ref, head_ref)
+
+    # DECOUPLED signal (see CROSS_REPO_REGISTRY_ALLOWLIST docstring) — never folded into
+    # `reasons`/`is_breaking`, only exposed as its own field for a caller to drive a
+    # targeted re-dispatch of direct dependents.
+    registry_value_changed_names = registry_value_changes(old, new) + config_yaml_value_changes(base_ref, head_ref)
+    registry_value_changed = bool(registry_value_changed_names)
 
     if as_json:
         print(
@@ -527,6 +709,9 @@ def main() -> int:
                     "source_dir": source_dir,
                     "old_export_count": len(old.exports),
                     "new_export_count": len(new.exports),
+                    "source_touched": source_touched,
+                    "registry_value_changed": registry_value_changed,
+                    "registry_value_changed_names": registry_value_changed_names,
                 },
                 indent=2,
             )
@@ -539,6 +724,12 @@ def main() -> int:
         else:
             print("non-breaking — no public API/schema surface change detected")
         print(f"is_breaking={'true' if is_breaking else 'false'}")
+        print(f"source_touched={'true' if source_touched else 'false'}")
+        if registry_value_changed_names:
+            print("registry value(s) changed (decoupled signal, NOT is_breaking):")
+            for n in registry_value_changed_names:
+                print(f"  - {n}")
+        print(f"registry_value_changed={'true' if registry_value_changed else 'false'}")
     return 0
 
 
