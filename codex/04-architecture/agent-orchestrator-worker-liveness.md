@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-10
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -714,6 +714,13 @@ caller that gets the source wrong cannot inflate a model's window past a bounded
 does not depend on every caller honoring the calibration-source contract above; it is the backstop, not a substitute for
 it.
 
+> **SUPERSEDED in part (2026-08-10, `ao_model_main_agent_as_first_class_slot_2026_08_10`) — main now has a real
+> `SlotRow`.** The premise of the paragraph below — _"Main has no `SlotRow`"_ — no longer holds: `main_agent_keeper`
+> `_sync_main_slot_row` keeps a genuine `SlotRow(slot_id=0)` current every keeper tick, sourced from main's own
+> `AgentRow` (see "main is a first-class slot" at the end of this doc). The `_main_pct()` floor mechanism described here
+> STILL runs in code — its collapse into the ordinary `_read_pct()` slot path is the issue's todo 5, not yet done — but
+> the structural reason it existed (a row-less main with no self-report floor at all) is gone.
+
 **Main's `AgentRow` floor — the other half of the fix.** Every WORKER already had a self-reported floor: `_read_pct`
 took `max(SlotRow.context_used_pct, probe)`, so a poisoned/under-reading probe could only ever be overridden upward by
 the worker's own `/progress`-reported percentage. **Main has no `SlotRow`** (it is not a slot-bound worker), so before
@@ -836,3 +843,58 @@ EFFECT, not submission" fix was still unlanded when this was measured, so 22% is
   `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently. Changing the
   policy therefore means deliberately updating that test WITH the measurement above in the commit message — which is the
   intended friction, not a blocker.
+
+---
+
+## main is a first-class slot — the slot-less special case is retired (operator ruling 2026-08-10)
+
+**The ruling.** main becomes a first-class slot: it gets a real, live `SlotRow`, exactly like every worker and review
+slot. This is a STRUCTURAL fix, not another main-specific branch. Every defect in the 2026-08-09 context-lifecycle
+family traced to one asymmetry — main was the ONE lifecycle target with no `SlotRow` — and each was patched with a
+main-specific branch + main-specific test: no self-reported context floor (main ran to 99% with the compaction net
+disarmed for 4.3h), `context_pressure` hardcoded `"low"` (the thrashing-recycle trigger structurally unreachable), and a
+terminal wedge-recovery gated behind a force main could never receive. The fourth mechanism to assume "targets have
+SlotRows" would have started the class again. Issue:
+`plans/active/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`.
+
+**Prerequisite resolved — `slot_id` 0 meant two different things.** Before main could own a real row, the identifier had
+to be disambiguated: `autospawn._MAIN_SLOT_ID = 0` (main's identity) collided with a synthetic sentinel `slot_id=0` used
+for plan-level/operator-gated rows that belong to NO worker (`bootstrap.py:931`, `orm.py:390`,
+`blocked_reconcile.py:474`). A real `SlotRow(slot_id=0)` written while the sentinel meaning persisted would have made
+every plan-level activity row appear to belong to main. The no-slot rows now carry `orm.NO_WORKER_SLOT_SENTINEL = -1`
+(`agent-orchestrator@0efa913`): a value no real slot can hold. Every write/read site (`bootstrap.py`, `plan_health.py`,
+`blocked_reconcile.py`, `routes/backlog.py`, `regen_backlog_from_plan.py`'s raw SQL) was migrated off the literal `0`,
+and `bootstrap._migrate_blocked_queue_no_slot_sentinel` is a data-only UPDATE rewriting legacy rows on live DBs (proof:
+`tests/test_migrate_blocked_queue_no_slot_sentinel.py`). A `context_lifecycle.py` THIRD encoding — main as
+`slot_id is None` inside its own target list — was confirmed clean and left alone (it already can't collide with a real
+int id).
+
+**The resulting shape.**
+
+- **Real `SlotRow`, owned by `MainAgentKeeper`** (`agent-orchestrator@8fedf51`). `main_agent_keeper.MAIN_SLOT_ID = 0` —
+  the same value every pre-existing "main identity" call site already assumed (kept as an independent literal, not a
+  shared import with `autospawn._MAIN_SLOT_ID`, to avoid a circular import; `test_main_slot_id_matches_autospawn` pins
+  the two equal). `tick_once()` is a thin wrapper around the renamed `_tick_once_inner` so `_sync_main_slot_row` runs
+  EVERY tick regardless of which branch fired — not threaded into each of the many early returns. The row's
+  `context_used_pct`/`context_pressure`/`last_ping` are written via `state_store.update_slot_ping` — the SAME function
+  every worker's `/progress`|`/done`|`/heartbeat` already calls — sourced from main's own `AgentRow.context_used_pct`
+  (already ratcheted by `_main_pct` against the measured probe earlier the same tick), so the SlotRow tracks the
+  AgentRow rather than re-deriving anything. `status` comes from a fresh `tmux_spawn.has_session` read (not the tick's
+  own branch outcome); `claude_session_id` from the AgentRow. `/api/state` now shows main's row with a live context pct.
+  Tests: `test_main_slot_row_created_and_tracks_agent_row_every_tick`,
+  `test_main_slot_row_status_idle_when_session_dead`.
+- **Dispatch exclusion — the ONE deliberate difference.** main must NOT become dispatchable for backlog tasks, and must
+  NOT count toward claimable capacity. `dispatch._MAIN_SLOT_ID = 0` + an unconditional early-return guard in
+  `_task_is_routable_to` (`agent-orchestrator@3fa500e`, checked BEFORE the target_slot match so an explicit
+  `target_slot=0, affinity=high` pin cannot override it) reject slot 0 outright; main's row carries no
+  worktree/branch/operator, so `slot_is_spawnable` never satisfies it either and AutoSpawn skips it (`"main_slot"`
+  reason). This survives the refactor BY DESIGN — the `dispatch.py:606-611` incident (an unconfigured slot 0 read as
+  permanently claimable and burned a budget slot every tick) is why the exclusion is a non-goal, not a regression.
+  Tests: `tests/test_dispatch_main_slot_gate.py`, `tests/test_autospawn.py`'s `main_slot` skip-reason test.
+- **Standing guard against the regression class.** `test_every_context_lifecycle_target_has_slot_row`
+  (`agent-orchestrator@c8109bd`) mirrors `ContextLifecyclePolicy.tick()`'s target-list construction (main + review +
+  workers) and asserts every target resolves to a real `SlotRow` — a future target added without one fails the suite.
+- **Not changed.** Compaction semantics are untouched — main's observable compaction behaviour is identical; the point
+  was deleting special cases, not changing policy. The remaining main-specific branches in `context_lifecycle.py`
+  (`_main_pct`, the `slot_id is None` wedge-recovery) are scheduled to be collapsed into the ordinary slot path (issue
+  todos 5-6) once the row is the stable base; the row existing NOW is what makes those collapses pure refactors.
