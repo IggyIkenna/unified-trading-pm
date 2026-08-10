@@ -194,8 +194,38 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `git config`). Only `SDP_ISOLATED=0` got this session's doc pushed — i.e. the newly-MANDATED protection had to be
       switched off to ship, which also silently reopens the contamination window this doc's other todo is about. Fix the
       hook to derive identity from the CALLER's repo (`SDP_CALLER_REPO` is already exported for exactly this kind of
-      need) or seed the isolated worktree's `user.name` at creation. Verify quickmerge's new `--isolated` does not have
-      the same defect before relying on it.
+      need) or seed the isolated worktree's `user.name` at creation.
+- [ ] [BACKEND] P1. `quickmerge.sh --isolated` is ALSO unusable from a slot clone, by a DIFFERENT mechanism than the
+      safe-doc-push one above — do not assume fixing one fixes the other. It does NOT hit the identity hook (it got all
+      the way to a green in-isolation quality gate), but then dies at STAGE 5 with
+      `fatal: 'live-defi-rollout' is already used by worktree at <slot clone>`: `git worktree add` refuses a branch that
+      is already checked out in the caller's own worktree, which is ALWAYS true for a slot clone sitting on the
+      integration branch. Measured 2026-08-10, exit 128. Use `--detach` (safe-doc-push already does exactly this:
+      `git worktree add --detach -q "$wt" "origin/$BRANCH"`) instead of checking the branch out by name.
+- [ ] [BACKEND] P0. The NON-isolated `quickmerge --files` path can drop the caller's staged files AND commit an
+      unrelated untracked file under the caller's message. Measured 2026-08-10, agent-orchestrator@62649fb: invoked with
+      `--files "server/state_store/agents.py tests/test_reap_orphan_agents.py"`, the resulting pushed commit carried
+      NEITHER — it contained only a peer's untracked `tests/test_tmux_spawn_deepseek_context_window.py` (+59), while
+      both named files stayed dirty in the worktree. The log shows prek's own stash/restore cycle ("Unstaged changes
+      detected. Temporarily saving them to .../patches/*.patch" -> "Restored unstaged changes") ran twice around the
+      commit, plus quickmerge's "Commit-hook chain left file(s) OUTSIDE this commit's scope newly dirty — reverting
+      them". Net effect is a commit whose content has no relationship to its `--files` argument or its message. This is
+      worse than the absorption failure in the sibling todo above, because it is SILENT: quickmerge reported success and
+      verified push ancestry. The scoped-pathspec commit proposed in that todo would also fix this.
+- [ ] [BACKEND] P0. Defect (B) has a WORKER twin that is still live and is the bigger of the two — the fix shipped in
+      @809c405 only guarded main. Every worker boot posts a literal zero that is then read as a compaction:
+      `server/prompts.py:219` (STEP 0 liveness) curls
+      `/api/slots/{id}/heartbeat -d '{"context_used_pct": 0, "message": "boot-started (reading role files)"}'`, and
+      `server/routes/slots_worker.py:2280` routes `/heartbeat` through
+      `ss.update_slot_ping(session, slot_id,     req.context_used_pct)`, which records a `CompactionRow` for any drop >=
+      `COMPACTION_DROP_THRESHOLD` (30). (The `/boot` endpoint at `slots_worker.py:343` assigns the same field DIRECTLY,
+      bypassing the detector — so it is specifically STEP 0's heartbeat that manufactures these.) Signature in the live
+      data 2026-08-10, slot 3: EVERY compaction row lands at exactly 0 — 48->0, 48->0, 95->0, 68->0, 56->0, 55->0,
+      41->0, 40->0 — including two 37 SECONDS apart. That inflates `compactions_total`/`compactions_last_hour` (slot 3
+      reached 6), which drives `derive_context_pressure` to "thrashing" and fires premature `context_recycle_requested`
+      fleet-wide; 132 `slot_compacted` events fleet-wide that day. Candidate fix: make STEP 0 omit `context_used_pct` (a
+      boot heartbeat is a liveness ping, not a measurement) and/or apply the same "0 is not a reading" guard inside
+      `update_slot_ping` so no caller can manufacture a compaction with it.
 - [ ] [BACKEND] P2. Make main actually self-report `context_used_pct`, closing defect (A) at source for the one role the
       slot-mirror cannot cover (main is not on an `orch-slot-N` session). `agents/main.md:293` already instructs
       `"context_used_pct": <0-100, your /usage estimate>` on every `/poll`, yet the live row read 0 with a fresh ping —
@@ -265,6 +295,16 @@ healthy main, and it parks a 0 in the row `_read_pct` consults, which cannot cro
   Corrected the "purely a display gap" triage framing — (B) writes state and drives premature recycles. NOTE: this doc
   is no longer whole-doc NA — the two remaining BACKEND/DATA todos are bounded, but the `[UI] P3` still carries the
   pw:L2 gate, so the prior non-parallelizable finding stands for the UI item alone.
+
+- **FOLLOW-UP 2026-08-10 — the mirror's first cut had a staleness bug, caught by the operator within the hour.** It only
+  filled a ZERO, so the AgentRow froze at the first value written while the slot kept moving: the cicd agent on
+  orch-slot-3 showed 95% in the Agents panel while its slot had compacted 95->0 and climbed back to 48%, reading as
+  "pinned at 100%, nothing compacting". Fixed to sync continuously — agent-orchestrator@4957896, regression test
+  `test_context_backfill_tracks_the_slot_downwards_after_a_compaction` verified RED against the one-shot-fill code
+  first. Runtime-verified for defect (B) the same session: main's slot 0 has logged exactly ONE compaction since the
+  guard went live and it is a GENUINE 50->11, where before the fix every single main compaction landed at exactly 0.
+  Shipping this two-file change took SIX quality-gate runs and four quickmerge attempts, none of the failures after the
+  first being defects in the change — the two new ship-tooling todos above were all discovered in that attempt loop.
 
 - **PROVENANCE NOTE 2026-08-10 — the code fix shipped inside a PEER's commit.** Recorded because the `- [x]` evidence
   SHAs above do not read as this session's own work and would otherwise look falsified. Both fixes were authored and
