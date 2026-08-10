@@ -328,10 +328,12 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       can actually fire for it. **Done when**: a table lands in this plan's Progress Log naming every call site and its
       working exits, and any class found with zero reachable exits gets its own `- [ ]` follow-up todo here. — slot-22
       audit (no code change; audit table in Progress Log below). Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. **Close the currently-open orphaned `doc_drift` rows** once the retirement path exists — these
+- [x] ✅ [BACKEND] P3. **Close the currently-open orphaned `doc_drift` rows** once the retirement path exists — these
       predate the fix and will never clear on their own. **Done when**: the live blocked queue contains no `doc_drift:*`
       row whose key is absent from the most recent `plan_health` run's findings, verified against the live API. Repo:
-      agent-orchestrator.
+      agent-orchestrator. — Verified 2026-08-10 via `GET /api/state`: 121 open blocked rows, 0 `doc_drift:*` rows — the
+      `condition_cleared` retirement exit (C1/C2) already closed every orphan. No code change needed; this was a
+      verification-only operational todo (safe-idempotent per plan § Dispatch eligibility).
 
 ### D — corrections owed to the sibling doc
 
