@@ -302,20 +302,22 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
 - [ ] [DOCS] P1. **market-tick-data-service finish**: `DEPLOYMENT_GUIDE_FEMI.md` (person-named onboarding dup) +
       `SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` (infra-spec dup) → migrate unique delta, replace with redirect to
       `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md`.
-- [ ] [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
+- [x] ✅ [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
       `codex/08-workflows`. Highest duplication surface. **AUDIT DONE 2026-07-27** — refreshed per-doc registry (89
       repo-owned docs: 47 core + 42 infra/profiles/runbooks; excl. `docs/archive/*` 13 + vendored `.terraform` provider
       CHANGELOGs 10) in **Appendix B** below; SUPERSEDES the stale `deployment-service (~52)` entry in Appendix A. Net:
       12 DELETE (dead Feb/Mar-2026 impl-plan dumps + the `audit/` trio, not codex-dups) · 14 REDIRECT (all 12 codex
       targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
       links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. **REDIRECT half ✅ SHIPPED**
-      (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE
-      half NOT shipped** (`docs/{MASTER_ML_IMPLEMENTATION_PLAN,ML_IMPLEMENTATION,MASTER_IMPLEMENTATION_INDEX}.md` +
-      `docs/specs/PLANS_ALIGNMENT.md` all 4 confirmed still live on disk — RE-VERIFIED 2026-08-10 by plan_reconciler
-      infra shard, agt-716973, same 4 files). Un-checked 2026-08-10 — was `[x]` despite the DELETE half being unshipped
-      (violates this plan's own GATE-1 "no partial passes" mandate; CLAUDE.md half-done convention: flip only the
-      shipped half). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06
-      (/plan-reconcile ao).
+      (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DELETE half ✅
+      SHIPPED 2026-08-10** (`deployment-service@42ec7572`, verified ancestor of `origin/live-defi-rollout`) — the
+      `audit/` trio was already gone; all 9 remaining core-doc DELETE items confirmed still live on disk before this
+      commit (the earlier 2026-08-10 re-verify's "same 4 files" note undercounted — `IMPLEMENTATION_MAX_WORKERS`,
+      `MAX_WORKERS_UNIFIED_IMPLEMENTATION_PLAN`, `UI_TYPESCRIPT_TYPES`, `GCS_LIFECYCLE_COST_OPTIMIZATION`,
+      `docs/SPECS.md`, `docs/specs/README.md`, `CONFIGURATION`, `service-bundling-review` were also still present) and
+      are now deleted, plus the now-empty `docs/specs/` dir removed and the dangling `IMPLEMENTATION_MAX_WORKERS` /
+      `ML_IMPLEMENTATION` / `SPECS.md` links in `cli.md`/`BIGQUERY_INTEGRATION_GUIDE.md`/`INDEX.md` fixed. Phase-3/4
+      hold itself LIFTED 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao).
 - [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED + FIX-STALE
       APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
       `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
