@@ -141,12 +141,12 @@ context_scope:
       tests 17/17 pass), credential resolution mirrors `LiveExecutionHandler._load_bybit_trade_credentials` (trade-scope
       pair preferred, unscoped fallback).
 
-- [ ] [BACKEND] P2. Wire Bybit connector at `app.py` startup/shutdown. Add `_wire_bybit_connector` startup handler +
+- [x] ✅ [BACKEND] P2. Wire Bybit connector at `app.py` startup/shutdown. Add `_wire_bybit_connector` startup handler +
       `_stop_bybit_connector` shutdown handler. `_start_perp_hedge_monitors` now binds the Bybit connector into
       `RecursiveLoopOrchestrator(bybit_connector=...)` so Bybit-venue rebalance/topup intents route through the same
       consumer path (todo 2's extended guard). Repo: execution-service. Done-when: wiring/integration test asserts app
       startup binds Bybit connector + shutdown tears down cleanly + orchestrator carries both HL and Bybit connectors;
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. — execution-service@39b9c88143, QG green (7965 passed, 21 skipped, 93s).
 
 - [ ] [BACKEND] P2. Wire Bybit fetch readers into `PerpHedgeFetchProvider`. Add `fetch_current_perp_size_bybit`,
       `fetch_available_margin_bybit`, `fetch_initial_margin_estimate_bybit` callables sourced from
@@ -180,6 +180,13 @@ context_scope:
   exists. Decision: wrap the existing adapter rather than build a native connector from scratch (P3 secondary venue —
   reuse tested code; the adapter IS the seam if CCXT ever needs replacing). Filed as the gated follow-up required by
   `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md` todo 15.
+- **2026-08-10 (slot 19, backend_engineer)**: Dispatched todo 4. Todo 3's `bybit_wiring.py` + credential reloader
+  already shipped (code present, tests green — earned a checkbox flip but no SHA cited in plan). Added
+  `_wire_bybit_connector` startup handler (mirrors `_wire_hyperliquid_connector`: resolve Bybit API creds from GSM,
+  `build_bybit_wiring()`, `wiring.connect()`, store on `app.state.bybit_wiring`), `_stop_bybit_connector` shutdown
+  handler (teardown reloader + `connector.close()`), and `bybit_connector=bybit_conn` binding into
+  `RecursiveLoopOrchestrator` in `_start_perp_hedge_monitors`. QG green (7965 passed, 21 skipped, 93s). Shipped
+  execution-service@39b9c88143.
 
 - **2026-08-10 (slot 13, backend_engineer)**: Todo 3 shipped — Bybit credential hot-reloader + wiring module at
   `execution_service/defi_execution/wiring/bybit_wiring.py` (execution-service@03c69a3767). Credential resolution
