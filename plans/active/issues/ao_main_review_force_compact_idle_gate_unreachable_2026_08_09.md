@@ -105,12 +105,13 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       `pane_verdict`/`idle_streak`/`required` detail on every decline: `pane_capture_failed` / `classify_pane` /
       `idle_streak_insufficient` / `pane_input_pending` / `child_processes`); unit-covered in
       `tests/test_context_lifecycle.py`, full QG green.
-- [ ] [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
+- [x] ✅ [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
       Done-when: the Progress Log carries open-vs-blocked counts for both roles. **RETARGETED 2026-08-10**: the ruling
       it was meant to inform is already made on a 3.7h sample (see the [OPERATOR] todo below), so this is no longer a
       gate on that decision — it now serves as the CONFIRMING run over a full window. Report it as confirmation that the
-      cooperative path keeps working, not as new input to a pending ruling.
+      cooperative path keeps working, not as new input to a pending ruling. — measured 2026-08-10 (slot 9); see Progress
+      Log for the counts.
 - [ ] [BACKEND] P2. Machine-guard the ruling so it cannot be silently reversed: add a test asserting main and review
       route through the idle-gated `_maybe_force_compact` and never the worker unconditional-force path (the mirror of
       `_forbid_idle_checks`, which already guards the worker side). A doc-only ruling is not a gate — a future agent
@@ -216,3 +217,22 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   explicitly rejected as evidence) while making the condition worker-determinable, per the dispatch-scope-eligibility
   principle that a todo's outcome must be checkable by the worker alone. SSOT:
   `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "main/review stay COOPERATIVE-first".
+
+- 2026-08-10 (slot 9) — Shipped todo 2, the confirming >=6h measurement, queried directly against `GET /api/activity` on
+  the orchestrator VM (this session runs ON that VM — `localhost:8765` answers directly, so no SSM detour was needed)
+  for
+  `types=context_force_idle_gate_blocked,forced_precompact,forced_compact, context_force_compact_queued_hold,forced_precompact_submit_failed`
+  since the confirmed-live restart timestamp `2026-08-09T18:00:24Z` through `2026-08-10T00:25:35Z` (6h25m, satisfies
+  the >=6h bar). 202 total matching rows in the window. **Open-vs-blocked counts, `role in {main, review}`** (OPENED = a
+  tick where the idle multi-signal verdict passed and `_force_compact_now` was entered —
+  `forced_precompact`/`forced_compact`/ `context_force_compact_queued_hold`/`forced_precompact_submit_failed`; BLOCKED =
+  `context_force_idle_gate_blocked`):
+  - `main`: deadline-past ticks = 1, blocked = 1, opened = 0. Dominant blocking signal: `classify_pane` (1/1).
+  - `review`: deadline-past ticks = 0, blocked = 0, opened = 0 — review never reached a deadline-past tick in this
+    window (compacted cooperatively via Tier-1 guidance before ever crossing `context_compact_force_after_seconds`).
+  - For contrast, the 201 non-main/review rows in the same window were all `role=worker` (`forced_precompact`=99,
+    `forced_compact`=92, `context_force_compact_queued_hold`=9, `forced_precompact_submit_failed`=1) — the unconditional
+    worker force path firing at its normal high volume, unrelated to this todo's idle-gated main/review path.
+  - **Consistent with the operator's 3.7h sample** (todo 5 above: "idle gate blocked only once" for main, review
+    reaching zero forces) — same shape holds over the fuller window, nothing new surfaces. Reported as the CONFIRMING
+    run per the 2026-08-10 retarget, not as new input to a pending decision.
