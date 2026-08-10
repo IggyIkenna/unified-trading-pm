@@ -169,6 +169,20 @@ a normal ratchet into a self-reinforcing wall.
 
 ## Progress Log
 
+- **2026-08-10 16:36Z (/ci-reconcile, slot-2·laptop)** — ✅ **PROMOTION DRAINED. The wall is down.** Promote PR **#2717
+  MERGED at 2026-08-10T16:36:18Z**; `origin/main..origin/live-defi-rollout` went **1728 → 2** (the 2 being commits that
+  landed after the merge). First promote PR to merge since #2671 on 2026-08-09T09:19Z — roughly 31h and ~1730 commits.
+  **Attribution, stated honestly: this session did not land the change that unblocked it.** The final blocker was
+  `check_ag_closeout_linkage` reporting `1 orphan (baseline 0)` at frozen head `37d720dc4291`; that orphan is simply
+  absent at LDR tip `0f7d704066` (verified locally in a clean worktree: 0 orphans), so someone else's commit cleared it,
+  the checks slice passed at 16:35Z, and the already-armed auto-merge fired one minute later. What this session's two
+  shipped fixes DID do is remove the two earlier blockers in front of it — and note the cancel-in-progress exemption was
+  verified ABSENT on `main` before this merge and PRESENT after, so it only becomes load-bearing from now on. **The P1
+  treadmill todo stays OPEN and is not resolved by this drain**: the rate mismatch that manufactured #2713→#2717 is
+  still armed and will re-fire on the next fast-failing check. Measurement trap recorded for the next person:
+  `gh pr list --search "chore(promote)"` returned an EMPTY list twice while promote PRs demonstrably existed — it
+  reported `[]` at the same moment `#2717` was open. Use `gh pr list --state all` and filter on `headRefName` starting
+  `promote/`; do not trust the search form for this.
 - **2026-08-10 ~16:35Z (/ci-reconcile, slot-2·laptop)** — **The promotion did NOT drain; reopening the analysis.** A 2h
   watcher on PR #2713 terminated on its own timeout branch (distinct exit code 3, deliberately not 0 — an earlier
   watcher this session exited 0 on a fallthrough and I misreported it as success). Its verdict: #2713 CLOSED unmerged,
