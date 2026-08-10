@@ -134,6 +134,44 @@ fleet-wide commit-blocking gate pre-armed). Override to enforce: `QUICKMERGE_PRO
 pre-push guard is a committed `.husky/pre-push` delegate file, not this hook chain, so this new commit-msg check does
 not currently reach them. A husky-side equivalent is tracked as future work, not yet built.
 
+## 5. Parallel sub-agents parallelise AUTHORING ONLY — gating and shipping stay SERIAL
+
+**Scope: laptop multi-agent fan-out only** (an interactive Ikenna/Harsh session spawning `Task` sub-agents). AO never
+fans out this way — it dispatches per-repo workers serially — so this section is a local-session design rule, not an
+orchestrator one.
+
+Measured 2026-08-10, a 6-agent fan-out across 6 repos: every agent authored its change successfully and in parallel;
+**every downstream step then serialised anyway**, and two of the three ship failures were _caused_ by the parallelism.
+Four structural reasons, none of which file-level partitioning prevents:
+
+1. **The QG governor caps concurrent gates at 2 HOST-WIDE**, shared with every peer slot on the machine. Launching a
+   second gate while your own ship is queued starves your own merge — measured: a `quickmerge` re-gate queued **810s**
+   behind its own session's other gate plus 4 peer-slot gates. More concurrency here is strictly negative.
+2. **The ship gate is TREE-WIDE, not file-scoped.** `quickmerge` re-gates the whole repo, so a peer agent's concurrent
+   edits fail _your_ merge. Partitioning by file prevents edit collisions but NOT **ratchet** collisions: three agents
+   each added ~100-180 lines to different files, none individually alarming, and collectively broke the repo's file-size
+   ratchet (853→998, 926→1008, 891→992 against a 960 cap) — a class of failure that is invisible to every agent locally
+   and only appears at the tree-wide gate.
+3. **Dependency repos cannot be edited concurrently with their dependents.** `quickmerge`'s pre-flight refuses to ship
+   any repo whose path-dependencies are dirty (`❌ <dep>: HAS UNCOMMITTED CHANGES`), and a dependency mid-refactor
+   _transiently breaks its dependents' imports_ (observed: UTL's `_state.py` split made `deployment-service` un-
+   importable for minutes). So `unified-trading-library`/`unified-api-contracts` must reach a clean, shipped state
+   BEFORE any service repo can gate or ship.
+4. **Sub-agents structurally cannot self-verify.** Because of (1) they must be told to run targeted tests only, so the
+   codex-compliance checks that run ONLY in the full gate (file-size ratchet, banned-token scan, hardcoded-project-id)
+   are invisible to them. Every such violation surfaces at the parent's gate, after the fact.
+
+**The shape that works**: fan out authoring → collect ALL agents → ship dependency repos FIRST → then ONE full gate per
+dependent repo (QG-sweep batching: gate once over the combined tree, then per-unit commits) → ship serially. Never run
+two gates concurrently yourself, and never bulk-kill a peer slot's gate to free a token (banned) — patience is the
+sanctioned response to contention.
+
+**Corollary for fix shape**: when a cap breach is the blocker, fix it by EXTRACTION along a real seam, never by
+compressing logic or deleting docstrings. The 2026-08-10 batch produced four genuinely better modules that way
+(`_durable_state.py`, `_preemption_signal.py`, `_captured_reader.py`, `_classify.py`). Extraction has one recurring
+second-order cost to check: a moved function takes its imports with it, so any test that monkeypatched
+`<old_module>.<symbol>` must be repointed at the new module.
+
 ## Operator/agent takeaways
 
 - Don't hand-roll a raw `git commit`/`git push` retry loop to escape contention on a shared checkout — that bypasses
