@@ -98,11 +98,16 @@ when the violation list is empty.
       first segment", so a typo'd PM-internal path (`plns/foo.md`) is still a real violation. The full-QG path clones
       siblings and still checks these for real, so no coverage is lost. Verified: local full corpus still 2022 docs /
       zero violations; simulated PM-only checkout skips the two real cross-repo citations and still flags the typo.
-- [ ] [BACKEND] P2. `market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md` is cited by
-      `/plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` but exists only as an
-      UNTRACKED local file in at least one slot checkout — so it is dead for everyone else and will still flag once MTDS
-      is checked out alongside PM. Either commit it in market-tick-data-service or drop the citation. Repo:
-      market-tick-data-service / unified-trading-pm.
+- [x] ✅ [BACKEND] P2. ~~`market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md` is an untracked local file, so the
+      citation is dead for everyone else.~~ **RETRACTED 2026-08-10 — this was a measurement error, not a finding.** The
+      file IS tracked in `market-tick-data-service` and present on its `origin/live-defi-rollout` (113 lines, "Quality
+      Gate Bypass Audit", last reconciled 2026-06-11). The earlier "untracked" verdict came from a bad probe: it derived
+      the repo directory as `dirname $(dirname <path>)`, which resolves to `.` for a REPO-ROOT-level file, so
+      `git ls-files` was run against the wrong repo and returned no match. Every one of the eight citations
+      `ldr-docs-gate` flagged was therefore a false positive, not seven-plus-one — the docspec fix above covers all of
+      them and NO corpus edit is required. Lesson worth keeping: a probe that reports "file absent" is only evidence
+      once you have confirmed the probe looked in the right place, the same failure shape the reconciliation codex
+      already warns about for vocabulary probes.
 - [ ] [BACKEND] P2. **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
       checked-out ref** — so this doc's own `set +e` fix was inert for every scheduled run the moment it landed on LDR,
       and stays inert until promotion carries it to main. That is a circular dependency: the fix for a silent-alert bug
