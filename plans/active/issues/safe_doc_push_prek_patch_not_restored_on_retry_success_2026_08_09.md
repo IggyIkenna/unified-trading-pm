@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                                          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                                          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                                          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                                          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                                          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                                          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                                          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                                          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                                          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                                          redundant, so both mechanisms are now kept.
+                                              (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                                              retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                                              before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                                              and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                                              `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                                              behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                                              `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                                              only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                                              both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                                              redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -267,3 +267,17 @@ mitigations, cheapest first:
   at 13:18 — live claim), not a defect in this run's own commit. Did NOT apply the patch or commit the flip — wrong
   task/repo scope + unverifiable evidence + live owner. Left both patch files in place for the batch9_finalize owner to
   recover/verify; noting here per this doc's established practice of logging live recurrences of this failure signature.
+- **2026-08-10 (slot 30, second recurrence same session —
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize-dba91daebce3`, todo 5)**: the
+  `check_orphaned_prek_patches()` safety net fired again on the batch10+finalize archival push (`bca0b577f6`); orphaned
+  patches `1786369822882-1667434.patch` + `1786369843952-1689759.patch` (byte-identical) diffed
+  `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` — the auto-generated inventory dashboard THIS
+  SESSION regenerated (via `scripts/plans/regenerate_active_plan_inventory.py`) as a normal part of the archival ritual
+  (batch10 + finalize archived → rows dropped). NOT foreign WIP: the working tree already carried the dashboard edit,
+  the patches were duplicate stashes of that same content created during the run's 2-attempt retry, and the content was
+  re-confirmed present (`git status --porcelain` showed the dashboard ` M`) before committing it as its own follow-up
+  push (`cb788fc74e`). No data loss — the regeneration the patches held was the same change I then shipped. Per the
+  script's own ACTION ("check whether its content is ALREADY back in your working tree before assuming loss"), confirmed
+  present → no `git apply` needed, patches left in place (do-not-delete). Same root cause as the earlier slot-30
+  occurrence: prek patch stash/restore on a retry-success leaves an orphan, the safety net catches it; the shared
+  `~/.cache/prek/patches/` dir holds the evidence.
