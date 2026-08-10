@@ -16,7 +16,7 @@ summary: >-
   `ci`-tranche metadata-retag list, and an independently-resolved provenance-marker doc that fixed a different
   subsystem) neither of which claims this batch's extracted item. All 11 todos are file-disjoint (verified during
   drafting) so this plan needs no `sequential` gate.
-status: archived
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-12, satellite-docs, satellite-extraction]
 related:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md,
+    /plans/active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md,
     /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
@@ -71,12 +71,6 @@ source: >-
 
 # AO satellite AO batch 12
 
-> **ARCHIVED 2026-08-10** — all 11 todos done and verified against reality by
-> `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md` (each done-claim independently
-> confirmed: tests re-run green, live DB/state verified, post-action states confirmed). The batch's completion evidence
-> was reconciled into the TRUE source docs (deepseek_flash_ab_routing_test_2026_08_05.md, ao_false_done_backlog_rows,
-> fleet_host_inventory, forced_compact_reports) before this batch archived. Archived by the batch12-finalize plan.
-
 > **`status: draft`** — pending operator approval, same convention as batch5-11: flip to `active` to dispatch.
 > **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once approved, same as the rest of this series.
 
@@ -93,9 +87,8 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
 
 - Do not edit the 4 source docs' remaining checkboxes beyond what this plan's own todos below already changed at
   drafting time (a `[x]`/redirect-pointer marking the extracted item). Append your evidence to THIS plan's own todo when
-  you finish; the paired finalize plan
-  (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`) reconciles evidence back into each
-  source doc.
+  you finish; the paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`)
+  reconciles evidence back into each source doc.
 - The 11 todos below are file-disjoint by construction — keep new test/evidence files scoped to the todo's own concern.
 - Todo 5 and todo 8 are the only todos touching live production state (a `state.db` row repair and a worker-slot git
   reset respectively); both are explicitly `[OPERATOR]`-adjacent per the source docs' own established precedent
