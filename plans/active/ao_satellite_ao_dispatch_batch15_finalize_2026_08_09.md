@@ -59,10 +59,28 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify batch15's 3 done-claims against reality** — confirm the `paper_target_registry` rename
+- [x] ✅ [REVIEW] P1. **Re-verify batch15's 3 done-claims against reality** — confirm the `paper_target_registry` rename
       left zero active references, confirm the CANCELLED-format fix actually passes `check_todo_regression.sh --only` on
       a fresh test conversion, and confirm the corpus grep result is complete (re-run it). **Done when**: all 3
-      independently confirmed; any discrepancy re-opened as a new tracked todo here.
+      independently confirmed; any discrepancy re-opened as a new tracked todo here. — All 3 independently re-verified,
+      no discrepancies: (1) rename — corpus-wide grep of `plans/`+`codex/` for `paper_target_registry` outside
+      `plans/archive/` shows only this doc's own tracking prose + the 2 intentional correction notes
+      (`/codex/04-architecture/operational-modes.md:128`,
+      `/codex/04-architecture/paper-vs-live-execution-seam.md:56,174`) claimed as exempt; separately grepped all `.py`
+      across `unified-api-contracts`/`unified-trading-library`/`market-tick-data-service`/`strategy-service`/
+      `execution-service` — 0 code hits for `paper_target_registry`, confirmed `PAPER_EXECUTION_TARGETS` +
+      `get_paper_target()` are real symbols in
+      `unified-api-contracts/unified_api_contracts/internal/paper_execution_targets.py`. (2) CANCELLED-format fix —
+      confirmed `CANCELLED_RE='^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED'` is live in
+      `scripts/plan-hygiene/check_todo_regression.sh` (`d01cd9ad41`); independently re-derived `_check_one()`'s counting
+      logic against synthetic before/after content (a 2-checkbox origin state): a CANCELLED conversion yields
+      checkbox=1+cancelled=1=2 (conserved, no loss), a genuine deletion yields checkbox=1+cancelled=0=1 (correctly < 2,
+      would fail) — matches the shipped regex exactly. (3) corpus grep — re-ran
+      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\. (CANCELLED|SUPERSEDED)' plans/ codex/`: same exact 3 matches, same
+      files/lines as claimed (`defi_satellite_ao_dispatch_batch2_2026_07_26.md:90`,
+      `defi_manifest_no_expected_unattempted_seeder_2026_07_26.md:158`,
+      `data_pipeline_check_mdps_features_history_2026_07_24.md:947`); re-ran `check_todo_regression.sh --only <file>`
+      against each individually — all 3 report `0 violation(s)`, matching the claim.
 - [ ] [REVIEW] P0. **Reconcile verified evidence into each source doc's own checkbox** —
       `operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`'s `[DOCS] P3` rename item, and
       `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`'s `[DEVOPS] P2` + `[DOC] P3` items
