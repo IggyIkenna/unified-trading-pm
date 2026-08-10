@@ -392,6 +392,21 @@ Progress Log entries 2026-07-30 through 2026-08-10 moved **verbatim** — nothin
 `/plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` (line-cap remediation — see that
 doc for the full history).
 
+- **slot-8 2026-08-10 (task -014 re-check before any delete)**: re-verified both -014 gates — **both still unmet, the
+  physical GCS delete remains correctly blocked**. (1) **Step-1 corpus-freshness gate FAIL**: bounded list-only probe
+  (UTL `get_storage_client`, never a subprocess, never a corpus walk) of the DeFi tick-data bucket
+  `market-data-tick-defi-prd-central-element-323112` — the exact bucket `CanonicalPerpFundingProvider` reads — for
+  `data_type=perp_funding|perp_daily_ctx` across **2026-08-01→08-10**: **0 objects for all 6 `catalog_carry.py` venues**
+  (`KRAKEN/BINANCE/BYBIT/OKX/BITFINEX/BITGET-FUTURES`). `funding_window()` returns empty for current days; the corpus is
+  NOT fresh. (2) **In-flight defi-bucket rebuild CONFLICT**: `canonical-migration-defi-rebuild- 20260810-204358` is
+  **RUNNING** (GCE instance list, 2026-08-10) — the -014 todo explicitly forbids running any GCS-delete / manifest-CAS
+  rewrite concurrently with a defi-bucket rebuild. Mis-filed objects still present: **98 objects** (7 venues × 7 days
+  2026-05-16..22 × 2 data_types) at
+  `raw_tick_data/by_date/day=…/pipeline_mode=batch_tardis/asset_group=cefi/venue={*-FUTURES|DERIBIT}/…` in the DeFi
+  bucket, with cefi-bucket twins verified at the matching prefix (14/14 per venue). No code shipped; deletion not
+  executed. Task released via `/skip-current-task` `reason_code=GATED` — re-dispatch when step-1 lands (forward-poll
+  cron gap closed + corpus recompute current) AND the in-flight defi rebuild completes.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
