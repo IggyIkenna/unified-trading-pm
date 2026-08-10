@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-              (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-              retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-              before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-              and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-              `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-              behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-              `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-              only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-              both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-              redundant, so both mechanisms are now kept.
+                  (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                  retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                  before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                  and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                  `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                  behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                  `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                  only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                  both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                  redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -147,7 +147,7 @@ mitigations, cheapest first:
       reproduction (2 sequential `git commit` invocations, fail-then-pass hook, unrelated unstaged edit, with and
       without inter-attempt delay) could not reproduce it — the actual risk is the cross-process race documented in
       `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`, which the checksum safety net
-      (`_prek_race_check`) already guards against. — unified-trading-pm@c692a472e6: added a header comment block to
+      (`_prek_race_check`) already guards against. — unified-trading-pm@fe47a4b219: added a header comment block to
       `scripts/dev/safe-doc-push.sh` (before `set -uo pipefail`) stating the reproduction verdict and pointing at
       `_prek_race_snapshot`/`_prek_race_check` as the actual mitigation in place.
 
