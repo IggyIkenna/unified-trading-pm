@@ -330,11 +330,20 @@ depends_on: []
           Heartbeat alive. Queue unchanged.
         - No code shipped — pre-compact ritual.
 
-## Deferred work after 2026-08-10 ~20:50Z
+      - **2026-08-10 (slot 28, data_engineering, ~20:51Z–~21:00Z)** — Post-compact + pre-compact sessions:
+        - VM progressed from `2021-06-07` (~20:50Z) → `2021-06-17` (multiple checks across compact+resume cycles) →
+          `2021-06-20` (~21:00Z). Monotonic, forward progress. VM RUNNING in `asia-northeast1-c`. No `exit_code=` yet.
+          Heartbeat alive.
+        - Pace remains ~1-2 season-start-dates/min, non-linear deceleration into denser 2022+ seasons as expected. Run
+          now ~4.5h old. No reliable ETA — STANDINGS is season-scoped, pace depends on league density per season.
+        - No code shipped — pure monitoring across multiple compact+resume cycles.
+        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
+
+## Deferred work after 2026-08-10 ~21:00Z
 
 | Item                                                             | State / why deferred                                  | Blocked on                         |
 | ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-06-07`, pace ~1-2 dates/min non-linear | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-06-20`, pace ~1-2 dates/min non-linear | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
