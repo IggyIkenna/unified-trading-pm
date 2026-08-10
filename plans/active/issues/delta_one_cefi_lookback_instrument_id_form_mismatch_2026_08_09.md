@@ -187,3 +187,9 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   noise, not a code issue), shipped via `quickmerge --agent`, post-push ancestry verified (`0c70a43f0` is an ancestor of
   `origin/live-defi-rollout`). Escalating the venue-representative question via `/blocked`; this P2 todo stays open
   pending that decision.
+- 2026-08-10 (slot-6, resumed task `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a`): The
+  venue-representative `/blocked` question was answered (option (a) — see
+  `delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md`'s "Operator ruling" section) — a new scoped fix
+  todo is filed there (explicit `--instruments` bypasses `_collapse_to_perp_representative`). Both of this doc's open P2
+  re-run todos stay blocked until that fix lands; skipping this dispatched instance with `reason_code: GATED` rather
+  than attempting a re-run that would still fail the same way.

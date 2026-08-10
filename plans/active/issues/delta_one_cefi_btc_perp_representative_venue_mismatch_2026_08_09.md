@@ -138,6 +138,28 @@ the volume-based collapse and fall back to the legacy per-family filter for it s
 continuity without a blanket CLI-semantics change, but is a special-case exception that needs its own documented
 justification (why BTC, why BITGET) and doesn't generalize to the next base that hits the same disagreement.
 
+## Operator ruling (2026-08-10)
+
+Option **(a)** — explicit `--instruments` bypasses `_collapse_to_perp_representative` entirely — ruled via `/blocked`
+(`BLK-13405a35`, answered by main). Rationale: silently dropping an explicitly-named instrument is itself the bug; this
+preserves the existing BITGET-based corpus without a cross-group recompute (rules out (b)) and avoids a BTC-only special
+case that wouldn't generalize (rules out (c)). Scope as its own change with regression tests, filed as its own todo
+below — NOT bundled into either P2 corpus-recompute todo in the parent issue.
+
+- [ ] [DATA] P2. Make an explicit `--instruments` override bypass `_collapse_to_perp_representative` in
+      `features_service/delta_one/universe/mvp_universe_filter.py`'s `filter_instruments_for_family` — thread a
+      caller-explicit flag (mirroring how `BatchHandler._resolve_instrument_list`,
+      `features_service/delta_one/cli/handlers/batch_handler.py:476`, already distinguishes `instruments is None`
+      auto-discovery from an explicit caller-provided list via its `record_out_of_scope_instruments` gate) from
+      `_resolve_instrument_list` through `_process_one_group` (`batch_handler.py:733`'s
+      `filter_instruments_for_family(...)` call site) into `filter_instruments_for_family`, and skip the
+      `_collapse_to_perp_representative` call (mvp_universe_filter.py:182) when set. Add regression tests in
+      `tests/delta_one/unit/test_mvp_universe_filter.py`: (1) full-universe auto-discovery (no explicit override) still
+      collapses to one representative venue per base — unchanged behavior; (2) an explicit `--instruments` override
+      bypasses the collapse entirely and the named instrument(s) survive the filter regardless of trailing-volume
+      ranking. Repo: features-service. Unblocks both P2 re-run todos in
+      `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`.
+
 ## Progress Log
 
 - 2026-08-09 (slot-29, task delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a): Resumed the "recompute
@@ -171,3 +193,14 @@ justification (why BTC, why BITGET) and doesn't generalize to the next base that
   (`blocked_id: BLK-13405a35`, same 3 options/recommendation as the "Recommended decision" section above). Repos all
   clean (no uncommitted WIP from the prior session survived). Waiting on the operator/main ruling; no other in-scope
   work remains on this P2 todo until the venue-representative decision lands.
+- 2026-08-10 (slot-6): Main answered `BLK-13405a35` — option (a) ruled. Added the "Operator ruling" section above + a
+  scoped `- [ ]` fix todo (explicit `--instruments` bypasses `_collapse_to_perp_representative`, with the exact
+  thread-through path from `_resolve_instrument_list` to `filter_instruments_for_family`, plus the two required
+  regression tests) per main's explicit instruction to file it as its own todo rather than bundle it into either P2
+  re-run todo. Did NOT implement the fix in this session — main's ruling text says to file it, not do it inline, and
+  this task's own craft/scope is the P2 re-run, not this shared-core dependency-checker-adjacent change. Note:
+  `depends_on`/`sequential` only gate ordering/archival WITHIN a doc and do not affect cross-doc dispatch (per
+  CLAUDE.md), so they can't gate the parent issue's P2 todos on this doc's new fix todo — the actual backstop is the
+  `GATED`-reason_code skip on this session's own dispatched instance below.
+  `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a` (this session's actual dispatched task) stays
+  blocked on this new todo landing — skipping it with `reason_code: GATED` rather than holding the slot idle.
