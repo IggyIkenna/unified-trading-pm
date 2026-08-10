@@ -241,6 +241,28 @@ Directions, cheapest first — each is a todo below:
       re-stage the named files and retry — rather than exiting 6 with "Do NOT re-run this script". **Done when**: a
       simulated autofix-only prek failure re-stages and retries to success, a genuine content rejection still exits 6
       with the hook's remedy line, and both are covered by tests. Repo: unified-trading-pm.
+- [ ] [INFRA] P0. **The silent-revert class also hits `quickmerge.sh`, and safe-doc-push's own "already landed"
+      heuristic converts it into a FALSE SUCCESS — four measured instances 2026-08-10, two of which destroyed this very
+      todo.** The sibling todo below covers safe-doc-push's exit-5 path only; these are different. (1) A comment edit to
+      `scripts/quality-gates-base/qg-host-governor.sh`, staged and passing, was silently dropped by quickmerge's
+      autostash/`_qm_restage_target_files` reconcile — the run reported SUCCESS and pushed a commit with the OTHER named
+      files but not that one; the edit survived in neither worktree nor HEAD (re-applied by hand, shipped as
+      unified-trading-pm@7a6f9a47). Nothing warned. (2) A scoped `--files` run pushed a commit containing NEITHER named
+      file — only a peer's untracked test file — while both named files stayed dirty on disk
+      (agent-orchestrator@62649fb). (3) This todo, attempt 1: written, pushed, and afterwards CLEAN with `ahead=0`,
+      present in neither worktree nor HEAD; unrecoverable from all 4 live stashes (incl. two
+      `safety-snapshot: pre-reconcile quarantine`), checked individually. (4) This todo, attempt 2 — THE WORST SHAPE:
+      `safe-doc-push.sh` exited **0** reporting
+      `✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success.` It had
+      not landed; the edit was reverted BEFORE the script hashed the file, so "matches HEAD" was true for the wrong
+      reason. That heuristic cannot distinguish "someone else already pushed your content" from "your content was
+      destroyed" — and resolves both to success. An autonomous run would record a green push and move on. **Why
+      `_qm_unstage_foreign_paths()` (@bde0cc4a) does not cover this**: it stops FOREIGN work being committed under your
+      message; it does nothing about YOUR work being reverted. Separate failure modes, only one fixed. Fix shape: hash
+      the named files at ENTRY; before reporting success, require that HEAD contains THAT hash's content — not merely
+      that the worktree matches HEAD. On mismatch, fail loudly naming a recovery ref. **Done when**: an induced run
+      whose named file is reverted mid-flight exits non-zero naming the recovery ref instead of reporting "already match
+      HEAD", and a test covers both branches. Repo: unified-trading-pm.
 - [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
       non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
       entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
