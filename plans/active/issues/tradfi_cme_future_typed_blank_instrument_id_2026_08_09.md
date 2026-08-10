@@ -230,3 +230,40 @@ Not urgent (static, not actively growing) but real and unaddressed.
   real per-row `instrument_id` + a live manifest recount) into the new todo above — that requires downloading and
   classifying each legacy object's row content (a real per-row id is not path-derivable), a materially larger operation
   than this code-fix todo, not attempted in this session.
+
+- **slot-21 worker 2026-08-10** (census for batch11 #6 backfill): **Population is 473,374 rows — 23× the original
+  20,254.** NOT static — 425K rows written TODAY (2026-08-10, clusters at 07:14 and 13:25 UTC). Census details:
+  - **Full CME null-instrument_id landscape**: COMBO=301,391, `futures_chain`=79,984, `options_chain`=78,138,
+    `FUTURE`=473,374, blank-itype=9,630. COMBO/futures_chain/options_chain null-ids are STRUCTURALLY CORRECT (bundle
+    grain, per `_STRUCTURALLY_BLANK_DEPENDENCIES` in `manifest_consolidator.py:2284-2289`). The FUTURE rows are the
+    anomaly.
+  - **FUTURE null-id profile**: 457,139 captured + 16,235 empty_confirmed. ALL have POPULATED `underlying`
+    (RUSSELL2000/ZAR/CRUDE/SILVER/… — 473,374 of 473,374 rows have non-null underlying). ALL
+    `pipeline_mode= batch_databento`, `source=databento`. `quote_asset` and `margin_type` are EMPTY for ALL rows (NOT v6
+    chain dims — rules out v6 `quote=USD/margin=linear/` paths as the source). 76,454 unique (date, underlying,
+    data_type) combos across 77 year-months (2020-2026).
+  - **NOT simple duplicates**: 75,805/76,454 key combos (453,613/457,139 rows) overlap with `futures_chain` rows on
+    (date, underlying, data_type) — BUT the FUTURE and futures_chain rows have DIFFERENT `instrument_count` values and
+    DIFFERENT `written_at` timestamps. The two populations represent DIFFERENT aggregate counts, not redundant copies of
+    the same data. 649 key combos (3,526 rows) have NO futures_chain counterpart at all.
+  - **Root cause refined**: `canonicalize_manifest_instrument_type()` at
+    `unified_trading_library/canonical/_manifest_instrument_type_canon.py:54` maps `continuous_future` →
+    `InstrumentType.FUTURE`. This conflates bundle-grain continuous futures (which have populated `underlying` and null
+    `instrument_id` by construction — they are a rolling basket, not a single contract) with singular FUTURE contracts
+    (which should have a real per-contract `instrument_id`). `_BUNDLE_GRAIN_EXCLUDED` (line 76) excludes
+    `futures_chain`/`options_chain` from canonicalization but NOT `combo` or `continuous_future`. `combo` → `COMBO` is
+    also wrong (should be excluded like `futures_chain`), but `continuous_future` → `FUTURE` is the active defect
+    producing these 473K rows. The GCS source objects for `instrument_type=future/underlying=*/` (or
+    `continuous_future/`) could not be located in the canonical bucket — they may have been migrated/deleted after the
+    rebuild script ran this morning.
+  - **Rebuild script runs**: The `written_at` clusters (07:14 + 13:25 UTC 2026-08-10) indicate at least two separate
+    `rebuild_tradfi_manifest.py` invocations today. The `@bd6233b4` fix gates `_PAT_UNDERLYING_BUNDLE` on
+    `itype.lower() in BUNDLED_ITYPES`, which INCLUDES `continuous_future` — so the fix WOULD still classify
+    `continuous_future/` paths as bundled. Whether it produces correct rows or null-id rows depends on downstream
+    routing (`_emit_shard_row`).
+  - **KRX blank rows**: 9,665 rows with `instrument_type=:` (blank) AND `underlying=:` (blank), ALL
+    `capture_status=empty_confirmed`, `written_at` clusters at 2026-07-15 (7,264) and 2026-08-09/10 (2,401). Separate
+    defect from this issue's CME scope — not scoped here.
+  - **pyarrow.compute trap**: `pc.and_(a, pc.or_(b, c))` returns an all-false ChunkedArray when one operand of the outer
+    `and_` is an `or_` result — a pyarrow compose bug. Workaround: two-step filter (filter with AND first, then filter
+    with OR on the intermediate table).
