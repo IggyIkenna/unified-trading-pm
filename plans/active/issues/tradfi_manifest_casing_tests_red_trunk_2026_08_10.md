@@ -37,6 +37,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 # market-tick-data-service QG red on trunk — 3 pre-existing TradFi casing tests
@@ -87,20 +88,20 @@ repo-blocker auto-resolves and pending quickmerge ships proceed.
 
 ## Todos
 
-- [ ] [DATA] P1. **Fix the 3 STALE mtds tests to match the UTL canon reversal (`74fe04fd`, 2026-08-10) — NOT by
-      restoring the `continuous_future→FUTURE`/`combo→COMBO` mapping** — repo: market-tick-data-service. **CORRECTED
-      ROOT CAUSE (2026-08-10, slot 20 — supersedes this todo's original hypothesis below):** the 3 failures are STALE
-      TEST EXPECTATIONS, not a production bug. UTL canon `unified-trading-library@74fe04fd` (2026-08-10 21:10Z)
-      **deliberately reversed** the prior `continuous_future→FUTURE`/`combo→COMBO` manifest-column mapping, after a live
-      census showed **473,374 manifest rows with bundle-grain signature (populated `underlying`, null `instrument_id`)
-      incorrectly classified as per-contract FUTURE rows** — `combo`/`continuous_future` are id-less bundle aggregates,
-      permanently excluded from casing-upgrade like `futures_chain`/`options_chain`. That commit updated the UTL +
-      instruments-service tests but NOT these 3 mtds tests. The production code (`_tradfi_manifest_itype` in
-      `_tradfi_manifest_shard.py`, `build_casing_frame` in the casing migration script, `_record_venue_shard_counts` in
-      `venue_fetch.py:391`) all route through the shared UTL canon and are CORRECT. **The fix is to update the 3 tests
-      to expect lowercase pass-through** (`continuous_future` stays `'continuous_future'`, `combo` stays `'combo'`),
-      matching `74fe04fd`'s canonical list. Do NOT restore the mapping — that re-introduces the misclassification bug
-      the reversal fixed. 1.
+- [x] ✅ [DATA] P1. **Fix the 3 STALE mtds tests to match the UTL canon reversal — market-tick-data-service@5f037099
+      (`74fe04fd`, 2026-08-10) — NOT by restoring the `continuous_future→FUTURE`/`combo→COMBO` mapping** — repo:
+      market-tick-data-service. **CORRECTED ROOT CAUSE (2026-08-10, slot 20 — supersedes this todo's original hypothesis
+      below):** the 3 failures are STALE TEST EXPECTATIONS, not a production bug. UTL canon
+      `unified-trading-library@74fe04fd` (2026-08-10 21:10Z) **deliberately reversed** the prior
+      `continuous_future→FUTURE`/`combo→COMBO` manifest-column mapping, after a live census showed **473,374 manifest
+      rows with bundle-grain signature (populated `underlying`, null `instrument_id`) incorrectly classified as
+      per-contract FUTURE rows** — `combo`/`continuous_future` are id-less bundle aggregates, permanently excluded from
+      casing-upgrade like `futures_chain`/`options_chain`. That commit updated the UTL + instruments-service tests but
+      NOT these 3 mtds tests. The production code (`_tradfi_manifest_itype` in `_tradfi_manifest_shard.py`,
+      `build_casing_frame` in the casing migration script, `_record_venue_shard_counts` in `venue_fetch.py:391`) all
+      route through the shared UTL canon and are CORRECT. **The fix is to update the 3 tests to expect lowercase
+      pass-through** (`continuous_future` stays `'continuous_future'`, `combo` stays `'combo'`), matching `74fe04fd`'s
+      canonical list. Do NOT restore the mapping — that re-introduces the misclassification bug the reversal fixed. 1.
       `tests/unit/engine/test_tradfi_manifest_shard.py::test_tradfi_manifest_itype_continuous_future_now_upgrades_to_future`
       → expect `_tradfi_manifest_itype("CME", "continuous_future") == "continuous_future"` (rename test). 2.
       `tests/unit/scripts/test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py::test_build_casing_frame_upgrades_every_known_residual_token`
@@ -124,6 +125,10 @@ repo-blocker auto-resolves and pending quickmerge ships proceed.
   the misclassification bug). Test edits are fully specified in the todo body above; each is a one-line assertion/name
   change. Compaction interrupted mid-task (context gate) — the edits are NOT yet applied; resume by making the 3 test
   edits, running `bash scripts/quality-gates.sh`, then quickmerge + flip.
+- **2026-08-10 (slot 22, fix-worker verification)** — The 3 test edits shipped earlier as
+  `market-tick-data-service@5f037099` (slot-7; matches UTL canon `74fe04fd` — `continuous_future`/`combo` stay
+  lowercase). Re-ran full `bash scripts/quality-gates.sh` on this HEAD — exit 0, sentinel written (10508+ passed, 3
+  previously-red tests now green). Trunk red cleared; repo-blocker RB-90251f57 unblocked. Checkbox flipped.
 
 ## Deferred work after 2026-08-10
 
