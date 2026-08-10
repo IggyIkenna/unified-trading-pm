@@ -1117,7 +1117,38 @@ PYEOF
     if [ "${#_BATS_FILES[@]}" -gt 0 ]; then
         log_section "BATS SHELL TESTS"
         if command -v bats &>/dev/null; then
-            if bats "${_BATS_FILES[@]}" 2>&1; then
+            # Run in PARALLEL where the host can (measured 2026-08-10, PM's 211 tests across
+            # 28 files): serial 663s vs `-j 8` 115s — 5.8x, and bats alone was essentially the
+            # WHOLE quality-gate budget (PM's gate hit its own 600s cap at 659s; pytest's
+            # entire slowest-25 is ~48s by comparison). These suites are hermetic git tests —
+            # every setup() does init/clone/commit/push in its own mktemp dir — so they are
+            # process-spawn bound, not CPU bound, which is close to the ideal parallel case.
+            #
+            # Verified SAFE before enabling, not assumed: serial and -j 8 produced identical
+            # outcomes on the same tree — 151 ok / 60 not-ok, and the failing test NAMES
+            # matched exactly. Parallelism surfaced no new failures.
+            #
+            # Degrades to today's serial behaviour rather than breaking, in both directions:
+            # `bats -j` requires GNU parallel, so without it we must NOT pass the flag (bats
+            # errors out), and BATS_JOBS=1 (or =0) is an explicit opt-out for a host where a
+            # repo's suite turns out not to be hermetic. Other repos share this base file and
+            # their suites were NOT part of the measurement above — the parallel path is
+            # therefore gated on GNU parallel being present, and any repo that trips over it
+            # can pin BATS_JOBS=1 without touching this file.
+            _BATS_JOBS="${BATS_JOBS:-}"
+            if [ -z "$_BATS_JOBS" ]; then
+                _bats_cores="$( (getconf _NPROCESSORS_ONLN || sysctl -n hw.ncpu || nproc) 2>/dev/null || echo 2)"
+                _BATS_JOBS=$((_bats_cores / 2))
+                [ "$_BATS_JOBS" -lt 2 ] && _BATS_JOBS=2
+            fi
+            _BATS_ARGS=()
+            if [ "$_BATS_JOBS" -gt 1 ] && command -v parallel &>/dev/null; then
+                _BATS_ARGS=(-j "$_BATS_JOBS")
+                echo "  BATS: running ${#_BATS_FILES[@]} file(s) with -j $_BATS_JOBS (GNU parallel present)"
+            else
+                echo "  BATS: running ${#_BATS_FILES[@]} file(s) SERIALLY (GNU parallel absent or BATS_JOBS<=1)"
+            fi
+            if bats "${_BATS_ARGS[@]}" "${_BATS_FILES[@]}" 2>&1; then
                 log_ok "BATS tests PASSED (${#_BATS_FILES[@]} file(s))"
             else
                 log_warn "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (NON-FATAL transitional — re-harden to hard-fail once a clean fleet baseline is confirmed)"
