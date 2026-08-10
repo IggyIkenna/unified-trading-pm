@@ -10,7 +10,7 @@ summary: >-
   design work (measurement, fan-out audit, concurrency right-sizing, cost accounting) lives.
 status: active
 nature: process
-asset_group: [ci, infrastructure]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator, system-integration-tests]
 scope: [engineer, admin]
