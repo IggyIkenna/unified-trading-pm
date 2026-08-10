@@ -80,9 +80,10 @@ Clean up each in its own repo (all small, bounded, deterministic):
 
 ## Todos
 
-- [ ] [INFRA] P3. Remove the dead `deployed_versions` read in deployment-api `_repo_ci_manifest.deployed_version_for` +
-      `repo_ci.py` call sites (or repoint to Firestore `ci_status` / released-version registry); remove
-      `deployment_diff._deployed_versions_at_sha` or wire it to a live source. (repo: deployment-api)
+- [x] ✅ [INFRA] P3. Remove the dead `deployed_versions` read in deployment-api
+      `_repo_ci_manifest.deployed_version_for` + `repo_ci.py` call sites (or repoint to Firestore `ci_status` /
+      released-version registry); remove `deployment_diff._deployed_versions_at_sha` or wire it to a live source. (repo:
+      deployment-api) — deployment-api@fff55c6
 - [ ] [INFRA] P3. Update the deployment-ui artifact-pipeline design mock to drop the `deployed_versions` narrative.
       (repo: deployment-ui)
 - [ ] [INFRA] P3. Remove the "falls back to deployed_versions from the PM manifest" mock-mode phrase from the build-list
