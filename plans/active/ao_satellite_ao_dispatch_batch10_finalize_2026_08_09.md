@@ -84,12 +84,19 @@ source: >-
       (`worker_liveness_watchdog.py:715`). (5) role lifecycle: all 5 craft role files declare `lifecycle: persistent`;
       AO commits c72daaa+4421129, PM commit 14f1dcd. (6) prettier: `agent-orchestrator@fcbc736` exists;
       `dashboard/package.json:28` = `"prettier": "^3.9.5"`.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence into its TRUE source doc's own checkbox** — replace the
+- [x] ✅ [REVIEW] P0. **Reconcile each verified todo's evidence into its TRUE source doc's own checkbox** — replace the
       redirect-pointer text batch10 left behind with the real completion evidence (commit sha / query result / recorded
       verdict), per source: `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (its `[SCRIPT] P3` line ~199 and `[DATA] P2`
       line ~242), `ao_open_issues_consolidated_close_out_2026_07_17.md` (its `[REVIEW] P0` line ~479, `[BACKEND] P0`
       line ~806, `[BACKEND] P0` line ~828), `dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` (its 2nd
       `[INFRA] P3`, line ~81). **Done when**: all 6 source checkboxes carry real evidence, not a bare redirect pointer.
+      **DONE 2026-08-10 (slot 24, review) — all 6 source checkboxes carry real evidence @unified-trading-pm
+      291e715e21**: batch2 [SCRIPT] P3 (na-eligibility timer verdict: YES, later fires complete end-to-end post
+      `@17939c3`) and [DATA] P2 (wip-preserve ref, SUPERSEDED by `400d3773`, stale local ref deleted); ao_open_issues
+      [REVIEW] P0 (archive sweep 0-orphan verdict, 297 plans) and [BACKEND] P0 ×2 (plan_reconciler end-to-end + R1/R2
+      cited rows/PR; role lifecycle reclassification @c72daaa+4421129+14f1dcd); dashboard_prettier 2nd [INFRA] P3
+      (prettier bump @fcbc736, `package.json:28` `^3.9.5`). No bare redirect pointers remain. NOTE: batch2 is now
+      fully-closed (0 open todos) — `archive_exempt: true` set on its flip commit; its archival is checked under todo 3.
 - [ ] [REVIEW] P1. **Check whether any of the 3 source docs is now fully closed** (every remaining open todo done, not
       just the extracted ones) — if so, run the standard 6-step archival ritual on it (banner, codex-alignment check,
       corpus-wide referrer fixup, lock check). Each source doc is expected to retain other open, non-extracted items
@@ -136,3 +143,7 @@ source: >-
   `mtds_qg_red_uac_capability_declaration_drift_2026_08_05.md` +
   `plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`) and the inventory reports 3 orphans / 313 plans (was
   0/297). Re-opened as new todo 5 (P1).
+- **2026-08-10 (slot 24, review)** — P0 reconcile done: all 6 source checkboxes now carry real completion evidence
+  (`unified-trading-pm@291e715e21`) — batch2 `[SCRIPT] P3` + `[DATA] P2`, ao_open_issues `[REVIEW] P0` + `[BACKEND] P0`
+  ×2, dashboard_prettier 2nd `[INFRA] P3`. No bare redirect pointers remain. Side-effect noted for todo 3: batch2 is now
+  fully closed (0 open todos) — `archive_exempt: true` set on its flip commit, archival to be checked/executed there.
