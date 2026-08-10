@@ -291,36 +291,19 @@ depends_on: []
           season.
         - No code shipped — pure monitoring.
 
-      - **2026-08-10 (slot 28, data_engineering, ~20:15Z)** — STANDINGS VM check (pre-compact):
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-04-17` (~20:09Z) → `2021-04-22` (~20:10Z) → `2021-04-28` (~20:15Z). Monotonic, forward progress.
-          Heartbeat alive at `20:14:51Z`. No `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~11 season-start-dates since ~20:09Z (~6 min). Season density continues to increase — each season-start
-          date now covers more active leagues, so pace per calendar-date continues to decelerate.
-        - No code shipped — pure monitoring.
+## Deferred work after 2026-08-10 ~20:09Z
 
-      - **2026-08-10 (slot 28, data_engineering, ~20:17Z–~20:20Z)** — STANDINGS VM checks (pre-compact):
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-04-28` (~20:15Z) → `2021-05-01` (~20:17Z) → `2021-05-04` (~20:20Z). Monotonic, forward progress. 333
-          total `[[VM_PROGRESS]]` markers written. Heartbeat alive at `20:16:51Z`. No `exit_code=` yet. VM confirmed
-          RUNNING.
-        - Pace ~6 season-start-dates since ~20:15Z (~5 min). Season density continues to increase — each season-start
-          date now covers more active leagues, pace per calendar-date decelerating as expected into 2022+ seasons.
-        - No code shipped — pure monitoring.
-
-## Deferred work after 2026-08-10 ~20:20Z
-
-| Item                                                             | State / why deferred                                  | Blocked on                         |
-| ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-05-04`, pace non-linear (decelerating) | VM completion (real infra)         |
-| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
-| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
-| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
-| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)        | FIXTURE_LINEUPS VM exit_code=0     |
-| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging        | All per-entity VMs exit_code=0     |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                 | Re-census confirms ~0 needed       |
-| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works  | Post-hoc diagnosis (non-blocking)  |
-| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                   | After each VM >30min or terminates |
+| Item                                                             | State / why deferred                                               | Blocked on                         |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-04-17`, 316 markers, pace non-linear (decelerating) | VM completion (real infra)         |
+| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)                           | STANDINGS VM exit_code=0           |
+| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                               | TEAMS VM exit_code=0               |
+| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)                       | FIXTURE_STATS VM exit_code=0       |
+| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)                     | FIXTURE_LINEUPS VM exit_code=0     |
+| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging                     | All per-entity VMs exit_code=0     |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                              | Re-census confirms ~0 needed       |
+| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works               | Post-hoc diagnosis (non-blocking)  |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                                | After each VM >30min or terminates |
 
 **Recommended NEXT item**: Wait for STANDINGS VM `af-backfill-20260810-162910` boot + first progress. When complete:
 launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.

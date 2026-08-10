@@ -278,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-                          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-                          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-                          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-                          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+                      open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+                      extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+                      extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+                      Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
@@ -358,6 +358,6 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   is real and would bite on any future day where both modes run. The fix: `--list-done-tranches` should also check for
   `tranche=null` rows for the same job on the same day — a completed `all`-mode run covers ALL tranches, so it should
   block every per-tranche dispatch. Filed as follow-up:
-  `/plans/archive/2026_08/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
+  `/plans/active/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
 
   No code shipped (read-only diagnostic). Plan flip only — unified-trading-pm@<this-commit>.
