@@ -268,8 +268,15 @@ Two independent gates because Group A and Group B are at different stages:
       entirely (confirmed: `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity; the
       same error class hit ~15 unrelated pre-existing resources in a full untargeted plan too, confirming a
       whole-project permission gap, not something wrong with the new resources).~~
-- [ ] [TERRAFORM] P1.3. Verify dev/stg workloads read everything, write their own tier, and are **IAM-denied** a `-prd-`
-      write (negative test). No prod write-grant removal until P2.
+- [x] ✅ [TERRAFORM] P1.3. ~~Verify dev/stg workloads read everything, write their own tier, and are **IAM-denied** a
+      `-prd-` write (negative test).~~ **MOOT, closed via P2.3 — verified by plan_reconciler 2026-08-10.** As literally
+      worded this tests a tier pair (`dev`/`stg`) that P1.2a (above, DONE 2026-07-27) already confirms was permanently
+      retired 2026-07-13 — `uts-dev-sa`/`uts-stg-sa` are "(HISTORICAL — permanently unbound)" with zero role bindings,
+      so there is no live dev/stg workload left to test. P2.3 (below, DONE 2026-08-02) already performed the equivalent
+      negative test on the REAL current tier pair: live-verified `uts-prd-sa` can write `-prd-`/denied `-test-`;
+      `uts-test-sa` can write `-test-`/denied `-prd-` — the actual IAM-level cross-tier-write-403 proof this todo was
+      asking for, just against the tier names that replaced dev/stg rather than the retired ones. No prod write-grant
+      removal needed here either way (P2 handles that separately, unaffected by this closure).
 
 ### Phase 2 — Prod cutover + wiring
 
@@ -332,11 +339,11 @@ Two independent gates because Group A and Group B are at different stages:
       stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                                                                                                                                                                                                                                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                                                                                                                                                                                                                                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                                                                                                                                                                                                                                                                                                                      > (or any other role) without going through terraform at all. See
-                                                                                                                                                                                                                                                                                                                                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                                                                                                                                                                                                                                                                                                                      > actually complete until that doc's P1/P2 also land.
+                                                                                                                                                                                                                                                                                                                                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                                                                                                                                                                                                                                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                                                                                                                                                                                                                                                                                                                              > (or any other role) without going through terraform at all. See
+                                                                                                                                                                                                                                                                                                                                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                                                                                                                                                                                                                                                                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -752,3 +759,11 @@ Two independent gates because Group A and Group B are at different stages:
   of P2.1b scope, tracked in `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md`. Shipped
   `deployment-service@f514b6a0` (`terraform/gcp/main.tf` god-SA block removed +
   `tests/integration/test_bucket_iam_tier_isolation.py` assertion flipped) via quality-gates.sh green + quickmerge.
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: closed P1.3 as MOOT/superseded by P2.3
+  (see the flipped checkbox above for the evidence chain — both halves of the argument, dev/stg's permanent retirement
+  and P2.3's equivalent test on the real tier pair, are already recorded in this same doc). **This was the LAST open
+  todo — the doc is now 100% `[x]` done.** Not archiving: `locked_by: live-defi-rollout` blocks archival without an
+  explicit `[unlock-plan]` grant (HARD RULE) — flagging as an archive-ready-once-unlocked candidate in this run's
+  findings doc instead. The gated finalize plan
+  (`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md`, `depends_on`+`gate_on_depends: true`) can
+  now dispatch once someone flips it `active` — its own gate condition (source plan fully done) is met.
