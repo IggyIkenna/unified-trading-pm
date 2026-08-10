@@ -241,19 +241,34 @@ def _is_subprocess_or_system_call(node: ast.Call) -> bool:
 # ── Scanning ─────────────────────────────────────────────────────────────────
 
 
-def _is_excluded_path(path: Path) -> bool:
+def _is_excluded_path(path: Path, *, scoped: bool = False) -> bool:
+    """Return True if ``path`` should not be scanned.
+
+    ``scoped`` is True for an explicitly-named repo (``--scope``). The scoped
+    repo's OWN checkout path must never be excluded merely because it lives
+    under a workspace ``.tabs/`` dir (a per-slot worktree) — that would silently
+    blind STEP 5.105 in every slot-local QG run (class-(f) gap, surfaced
+    2026-08-10: the restamp_tradfi_cme_future_blank_instrument_id script shipped
+    because the ``/.tabs/`` fragment made the check a no-op locally, so only CI
+    caught it on an unrelated SHA). The ``/.tabs/`` fragment remains in effect
+    for unscoped workspace-wide sweeps, where it deliberately avoids re-scanning
+    sibling slot checkouts.
+    """
     if any(part in EXCLUDE_DIR_NAMES for part in path.parts):
         return True
     posix = path.as_posix()
-    return any(frag in posix for frag in EXCLUDE_PATH_FRAGMENTS)
+    fragments = EXCLUDE_PATH_FRAGMENTS
+    if scoped:
+        fragments = tuple(f for f in fragments if f != "/.tabs/")
+    return any(frag in posix for frag in fragments)
 
 
-def _iter_py_files(root: Path) -> Iterator[Path]:
-    if root.is_file() and root.suffix == ".py" and not _is_excluded_path(root):
+def _iter_py_files(root: Path, *, scoped: bool = False) -> Iterator[Path]:
+    if root.is_file() and root.suffix == ".py" and not _is_excluded_path(root, scoped=scoped):
         yield root
         return
     for path in root.rglob("*.py"):
-        if _is_excluded_path(path):
+        if _is_excluded_path(path, scoped=scoped):
             continue
         yield path
 
@@ -299,9 +314,9 @@ class RepoScan:
     sites: list[tuple[str, int, str]]  # (repo-relative-file, line, reason)
 
 
-def scan_repo(repo_root: Path, repo_name: str) -> RepoScan:
+def scan_repo(repo_root: Path, repo_name: str, *, scoped: bool = False) -> RepoScan:
     sites: list[tuple[str, int, str]] = []
-    for py in _iter_py_files(repo_root):
+    for py in _iter_py_files(repo_root, scoped=scoped):
         for lineno, reason in count_hits_in_file(py):
             rel = py.relative_to(repo_root).as_posix() if py.is_relative_to(repo_root) else py.as_posix()
             sites.append((rel, lineno, reason))
@@ -411,11 +426,12 @@ def main(argv: Iterable[str] | None = None) -> int:
         print("[check_subprocess_gcs_object_cli] no repos in scope.", file=sys.stderr)
         return 0
 
+    scoped = args.scope is not None
     observed: dict[str, int] = {}
     failures: list[str] = []
     warnings: list[str] = []
     for repo_name, scan_root in scopes:
-        scan = scan_repo(scan_root, repo_name)
+        scan = scan_repo(scan_root, repo_name, scoped=scoped)
         observed[repo_name] = scan.count
         allowed = baseline.allowed(repo_name)
         if scan.count > allowed:

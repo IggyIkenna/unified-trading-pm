@@ -150,9 +150,10 @@ discipline for whoever executes these:
       until that's resolved or the operator accepts current evidence as sufficient; only the billing citation is being
       lifted here, not the whole gate. Repo: unified-trading-pm.
 
-- [ ] [DOCS] P2. **Add a Databento-access-confirmed note to `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s
-      re-feed-chain todo.** Grep-check: `grep -c "DATABENTO ACCESS CONFIRMED LIVE 2026-08-10" <file>` — skip if ≥1. Find
-      the `[DATA] P0` todo starting "**NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to
+- [x] ✅ [DOCS] P2. **Add a Databento-access-confirmed note to
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s re-feed-chain todo.** — unified-trading-pm@4266ce77c5.
+      Grep-check: `grep -c "DATABENTO ACCESS CONFIRMED LIVE 2026-08-10" <file>` — skip if ≥1. Find the `[DATA] P0` todo
+      starting "**NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to
       completion..."`(this todo was never itself billing-block-tagged, but the billing suspension made it practically undispatchable — a fetch would have failed). Insert a sentence after its bold lead-in: "**DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH`
       pulls both succeeded); this todo is the exact re-feed work that gate would have blocked in practice — now
       genuinely runnable." Repo: unified-trading-pm.
