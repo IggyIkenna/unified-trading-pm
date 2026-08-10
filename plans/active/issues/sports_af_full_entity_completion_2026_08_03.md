@@ -216,9 +216,8 @@ not urgent enough to block this campaign.
       already closed nearly all of this gap; only just discovered/confirmed now.
 - [x] ✅ [SCRIPT] P1. **Launch STANDINGS all-leagues backfill** — **CONFIRMED DONE 2026-08-07T15:15Z**, same re-census:
       `needed=271` (was 51,114) — same earlier-VM explanation as TEAMS above.
-- [x] ✅ [SCRIPT] P2. **Launch INJURIES all-leagues backfill** — DONE 2026-08-10 (slot 25 re-census discovery):
-      `af-backfill-20260809-222924` ran `--entity INJURIES` + completed `exit_code=0` on 2026-08-10T04:23Z (fetched 322
-      injuries for day 2026-08-09); fresh census needed=334 (was 62,709) — near-converged completion tail.
+- [ ] [SCRIPT] P2. **Launch INJURIES all-leagues backfill** (62,709 needed, unchanged — no backfill run against it yet)
+      — likely per-fixture-date cadence, apply the daily stop/resume discipline.
 - [x] ✅ [SCRIPT] P2. ~~Launch LEAGUES all-leagues backfill~~ — NOT APPLICABLE, resolved above: LEAGUES is a retired
       entity (no write path since 2026-05-07); there is nothing to launch. Excluded from this campaign's remaining scope
       and from the grand-total needed count.
@@ -687,8 +686,12 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T02:58Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 2/26. PLAYER_STATS 973→929 (-44),
   steady real progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch
   needed. Grand total 64,005 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
-- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added `launch-api-football-backfill-vm.sh` (the
-  af-backfill singleton-lock launcher) + `census_other_vendors_gap_2026_08_06.py`; all 4 pre-existing re-verified, kept.
+- **context-scout 2026-08-07**: populated/refreshed context_scope (6 entries) — added
+  `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` (the actual `af-backfill-*` singleton-lock launcher
+  driving this entire campaign, never named by filename in the doc's own prose despite dozens of VM-name mentions) and
+  `instruments-service/scripts/census_other_vendors_gap_2026_08_06.py` (the newer census script covering the doc's
+  2026-08-06 operator-directed scope expansion to the other 5 sports vendors); all 4 pre-existing entries re-verified to
+  resolve on disk and kept.
 - **2026-08-07T03:21Z** — Still RUNNING and healthy (0 rate-limit errors), accelerated sharply from chunk 2/26 to chunk
   9/26 — skip-fast through a stretch of chunks with few/no remaining PLAYER_STATS gaps. PLAYER_STATS 929→702 (-227), the
   biggest single-tick drop since the quota reset. Census scripts hit their 280s timeout on first attempt this tick
@@ -995,7 +998,3 @@ are genuinely in scope for the operator's "no exceptions" directive.
   (`last_completed_date=2024-03-15`, fresh `05:55:28Z`). Both healthy.
 - **2026-08-08T06:24Z** — FIXTURE_STATS +34 days (`last_completed_date=2024-04-18`, fresh `06:23:27Z`). smallchunk4
   chunk 10/451 (`2020-07-21`), zero OOMs, no 3rd hang occurrence yet. Both healthy.
-- **2026-08-10 (slot 25, `-011` re-census)**: PLAYER_STATS 3 · INJURIES 334 (was 62,709) · STANDINGS 271 · TEAMS 96 ·
-  FIXTURE_STATS 136 · FIXTURE_LINEUPS 136 = ~976 (was 146,640). ~all `expected_unattempted`/absent tail, 19 TEAMS
-  `attempted_failed` — completion pass would close it, NOT confirmed floors. LINEUPS+INJURIES backfills done since last
-  entry (af-backfill-20260809-* exit_code=0). Checkbox OPEN.

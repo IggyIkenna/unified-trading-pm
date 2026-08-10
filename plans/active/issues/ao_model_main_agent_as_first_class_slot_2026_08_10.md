@@ -42,11 +42,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-# Temporary bridge for the flip-then-mv two-commit archival (todo 5's flip completes this
-# doc's LAST open todo, which is its own archival trigger — check_archive_candidates only-mode
-# deadlocks otherwise; see check_archive_candidates.sh's own docstring). Dropped in the
-# immediately-following git mv to plans/archive/.
-archive_exempt: true
 source: >-
   Operator ruling 2026-08-10, taken after the 2026-08-09 poisoned-calibration incident and its four sibling issues all
   root-caused to the same missing SlotRow.
@@ -153,16 +148,10 @@ row appear to belong to main.
       corrected to point at the new file, since todo 3 invalidated that premise. Full suite 3085 passed, 2 skipped,
       ruff + basedpyright clean (one unrelated `test_worker_liveness_watchdog.py` timing flake observed under concurrent
       shared-host QG load, confirmed non-reproducing on a clean re-run).
-- [x] ✅ [BACKEND] P2. Collapse `_main_pct()` into the ordinary `_read_pct()` slot path now that main has a row, keeping
+- [ ] [BACKEND] P2. Collapse `_main_pct()` into the ordinary `_read_pct()` slot path now that main has a row, keeping
       the self-report floor semantics identical (higher of {self-report, probe}, ratchet-up persisted). Done-when: the
       main-specific branch is deleted, and the existing `_main_pct` regression tests pass unchanged against the unified
-      path. — agent-orchestrator@bef2f6b: `main_pct` deleted; `_read_pct` now applies the same out-of-band
-      probe-vs-self-report floor (max(self-report, probe), ratchet-up persisted to the SlotRow) to EVERY target — main
-      included — and `MainAgentKeeper._sync_main_slot_row` writes main's raw `AgentRow.context_used_pct` via
-      `update_slot_ping` (no more pre-floored write). The four `test_main_pct_*` regressions now run against
-      `_read_pct(role="main")` with a seeded `SlotRow(MAIN_SLOT_ID)` and assert the SAME values (99 floor, 72
-      ratchet+persist, 88 unreadable-probe fallback, None when nothing known). Full suite 3101 passed, 2 skipped, ruff +
-      basedpyright + dashboard clean via `quality-gates.sh`.
+      path.
 - [x] ✅ [BACKEND] P2. Collapse the derived-pressure and wedge-recovery main branches the same way, so main reaches
       those paths as a slot rather than via a special case. Done-when: both main-specific branches are deleted and their
       existing tests pass against the shared path. — agent-orchestrator@abcdee3
@@ -285,17 +274,3 @@ row appear to belong to main.
   `MAIN_SLOT_ID` so main's status=working row never becomes a phantom worker target. slot_id call-chain types tightened
   `int | None → int`. Tests updated to tick main as slot `MAIN_SLOT_ID` (idle-gate, wedge-recovery, thrashing-pressure,
   direct `_read_pct` callers). Full suite passed via `quality-gates.sh`; landed on LDR via quickmerge.
-- 2026-08-10 — Todo 5 (collapse `_main_pct()` into the ordinary `_read_pct()` slot path) complete,
-  agent-orchestrator@bef2f6b. `main_pct` (the last main-specific floor helper, previously invoked from
-  `MainAgentKeeper._sync_main_slot_row`) is DELETED. `_read_pct` now applies its same-tick out-of-band pane sample to
-  EVERY target — the `role in ("worker", "review")` restriction is gone, so main reads its `SlotRow(MAIN_SLOT_ID)` like
-  every slot and gets the identical probe-vs-self-report floor: `max(SlotRow.context_used_pct, probe)`, ratchet-up
-  persisted to the SlotRow. The keeper correspondingly writes main's RAW `AgentRow.context_used_pct` via
-  `update_slot_ping` (no pre-floor, no `main_pct` call/import) — the SlotRow IS main's self-report, floored on read by
-  the same code every other target uses. Semantics are identical to the retired helper (higher of {self-report, probe},
-  ratchet-up only; a real drop is still only recognised via `update_slot_ping`'s compaction-detection, never by a lower
-  read). The four `test_main_pct_*` regressions now run against `_read_pct(role="main")` with a seeded
-  `SlotRow(MAIN_SLOT_ID)` and assert the SAME values (99 floor, 72 ratchet+persist, 88 unreadable-probe fallback, None
-  when nothing known); the keeper's `test_main_slot_row_created_and_tracks_agent_row_every_tick` passes unchanged
-  (writes 42 then 85 raw). Full suite 3101 passed, 2 skipped, ruff + basedpyright + dashboard clean via
-  `quality-gates.sh`.

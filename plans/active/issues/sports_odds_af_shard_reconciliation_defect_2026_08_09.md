@@ -24,7 +24,7 @@ summary: >-
   current-gap counts. Filed as its own doc because the parent
   (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`, 1018L) is over its 1000L hard cap and its own
   pre-commit line-cap gate blocks any checkbox-touching edit to it.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data, live]
@@ -48,7 +48,7 @@ related:
   ]
 created: 2026-08-09
 author: unknown
-last_updated: 2026-08-10
+last_updated: 2026-08-09
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -76,12 +76,6 @@ context_scope:
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 3 todos complete: (1)
-> root-cause + fix for manifest shard-reconciliation defect shipped market-tick-data-service@cf855ff0, (2) corrected
-> reachable_coverage table posted showing attempted_failed drops to 0 post-consolidation, (3) per-league data_type=odds
-> filter shipped deployment-service@e53b9008. See Progress Log entries 2026-08-09 (slot 32), 2026-08-10 (slot 31),
-> 2026-08-10 (slot 7) for full evidence.
 
 # Sports odds_api attempted_failed: vendor-verify confirms vendor HAS data — real defect is shard-level reconciliation
 
@@ -263,14 +257,6 @@ non-`canonical-migration-` prefix). Deleted the dead VM. This is a pre-existing 
 (`sports_mtds_backfill_vm_unscoped_fetch_oom_2026_08_06.md` already exists) — the per-league fan-out was itself an OOM
 mitigation but doesn't filter by `data_type`. Filed as follow-up todo below.
 
-**2026-08-10 (slot 7, data_engineering)** — Picked up the P2 follow-up todo (fix per-league fan-out to filter by
-`data_type`). Traced the full path: `launch-mtds-sports-odds-backfill-vm.sh` → `setup-data-pipeline-vm.sh` (reads
-`VM_DATA_TYPES` metadata at line 343) → `mtds_chunk_loop.sh` (per-league fan-out at lines 1857-1862, passes `$BASE_CLI`
-at line 1906 which includes `--data-types` from `VM_DATA_TYPES` at line 1746). The launcher never set `VM_DATA_TYPES`,
-so each league sub-invocation fetched ALL data_types — EPL's `trades` (BETFAIR_EX_EU) dwarfed `odds`, causing OOM-kill
-on e2-highmem-4. Added `VM_DATA_TYPES=odds` to the launcher's metadata block — a one-line fix, the plumbing was all
-there. Shipped deployment-service@e53b9008 via quickmerge, verified on `origin/live-defi-rollout`. Flipped todo above.
-
 Coverage computed from LIVE manifest (`instruments-store-sports-prd`, `read_availability_index_safe`, date-range
 pushdown 07-27..08-06, `data_type` LIKE `%odds%`). Shard atom = `(venue=bookmaker, league_id, date)`. Consolidation
 rule: if ANY fixture within a shard is `captured`, the shard is `captured`; else `attempted_failed` >
@@ -318,9 +304,9 @@ respects per-league memory bounds would likely push most `empty_confirmed`→`ca
 confirmed the vendor HAS real data for 100% of sampled groups. The pre-existing backfill OOM bug
 (`sports_mtds_backfill_vm_unscoped_fetch_oom_2026_08_06.md`) blocks this — follow-up todo below.
 
-- [x] ✅ [DATA] P2. Fix MTDS sports backfill per-league fan-out to filter by `data_type` — deployment-service@e53b9008.
-      Added `VM_DATA_TYPES=odds` metadata to `launch-mtds-sports-odds-backfill-vm.sh` so the per-league chunk loop
-      (`setup-data-pipeline-vm.sh`'s `mtds_chunk_loop.sh`) passes `--data-types odds` to each league sub-invocation,
-      scoping fetches to the intended data_type instead of fetching ALL data_types per league (where `trades` dwarfs
-      `odds` and causes OOM-kill). The chunk loop already plumbed `--data-types` from `VM_DATA_TYPES` metadata (line
-      1746 of setup-data-pipeline-vm.sh); the launcher simply wasn't setting it. (repo: deployment-service)
+- [ ] [DATA] P2. Fix MTDS sports backfill per-league fan-out to filter by `data_type` (fetching ALL data_types per
+      league causes OOM — `trades` data dwarfs `odds`). The per-league chunk loop
+      (`market-tick-data-service/.../mtds_chunk_loop.sh` or equivalent) should pass `--data-type odds` (or the
+      equivalent CLI flag) to scope each league sub-invocation to the requested data_type, not the full league corpus.
+      Done when: a targeted sports-odds backfill VM completes a 5-day chunk without >90% memory on e2-highmem-4. (repo:
+      market-tick-data-service)
