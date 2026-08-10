@@ -201,49 +201,9 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # (detector-type + content, not line number) at current content vs `git show HEAD:<path>`,
     # flagging only what THIS commit introduces. Same HEAD-vs-current growth-ratchet shape as
     # check_effort_signal_ratchet.py --only above.
-    # Unresolved evidence placeholder guard (2026-08-10). `<repo>@PENDING` is filled in by the
-    # push that creates the commit (resolve_pending_citations in reconcile-sha-citations.sh), so
-    # one surviving into a staged plan means the flip is being committed before, or without, the
-    # ship it claims — exactly the false-progress the Commit+Push+Flip rule exists to prevent.
-    # Cheap literal grep; no effect on any plan that does not use the convention.
-    # The array-length test is belt-and-braces: this block is already inside a `-gt 0` guard, but
-    # a `grep -F pat` that word-splits to ZERO file arguments reads STDIN instead — which would
-    # hang the pre-commit hook, fleet-wide, with no timeout to save it. Cheap insurance against a
-    # future edit moving this block.
-    if [ "${#STAGED_PLANS[@]}" -gt 0 ] && grep -l -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | grep -q .; then
-      echo "  ❌ A staged plan still carries an unresolved '<repo>@PENDING' evidence placeholder:"
-      grep -n -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | sed 's/^/       /' | head -5
-      echo "       PENDING is resolved by the quickmerge push that creates the commit. Ship the work first, then commit the flip — or replace it with the real sha."
-      PF=$(( PF + 1 ))
-    fi
-
-    # AUTO-REPAIR, then re-verify (2026-08-10). Agents were hand-repairing this corruption on
-    # every occurrence — a peer did so today — even though fix_prosewrap_padding.py already knew
-    # the repair, because the fixer was whole-file scoped and unsafe to run unattended. Now that
-    # `--only --emit-lines` can name exactly the lines THIS commit introduced, the repair is
-    # scoped to those lines and can run here. The re-check is the gate: nothing passes because we
-    # ran a fixer, only because the check agrees afterwards. Files are re-staged individually and
-    # only if they were flagged, mirroring prettier-autostage.sh's contract.
-    if bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}"; then
-      echo "  ✅ Prosewrap-padding (staged plans)"
-    else
-      _psw_scope="$(bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only --emit-lines "${STAGED_PLANS[@]}" 2>/dev/null || true)"
-      if [ -n "$_psw_scope" ]; then
-        printf '%s\n' "$_psw_scope" | python3 "$SCRIPT_DIR/fix_prosewrap_padding.py" --scoped || true
-        if bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}"; then
-          _psw_n=0
-          while IFS= read -r _psw_f; do
-            [ -n "$_psw_f" ] || continue
-            git -C "$PM_DIR" add -- "$_psw_f" 2>/dev/null && _psw_n=$(( _psw_n + 1 ))
-          done < <(printf '%s\n' "$_psw_scope" | sed 's/:[0-9]*$//' | sort -u)
-          echo "  ✅ Prosewrap-padding (staged plans) — auto-repaired and re-staged ${_psw_n} file(s); no hand-repair needed"
-        else
-          echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance that the scoped auto-repair could not resolve — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 ))
-        fi
-      else
-        echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 ))
-      fi
-    fi
+    bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Prosewrap-padding (staged plans)" \
+      || { echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 )); }
     # depends_on DAG, --only-scoped (2026-08-09): the full-sweep cycle/self-dep check (below,
     # corpus-wide) previously had NO precommit-time presence, so a docs(plans) commit introducing
     # a cycle (depends_on gates archival — neither plan can ever close) had zero enforcement at

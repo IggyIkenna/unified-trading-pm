@@ -24,7 +24,7 @@ summary: >-
   correctly this time) — zero genuine `[infrastructure, cross-cutting]` dual-tag hits (3 raw grep hits, all 3 false
   positives from an unstripped-comment bug in my own first-pass grep, corrected and re-verified). Findings 12 and 13
   (carried since 2026-08-01/08-03) remain open, unchanged, still not urgent.
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, parked-findings, asset-group-mistag, stop-iterating, stale-checkbox]
 related:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
@@ -46,7 +46,7 @@ related:
   ]
 created: "2026-08-08"
 author: slot-3 (ag_closeout_auditor, infra tranche, dispatch agt-50ee67)
-last_updated: "2026-08-10"
+last_updated: "2026-08-08"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -59,12 +59,12 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_09
+superseded_by:
 resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -79,15 +79,6 @@ source: >-
   positives, re-verified 0 genuine dual-tags). Phase 3: evaluated all 5 orphaned candidates for conflict-clear bounded
   work — none qualified, so no batch drafted this run (stop-iterating condition met).
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-08 `/ag-closeout-audit infra` run
 
@@ -186,20 +177,10 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
 
 ## Todos
 
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 12 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned (the original text's own "6th
-      day" label is the evidence); per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT
-      reach a parked doc" rule 3 a carried finding lives in ONE doc. Original text preserved for record. Was: **Consider
-      a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`** (finding 12, carried,
-      6th day). Design/tooling-priority call, not urgent.
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 13 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned (the original text's own "6th
-      day" label is the evidence); per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT
-      reach a parked doc" rule 3 a carried finding lives in ONE doc. Original text preserved for record. Was: **Scope +
-      conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 6th day: `CITE_RE` hardening design;
-      `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
+- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
+      (finding 12, carried, 6th day). Design/tooling-priority call, not urgent.
+- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 6th day: `CITE_RE`
+      hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
 - [x] ✅ [DOCS] P3. **See `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` — RULED
       2026-08-09.** Retagged to `[defi, infrastructure]`; full ruling recorded in that doc and in
       `ag_closeout_audit_infra_parked_2026_08_09.md` (finding 6), not re-litigated here.

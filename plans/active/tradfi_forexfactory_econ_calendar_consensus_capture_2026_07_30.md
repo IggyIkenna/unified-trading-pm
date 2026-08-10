@@ -24,7 +24,6 @@ related:
     /plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md,
     /plans/archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-30
 last_updated: 2026-07-30

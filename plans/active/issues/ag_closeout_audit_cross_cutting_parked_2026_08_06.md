@@ -216,18 +216,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 
 ## Todos
 
-> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
-> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
-> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
-> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
-> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
-> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
-> plan's own todo 17 once the work lands — do not flip them early.
-
-- [x] ✅ [DOCS] P3. **MOOT 2026-08-10 — target already archived** at
-      `/plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`; the todo's own
-      text already pointed at the archive path. Verified live. Original text preserved for record. Was: Retag
+- [ ] [DOCS] P3. Retag
       `plans/archive/issues/deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md`'s `asset_group`
       `[cross-cutting]` → `[ui]` (finding 1) — owning-tranche fix, leave to the `ui` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ui_consolidated_closeout_2026_07_30.md`'s membership, and its 3

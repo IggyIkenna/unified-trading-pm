@@ -28,7 +28,7 @@ summary: >-
   dispatch #7 VM failure recorded 2026-08-07) — still not infra's to write. Ran the Orthogonality HARD CHECK against the
   full 9-tranche peer set: 9 corpus-wide dual-tag hits found (ao×2, ci×4, defi×1, tradfi×2), **zero infra-related** —
   informational only, not this tranche's to fix. 0 new operator-decision-requiring findings this run.
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,7 +37,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, parked-findings, gate-resolution, batch-9, stale-checkbox]
 related:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
@@ -58,7 +58,7 @@ created: "2026-08-09"
 author:
   "slot-22 (ag_closeout_auditor, infra tranche, dispatch agt-3b6f6b) + slot-9 (ag_closeout_auditor, infra tranche,
   dispatch agt-c74a01, second run same day)"
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -71,12 +71,12 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_10
+superseded_by:
 resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -92,15 +92,6 @@ source: >-
   false collision between `_AR_REPO` and its own unrelated `_AR_REPO_OVERRIDES`) — all 4 conflict-clear, drafted
   `infra_satellite_ao_dispatch_batch9_2026_08_09.md` + finalize twin.
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-09 `/ag-closeout-audit infra` run
 
@@ -184,20 +175,10 @@ shipped draft artifact, not an unresolved item) — **balanced**.
 
 ## Todos
 
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 12 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned (the original text's own "7th
-      day" label is the evidence); per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT
-      reach a parked doc" rule 3 a carried finding lives in ONE doc. Original text preserved for record. Was: **Consider
-      a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`** (finding 12, carried,
-      7th day). Design/tooling-priority call, not urgent.
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 13 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned (the original text's own "7th
-      day" label is the evidence); per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT
-      reach a parked doc" rule 3 a carried finding lives in ONE doc. Original text preserved for record. Was: **Scope +
-      conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 7th day: `CITE_RE` hardening design;
-      `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
+- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
+      (finding 12, carried, 7th day). Design/tooling-priority call, not urgent.
+- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 7th day: `CITE_RE`
+      hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
 - [x] ✅ [DOCS] P3. **RULED 2026-08-09 (operator): retag
       `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** from `[infrastructure]` to
       `[defi, infrastructure]` (finding 22, recommendation B taken) — `unified-trading-pm` (docs-only, same commit as
@@ -206,16 +187,11 @@ shipped draft artifact, not an unresolved item) — **balanced**.
       `status: draft` → `status: active`** — its finalize twin was already `status: active` and correctly gated, so no
       further gate work was needed. 4 todos now dispatchable: UV-version-pin centralization (6 files) + 3 conflict-clear
       fixes extracted from `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`.
-- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-10 — batch11 was approved and has since completed.**
-      `infra_satellite_ao_dispatch_batch11_2026_08_09.md` is now archived at
-      `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_2026_08_09.md`, and its source issue doc
-      `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` is archived alongside it (both
-      verified live 2026-08-10). No operator action outstanding. Original text preserved for record. Was: **Review +
-      approve (or reject) `infra_satellite_ao_dispatch_batch11_2026_08_09.md`** (status: draft, drafted by this run's
-      own second dispatch) — 2 todos: generalize `generate_na_doc_tranche_inventory.py`'s `body_content_hash()`
-      marker-stripping to cover `/context-scout`'s own body-level Progress Log line (measured 44% false-positive rate on
-      one tranche, one run) + a SKILL.md cross-reference. Flip to `status: active` to dispatch; its finalize twin is
-      already `status: active` and correctly gated either way. Source:
+- [ ] [OPERATOR] P2. **Review + approve (or reject) `infra_satellite_ao_dispatch_batch11_2026_08_09.md`** (status:
+      draft, drafted by this run's own second dispatch) — 2 todos: generalize `generate_na_doc_tranche_inventory.py`'s
+      `body_content_hash()` marker-stripping to cover `/context-scout`'s own body-level Progress Log line (measured 44%
+      false-positive rate on one tranche, one run) + a SKILL.md cross-reference. Flip to `status: active` to dispatch;
+      its finalize twin is already `status: active` and correctly gated either way. Source:
       `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`.
 - [x] ✅ [DOCS] P3. **STALE — already flipped, this finding was itself reading stale prose.** Direct read of
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (na-eligibility-audit infra

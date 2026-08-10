@@ -201,42 +201,19 @@ left only in ephemeral chat/return text.
 
 ## Todos
 
-> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
-> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
-> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
-> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
-> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
-> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
-> plan's own todo 17 once the work lands — do not flip them early.
-
-- [x] ✅ [OPERATOR] P2. **CARRIED 2026-08-10 →
-      `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** Still genuinely operator-only; now
-      tracked on the single consolidated operator list rather than in this dated audit report. Original text preserved
-      for record. Was: **Confirm the 6 transcribed rulings in
+- [ ] [OPERATOR] P2. **Confirm the 6 transcribed rulings in
       `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` are accurate** (finding 4's item 1) —
       operator-only, cannot be worker-determined.
-- [x] ✅ [DOCS] P3. **CARRIED 2026-08-10 → `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A
-      human judgment call with no worker-determinable outcome; moved to the single consolidated operator list so this
-      dated audit report can reach zero open todos and archive. Original text preserved for record. Was: **Decide where
-      future ruling sessions get recorded** among the 3 options named in
+- [ ] [DOCS] P3. **Decide where future ruling sessions get recorded** among the 3 options named in
       `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` item 2 (finding 4's item 2) — a judgment call, low
       urgency.
-- [x] ✅ [LOCAL] P3. **CARRIED 2026-08-10 → `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A
-      human judgment call with no worker-determinable outcome; moved to the single consolidated operator list so this
-      dated audit report can reach zero open todos and archive. Original text preserved for record. Was: **Resolve the
-      aggregate-zero-path signal design fork** in `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]`
-      todo before its `[UI]`/`[BACKEND]` todos can proceed (finding 2) — carried, human-only.
-- [x] ✅ [LOCAL] P3. **CARRIED 2026-08-10 → `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A
-      human judgment call with no worker-determinable outcome; moved to the single consolidated operator list so this
-      dated audit report can reach zero open todos and archive. Original text preserved for record. Was: **Run
-      `/plan-brainstorm` on `context_scope_sufficiency_measurement_2026_08_08.md`'s open-ended sufficiency-metric
-      question** (finding 3) before authoring an implementation todo — carried, human-only.
-- [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-10 (operator ruling) — batch19 APPROVED.**
-      `ao_satellite_ao_dispatch_batch19_2026_08_10.md` flipped `status: draft` → `active`; its 2 todos are now
-      dispatchable. No operator action outstanding. Original text preserved for record. Was: **Review + approve
-      `ao_satellite_ao_dispatch_batch19_2026_08_10.md`** (flip `status: draft` → `active` if agreed) — 2 AO-eligible
-      items, conflict-checked against batch1-18, zero overlap found.
+- [ ] [LOCAL] P3. **Resolve the aggregate-zero-path signal design fork** in
+      `ao_context_pct_0_for_monitor_heavy_workers_2026_07_29.md`'s `[DATA]` todo before its `[UI]`/`[BACKEND]` todos can
+      proceed (finding 2) — carried, human-only.
+- [ ] [LOCAL] P3. **Run `/plan-brainstorm` on `context_scope_sufficiency_measurement_2026_08_08.md`'s open-ended
+      sufficiency-metric question** (finding 3) before authoring an implementation todo — carried, human-only.
+- [ ] [OPERATOR] P2. **Review + approve `ao_satellite_ao_dispatch_batch19_2026_08_10.md`** (flip `status: draft` →
+      `active` if agreed) — 2 AO-eligible items, conflict-checked against batch1-18, zero overlap found.
 - [ ] [LOCAL] P3. **Archive `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`** via the standard
       6-step ritual — all 3 todos done + unlocked, own Progress Log already flags it archival-eligible.
 

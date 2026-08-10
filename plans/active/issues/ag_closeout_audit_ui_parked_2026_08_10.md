@@ -13,7 +13,7 @@ summary: >-
   other new candidate doc is a concurrently in-flight `/plan-reconcile ui` run (dispatch agt-ec1688, still mid-flight as
   of this audit) that must not be raced. Every other orphaned doc remains operator/time/too-large-gated with zero new
   ruling since 2026-08-09. 7 findings.
-status: resolved
+status: open
 nature: issue
 asset_group: [ui]
 stage: [meta]
@@ -29,7 +29,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
     /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_09.md,
+    /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_09.md,
     /plans/active/issues/plan_reconciler_findings_2026_08_07.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
   ]
@@ -49,15 +49,6 @@ archive_exempt: true # 2026-08-10 bridge -- last todo flipped this commit, full 
 # following commit (per plan-completion-and-archival-discipline.md's sanctioned two-commit bridge); drop this line
 # in that follow-up commit.
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # ag-closeout-audit ui parked findings — 2026-08-10
 
@@ -205,20 +196,20 @@ negative result so a future pass doesn't have to re-derive it.
 ## Todos
 
 - [x] ✅ [OPERATOR] P3. **Run `[unlock-plan]` on `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
-      then complete its archival** (Finding 6) — frontmatter had read `status: open`, `locked_by: live-defi-rollout`,
-      `locked_since: 2026-05-21`, a lock timestamp predating the doc's own `created: 2026-07-21` by ~2 months,
-      impossible for a genuine exclusive claim. This was the 6th consecutive flag (2026-08-06/07/08/09/10) across two
-      skills (`/ag-closeout-audit ui` + `/plan-reconcile ui`), neither of which could unlock it (out of both skills'
-      write-scope). **RESOLVED 2026-08-10** — operator asked directly via a human/operator session, approved
-      `[unlock-plan]` for this doc specifically; unlocked + archived to
+      then complete its archival** (Finding 6) — frontmatter had read `status: open`,
+      `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`, a lock timestamp predating the doc's own
+      `created: 2026-07-21` by ~2 months, impossible for a genuine exclusive claim. This was the 6th consecutive flag
+      (2026-08-06/07/08/09/10) across two skills (`/ag-closeout-audit ui` + `/plan-reconcile ui`), neither of which
+      could unlock it (out of both skills' write-scope). **RESOLVED 2026-08-10** — operator asked directly via a
+      human/operator session, approved `[unlock-plan]` for this doc specifically; unlocked + archived to
       `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per the 6-step
       ritual, all active-corpus referrers repointed. This todo was this doc's only open item — see Progress Log for the
-      note on why this doc itself is left for the next `/ag-closeout-audit ui`/`/na-eligibility-audit` pass to classify
-      for its own archival, consistent with how its 2026-08-07/08/09 siblings were handled.
+      note on why this doc itself is left for the next `/ag-closeout-audit ui`/`/na-eligibility-audit` pass to
+      classify for its own archival, consistent with how its 2026-08-07/08/09 siblings were handled.
 
-**Already resolved (Finding 3)**: `plan_reconciler_findings_2026_08_07.md`'s ACTIVE_INDEX.md dangling-reference item was
-already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same-day 2026-08-10 `/plan-reconcile ui` run
-(dispatch `agt-ec1688`) — verified present at that doc's line ~135. No action needed here.
+**Already resolved (Finding 3)**: `plan_reconciler_findings_2026_08_07.md`'s ACTIVE_INDEX.md dangling-reference item
+was already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same-day 2026-08-10 `/plan-reconcile
+ui` run (dispatch `agt-ec1688`) — verified present at that doc's line ~135. No action needed here.
 
 **Already tracked elsewhere (Finding 5)**: both mistag candidates remain correctly tracked in
 `ui_consolidated_closeout_2026_07_30.md`'s standing `[REVIEW] P2` retag-audit todo — no duplicate todo needed.
@@ -244,13 +235,13 @@ already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same
 
 - **2026-08-10 (operator-approved archival)**: flipped the `[OPERATOR]` P3 todo above — operator asked directly and
   approved a targeted `[unlock-plan]` for `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, unlocked
-  - archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per
-    the 6-step ritual, all active-corpus referrers repointed. This was this doc's only open todo, so this doc itself now
-    reads 0 open todos + unlocked — **deliberately NOT archived as part of this action**: the task that resolved the
-    todo above was scoped to that one target doc only, and this doc's own archival-eligibility is a judgment call for
-    this skill's own next pass (mirrors how the 2026-08-07/08/09 siblings sat similarly classified without immediate
-    same-day archival). Flagging here so the next `/ag-closeout-audit ui` or `/na-eligibility-audit` run picks it up
-    rather than re-deriving the "why is this still active" question from scratch.
+  + archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per
+  the 6-step ritual, all active-corpus referrers repointed. This was this doc's only open todo, so this doc itself now
+  reads 0 open todos + unlocked — **deliberately NOT archived as part of this action**: the task that resolved the
+  todo above was scoped to that one target doc only, and this doc's own archival-eligibility is a judgment call for
+  this skill's own next pass (mirrors how the 2026-08-07/08/09 siblings sat similarly classified without immediate
+  same-day archival). Flagging here so the next `/ag-closeout-audit ui` or `/na-eligibility-audit` run picks it up
+  rather than re-deriving the "why is this still active" question from scratch.
 - **2026-08-10 (ag_closeout_auditor, dispatch agt-e9985d, slot 18)**: Phase 0 discovery — candidate set grew 14→17 (2
   new `plan_reconciler_findings_*` docs), covering set unchanged at 7 (closeout + 3 batch/finalize pairs, all
   `status: active`). Orthogonality HARD CHECK: 0 dual-tag hits; targeted spot-check of 4 newer single-tag candidates
@@ -260,11 +251,11 @@ already converted from prose into a real `- [ ]` `[DOC] P3` checkbox by the same
   actionable content already non-batchable (Findings 3-4) — no batch 4 drafted. Parked-count reconciliation: 7 findings,
   all 7 written to this doc.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 1 prose finding into 1 formal todo (2 already
-  resolved/tracked-elsewhere, cited inline). Finding 6's stuck-lock doc is now a real `[OPERATOR]` todo (6th consecutive
-  flag, still no `[unlock-plan]`); Finding 3's ACTIVE_INDEX.md item was confirmed already converted to a checkbox by the
-  same-day plan_reconciler run; Finding 5's mistag candidates confirmed already tracked in ui_consolidated_closeout.
-  Findings 1/2/4/7 are process/informational, no todo warranted.
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — the sole open todo is a human-only
-  `[unlock-plan]` action (run it, then complete the standard archival ritual) on
+  resolved/tracked-elsewhere, cited inline). Finding 6's stuck-lock doc is now a real `[OPERATOR]` todo (6th
+  consecutive flag, still no `[unlock-plan]`); Finding 3's ACTIVE_INDEX.md item was confirmed already converted to a
+  checkbox by the same-day plan_reconciler run; Finding 5's mistag candidates confirmed already tracked in
+  ui_consolidated_closeout. Findings 1/2/4/7 are process/informational, no todo warranted.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — the sole open todo is a
+  human-only `[unlock-plan]` action (run it, then complete the standard archival ritual) on
   `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — unlocking is explicitly human-only per the
   archival-discipline HARD RULE, never autonomous, exactly as this doc's own Finding 6 text states. Doc stays NA.

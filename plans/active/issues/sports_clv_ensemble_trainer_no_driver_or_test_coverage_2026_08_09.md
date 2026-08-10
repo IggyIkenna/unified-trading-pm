@@ -100,13 +100,11 @@ the VM-scale run:
       `/codex/05-infrastructure/vm-launcher-runbook.md` — this is exactly the multi-year GCS-walk + heavy-compute case
       that rule exists for) for `model_2a`/`model_2b`/`model_2c`/`model_2d`/`model_2e`, and report the measured
       coverage + performance delta (rmse/mae/r2 per outcome per horizon) back into this doc and
-      `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service) — **PARTIAL
-      2026-08-10 (slot-24)**: the backfill landed and the 5 VMs were relaunched; **coverage delta MEASURED** — CLV
-      targets now 5.7% (train, 121,376 rows) / 17.2% (val, 8,897) / 15.6% (test, 32,271) non-null, up from 0.0%.
-      **Performance delta STILL blocked on a new code bug**: the trainer crashes at the first CatBoost fit ("RMSE does
-      not allow nan values in target data", all 5 VMs, exit_code=1) because partially-non-null CLV targets go straight
-      into CatBoost. Fix tracked as P3 in
-      `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`.
+      `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service) — **BLOCKED
+      2026-08-10**: the driver itself is now correct (`ml-service@68a4b82`), but the 3rd relaunch attempt revealed a
+      deeper, real data gap one layer up in features-service — see
+      `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. This todo
+      cannot proceed until that doc's backfill todo lands.
 - [x] ✅ [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
       `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
       `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler

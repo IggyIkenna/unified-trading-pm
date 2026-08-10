@@ -46,7 +46,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
   ]
 supersedes:
 superseded_by:
@@ -96,7 +96,7 @@ stash-pile audit/cleanup runbook) ·
 [issues/service_dockerfile_pattern_normalization_2026_06_17.md](/plans/archive/issues/service_dockerfile_pattern_normalization_2026_06_17.md)
 (9 services' Dockerfiles inconsistent vs the clean base-image pattern) ·
 [issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md](/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md)
-(ARCHIVED 2026-07-27, RESOLVED — execution-service@e00152b6, aiohttp-3.14 CVE bump unblocked) ·
+(ARCHIVED 2026-07-27, RESOLVED — execution-service@9ce159a7, aiohttp-3.14 CVE bump unblocked) ·
 [issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md](/plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md)
 (28 shared QG checker scripts lack a `.claude` worktree-exclusion pattern, retagged in from `cross-cutting` 2026-08-07).
 
@@ -357,7 +357,7 @@ not data-pipeline).
   (`stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`) is a genuine orphan but
   guardrail-blocked operator-only work (non-batchable), and `codex_violations_ratchet_to_five` has 5 of 7 open items
   genuinely uncovered — 3 remain correctly gated by batch1's own pre-existing Deferred classification (unchanged), 1
-  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@980a6ad0`) with a stale checkbox, and
+  (`delta_proxy_repricer.py`) turned out to be ALREADY SHIPPED (`execution-service@89fbf99d`) with a stale checkbox, and
   1 (`_solana_utils.py` line-cap split) was genuinely new, conflict-clear, and bounded. Phase 3 drafted a single-todo
   `infra_satellite_ao_dispatch_batch4_2026_07_31.md` (`status: draft`, no finalize twin per the single-todo carve-out)
   for that one item. The stale-checkbox finding plus a filesystem-vs-doc discrepancy on the stash-clone deletion (target
@@ -403,7 +403,7 @@ not data-pipeline).
   `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` mistag from this run's never-cited list purely
   because a prior Progress Log entry named the file in prose; and a second likely `asset_group: [meta]` mistag whose
   real owner is probably `ao`, not `infra`) — all recorded in
-  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
+  [issues/ag_closeout_audit_infra_parked_2026_08_01.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md)
   per the parked-findings hard rule. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed the
   shrinking-ratchet count risen to 78 (baseline 69) — corpus-wide, mostly other tranches' concurrent activity (not this
   run's doing; this run's own 2 new docs are both correctly linked, verified). Of the 78, exactly 7 carry
@@ -499,7 +499,7 @@ not data-pipeline).
   investigation (relocated durably vs. an unrecovered loss). Both, plus a methodology caveat (15 of today's 42
   orphaned-verdict docs are already self-dispatched and do not need batch7 treatment — corroborated unprompted by 7 of
   the 45 Phase-1 agents) and 2 unscoped batch7 candidates, are recorded in full in
-  [issues/ag_closeout_audit_infra_parked_2026_08_03.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md).
+  [issues/ag_closeout_audit_infra_parked_2026_08_03.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md).
   Did not draft `infra_satellite_ao_dispatch_batch7` — of 42 orphaned docs, 15 are self-dispatched and the remaining 27
   are each operator/time/design/conflict-gated or this skill's own prior-run parked-findings docs; the 2 "maybe"
   candidates need dedicated scoping first, per the skill's own "report the residual, don't force a batch" allowance.
@@ -527,7 +527,7 @@ not data-pipeline).
   [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
   its finalize twin (3 todos, both `status: draft`). **New finding**: 4 drafted batches (4/5/6/7) now sit unreviewed,
   oldest 4 days — see
-  [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
+  [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
   finding 14. **Linkage discoverability fix**: `check_ag_closeout_linkage.py` showed 66 orphans corpus-wide (baseline
   69, still improving) — exactly 1 carried `asset_group: [infrastructure]`:
   `issues/fix_frontmatter_strips_required_author_field_from_issue_docs_2026_08_04.md` (already `status: resolved`,

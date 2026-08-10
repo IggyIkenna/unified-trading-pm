@@ -129,26 +129,16 @@ already-resolved-on-LDR content mismatch at the promotion boundary.
 - `gh pr view 1136 --repo IggyIkenna/instruments-service` → `state: MERGED`, `mergedAt: 2026-08-09T12:31:02Z`.
 - `gh run list --repo IggyIkenna/instruments-service --branch main --workflow quality-gates-v2.yml --limit 5` → 5/5
   `success`, most recent `2026-08-10T07:18:25Z` (well after the merge).
-- `gh run list --repo IggyIkenna/system-integration-tests --branch main --workflow quality-gates-v2.yml --limit 5` → 5/5
-  `success`, most recent `2026-08-10T00:18:26Z`.
+- `gh run list --repo IggyIkenna/system-integration-tests --branch main --workflow quality-gates-v2.yml --limit 5` →
+  5/5 `success`, most recent `2026-08-10T00:18:26Z`.
 
-`ci_status` self-cleared via a genuine fresh `push:[main]` GREEN as predicted; the deadlock has not recurred in the ~19
-hours since the merge. This confirms and formalizes the same conclusion `ag_closeout_audit_ci_parked_2026_08_10.md`
+`ci_status` self-cleared via a genuine fresh `push:[main]` GREEN as predicted; the deadlock has not recurred in the
+~19 hours since the merge. This confirms and formalizes the same conclusion `ag_closeout_audit_ci_parked_2026_08_10.md`
 (Phase 3) and its own draft `ci_satellite_ao_dispatch_batch12_2026_08_10.md` (todo 2, still `status: draft` pending
 operator approval) already reached independently — recording it here directly means that batch12 todo's "record the
-resolution" half is now already-satisfied when/if it runs. **Not closing this doc or flipping `status`/`resolved_by`** —
-per the doc's own text, path #1 was always a separate claim from "the actual ask of this issue" (paths #2/#3, still
+resolution" half is now already-satisfied when/if it runs. **Not closing this doc or flipping `status`/`resolved_by`**
+— per the doc's own text, path #1 was always a separate claim from "the actual ask of this issue" (paths #2/#3, still
 genuinely open, see `## Todos` below).
-
-**Fresh re-verification 2026-08-10 (~13:00Z, batch12 todo 2 executor, slot 27)** — deadlock still not recurred, ~24h
-post-merge. Re-ran the checks fresh rather than trusting the citation above:
-`gh run list --repo IggyIkenna/instruments-service --branch main --workflow quality-gates-v2.yml --limit 5` → 5/5
-`success`, most recent `31386267577` @ `2026-08-10T12:03:49Z` (plus `31382530154`/`31380759340`/`31376351998`/
-`31375224430`, all success, spanning 09:34-12:03Z).
-`gh run list --repo IggyIkenna/system-integration-tests --branch main --workflow quality-gates-v2.yml --limit 5` → 5/5
-`success`, most recent `31386122487` @ `2026-08-10T12:01:51Z` (plus
-`31379593900`/`31344102164`/`31336398857`/`31331866504`, all success). `gh pr view 1136` still `MERGED` @
-`2026-08-09T12:31:02Z`. `ci_status` remains self-cleared; both dependent repos green on `main` continuously since.
 
 ## Todos
 
@@ -159,15 +149,15 @@ post-merge. Re-ran the checks fresh rather than trusting the citation above:
 > `too_large_or_risky` (a shared, fleet-wide promotion-gate mechanism every repo's `ldr_main` promotion depends on) —
 > not a bounded, worker-executable fix. `assigned_vm`/`status` left untouched.
 
-- [x] ✅ [OPERATOR] P2. **Stop `ldr_to_main_fleet_promote.sh`'s Tier-A gate from vetoing PR-_creation_, only
-      PR-_merging_, while `ci_status=FAILING`** (Suggested resolution path #2, the doc's own stated "actual ask").
-      **Approved 2026-08-10 by the operator via a direct question, implemented in
-      `scripts/cicd/ldr_to_main_fleet_promote.sh`**: the old early-return that vetoed even opening a fresh PR is now
-      scoped down to `TIER_A_CI_FAILING`, checked via a new `tier_a_merge_gate_ok()` immediately before each of the 3
-      merge-(re-)arm sites (mirrors `provenance_check_ok()`'s existing re-check-before-every-arm pattern) — PR
-      creation/content-gate/SIT-gate/ label-check all proceed unconditionally now; only the act of arming auto-merge
-      stays blocked while red. **Committed locally, not yet pushed** — held pending the operator's live CI-blockage fix;
-      verify this landed on origin before treating the deadlock as resolved.
+- [x] ✅ [OPERATOR] P2. **Stop `ldr_to_main_fleet_promote.sh`'s Tier-A gate from vetoing PR-*creation*, only
+      PR-*merging*, while `ci_status=FAILING`** (Suggested resolution path #2, the doc's own stated "actual ask").
+      **Approved 2026-08-10 by the operator via a direct question, implemented in `scripts/cicd/ldr_to_main_fleet_promote.sh`**:
+      the old early-return that vetoed even opening a fresh PR is now scoped down to `TIER_A_CI_FAILING`, checked via
+      a new `tier_a_merge_gate_ok()` immediately before each of the 3 merge-(re-)arm sites (mirrors
+      `provenance_check_ok()`'s existing re-check-before-every-arm pattern) — PR creation/content-gate/SIT-gate/
+      label-check all proceed unconditionally now; only the act of arming auto-merge stays blocked while red.
+      **Committed locally, not yet pushed** — held pending the operator's live CI-blockage fix; verify this landed on
+      origin before treating the deadlock as resolved.
 - [ ] [OPERATOR] P3. **Decide whether to pin the push-time UAC re-verification to the exact commit the PR validated
       against** (Suggested resolution path #3), instead of content-first re-resolving UAC at HEAD — this would eliminate
       the PR-time-vs-push-time content race at its source rather than only unblocking its downstream deadlock. A design
@@ -196,13 +186,13 @@ scope).
 ## Progress Log
 
 - **2026-08-10 (prose-findings formalization sweep)**: converted 2 prose findings into 2 formal todos (1 already
-  resolved, cited inline). Path #1 (immediate unblock) verified DONE via fresh live `gh` checks — see "Resolution
-  (2026-08-10)" above. Paths #2 (structural Tier-A gate fix) and #3 (PR-time/push-time content pinning) formalized into
-  `## Todos` above, both tagged `[OPERATOR]` per the existing `too_large_or_risky` classification from
+  resolved, cited inline). Path #1 (immediate unblock) verified DONE via fresh live `gh` checks — see
+  "Resolution (2026-08-10)" above. Paths #2 (structural Tier-A gate fix) and #3 (PR-time/push-time content pinning)
+  formalized into `## Todos` above, both tagged `[OPERATOR]` per the existing `too_large_or_risky` classification from
   `ag_closeout_audit_ci_parked_2026_08_10.md`. This directly resolves the gap the 2026-08-10 na-eligibility-audit
   verdict above flagged (TRAP CONFIRMED: prose-only remaining work, never converted).
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — both open todos are explicitly
   `[OPERATOR]`-tagged and the doc's own text states neither is a bounded, worker-executable fix: todo 1 needs an
   owner/operator scoping call before any worker touches a shared, fleet-wide, high-blast-radius promotion gate
-  (`ag_closeout_audit_ci_parked_2026_08_10.md`'s own conflict-check already classified this `too_large_or_risky`); todo
-  2 is a design call on `unified-api-contracts` dependency-resolution semantics for CI. Doc stays NA.
+  (`ag_closeout_audit_ci_parked_2026_08_10.md`'s own conflict-check already classified this `too_large_or_risky`);
+  todo 2 is a design call on `unified-api-contracts` dependency-resolution semantics for CI. Doc stays NA.

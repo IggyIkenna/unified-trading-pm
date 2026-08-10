@@ -23,7 +23,7 @@ summary: >-
   NOT drafted this run (need dedicated scoping first). Also fixed in-line this run (not parked, already shipped):
   `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s todo 1 was already resolved independently by today's
   `docs_reconciler` sweep — marked done, `unified-trading-pm` LDR.
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,7 @@ tags: [infra, ag-closeout-audit, plan-reconcile, parked-findings, dispatch-gap, 
 related:
   [
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_08_02.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_01.md,
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
@@ -46,7 +46,7 @@ related:
   ]
 created: "2026-08-03"
 author: unknown
-last_updated: "2026-08-10"
+last_updated: "2026-08-03"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -59,7 +59,7 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_04
+superseded_by:
 resolved_by:
 depends_on: []
 source: >-
@@ -76,15 +76,6 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-03 `/ag-closeout-audit infra` run
 
@@ -295,29 +286,12 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
       represents an unrecovered loss of 10 real stash entries. Update
       `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the outcome either way —
       do not silently flip its delete todo to done without addressing the bundle discrepancy.
-
-> **2026-08-10 — this doc is now the SOLE carrier for findings 12 and 13.** Both were re-parked as fresh `- [ ]` todos
-> into `ag_closeout_audit_infra_parked_2026_08_04.md`, `_2026_08_06.md`, `_2026_08_08.md` and `_2026_08_09.md` — 5
-> copies of each across 5 dated docs, never actioned, the last self-labelling "carried, 7th day". Those 8 duplicate
-> entries are now closed as DEDUPED, pointing here. Per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three
-> things that must NOT reach a parked doc" rule 3, a future run that re-confirms either finding appends a dated line to
-> THIS entry and leaves its own doc silent. **Both have now been re-confirmed 4+ times, which under that same rule is
-> the escalation trigger, not grounds for a 5th re-confirmation** — they are carried below as genuine open-ended design
-> calls (`assigned_vm: NA` is correct for both; neither is worker-determinable as written), and the next disposition
-> should be an operator ruling or a `/plan-brainstorm` pass, not another audit cycle.
-
-- [x] ✅ [DOCS] P3. **CARRIED 2026-08-10 → `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A
-      human judgment call with no worker-determinable outcome; moved to the single consolidated operator list so this
-      dated audit report can reach zero open todos and archive. Original text preserved for record. Was: **Consider a
-      `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`** (finding 12) — segments
-      the headline orphan count so future runs (and readers) don't overstate the batch-needed backlog.
-      Design/tooling-priority call, not urgent. **Re-confirmed unchanged 2026-08-04, -06, -08, -09, -10.**
-- [x] ✅ [DOCS] P3. **CARRIED 2026-08-10 → `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`.** A
-      human judgment call with no worker-determinable outcome; moved to the single consolidated operator list so this
-      dated audit report can reach zero open todos and archive. Original text preserved for record. Was: **Scope +
-      conflict-check the 2 flagged batch7 candidates** (finding 13: `CITE_RE` hardening design;
+- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
+      (finding 12) — segments the headline orphan count so future runs (and readers) don't overstate the batch-needed
+      backlog. Design/tooling-priority call, not urgent.
+- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch7 candidates** (finding 13: `CITE_RE` hardening design;
       `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them — neither is ready to
-      batch as-is. **Re-confirmed unchanged 2026-08-04, -06, -08, -09, -10.**
+      batch as-is.
 
 ## Progress Log
 

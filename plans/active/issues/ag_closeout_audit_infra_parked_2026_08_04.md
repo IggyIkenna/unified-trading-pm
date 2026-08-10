@@ -19,7 +19,7 @@ summary: >-
   (`ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`, a large actively-executing human VM-migration plan), the
   other two contributed 3 conflict-clear bounded todos, drafted as `infra_satellite_ao_dispatch_batch7_2026_08_04.md` +
   its finalize twin (both `status: draft`, operator approval required).
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, parked-findings, batch-approval-backlog, dispatch-gap]
 related:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
@@ -43,7 +43,7 @@ related:
   ]
 created: "2026-08-04"
 author: unknown
-last_updated: "2026-08-10"
+last_updated: "2026-08-04"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -56,12 +56,12 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_06
+superseded_by:
 resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
@@ -73,15 +73,6 @@ source: >-
   never-cited). Ran the skill's iterative-drain step 1 (re-checked all 3 carried-forward findings live) before a
   targeted Phase 1 direct-read of the 3 net-new never-cited candidates.
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-04 `/ag-closeout-audit infra` run
 
@@ -198,21 +189,11 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       overlapping source doc). Original text preserved below for record. **Review + approve/decline the 4 backlogged
       drafted infra batches** (finding 14) — `infra_satellite_ao_dispatch_batch4_2026_07_31.md`, `batch5_2026_08_01.md`,
       `batch6_2026_08_02.md` (1 of 2 todos already resolved-elsewhere), and this run's `batch7_2026_08_04.md` (3 todos).
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 12 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned; per
-      `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc" rule 3 a
-      carried finding lives in ONE doc. Original text preserved for record. Was: **Consider a
-      `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`** (finding 12, carried).
-      Design/tooling-priority call, not urgent.
-- [x] ✅ [DOCS] P3. **DEDUPED 2026-08-10 — duplicate of finding 13 in
-      `/plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md`, the origin doc and sole carrier.**
-      Re-parked across 5 dated docs (08-03/-04/-06/-08/-09) without ever being actioned; per
-      `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc" rule 3 a
-      carried finding lives in ONE doc. Original text preserved for record. Was: **Scope + conflict-check the 2 flagged
-      batch7-era candidates** (finding 13, carried: `CITE_RE` hardening design;
-      `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them — neither is ready to
-      batch as-is; unrelated to this run's actual `batch7`, which drew from different material.
+- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
+      (finding 12, carried). Design/tooling-priority call, not urgent.
+- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch7-era candidates** (finding 13, carried: `CITE_RE`
+      hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them —
+      neither is ready to batch as-is; unrelated to this run's actual `batch7`, which drew from different material.
 
 ## Progress Log
 

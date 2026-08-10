@@ -29,20 +29,15 @@ summary: >-
 status: open
 resolved_by:
 nature: issue
-asset_group: [ui]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, unified-trading-library]
 scope: [engineer, admin]
 tags: [security, auth, prod, deployment-api, cloud-run, disable-auth, misconfiguration]
-related:
-  [
-    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/ui_consolidated_closeout_2026_07_30.md,
-    /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
-  ]
+related: [/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md]
 created: 2026-08-06
 author: sub-agent (service-deployed dispatch listener task)
-last_updated: 2026-08-10
+last_updated: 2026-08-06
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -185,14 +180,3 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
   plan-reconciliation pass — this is application code + live infra, not a plan doc). Not flipping any of the 4 todos;
   this remains genuinely operator-gated per the 2026-08-07 verdict above, now with a narrower, evidence-backed choice in
   front of the operator instead of an open-ended one.
-- **2026-08-10 (meta_plan_corpus_hygiene_ao_dispatch_batch1 todo 1)**: retagged `asset_group: [cross-cutting]` → `[ui]`
-  - added `related:` links to `ui_consolidated_closeout_2026_07_30.md` and the P0 escalation plan
-    `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (linkage-graph reachability per
-    `check_ag_closeout_linkage.py`). **Fix-steps status report (per the batch plan's done-when)**: all 4 `[BACKEND] P1`
-    fix-steps in this doc's Resolution section remain OPEN `- [ ]`, and the live prod exposure is confirmed again by the
-    P0 escalation plan's own 2026-08-10 live re-verification (broader than recorded here: `ingress: all` + `allUsers`
-    bound to `roles/run.invoker`). This IS the P1 security finding the batch plan asked to escalate — it has already
-    been escalated to its own active P0 plan (`deployment_api_unauthenticated_prod_p0_2026_08_10.md`,
-    `assigned_vm: planning`, `sequential: true`; step 1 "Decide the env SSOT + fix the guard" DONE via
-    `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`, 4 follow-on todos open), so no further escalation is needed from
-    this retag — the retag is what finally gives the fix a owning tranche to be claimed under.

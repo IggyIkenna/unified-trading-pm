@@ -31,7 +31,7 @@ summary: >-
   infra-tagged-but-ao-owned mistags, F18/F19) — deliberately NOT remedied via a Sources-list link this run (that would
   misrepresent infra as the content owner; the correct fix is the retag, which is the same operator-gated decision as
   finding 6, not a linkage-hygiene one-liner).
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -40,7 +40,7 @@ scope: [engineer, admin]
 tags: [infra, ag-closeout-audit, parked-findings, asset-group-mistag, linkage, batch-8]
 related:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
@@ -55,7 +55,7 @@ related:
   ]
 created: "2026-08-07"
 author: slot-8 (ag_closeout_auditor, infra tranche, dispatch agt-164a48)
-last_updated: "2026-08-10"
+last_updated: "2026-08-07"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -68,13 +68,13 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_08
+superseded_by:
 resolved_by:
 depends_on: []
 archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrer) -- see Progress Log
 context_scope:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_06.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
@@ -90,15 +90,6 @@ source: >-
   claim found (the same-day `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` only references it as a confound, not a
   claim) — drafted `infra_satellite_ao_dispatch_batch8_2026_08_07.md`.
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-07 `/ag-closeout-audit infra` run
 

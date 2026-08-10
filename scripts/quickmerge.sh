@@ -637,15 +637,7 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       echo "   but it costs a full QG run. Use --no-isolated to keep the sentinel fast path."
       echo "   disable with --no-isolated; see codex/05-infrastructure/per-tab-worktrees.md"
       cd "$_qm_iso_wt" || exit 2
-      # QG_ALLOW_SKIP_DASHBOARD=1 (2026-08-10): quality-gates.sh fails closed when a repo with
-      # dashboard/package.json has no dashboard/node_modules (agent-orchestrator@8f1a08a). An
-      # isolated worktree NEVER has node_modules (gitignored; isolation provisions a venv but no
-      # node deps), so the full re-gate here would hard-fail on every dashboard-carrying repo.
-      # The isolated worktree IS the "deliberately python-only environment" the override exists
-      # for — the explicit exemption (not the silent skip the commit closed). CI runs the real
-      # UI checks: the shared QG template installs dashboard deps when dashboard/package.json is
-      # present, so a UI regression is still caught at push/promote, just not at the local fast path.
-      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
+      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
       _qm_rc=$?
       cd "$_qm_caller_repo" || true
       exit "$_qm_rc"
@@ -2637,16 +2629,6 @@ echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is 
 # check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
 # silent on the authoring machine, where the orphaned object still resolves.
 echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
-# ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
-# resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
-# a second edit pass afterwards.
-if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
-  # shellcheck source=/dev/null
-  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
-  if declare -F resolve_pending_citations >/dev/null 2>&1; then
-    resolve_pending_citations "$REPO_NAME" "$_QM_PUSHED_SHA" "$WORKSPACE_ROOT/unified-trading-pm" || true
-  fi
-fi
 push_gov_release_push
 
 # Extract issue references from commit message for PR body

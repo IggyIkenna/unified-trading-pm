@@ -20,7 +20,7 @@ summary: >-
   **Ledger**: 28 orphaned docs - 2 fully covered by batch12 (sports_clv_target_builder_family_route_likely_same_pit_gap,
   sports_manifest_consolidator_zero_growth_stall) = 26 parked entries below. `parked_findings=26`, `entries_written=26`
   — balanced.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -75,15 +75,6 @@ context_scope:
   ]
 ---
 
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
-
 # Sports closeout-audit findings, 2026-08-09
 
 ## Finding 1 — a live-VM conflict almost produced 2 redundant batch todos (fixed directly, not batched)
@@ -107,9 +98,9 @@ launch). No operator action needed — this was resolved by evidence, not a judg
 `asset_group: [cross-cutting]` — the Phase 0.3 filename-prefix heuristic flagged it as a likely "fork inherited the
 parent's cross-cutting tag" mistag. Read in full: the doc's own design explicitly frames the schema bump as spanning
 "every asset_group and every producer service" (not sports-specific), and
-`plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_09.md` (the prediction tranche's own same-day
-run) independently read the same doc and concluded "confirmed genuinely cross-cutting... not a mistag." Deferring to
-that finding rather than re-litigating or retagging — no action taken.
+`plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_09.md` (the prediction tranche's own same-day run)
+independently read the same doc and concluded "confirmed genuinely cross-cutting... not a mistag." Deferring to that
+finding rather than re-litigating or retagging — no action taken.
 
 ## Batch 12 — what was extracted (4 items, 4 source docs)
 
@@ -258,11 +249,11 @@ launcher category + run a real dry-run census — the actual delete stays operat
 - **2026-08-10 (prose-findings formalization sweep)**: full read for unconverted actionable prose — none found. Both
   named findings are already self-resolved within this doc's own text: Finding 1's "Action taken" already fixed the
   live-VM-conflict risk directly (a doc-hygiene note added to the 2 source docs, not a deferred recommendation) and
-  Finding 2 concluded "no action needed" on its own evidence (mistag confirmed NOT a mistag by a same-day sibling run).
-  Every entry in the "Parked —" taxonomy sections below either explicitly states "no recommendation" (the genuinely
-  operator-gated design forks) or points at an already-tracked gate/doc elsewhere in the corpus — none contains a
-  distinct, unconverted actionable claim of its own that isn't already one of those two states. 0 prose findings
-  converted to new todos; 0 new already-resolved citations needed beyond what the doc already states.
+  Finding 2 concluded "no action needed" on its own evidence (mistag confirmed NOT a mistag by a same-day sibling
+  run). Every entry in the "Parked —" taxonomy sections below either explicitly states "no recommendation" (the
+  genuinely operator-gated design forks) or points at an already-tracked gate/doc elsewhere in the corpus — none
+  contains a distinct, unconverted actionable claim of its own that isn't already one of those two states. 0 prose
+  findings converted to new todos; 0 new already-resolved citations needed beyond what the doc already states.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
   candidate. Standing triage ledger for 26 parked orphan docs across 6 taxonomy categories (operator-gated, time-gated,
   dependency-gated, too-large-or-risky, self-progressing, not-this-tranche's-write); 0 checkboxes by design (every

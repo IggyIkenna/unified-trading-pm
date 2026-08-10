@@ -16,7 +16,7 @@ summary: >-
   5/defi_track01 failed a 2nd time, resource-exhaustion pattern, no 3rd relaunch attempted; consolidator lock separately
   confirmed self-healed, not a second stuck-lock problem). Batch13 decision unchanged (still 1-item pool). 9 findings
   total across all 3 runs today.
-status: resolved
+status: open
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -31,7 +31,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_defi_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md,
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
     /plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
@@ -43,7 +43,7 @@ created: 2026-08-10
 parent_epic: defi_master
 assigned_vm: NA
 priority: P3
-last_updated: "2026-08-10"
+last_updated: 2026-08-10
 source: >-
   ag_closeout_auditor scheduled run 2026-08-10 (tranche=defi, slot 14, DISPATCH_ID=agt-f508ad); iterative-drain
   follow-up same day (tranche=defi, slot 20, DISPATCH_ID=agt-af667b)
@@ -54,20 +54,11 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/issues/ag_closeout_audit_defi_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md,
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # ag-closeout-audit defi parked findings — 2026-08-10
 
@@ -328,6 +319,6 @@ Cumulative doc total: 9 findings across 3 runs today.
   `solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md`) all already have their own tracked todos. This
   is a findings ledger correctly pointing at already-tracked work; no `## Todos` section needed.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
-  candidate. This is today's most current defi audit ledger, still receiving same-day updates (3 dispatches today: slot
-  14, slot 26 all-mode cross-check, slot 20 iterative-drain follow-up with a fresh live-state finding). Not locked;
-  unambiguously a live standing record, not moot. Doc stays `assigned_vm: NA`.
+  candidate. This is today's most current defi audit ledger, still receiving same-day updates (3 dispatches today:
+  slot 14, slot 26 all-mode cross-check, slot 20 iterative-drain follow-up with a fresh live-state finding). Not
+  locked; unambiguously a live standing record, not moot. Doc stays `assigned_vm: NA`.

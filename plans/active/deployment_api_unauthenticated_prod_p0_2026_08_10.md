@@ -109,34 +109,20 @@ cause an outage).
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Decide the env SSOT and fix the guard.** — UTL@336f2b3b6c + deployment-api@d0eebac4e6.
-
-      **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
-
-              **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-              1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-              2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-              3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-              4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-              5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-              6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-              7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-              8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-              9. `UTL service_runtime.py:207` — runtime env value
-
-              **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
-
-              **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
-
-- [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
-      GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
+- [ ] [BACKEND] P0. **Decide the env SSOT and fix the guard.** Choose (a) make the guard read `DEPLOYMENT_ENV` (or both
+      `ENVIRONMENT` and `DEPLOYMENT_ENV`), or (b) set `ENVIRONMENT=production` on the prod Cloud Run service. Before
+      choosing, enumerate every consumer of `UnifiedCloudConfig.environment` across the fleet and confirm neither choice
+      breaks one — a rename affects more than this guard. **Done when**: the choice is made with the consumer
+      enumeration recorded inline, and the guard demonstrably trips in a non-prod environment carrying the prod-marking
+      env var. Do NOT deploy the enforcing change to prod in this step — that is step 4, after callers are fixed.
+- [ ] [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a GSM
+      secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
       console edit), and populate a `DEPLOYMENT_API_KEY` GH secret on every repo whose CI calls deployment-api
       server-to-server — starting with `deployment-service` (`service-deployed-listener.yml`). No client code change is
       needed there: `_deploy_one` already sends the header when the value is non-empty. **Done when**:
       `verify_api_key()`'s expected key resolves to a real non-None value in prod AND the listener is confirmed sending
       the header. Self-issuable — GSM secret creation is within the orchestrator's IAM self-service scope
-      (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), so this is NOT operator-gated. —
-      deployment-api@fc01906159 + deployment-api@fc01906 (live service updated 2026-08-10; see Progress Log)
+      (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), so this is NOT operator-gated.
 - [ ] [BACKEND] P0. **Audit every current caller of `_authenticated_router` routes and fix the ones with no
       credential.** Cover deployment-ui, every CI workflow across all repos, and any documented manual `curl`/`gh api`
       usage. For each: does it already send `X-API-Key` or a Firebase token? **Done when**: a complete caller inventory
@@ -167,22 +153,3 @@ cause an outage).
   `allUsers` → `roles/run.invoker`), which broaden the exposure from "public Cloud Run URL" to "nothing gates it at the
   GCP layer either". Operator notified in-session at the moment of discovery; no mitigation armed, since every candidate
   mitigation risks breaking the very callers step 3 exists to enumerate, and the operator was mid-CI-fix.
-- **2026-08-10 (slot 9)** — Todo 1 complete. Decision: Option (a). Added `deployment_env` field to `BaseConfig`
-  (`unified-trading-library@336f2b3b6c`) reading `DEPLOYMENT_ENV`. Updated `deployment_api/auth.py` guard
-  (`deployment-api@d0eebac4e6`) to check both `ENVIRONMENT` and `DEPLOYMENT_ENV`. Enumerated 9 consumers of
-  `UnifiedCloudConfig.environment` — none broken by this additive change. Guard logic verified: condition
-  `_deployment_env in ("production", "prod")` evaluates True when `DEPLOYMENT_ENV=prod`. Not deployed to prod (that's
-  step 4).
-- **2026-08-10 (slot 19)** — Todo 2 complete. Issued a 256-bit hex deployment-api API key and wired it end-to-end: (1)
-  stored as GSM secret `deployment-api-api-key` (version 1, enabled) in `central-element-323112`; (2) wired the live
-  prod service via `gcloud run services update --update-secrets API_KEY=deployment-api-api-key:latest` (revision
-  `uts-shared-deployment-api-00509-jb2`, Ready=True, serving 100%, `/health` 200) — the runtime SA `uts-prd-sa` holds
-  project-level `secretmanager.secretAccessor`, so the secret resolves in-revision; (3) made the wiring durable in the
-  deploy path: `deployment-api/cloudbuild.yaml` deploy step now passes
-  `--update-secrets API_KEY=deployment-api-api-key:latest` (deployment-api@fc01906159, on origin/live-defi-rollout); (4)
-  populated the `DEPLOYMENT_API_KEY` GH secret on `IggyIkenna/deployment-service` — the only repo whose CI calls
-  deployment-api server-to-server (`service-deployed-listener.yml` passes `--api-key "$DEPLOYMENT_API_KEY"` when
-  non-empty, and `_deploy_one` sets the `X-API-Key` header when `api_key` is non-empty; verified by reading
-  `handle_service_deployed_dispatch.py::_deploy_one`). GSM/GH values fingerprint-match the generated key (sha256[0:16]
-  identical). Both done-when conditions met: expected key resolves non-None in prod AND listener confirmed sending the
-  header. Auth still DISABLE_AUTH=true — enforcement flip is step 4.

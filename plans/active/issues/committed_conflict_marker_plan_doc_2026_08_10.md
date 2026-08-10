@@ -124,28 +124,19 @@ shared-plan-file contention class that already produced
 
 ## Todos
 
-- [x] ✅ [DEVOPS] P1. **Verify why the committed-conflict-marker gate did not fire on `unified-trading-pm@505bfe3ced`**
+- [ ] [DEVOPS] P1. **Verify why the committed-conflict-marker gate did not fire on `unified-trading-pm@505bfe3ced`**
       (slot 31's `multi_leg_execution_systems_audit_2026_08_10.md` todo-3 flip, which shipped a committed close-marker
-      line + orphaned `=======` to LDR). **Gap identified + closed** — `unified-trading-pm@caae76d29e`. The
-      `check_conflict_markers.sh` gate had ONLY one line of defense: the pre-commit hook
-      (`run_hygiene_sweep.sh --precommit`). It was absent from `quality-gates.sh`, `ldr-docs-gate.yml`, and every CI/CD
-      workflow. `--diff-filter=ACM` IS populated for modified plan files (confirmed via reproduction), and the checker
-      DOES catch `seven-`>` close-marker` markers (confirmed). So the gate works when the pre-commit hook fires — but
-      any bypass (`git rebase --continue` after manual conflict resolution, `--no-verify`, a prek race condition on
-      shared checkouts) lets markers reach LDR with no second line of defense. **Fix**: wired
-      `check_conflict_markers.sh` into (1) `quality-gates.sh` — scoped to the changeset (same pattern as the frontmatter
-      schema check), catching markers at Pass-1 QG before quickmerge push; (2) `ldr-docs-gate.yml` — the hourly
-      post-push corpus scan, catching any markers that bypassed BOTH the pre-commit hook AND QG within one hour of
-      landing on LDR. See Progress Log for full investigation details. Done when: a marker-bearing plan committed via
-      the same path is REJECTED pre-push, with the gap identified + closed (or a documented, intentional exclusion).
-      (repo: unified-trading-pm)
-- [x] ✅ [DEVOPS] P2. **Narrow `check_conflict_markers.sh`'s `=======` exclusion** — `unified-trading-pm@9b7e2cc451`.
-      Added an awk-based orphaned-`=======` check: lines of 7+ `=` signs NOT directly under a non-empty text line
-      (setext-H1 guard) and shorter than 30 chars (separator-line guard) are flagged as conflict-marker debris. Tested:
-      orphaned `=======` → exit 1 (caught); `Title\n=======` setext → exit 0 (skipped); `======...======` (42 chars)
-      separator → exit 0 (skipped); combined `=======` + `seven-`>` close-marker` fixture → exit 1 (both caught). Full
-      810-file corpus clean (exit 0). Done when: a fixture with an orphaned `=======` in a Progress Log fails the check,
-      and a genuine `Title` + setext-underline form still passes. (repo: unified-trading-pm)
+      line + orphaned `=======` to LDR). The `--precommit` staged-plans check (`run_hygiene_sweep.sh` line ~95,
+      `check_conflict_markers.sh --quiet "${STAGED_PLANS[@]}"`) should have caught it. Reproduce the exact commit shape
+      (quickmerge `--agent` on the AO VM against a marker-bearing staged plan) and determine whether `STAGED_PLANS` is
+      populated for that path; if empty-by-design for some commit shape, fix the sweep to scan the staged file
+      regardless. Done when: a marker-bearing plan committed via the same path is REJECTED pre-push, with the gap
+      identified + closed (or a documented, intentional exclusion). (repo: unified-trading-pm)
+- [ ] [DEVOPS] P2. **Narrow `check_conflict_markers.sh`'s `=======` exclusion** so an ORPHANED mid-doc `=======` line (a
+      committed `=======` NOT directly under an H1 text line as a setext underline — the corpus uses ATX headers, so a
+      genuine setext underline is already non-canonical) is flagged as conflict-marker debris. Keep the
+      setext-H1-underline false-positive guard. Done when: a fixture with an orphaned `=======` in a Progress Log fails
+      the check, and a genuine `Title` + setext-underline form still passes. (repo: unified-trading-pm)
 - [ ] [DOCS] P2. **Scan active plans for the concurrent-same-file-Progress-Log shape** that corrupted
       `multi_leg_execution_systems_audit_2026_08_10.md`: multiple same-priority `- [ ]` todos in ONE plan doc that each
       append a Progress-Log entry + flip a checkbox in that same doc (concurrent dispatch → parallel slots edit one
@@ -162,31 +153,3 @@ shared-plan-file contention class that already produced
   plan's Progress Log entry. This doc tracks the durable gate/planning fixes. Note: the first draft of this doc wrote
   the marker strings verbatim and tripped `check_conflict_markers.sh` (the gate matches mid-line/in-backtick); rewritten
   with the seven-`>`/seven-`<` notation above.
-- **2026-08-10 (slot 6, cicd)**: todo 1 investigation + fix shipped (`unified-trading-pm@caae76d29e`). **Root cause**:
-  `check_conflict_markers.sh` was wired ONLY into the pre-commit hook (`run_hygiene_sweep.sh --precommit`). Verified via
-  reproduction: `--diff-filter=ACM` correctly captures modified plan files, `check_conflict_markers.sh` correctly
-  catches `seven-`>` close-marker` markers (exit 1), and `prek` fires the plan-hygiene hook on commit (confirmed by
-  committing a marker-bearing test file — rejected with "❌ Conflict marker(s) in staged plans"). So the gate mechanism
-  works when invoked. **But it had ZERO presence in**: (a) `quality-gates.sh` — the Pass-1 QG gate that runs before
-  quickmerge push, (b) `ldr-docs-gate.yml` — the hourly post-push corpus scan added after the 2026-07-17 fail-open
-  incident, (c) any CI/CD GitHub Actions workflow. The standard `check for merge conflicts` pre-commit hook only catches
-  the full `seven-`<` open-marker` + `=======` + `seven-`>` close-marker` triple — `505bfe3ced` only had `=======` +
-  `seven-`>` close-marker` (no open marker), so it passed. **The pre-commit hook is the SOLE line of defense** — any
-  bypass (`git rebase --continue` after manual conflict resolution, `--no-verify`, a prek race condition on shared
-  checkouts) lets markers reach LDR undetected. **Fix**: wired `check_conflict_markers.sh` into `quality-gates.sh`
-  (changeset-scoped, same pattern as the frontmatter schema check — catches markers at Pass-1 QG before quickmerge push)
-  AND into `ldr-docs-gate.yml` (hourly corpus scan — catches any markers that bypassed BOTH the pre-commit hook AND QG
-  within one hour of landing on LDR). Pre-commit hook presence confirmed in ALL 12 slots (all `.git/hooks/pre-commit`
-  mtimes Jul 7 13:41; slot 31's was Aug 8 13:07). Slot 31's clone has the same `.pre-commit-config.yaml` as slot 6
-  (diff-empty). `prek` 0.4.12 installed Jul 30. The marker hash `86e965852f` (from the `seven-`>` close-marker` line) is
-  unreachable in the current clone — consistent with a rebase-created commit whose original hash was garbage-collected.
-  **Deferred to P2 todos**: (a) narrowing the `=======` exclusion in `check_conflict_markers.sh` to catch orphaned
-  mid-doc `=======` lines, (b) scanning active plans for the concurrent-same-file-Progress-Log shape.
-- **2026-08-10 (slot 6, cicd)**: todo 2 shipped (`unified-trading-pm@9b7e2cc451`). Added awk-based orphaned-`=======`
-  check to `check_conflict_markers.sh`. Lines matching `^={7,}$` are flagged UNLESS (a) the previous line is a non-empty
-  text line (setext-H1 underline guard), or (b) the line is ≥30 `=` chars (visual separator convention). Three fixtures
-  verified: orphaned `=======` → exit 1 (caught), `Title\n=======` setext → exit 0 (correctly skipped),
-  `======...======` 42-char separator → exit 0 (correctly skipped). Combined `seven-`>` close-marker` + orphaned
-  `=======` fixture → exit 1 (both caught, separate messages). Full 810-file plans corpus clean (exit 0). The original
-  open/close marker PAT is unchanged — this only adds the middle-marker detection that was the proven blind spot in
-  `505bfe3ced`.

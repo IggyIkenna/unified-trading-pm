@@ -119,11 +119,3 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   the 2019-2025 training range) rather than a driver bug. Full evidence + the backfill todo:
   `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. No measured
   delta exists yet to report.
-- 2026-08-10 (slot-24, 14:12Z): the retrain-and-measure half advanced, then re-blocked. The `odds_targets` backfill (P0
-  in `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`) landed; the 5
-  sports CLV ensemble trainer VMs were relaunched and ran end-to-end. **Measured coverage delta**: CLV targets went 0.0%
-  → **5.7% (train, 121,376) / 17.2% (val, 8,897) / 15.6% (test, 32,271)** non-null. **Performance delta not yet
-  measurable**: all 5 VMs crashed at the first CatBoost fit — `RMSE does not allow nan values in target data`
-  (exit_code=1) — because the partially-non-null CLV targets are passed straight to CatBoost. That NaN-handling fix is
-  tracked as P3 in the odds_targets issue doc; once it lands, re-run the 5 VMs and report the rmse/mae/r2-per-outcome-
-  per-horizon delta here.

@@ -16,7 +16,7 @@ summary: >-
   (real owner `ao`, not `infra`) found via the corpus-wide new-doc sweep, reported per the skill's
   concurrent-sharded-worker rule (only the owning tranche may write the retag). All evidence-backed, not judgment calls
   — recorded here per the "Parked findings ALWAYS get a durable issue doc" hard rule.
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,7 +37,7 @@ related:
   ]
 created: "2026-08-01"
 author: unknown
-last_updated: "2026-08-10"
+last_updated: "2026-08-01"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -50,7 +50,7 @@ drift_direction: none
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_infra_parked_2026_08_02
+superseded_by:
 resolved_by:
 depends_on: []
 archive_exempt: true # 2026-08-10: 0 open todos, full archival deferred (grace-locked referrer) -- see Progress Log
@@ -67,15 +67,6 @@ context_scope:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Parked findings — 2026-08-01 `/ag-closeout-audit infra` run
 
@@ -185,7 +176,7 @@ All 3 findings in `issues/ag_closeout_audit_infra_parked_2026_07_31.md` were re-
 no drift:
 
 1. **`codex_violations_ratchet_to_five_2026_06_10.md`'s `delta_proxy_repricer.py` checkbox** — still `- [ ]` at
-   line 373. Still false-unchecked per the original finding (`execution-service@980a6ad0` already wires it in).
+   line 373. Still false-unchecked per the original finding (`execution-service@89fbf99d` already wires it in).
 2. **`issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` todo 3** — still `- [ ]`.
    Re-checked the filesystem again this run: `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` and
    `.tabs/3/stash-bundles/` are STILL absent from this sandbox, same as 2026-07-31's observation — no new information,
@@ -225,7 +216,7 @@ no drift:
       target needs updating to the live doc.
 - [x] ✅ [DOCS] P3. Re-carry forward the 3 still-open 2026-07-31 findings/todos (reconcile `delta_proxy_repricer.py`'s
       **CLOSED 2026-08-06 (na-eligibility-audit)**: superseded — the findings now live in the 08-02/08-03/08-04 parked
-      registers: delta_proxy_repricer.py checkbox shipped (execution-service@980a6ad0, closeout 08-03); stash-clone
+      registers: delta_proxy_repricer.py checkbox shipped (execution-service@89fbf99d, closeout 08-03); stash-clone
       real-host state + ao_self_pull retag carried as open findings in the newer registers. checkbox; positively confirm
       the stash-clone directory's real-host state; retag
       `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`) — see

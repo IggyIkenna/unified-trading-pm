@@ -102,8 +102,8 @@ to quantify and quarantine ONE account, not to feed the main calibration.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
-      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
+      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
@@ -119,14 +119,13 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
       and the resolver returns the same account for two sessions of one agent split by a compaction.
-- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
-      account-window, regardless of how many files or task windows contain it.** — agent-orchestrator@ff2f1c5
-      (peer-shipped: `scan_usage_across_transcripts` + `scan_account_transcripts` with window filtering + 3 tests
-      covering cross-file dedup and hand-verified window totals) `scan_session_usage` already dedups within one file;
-      the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a second transcript
-      — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against 649,255 real ones on
-      this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript files under one account
-      yields one counted turn, and the walker's total for a known window matches a hand-verified count.
+- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+      account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
+      within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
+      second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
+      649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
+      files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
+      count.
 - [ ] [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE session,
       and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts per-task cost
       independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the transcript-derived one
@@ -321,22 +320,6 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
       measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
       or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
-- [ ] [DOC] P1. **Add tool-call batching guidance to `cursor-configs/AUTONOMOUS_AGENT_RULES.md` so every autonomous run
-      inherits it — measured 2026-08-10 as the single highest-leverage cost change available.** 65.1% of API calls in
-      the controlled window came from sessions that genuinely invoked `/autonomous` (8 sessions, 63.8% of cache reads),
-      and 57.3% of ALL calls are consecutive same-tool chains that could collapse into one — Bash alone is 52.8%, with
-      observed runs of 20, 23, 26, 28 and 32 consecutive Bash calls. Every collapsed call saves one full ~406k-token
-      prefix re-read. State the rule positively (compound shell commands with `;`/`&&`; multiple `tool_use` blocks in
-      one message for independent calls; `replace_all` or one Write instead of serial Edits; never re-read a file
-      already read) and note the exception that genuinely result-dependent calls must stay separate. **Done when**: the
-      rules file carries the guidance and a follow-up measurement over a later window shows the consecutive-same-tool
-      share below 40%.
-- [ ] [DATA] P2. **Re-measure the collapsible-call share after the batching guidance ships, to confirm it moved rather
-      than assuming it did.** Baseline to beat (2026-08-10 controlled window): 3,123 calls, 57.3% collapsible, 405,833
-      mean cache-read tokens per call, 1.27B total reads. Reuse the same requestId-unioned method (content blocks must
-      be unioned across all JSONL lines sharing a requestId — deduping to the first line silently drops tool_use blocks
-      and was the bug in this plan's first content pass). **Done when**: a post-change window is measured with the same
-      method and the before/after collapsible share and cache-read totals are recorded here.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
@@ -467,68 +450,6 @@ multiplier carry its valuation date and rate set.
 (`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
 sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
 
-### 2026-08-10 — CONTROLLED MEASUREMENT: ~190x on a clean laptop-only window (best datapoint to date)
-
-Operator supplied a controlled experiment that removes every contamination problem above: a 4h25m window
-(`2026-08-10 10:02:35Z -> 14:27:34Z`) that was **strictly laptop, strictly `iggy2london@gmail.com` (`sub-b`), zero AO**,
-across which the weekly meter moved **57% -> 64% = 7%**. Actual money spent is therefore `0.07 x $45.16 = $3.16`.
-
-Measured from the laptop's own transcripts (tabs 1-4 + subagents), deduped by `requestId`:
-
-| model           | turns |    cache read |    output | documented cost |
-| --------------- | ----: | ------------: | --------: | --------------: |
-| claude-opus-5   | 1,998 |   745,335,541 | 1,617,949 |         $459.02 |
-| claude-sonnet-5 | 1,125 |   522,080,577 |   788,135 |         $137.82 |
-| **total**       | 3,123 | 1,267,416,118 | 2,406,084 |     **$598.71** |
-
-**Multiplier = $598.71 / $3.16 = ~190x at August promo rates (~212x at standard).** Against 15-32x from the contaminated
-AO-side attempts and 6-10x published — confirming the AO figures were understated exactly as the contamination analysis
-predicted.
-
-Notes that make this the reference measurement:
-
-- **Opus dominates cost, not turn count**: 77% of documented value off 64% of turns ($5/$25 vs Sonnet-5's promo $2/$10),
-  and Opus cache reads alone are $373. Model mix, not volume, drives equivalent value — a Sonnet-only window would value
-  at roughly a third.
-- **Compaction replay is real and large**: 3,270 replay lines were skipped against 3,123 genuinely billed turns — over
-  half of transcript lines re-write already-billed calls. Deduping on `requestId` (stable across replay) is what makes
-  the number trustworthy; naive counting roughly doubles it. Same mis-measurement class the pre-compact trigger hit.
-- AO touched `sub-b` only twice inside the window, both known mislabeled-telemetry rows (`deepseek-v4-pro` /
-  `<synthetic>` model strings), worth at most ~$37 — immaterial.
-- **Caveats**: 57->64 is integer-rounded, so the true delta is 6.5-7.5% and the range ~176-204x; and if heavy Opus use
-  draws on a scoped `seven_day_opus` bucket rather than `weekly_all`, the 7% understates consumption and would pull the
-  multiplier DOWN — the one open risk, already tracked as the per-model quota-weight todo.
-
-### 2026-08-10 — Cost structure: cache reads are 80% of the bill, and 90% of calls are un-batched
-
-Decomposition of the controlled window's $598.71 by token class, and where the reducible waste is.
-
-| class                   |    cost | share |
-| ----------------------- | ------: | ----: |
-| cache read              | $477.09 | 79.7% |
-| cache write             |    ~$73 | 12.2% |
-| output (incl. thinking) |  $48.33 |  8.1% |
-| input (uncached)        |  ~$0.04 |   ~0% |
-
-**Cache reads dominate four-to-one.** Mean cache read per API call is **405,833 tokens**, and within-session context
-growth is only **1.37x** (344k -> 471k first-vs-last quartile), so compaction is working and cost is **linear in CALL
-COUNT at a ~406k constant**, not quadratic in context. Every call re-reads the full prefix regardless of how small its
-work is.
-
-**89.9% of API calls make exactly one tool call; only 4.0% batch 2+.** Because cost is linear in calls, merging X% of
-calls saves X% of cache reads: 25% -> 317M tokens, 50% -> 634M tokens (~$239, ~40% of the total bill, i.e. roughly
-double the work per weekly quota window). Independent tool calls (multiple reads, parallel greps) batch at zero quality
-cost; genuinely dependent ones cannot. The second, equally linear lever is resident context size itself.
-
-**Thinking is 68.8% of output tokens** (Opus 66.9%, Sonnet 72.8%) but only ~$33 of $599 — **5.5% of cost**. Thinking
-depth is not the spend lever; cache reads are.
-
-**Method correction**: an earlier pass reported 89% thinking and claimed 71% of turns made no tool call. Both were
-artifacts of deduping transcript lines by `requestId` and keeping only the FIRST line — Claude Code writes one JSONL
-line per content block, all sharing a requestId, so `tool_use`/`thinking` blocks logged on later lines were dropped.
-Token totals were unaffected (usage is per API call and was correctly counted once); only the content statistics were
-wrong. Content must be UNIONED across all lines sharing a requestId.
-
 ### 2026-08-10 — RETRACTION: the laptop switches accounts, so no account is certifiably clean
 
 Operator correction: "we literally switched accounts today and we switch often." Investigated every account-history
@@ -557,3 +478,26 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
+
+### 2026-08-10 — Todo 1 shipped: account_usage_history table + snapshot on every UsagePoller tick
+
+**Shipped**: agent-orchestrator@ce3389fbe9
+
+**What was built**:
+
+- `AccountUsageHistoryRow` ORM model — composite PK `(account_id, sampled_at)`, stores `weekly_pct`,
+  `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`, `overage_status`,
+  `account_status`
+- `snapshot_account_usage_history()` in `state_store/account_usage.py` — copies every current `account_usage` row into
+  history, idempotent per `(account_id, sampled_at)`
+- Wired into `UsagePoller._tick_once()` after the per-account refresh loop — every 30-min tick snapshots all accounts
+  (~10x per 5-hour window, well above the "at least twice" floor)
+- `Base.metadata.create_all()` auto-creates the table on deploy — no manual migration needed
+- 4 unit tests: snapshot coverage, idempotency guard, multi-tick accumulation, table creation by bootstrap
+
+**What still needs to happen on the live VM** (the "done when" gate's live-verification clause — deploy + 2+ ticks):
+
+- Deploy this commit to the orchestrator VM (the standard LDR→main promote flow)
+- Wait ≥2 UsagePoller ticks (~60 min) for `account_usage_history` to accumulate ≥2 distinct `sampled_at` rows per active
+  account
+- Verify sampler survives an orchestrator restart (table created by `Base.metadata.create_all` on boot)

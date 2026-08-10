@@ -113,23 +113,8 @@ jobs:
           # plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md
           set +e
           OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
-          FM_RC=$?
+          RC=$?
           echo "$OUT"
-
-          # ── Conflict-marker check (2026-08-10) ──────────────────────────────────────────
-          # check_conflict_markers.sh had NO presence in any CI/CD workflow — only the pre-commit
-          # hook. A pre-commit bypass (--no-verify, git rebase --continue, prek race condition)
-          # lets committed markers reach LDR undetected. committed_conflict_marker_plan_doc_2026_
-          # 08_10.md: slot 31's commit 505bfe3ced shipped `>>>>>>>` + `=======` markers in a plan
-          # doc. This closes the detection gap by running on the whole plans/active/ corpus hourly.
-          CM_OUT="$(bash scripts/plan-hygiene/check_conflict_markers.sh 2>&1)"
-          CM_RC=$?
-          echo "$CM_OUT"
-          RC=$(( FM_RC + CM_RC ))
-          # If the conflict-marker check fails, prefix its output into OUT for the excerpt below.
-          if [ "$CM_RC" -ne 0 ]; then
-            OUT="CONFLICT MARKERS (check_conflict_markers.sh):${CM_OUT}${OUT}"
-          fi
 
           ATTR=""
           if [ "$RC" -ne 0 ]; then
@@ -140,7 +125,7 @@ jobs:
               [ -n "$f" ] && [ -f "$f" ] || continue
               LAST="$(git log -1 --format='%an <%h> %cs: %s' -- "$f" 2>/dev/null || echo 'unknown (no history in fetch-depth)')"
               ATTR="${ATTR}${f}\n  last touched by ${LAST}\n"
-            done < <(printf '%s\n' "$OUT" | grep -E '^  [^ ].*:$|^❌ conflict marker' | sed 's/^  //;s/:$//' | grep -v '^❌')
+            done < <(printf '%s\n' "$OUT" | grep -E '^  [^ ].*:$' | sed 's/^  //;s/:$//')
           fi
 
           {

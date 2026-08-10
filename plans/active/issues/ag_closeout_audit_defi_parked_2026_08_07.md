@@ -147,15 +147,6 @@ resolution.
 
 ## Todos
 
-> **2026-08-10 — findings from this doc are now DISPATCHED, not orphaned.** The bounded, worker-determinable items below
-> (mechanical `asset_group` retags, stale-claim fixes, checkbox reconciliation) were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (`assigned_vm: planning`, `status: active`)
-> and are being executed there. They stayed unactioned here only because this doc is `assigned_vm: NA` /
-> `execution_scope: local-only`, so nothing could ever pick them up. **A future `/ag-closeout-audit` run must NOT
-> re-park them** — per `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked
-> doc" rule 3, a finding lives in exactly one place at a time. Their checkboxes here are reconciled in one pass by that
-> plan's own todo 17 once the work lands — do not flip them early.
-
 - [ ] [DOC] P3. **Retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`** from `[defi]` to `[ui]`
       or `[cross-cutting]` (Finding 2) — repos `[unified-api-contracts, unified-trading-system-ui]`, content is
       strategy-archetype subsystem DRIFT venue cleanup (cross-cutting architecture), not defi-specific. Verified
@@ -169,8 +160,8 @@ resolution.
       `defi_satellite_ao_dispatch_batch11_2026_08_09.md` (batch11's own "Not extracted this batch" section explicitly
       lists this doc as outside its 18-doc scope). Include in the next scheduled defi batch.
 
-**Already resolved (Finding 1)**: `defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`'s DIAG todo completed 2026-08-07
-(verdict: total data loss for the 3 failed cron dates) and the doc is now fully archived
+**Already resolved (Finding 1)**: `defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`'s DIAG todo completed
+2026-08-07 (verdict: total data loss for the 3 failed cron dates) and the doc is now fully archived
 (`plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`) — no action needed.
 
 **Already resolved (Finding 2, `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` half)**: already
@@ -182,11 +173,11 @@ fully archived with `status: resolved` and 0 open / 12 closed checkboxes — ite
 residue) confirmed closed alongside the rest, not left open as the prior edit's hedge suggested.
 
 **Already resolved (Finding 5)**: `defi_hyperliquid_residual_manifest_rows_2026_08_04.md`'s SOLBLAZE-SOLANA backfill
-completed 2026-08-07 (GCS-verified, `deployment-service@46eddc9` + 3 Cloud Run executions) and the doc is fully archived
-(all 7 todos `[x]`) — no action needed.
+completed 2026-08-07 (GCS-verified, `deployment-service@46eddc9` + 3 Cloud Run executions) and the doc is fully
+archived (all 7 todos `[x]`) — no action needed.
 
-**Already tracked elsewhere (Finding 6)**: the KAMINO_LENDING live-manifest verification gap is already a real open todo
-— `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`'s `[DATA] P3`
+**Already tracked elsewhere (Finding 6)**: the KAMINO_LENDING live-manifest verification gap is already a real open
+todo — `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`'s `[DATA] P3`
 "Reconcile" todo covers exactly this (bounded VM-backed manifest-index read for the accumulation window, done-when
 criterion cites flipping the source doc's checkbox). No duplicate todo needed here.
 
@@ -224,12 +215,12 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   closed (0 open checkboxes in the now-archived source doc); finding 6 confirmed already tracked as a real todo in the
   kamino finalize plan; finding 2's `deployment_ui_capability_bundle_stale_drift_pacifica` half already tracked in
   ui_consolidated_closeout, but its `architecture_v2_drift_leg_specs_and_manifest_residue` half was genuinely untracked
-  anywhere — now a real todo; finding 3's item 2 (timeout investigation) confirmed still open and NOT covered by batch11
-  — now a real todo.
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — neither open todo is bounded. Todo 1
-  (retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`) names two candidate target tags ("to
-  `[ui]` or `[cross-cutting]`") rather than committing to one — the finding's own text is genuinely split between a
-  repos-scope reading (`[ui]`) and a content-shape reading (`[cross-cutting]`), so picking the correct tag is a judgment
-  call, not a deterministic outcome. Todo 2 ("investigate raising ... per-date subprocess timeout") is explicit
-  investigation/design work by its own verb, exactly the class this audit's own instructions flag as correctly staying
-  NA even when freshly formalized. Doc stays NA.
+  anywhere — now a real todo; finding 3's item 2 (timeout investigation) confirmed still open and NOT covered by
+  batch11 — now a real todo.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — neither open todo is bounded.
+  Todo 1 (retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`) names two candidate target tags
+  ("to `[ui]` or `[cross-cutting]`") rather than committing to one — the finding's own text is genuinely split between
+  a repos-scope reading (`[ui]`) and a content-shape reading (`[cross-cutting]`), so picking the correct tag is a
+  judgment call, not a deterministic outcome. Todo 2 ("investigate raising ... per-date subprocess timeout") is
+  explicit investigation/design work by its own verb, exactly the class this audit's own instructions flag as
+  correctly staying NA even when freshly formalized. Doc stays NA.

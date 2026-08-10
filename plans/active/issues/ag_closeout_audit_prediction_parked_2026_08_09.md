@@ -19,7 +19,7 @@ summary: >-
   orphans are correctly non-batchable per the skill's own taxonomy (1 too-large-for-a-batch-todo, 1 operator-gated, 1
   time-gated on an external cross-tranche dependency, 1 belongs to the `infra`/`ci` tranche) — parked below, none newly
   actionable from this tranche. One fresh finding, below, on a likely checkbox-citation over-claim in a prior batch.
-status: resolved
+status: open
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -61,7 +61,7 @@ resolved_by:
 locked_by:
 locked_since:
 supersedes:
-superseded_by: ag_closeout_audit_prediction_parked_2026_08_10
+superseded_by:
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -70,15 +70,6 @@ context_scope:
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # Prediction closeout-audit findings, 2026-08-09
 
@@ -208,31 +199,21 @@ covers 3a+3b before treating the residual as fully closed.
 
 ## Todos
 
-> **2026-08-10 — findings 1-4 converted from `- [ ]` todos to the informational notes below; finding 5 re-homed to an AO
-> batch.** Each of findings 1-4 began "No action needed on Finding N" — no actor, no done-when, so none could ever be
-> closed; they only inflated the corpus open count and the NA ratchet. Per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc" rule 2, an
-> informational finding is prose. Finding 5 was the opposite case — a genuinely bounded verification with a stated
-> done-when, sitting on an `assigned_vm: NA` doc where nothing could pick it up; it is now dispatched.
-
-**Findings 1-4 (informational, no action required):**
-
-1. Awaiting an operator ruling on one of 3 options (author the dedicated Phase-B design plan / leave parked / explicitly
-   deprioritize). No worker action available until then.
-2. Folded into `/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`'s reconciliation
-   scope, which takes effect once batch10 todos 3/4 land. Tracked there, not here.
-3. Time-gated — re-check when `sports_master` Group E next moves.
-4. Belongs to the `infra`/`ci` tranche's own audit, not this tranche's file to fix.
-
-- [x] ✅ [DOC] P3. **RE-HOMED 2026-08-10 to `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`
-      (todo 15).** Finding 5 is a bounded verification with an explicit done-when, so it is AO-eligible — it was stalled
-      only because this doc is `assigned_vm: NA`, which pinned it along with its non-dispatchable siblings. Now
-      dispatched; this doc no longer carries it. Original text preserved for record. Was: Finding 5 — before any future
-      pass treats `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s fixture-pairing checkbox as closable, verify
-      `instruments-service@62a8b1d8`'s actual diff covers parts 3a (registry-resolution) and 3b
-      (`mapped_sport_event_id`/`PredictionMarketCrossVenueMapping` population), not just 3c (team-name
-      canonicalisation). **Done when**: an explicit verdict (covers / doesn't cover 3a+3b) is recorded on this doc or
-      the checkbox's own citation. (repo: unified-trading-pm)
+- [ ] [DOC] P3. No action needed on Finding 1 unless/until an operator rules on one of the 3 options (author the
+      dedicated Phase-B design plan / leave parked / explicitly deprioritize). Informational only. (repo:
+      unified-trading-pm)
+- [ ] [DOC] P3. No action needed on Finding 2 directly — folded into
+      `prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`'s reconciliation scope once batch10 todos 3/4
+      land. (repo: unified-trading-pm)
+- [ ] [DOC] P3. No action needed on Finding 3 — re-check when `sports_master` Group E next moves. (repo:
+      unified-trading-pm)
+- [ ] [DOC] P3. No action needed on Finding 4 here — flagged for the `infra`/`ci` tranche's own audit, not this
+      tranche's file to fix. (repo: unified-trading-pm)
+- [ ] [DOC] P3. Finding 5 — before any future pass treats `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s
+      fixture-pairing checkbox as closable, verify `instruments-service@62a8b1d8`'s actual diff covers parts 3a
+      (registry-resolution) and 3b (`mapped_sport_event_id`/`PredictionMarketCrossVenueMapping` population), not just 3c
+      (team-name canonicalisation). **Done when**: an explicit verdict (covers / doesn't cover 3a+3b) is recorded on
+      this doc or the checkbox's own citation. (repo: unified-trading-pm)
 
 ## Codex SSOTs
 

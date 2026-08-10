@@ -27,7 +27,7 @@ related:
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

@@ -106,11 +106,7 @@ true-catalogue Phase 2 source lands; the cell-grid re-architecture ships so full
 (Phase 5 — verify at scale + codex SSOT update) ·
 [issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md](/plans/active/issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md)
 (the D.3 health-alert gate only fires as a side effect of someone having the Deployments tab open — no dedicated Cloud
-Scheduler cron) ·
-[issues/deployment_api_prod_disable_auth_true_2026_08_06.md](/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md)
-(retagged from `cross-cutting` → `ui` 2026-08-10 by `meta_plan_corpus_hygiene_ao_dispatch_batch1` todo 1 — live
-unauthenticated-prod exposure on `uts-shared-deployment-api`, all 4 fix-steps escalated to
-`deployment_api_unauthenticated_prod_p0_2026_08_10.md`).
+Scheduler cron).
 
 **Close-out criterion**: Firestore cutover (Phase 3) + at-scale verification (Phase 5) both land; the health-alert gate
 gets an independent polling schedule, not just dashboard-open-triggered.

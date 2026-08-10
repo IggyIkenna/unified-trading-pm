@@ -323,11 +323,11 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       `last_reconfirmed_at` column + migration + stamp-at-creation + re-stamp surviving rows each `plan_health` run +
       `BlockedView`/`_blocked_to_view` wiring; 3199 tests passed, 2 pre-existing env flakes unrelated). Repo:
       agent-orchestrator.
-- [x] ✅ [BACKEND] P2. **Audit every `add_blocked` call site for the same blind spot** — enumerate each class of blocked
+- [ ] [BACKEND] P2. **Audit every `add_blocked` call site for the same blind spot** — enumerate each class of blocked
       row (worker `/blocked`, `BLK-op-*` operator-gated, `doc_drift`, and any other) and record which retirement exits
       can actually fire for it. **Done when**: a table lands in this plan's Progress Log naming every call site and its
-      working exits, and any class found with zero reachable exits gets its own `- [ ]` follow-up todo here. — slot-22
-      audit (no code change; audit table in Progress Log below). Repo: agent-orchestrator.
+      working exits, and any class found with zero reachable exits gets its own `- [ ]` follow-up todo here. Repo:
+      agent-orchestrator.
 - [ ] [BACKEND] P3. **Close the currently-open orphaned `doc_drift` rows** once the retirement path exists — these
       predate the fix and will never clear on their own. **Done when**: the live blocked queue contains no `doc_drift:*`
       row whose key is absent from the most recent `plan_health` run's findings, verified against the live API. Repo:
@@ -436,32 +436,3 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   default) — `rg -rn` replaces matches with "n"; `git commit ... | tail` can hide a pre-commit hook failure — verify the
   SHA moved; pre-commit `ruff-format` reformats then aborts — re-`git add` before re-committing; a module-level registry
   that bakes in `config.STATE_DIR` at import time defeats test `monkeypatch` — resolve such paths at call time.
-- **2026-08-10 (C4, slot-22 worker)**: Audit of every `add_blocked` / direct `BlockedRow` call site in production code.
-  Three call sites found; none has zero reachable retirement exits (the `doc_drift` class had zero before C1/C2 landed
-  on this same plan — that was the blind spot this todo exists to confirm is now closed).
-
-  **Call site 1 — Worker `/blocked` endpoint** (`server/routes/slots_worker.py:2543`): `add_blocked()` with real
-  `task_id` + `slot_id`, no `condition_key`. Row class: worker-raised blocked questions (`BLK-xxxxxxxx`).
-
-  **Call site 2 — `doc_drift` detector** (`server/plan_health.py:1098`): `add_blocked()` with
-  `task_id="doc_drift:<key>"` (not a TaskRow id), `condition_key="doc_drift:<key>"`, `slot_id=NO_WORKER_SLOT_SENTINEL`.
-  Row class: detector-seeded doc_drift rows.
-
-  **Call site 3 — Operator-gated `BLK-op-*`** (`server/bootstrap.py:1038`): direct `BlockedRow()` construction (NOT via
-  `add_blocked()` — bypasses the main-agent nudge). `blocked_id="BLK-op-{task.id}"`, real `task_id`,
-  `slot_id=NO_WORKER_SLOT_SENTINEL`, no `condition_key`. Row class: operator-gated plan todos.
-
-  | Exit                           | Call site 1 (worker /blocked) | Call site 2 (doc_drift)            | Call site 3 (BLK-op-*)     |
-  | ------------------------------ | ----------------------------- | ---------------------------------- | -------------------------- |
-  | `task_terminal`                | ✅ real TaskRow               | ❌ `doc_drift:<key>` not a task id | ✅ real TaskRow            |
-  | `doc_archived`                 | ✅ TaskRow.plan_ref           | ❌ no TaskRow                      | ✅ TaskRow.plan_ref        |
-  | `pr_terminal`                  | ✅ text-based match           | ✅ text-based match                | ✅ text-based match        |
-  | `condition_cleared`            | ❌ no condition_key           | ✅ `doc_drift:<key>` in registry   | ❌ no condition_key        |
-  | `find_resolution_in_plans`     | ✅ plan-corpus scan           | ✅ plan-corpus scan                | ✅ plan-corpus scan        |
-  | `classify_timeout` (kill slot) | ✅ real slot_id               | ❌ NO_WORKER_SLOT_SENTINEL         | ❌ NO_WORKER_SLOT_SENTINEL |
-
-  **Verdict**: No class has zero reachable exits. The `doc_drift` class (the plan's original blind spot) now has
-  `condition_cleared` as its primary exit + `pr_terminal` and plan-corpus resolution as fallbacks. The `BLK-op-*` path's
-  use of direct `BlockedRow()` (bypassing `add_blocked()`) is intentional — these rows represent operator-gated plan
-  todos, not worker questions, and their primary resolution path is `find_resolution_in_plans` (an operator ruling
-  documented in a plan Progress Log) or `task_terminal` (the task is done/cancelled). No follow-up todos needed.

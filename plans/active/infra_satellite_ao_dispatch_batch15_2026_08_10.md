@@ -26,7 +26,7 @@ related:
     /plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_10.md,
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_10.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

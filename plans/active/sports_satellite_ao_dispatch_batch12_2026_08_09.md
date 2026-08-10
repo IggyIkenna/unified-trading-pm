@@ -9,10 +9,10 @@ summary: >-
   remaining work. Of those 28, the Phase-3 conflict-check found only 4 source docs' remaining items are BOTH bounded
   (worker-determinable outcome) AND conflict-clear today; everything else is operator-gated, time-gated, dependency-
   gated on other in-flight work, or needs its own scoped design/investigation pass first — see
-  `/plans/archive/2026_08/issues/ag_closeout_audit_sports_parked_2026_08_09.md` for the full 24-item Deferred ledger
-  with taxonomy tags. Two items initially looked batchable but turned out, on a deeper read, to already be
-  live/in-flight under a THIRD doc (`sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s odds_api backfill VM
-  chain) — fixed as a doc-hygiene note in their source docs instead of drafted here, to avoid racing a live VM.
+  `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md` for the full 24-item Deferred ledger with
+  taxonomy tags. Two items initially looked batchable but turned out, on a deeper read, to already be live/in-flight
+  under a THIRD doc (`sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s odds_api backfill VM chain) — fixed
+  as a doc-hygiene note in their source docs instead of drafted here, to avoid racing a live VM.
 status: active
 nature: process
 asset_group: [sports]
@@ -29,7 +29,7 @@ related:
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
     /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_sports_parked_2026_08_09.md,
+    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -191,10 +191,10 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   orphaned_never_touched + 9 orphaned_partial_coverage) a full Phase-0/1 audit produced. 4 items extracted across 4
   source docs; a further 3 items initially looked extractable but were held back after a deeper conflict-check read (2
   stale-vs-a-live-VM, 1 sibling-audit-cautioned, 1 dependency-gated) — see "Conflict-check findings" above. The other 24
-  orphaned-doc items are parked in `/plans/archive/2026_08/issues/ag_closeout_audit_sports_parked_2026_08_09.md` by
-  taxonomy category (operator-gated / time-gated / dependency-gated / too-large-or-risky / not-this-tranche's-write).
-  **Status left `draft`** per this skill's autonomous-mode safety rail — flipping to `active` needs explicit operator
-  approval before this batch dispatches.
+  orphaned-doc items are parked in `/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md` by taxonomy
+  category (operator-gated / time-gated / dependency-gated / too-large-or-risky / not-this-tranche's-write). **Status
+  left `draft`** per this skill's autonomous-mode safety rail — flipping to `active` needs explicit operator approval
+  before this batch dispatches.
 - **2026-08-09 (slot-29, todo 1 — PLAYER_STATS reconcile)**: The referenced script
   (`scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`, `market-tick-data-service@25c7a3f2`) had
   a real bug that made every prior dry-run/apply invocation a silent false-clean no-op: `PROD_BUCKET` resolved

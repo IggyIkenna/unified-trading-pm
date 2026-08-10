@@ -9,7 +9,7 @@ summary: >-
   batch11 doc this round (precedent: 08-07's Option A for an equally thin pool) — all 3 flagged here as batch11
   candidates. 2 informational carry-forwards (unexecuted retag recommendation, linkage-gate tool blind spot). 6 findings
   total.
-status: resolved
+status: open
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -29,7 +29,7 @@ created: 2026-08-08
 parent_epic: defi_master
 assigned_vm: NA
 priority: P3
-last_updated: "2026-08-10"
+last_updated: 2026-08-08
 source: >-
   ag_closeout_auditor scheduled run 2026-08-08 (tranche=defi, slot 13, DISPATCH_ID=agt-615b60)
 resolved_by:
@@ -46,15 +46,6 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # ag-closeout-audit defi parked findings — 2026-08-08
 
@@ -113,9 +104,9 @@ Re-verified against current live state (not just re-reading yesterday's text):
 1. **`defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`** — `[DIAG] P3`: investigate raising the per-date
    subprocess timeout from 1800s for DeFi years with 10K+ instruments. Bounded, target file
    (`market-data-processing-service/.../process_handler.py`) named. **RESOLVED (2026-08-10 formalization sweep,
-   corroborated by `ag_closeout_audit_defi_parked_2026_08_10.md`'s own iterative-drain step 1) — now cited/picked up in
-   `defi_satellite_ao_dispatch_batch11_2026_08_09.md:438`.** No longer a live candidate; not re-added as a todo here to
-   avoid duplication.
+   corroborated by `ag_closeout_audit_defi_parked_2026_08_10.md`'s own iterative-drain step 1) — now cited/picked up
+   in `defi_satellite_ao_dispatch_batch11_2026_08_09.md:438`.** No longer a live candidate; not re-added as a todo here
+   to avoid duplication.
 2. **`defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`** (ARCHIVED 2026-08-09, all 12 todos closed —
    `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) — item 3:
    retry-fixable historical `attempted_failed` residue backfill for now-healthy dex-swap pairs. Bounded SPOT backfill
@@ -227,14 +218,14 @@ this doc. ✓
   closed), and Finding 3's items 1-2 are now `[x]` closed at their source doc
   (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`). Finding 3 item 3 and Finding 5's retag
   recommendation remain genuinely open but already carry real `- [ ]` checkboxes at their own source docs
-  (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` todo 3; `ui_consolidated_closeout_2026_07_30.md`'s P2
-  todo #5) — not duplicated here. This doc is a findings ledger by design (per its own repeated na-eligibility-audit
-  verdicts); no new `## Todos` section added.
+  (`defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` todo 3;
+  `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) — not duplicated here. This doc is a findings ledger by
+  design (per its own repeated na-eligibility-audit verdicts); no new `## Todos` section added.
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — not an ARCHIVE
-  candidate despite 0 open todos. Unlike the ci/prediction tranches (where a same-tranche successor doc that re-derives
-  IDENTICAL Phase-0-3 content over an unchanged candidate set gets `status: resolved` + `superseded_by:` — confirmed
-  precedent: `ag_closeout_audit_ci_parked_2026_08_07.md`), this doc's defi-tranche siblings (08-06/08-07/08-10, all
-  still `status: open`, none archived) form a genuinely growing, incremental corpus (80 members here -> 91 by 08-10)
-  where each day surfaces distinct new candidates rather than re-deriving the same ones — the observed, consistent
-  tranche convention keeps every daily parked doc active as its own audit-run provenance record. Not locked. Doc stays
-  `assigned_vm: NA`.
+  candidate despite 0 open todos. Unlike the ci/prediction tranches (where a same-tranche successor doc that
+  re-derives IDENTICAL Phase-0-3 content over an unchanged candidate set gets `status: resolved` +
+  `superseded_by:` — confirmed precedent: `ag_closeout_audit_ci_parked_2026_08_07.md`), this doc's defi-tranche
+  siblings (08-06/08-07/08-10, all still `status: open`, none archived) form a genuinely growing, incremental corpus
+  (80 members here -> 91 by 08-10) where each day surfaces distinct new candidates rather than re-deriving the same
+  ones — the observed, consistent tranche convention keeps every daily parked doc active as its own audit-run
+  provenance record. Not locked. Doc stays `assigned_vm: NA`.

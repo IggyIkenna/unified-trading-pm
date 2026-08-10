@@ -35,7 +35,7 @@ related:
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
     /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
     /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/task_template.md,
@@ -113,15 +113,12 @@ Two independent causes, both now fixed:
 
 ## Todos
 
-- [x] ✅ [DOCS] P1. **Retag `/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`** `asset_group`
+- [ ] [DOCS] P1. **Retag `/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`** `asset_group`
       `[cross-cutting]` → `[ui]`. **Flagged urgent on 3 consecutive audit days** (2026-08-07, -08, -10) and never
       actioned: the doc records a live unauthenticated prod endpoint with all 4 fix-steps still open, and the wrong
       tranche tag is why no tranche's closeout ever claimed it. **Done when**: `asset_group: [ui]` and the doc is named
       in `ui`'s consolidated-closeout membership. Also report in the Progress Log whether those 4 fix-steps are still
-      open — if they are, that is a P1 security finding needing its own escalation, not a retag follow-up. —
-      unified-trading-pm@278b479e9f + `check_ag_closeout_linkage --only` 0 new orphans + `check_frontmatter_schema` 2
-      docs clean. Fix-steps report: all 4 `[BACKEND] P1` still open, already escalated to
-      `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (step 1 DONE `UTL@336f2b3b6c`+`deployment-api@d0eebac4e6`).
+      open — if they are, that is a P1 security finding needing its own escalation, not a retag follow-up.
 - [ ] [DOCS] P2. **Collapse the 4 `[ci, infrastructure]` dual-tags to `[ci]`** —
       `ci_pipeline_speed_and_cost_redesign_     2026_08_05.md`,
       `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,

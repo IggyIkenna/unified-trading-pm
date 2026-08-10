@@ -14,7 +14,7 @@ summary: >-
   with no new ruling since 2026-08-08. 4 findings: a bookkeeping gap in batch1_finalize's own candidate summary (a
   low-priority item at risk of being silently dropped), the Phase-3 no-new-batch rationale, and 2 carried-forward items
   with no new information (2 mistag candidates, 1 stuck-archival doc).
-status: resolved
+status: open
 nature: issue
 asset_group: [ui]
 stage: [meta]
@@ -36,7 +36,7 @@ created: 2026-08-09
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 priority: P3
-last_updated: "2026-08-10"
+last_updated: 2026-08-09
 source: >-
   ag_closeout_auditor scheduled run 2026-08-09 (tranche=ui, slot 24, DISPATCH_ID=agt-db95b9)
 resolved_by:
@@ -45,15 +45,6 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
-
-> **📦 ARCHIVED 2026-08-10 — this audit report is complete.** Every finding it raised has been dispositioned: the
-> bounded, worker-determinable items were extracted into
-> `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, cross-day duplicates were collapsed into
-> their origin doc, and informational findings were converted to prose (all per
-> `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Three things that must NOT reach a parked doc",
-> `unified-trading-pm@bd812c57ad`). Zero open todos remained at archival. Archived as COMPLETE, not superseded —
-> `superseded_by` below points to the next dated report in this tranche's chain for navigation only; it does not mean
-> this report's content was replaced.
 
 # ag-closeout-audit ui parked findings — 2026-08-09
 
@@ -210,26 +201,20 @@ nothing changed that could clear a conflict or create a new candidate.
 
 ## Todos
 
-- [x] ✅ [REVIEW] P3. **RE-HOMED 2026-08-10 → `/plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`.**
-      This is not an operator decision and not orphaned work — it is a check that fires WHEN that plan's own todo 4 (the
-      archival ritual) executes. It belongs on that plan, next to its trigger, not in a dated audit report that would
-      otherwise stay open indefinitely waiting on someone else's todo. Original text preserved for record. Was: **Verify
-      the full 6-item CLEARED list, not just the 5-item summary, when
+- [ ] [REVIEW] P3. **Verify the full 6-item CLEARED list, not just the 5-item summary, when
       `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s todo 4 (archival ritual, still `[ ]` open as of
       2026-08-10) actually executes.** Per Finding 1: todo 2's own narrative cleared 6 items from
       `data_status_tab_and_downloads_remediation_2026_06_16.md` (incl. the low-priority Phase B "Rollup-difference
       clarity" tooltip), but todo 4's operative candidate-summary list names only 3 groups covering 5 of those 6 —
       silently dropping the tooltip item. Whoever executes todo 4 should re-read todo 2's full narrative before
       migrating cleared work forward, not just the summary line.
-- [x] ✅ [OPERATOR] P2. **Clear the stale/impossible lock on
+- [ ] [OPERATOR] P2. **Clear the stale/impossible lock on
       `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` and archive it.** Per Finding 4:
       `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` predates the doc's own `created: 2026-07-21` by ~2
-      months — impossible for a genuine exclusive claim. All 3 of that doc's own todos were already `[x]` done. This was
-      the 4th consecutive ag-closeout-audit pass (2026-08-06/07/08/09) to flag it unchanged; needed `[unlock-plan]`
-      (human-gated, never autonomous) then the normal archival ritual. **RESOLVED 2026-08-10** — operator asked
-      directly, approved the unlock; doc unlocked + archived to
-      `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per the 6-step
-      ritual, all active-corpus referrers repointed.
+      months — impossible for a genuine exclusive claim. All 3 of that doc's own todos are already `[x]` done. This is
+      the 4th consecutive ag-closeout-audit pass (2026-08-06/07/08/09) to flag it unchanged; needs `[unlock-plan]`
+      (human-gated, never autonomous) then the normal archival ritual — `/plan-reconcile ui` or
+      `/archive-candidates-audit` are the natural owners but neither has picked it up yet.
 
 ## Recommendation carried to `/done` evidence
 
@@ -249,8 +234,8 @@ nothing changed that could clear a conflict or create a new candidate.
 
 - **2026-08-10 (operator-approved archival)**: flipped the `[OPERATOR]` P2 todo above — operator asked directly and
   approved a targeted `[unlock-plan]` for `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, unlocked
-  - archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`. The
-    other open todo (verify the full 6-item CLEARED list at batch1_finalize todo 4 execution time) is unaffected.
+  + archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`. The
+  other open todo (verify the full 6-item CLEARED list at batch1_finalize todo 4 execution time) is unaffected.
 - **2026-08-09 (ag_closeout_auditor, dispatch agt-db95b9, slot 24)**: Phase 0 discovery — candidate set re-confirmed at
   14 via two independent methods (`generate_ag_closeout_audit_candidates.py --tranche ui` and a manual
   frontmatter-block-aware scan), covering set unchanged (closeout + batch1[done, unarchived] + batch1_finalize[3/4
@@ -277,10 +262,9 @@ nothing changed that could clear a conflict or create a new candidate.
   (verified: `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 is still `[ ]` open;
   `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` still carries its impossible lock) — added a
   `## Todos` section formalizing both.
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — neither of the 2 todos
-  is worker-determinable-now. Todo 1 (`[REVIEW]` P3) is a contingent reminder that only becomes actionable once
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up, group 1 of 2)**: KEEP-NA, valid — neither of the 2
+  todos is worker-determinable-now. Todo 1 (`[REVIEW]` P3) is a contingent reminder that only becomes actionable once
   `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s own todo 4 executes (still `[ ]` open, unfired) — nothing
   to dispatch today. Todo 2 (`[OPERATOR]` P2) needs `[unlock-plan]`, human-gated per the corpus HARD RULE (never
-  autonomous), before the normal archival ritual can even start. Doc stays `assigned_vm: NA`. Findings 2 (Phase-3
-  rationale) and 3 (mistag candidates, already tracked by `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) needed
-  no new todo.
+  autonomous), before the normal archival ritual can even start. Doc stays `assigned_vm: NA`. Findings 2 (Phase-3 rationale) and 3 (mistag candidates, already tracked by
+  `ui_consolidated_closeout_2026_07_30.md`'s P2 todo #5) needed no new todo.
