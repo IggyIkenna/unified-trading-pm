@@ -151,10 +151,3 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   CONTRACT_REGISTRY gap, resolved + archived 2026-08-09) since it's cross-cutting and unrelated to the
   `--force`-forwarding fix this doc tracks. Releasing todo 2 back to the queue per the same precedent — not busy-waiting
   on a month-scale external condition.
-- **data_engineering (slot 9) 2026-08-10T13:26Z**: Re-checked terminal-state gate for todo 2. VM
-  `mdps-backfill-cefi-20260808-095136` is still `RUNNING` (`gcloud compute instances describe` status=RUNNING) — run.log
-  shows active POLARS aggregation at `2026-08-10T13:25:06Z` (this check's own timestamp, ~2 days after the last check at
-  2026-08-08T22:40Z — it has NOT preempted in that window, still progressing through the full 2023-06-01→2026-01-01
-  range). Todo 2 remains gated: not actionable until the VM reaches a terminal state (completed or preempted), which per
-  this doc's own estimate is still month-scale (or an unpredictable SPOT preemption). Releasing back to the queue with
-  `reason_code: GATED` per worker.md § 4c — not busy-waiting on an indeterminate external condition.

@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                                          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                                          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                                          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                                          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                                          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                                          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                                          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                                          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                                          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                                          redundant, so both mechanisms are now kept.
+                                      (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                                      retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                                      before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                                      and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                                      `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                                      behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                                      `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                                      only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                                      both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                                      redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -249,21 +249,3 @@ mitigations, cheapest first:
   was 12:31 (pre-run), so it is a dead session's leftover WIP, not a live in-flight change. Did NOT apply the patch or
   touch the infra file — wrong task/repo scope (this session is tradfi, not infra batch9). Left the patch file(s) in
   place for the owning session to recover; noting per this doc's established practice.
-- **2026-08-10 (slot 30, unrelated task `multi_leg_execution_systems_audit-9afb65835004` — hit the
-  `check_orphaned_prek_patches()` safety net firing live)**: a `safe-doc-push.sh` commit for a different doc
-  (`multi_leg_execution_systems_audit_2026_08_10.md` todo-2 flip, push `787122de9e`) succeeded but exited 9 with an
-  orphaned-patch warning: `~/.cache/prek/patches/1786367698612-4000574.patch` + `1786367714653-4017787.patch` (two
-  identical copies, mtime 2026-08-10T13:14-13:15Z, during this run's 3-attempt retry), diffing an UNRELATED file this
-  session never touched — `plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`, a `[REVIEW] P3` todo
-  flip (G2-resolution-citation note). The flip's own factual claim is NOT verifiable: it asserts "Added a dated RESOLVED
-  note to batch1's archived doc's Deferred item 3 pointing at batch9 todo 1's landing commit e5697ac5c", but the batch1
-  archive doc (`plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md`) has NO such note on Deferred
-  item 3 (grepped `resolve-canonical`/`UV_VERSION`/`e5697`/`centraliz`/`batch9` — only hits are the item's original
-  prose + the pre-existing "Deferred item disposition (added 2026-08-09, finalize plan todo 4)" section which predates
-  this patch). So the stranded edit is a flip whose cited evidence doesn't exist — applying it would be false-progress.
-  `git status --porcelain` clean before and after; this run's own flip verified on origin
-  (`git merge-base --is-ancestor 787122de9e origin/live-defi-rollout`). Consistent with the slot-23 recurrence above: a
-  leftover patch from a DIFFERENT concurrent process/session (slot-31 authored the most recent commit touching that file
-  at 13:18 — live claim), not a defect in this run's own commit. Did NOT apply the patch or commit the flip — wrong
-  task/repo scope + unverifiable evidence + live owner. Left both patch files in place for the batch9_finalize owner to
-  recover/verify; noting here per this doc's established practice of logging live recurrences of this failure signature.

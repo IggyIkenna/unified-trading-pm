@@ -60,12 +60,6 @@ SITES: list[tuple[str, str, str]] = [
         r'GITHUB_HEAD_REF-\}"\s*=~\s*\^promote/',
         "the hygiene sweep detects a promote PR to skip --diff-base",
     ),
-    (
-        ".github/workflows/quality-gates-v2.yml",
-        r"cancel-in-progress:\s*\$\{\{\s*!startsWith\(github\.head_ref,\s*'promote/'\)",
-        "quality-gates-v2 exempts promote PRs from cancel-in-progress so a 70-135 min "
-        "tests leg can outlive the promote bot's ~15 min head refresh",
-    ),
 ]
 
 
