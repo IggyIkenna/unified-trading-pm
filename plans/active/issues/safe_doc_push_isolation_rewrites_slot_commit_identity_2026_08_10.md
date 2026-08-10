@@ -34,6 +34,7 @@ supersedes:
 superseded_by:
 source:
   - safe-doc-push.sh isolated-worktree mode (default since 2026-08-10)
+depends_on: []
 ---
 
 # safe-doc-push isolated-worktree mode silently mis-attributes slot commit identity to main
