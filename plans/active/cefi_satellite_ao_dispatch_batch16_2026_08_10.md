@@ -64,13 +64,13 @@ context_scope:
 
 ## Todos
 
-- [ ] [UI] P3. Grep `deployment-ui` for `"Barchart"`/`"barchart"` references in launch/devops console source dropdowns
-      or config (source: `issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`). If found, remove/replace
-      mirroring the already-shipped `unified-api-contracts@fc1b4897` + `market-tick-data-service@aea655a9` cleanup. If
-      none exist, close the source issue doc citing the negative-result grep as evidence. **Done when**: either a
-      committed diff removes every "Barchart"/"barchart" UI reference in `deployment-ui`, or the source issue doc is
-      updated + archived with the negative-result grep output quoted as evidence. Repo: deployment-ui (code path) /
-      unified-trading-pm (doc close-out).
+- [x] ✅ [UI] P3. Grep `deployment-ui` for `"Barchart"`/`"barchart"` references in launch/devops console source
+      dropdowns or config (source: `issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`). If found,
+      remove/replace mirroring the already-shipped `unified-api-contracts@fc1b4897` +
+      `market-tick-data-service@aea655a9` cleanup. If none exist, close the source issue doc citing the negative-result
+      grep as evidence. **Done when**: either a committed diff removes every "Barchart"/"barchart" UI reference in
+      `deployment-ui`, or the source issue doc is updated + archived with the negative-result grep output quoted as
+      evidence. Repo: deployment-ui (code path) / unified-trading-pm (doc close-out).
 
 ## Codex SSOTs
 
@@ -84,3 +84,18 @@ context_scope:
   Phase-1 classification agent as `orphaned_never_touched` + `ao_eligible=true` — a small bounded
   grep-and-conditional-fix with a stated done-when, genuinely uncovered by any active cefi plan. `status: draft` per the
   skill's autonomous-mode safety rail; flip to `active` only after operator review.
+- **2026-08-10 (slot 6)** — ✅ DONE (deployment-ui@6a323bfd0). Grep found real references: `deployment-ui`
+  `src/data/capability-manifest.json` carried a stale `data_source:barchart` node + 4 self-edges (over_transport:rest,
+  supports_mode:batch/live/replay) + `"label": "Barchart"`, and `tests/unit/capability-helpers.test.ts` used barchart as
+  a fixture source. Barchart left UAC `SOURCE_PRIORITY` on 2026-06-24, so the bundled manifest was stale
+  (generated-artifact "manual sync" gap per `docs/ui-alignment-ssot.md`). Removed all references via surgical prune
+  (mirroring `deployment-ui@24d06ac`'s gmx_v2 precedent — generator not wired to deployment-ui, full regen would churn
+  unrelated content): pruned node + 4 edges, decremented `gaps.missing_registry` 150→148 + `gaps.not_registered_total`
+  151→149 to stay internally consistent, renamed test fixture barchart→databento. QG green (vitest 1108 passed, tsc +
+  eslint clean). Only remaining `barchart`-substring hits in deployment-ui are `BarChart`/`BarChart2`/`BarChart3`
+  chart-visualization components (recharts/lucide-react) — not the retired data source. Source issue doc
+  `issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md` left open for the gated
+  `cefi_satellite_ao_dispatch_batch16_finalize_2026_08_10.md` to reconcile this evidence + flip its checkbox + archive
+  (depends_on + gate_on_depends design). Minor pre-existing finding (noted, not fixed): manifest `gaps.logical_dead_end`
+  declared 446 vs actual edge count 447 — pre-existing drift unrelated to barchart, only a full manifest regen corrects
+  it.
