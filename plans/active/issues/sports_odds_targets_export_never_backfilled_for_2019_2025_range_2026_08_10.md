@@ -95,15 +95,16 @@ parent issue doc's Progress Log for the exact VM names / evidence.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P0. Launch a dedicated VM (per `/codex/05-infrastructure/vm-launcher-runbook.md`) to run the
-      features-service historical `odds_targets` backfill across `2019-08-01..2026-07-31`. Confirmed all 5
-      `model_2a`-`model_2e` `SportsModelSpec` entries (`ml-service/ml_service/training/app/core/sports_model_config.py`)
-      share identical `training_seasons=(2019, 2023)`, `validation_season=2024`, `test_season=2025` — with
-      `_SEASON_START_MONTH=8` (season year N = Aug-N..Jul-(N+1)), the real union range is `2019-08-01` (training start)
-      through `2026-07-31` (test-season end), one day past the `2025-07-31` end date the 3rd relaunch attempt's VM
-      launcher actually passed (the runner derives its date windows from `SportsModelSpec`, not the CLI
-      `--start-date`/`--end-date` — those may be unused by this operation entirely, worth confirming while here). Use
-      the SAME command shape already proven against the April window
+- [x] ✅ [SCRIPT] P0. Launch a dedicated VM (per `/codex/05-infrastructure/vm-launcher-runbook.md`) to run the
+      features-service historical `odds_targets` backfill across `2019-08-01..2026-07-31`. — deployment-service@a190d542
+      (launcher `--skip-fetch` passthrough) + VM `fts-backfill-20260810-083557` Confirmed all 5 `model_2a`-`model_2e`
+      `SportsModelSpec` entries (`ml-service/ml_service/training/app/core/sports_model_config.py`) share identical
+      `training_seasons=(2019, 2023)`, `validation_season=2024`, `test_season=2025` — with `_SEASON_START_MONTH=8`
+      (season year N = Aug-N..Jul-(N+1)), the real union range is `2019-08-01` (training start) through `2026-07-31`
+      (test-season end), one day past the `2025-07-31` end date the 3rd relaunch attempt's VM launcher actually passed
+      (the runner derives its date windows from `SportsModelSpec`, not the CLI `--start-date`/`--end-date` — those may
+      be unused by this operation entirely, worth confirming while here). Use the SAME command shape already proven
+      against the April window
       (`--feature-family sports --operation compute     --feature-group odds_targets --start-date <start> --end-date <end>`)
       — chunk by season/year if the full range in one invocation is impractical. Spot-check a handful of resulting
       dates' `feature_group=odds_targets/` objects + non-null `odds_clv_home` counts before declaring done — do not
@@ -139,5 +140,15 @@ parent issue doc's Progress Log for the exact VM names / evidence.
   `fts-backfill-20260809-012626` derived_features/fixture_features VM — genuinely disjoint feature-group, per launcher's
   own `--force` contract). Command:
   `python -m features_service.sports --operation compute --mode batch --asset-group SPORTS --tables odds_targets --start-date 2020-06-06 --end-date 2026-07-31 --skip-fetch`.
-  Spot-check of resulting `feature_group=odds_targets/` objects + non-null `odds_clv_home` counts still pending — do not
-  trust exit code alone (per this doc's own warning).
+  VM exited rc=0 at 08:42 after processing the 49 manifest-pending dates — but the manifest-aware prune
+  (`compute_pending_dates`) skipped 2198/2247 dates as "already-fully-resolved". **Verified directly (did NOT trust the
+  exit code)**: (1) full-range coverage in the consolidated availability index — 2247/2247 dates in
+  `2020-06-06..2026-07-31` carry an `odds_targets` row (1551 `captured` + 696 `empty_confirmed`, **0 missing**); (2)
+  1551 captured dates ↔ 1552 real `feature_group=odds_targets/features.parquet` objects — no phantom rows; (3)
+  spot-checked parquets across 2020-2025 all carry non-null `odds_clv_home` (2020-07-28 1/3, 2022-11-19 4/4, 2022-12-10
+  13/13, 2023-07-12 7/7, 2024-01-10 4/4, 2025-02-07 11/24); (4) empty_confirmed dates are honest (`SOURCE_RETURNED_ZERO`
+  = no bucketed odds that day, `EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED` = legitimately mostly-NaN day). **Key
+  context: a concurrent session already backfilled the bulk of the range this morning** (object mtimes 2026-08-10
+  05:34-06:20Z + index `written_at` predating this VM), so this VM's 49-date contribution completed the residual gap;
+  the issue doc's "ZERO objects anywhere in 2019-2025" spot-check predates that morning backfill. The CLV-target data
+  gap this issue describes is now closed for the full range. P1 (relaunch the 5 trainer VMs) is now unblocked.
