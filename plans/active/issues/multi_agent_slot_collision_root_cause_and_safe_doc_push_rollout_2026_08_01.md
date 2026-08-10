@@ -254,7 +254,7 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       safety" block gets a condensed pointer (one sentence + SSOT link, per CLAUDE.md's own size-budget rule) —
       `cursor-configs/CLAUDE.md` stays at 38,952 B, well under the 40,960 B hard cap (`check_agent_rules_size_cap.py`
       green, WARN-only past the 95% threshold, pre-existing).
-- [ ] [SCRIPT] P1. **The autostash CHAIN re-applies an ever-staler snapshot — measured 107 files, 2026-08-10 slot-1.** A
+- [x] ✅ [SCRIPT] P1. **The autostash CHAIN re-applies an ever-staler snapshot — measured 107 files, 2026-08-10 slot-1.** — **DONE 2026-08-10 (slot-9, infra craft), `unified-trading-pm@7861143b97`.** A
       new instance of the class in
       `/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md`, at a scale that one does
       not describe. Found at session resume: 107 files dirty, **all with an identical mtime** (a bulk mechanical write,
@@ -375,3 +375,18 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`) is now
   dispatchable for the archival ritual; this doc intentionally stays `status: open` until that finalize plan performs
   the 6-step archival (its own todos own that step, not this one).
+- **2026-08-10 (slot-9, infra craft)**: Shipped the autostash CHAIN breaker (the last open todo, flipped above) —
+  `unified-trading-pm@7861143b97`. Added two shared functions to `scripts/dev/tree-wip-guard.sh`:
+  `autostash_guard_quarantine_stale_pop()` (after a successful autostash pop, files NOT in the caller's `--files`
+  whose working-tree content differs from `origin/<branch>` are quarantined to a NAMED stash — never dropped — and the
+  origin version restored, so the next reconcile cycle does not re-stash them) and `autostash_guard_bound_backlog()`
+  (before any reconcile that creates a new autostash entry: warn at ≥5 autostash/safety-snapshot entries, self-arrest
+  an extreme ≥10 pile by quarantining the dirty tree first so no new entry forms). Wired into `safe-doc-push.sh`
+  (after `autostash_rebase_reconcile`'s pop + at the top of the retry loop) and `quickmerge.sh` (after the
+  behind-remote autostash pop + before the behind-remote reconcile). New hermetic bats suite
+  `tests/test_tree_wip_guard_autostash.bats` (7 tests: quarantine, protected-files pass-through, origin-matching
+  no-op, untracked-ignored, both backlog-bound tiers) — 7/7 green in the QG run (ok 88/92/93 confirmed in-log); the
+  existing `test_tree_wip_guard.bats` suite stays green (no regressions); `bash -n` + `shellcheck -S error` clean;
+  `quality-gates.sh` full run green (exit 0). All todos in this doc are now done — the gated finalize plan is
+  dispatchable for the archival ritual; this doc stays `status: open` until that finalize plan performs the 6-step
+  archival.

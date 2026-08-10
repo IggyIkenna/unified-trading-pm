@@ -94,7 +94,7 @@ setup() {
     git stash push -q -m "autostash $i" -- "f$i.md"
   done
 
-  run autostash_guard_bound_backlog "origin/live-defi-rollout"
+  run autostash_guard_bound_backlog "" "origin/live-defi-rollout"
   [ "$status" -eq 0 ]                      # advisory, never blocks the caller
   [[ "$output" == *"autostash"* ]]
   [[ "$output" == *"drop"* ]]              # hands over the recovery path
@@ -109,7 +109,7 @@ setup() {
   done
   printf 'my in-flight edit\n' > shipped.md
 
-  run autostash_guard_bound_backlog "origin/live-defi-rollout"
+  run autostash_guard_bound_backlog "" "origin/live-defi-rollout"
   [ "$status" -eq 0 ]
   [[ "$output" == *"extreme"* ]]
   run git stash list
@@ -117,7 +117,28 @@ setup() {
 }
 
 @test "a clean stash list is a no-op" {
-  run autostash_guard_bound_backlog "origin/live-defi-rollout"
+  run autostash_guard_bound_backlog "" "origin/live-defi-rollout"
   [ "$status" -eq 0 ]
   [ -z "$output" ]
+}
+
+@test "extreme backlog self-arrest does NOT quarantine the caller's protected files" {
+  # Dogfooded live 2026-08-10 slot-9: the self-arrest quarantined the caller's OWN plan-flip
+  # edit, and the ship then falsely reported "already matches HEAD". The protected list is
+  # the work being SHIPPED and must survive untouched even in the extreme case.
+  for i in $(seq 1 10); do
+    printf 'base\n' > "f$i.md"
+    git add "f$i.md"
+    printf 'noise\n' > "f$i.md"
+    git stash push -q -m "autostash $i" -- "f$i.md"
+  done
+  printf 'MY SHIPPED FLIP\n' > shipped.md          # protected -- the caller's own edit
+  printf 'STALE OTHER\n' > bystander.sh            # non-protected dirty file
+
+  run autostash_guard_bound_backlog "shipped.md" "origin/live-defi-rollout"
+  [ "$status" -eq 0 ]
+  [ "$(cat shipped.md)" = "MY SHIPPED FLIP" ]      # protected file survives intact
+  [ "$(cat bystander.sh)" = "original" ]           # non-protected dirty file quarantined + restored
+  run git stash list
+  [[ "$output" == *"pre-reconcile quarantine"* ]]  # non-protected dirty files still parked
 }

@@ -1063,9 +1063,11 @@ else
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
       # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
+      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The
+      # caller's --files are passed as protected so the extreme-pile self-arrest never
+      # quarantines the very work this run is shipping.
       if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-        autostash_guard_bound_backlog "${_QM_REMOTE_REF}" || true
+        autostash_guard_bound_backlog "${FILES_ARG:-}" "${_QM_REMOTE_REF}" || true
       fi
       # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
       # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with

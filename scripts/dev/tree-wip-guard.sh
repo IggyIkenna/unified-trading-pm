@@ -241,10 +241,14 @@ autostash_guard_quarantine_stale_pop() {
 # named stash BEFORE the pull, so no NEW autostash entry is created on top of the pile.
 # The chain self-arrests because the next pull has a clean tree, producing no new entry.
 #
-# $1: remote branch ref (for the quarantine fallback, default origin/live-defi-rollout)
+# $1: space-separated protected paths (the caller's --files, or "" for none) — these
+#     are the work being SHIPPED and must NEVER be quarantined, even in the extreme
+#     case (dogfooded live 2026-08-10 slot-9: an extreme pile quarantined the caller's
+#     own plan-flip edit, the ship then falsely reported "already matches HEAD").
+# $2: remote branch ref (for the quarantine fallback, default origin/live-defi-rollout)
 # Returns 0 (advisory — never blocks the caller).
 autostash_guard_bound_backlog() {
-  local branch="${1:-origin/live-defi-rollout}" entries entry_list count
+  local protected="${1:-}" branch="${2:-origin/live-defi-rollout}" entries entry_list count
   entry_list="$(git stash list 2>/dev/null | grep -i 'autostash\|safety-snapshot.*stale reapplied' || true)"
   [ -n "$entry_list" ] || return 0
   count="$(printf '%s\n' "$entry_list" | wc -l)"
@@ -261,19 +265,27 @@ autostash_guard_bound_backlog() {
     } >&2
   fi
   if [ "$count" -ge 10 ]; then
-    local current_dirty
+    local current_dirty f to_quarantine=()
     current_dirty="$(git diff --name-only 2>/dev/null)"
     if [ -n "$current_dirty" ]; then
-      local stash_msg="safety-snapshot: pre-reconcile quarantine (${count} autostash entries) — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-      if git stash push -m "$stash_msg" -- $current_dirty 2>/dev/null; then
-        local f
-        for f in $current_dirty; do
-          [ -n "$f" ] || continue
-          if git cat-file -e "$branch:$f" 2>/dev/null; then
-            git checkout "$branch" -- "$f" 2>/dev/null || true
-          fi
-        done
-        echo "  ✓ current dirty tree quarantined; the next pull will start clean (no new autostash entry)." >&2
+      # Skip the caller's named files: they are the work being shipped and must survive
+      # untouched even in the extreme case (see the dogfood note above).
+      while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        case " $protected " in *" $f "*) continue ;; esac
+        to_quarantine+=("$f")
+      done <<<"$current_dirty"
+      if [ ${#to_quarantine[@]} -gt 0 ]; then
+        local stash_msg="safety-snapshot: pre-reconcile quarantine (${count} autostash entries) — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        if git stash push -m "$stash_msg" -- "${to_quarantine[@]}" 2>/dev/null; then
+          for f in "${to_quarantine[@]}"; do
+            [ -n "$f" ] || continue
+            if git cat-file -e "$branch:$f" 2>/dev/null; then
+              git checkout "$branch" -- "$f" 2>/dev/null || true
+            fi
+          done
+          echo "  ✓ current dirty tree quarantined; the next pull will start clean (no new autostash entry)." >&2
+        fi
       fi
     fi
   fi
