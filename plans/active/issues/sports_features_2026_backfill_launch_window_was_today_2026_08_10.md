@@ -39,7 +39,6 @@ author: slot-6
 last_updated: "2026-08-10"
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
 source: >-
   DP_VM_EXIT_NONZERO escalation agt-af22dd (fleet exit-code monitor → orchestrator), VM
   features-sports-sports-2026-20260810-051126 (depl a35d016a-3b9d-480d-9f47-d055a751577d), 2026-08-10.
