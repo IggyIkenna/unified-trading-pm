@@ -455,6 +455,32 @@ transcript available in that session's Progress Log entry on
   by direct verification (not dependent on the census) as forward progress; the corpus-wide remainder stays open pending
   the census's real completion.
 
+  **2026-08-10 (slot-15, data_engineering, dispatched on todo 3 again)**: checked current census state before attempting
+  further remediation — reading the two report parquets directly (single bounded object read each, not a corpus walk):
+
+  - `features-sports-prd` half: **COMPLETE**. VM `sports-schema-census-features-sports-20260809-225453` self-deleted
+    (`gcloud compute instances describe` → NOT_FOUND; the delete audit entries are both attributed to the VM's own
+    `uts-prd-sa` runtime SA, not an external actor — a genuine self-delete-on-completion, not a preemption/kill). Report
+    (158826 rows) spans `day` `2020-06-06`→`2026-08-16` (the full sports floor-to-present+buffer range) with **0
+    contamination_codes hits** across the entire bucket.
+  - `instruments-store-sports-prd` half: **still genuinely running, ~30% through by date**. VM
+    `sports-schema-census-instruments-store-20260809-224053` confirmed RUNNING (not stalled) at 2026-08-10T05:15Z.
+    Report (337500 rows so far) spans `day` `2019-01-01`→`2021-07-25` — **0 contamination_codes hits in the scanned
+    range** (the known BOLIVIA_PRIMERA_DIVISION incident is on `day=2026-04-14`, nowhere near reached yet — the walk is
+    chronological ascending). Rate: VM created `2026-08-09T22:41:01Z`, now 2026-08-10T05:15:45Z ⇒ ~394 min elapsed for
+    938 days of coverage ⇒ ~2.4 days/min. Remaining range to present (~2026-08-10) is ~1840 days ⇒ **≈13 more hours at
+    the observed rate** — this is not a stall, just a genuinely long corpus-scale walk on a single VM, consistent with
+    the prior session's own "many hours, not minutes" estimate.
+
+  **Consequence**: nothing new to remediate this session — the only known-contaminated object (BOLIVIA_PRIMERA_DIVISION,
+  already quarantined below) predates any NEW findings, and the census hasn't reached its partition yet. Todo 3's
+  corpus-wide done-when condition remains genuinely gated on the still-running instruments-store census (~13h out). Not
+  busy-waiting on a single-dispatch session for a 13h background job — skipping this task back to the queue with
+  `reason_code: GATED` so it doesn't ping-pong to another slot before the census has meaningfully advanced; a future
+  session should re-check the report's max `day` before re-attempting remediation, and only then proceed to enumerate +
+  disposition any NEWLY found contaminated triples per the same canonical-twin-first logic the BOLIVIA_PRIMERA_DIVISION
+  remediation below used.
+
   **Remediation shipped for the one confirmed object** (`instruments-service@cfc3736b`,
   `scripts/quarantine_fixtures_wrong_schema_bolivia_2026_08_09.py`). Chose quarantine over re-fetch: checked the
   canonical twin first — `entity=fixtures_schedule/league=BOLIVIA_PRIMERA/fixtures_schedule.parquet` for the SAME
