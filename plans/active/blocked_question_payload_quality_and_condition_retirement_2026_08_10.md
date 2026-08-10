@@ -416,3 +416,13 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   synthetic condition-derived row retires via `classify_retirement`, end-to-end through `reconcile_once` with
   `answered_by=auto:condition_cleared` + slot freed, still-reported-key does not retire, record_result reports resolved
   count without closing).
+- **2026-08-10 (slot-16 worker, pre-compact journal)**: Session shipped A4/B1/C1/C2 — all flipped with evidence above,
+  both worktrees clean, `ahead=0` on `agent-orchestrator` and `unified-trading-pm` — safe to compact. **Deferred (all
+  already tracked `- [ ]`, not at risk):** C3 `last_reconfirmed_at` stamping · C4 `add_blocked` call-site audit · C5
+  close orphaned rows · D1 sibling-doc repo correction. **Recommended next: C3** (surviving detector rows should carry
+  "still detected as of `<ts>`", the companion card plan renders it). **Lessons carried for the next session:**
+  quickmerge REBASES a local commit in STAGE 0.4 so its SHA changes — cite the post-merge SHA quickmerge prints as
+  `📌 CITE THIS` (the pre-merge SHA is not on origin); `rg -r` is ripgrep's REPLACE flag, not recursive (rg recurses by
+  default) — `rg -rn` replaces matches with "n"; `git commit ... | tail` can hide a pre-commit hook failure — verify the
+  SHA moved; pre-commit `ruff-format` reformats then aborts — re-`git add` before re-committing; a module-level registry
+  that bakes in `config.STATE_DIR` at import time defeats test `monkeypatch` — resolve such paths at call time.
