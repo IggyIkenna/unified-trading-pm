@@ -15,6 +15,10 @@ summary:
   tracks this. This is a scoping judgment (should S5.1 tier its required set by repo type?), not a bounded worker todo —
   captured here per the findings-closure HARD RULE."
 status: open
+archive_exempt:
+  true # 0-open-todos 2026-08-10 (last todo closed per operator ruling BLK-2b076fa9); archival
+  # blocked by codex_vs_repo_docs_ssot_audit_2026_06_01.md (active, parent audit plan) still referencing this doc —
+  # archive_exempt bridges until the parent plan itself reaches a terminal status
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -104,14 +108,13 @@ the dispatch-scope-eligibility ruling):
       not-applicable instead of missing; every other repo keeps the full S5.1 set. Codified in
       `/codex/06-coding-standards/documentation-standards.md` new § S5.1a (+ S5.7/S5.10 cross-refs updated to match).
       (repo: unified-trading-pm)
-- [ ] [DOCS] P2. **CORRECTED 2026-08-10 (was: "fill the genuine data-service gaps" — see Progress Log).** Reconcile
-      market-data-processing-service's `DEPLOYMENT_GUIDE.md` + `TESTING.md` against the S5.1 filename set using the SAME
-      thin-redirect-stub approach the operator ruled for instruments-service (item 77 below): verify
-      `DEPLOYMENT_GUIDE_FEMI.md` / `TESTING_GUIDE.md` genuinely cover what the canonical S5.1 filenames would need to
-      say (per `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s 2026-07-27 refreshed registry DELETE classification —
-      "stub → FEMI" / "stub, `pytest` direct → TESTING_GUIDE", both REDIRECT targets already verified to exist), then
-      add S5.11-template redirect stubs at `DEPLOYMENT_GUIDE.md`/`TESTING.md` pointing at them (mirror
-      instruments-service's 6-stub pattern). Not net-new content. (repo: market-data-processing-service)
+- [x] ✅ [DOCS] P2. **CLOSED 2026-08-10 — operator ruling BLK-2b076fa9 option A: DELETE wins.** The
+      `codex_vs_repo_docs_ssot_audit_2026_06_01.md` 2026-07-27 refreshed registry classifies
+      market-data-processing-service's `DEPLOYMENT_GUIDE.md` + `TESTING.md` as DELETE — that ground-truthed audit is the
+      more recent, more authoritative verification. The existing stubs (`DEPLOYMENT_GUIDE_FEMI.md` / `TESTING_GUIDE.md`)
+      already cover whatever real content existed. No redirect stubs needed; the DELETE classification stands. If the
+      FILL direction's author had newer evidence the two files became load-bearing again since 2026-07-27, that would
+      need to be stated explicitly — which it is not. (repo: unified-trading-pm)
 - [x] ✅ [DOCS] P3. **DECIDED + DONE 2026-08-08 — Reconcile instruments-service's reorganized docs against the S5.1
       filename set.** OPERATOR RULING: add thin redirect stubs at the canonical filenames pointing at the reorganized
       docs. Added 6 stub files under `instruments-service/docs/` (`ARCHITECTURE.md` → `ADAPTER_ARCHITECTURE.md`;
@@ -123,6 +126,11 @@ the dispatch-scope-eligibility ruling):
 
 ## Progress Log
 
+- **plan_reconciler infra tranche 2026-08-10 (BLK-2b076fa9 resolved)**: Operator ruled option A — DELETE wins.
+  `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s 2026-07-27 ground-truthed registry is the authoritative
+  classification. Todo 2 (FILL/redirect-stubs for MDPS `DEPLOYMENT_GUIDE.md`/`TESTING.md`) closed as moot — the existing
+  content under different names is sufficient, and the SSOT audit's DELETE classification stands.
+  `unified-trading-pm@<pending-sha>`.
 - **ag-closeout-audit 2026-08-10 (infra tranche)**: Resolved the 2026-08-08 conflict by logic, not escalation — the
   competing claim (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s dated, specific 2026-07-27 refreshed registry entry,
   still `status: active`) is the more authoritative, more recent, more direct evidence, and it matches the

@@ -8,8 +8,10 @@ summary: >-
   of making the AG↔topic partition (5 AGs + cross-cutting + ao + ci + infra) total across the whole plans/issues corpus,
   per operator request.
 status:
-  complete # (was: active) 2026-07-28 archival sweep: this doc's own single [DOC] P3 todo (verify the reachability
-  # digest is accurate) is done; verified zero open todos of its own
+  active # REVIVED 2026-08-10 per operator ruling BLK-9a03622c option A — re-opened to cover
+  # self_hosted_runner_public_repo_revert_2026_08_05.md + shared_ci_workflow_repo_extraction_2026_08_06.md
+  # (dual-tagged [ci, infrastructure] P1 plans with no consolidated-closeout coordinator since this doc was
+  # archived 2026-07-28)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,10 +23,12 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md,
+    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-25"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -46,17 +50,15 @@ source: >-
   ao + ci + infra topic partition total (zero orphans) for sharded `/plan-reconcile` and `/ag-closeout-audit` runs.
 ---
 
-## Deferred work — migrated to:
-
-**N/A — this doc is a pure reachability digest, not a work-owning plan.** Its own single todo (verify the digest stays
-accurate) is done. The 2026-07-26 `/ag-closeout-audit ci` finding that 30 of 34 tranche docs were orphaned (no dispatch
-vehicle) is not this doc's own open work — it was already acted on: the extracted subset lives in
-`/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (status: draft) + its gated finalize. Archiving this index
-does not close any tranche work; see that batch plan for the live picture.
-
-> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — this doc's own scope (a verified-accurate reachability digest) is
-> complete; it does not represent the CI/CD tranche being done. Per
-> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+> **🟢 REVIVED 2026-08-10 per operator ruling BLK-9a03622c option A.** Two substantial, shipped, dual-tagged
+> `[ci, infrastructure]` P1 plans (`self_hosted_runner_public_repo_revert_2026_08_05.md` +
+> `shared_ci_workflow_repo_extraction_2026_08_06.md`) had no consolidated-closeout coordinator after this doc was
+> archived 2026-07-28. Un-archiving restores the original partition (rather than widening
+> `infra_consolidated_closeout`'s scope or accepting a permanent coverage gap). Both plans are now registered under this
+> umbrella.
+>
+> **Next action**: the next `/ag-closeout-audit ci` tranche should verify both plans' remaining work is tracked under
+> this closeout and fold any new ci-tagged issues into a fresh batch plan.
 
 # CI/CD consolidated close-out
 
@@ -79,7 +81,7 @@ does not close any tranche work; see that batch plan for the live picture.
 (QG sentinel blind to the `ENVIRONMENT` dimension, dev-vs-prod gate laundering) ·
 [issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md](/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md)
 (quickmerge silently no-ops on new-file-only ships) ·
-[issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md](/plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md)
+[issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md](/plans/archive/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md)
 (provenance gate hand-overridden + the strict-quickmerge hook installed in zero clones) ·
 [issues/stale_staging_versions_manifest_2026_07_23.md](/plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md)
 (`workspace-manifest.json` `staging_versions` frozen, breaks the quickmerge dependency gate — resolved + archived
@@ -201,9 +203,9 @@ unblocked on a CI runner.
   AO-dispatched. A recurring trap: **12 of the 30 orphans express ALL their remaining work as numbered prose with zero
   checkboxes**, so a checkbox count answers nothing here.
   - **Drafted (both `status: draft`, NOT dispatched — flipping to `active` is the operator's call)**:
-    [/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md)
+    [/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md)
     (29 conflict-cleared bounded todos, 33 Deferred by taxonomy) +
-    [/plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+    [/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
     (`depends_on` + `gate_on_depends: true` + `sequential: true`). Shipped `unified-trading-pm@03d9ed87e`.
   - **Phase-3 conflict-check result worth carrying forward**: `scripts/quickmerge.sh` is claimed by **6** docs in this
     tranche and PM `scripts/quality-gates.sh` by **3**, so the batch dispatches exactly ONE quickmerge.sh todo and
@@ -229,7 +231,7 @@ unblocked on a CI runner.
   (GitHub Actions self-hosted-runner strand blocking LDR→main promotion),
   [/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md)
   (CI alert-tuning incident), and the
-  [/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
+  [/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
   +finalize pair (batch-extraction docs are single-tranche by construction). Left 2 unretagged as genuinely ambiguous
   (`assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` — content is corpus-wide, not ci-specific;
   `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — plan-hygiene-tooling content reads closer to

@@ -171,16 +171,17 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       off-by-ones (states "23"/"22 of 23", enumerated lists count 24 — Doc-drift #2) and
       `defi_compute_gcp_migration_2026_08_08.md`'s missing `related:` back-reference to its own finalize twin (Doc-drift
       #3). Low-value cosmetic, deferred under time budget.
-- [x] [REVIEW] P2. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` MDPS
-      `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE-vs-FILL contradiction (both docs already self-flag it, neither resolves
-      it) — **ESCALATED 2026-08-10**: `POST /api/slots/6/blocked` → `BLK-2b076fa9` (options A/B/C, recommendation A:
-      DELETE wins per the ground-truthed SSOT audit registry). Marked done as FILED (the escalation is the completed
-      action for this run; applying the eventual answer is separate future work once it resolves).
-- [x] [OPERATOR] P2. Coverage gap: `self_hosted_runner_public_repo_revert_2026_08_05.md` +
+- [x] ✅ [REVIEW] P2. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` MDPS
+      `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE-vs-FILL contradiction — **RESOLVED 2026-08-10 ~08:26 UTC, operator
+      ruling BLK-2b076fa9 option A: DELETE wins.** The SSOT audit's 2026-07-27 ground-truthed registry is authoritative;
+      the existing stubs (`DEPLOYMENT_GUIDE_FEMI.md` / `TESTING_GUIDE.md`) already cover real content. Closed
+      `s5_7_required_docs_gaps_2026_07_29.md` todo 2 as moot. `unified-trading-pm@<pending-sha>`.
+- [x] ✅ [OPERATOR] P2. Coverage gap: `self_hosted_runner_public_repo_revert_2026_08_05.md` +
       `shared_ci_workflow_repo_extraction_2026_08_06.md` (dual-tagged `[ci, infrastructure]` P1 plans) have no
-      consolidated-closeout coordinator — `ci_consolidated_closeout_2026_07_25.md` archived/dormant since before either
-      plan existed. **ESCALATED 2026-08-10**: `POST /api/slots/6/blocked` → `BLK-9a03622c` (options A/B/C,
-      recommendation A: revive `ci_consolidated_closeout`). Marked done as FILED, same rationale as above.
+      consolidated-closeout coordinator — **RESOLVED 2026-08-10 ~08:26 UTC, operator ruling BLK-9a03622c option A:
+      revive `ci_consolidated_closeout`.** Un-archived `ci_consolidated_closeout_2026_07_25.md` from
+      `plans/archive/2026_07/` → `plans/active/`, both plans registered under it in `related:`.
+      `unified-trading-pm@<pending-sha>`.
 - [ ] [DOCS] P3. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced freshness-gap
       race from `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for
       "full gotchas + measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a
@@ -252,16 +253,16 @@ of the 42 writable docs was read and assessed by a hunter this run.
 
 ## Deferred work after 2026-08-10
 
-| Item                                                                                                      | State / why deferred                                                                                       | Blocked on                                                  |
-| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + its finalize's todo 3                        | **Cannot be done yet** — all 3 todos done, ready, but 3 of 5 referrers are inside today's 12h grace window | Time — referrer docs clearing grace (~12-24h from this run) |
-| Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Cannot be done yet** — same grace-locked-referrer blocker; `archive_exempt: true` bridge already applied | Time — referrer docs clearing grace                         |
-| Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Not done** — genuinely fixable, no blocker, just not this run's scope (meta-tagged, adjacent)            | Nobody — pick it up any time                                |
-| Re-count `defi_compute_gcp_migration_2026_08_08.md` off-by-one todo citations                             | **Not done** — real work, deliberately deferred to avoid a rushed second error                             | Nobody — pick it up any time                                |
-| Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Not done** — suspected pattern, unconfirmed, needs a live `find`/`ls` check                              | Nobody — pick it up any time                                |
-| `vm-launcher-runbook.md` missing freshness-gap incident                                                   | **Not done** — needs an editorial scope/placement decision, exceeds the mechanical carve-out               | Whoever owns that runbook's editorial scope                 |
-| MDPS DELETE-vs-FILL ruling (`s5_7` vs SSOT audit)                                                         | **Operator-owned** — escalated `BLK-2b076fa9`, options + recommendation given                              | **Operator** — dashboard answer                             |
-| CI-tagged infra closeout coverage gap                                                                     | **Operator-owned** — escalated `BLK-9a03622c`, options + recommendation given                              | **Operator** — dashboard answer                             |
+| Item                                                                                                      | State / why deferred                                                                                        | Blocked on                                                  |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + its finalize's todo 3                        | **Cannot be done yet** — all 3 todos done, ready, but 3 of 5 referrers are inside today's 12h grace window  | Time — referrer docs clearing grace (~12-24h from this run) |
+| Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Cannot be done yet** — same grace-locked-referrer blocker; `archive_exempt: true` bridge already applied  | Time — referrer docs clearing grace                         |
+| Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Not done** — genuinely fixable, no blocker, just not this run's scope (meta-tagged, adjacent)             | Nobody — pick it up any time                                |
+| Re-count `defi_compute_gcp_migration_2026_08_08.md` off-by-one todo citations                             | **Not done** — real work, deliberately deferred to avoid a rushed second error                              | Nobody — pick it up any time                                |
+| Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Not done** — suspected pattern, unconfirmed, needs a live `find`/`ls` check                               | Nobody — pick it up any time                                |
+| `vm-launcher-runbook.md` missing freshness-gap incident                                                   | **Not done** — needs an editorial scope/placement decision, exceeds the mechanical carve-out                | Whoever owns that runbook's editorial scope                 |
+| MDPS DELETE-vs-FILL ruling (`s5_7` vs SSOT audit)                                                         | **Done** — operator ruled 2026-08-10 option A (DELETE wins), applied `s5_7` todo 2 closed as moot           | Nobody — completed                                          |
+| CI-tagged infra closeout coverage gap                                                                     | **Done** — operator ruled 2026-08-10 option A (revive `ci_consolidated_closeout`), un-archived + registered | Nobody — completed                                          |
 
 **Recommended next item**: the 4 archive candidates (first two rows) — no judgment needed, purely a matter of the
 referrer docs aging out of grace; whoever next runs the infra tranche (or the weekly `all` pass) should check those 3-4
@@ -353,3 +354,11 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   specific actions (and ideally a timestamp check) should ever be considered for cleanup. Scratchpad unchanged (same 3
   files, still regenerable/already-summarized). No new secrets, no new dangling references. Verdict unchanged: safe to
   compact.
+- **2026-08-10 ~08:26 UTC** — STEP 8: Both blocked questions answered by operator (Slack `agent-orchestrator-alerts`,
+  06:19 UTC, answers read via `slack-read-channel.py`). BLK-2b076fa9: option A (DELETE wins) — flipped
+  `s5_7_required_docs_gaps_2026_07_29.md` todo 2 to `[x]` closed-as-moot, citing the SSOT audit's authoritative DELETE
+  classification. BLK-9a03622c: option A (revive `ci_consolidated_closeout`) — `git mv`'d
+  `ci_consolidated_closeout_2026_07_25.md` from `plans/archive/2026_07/` → `plans/active/`, updated frontmatter
+  (`status: active`, `last_updated: 2026-08-10`, added both plans to `related:`), replaced archival banner with revival
+  note. Findings doc Deferred-work table updated — both operator-owned rows now Done. PM repo clean, committing +
+  pushing this turn.
