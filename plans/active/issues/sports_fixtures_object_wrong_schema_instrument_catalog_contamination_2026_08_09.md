@@ -153,12 +153,29 @@ transcript available in that session's Progress Log entry on
 
 ## Todos
 
+- [x] ✅ [DATA] P1. Enumerate the full scope of schema-mismatched objects across `features-sports-prd` (all
+      `feature_group=` partitions). **RESOLVED (2026-08-10, slot-29)** — census VM
+      `sports-schema-census-features-sports-20260809-225453` terminated cleanly (`EXIT_STATUS=0`, `run.log`:
+      `DONE: validated=158826 total_rows_in_report=158826`). Downloaded + analyzed the 158,826-row report directly:
+      `contamination_codes` non-empty on **0** rows across every `feature_group`
+      (`fixture_features`/`derived_features`/`fixtures`/`standings`/`teams`/`venues`/
+      `fixture_events`/`leagues`/`sfi_progressive`/`odds_features`/`fixture_lineups`/`fixture_stats`/
+      `injuries`/`odds_targets`/`fixture_player_stats`), 0 `READ_ERROR` rows. **`features-sports-prd` carries zero
+      schema-mismatched objects.** (repo: instruments-service — split off the original combined todo below; see Progress
+      Log for full detail — instruments-service/unified-trading-pm)
 - [ ] [DATA] P1. Enumerate the full scope of schema-mismatched objects across `instruments-store-sports-prd` (all
-      `entity=` partitions, not just `fixtures`) and `features-sports-prd`. Produce a per-entity, per-schema-shape
-      count. This is corpus-scale (the sibling issue already flagged `instruments-store-sports-prd` as needing a
-      dedicated bounded VM walk for a full census) — run as a bounded VM job, not an interactive dispatch. (repo:
-      instruments-service / market-tick-data-service). **Done when**: a report exists listing every object whose parquet
-      schema does not match its `entity=` partition's expected schema, with counts by entity/day/pipeline_mode.
+      `entity=` partitions, not just `fixtures`). Produce a per-entity, per-schema-shape count. This is corpus-scale
+      (the sibling issue already flagged `instruments-store-sports-prd` as needing a dedicated bounded VM walk for a
+      full census) — run as a bounded VM job, not an interactive dispatch. **STATUS (2026-08-10, slot-29)**: census VM
+      `sports-schema-census-instruments-store-20260809-224053` confirmed still `RUNNING` (not self-deleted), 333,000
+      rows checkpointed as of this check, 0 contamination hits so far in the `day` range covered
+      (`2019-01-01`–`2021-07-18`, 410 distinct days) — healthy, no stall, but genuinely many more hours of corpus remain
+      at the observed pace (the one known-contaminated object is at `day=2026-04-14`, ~4.5 years past the current
+      frontier). (repo: instruments-service / market-tick-data-service). **Done when**: a report exists listing every
+      object whose parquet schema does not match its `entity=` partition's expected schema, with counts by
+      entity/day/pipeline_mode — the walk must reach `NOT_FOUND` on `gcloud compute instances describe` (genuine
+      terminal self-delete) before trusting any "complete"-looking log line (see the false-SUCCEEDED lesson in the
+      Progress Log above).
 - [x] ✅ [DATA] P1. Root-cause the writer that produced the
       `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet`
       instrument-catalog-shaped object. **RESOLVED (2026-08-09, slot-15)** — see the Progress Log entry below for full
@@ -504,10 +521,14 @@ transcript available in that session's Progress Log entry on
   (`22:40:53Z`→`~05:07Z`) covering ~410 distinct days; the sports corpus spans the 2020-06-06 floor (plus some pre-floor
   reference-entity days visible in this partial range, out of this issue's scope to explain) through 2026-08-10 —
   order-of-magnitude many more hours remain at the observed rate, matching the doc's own "genuinely long corpus-scale
-  walk...many hours, not minutes" note. **Todo 1 stays OPEN** — only the `features-sports-prd` half is closed;
-  `instruments-store-sports-prd` requires the walk to reach `NOT_FOUND` on `gcloud compute instances describe`
-  (self-delete after full completion) before its half can be closed. Not arming a long-lived watchdog this session (ETA
-  is many hours, well beyond a bounded single-session wait) — next session picking up todo 1 should repeat this exact
-  check (VM terminal state + report row-count growth across two time points) before trusting any "DONE"-looking log
-  line, then, once truly complete, consolidate both reports' `contamination_codes`-positive rows into the final
+  walk...many hours, not minutes" note. Not arming a long-lived watchdog this session (ETA is many hours, well beyond a
+  bounded single-session wait) — next session picking up the `instruments-store-sports-prd` todo should repeat this
+  exact check (VM terminal state + report row-count growth across two time points) before trusting any "DONE"-looking
+  log line, then, once truly complete, fold the report's `contamination_codes`-positive rows into the final
   per-entity/day/pipeline_mode count the todo's done-when requires.
+
+  **Split the original combined todo 1 into two** (the `features-sports-prd` half is genuinely, separately complete;
+  bundling it with the still-running `instruments-store-sports-prd` half under one checkbox would either falsely mark
+  the whole thing done or falsely withhold credit for real, finished, verified-clean scope) — see the Todos section
+  above: `features-sports-prd` checked off with this session's evidence, `instruments-store-sports-prd` carried forward
+  as its own open item with the current checkpoint status inline.
