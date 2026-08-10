@@ -557,7 +557,14 @@ reassert_renames() {
 # Pre-commit hooks whose failure is a genuine RACE against a concurrent slot -- the retry
 # loop's own fetch+pull clears them, so retrying is correct. Everything else is a
 # DETERMINISTIC content failure that will fail identically on all 6 attempts.
-RETRIABLE_HOOK_IDS="check-branch-drift"
+# fix-commit-identity added 2026-08-10: it is a SELF-CORRECTING hook, not a content verdict.
+# It rewrites the worktree's git identity and fails the commit with its own remedy line -- "git
+# resolves the author BEFORE this hook, so just RE-RUN your commit — it will land correctly."
+# Isolated-worktree mode trips it every time (the throwaway worktree lives outside the slot path,
+# so slot-identity derivation yields a different label and the hook corrects it on first use).
+# Treating that as deterministic made safe-doc-push exit 6 with "Do NOT re-run this script" over
+# a hook that literally asks to be re-run -- measured live while landing the sub-agent rules line.
+RETRIABLE_HOOK_IDS="check-branch-drift fix-commit-identity"
 
 # commit_failure_is_retriable <err-file> -- classify a `git commit` rejection.
 #
