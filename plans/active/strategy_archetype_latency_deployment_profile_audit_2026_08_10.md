@@ -190,12 +190,21 @@ collapsing them into one number the way the archived doc did.
       documented (all Low→co_located_vm require min SLA premium), decision-latency-vs-inter-leg-gap distinction per the
       2026-08-10 operator ruling at `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
       frontmatter `source:`.
-- [ ] [DATA] P2. **Check whether `isolation_policies.strategy-service`'s existing SLA-tier framework already accounts
+- [x] ✅ [DATA] P2. **Check whether `isolation_policies.strategy-service`'s existing SLA-tier framework already accounts
       for `Low`-category archetypes needing more than the `premium` tier's 40ms budget provides** — some archived-doc
       figures (MM <100ms total E2E) fit inside 40ms; verify the others (arb <200-300ms, and the newly ms-realm-ruled
       basis/ML-directional/rules-based) against the `premium` tier's 40ms number and flag explicitly if any family's
       real requirement EXCEEDS what even the `premium` SLA tier currently promises — that's a real
-      SLA-tier-vs-archetype-requirement gap worth surfacing, not silently absorbing.
+      SLA-tier-vs-archetype-requirement gap worth surfacing, not silently absorbing. **Done**:
+      `unified-trading-pm@9257f75c4c` — verdict: **NO, the framework does NOT account for it** — every Low family's real
+      E2E requirement (MM <100ms / arb <200-300ms / basis+ML+rules+stat-arb ms-realm inter-leg gap) EXCEEDS premium's
+      40ms `latency_budget_ms` (the brief's own "MM <100ms fits inside 40ms" example is arithmetically off — 100 > 40);
+      the 40ms total-E2E promise is physically unachievable for live venue trades (order-to-fill floor 20-70ms alone);
+      the 40ms metric does not address the inter-leg execution gap that drives `co_located_vm`; and
+      `topology_enforcement.py` never cross-checks archetype `latency_budget_ms` vs tier budget. Full per-family
+      comparison + the stale archetype-frontmatter finding (150-500ms / standard-basic for the corrected Low families) +
+      5 invalid `min_sla_tier` enum values written to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` for the
+      execution plan / todo 10.
 - [ ] [DATA] P2. **Confirm whether `strategy-service`'s archetype registry or engine layer currently READS these family
       docs at runtime, or whether they're purely human-readable documentation today** — grep for any programmatic
       consumption of `codex/09-strategy/architecture-v2/families/*.md` content (unlikely, but confirm rather than
@@ -282,3 +291,20 @@ collapsing them into one number the way the archived doc did.
   with `distributed` (no discrepancy, unlike the Low families); no `EVENT_DRIVEN` / `PORTFOLIO` row exists yet —
   derivation todo should add them at `distributed`-consistent settings. Same commit fixed 2 pre-existing bare-filename
   `related:` frontmatter refs (`market-making.md` / `ml-directional.md` → leading-slash paths) flagged by plan-hygiene.
+- **data_engineering (slot 6) 2026-08-10T19:01Z**: Todo 8 done. Checked `isolation_policies.strategy-service`'s existing
+  SLA-tier framework vs the `premium` tier's 40ms `latency_budget_ms` against every Low-category family's populated
+  latency requirement (`unified-trading-pm@9257f75c4c`, full section appended to
+  `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`). Verdict: **NO — the framework does not account for Low
+  archetypes needing more than premium's 40ms provides**; every Low family's real E2E requirement EXCEEDS 40ms (MM
+  <100ms, arb <200-300ms, basis/ML/rules/stat-arb ms-realm inter-leg gap; even the brief's own "MM <100ms fits inside
+  40ms" example is off — 100 > 40). Also surfaced: (1) premium's 40ms total-E2E is physically unachievable for live
+  venue trades (order-to-fill floor 20-70ms on CeFi venues per the same family docs), (2) the 40ms metric does not
+  address the inter-leg execution gap that actually drives `co_located_vm`, (3) `topology_enforcement.py` parses the
+  archetype `latency_budget_ms` but never cross-checks it against the active tier budget, (4) the runtime-enforced
+  archetype frontmatter (`archetypes/*.md` `topology_requirements`) is STALE for the corrected Low families —
+  `CARRY_BASIS_PERP`/`ML_DIRECTIONAL_CONTINUOUS`/`STAT_ARB_PAIRS_FIXED` at 150ms-standard,
+  `RULES_DIRECTIONAL_CONTINUOUS` at 500ms-basic, all `co_location: []` — contradicting Low→`co_located_vm`→premium, so
+  the runtime gate currently PERMITS these on the wrong tier without co-location, and (5) 5 archetype docs declare
+  `min_sla_tier` values outside the UAC `SLATier` enum (`high` ×4 arbitrage-mev-*, `ultra-premium` ×1
+  market-making-queue-microstructure) that raise on the `SLATier()` cast under enforcement. All captured as input to the
+  execution plan / todo 10 decision artifact.
