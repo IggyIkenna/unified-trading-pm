@@ -147,3 +147,15 @@ Mechanical, bounded remediation — not a design/judgment call:
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`'s hand-fix todo (noted inline above, not blocking — an
   idempotent mechanical fix). No finalize-plan companion needed (`doc_type: issue`, structurally exempt per
   `check_finalize_plan_coverage.py`). Flipped `assigned_vm: NA -> planning`, `execution_scope` to `orchestrator-agent`.
+
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: refining the trigger condition while
+  hand-fixing several NEW instances this run (unrelated to this doc's own todos — found while adding my own notes to
+  other plan docs). Confirmed concretely: the corruption is NOT random — it specifically triggers on a multi-paragraph
+  note **nested as a continuation of a checkbox list item** (2+ levels of list/checkbox indent), and gets WORSE on each
+  successive `prettier --write` pass on the same content (non-idempotent, monotonically increasing indent — matches
+  `check_prosewrap_padding.sh --only`'s own doc comment about this). Repro'd live: writing the identical prose as a
+  **top-level blockquote** (`> **...**` immediately before the checkbox, not nested under it) survives repeated
+  `prettier --write` passes with zero padding growth — 0 violations both before and after. Practical takeaway for any
+  agent hand-authoring a multi-paragraph annotation near a checkbox: use a top-level blockquote banner (matching the
+  style already used elsewhere in this corpus for dated correction banners), not a nested checkbox-continuation
+  paragraph, or expect to re-fight this bug on every commit attempt.
