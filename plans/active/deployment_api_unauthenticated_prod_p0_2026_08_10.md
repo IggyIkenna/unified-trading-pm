@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-                          **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-                          1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-                          2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-                          3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-                          4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-                          5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-                          6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-                          7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-                          8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-                          9. `UTL service_runtime.py:207` — runtime env value
+                              **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                              1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                              2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                              3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                              4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                              5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                              6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                              7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                              8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                              9. `UTL service_runtime.py:207` — runtime env value
 
-                          **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                              **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-                          **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                              **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -240,3 +240,22 @@ are unaffected.
   bakes `VITE_SKIP_AUTH=true` — flagged for step 4/5 (step 4's 401-watch is the rollback net). All SHAs verified on
   origin/live-defi-rollout. Each caller fix is empty-safe (omits the header when the env is unset) so nothing breaks
   during rollout. Enforcement still DISABLE_AUTH=true — flip is step 4.
+- **2026-08-10T16:50Z (slot 22, backend_engineer, task `-56498deea390`, step-4 dispatch)** — Started the step-4 flip
+  investigation; live verification + caller-fix scoping surfaced **2 new findings** that gate the flip sequencing: (1)
+  **Caller row 6 (cost-scheduler) is ALREADY fixed** — the live Cloud Scheduler job `uts-prod-cost-snapshot-cron` now
+  sends `X-API-Key: 210a43c9…` which EXACTLY matches the issued `deployment-api-api-key` GSM secret (verified
+  byte-identical), so `POST /api/costs/snapshot-run` will authenticate post-flip with no further work. (2) **Caller row
+  5 (deployment-ui console) cannot be made credential-bearing within this task as scoped**: `deployment-api`'s
+  `Dockerfile` bakes `ENV VITE_SKIP_AUTH=true VITE_MOCK_API=false` (lines 45-46) so the bundled console's login flow
+  never runs and no `google_id_token` is ever stored; `verify_any_auth` accepts only X-API-Key/Firebase Bearer — NOT the
+  Google OAuth token the UI stores; and **no Google OAuth client ID exists anywhere** in the project (`.env.example`
+  `VITE_GOOGLE_CLIENT_ID=your-google-client-id` placeholder only; no `apps.googleusercontent.com` value in any repo or
+  any live Cloud Run service env; `initiateGoogleLogin` would build an OAuth URL from a placeholder). So the row-5 fix
+  requires provisioning a Google OAuth client (operator-gated credential) BEFORE the console can authenticate post-flip.
+  Escalated sequencing via `/blocked` (BLK-4df46920); operator answered **Option A** — fix the 2 legitimate callers
+  first, then flip enforcement in the SAME task, atomic ship. Given finding (1), row 6 needs nothing; given finding (2),
+  the row-5 console fix is blocked on a Google OAuth client that does not exist — re-escalated (BLK-b1daea0a) with the
+  precise blocker; **operator answered Option B — flip enforcement NOW**, accepting a temporary deployment-ui console
+  401 until Google OAuth is provisioned as an operator-gated follow-up (do NOT bake the X-API-Key into the served SPA;
+  monitor post-flip for unexpected 401s beyond cost-scheduler + console; file the Google OAuth client-ID provisioning as
+  the durable follow-up).
