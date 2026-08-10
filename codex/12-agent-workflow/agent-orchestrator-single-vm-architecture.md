@@ -427,6 +427,40 @@ what X should be" — the scope, not the word "audit," is what makes it dispatch
 `task_template.md` §4. Review-time check: `/plan-reconcile`'s AO-dispatch-readiness hunters (line 3 of the plan-quality
 four-line-defense, `/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`).
 
+### 6. Holding a todo — DECLARE the marker, or it reads as an accident
+
+A `BLOCKED-<TOKEN>` / `DEFERRED-BY-DESIGN` / `STRETCH` marker anywhere in a todo stops that todo dispatching. Whether
+that was **intended** is a separate question, and it is the one the dispatch-visibility gate answers: a marker
+**declares** the hold only when it opens the checkbox line — inside the leading `[TAG]` cluster or at the head of the
+description. Buried mid-sentence it still blocks dispatch but counts as an **accidental exclusion**, i.e. a todo nobody
+will ever work and nobody meant to park.
+
+```
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P1. **Thing** — waiting on the vendor.   ← declared
+- [ ] BLOCKED-CREDENTIALS [INFRA] P1. **Thing** — waiting on the vendor.    ← declared
+- [ ] [INFRA] P1. **Thing** — we can't start until the vendor replies, so BLOCKED-CREDENTIALS.  ← accidental
+```
+
+Continuation lines deliberately do not count: prose wrapping is a formatting artifact, so any rule keyed on "starts a
+line" can be satisfied by accident. The checkbox line's head is the one position prose cannot wander into, and complying
+is a ten-character edit.
+
+**When the corpus-wide gate fails, it is usually not your changeset.** `check_ao_dispatch_visibility_gate.py` scans
+every `assigned_vm: planning` doc in `plans/active`, so a failure names the corpus, not your commit. Before treating it
+as a blocker: run it with `--json` to get the offending docs, check whether any are yours, and **re-run it** — the
+corpus moves ~50 commits/hour and a failure can clear itself as peers close the todos involved (observed 2026-08-10: 6
+accidental exclusions → 0 within ~20 minutes, no action taken). Read the result as a corpus health signal, not as
+"someone broke origin". Never hand-edit `ao_dispatch_visibility_baseline.yaml`; `--update-baseline` needs a stated,
+reviewed reason.
+
+**Your own instance is caught at commit time.** `scripts/plan-hygiene/check_accidental_exclusions_only.sh` runs in
+`run_hygiene_sweep.sh --precommit` (so it fires on a plain `safe-doc-push.sh`, which takes prek only) and flags a NEW
+undeclared exclusion in a staged plan, HEAD-vs-current, before it can reach origin. The verdict comes from AO's own
+`dispatch_visibility_report --check-files`, reusing `_eligible_todos` and `_is_declared` rather than re-deriving the
+marker rule — that predicate has four recorded widen-the-regex regressions, and a check that disagrees with the
+dispatcher is worse than no check. A marker-token grep gates the ~8s module import, so plans carrying no marker (roughly
+three in four) pay nothing.
+
 ## Deploy currency — `ao-self-pull.sh`
 
 The backend runs `uvicorn server.server:app` from the VM's git checkout; nothing else keeps that checkout current.

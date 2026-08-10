@@ -201,20 +201,41 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # (detector-type + content, not line number) at current content vs `git show HEAD:<path>`,
     # flagging only what THIS commit introduces. Same HEAD-vs-current growth-ratchet shape as
     # check_effort_signal_ratchet.py --only above.
+    # Accidental (undeclared) dispatch-exclusion gate, staged-files-only (2026-08-10). The
+    # corpus-wide `check_ao_dispatch_visibility_gate.py` runs only in the FULL gate, so a plan
+    # whose open todo is held by a marker buried mid-sentence lands via a docs(plans) push
+    # unchallenged and fails later on an unrelated agent's QG run. Verdict comes from AO's own
+    # module — no second copy of the marker rule — and a grep pre-filter keeps it free for the
+    # ~3-in-4 plans that carry no marker at all. See the script header for the full rationale.
+    bash "$SCRIPT_DIR/check_accidental_exclusions_only.sh" "${STAGED_PLANS[@]}" \
+      && echo "  ✅ No new accidental dispatch-exclusions (staged plans)" \
+      || PF=$(( PF + 1 ))
+
     # Unresolved evidence placeholder guard (2026-08-10). `<repo>@PENDING` is filled in by the
     # push that creates the commit (resolve_pending_citations in reconcile-sha-citations.sh), so
     # one surviving into a staged plan means the flip is being committed before, or without, the
     # ship it claims — exactly the false-progress the Commit+Push+Flip rule exists to prevent.
     # Cheap literal grep; no effect on any plan that does not use the convention.
-    # The array-length test is belt-and-braces: this block is already inside a `-gt 0` guard, but
-    # a `grep -F pat` that word-splits to ZERO file arguments reads STDIN instead — which would
-    # hang the pre-commit hook, fleet-wide, with no timeout to save it. Cheap insurance against a
-    # future edit moving this block.
-    if [ "${#STAGED_PLANS[@]}" -gt 0 ] && grep -l -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | grep -q .; then
-      echo "  ❌ A staged plan still carries an unresolved '<repo>@PENDING' evidence placeholder:"
-      grep -n -F '@PENDING' "${STAGED_PLANS[@]}" 2>/dev/null | sed 's/^/       /' | head -5
-      echo "       PENDING is resolved by the quickmerge push that creates the commit. Ship the work first, then commit the flip — or replace it with the real sha."
-      PF=$(( PF + 1 ))
+    # Matching a bare `@PENDING` was the obvious implementation and it was WRONG: the first doc
+    # it blocked was the issue doc DESCRIBING the convention, because prose necessarily writes
+    # the literal `<repo>@PENDING` and the word PENDING. So match the CITATION GRAMMAR instead —
+    # a real repo-name token immediately before `@PENDING`, which `<repo>@PENDING` cannot satisfy
+    # (the `>` breaks the token) — and strip backtick spans first, so a documented example stays
+    # documentable. Same backtick-stripping technique check_prosewrap_padding.sh's detectors use.
+    # The array-length test is belt-and-braces: this block already sits inside a `-gt 0` guard,
+    # but an awk/grep that word-splits to ZERO file arguments reads STDIN instead, which would
+    # hang the pre-commit hook fleet-wide with no timeout to save it.
+    if [ "${#STAGED_PLANS[@]}" -gt 0 ]; then
+      _pending_hits="$(awk '
+        { s = $0; gsub(/`[^`]*`/, "", s)
+          if (s ~ /[a-z][a-z0-9-][a-z0-9-]+@PENDING/) print FILENAME ":" FNR ": " $0 }
+      ' "${STAGED_PLANS[@]}" 2>/dev/null || true)"
+      if [ -n "$_pending_hits" ]; then
+        echo "  ❌ A staged plan still carries an unresolved '<repo>@PENDING' evidence placeholder:"
+        printf '%s\n' "$_pending_hits" | sed 's/^/       /' | head -5
+        echo "       PENDING is resolved by the quickmerge push that creates the commit. Ship the work first, then commit the flip — or replace it with the real sha."
+        PF=$(( PF + 1 ))
+      fi
     fi
 
     # AUTO-REPAIR, then re-verify (2026-08-10). Agents were hand-repairing this corruption on
