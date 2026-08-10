@@ -393,3 +393,15 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   with `reason_code: "PARKED"`. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already
   tracks this exact bug class (now 14 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2,
   28, 17 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-10 (slot 15, data_engineering craft, 15th stale re-dispatch of the same already-parked task)**: Same pattern
+  again — a heartbeat handoff surfaced this task directly (`dispatch_reason: "tier=1 priority=50 plan_order=0..."`);
+  `GET /api/backlog/parked` confirmed `reason_code: "PARKED"`, `skip_count: 13` at boot time (incremented from 12 at
+  slot 17's check). Re-verified the gate independently: `gcloud compute instances list --filter="name~cefi-queue-heavy"`
+  shows the SAME instance (`cefi-queue-heavy-binancefutu-x17-20260809-083733`, still `RUNNING`, created
+  2026-08-09T01:37Z) — unchanged since slot 17's check, now ~28h with no termination; the gate condition remains unmet.
+  Declining to redo the venue-scoped completeness check for the same stale-baseline reason given 14 times above.
+  Re-`skip-current-task`ing with `reason_code: "PARKED"`. No new cross-reference filed —
+  `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this exact bug class (now 15 touches post-park: slot
+  19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15 all bypassing the park). No code/report changes;
+  this Progress Log entry is the only change this turn.
