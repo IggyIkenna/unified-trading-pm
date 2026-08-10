@@ -12,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan_reconciler, reconciliation, tradfi, auto-generated]
-related: []
+related: [/plans/active/tradfi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-06
 author: plan_reconciler
 source: agt-041a96

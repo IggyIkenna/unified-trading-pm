@@ -20,6 +20,7 @@ related:
   [
     /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
     /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
   ]
 created: "2026-08-10"
 last_updated: "2026-08-10"
