@@ -319,13 +319,20 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       slot hosting a typed one-shot, not just review slots. Release points added so a finished/torn-down typed slot
       returns to the free-slot pool: `_done_one_off`, `reset_slot_worker_state`, and the pruner's slot-loss branch (+
       the existing `_typed_occupant_liveness` stale-clear). 5 new regression tests.
-- [ ] [DATA] P2. **Bumped from P3 2026-08-09** (see the bump-todo below): reaped-stale rate is climbing day over day
+- [x] ✅ [DATA] P2. **Bumped from P3 2026-08-09** (see the bump-todo below): reaped-stale rate is climbing day over day
       (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09) and the mid-run-session-death re-check todo above is blocked on this
       instrumentation for a causal (not just correlational) answer. Observability gap surfaced by the root-cause: the
       exact process that kills per-slot tmux sessions around orchestrator restarts is invisible — no `kill_session`
       call, watchdog reclaim, or systemd signal is logged, only the pruner's later `has_session()` detection (which
       fired 589× on 08-04). Instrument the session-teardown paths so a future recurrence is attributable from
-      journalctl/syslog alone. (repo: agent-orchestrator)
+      journalctl/syslog alone. (repo: agent-orchestrator) — SHIPPED agent-orchestrator@0c27963 (2026-08-10): every
+      kill_session now logs a `SESSION-TEARDOWN ... reason=... sha=...` line (all 18 call sites tagged); new
+      `config.running_checkout_sha()` (cached short SHA of the running build — the build that observed the death);
+      tmux_pruner logs a per-slot "GONE mid-task ... reaped-stale candidate" WARNING for a slot that died holding a
+      task, and stamps `checkout_sha` onto every `tmux_session_lost` activity row + the reaped-stale WARNING;
+      orchestrator startup/shutdown record the running SHA + live-session inventory to bracket the restart window. 5 new
+      tests (tests/test_session_teardown_instrumentation.py) + 25 existing assertions updated to the `reason=` contract.
+      QG green 3107 passed.
 - [x] ✅ [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed
       2026-08-06 15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than
       `no_capacity` in `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
@@ -375,21 +382,21 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-                  SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-                  2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-                  below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-                  pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-                  rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-                  survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-                  both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-                  original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-                  per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-                  08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-                  also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-                  week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-                  rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-                  above for a causal read. New follow-up filed directly below given the climbing raw rate.
-                  (repo: agent-orchestrator)
+                      SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                      2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                      below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                      pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                      rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                      survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                      both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                      original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                      per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                      08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                      also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                      week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                      rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                      above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                      (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
       08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
@@ -604,6 +611,28 @@ tests; the re-install is the single step standing between that and any of it act
 gates promotion to `main`, not the fix's correctness.
 
 ## Progress Log
+
+- **worker slot-7 2026-08-10 (this todo — session-teardown instrumentation)**: SHIPPED — agent-orchestrator@0c27963, QG
+  green 3107 passed, on origin/live-defi-rollout (quickmerge-post-push ancestry verified). What landed + why it closes
+  the observability gap: (1) `tmux_spawn.kill_session` now logs `SESSION-TEARDOWN kill_session session=… reason=… sha=…`
+  on every successful kill — the physical teardown is no longer invisible; all 18 call sites across the watchdog
+  (`_kill_slot` passes its trigger: context_full / stuck_at_prompt / usage_cap / heartbeat_silent / context_burn), the
+  orphan/idle/prereq reclaimers, autospawn (tier-upgrade, hung review), the respawn paths (idle_reap / kill_for_resume /
+  auto_respawn), context-lifecycle wedge kills, main-agent-keeper respawn, blocked- reconcile release, auth-failover,
+  account-rotation + dead-orphan cleanup tag their kills. (2) new `config.running_checkout_sha()` — the short SHA of the
+  RUNNING build, captured once at first use (cached), so a log line's `sha=` is the build that observed the death, not a
+  HEAD that drifted past the process. (3) `TmuxPruner` now logs a per-slot "GONE mid-task … reaped-stale candidate"
+  WARNING when a slot's session dies while it still held a task (or was marked resume-pending) — the mid-run-death
+  signal distinct from the routine one-shot completion — and stamps `checkout_sha` onto every `tmux_session_lost`
+  activity row + the reaped-stale WARNING. (4) orchestrator startup/shutdown record the running SHA + the live-session
+  inventory, so a session that dies across a restart is attributable to the restart window from journalctl alone. A
+  future recurrence is now diagnosable by
+  `journalctl -u orchestrator | grep -E 'SESSION-TEARDOWN|GONE mid-task|REAPED-STALE'` + the startup/shutdown inventory
+  — no transcript archaeology. Note: mid-commit, a concurrent slot's main-as-first-class- slot refactor (@66be387,
+  `ao_model_main_agent_as_first_class_slot_2026_08_10`) landed on the same `context_lifecycle.py`; resolved via
+  `git pull --rebase --autostash` + a manual conflict resolution (upstream's new docstring/structure kept, my `reason=`
+  tag preserved on the shared wedge-kill path; the old `if slot_id is None:` main block was correctly superseded by the
+  upstream slot-bound design). QG was re-run on the merged committed HEAD, not just my pre-merge diff.
 
 - **slot-11 2026-08-09 (todo — re-check whether mid-run session death is fully closed by @5941552)**: Downloaded the
   latest S3 DR SQLite snapshot (`live_20260809T210230Z.db`, same read path documented in the slot-20 entry below) and
