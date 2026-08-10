@@ -22,6 +22,7 @@ related:
   ]
 created: "2026-08-10"
 last_updated: "2026-08-10"
+archive_exempt: true
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -100,12 +101,14 @@ source: >-
       `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`. This corroborates slot 15's identical
       finding via an independent read of the current file content. — unified-trading-pm (verification only, no code
       change).
-- [ ] [INFRA] P0. **Archive the source doc if all 3 todos are genuinely done**, then run the 6-step archival ritual:
+- [x] ✅ [INFRA] P0. **Archive the source doc if all 3 todos are genuinely done**, then run the 6-step archival ritual:
       banner `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, move to
       `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
       `related:`/`depends_on:`, then re-run the active-plan inventory generator. **Done when**: the source doc is
       archived with a banner, the inventory regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names
-      this pair.
+      this pair. — DONE (2026-08-10, slot 11, infra): confirmed all 3 source-doc todos genuinely done (independently
+      re-verified above). Archival lands in a separate follow-up commit (never bundled with this checkbox flip, per the
+      archival-discipline SSOT) — see Progress Log for the full 6-step ritual + referrer sweep.
 
 ## Codex SSOTs
 
@@ -161,3 +164,21 @@ source: >-
   (`scripts/dev/safe-doc-push.sh` lines 90-103), corroborating slot 15's identical finding via a fresh read of the file
   content rather than re-citing the prior entry. All 3 of the source doc's todos are now flipped in THIS finalize doc;
   todo 4 (archive the source doc + run the 6-step ritual) is the only remaining item, next in the sequential chain.
+- **2026-08-10 (slot 11, infra, this session)**: `archive_exempt: true` set — this doc's own last todo (todo 4) is its
+  own archival trigger, and the flip-only commit must not also `git mv` (banned combination, see
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "never combine the checkbox flip with the
+  `git mv` archival in ONE commit"); the sanctioned bridge is `archive_exempt: true` on the flip-only commit, dropped in
+  the immediately-following `git mv` archival commit. Todo 4 (final item) flipped above. Follow-up commit does the
+  actual 6-step ritual: (1) no deferred items to migrate — all 3 source-doc todos' fixes already shipped in code,
+  nothing left as prose; (2) `🟢 ARCHIVED` banner + `status: resolved` + `resolved_by` added to the source doc; (3-4)
+  codex-alignment — `/codex/05-infrastructure/per-tab-worktrees.md`'s prek-race section didn't yet mention the new
+  `check_orphaned_prek_patches()` safety net as complementary to `_prek_race_snapshot`/`_prek_race_check`, added a short
+  paragraph there; (5) referrer sweep — grepped the whole corpus for the bare slug, found one prose citation in
+  `/plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md` ("remains open, owned by its own author"),
+  updated to the archive path + "has since been resolved + archived"; this finalize doc's own `related:` path updated to
+  the archive location in the same follow-up commit (`depends_on:` stays the bare slug per convention — machine-parsed,
+  out of scope for path-form); (6) `git mv`d the source doc to `plans/archive/2026_08/issues/` in that same follow-up
+  commit (legal to bundle banner+status+mv together since no checkbox transition happens on the source doc in this
+  commit — all 3 of its todos were already `[x]` before this session). Re-ran
+  `scripts/plans/regenerate_active_plan_inventory.py` after the move; confirmed `check_finalize_plan_coverage.py` no
+  longer names this pair.
