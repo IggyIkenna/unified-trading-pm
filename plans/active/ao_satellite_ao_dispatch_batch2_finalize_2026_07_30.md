@@ -78,34 +78,34 @@ context_scope:
       discrepancy stated.
 
       **VERIFIED 2026-08-10 (slot 30, review) — all 8 done-claims hold against reality, no discrepancies.** Re-ran
-          `git show --stat` + `git merge-base --is-ancestor` + content-diffs and re-ran the named tests directly:
-          (1) `ao_done_gate_no_carveout...` — `agent-orchestrator@22a14b1`/`@e1b30f5`/`@587c8db` all ancestors of
-          `origin/live-defi-rollout`; all 3 sub-item code paths live on HEAD (`_diff_blocks_checkbox`+`_ADDED_BLOCKED_LINE_RE`
-          +`todo_blocked_pending_other_owner`, `_marker_disposition_in_text`+`_mode1_fallback_disposition`+
-          `_mode2_no_recent_commit_disposition`, rename-following `_same_commit_added_path_matching_basename` +
-          `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename`); re-ran
-          `tests/test_done_gate_plan_flip_hard_reject.py` = **42 passed** (all 8 named regression tests present, pass).
-          (2) `branch_reset_to_origin...` — all 4 orphan commits confirmed NOT on origin (`features-service@207afd62`,
-          `@d1c1ad8a`, `unified-api-contracts@724bd9be`, `agent-orchestrator@559452e`), all 4 replacements ON origin
-          (`a90256f5`, `a9429cba`, `698b5b6f`, `09cda29`), `git diff 724bd9be 698b5b6f --stat` EMPTY (byte-identical), route +
-          test file for `09cda29` live. (3) `mtds_backfill_sequential_true...` — `agent-orchestrator@77769ab` on origin,
-          `current_task_ids_by_plan`+`_wire_sequential_prereqs` code live; re-ran `tests/test_regen_reconcile.py` = **19
-          passed** (regression test `test_sequential_reword_mid_flight_does_not_corrupt_chain` present at :324). (4)
-          na-timer (EXTRACTED → batch10 todo 1) — batch10's own evidence re-checked: `agent-orchestrator@17939c3`
-          (TimeoutStartSec 2450→21600) on origin; live `state.db` shows `agent_kind=na_eligibility_auditor`
-          `exit_reason=lifecycle-complete` rows incl. the exact cited `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`
-          (3 lifecycle-complete current; `reaped-stale` is a separately-tracked mode, out of this todo's scope). (5)
-          orch_token — source doc's own `[x]` MOOT verdict (2026-08-06 loopback-preference) present; live `/api/fleet/git-health`
-          confirms `ip-172-31-5-118` 34/34 slots `reporter_stale=false`. (6) JWT-secret — `/etc/systemd/system/
-          orchestrator.service.d/jwt-secret-gcs.conf` present (systemd env carries `ORCHESTRATOR_JWT_SECRET_GCS`), unit active.
-          (7) `dispatch_sequential_gate...` — `unified-trading-pm@41a51d9ff` on origin; both codex docs state the
-          gate-on-`sequential:true` behavior + cite `agent-orchestrator@867b1731e`. (8) wip-preserve (EXTRACTED → batch10
-          todo 2) — `git ls-remote origin 'refs/wip-preserve/*'` empty; `staging-lock-check.yml` byte-identical between
-          `a77eb6d1` and `strategy-service@400d3773` (ON origin); current HEAD file is the thin-caller stub. No claim failed
-          verification; no new todo required.
+              `git show --stat` + `git merge-base --is-ancestor` + content-diffs and re-ran the named tests directly:
+              (1) `ao_done_gate_no_carveout...` — `agent-orchestrator@22a14b1`/`@e1b30f5`/`@587c8db` all ancestors of
+              `origin/live-defi-rollout`; all 3 sub-item code paths live on HEAD (`_diff_blocks_checkbox`+`_ADDED_BLOCKED_LINE_RE`
+              +`todo_blocked_pending_other_owner`, `_marker_disposition_in_text`+`_mode1_fallback_disposition`+
+              `_mode2_no_recent_commit_disposition`, rename-following `_same_commit_added_path_matching_basename` +
+              `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename`); re-ran
+              `tests/test_done_gate_plan_flip_hard_reject.py` = **42 passed** (all 8 named regression tests present, pass).
+              (2) `branch_reset_to_origin...` — all 4 orphan commits confirmed NOT on origin (`features-service@207afd62`,
+              `@d1c1ad8a`, `unified-api-contracts@724bd9be`, `agent-orchestrator@559452e`), all 4 replacements ON origin
+              (`a90256f5`, `a9429cba`, `698b5b6f`, `09cda29`), `git diff 724bd9be 698b5b6f --stat` EMPTY (byte-identical), route +
+              test file for `09cda29` live. (3) `mtds_backfill_sequential_true...` — `agent-orchestrator@77769ab` on origin,
+              `current_task_ids_by_plan`+`_wire_sequential_prereqs` code live; re-ran `tests/test_regen_reconcile.py` = **19
+              passed** (regression test `test_sequential_reword_mid_flight_does_not_corrupt_chain` present at :324). (4)
+              na-timer (EXTRACTED → batch10 todo 1) — batch10's own evidence re-checked: `agent-orchestrator@17939c3`
+              (TimeoutStartSec 2450→21600) on origin; live `state.db` shows `agent_kind=na_eligibility_auditor`
+              `exit_reason=lifecycle-complete` rows incl. the exact cited `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`
+              (3 lifecycle-complete current; `reaped-stale` is a separately-tracked mode, out of this todo's scope). (5)
+              orch_token — source doc's own `[x]` MOOT verdict (2026-08-06 loopback-preference) present; live `/api/fleet/git-health`
+              confirms `ip-172-31-5-118` 34/34 slots `reporter_stale=false`. (6) JWT-secret — `/etc/systemd/system/
+              orchestrator.service.d/jwt-secret-gcs.conf` present (systemd env carries `ORCHESTRATOR_JWT_SECRET_GCS`), unit active.
+              (7) `dispatch_sequential_gate...` — `unified-trading-pm@41a51d9ff` on origin; both codex docs state the
+              gate-on-`sequential:true` behavior + cite `agent-orchestrator@867b1731e`. (8) wip-preserve (EXTRACTED → batch10
+              todo 2) — `git ls-remote origin 'refs/wip-preserve/*'` empty; `staging-lock-check.yml` byte-identical between
+              `a77eb6d1` and `strategy-service@400d3773` (ON origin); current HEAD file is the thin-caller stub. No claim failed
+              verification; no new todo required.
 
-- [ ] [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was an
-      extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
+- [x] ✅ [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was
+      an extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
       todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
       `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (both `[WORKER] P1` checkboxes, with
       per-item MOOT-SUPERSEDED-or-recovered dispositions),
@@ -115,8 +115,19 @@ context_scope:
       `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (its DEVOPS P1 item),
       `dispatch_sequential_gate_fix_2026_07_24.md` (its DOCS P1 item — confirm operator sign-off was actually obtained
       before this flip, per that todo's `[OPERATOR]` tag), and `wip_preserve_refs_silently_unrecovered_2026_07_29.md`
-      (its `[DATA] P2` item only). **Done when**: every one of those flips is committed with the `docs(plans):` prefix
-      and cites the real commit sha (or, for the read-only/host-action items, the verification evidence).
+      (its `[DATA] P2` item only). **DONE 2026-08-10 (slot 28, review)** — all 8 source docs already have their target
+      checkboxes flipped with the correct evidence SHAs (verified via per-doc read, 0→4 open→checked across the set). No
+      new flips needed; the evidence was reconciled organically by the workers who shipped each fix. Summary per doc:
+      (1) `ao_done_gate`: all 4 [x] ✅ with agent-orchestrator@22a14b1/@e1b30f5/@587c8db/@3839380, all ancestors of
+      origin; (2) `branch_reset`: both WORKER P1 items [x] ✅ SUPERSEDED with per-orphan dispositions, verified
+      byte-identical on origin; (3) `mtds_backfill`: both [x] ✅ with agent-orchestrator@77769ab/@3474b95, tests re-ran
+      green; (4) `na_eligibility`: SCRIPT P3 [x] ✅ with agent-orchestrator@17939c3 + live state.db lifecycle-complete
+      rows; (5) `git_status`: INFRA P3 [x] ✅ MOOT — loopback fix removed token dependency, reporter_stale=0 live; (6)
+      `jwt_secret`: DEVOPS P1 [x] ✅ — .env.local literal + systemd drop-in, token-survives-restart proven; (7)
+      `dispatch_sequential`: DOCS P1 [x] ✅ — operator sign-off obtained 2026-08-06 + 2026-08-08, both codex docs cite
+      sequential gate; (8) `wip_preserve`: DATA P2 [x] ✅ SUPERSEDED — byte-identical content on origin, ref deleted.
+      **Done when**: satisfied — all 8 source docs' target checkboxes were already committed with real SHAs/evidence; no
+      additional commits needed.
 - [ ] [INFRA] P0. **Re-check every Deferred item's gate and spin the cleared ones into batch 3** — walk both Deferred
       sections of the batch plan and, for each entry, state whether its named gate has cleared: the 7 design/judgment
       forks (re-check whether any has since been operator-ruled or the source doc itself narrowed to one direction), the
