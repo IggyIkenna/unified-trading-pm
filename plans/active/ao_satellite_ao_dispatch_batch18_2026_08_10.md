@@ -15,7 +15,7 @@ summary: >-
   2026-08-10, real evidence: 20 completed reconcile runs, R1/R2 both answered) — extracting it here would have
   duplicated already-done work. See that batch's own finalize plan for the pending checkbox-reconciliation step; not
   this batch's concern.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
