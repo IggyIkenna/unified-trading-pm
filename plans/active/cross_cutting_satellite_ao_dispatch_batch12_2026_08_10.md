@@ -180,6 +180,49 @@ already in test bucket → skipped. ETA ~70 min.
 **Auto-pipeline armed** (background task `b3xnq4wbw`): polls every 120s for Aug 3 completion → auto-runs manifest merge
 → auto-runs delta_one `funding_oi`@1h → auto-runs delta_one `returns`@1h → reports results.
 
-**Next**: wait for auto-pipeline to complete, then read-back verify the features output in
-`gs://features-cefi-test-central-element-323112/delta_one/`, then flip both plan checkboxes (batch-12 todo 7 + source
-doc line 711).
+**Session resumed 2026-08-10 ~12:03 UTC** (after compaction). Old auto-pipeline `b3xnq4wbw` died with previous session.
+
+**Heartbeat 12:03 UTC**: VM `mdps-backfill-cefi-20260810-114949` still RUNNING (asia-northeast1-c, e2-standard-8,
+ON-DEMAND). Progress: **Jul 28 4/4 modes** (newly complete, was 0), Jul 27 3/4 (batch_aster missing), Aug 1 4/4, Aug 2
+3/4 (batch_hyperliquid missing), Jul 29-31 + Aug 3 0/4 (VM working through them). ~2/8 days complete, 2 partial, 4
+missing. VM ~12 min into ~70 min ETA.
+
+**Auto-pipeline re-armed** (background task `b3840ac7e`, script `.../auto_pipeline.sh`): polls every 60s for all 8 days
+→ manifest merge → delta_one `funding_oi`@1h → delta_one `returns`@1h → read-back verify. Same recipe as before but
+self-contained in a single script.
+
+**Session resumed 2026-08-10 ~12:12 UTC** (second compaction). Old auto-pipeline `b3840ac7e` died. Post-pipeline script
+`/tmp/post_mdps_pipeline.sh` (PID 531537) also **died during compaction** — the harness killed the background task it
+was tracking. Only `tail -f` harness monitors survived.
+
+**Heartbeat ~12:27 UTC**: VM still RUNNING. GCS state:
+
+- Jul 27: 3/4 modes (batch_aster absent — legitimate)
+- Jul 28: 4/4 ✅
+- Jul 29: 4/4 ✅ (newly complete, was processing at 12:14)
+- Jul 30: 4/4 ✅ (newly complete, was 0 at 12:16)
+- Jul 31: 1→6 modes growing (VM actively writing; 300/4351 instruments at 7%, ETA ~8 min)
+- Aug 01: 4/4 ✅
+- Aug 02: 3/4 (batch_hyperliquid absent — legitimate)
+- Aug 03: 0/4 pending
+
+VM on Jul 31 at ~12:28 UTC: 300/4351 instruments (7%), 8.3/s, ETA 488s (~12:36). ASTER chain mismatch errors on
+SOL-USDT@LIN (partition declares BSC, id has None) — benign, same pattern as KRAKEN-FUTURES non-perp failures.
+
+**Post-pipeline script RE-ARMED** (v3, ~12:29 UTC):
+`/home/ubuntu/unified-trading-system-repos/.tabs/14/post_mdps_pipeline.sh` (PID 1488466, nohup'd). Log at
+`/home/ubuntu/unified-trading-system-repos/.tabs/14/post_mdps_pipeline.log`. Polls VM every 30s → when
+TERMINATED/STOPPED/UNKNOWN: manifest merge → delta_one funding_oi@1h → delta_one returns@1h (for realized_vol_20) →
+read-back verify. VM ETA: Jul 31 ~12:36, Aug 03 ~12:44, pipeline ~5 min → full completion ~12:50 UTC.
+
+**Lessons — script survival across compactions**: `nohup ... &` launched via `Bash(run_in_background)` does NOT survive
+harness compaction — the harness tracks the foreground wrapper and may kill the process tree. A durable post-VM pipeline
+needs either: (a) a Monitor-based approach that stays in-harness, (b) a systemd timer, or (c) explicit re-arm on every
+session resume. The current re-armed script (v3) is a best-effort nohup — the next session MUST verify it's alive or
+re-arm again.
+
+**Next (session 3)**: verify post_mdps_pipeline.sh is alive (`ps aux | grep post_mdps`). If dead, re-arm from
+`/home/ubuntu/unified-trading-system-repos/.tabs/14/post_mdps_pipeline.sh`. Check VM status — if already TERMINATED, run
+the pipeline steps manually (manifest merge → funding_oi → returns → read-back verify in
+`gs://features-cefi-test-central-element-323112/delta_one/`). Flip both plan checkboxes (batch-12 todo 7 + source doc
+`features_service_e2e_pipeline_test_2026_05_26.md` line 711), commit with `docs(plans):`, POST `/done`.
