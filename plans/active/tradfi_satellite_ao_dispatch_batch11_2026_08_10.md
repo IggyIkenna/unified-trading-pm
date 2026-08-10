@@ -355,3 +355,17 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   `availability_index_backup_krx_purge_20260810T182348.parquet`, verified 0 `.KS-USD` rows remain. Note: bare `.KS`
   ticker forms (`000660.KS` etc.) and blank-instrument_id (`:`) rows remain — these are separate issues (likely batch11
   #6's domain).
+
+- 2026-08-10 (slot-21, data_engineering craft): census for todo #6 (CME FUTURE blank-instrument_id backfill).
+  **Population is 473,374 rows — 23× the 20,254 in the source issue.** NOT static — 425K rows written 2026-08-10
+  (clusters at 07:14 and 13:25 UTC). Full dissection in
+  `/plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` Progress Log (slot-21 entry). Key
+  findings: (1) ALL rows have populated `underlying` + null `instrument_id` + empty `quote_asset`/`margin_type` —
+  bundle-grain signature, NOT per-contract singles. (2) 75,805/76,454 unique (date, underlying, data_type) keys overlap
+  with `futures_chain` but with DIFFERENT `instrument_count` values — not redundant, can't blindly delete. (3) Root
+  cause refined: `canonicalize_manifest_instrument_type()` maps `continuous_future` → `FUTURE` — should be excluded like
+  `futures_chain`/`options_chain`. (4) GCS source objects (`instrument_type=future/underlying=*/` or
+  `continuous_future/`) not found in canonical bucket — likely migrated/deleted post-rebuild. (5) Also found: 9,665 KRX
+  blank rows (blank `instrument_type` + blank `underlying`), separate defect. **Todo #6 scope is now wrong** — the
+  "backfill per-contract instrument_ids" approach assumes per-instrument rows; these are bundle-grain rows that need
+  `instrument_type` reclassification, not per-contract id derivation. Needs operator re-triage.
