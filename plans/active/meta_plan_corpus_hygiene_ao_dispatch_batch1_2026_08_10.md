@@ -122,12 +122,15 @@ Two independent causes, both now fixed:
       unified-trading-pm@278b479e9f + `check_ag_closeout_linkage --only` 0 new orphans + `check_frontmatter_schema` 2
       docs clean. Fix-steps report: all 4 `[BACKEND] P1` still open, already escalated to
       `deployment_api_unauthenticated_prod_p0_2026_08_10.md` (step 1 DONE `UTL@336f2b3b6c`+`deployment-api@d0eebac4e6`).
-- [ ] [DOCS] P2. **Collapse the 4 `[ci, infrastructure]` dual-tags to `[ci]`** —
+- [x] ✅ [DOCS] P2. **Collapse the 4 `[ci, infrastructure]` dual-tags to `[ci]`** —
       `ci_pipeline_speed_and_cost_redesign_     2026_08_05.md`,
       `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,
       `self_hosted_runner_public_repo_revert_2026_08_05.md`, `shared_ci_workflow_repo_extraction_2026_08_06.md` (all in
       `/plans/active/issues/`). The `ci` tranche's 2026-08-10 audit already confirmed all 4 CI-pipeline-primary by
-      content. **Done when**: all 4 read `asset_group: [ci]`.
+      content. **Done when**: all 4 read `asset_group: [ci]`. — unified-trading-pm@242e239214 +
+      `check_frontmatter_schema` 2013 docs zero violations (3 targets live in `plans/active/`; the 4th
+      `shared_ci_workflow_repo_extraction_2026_08_06` is archived under `plans/archive/2026_08/` but was still retagged
+      to `[ci]` for corpus orthogonality).
 - [ ] [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
       `/plans/active/issues/`): `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` → `[ci]` or
       `[infrastructure]` (audit recommended `ci`, `infrastructure` defensible — pick by content);
