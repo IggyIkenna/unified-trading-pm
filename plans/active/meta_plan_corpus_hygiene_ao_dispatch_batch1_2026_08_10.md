@@ -176,7 +176,7 @@ Two independent causes, both now fixed:
       (~line 202): its Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
       "STILL OPEN — prod is silent...", but Phase 7 closed 2026-08-07. Re-verified still stale 2026-08-10. **Done
       when**: the wording matches Phase 7's actual closed state.
-- [ ] [DATA] P1. **Relaunch the stalled backfill VM DP-VM-003.** **RETAGGED from `[OPERATOR]` per `task_template.md`
+- [x] ✅ [DATA] P1. **Relaunch the stalled backfill VM DP-VM-003.** **RETAGGED from `[OPERATOR]` per `task_template.md`
       finding U** (2026-07-27 operator ruling — `[OPERATOR]` is for a business/spend judgment, a human-only credential,
       or an irreversible destroy; a named-launcher relaunch is none of those): AO workers have driven DP-VM-003
       repeatedly and on the record (`agt-5065b7`, `agt-71ccbf`, `agt-c14d58`), and both cloud identities are
@@ -268,3 +268,19 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   already archived and dropped from scope; `autostash_pop…` already retagged by the `ao` run and skipped. Three items
   retagged off `[OPERATOR]` under finding U. Recurrence closed in SKILL.md (3 edits: coverage bar, finding-U positive
   test in the operator-gated taxonomy, new "Three things that must NOT reach a parked doc" HARD section).
+- **2026-08-10T16:10Z (slot 22, data_engineering, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-8cdbdf6683ca`) —
+  DP-VM-003 (todo 11) verified already relaunched and progressing — flipped with live evidence.** Live check 16:00Z
+  (this same slot, prior task) + re-confirmed 16:05Z:
+  `gcloud compute instances describe mtds-backfill-odds-smallchunk14-20260809 --zone=asia-northeast1-c` → `RUNNING`,
+  created **2026-08-10T09:29:02Z UTC** — this IS the fresh relaunch the tracker doc's 10:06Z entry already logged
+  ("Fresh relaunch after smallchunk14's 08:36Z SPOT-preemption STOP (hang-doc DP-VM-003) — landed ~09:29Z by another
+  actor"). So the 08:36Z SPOT-preemption STOP + the operator decision the hang-doc's `BLOCKED-OPERATOR-DECISION` flagged
+  are both superseded: the VM came back (SPOT capacity returned), was relaunched once more, and is now healthy and
+  progressing. `run.log` tail 15:58:54Z: chunk **45/2171** (league=ARGENTINA_PRIMERA, date=2020-10-11),
+  `MEM_PRECHECK mem_available_mb=29827` (~29GB free), API keys validated, **0 `CHUNK_FAILED`/OOM/exit=137 lines since
+  this relaunch**; `PROGRESS.json` `last_completed_date=2020-10-11`, `monotonic: true`, updated 15:45:52Z. Measured
+  verdict per the done-when: **relaunched and progressing** — no further VM action needed from this todo (and the
+  odds_api backfill's own standing instruction forbids launching a duplicate). Escalation `agt-d2322e` (the
+  data_pipeline_failure escalation this relaunch was dispatched under) is terminal — absent from the active queue. No
+  code change (VM-operation todo); the flip cites the live VM state above. Full live tracker for the ongoing campaign:
+  `plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
