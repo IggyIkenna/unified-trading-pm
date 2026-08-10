@@ -653,3 +653,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   dropped **13,957 → 11,001** (-2,956); manifest row total has now been flat at 16,181,741 for a 4th consecutive reading
   while needed keeps declining every tick — a stable, reproducible decoupled-metric pattern (not a stall; both
   independent signals keep confirming real forward movement). Other AF entities unchanged at their floors.
+- **04:16Z — Both fleets healthy; INJURIES accelerating hard toward convergence (needed 11,001 → 5,406, -5,595 in one
+  tick).** Same live instances (`af-backfill-20260809-222924`, `mtds-backfill-odds-smallchunk17-20260810`) — no
+  rotation, still 11x hang occurrences (no 12th). `smallchunk17`: chunk 5/425, zero OOMs/CHUNK_FAILED, fresh — 13 chunks
+  from chunk 18. INJURIES `[[VM_PROGRESS]]` monotonic advance 2025-12-19 → 2026-05-22 (~5 real months in ~22min, the
+  fastest pace observed yet, now within ~2.5 months of the 2026-08-09 end date). Fresh census confirms the acceleration:
+  INJURIES needed **11,001 → 5,406** (-5,595); other AF entities unchanged at floor (PLAYER_STATS=3, STANDINGS=271,
+  TEAMS=96); grand total needed 11,371 → 5,776 — the campaign is now visibly closing in on whatever INJURIES' own
+  honest-absence floor turns out to be (watching closely over the next few ticks; may not reach exactly 0, similar to
+  the other 3 entities' small non-zero floors). Manifest row total flat at 16,181,741 for a 5th consecutive tick while
+  needed keeps dropping — the decoupled-metric pattern remains stable and not concerning. No intervention needed on
+  either fleet.
