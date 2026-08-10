@@ -120,14 +120,15 @@ CLI wiring, same shape as the 3 domains that already have it.
       branch needed** — CatalogManager is a domain-agnostic Nautilus `ParquetDataCatalog` wrapper; the sports
       synthetic-tick shape is the same QuoteTick shape CeFi registers (verified by write+read-back in
       `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd; shipped as 51bee662a.
-- [ ] [DESIGN] P3. **RESOLVED by the 2026-08-08 OPERATOR RULING banner above — option (a), delete it.** Resolve the
+- [x] ✅ [DESIGN] P3. Deleted `SportsMatchingEngine` per operator ruling at
+      `/plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` L54 (2026-08-08): option (a). Resolve the
       `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
       `tests/`, always fills at requested odds with no rejection/queue model, i.e. Group-B-shaped behavior sitting in
       the matching-engine module). ~~Either: (a) delete it as unused dead code once confirmed truly orphaned, or (b) if
       it was meant to replace `L0Matcher` for sports specifically, explain why and wire it in instead of `L0Matcher`.~~
       Ruled: confirmed dead code, delete it (no shims) rather than wiring it — do not re-litigate. Do this BEFORE
-      building the CLI below so the harness targets the right matcher (`L0Matcher`).
+      building the CLI below so the harness targets the right matcher (`L0Matcher`). — execution-service@70d18a44
 - [ ] [SCRIPT] P3. Add a hermetic test asserting `run_sports_backtest` produces a non-trivial `execution_alpha_bps` (per
       `backtest-groups.md`'s Group-C output contract) against the fixture data, proving the harness actually measures
       something (not just that it runs).
@@ -206,3 +207,9 @@ CLI wiring, same shape as the 3 domains that already have it.
   left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain runners'
   CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired finalize
   sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+- **2026-08-10 (slot 4, backend_engineer)**: Todo 3 shipped — deleted `SportsMatchingEngine`
+  (`execution_service/matching_engine/sports_matching.py`, 468 lines, zero callers anywhere in execution-service or
+  tests) and removed its re-exports from `matching_engine/__init__.py` (BetOrder, BetStatus, MarketType, OpenBet,
+  PortfolioSummary, SettlementResult, SportsMatchingEngine — all had zero importers from this package; real consumers
+  import the distinct UAC types of the same names). Operator ruling 2026-08-08 option (a): delete rather than wire.
+  execution-service@70d18a44.
