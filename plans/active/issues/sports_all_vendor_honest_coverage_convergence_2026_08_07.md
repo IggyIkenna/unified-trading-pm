@@ -754,3 +754,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   frontier passes ~chunk 70 (≈2021-06). **Odds fleet health this tick**: `smallchunk18` at chunk 13/425, zero
   OOMs/CHUNK_FAILED, fresh (~1.5min log lag) — 5 chunks from chunk 18 (tightening next wakeup to watch it through the
   danger zone). Still 12x hang occurrences (no 13th). AF sanity check remains clean.
+- **07:52Z — Odds fleet healthy, no new hang (still 12x); still approaching chunk 18.** `smallchunk18`: chunk 15/425,
+  zero OOMs/CHUNK_FAILED, very fresh (~40s log lag) — 3 chunks from chunk 18, keeping the tightened watch interval until
+  it clears. AF sanity check remains clean (no new `af-backfill-*` instance). Not re-running the odds_api gap census
+  this tick (nothing new to learn — frontier is still deep in already-covered 2020 ground, well before the first real
+  gap at ~chunk 70/2021-06). No intervention needed.
