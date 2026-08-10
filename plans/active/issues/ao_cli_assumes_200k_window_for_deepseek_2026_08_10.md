@@ -94,10 +94,18 @@ exists to produce.
       so the CLI's own auto-compact keeps headroom. Tests: `test_a_deepseek_spawn_gets_the_real_window`,
       `test_an_anthropic_spawn_is_left_alone`, `test_an_unset_model_is_left_alone`,
       `test_the_value_stays_below_the_measured_hard_ceiling`.
-- [ ] [BACKEND] P1. **Confirm the effect on the live fleet.** The code is on LDR but the VM checkout had not pulled it
-      at time of writing, and the export applies at SPAWN — running DeepSeek sessions keep the old ~200K belief until
-      they respawn. Done-when: a DeepSeek slot spawned after the rollout is observed passing 400K with no `auto`
-      `compact_boundary`, cited by transcript id; and `auto` boundaries for DeepSeek stop appearing in the ~150K band.
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-10 (slot-3, backend craft)** — Confirmed the effect on the live fleet. The server
+      (uvicorn PID, root clone `agent-orchestrator`) restarted `13:30:20` with `ac9ba18` an ancestor of its HEAD; every
+      DeepSeek claude process spawned since carries `CLAUDE_CODE_MAX_CONTEXT_TOKENS=1000000` in its env (verified at
+      process level for slots 3/6/17/30/32), while pre-rollout spawns (slots 2/14/21) do not — the "applies at SPAWN"
+      contract holds. Done-when met with a citable observation: **slot-30's transcript
+      `e0d3058f-26f5-4563-8122-432379ac17b0.jsonl` crossed 400K at `2026-08-10T13:45:51Z` and reached 440,529 tokens
+      with ZERO `trigger=auto` `compact_boundary`** (the old ~167-171K auto-compact band was crossed at 13:20Z — no
+      boundary — proving the session's CLI did not hold the old ~200K belief). Fleet-wide: **ZERO auto compact_boundary
+      in ANY DeepSeek transcript since the rollout** (the only post-rollout in-band boundary, slot-14's 141K, is
+      `trigger=manual` — AO's `/pre-compact`, bounds nothing). Pre-rollout baseline confirmed the old band was real
+      (slot-2's old transcripts compact at preTokens≈167-171K). See Progress Log for the full evidence. Repo:
+      agent-orchestrator (observation only — the fix itself already shipped as `ac9ba18`).
 - [x] ✅ [BACKEND] P2. Not needed — the "if it is NOT settable, compensate" branch is moot now that it is settable. AO's
       own arithmetic was already corrected separately (1M prior + `context_window_for` taking it outright for DeepSeek),
       so the two numbers no longer contradict each other in the dashboard.
@@ -166,3 +174,21 @@ exists to produce.
   what actually truncates the sessions. Probe method for anyone re-checking the window: POST `/v1/messages` at
   `api.deepseek.com` with a large filler prompt and `max_tokens: 16` — the filler runs ~6 chars/token, so size the
   payload accordingly (3.6 MB yielded 600K input tokens).
+- 2026-08-10T13:55Z (slot-3, backend craft, dispatched on the "Confirm the effect on the live fleet" todo): Live-fleet
+  confirmation — all evidence gathered from the running system, not from self-report. (1) **Server has the fix**:
+  uvicorn PID 666777 restarted `13:30:20` from the root clone whose HEAD has `ac9ba18` as an ancestor (commit `ac9ba18`
+  landed `12:19:38Z`). (2) **The env export is live on post-rollout spawns, absent on pre-rollout ones**:
+  `/proc/<pid>/environ` shows `CLAUDE_CODE_MAX_CONTEXT_TOKENS=1000000` for the DeepSeek claude processes of slots
+  3/6/17/30/32 (all started after the restart) and is UNSET for slots 2/14/21 (spawned earlier) — the exact "applies at
+  SPAWN, old sessions keep the old belief until respawn" contract the todo predicted. (3) **Done-when observation**:
+  slot-30's transcript `e0d3058f-26f5-4563-8122-432379ac17b0.jsonl` crossed 400K at `13:45:51Z` and reached 440,529
+  tokens with ZERO `trigger=auto` `compact_boundary` — it crossed the old ~167-171K auto-compact band at `13:20:59Z`
+  with no boundary either, proving its CLI did not hold the old ~200K belief. (4) **No auto boundaries in the ~150K band
+  fleet-wide since rollout**: scanned every DeepSeek transcript under `~/.claude-configs/orch-slot-*/projects` — zero
+  `trigger=auto` compact_boundary with ts>=13:30Z anywhere; the only post-rollout in-band boundary (slot-14's 141,909)
+  is `trigger=manual` (AO's own `/pre-compact`, bounds nothing per `context_probe.py`). (5) **Pre-rollout baseline**:
+  slot-2's old transcripts compact at preTokens≈167-171K (e.g. `06137d9f...` preTokens=167847), confirming the old band
+  was real and is now silent. No code changed — observation only; the fix (`ac9ba18`) was already shipped. Noted for
+  awareness: slot-30's session began 13:10Z (before the 13:30 restart I attributed as the rollout instant), yet its
+  no-boundary crossing of 167K+ at ~13:18-20Z proves the 1M belief was already live on it from early on (the server had
+  evidently been running the fixed code before the 13:30 process).
