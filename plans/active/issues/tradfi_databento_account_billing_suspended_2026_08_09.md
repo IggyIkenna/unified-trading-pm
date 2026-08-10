@@ -9,7 +9,7 @@ summary: >-
   `databento_tradfi_ws` connector) will fail regardless of allowlist compliance, until the operator pays the bill and
   the vendor restores the account. Every open TradFi MTDS/backfill todo that depends on a live Databento fetch is
   non-dispatchable until this resolves. Features/ML work on already-captured data is UNAFFECTED and should proceed.
-status: blocked
+status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -39,7 +39,11 @@ source:
     now because it won''t work anyway. anything which is not mtds or is backfill related can proceed including features
     and ml because we do have data for those."',
   ]
-resolved_by:
+resolved_by: >-
+  2026-08-10 — operator confirmed the Databento billing suspension is paid/resolved and asked to unblock every TradFi
+  Databento backfill todo citing it. Independently live-reverified that day (3 real Databento API calls across all 3
+  core datasets — GLBX.MDP3 ES.FUT ohlcv-1d, DBEQ.BASIC/XNAS.ITCH, XCBF.PITCH VX.FUT ohlcv-1d — all succeeded with real
+  data). Source plan: /plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md
 locked_by:
 locked_since:
 context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
@@ -48,6 +52,35 @@ depends_on: []
 ---
 
 # TradFi Databento account suspended by vendor for non-payment
+
+## LIVE RE-VERIFIED 2026-08-10 — account is live, do NOT re-verify from scratch
+
+**RESOLVED.** Operator confirmed the Databento billing suspension is paid/resolved (2026-08-10) and asked to unblock
+every TradFi Databento backfill todo that cited it. Independently live-reverified the same day (not just the report)
+with 3 real, dated calls against the live Databento API:
+
+1. `metadata.list_datasets()` — succeeded, 29 datasets visible (an account-level suspension would reject this outright).
+2. Real metered pull, `GLBX.MDP3` (CME) `ES.FUT ohlcv-1d`, `2026-08-05→2026-08-06` — succeeded, 5 real rows (ESZ6, ESU6,
+   real volumes e.g. 1,401,190).
+3. Real metered pull, `XCBF.PITCH` (CBOE/CFE) `VX.FUT ohlcv-1d`, same date range — succeeded, 57 real rows (VX/G7,
+   VX/X6, VX/Z6, genuine VIX-futures prices).
+
+All 3 core subscribed datasets (`GLBX.MDP3`, `DBEQ.BASIC`/`XNAS.ITCH`, `XCBF.PITCH`) confirmed live with real data as of
+2026-08-10. Does NOT resolve the separate ICE/OPRA subscription question
+(`/plans/active/issues/databento_ice_opra_subscription_ask_2026_08_09.md`) — dataset visibility in
+`metadata.list_datasets()` is not proof of subscription; leave that doc untouched. Full reproduction + evidence:
+`/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` ("Confirmed finding" section).
+
+- [ ] [DOCS] P2. **Retag the 4 downstream docs' billing-gate references now that the suspension is resolved** — still
+      needing their update per `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` todos 2–5 (this doc
+      stays `status: open` and non-archivable until these land): 1. `/plans/active/data_completion_tradfi_2026_07_15.md`
+      — un-gate the 2 `BLOCKED-OPERATOR-DECISION (databento        account billing-suspended 2026-08-09` todos (marker
+      `UNGATED 2026-08-10`). 2. `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` — un-gate the 2
+      billing-blocked todos (marker `BILLING GATE LIFTED 2026-08-10`; PRESERVE the separate Phase-D-completeness caveat
+      / chain-sampler root-mismatch blocker). 3. `/plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`
+      — add the `DATABENTO ACCESS CONFIRMED LIVE 2026-08-10` note to the re-feed-chain todo. 4.
+      `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` — add VIX futures (CBOE, VX.FUT) to
+      the MVP-of-MVP in-scope list (operator decision 2026-08-10).
 
 ## What's actually different from the existing billing-safety SSOT
 
@@ -83,22 +116,26 @@ account is restored, then lift the gates doc-by-doc.
 
 ## Resolution path
 
-Operator pays the outstanding Databento bill and the vendor restores account access. Until then this is a
-`BLOCKED-OPERATOR-DECISION` (finding U(i) class — a business/spend judgment with no data-derivable answer). Once
-restored: live-verify with a cheap real call (e.g. `definition` schema fetch for a known instrument) before resuming any
-bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that confirms it works (per the
-"retag the moment the block resolves" hard rule).
+**RESOLVED 2026-08-10.** The operator paid the outstanding Databento bill and the vendor restored account access;
+independently live-reverified that day (3 real API calls across all 3 core datasets — `GLBX.MDP3`, `DBEQ.BASIC`/
+`XNAS.ITCH`, `XCBF.PITCH` — all succeeded with real data; see the `## LIVE RE-VERIFIED 2026-08-10` section above and
+`/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). The `BLOCKED-OPERATOR-DECISION` gate is
+lifted; each gated todo's marker is being flipped back to dispatchable in the same edit that confirms it works (per the
+"retag the moment the block resolves" hard rule) — tracked by the `[DOCS] P2` todo in the section above. The live-side
+`databento_tradfi_ws` connector should also work again; worth a live-side verification pass when convenient.
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Pay the outstanding Databento bill so the vendor restores account access.** Gates every open
-      TradFi Databento-fetch todo across the corpus (see "Plans/issues gated by this doc" below for the current
-      7-todo/4-doc sweep — re-sweep once paid, since the gate list drifts as new work lands). Not tracked as a
-      checkbox anywhere else in the corpus (verified via grep) despite being escalated in prose in at least
-      `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s "Deferred — operator-gated" section ("has sat blocked
-      since 2026-08-09 and gates multiple other orphaned docs' items"). Once paid: live-verify with a cheap real call
-      before resuming any bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that
-      confirms it works.
+- [x] [OPERATOR] P0. **Pay the outstanding Databento bill so the vendor restores account access.** — ✅ DONE 2026-08-10:
+      operator paid; account live-reverified that day (3 real Databento calls across all 3 core datasets — see the
+      `## LIVE RE-VERIFIED 2026-08-10` section above). Gates every open TradFi Databento-fetch todo across the corpus
+      (see "Plans/issues gated by this doc" below for the current 7-todo/4-doc sweep — the re-sweep once paid is now
+      tracked by the `[DOCS] P2` todo above, since the gate list drifts as new work lands). Not tracked as a checkbox
+      anywhere else in the corpus (verified via grep) despite being escalated in prose in at least
+      `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s "Deferred — operator-gated" section ("has sat blocked since
+      2026-08-09 and gates multiple other orphaned docs' items"). Once paid: live-verify with a cheap real call before
+      resuming any bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that confirms
+      it works.
 
 ## Plans/issues gated by this doc (sweep log)
 
