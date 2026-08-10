@@ -304,12 +304,19 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       `doc_drift_cleared` activity; ✅ CLOSE bookend (`notify_slot_blocked_answered`, auto=True) for rows that had
       paged; `resolved_doc_drift_count` now counts rows actually closed, not raw resolved keys; 3 new tests:
       open-then-clear, paged→bookend, no-open-row→zero).
-- [ ] [BACKEND] P1. **Generalise it — add a `condition_key` column and a fourth `classify_retirement` exit that does not
-      resolve a `TaskRow`.** Any detector-seeded row carrying a `condition_key` retires when its detector's latest run
-      no longer reports that key. Route `doc_drift` through this generic path rather than keeping a bespoke closer.
+- [x] ✅ [BACKEND] P1. **Generalise it — add a `condition_key` column and a fourth `classify_retirement` exit that does
+      not resolve a `TaskRow`.** Any detector-seeded row carrying a `condition_key` retires when its detector's latest
+      run no longer reports that key. Route `doc_drift` through this generic path rather than keeping a bespoke closer.
       **Done when**: `classify_retirement` has a `condition_cleared` exit with no `TaskRow` dependency, a test proves a
       synthetic condition-derived row retires through it, and the `doc_drift`-specific closer from the P0 todo is
-      replaced by it (not left alongside it). Repo: agent-orchestrator.
+      replaced by it (not left alongside it). Repo: agent-orchestrator. — agent-orchestrator@b5d38671d (QG green 3201
+      passed; `BlockedRow.condition_key` + `_migrate_blocked_queue_condition_key`; `add_blocked(condition_key=)`;
+      doc_drift rows stamp `doc_drift:<key>`; `classify_retirement` `condition_cleared` exit resolves NO TaskRow —
+      retires any namespaced `condition_key` absent from its detector's seen-set (`_CONDITION_SEEN_SET_RELPATHS`
+      registry, path joined at call time); reconcile retirement `answered_by` is now `auto:<reason>` so
+      condition-cleared rows read `auto:condition_cleared`; C1's in-record_result closer + bookend REMOVED, replaced by
+      this exit; 4 new tests incl. synthetic-row retire-through + reconcile end-to-end + still-
+      reported-does-not-retire).
 - [ ] [BACKEND] P2. **Stamp and surface `last_reconfirmed_at`** on every surviving detector-derived row on each detector
       run, and render it on the card as "still detected as of `<ts>`". This is what makes an open row mean "currently
       true" rather than "was true at some point". **Done when**: the column updates on each `plan_health` run that
@@ -395,3 +402,17 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   paged→bookend, no-open-row→zero). Note: C2 generalises this into a `condition_cleared` `classify_retirement` exit +
   `condition_key` column and REPLACES this doc_drift-specific closer — C1 deliberately keeps the bespoke path until C2
   lands.
+- **2026-08-10 (C2, slot-16 worker)**: Generalised C1's condition-cleared closure into the generic path and routed
+  doc_drift through it, replacing the bespoke closer (per C2's "not left alongside it"). Added
+  `BlockedRow.condition_key` (nullable, no-backfill `_migrate_blocked_queue_condition_key`) +
+  `add_blocked(condition_key=)`; doc_drift rows stamp `condition_key="doc_drift:<drift_key>"`. `classify_retirement`
+  gained the `condition_cleared` exit — the one exit with NO `TaskRow` dependency: a row carrying a namespaced
+  `condition_key` retires when its detector's latest run (the seen-set under `STATE_DIR`, mapped per-namespace in
+  `_CONDITION_SEEN_SET_RELPATHS`, joined at CALL time so a STATE_DIR change/test-monkeypatch is honoured) no longer
+  reports that key. The reconcile sweep's existing retirement path answers the row (answered_by generalised from
+  `auto-retire` to `auto:<reason>`, so condition-cleared rows read `auto:condition_cleared`) and fires the ✅ CLOSE
+  bookend for paged rows. C1's in-`record_result` closer + bookend block were REMOVED; `resolved_doc_drift_count` is
+  again an informational resolved-keys count. — agent-orchestrator@b5d38671d (QG green 3201 passed; 4 new tests:
+  synthetic condition-derived row retires via `classify_retirement`, end-to-end through `reconcile_once` with
+  `answered_by=auto:condition_cleared` + slot freed, still-reported-key does not retire, record_result reports resolved
+  count without closing).
