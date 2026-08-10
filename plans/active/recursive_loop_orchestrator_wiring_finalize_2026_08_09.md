@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                      new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                      Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                      (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                      perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                      (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                      rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                      service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                      code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                      opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                      docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                      would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                      requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                                          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                                          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                                          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                                          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                                          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                                          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                                          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                                          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                                          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                                          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                                          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                                          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -213,19 +213,57 @@ context_scope:
       (dispatch routing to the injected router bound to the orchestrator + fetch seam raises + router logs intents).
       Full `quality-gates.sh` green on execution-service.
 
-- [ ] [DESIGN] P2. Decide + scope the actual on-chain rebalance/topup execution path for `PerpHedgeMonitor` (the
-      dispatch target todo 7's `PerpHedgeDispatchRouter` is bound to). RULED 2026-08-10 (BLK-1255d5cf, option C): todo 7
-      shipped the lifecycle + dispatch ROUTING (`execution-service@afd0166b (feature @163b3c90)`); the real execution is
-      deferred here, gated on machinery that does not exist yet. `RecursiveLoopOrchestrator` exposes only
-      `open()`/`unwind()`; there is no perp-venue order adapter, USDC-transfer adapter, or production
-      `RebalanceInstruction`/ `MarginTopupInstruction` consumer (verified 2026-08-10, slot 16:
-      `execution_service/venues/` has no hyperliquid/bybit adapter; only `PerpHedgeSizer` produces and
-      `PerpHedgeMonitor` dispatches the two intent types). The production on-chain fetch readers
-      `PerpHedgeFetchProvider` currently raises for are the same machinery bucket (Aave account data via RPC, LST
-      exchange rate, perp-venue position/margin reads). Repo: execution-service. Done-when: a properly-scoped
-      implementation plan/todo pair (with exact done-when + test plan) filed covering the real execution path —
-      perp-venue order + USDC-transfer adapters + a real consumer under `RecursiveLoopOrchestrator`, plus the production
-      fetch readers — gated on the machinery that doesn't exist yet.
+- [x] ✅ [DESIGN] P2. Decide + scope the actual on-chain rebalance/topup execution path for `PerpHedgeMonitor` (the
+      dispatch target todo 7's `PerpHedgeDispatchRouter` is bound to). **RULED 2026-08-10 (BLK-d02b4032, main, option A
+      — Hyperliquid-first: reuse+wire the existing `HyperliquidConnector`).** KEY CORRECTION TO PREMISE (2026-08-10,
+      slot 9): the "no perp-venue order adapter" claim from slot 16 was verified against `execution_service/venues/`
+      only — the `defi_execution/protocols/` layer already has a tested, live-capable `HyperliquidConnector`
+      (`hyperliquid.py:93`, `place_order()` = EIP-712 sign + POST `/exchange` line 522-542, `cancel_order`,
+      `_get_account_value_live` margin/equity/withdrawable reads, sim mode) + a GSM credential hot-reloader
+      (`config_reloaders.py:199 start_hl_key_reloader`, secret `hyperliquid-api-credentials`) + a USDC Arbitrum→HL
+      bridge (`hyperliquid_bridge.py` `deposit_usdc_to_hyperliquid`) — NONE wired into production (zero app.py/registry
+      callers; only unit tests). Bybit is genuinely greenfield (no connector anywhere). Aave `getUserAccountData` + LST
+      `get_exchange_rate` primitives exist. Main ruled A (Hyperliquid-first, reuse), rejecting B (build both HL+Bybit
+      from scratch — doubles surface when HL is primary and Bybit is a 50%-cap secondary) and C (separate executor
+      module — deviates from explicit "consumer under `RecursiveLoopOrchestrator`" done-when). The properly-scoped
+      implementation plan/todo pair is filed below as todos 11–15, one per machinery bucket (consumer, HL wiring, fetch
+      readers, USDC bridge, Bybit follow-up) — see also the verified machinery-state draft in
+      `execution-service/_scratch/perp_hedge_execution_plan_draft.md`. — unified-trading-pm.
+
+- [ ] [BACKEND] P2. Add `RecursiveLoopOrchestrator.rebalance()` + `.margin_topup()` consumer methods driving
+      `HyperliquidConnector.place_order()` (SHORT=extend-short, COVER=reduce-short with `reduce_only`, NOOP no-op) +
+      `hyperliquid_bridge.deposit_usdc_to_hyperliquid` for topup (`TREASURY_HOT` source, testnet/early-mainnet). Keep
+      the BLK-1255d5cf single-designated-path constraint: `PerpHedgeDispatchRouter` routes through this consumer — no
+      second instruction sink. Repo: execution-service. Done-when: unit tests (SHORT opens/extends, COVER reduces with
+      reduce_only, NOOP no-op, margin topup routes to bridge deposit, error classified via UAC `classify_venue_error` in
+      per-tick loop); `quality-gates.sh` green. Codex SSOTs: `/codex/04-architecture/tier-and-import-architecture.md`,
+      `/codex/04-architecture/defi-execution-overview.md`.
+
+- [ ] [BACKEND] P2. Wire `HyperliquidConnector` + credential reloader into production at `app.py` startup/shutdown.
+      Instantiate `HyperliquidConnector` (mode from config: testnet/early-mainnet), call `start_hl_key_reloader` (GSM
+      secret `hyperliquid-api-credentials`), `connect()` on startup, `close()` on shutdown. Bind to the orchestrator's
+      rebalance path (todo 11's consumer). Repo: execution-service. Done-when: wiring test asserts connector connected
+      at startup + reloader pushes credentials + connector bound to orchestrator rebalance; `quality-gates.sh` green.
+
+- [ ] [BACKEND] P2. Wire production fetch readers into `PerpHedgeFetchProvider` — `fetch_aave_data` → AAVEConnector
+      `getUserAccountData` (keys `total_collateral_eth`/`total_debt_eth`), `fetch_exchange_rate` → LST protocol
+      connector `get_exchange_rate`, `fetch_current_perp_size`/`fetch_available_margin`/`fetch_initial_margin_estimate`
+      → `HyperliquidConnector` live position + clearinghouseState margin reads. Repo: execution-service. Done-when:
+      provider returns real callables (no more `PerpHedgeFetchNotWiredError`); unit tests with mock RPC/HL responses;
+      `quality-gates.sh` green.
+
+- [ ] [BACKEND] P3. Wire USDC margin topup path: `hyperliquid_bridge.deposit_usdc_to_hyperliquid` for `TREASURY_HOT`
+      source (testnet/early-mainnet — COPPER_MPC/CEFFU_MPC remain gated per Group F item 19). Repo: execution-service.
+      Done-when: topup instruction routes to a deposit building the correct approve+sendDeposit calls; unit tests with
+      mock Arbitrum RPC; `quality-gates.sh` green. **LOW-CONFIDENCE bridge address noted** (`hyperliquid_bridge.py:17`
+      `_HL_ARBITRUM_BRIDGE` — verify against current HL docs before mainnet). Wallet private-key custody
+      (`CLOUD_KMS_ENCRYPTED` per defi-execution credential convention) stays a human-only hard-stop; this todo wires the
+      code path only.
+
+- [ ] [DESIGN] P3. Scoped follow-up plan for Bybit (secondary venue, 50% counterparty cap). Nothing exists today — HMAC
+      auth, USDC margin, new connector + bridge + instruction mapping, `depends_on`/`gate_on_depends` on the HL path's
+      instruction-mapping pattern from todo 11. Repo: execution-service. Done-when: a properly-scoped implementation
+      plan (same shape as todos 11–14) filed; gated on HL path being green.
 
 ## Progress Log
 
@@ -353,3 +391,20 @@ context_scope:
   execution-service; `execution-service@afd0166b (feature @163b3c90)` landed on LDR + verified as an ancestor of
   `origin/live-defi-rollout`. Filed the gated follow-up as todo 10 (the real on-chain execution path + production fetch
   readers).
+  - **2026-08-10 (slot 9, backend_engineer)**: Todo 10 shipped — DESIGN deliverable per its done-when. Verified the
+    machinery state from scratch, independently of the slot-16 check: the "no perp-venue order adapter" premise was
+    incomplete — it checked `execution_service/venues/` only and missed the `defi_execution/protocols/` layer where
+    `HyperliquidConnector` (`hyperliquid.py:93`) already has a live EIP-712 order-placement path (`place_order()` →
+    signed POST `/exchange`, `cancel_order`, `_get_account_value_live` margin/equity/withdrawable reads, sim mode) + a
+    GSM credential hot-reloader (`start_hl_key_reloader`, secret `hyperliquid-api-credentials`) + a USDC Arbitrum→HL
+    deposit/withdraw bridge (`hyperliquid_bridge.py`) — all tested, none wired into production (zero app.py/registry
+    callers). Bybit is genuinely greenfield (no connector anywhere). Aave `getUserAccountData` + LST `get_exchange_rate`
+    primitives exist. Escalated the sequencing + custody-shape decision to main (BLK-d02b4032, 3 options, recommendation
+    A — Hyperliquid-first, reuse existing primitives). Main ruled A (rationale: "matches done-when exactly, reuses
+    shipped+tested primitives, fuller solution, lowest risk"; rejects B as doubling surface when HL is primary and Bybit
+    is a 50%-cap secondary; rejects C as deviating from done-when's explicit consumer-under-orchestrator). Filed the
+    properly-scoped implementation plan/todo pair as new `- [ ]` todos 11–15 covering: consumer under
+    `RecursiveLoopOrchestrator` (todo 11), HL connector wiring (todo 12), production fetch readers into
+    `PerpHedgeFetchProvider` (todo 13), USDC bridge topup path (todo 14), Bybit scoped follow-up (todo 15). Mirrors the
+    established BLK-1255d5cf split pattern — execution is a separately-dispatching todo, not folded into this design
+    todo. Flipped todo 10 `[x]`.
