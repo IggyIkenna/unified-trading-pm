@@ -117,14 +117,20 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       `five_hour_pct` non-null (e.g. sub-a weekly_pct=100, five_hour_pct=76). Poller started in `server.py` startup
       (env-gated by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`, default 30min → ~10x/5h-window) → survives orchestrator
       restart. See Progress Log.
-- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
-      the account that owned its slot at that timestamp.** Current attribution has no correct path:
+- [x] ✅ [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves
+      to the account that owned its slot at that timestamp.** Current attribution has no correct path:
       `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
       earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
       ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
-      and the resolver returns the same account for two sessions of one agent split by a compaction.
+      and the resolver returns the same account for two sessions of one agent split by a compaction. —
+      agent-orchestrator@5516a0a (server/slot_account_attribution.py: build_account_intervals + resolve_turn_account +
+      resolve_transcript_account; wired into deepseek_usage.scan_account_transcripts via build_account_intervals).
+      **Verified 2026-08-10 (slot 19)**: 21/21 tests pass incl. `test_post_compaction_same_account_from_db`
+      (pre-compaction turn resolves to correct account despite claude_session_id now pointing at post-compaction
+      session; both pre+post turns agree) and `test_two_intervals_same_agent_different_sessions` (same account across a
+      compaction split). See Progress Log.
 - [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
@@ -714,3 +720,22 @@ VM (read-only, `mode=ro`):
   agnostic.
 
 Done-when fully met: table on live VM ✓, ≥2 distinct sampled_at per account ✓, restart-survival wiring ✓.
+
+### 2026-08-10 — Todo 2 (slot-to-account-over-time attribution map) complete + verified (slot 19)
+
+Todo 2's code was already shipped (agent-orchestrator@5516a0a, `server/slot_account_attribution.py`) but the checkbox
+was never flipped. Verified:
+
+- **Module**: `build_account_intervals(session)` derives `(account_id, session_name, registered_at, finished_at)`
+  intervals from every `AgentRow` with a known `account_id` + ≥1 session name (both `tmux_session` and
+  `last_tmux_session` — the latter survives archival so reaped-stale agents still attribute).
+  `resolve_turn_account(ts, session_name, intervals)` assigns a turn by its own timestamp; `resolve_transcript_account`
+  is the caller wrapper (probes the earliest turn). `deepseek_usage.scan_account_transcripts` consumes
+  `build_account_intervals` for the account-window walker.
+- **Done-when both met**: `test_post_compaction_same_account_from_db` proves a pre-compaction turn (whose
+  `claude_session_id` is no longer on the AgentRow) still attributes to the correct account AND both pre/post-compaction
+  turns resolve to the same account; `test_two_intervals_same_agent_different_sessions` proves the same account across a
+  compaction split. 21/21 tests in `test_slot_account_attribution.py` + `test_deepseek_account_scoped_attribution.py`
+  pass.
+- Consumers wired: `scan_account_transcripts` uses the interval map (todo 1 of this plan), so the calibration walker now
+  resolves post-compaction turns correctly.
