@@ -255,6 +255,16 @@ the VM-scale run:
   is compacting here; todo 2 stays unchecked (genuinely not done — needs elapsed wall-clock time on GCE, not more code
   or a decision). See `## Deferred work after 2026-08-10` below for what the next session should do.
 
+  **Two operational lessons worth not re-learning**: (1) `ScheduleWakeup` and `run_in_background` do NOT compose — a
+  `run_in_background` watchdog polling for VM terminal state gets killed by session/turn boundaries before it can
+  report; confirmed empirically here (2 dead watchdog attempts) and it turns out this is already a documented codex HARD
+  RULE (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`) — use `ScheduleWakeup` + a direct `gcloud`/log
+  check on each wake instead, never a backgrounded poll loop. (2) `quality-gates.sh`'s `.qg_last_passed_sha` sentinel is
+  keyed to the exact HEAD it ran against — running QG on a dirty/uncommitted tree and THEN committing produces a
+  sentinel that doesn't match the new post-commit HEAD, forcing a wasted second QG pass; always commit first (per the
+  workspace's own "commit only from a green tree" rule — sequence is stage → QG on the staged tree → commit → sentinel
+  now matches HEAD → ship), not QG-then-commit.
+
 ## Deferred work after 2026-08-10
 
 | Item                                                                                                                                                | State / why deferred                                                                                                                                 | Blocked on                              |
