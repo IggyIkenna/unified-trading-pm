@@ -17,7 +17,7 @@ tags: [cefi, ao-dispatch, close-out, batch-17, finalize, satellite-extraction]
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -60,11 +60,17 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOC] P1. Once batch17's todo 1 (watchdog relaunch) and todo 2 (unit test) are both done, confirm
+- [x] ✅ [DOC] P1. Once batch17's todo 1 (watchdog relaunch) and todo 2 (unit test) are both done, confirm
       `issues/tardis_concurrency_gate_hardening_2026_08_09.md` has 0 remaining open todos and archive it via the
       standard 6-step ritual (`git mv` to `plans/archive/2026_08/`, SUPERSEDED-banner if anything else cross-references
       it, sweep referrers). Repo: unified-trading-pm. **Done when**: the doc is at `plans/archive/2026_08/` with a clean
-      `run_hygiene_sweep.sh`.
+      `run_hygiene_sweep.sh`. **DONE (2026-08-10, slot 22)** — confirmed the tardis issue doc has 0 remaining open todos
+      (both `- [x]`). It was already archived by the batch-17 session at `plans/archive/issues/`
+      (`status:     resolved`, ARCHIVED banner, `archived: "2026-08-10"` — the majority issue-doc archive convention),
+      so no `git mv` was needed. Swept referrers: fixed the dangling active-path references to
+      `tardis_concurrency_gate_hardening_2026_08_09.md` in this plan's `related:` + the archived
+      `ag_closeout_audit_cefi_parked_2026_08_10.md` (incl. that doc's other pre-existing dangling
+      batch16/batch16_finalize/deployment_ui refs). `run_hygiene_sweep.sh` clean on the staged set.
 - [ ] [DOC] P1. Once batch17's todo 3 (ASTER recurrence check) resolves EITHER way (confirmed non-recurring, or
       escalated as a fresh P0), reconcile
       `issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s todo 2 checkbox with
@@ -83,3 +89,16 @@ context_scope:
 - `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual + fact-vs-path
   referrer rule
 - `plans/active/task_template.md` §4 — finalize-plan-coverage rule
+
+## Progress Log
+
+- **2026-08-10 (slot 22, data_engineering, todo 1)**: finalize todo 1 — confirm + archive the tardis issue doc. Verified
+  `issues/tardis_concurrency_gate_hardening_2026_08_09.md` has 0 remaining open todos (both `- [x]`: watchdog relaunch +
+  unit-test todo). It was ALREADY archived by the batch-17 session at `plans/archive/issues/` (`status: resolved`,
+  ARCHIVED banner 2026-08-10, `archived: "2026-08-10"`, `resolved_by` → batch17 plan) — the majority issue-doc archive
+  convention, so no additional `git mv` was performed (the todo's literal `plans/archive/2026_08/` target is satisfied
+  in substance: doc is out of `plans/active/`, terminal status, banner). Referrer sweep (6-step ritual step 5): fixed
+  the dangling active-path references to `tardis_concurrency_gate_hardening_2026_08_09.md` in this plan's `related:` +
+  the archived `ag_closeout_audit_cefi_parked_2026_08_10.md`, and corrected that archived doc's other pre-existing
+  dangling refs (batch16/batch16_finalize/deployment_ui → `/plans/archive/2026_08/...`). Checked `check_reference_paths`
+  clean on the staged set. Todo 1 flipped.

@@ -20,14 +20,14 @@ scope: [engineer, admin]
 tags: [cefi, ag-closeout-audit, parked-findings, batch-16, barchart]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch16_2026_08_10.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch16_finalize_2026_08_10.md,
-    /plans/active/issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch16_2026_08_10.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch16_finalize_2026_08_10.md,
+    /plans/archive/2026_08/deployment_ui_barchart_label_spotcheck_2026_08_09.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
     /plans/active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
@@ -50,7 +50,10 @@ superseded_by:
 resolved_by:
 depends_on: []
 context_scope:
-  [/plans/active/cefi_satellite_ao_dispatch_batch16_2026_08_10.md, /scripts/plan-hygiene/check_ag_closeout_linkage.py]
+  [
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch16_2026_08_10.md,
+    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+  ]
 source: >-
   `/ag-closeout-audit all` run 2026-08-10 (ag_closeout_auditor scheduled worker, slot 26, one-shot, no $TRANCHE set).
 ---
