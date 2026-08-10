@@ -649,8 +649,26 @@ jobs:
               # invocation — the precise ambiguity it exists to resolve.
               # Keep only the gcloud diagnostic itself: drop the preamble, and prefer the bare
               # status code when one is present so the message stays short and secret-free.
+              # SECURITY — defence in depth, in this order:
+              #   1. Actions' own masking still runs AFTER everything below. This code cannot
+              #      "unmask" anything: if a secret survives the scrub, Actions still refuses the
+              #      output and the fallback fires. Stripping only decides whether the NON-secret
+              #      part reaches Slack; it can never widen what a secret-bearing string exposes.
+              #   2. The preamble strip is a DENYLIST keyed on gcloud's current wording, so a
+              #      future gcloud release that re-words or re-orders that sentence would slip
+              #      through it. The scrub below therefore redacts the two things that are
+              #      sensitive REGARDLESS of surrounding wording — the service-account identity and
+              #      the on-disk credential path — so a wording change degrades to a redacted
+              #      message rather than a leaked one.
+              # This message is posted to a Slack channel, so "fails closed to redacted" is the
+              # only acceptable failure mode.
               ERR_RAW="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null || echo "")"
-              ERR_DETAIL="$(printf '%s' "$ERR_RAW" | sed -E 's/[[:space:]]*This command is authenticated as.*$//' | cut -c1-300)"
+              ERR_DETAIL="$(printf '%s' "$ERR_RAW" \
+                | sed -E 's/[[:space:]]*This command is authenticated as.*$//' \
+                | sed -E 's#[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}#<redacted-account>#g' \
+                | sed -E 's#(/[^[:space:],]*(gha-creds|credentials)[^[:space:],]*)#<redacted-credential-path>#g' \
+                | sed -E 's#/[^[:space:],]*\.json#<redacted-path>#g' \
+                | cut -c1-300)"
               # Fall back to the status code alone if stripping left nothing usable.
               if [ -z "${ERR_DETAIL// /}" ]; then
                 ERR_DETAIL="$(printf '%s' "$ERR_RAW" | grep -oE '(NOT_FOUND|INVALID_ARGUMENT|PERMISSION_DENIED|FAILED_PRECONDITION|RESOURCE_EXHAUSTED|UNAVAILABLE)' | head -1)"
