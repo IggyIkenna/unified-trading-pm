@@ -89,12 +89,12 @@ for consistency." This batch extracts exactly that one self-contained todo.
 
 ## Todos
 
-- [ ] [INFRA] P3. **Add a `.pre-commit-config.yaml` to `unified-trading-ci`.** Mirror the hook set every other fleet
-      repo runs at commit time (gitleaks secret-scan, conventional-commit message check, trailing-whitespace /
-      end-of-file-fixer, YAML-lint given this repo's content is 100% workflow YAML) — use an existing lean fleet repo's
-      `.pre-commit-config.yaml` as the template (this repo has no Python/Node toolchain, so skip any language-specific
-      hooks that don't apply) and wire `scripts/dev/safe-doc-push.sh`-equivalent `prek` invocation per
-      `/codex/06-coding-standards/quality-gates.md`'s documented pre-commit convention. Done when: a
+- [x] ✅ [INFRA] P3. **Add a `.pre-commit-config.yaml` to `unified-trading-ci`.** — unified-trading-ci@ce50bc9 — Mirror
+      the hook set every other fleet repo runs at commit time (gitleaks secret-scan, conventional-commit message check,
+      trailing-whitespace / end-of-file-fixer, YAML-lint given this repo's content is 100% workflow YAML) — use an
+      existing lean fleet repo's `.pre-commit-config.yaml` as the template (this repo has no Python/Node toolchain, so
+      skip any language-specific hooks that don't apply) and wire `scripts/dev/safe-doc-push.sh`-equivalent `prek`
+      invocation per `/codex/06-coding-standards/quality-gates.md`'s documented pre-commit convention. Done when: a
       deliberately-introduced secret/bad-commit-message in a scratch commit is caught locally by `prek run` before it
       would reach a push, and a real clean commit to this repo passes `prek run --all-files` with zero violations.
       Source: `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 20. Repo: unified-trading-ci.
@@ -118,3 +118,7 @@ review" against an already-`active` frontmatter) until fixed by `/ag-closeout-au
 
 - **2026-08-09** — Drafted during the round-11 infra-tranche combined RECLASSIFY+satellite-extraction sweep. Paired with
   `infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` per the finalize-plan-coverage rule.
+- **2026-08-10** — Todo 1 done: added `.pre-commit-config.yaml` + `.gitleaks.toml` to `unified-trading-ci` (commit
+  `ce50bc9`). Mirrored the python-service template minus Ruff (no Python code). Prettier reformatted 8 existing workflow
+  YAMLs. Verified: all 11 pre-commit hooks pass clean on `--all-files`; gitleaks catches a staged secret
+  (`gcp-api-key`); conventional-commit hook validates the commit message.
