@@ -57,17 +57,17 @@ source: >-
       Per-claim verification against `origin/live-defi-rollout` (doc claims) and live GCP infra (VIX launch claim):
 
       | # | Claim | Marker | Expected | Actual | Verdict |
-              |---|-------|--------|----------|--------|---------|
-              | 1 | billing-suspension resolution @`5ed8364ccb` | `LIVE RE-VERIFIED 2026-08-10` | ≥1 | **0** | STALE — `b53eade639` (slot-1, +1h) removed the section + rewrote resolution. Substance intact (doc `status: open`, billing resolved), marker overwritten. |
-              | 2 | `data_completion_tradfi` ungate @`b950917f64` | `UNGATED 2026-08-10` | 2 | **2** | ✅ |
-              | 3 | `phase_d_terminal_gate` ungate | `BILLING GATE LIFTED 2026-08-10` | ≥1 | **2** | ✅ |
-              | 4 | `registry_coverage` access note @`4266ce77c5` | `DATABENTO ACCESS CONFIRMED LIVE 2026-08-10` | 1 | **1** | ✅ |
-              | 5 | MVP-of-MVP VIX addition @`9e2041f7ba` | `VIX futures (CBOE, VX.FUT)` | ≥1 | **1** | ✅ |
-              | 6 | VIX backfill launch + manifest verify | 6 VMs RUNNING + 7,341 manifest rows | — | **0 VMs** | ❌ Launcher script on origin ✓; zero `tradfi-bf-cfe-*` VMs (running or terminated) found via `gcloud compute instances list`. Manifest inaccessible (no GCS/UTL module in this env). Cannot verify. |
-              | 7 | Yahoo floor capped at 2018 @`ac45412f05` | `start-floor 2018-01-01` | ≥1 | **1** | ✅ |
+                  |---|-------|--------|----------|--------|---------|
+                  | 1 | billing-suspension resolution @`5ed8364ccb` | `LIVE RE-VERIFIED 2026-08-10` | ≥1 | **0** | STALE — `b53eade639` (slot-1, +1h) removed the section + rewrote resolution. Substance intact (doc `status: open`, billing resolved), marker overwritten. |
+                  | 2 | `data_completion_tradfi` ungate @`b950917f64` | `UNGATED 2026-08-10` | 2 | **2** | ✅ |
+                  | 3 | `phase_d_terminal_gate` ungate | `BILLING GATE LIFTED 2026-08-10` | ≥1 | **2** | ✅ |
+                  | 4 | `registry_coverage` access note @`4266ce77c5` | `DATABENTO ACCESS CONFIRMED LIVE 2026-08-10` | 1 | **1** | ✅ |
+                  | 5 | MVP-of-MVP VIX addition @`9e2041f7ba` | `VIX futures (CBOE, VX.FUT)` | ≥1 | **1** | ✅ |
+                  | 6 | VIX backfill launch + manifest verify | 6 VMs RUNNING + 7,341 manifest rows | — | **0 VMs** | ❌ Launcher script on origin ✓; zero `tradfi-bf-cfe-*` VMs (running or terminated) found via `gcloud compute instances list`. Manifest inaccessible (no GCS/UTL module in this env). Cannot verify. |
+                  | 7 | Yahoo floor capped at 2018 @`ac45412f05` | `start-floor 2018-01-01` | ≥1 | **1** | ✅ |
 
-              **Result**: 5/7 verified clean; 1 stale-marker (Claim 1, substance intact); 1 unverifiable (Claim 6, zero VM
-              evidence). Discrepancies re-opened as tracked todos below.
+                  **Result**: 5/7 verified clean; 1 stale-marker (Claim 1, substance intact); 1 unverifiable (Claim 6, zero VM
+                  evidence). Discrepancies re-opened as tracked todos below.
 
 - [x] ✅ [REVIEW] P1. **Check billing-suspension doc archival readiness** — unified-trading-pm@<TBD>.
       `tradfi_databento_account_billing_suspended_2026_08_09.md` on origin: `status: open`, 4 `[ ]` matches (1 real
@@ -86,16 +86,22 @@ source: >-
       doc `status: open`, `## LIVE RE-VERIFIED 2026-08-10` section absent, Archive P2 todo present — the operator's
       version is current; the 4 downstream-doc retags the old todo named are independently verified done in Claims 2-5
       above. Content-consistency finding only — account IS unblocked either way, no correctness defect.
-- [ ] [REVIEW] P0. **Claim 6 discrepancy — zero evidence of CFE VIX backfill VMs on GCP.** The parent plan claims 7 CFE
-      year-shard SPOT VMs launched (2020-2026), 2021 preempted, "6 still RUNNING", and "Manifest verified: 7,341
-      captured CBOE ohlcv_1m rows (1,523 with instrument_id=CBOE:FUTURE:VIX)." Verification: - Launcher script
-      `scripts/vm/launch-tradfi-bf-cfe-ohlcv-1m.sh` exists on origin ✓ -
-      `gcloud compute instances list --filter="name~tradfi-bf-cfe"` → **empty** (no running or terminated VMs) -
-      `gcloud compute instances list --filter="creationTimestamp>'2026-08-10'"` → **no CFE/VIX/CBOE VMs at all** - GCS
-      manifest check not possible from this env (no `unified_trading_library` module, no `google.cloud`). **Done when**:
-      operator confirms whether the VIX backfill actually ran, or re-launches it if the parent plan's done-claim was
-      premature. This is a potential data-completeness gap — if the VIX futures backfill never executed, TradFi CBOE
-      futures coverage is incomplete.
+- [x] ✅ [REVIEW] P0. **Claim 6 discrepancy — zero evidence of CFE VIX backfill VMs on GCP.** — **RESOLVED 2026-08-10
+      (slot 4): the backfill DID run — claim corroborated, NOT premature; no re-launch needed.** Evidence trail: (1) All
+      7 `tradfi-bf-cfe-ohlcv-1m-{2020..2026}-20260810-1930*` VMs have vm-logs/ entries
+      (`gs://deployment-scripts-central-element-323112/vm-logs/`, launched 2026-08-10T19:30Z) — the
+      zero-`instances     list` result is self-deletion (completed/deleted VMs are invisible to that call), not "never
+      ran". 2020+2024 reached `EXIT_STATUS=0` (clean full-year completion); 2021 preempted before work (LAUNCH_PARAMS
+      only — matches the claim's "2021 preempted"); 2022/23/25/26 ran partway (WATCHDOG_TRACE.log, no EXIT_STATUS —
+      non-clean exit). (2) Manifest ground-truth
+      (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 11.3M rows): **8,640
+      captured** CBOE/ohlcv_1m rows (EXCEEDS claimed 7,341); **1,556 captured VIX**, instrument_id=`CBOE:FUTURE:VIX`
+      (EXCEEDS claimed 1,523); **all 1,556 VIX rows written 2026-08-10** by this run (written_at provenance), +1,322
+      earlier-captured rows; per-year VIX coverage essentially complete 2020-06-01→2026-08-07 (2021-2025 ≈250 trading
+      days/yr). No data-completeness gap. Residual flag: the 4 non-clean VM exits (silent-hang/OOM class) are a
+      launcher-reliability note for any reuse of `launch-tradfi-bf-cfe-ohlcv-1m.sh` — they did NOT prevent the data
+      landing (manifest confirms per-year coverage even in those shards). "6 still RUNNING" was a snapshot-time phrase;
+      the VMs have since gone terminal.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the parent plan itself, then regenerate the inventory** — gated on
       the two Claim discrepancies above being resolved (Claims 2-5+7 are verified clean; Claims 1+6 need operator
       confirmation before the parent plan can be declared genuinely complete). Banner
