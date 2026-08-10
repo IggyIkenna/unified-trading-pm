@@ -329,8 +329,8 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
       permits sonnet ONLY for FIX-STALE literal sweeps). **REDIRECT half ✅ SHIPPED** (`PACKAGE_LAYOUT_AND_SCOPE`/
       `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`, `unified-api-contracts@f952e17f`, verified ancestor of
-      `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE half + the rest not shipped** (RE-VERIFIED 2026-08-10
-      by plan_reconciler infra shard, agt-716973: all 4 `docs/` DELETE-class twins — `ICLOUD_REPO_MIGRATION_PROMPT`,
+      `origin/live-defi-rollout` 2026-08-06). **DELETE half + the rest not shipped** (RE-VERIFIED 2026-08-10 by
+      plan_reconciler infra shard, agt-716973: all 4 `docs/` DELETE-class twins — `ICLOUD_REPO_MIGRATION_PROMPT`,
       `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH` — still
       live on disk): DELETE the 4 `docs/` twins; `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs
       with NO 1:1 live target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 +
