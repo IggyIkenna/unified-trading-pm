@@ -18,7 +18,7 @@ created: 2026-06-26
 role: infra
 model: sonnet
 thinking: medium
-lifecycle: one_shot
+lifecycle: persistent
 does:
   - Infra/CI-CD/cloud code — VM launchers, deployment-target classification, CI workflow templates, GCS/AWS ops,
     observability

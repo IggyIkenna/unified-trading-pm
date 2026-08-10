@@ -18,7 +18,7 @@ created: 2026-06-26
 role: quant_dev
 model: sonnet
 thinking: medium
-lifecycle: one_shot
+lifecycle: persistent
 does:
   - Strategy/feature/ML code — archetype logic, feature formulas (versioned), PnL/HWM attribution, ledgers
   - Determinism-preserving impl so paper(W) == batch-rerun(W) trade-for-trade (ε=0); canonical InstrumentKey derivation

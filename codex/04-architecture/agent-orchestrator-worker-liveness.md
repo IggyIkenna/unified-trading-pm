@@ -560,8 +560,10 @@ fresh worker picks up later work. So: **crafts** stay `working` until `/done` (n
 
 ### Deferred (revisit later, not required for correctness)
 
-- **Role-field reclassification** (`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
-  `data_engineering` scheduled-vs-persistent). Reaping keys on dispatch context, not the field, so this is cosmetic.
+- ~~**Role-field reclassification**~~ — DONE (2026-08-10): `backend_engineer`/`ui_developer`/`quant_dev`/`infra`/
+  `data_engineering` all now declare `lifecycle: persistent` (matching `worker`) — they're plan-backlog workers, not
+  event-spawned one-offs, per the table above. Reaping keys on dispatch context, not the field, so this was cosmetic; no
+  dispatch/reap behavior changed.
 - **Sequential-plan context-continuity** (pin a `sequential` plan to one slot for conversational continuity across a
   cross-plan gate). A nice-to-have only — the durable state above already carries what matters. Explicitly out of scope.
 

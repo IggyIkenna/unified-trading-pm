@@ -17,7 +17,7 @@ created: 2026-06-26
 role: backend_engineer
 model: sonnet
 thinking: medium
-lifecycle: one_shot
+lifecycle: persistent
 does:
   - Python service code — handlers, adapters, async I/O, schema-conformant impl against UAC/UTL contracts
   - Optimize for scalability (throughput/concurrency, bounded fan-out) + reuse the right UAC/UTL primitive over

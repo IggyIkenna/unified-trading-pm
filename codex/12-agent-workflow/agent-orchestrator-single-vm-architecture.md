@@ -233,8 +233,9 @@ dead worker's task or process stranded.
   [worker-liveness.md § "Dispatch-context-driven lifecycle"](/codex/04-architecture/agent-orchestrator-worker-liveness.md) +
   [`ao_worker_lifecycle_dispatch_context`](/plans/archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md).
   This corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
-  static-role gate (`role_one_shot`); the gate now keys on dispatch context, and role-field reclassification is
-  deferred.
+  static-role gate (`role_one_shot`); the gate now keys on dispatch context. Role-field reclassification (those four
+  roles + `data_engineering` now declare `lifecycle: persistent`, matching `worker`) landed 2026-08-10 — cosmetic, since
+  reaping never depended on the field.
 - **Persistence is now GATED on self-reported context, not unconditional**
   (`ao_worker_context_lifecycle_gap_2026_07_25`, archived). The "same live session drains the next task" behavior above
   holds ONLY while `context_used_pct < tuning.context_worker_compact_gate_pct` (default 70). All four dispatch-adjacent
