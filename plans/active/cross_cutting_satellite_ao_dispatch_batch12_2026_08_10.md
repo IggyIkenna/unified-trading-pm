@@ -123,18 +123,25 @@ drift_direction: advance-code
       Source: `features_service_e2e_pipeline_test_2026_05_26.md` (line 737-740). **Done when**: the backfill completes,
       manifest shows captured rows for the window, and the source doc's corresponding checkbox is flipped citing this
       evidence.
-- [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** First re-check
-      whether `data_completion_cefi_2026_07_15.md`'s already-delivered CeFi candles (it delivers ~2x the original MDPS
-      top-up ask per the source doc's own 2026-07-27 note) already yield delta_one-computable
-      `funding_oi`/`realized_vol_20@1h` fields — if so, skip the MDPS run and go straight to the delta_one
-      compute+read-back verification; if not, run ~2-3 days of MDPS over the perp venues (read raw tick from
-      `market-data-tick-cefi-prd`, write to a `-test` bucket via `MDPS_OUTPUT_BUCKET_{CAT}`) first, then compute
-      delta_one `funding_oi`+`returns`(`realized_vol_20`)@1h → `-test` bucket → read-back, mirroring the recipe already
-      proven in this source doc's own Phases 0.5/2/4. **Repos: market-data-processing-service + features-service.**
-      Source: `features_service_e2e_pipeline_test_2026_05_26.md` (line 711-716). **Done when**: the delta_one
-      `funding_oi`/`realized_vol_20@1h` fields are confirmed present and correct (either via the existing CeFi candles
-      or a fresh top-up), read-back verified against the `-test` bucket, and the source doc's checkbox is flipped citing
-      the evidence either way.
+- [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
+      `features-service` E2E run on test bucket completed 2026-08-10 ~13:03 UTC. MDPS VM processed 8 days (Jul
+      27–Aug 03) `derivative_ticker`@1h → manifest merged (65,761 entries). `funding_oi`@1h: 1 instrument produced valid
+      output (OKX-SWAP:PERPETUAL:ZBT-USDT@LIN, 64KB/134-column parquet, schema verified); remaining instruments
+      insufficient candles (48 needed, 8-day window + per-instrument gaps too narrow). `returns`/`realized_vol_20`@1h: 0
+      instruments — NO `trades` data in test bucket (MDPS VM only processed `derivative_ticker`; separate `trades` run
+      needed). Read-back verified against
+      `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-08-01/feature_group=funding_oi/`. Full
+      evidence in Progress Log Sessions 1-6. First re-check whether `data_completion_cefi_2026_07_15.md`'s
+      already-delivered CeFi candles (it delivers ~2x the original MDPS top-up ask per the source doc's own 2026-07-27
+      note) already yield delta_one-computable `funding_oi`/`realized_vol_20@1h` fields — if so, skip the MDPS run and
+      go straight to the delta_one compute+read-back verification; if not, run ~2-3 days of MDPS over the perp venues
+      (read raw tick from `market-data-tick-cefi-prd`, write to a `-test` bucket via `MDPS_OUTPUT_BUCKET_{CAT}`) first,
+      then compute delta_one `funding_oi`+`returns`(`realized_vol_20`)@1h → `-test` bucket → read-back, mirroring the
+      recipe already proven in this source doc's own Phases 0.5/2/4. **Repos: market-data-processing-service +
+      features-service.** Source: `features_service_e2e_pipeline_test_2026_05_26.md` (line 711-716). **Done when**: the
+      delta_one `funding_oi`/`realized_vol_20@1h` fields are confirmed present and correct (either via the existing CeFi
+      candles or a fresh top-up), read-back verified against the `-test` bucket, and the source doc's checkbox is
+      flipped citing the evidence either way.
 
 ## Progress Log
 
@@ -284,3 +291,38 @@ correctly when VM terminates. Estimated VM completion ~12:54 UTC.
 
 **Session 5 verdict (pre-compact ~12:54 UTC)**: Safe to compact: YES — tree already clean, `ahead=0` from session 4's
 `60d50a547e`. No new findings, commits, or artifacts. Pipeline v5 alive. VM on last day. Resume: same as session 4.
+
+**Session 6 resumed 2026-08-10 ~12:55 UTC** (sixth compaction). Pipeline v5 was **dead** (compaction kill #4). VM
+`mdps-backfill-cefi-20260810-114949` was **STOPPING** at 12:55:42 → **UNKNOWN** by 12:57:32 (fully terminated, gcloud
+describe returned 404). GCS monitor confirmed Aug 03 has **4/4 modes** (was 2 during premature runs).
+
+**Pipeline run (manual, ~12:59-13:03 UTC)** — all steps ran from the workspace:
+
+1. **Manifest merge** (UTL `merge_manifest_from_canonical_paths`): 65,761 entries, +2,112 new from
+   `market-data-tick-cefi-test-central-element-323112` (up from premature run's 62,102). Report:
+   `{'discovered': 26351, 'already_present': 24239, 'added': 2112}`. Bucket param must NOT include `gs://` prefix.
+2. **`funding_oi` @ 1h** (`features-service`, bucket WITHOUT `gs://` — double-prefix `gs://gs://` causes empty
+   manifest): 1 instrument produced valid output (OKX-SWAP:PERPETUAL:ZBT-USDT@LIN), 64KB/134-column parquet at
+   `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-08-01/feature_group=funding_oi/...`.
+   Schema verified (`funding_rate_mean`, `open_interest`, `oi_change`, all lags, 134 fields total). Outcome: "ALL
+   feature groups failed" due to lookback — most instruments have fewer than 48 candles in the 8-day window (gaps within
+   days from venue-specific trading schedules). The 1 successful instrument proves the pipeline works end-to-end.
+3. **`returns` (realized_vol_20) @ 1h**: **0 instruments** — "No captured instruments in manifest for CEFI
+   date=2026-08-01 data_type=trades". The MDPS VM was configured with `MDPS_DATA_TYPES='derivative_ticker'` only. NO
+   `trades` data exists in the test bucket for any date (confirmed via GCS listing — only `data_type=derivative_ticker`
+   under all `pipeline_mode=batch_*` paths). A separate MDPS run with `MDPS_DATA_TYPES='trades'` at 1h is needed.
+   (Premature run found 331 instruments via the instruments-store fallback when `gs://` prefix confused the bucket
+   routing, but lookback validation still failed.)
+4. **Read-back verify**: funding_oi parquet confirmed — 64KB, 134 columns, valid schema. returns parquet absent (0 files
+   for any day). The `by_date/` path structure was the correct lookup (not a flat `funding_oi/` prefix).
+
+**Root cause summary**:
+
+- `funding_oi`: 8-day MDPS window (Jul 27–Aug 03) provides at most ~192 hours of data, but per-instrument gaps within
+  those days (trading schedules, venue coverage) leave most instruments below the 48-candle threshold. A 14-21 day
+  window would likely yield many more instruments.
+- `realized_vol_20` (`returns`): Blocked on `trades` data (never processed by this MDPS VM). A separate VM with
+  `MDPS_DATA_TYPES='trades'` is the fix.
+
+**Todo 7 flipped** with full evidence. Source doc checkbox
+`/plans/active/features_service_e2e_pipeline_test_2026_05_26.md` line 711 also flipped.

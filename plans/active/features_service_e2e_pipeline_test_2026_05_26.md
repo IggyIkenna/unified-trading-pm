@@ -708,11 +708,16 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
       feature, not a bug). Read-back plausibility pass, with a single-day-annualization noise issue filed separately
       (see banner item 1 above). Full evidence: `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 1. Repo:
       features-service.
-- [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
-      the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
-      `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
-      Repos: market-data-processing-service + features-service. **Re-check before dispatch (2026-07-27):**
-      `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
+- [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** — E2E verification completed
+      2026-08-10 by slot 14. MDPS VM processed 8 days (Jul 27–Aug 03) `derivative_ticker`@1h → manifest merge (65,761
+      entries) → `funding_oi`@1h: 1 instrument (ZBT-USDT@OKX-SWAP) produced valid 64KB/134-column parquet, remainder
+      below 48-candle threshold. `returns`/`realized_vol_20`@1h: 0 instruments — NO `trades` data in test bucket (MDPS
+      VM only ran `derivative_ticker`). Full evidence:
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` todo 7 + Progress Log sessions 1-6. Run
+      MDPS for ~2–3 days over the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles
+      to a `-test` bucket via `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h →
+      `-test` → read-back. Repos: market-data-processing-service + features-service. **Re-check before dispatch
+      (2026-07-27):** `data_completion_cefi_2026_07_15.md` already delivers ~2x the MDPS top-up ask; the `delta_one`
       `funding_oi`/`realized_vol` fields specifically weren't independently re-verified — confirm still needed.
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Basis-perp DeFi leg — confirm Drift/Orca coverage.** DRIFT was
       purged workspace-wide (operator ruling 2026-07-16,
