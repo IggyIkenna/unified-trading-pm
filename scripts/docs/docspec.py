@@ -290,41 +290,6 @@ def load_registries(pm_root: Path) -> Registries:
 
 
 # ----------------------------------------------------------------------------- helpers
-_SIBLING_REPOS_CACHE: dict[str, frozenset[str]] = {}
-
-
-def _sibling_repo_names(pm_root: Path) -> frozenset[str]:
-    """The workspace's sibling-repo names, from workspace-manifest.json.
-
-    Used to tell an UNVERIFIABLE cross-repo citation (the sibling repo simply is not checked
-    out in this job — e.g. ldr-docs-gate.yml clones ONLY PM) apart from a genuinely DEAD one.
-    Reading the manifest, rather than treating "any unrecognised first segment" as a repo,
-    is what keeps a typo'd PM-internal path (`plns/foo.md`) a real violation.
-
-    Falls back to an empty set if the manifest is missing/unreadable — which restores the old
-    strict behaviour rather than silently passing everything, so a broken manifest cannot turn
-    this check off.
-    """
-    key = str(pm_root)
-    cached = _SIBLING_REPOS_CACHE.get(key)
-    if cached is not None:
-        return cached
-    names: frozenset[str] = frozenset()
-    try:
-        data = json.loads((pm_root / "workspace-manifest.json").read_text())
-        repos = data.get("repositories")
-        # `repositories` is a dict keyed by repo name (each value a per-repo config object).
-        # A plain list of names is accepted too, so this keeps working if that shape ever changes.
-        if isinstance(repos, dict):
-            names = frozenset(str(k) for k in repos)
-        elif isinstance(repos, list):
-            names = frozenset(str(r) for r in repos if isinstance(r, str))
-    except (OSError, ValueError):
-        names = frozenset()
-    _SIBLING_REPOS_CACHE[key] = names
-    return names
-
-
 def _is_empty(v: object) -> bool:
     if v is None or v == [] or v == {}:
         return True
@@ -569,24 +534,7 @@ def validate_doc_references(path: Path, fm: dict, doc_type: str) -> list[Violati
             # a typo'd PM-internal path against the wrong root.
             first_segment = entry.split("/", 1)[0]
             workspace_root = pm_root.parent
-            if (workspace_root / first_segment).is_dir():
-                if (workspace_root / entry).is_file():
-                    continue
-                # The sibling repo IS checked out and the file genuinely is not there — a real
-                # dead reference. Fall through and flag it.
-            elif first_segment in _sibling_repo_names(pm_root):
-                # The sibling repo is NOT checked out (e.g. ldr-docs-gate.yml's job clones ONLY
-                # PM), so this citation is UNVERIFIABLE here, not dead. Flagging it is
-                # fail-UNSAFE and produces pure false positives — measured 2026-08-10:
-                # ldr-docs-gate went red for 14+ hours on SEVEN citations of
-                # instruments-service/docs/*.md files that all exist and are tracked in git,
-                # and (because of the separate inherited-`-e` bug) emitted nothing while doing
-                # it. Same principle as run_hygiene_sweep.sh's DIFF_BASE_REF guard: when the
-                # thing you would compare against is not present, fall back to "cannot verify",
-                # never to "violation". The full-QG path DOES clone siblings and still checks
-                # these for real, so coverage is not lost — only the PM-only path stops lying.
-                # Membership is read from workspace-manifest.json rather than "any unknown first
-                # segment", so a typo'd PM-internal path (`plns/foo.md`) is still flagged.
+            if (workspace_root / first_segment).is_dir() and (workspace_root / entry).is_file():
                 continue
             out.append(Violation(spec.name, Sev.HARD, f"referenced doc '{entry}' does not exist"))
     return out

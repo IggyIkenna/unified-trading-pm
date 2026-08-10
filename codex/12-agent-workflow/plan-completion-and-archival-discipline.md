@@ -124,11 +124,8 @@ now the compliant, hook-satisfying shape:
 - The AO `/done` M3 check resolves it: `_flips_at_path_or_rename`/`_resolve_current_plan_text`, and for the
   annotated-line shape `_archival_rename_disposition`, accept the bundled flip+mv with
   `reason="plan_ref_self_archived_with_marker"` — the 2026-07-30 combined-commit M3 gap is closed for this case.
-  Verified live 2026-08-10 via a direct `verify.check_plan_flip` trial (slot 17, scratch-repo simulation —
-  `_archival_rename_disposition` returns True on a same-commit flip+`git mv`) + the existing regression test
-  (`agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py:: test_done_accepts_cross_repo_self_archived_with_annotated_checked_line`
-  — exercises the same `_archival_rename_disposition` → `plan_ref_self_archived_with_marker` path, confirmed PASSING
-  2026-08-10).
+  Verified live 2026-08-10 via a direct `verify.check_plan_flip` trial + regression test
+  (`agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py::test_check_plan_flip_single_repo_combined_flip_mv_detected`).
 
 So: do NOT reach for the `archive_exempt: true` bridge (next section) on a single-repo finalize plan — the combined
 commit is the correct shape. The bridge remains the sanctioned path for the mode-2 (cross-repo) two-commit split.

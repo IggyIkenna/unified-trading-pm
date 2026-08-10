@@ -31,7 +31,6 @@ priority: P2
 source:
   "Discovered live while executing ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md's sole [REVIEW] todo (slot 16,
   2026-08-09)."
-archive_exempt: true
 locked_by:
 drift_direction: none
 depends_on: []
@@ -110,15 +109,12 @@ One of:
 
 ## Todos
 
-- [x] ✅ [DOC] P2. **Verified 2026-08-10 (slot 17): the M3 gap IS closed for mode 1.** A direct `verify.check_plan_flip`
-      trial (scratch-repo simulation: same-commit flip+`git mv` confirmed `_archival_rename_disposition` returns True;
-      the existing regression test `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` exercises
-      the same `plan_ref_self_archived_with_marker` path and PASSES). The codex SSOT was narrowed to mode-2 only via
-      `unified-trading-pm@79171795f2` + citation-fix follow-up; the `archive_exempt: true` bridge was independently
-      documented and shipped (todo 2 below). **Path (a) taken** — the `check_archive_candidates.sh --only` hook and the
-      codex rule now align: single-repo same-commit flip+archival is the sanctioned, hook-compliant shape; cross-repo
-      still uses the two-commit flip-then-mv split with the `archive_exempt: true` bridge. (repo: agent-orchestrator +
-      unified-trading-pm)
+- [ ] [DOC] P2. Determine whether `agent-orchestrator/server/verify.py`'s mode-1 `_mode1_disposition` +
+      `_resolve_current_plan_text` fallback (`checkbox_currently_checked_sha_mismatch`) actually resolves the 2026-07-30
+      combined-commit gap for single-repo plan-flip verification — a real `/done` trial (or a scratch unit test against
+      `verify.py` directly) against a same-commit flip+`git mv`, not a code read. If it resolves it, narrow
+      `plan-completion-and-archival-discipline.md`'s "never combine" rule to mode-2 (cross-repo PM flip) only. (repo:
+      agent-orchestrator + unified-trading-pm)
 - [x] [DOC] P2. ✅ **DONE — already shipped via a different, independently-filed duplicate issue, discovered and
       confirmed by plan_reconciler (ci tranche) 2026-08-10.** This exact conflict was independently rediscovered the
       same day (2026-08-09) by a different worker (via `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize`)
@@ -142,12 +138,3 @@ One of:
   1 (does the M3 fallback actually close the mode-1 combined-commit gap, which would let options (a)/(b) narrow or
   remove the `archive_exempt` bridge entirely) is a genuine, still-open investigation, not addressed by the duplicate's
   fix.
-- **2026-08-10 (slot 17, batch12 worker)** — flipped todo 1 (path (a) confirmed). Direct trial (scratch-repo simulation)
-  verified `_archival_rename_disposition` returns True on a same-commit flip+`git mv` →
-  `plan_ref_self_archived_with_marker`. Existing test
-  `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES. Codex SSOT
-  (`plan-completion-and-archival-discipline.md`) narrowed to mode-2 only at `unified-trading-pm@79171795f2`
-  - citation-fix follow-up (corrects a stale test-name reference). Both source-doc todos now `[x]`; doc can be archived
-    once the wrapping batch plan (`ci_satellite_ao_dispatch_batch12_2026_08_10.md`) and its sibling finalize plan are
-    also resolved. `archive_exempt: true` set to satisfy `check_archive_candidates.sh --only` — per the codex-sanctioned
-    bridge pattern; will be dropped in the actual archival commit.

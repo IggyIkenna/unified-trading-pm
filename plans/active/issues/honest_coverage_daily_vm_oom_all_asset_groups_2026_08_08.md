@@ -180,15 +180,15 @@ data landing under an unexpected path.
       a fresh `coverage.json` written while the diagnostic above runs, given the rollup is now stale for all 5 asset
       groups across 4 consecutive daily cycles with an unchanging (not self-healing) OOM signature. Repo:
       deployment-service.
-- [x] ✅ [INFRA] P3. **DONE 2026-08-10 — shipped via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todo 1
-      (`deployment-service@b44166be`, verified on origin).** Harden `honest-coverage-daily-launcher` to not report
-      success until it confirms the VM reached a real terminal state (output object exists, or VM exit code / OOM marker
-      checked) — the current "VM launched ⇒ Container called exit(0)" pattern is structurally blind to this exact
-      failure mode. (repo: deployment-service)
-- [x] ✅ [INFRA] P3. **DONE 2026-08-10 — shipped via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todo 2
-      (`deployment-service@10df4a3c7`, verified on origin).** Fix the VM's own metadata `TASK=features-backfill`
-      self-label (should be honest-coverage-specific) — cosmetic, but misleads future log-grep-by-TASK debugging. (repo:
-      deployment-service)
+- **[INFRA] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md`.** Harden
+  `honest-coverage-daily-launcher` to not report success until it confirms the VM reached a real terminal state
+  (output object exists, or VM exit code / OOM marker checked) — the current "VM launched ⇒ Container called exit(0)"
+  pattern is structurally blind to this exact failure mode. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here. (repo: deployment-service)
+- **[INFRA] P3. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md`.** Fix the VM's own
+  metadata `TASK=features-backfill` self-label (should be honest-coverage-specific) — cosmetic, but misleads future
+  log-grep-by-TASK debugging. See the batch doc for the full scoped todo; do not duplicate-dispatch from here. (repo:
+  deployment-service)
 
 ## 2026-08-09 update — 3rd consecutive IDENTICAL OOM, rollup now 4 cycles / ~86h+ stale, no remediation applied yet
 
@@ -246,7 +246,3 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
   `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md`. Whole-doc RECLASSIFY not applied — the `[OPERATOR] P1`
   immediate-unblock decision (machine-type bump vs. diagnose-first tradeoff) and the `[DIAG] P2` oom-monitor run stay
   here, genuinely tied to that operator decision.
-- **finalize reconciliation 2026-08-10 (slot 7, review)**: flipped both EXTRACTED `[INFRA] P3` items to done — shipped
-  via `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` todos 1+2 (`deployment-service@b44166be`,
-  `deployment-service@10df4a3c7`, both verified on origin). Doc stays open — `[DIAG] P2` + `[OPERATOR] P1` remain
-  genuinely open (operator-gated unblock decision + oom-monitor diagnostic).

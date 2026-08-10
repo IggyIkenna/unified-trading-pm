@@ -84,18 +84,8 @@ Clean up each in its own repo (all small, bounded, deterministic):
       `_repo_ci_manifest.deployed_version_for` + `repo_ci.py` call sites (or repoint to Firestore `ci_status` /
       released-version registry); remove `deployment_diff._deployed_versions_at_sha` or wire it to a live source. (repo:
       deployment-api) — deployment-api@fff55c6
-- [x] ✅ [INFRA] P3. Update the deployment-ui artifact-pipeline design mock to drop the `deployed_versions` narrative.
-      (repo: deployment-ui) — deployment-ui@32a99e5. Rewrote the "Build provenance never recorded" health item: the
-      manifest no longer carries `deployed_versions`/`deployed_versions_aws` (RETIRED 2026-08-10); provenance now read
-      from Firestore `ci_status` / released-version registry, matching the deployment-api fix (fff55c6). QG green.
+- [ ] [INFRA] P3. Update the deployment-ui artifact-pipeline design mock to drop the `deployed_versions` narrative.
+      (repo: deployment-ui)
 - [ ] [INFRA] P3. Remove the "falls back to deployed_versions from the PM manifest" mock-mode phrase from the build-list
       endpoint docstring in unified-api-contracts openapi + deployment-api openapi spec. (repos: unified-api-contracts,
       deployment-api)
-
-## Progress Log
-
-- **2026-08-10 (slot-3, infra)**: Flipped todo 2 — deployment-ui design mock updated.
-  `public/design-mocks/artifact-pipeline.html` health item "Build provenance never recorded" no longer describes
-  `deployed_versions`/`deployed_versions_aws` as live manifest fields; now states the fields were RETIRED 2026-08-10 and
-  provenance is sourced from Firestore `ci_status` / released-version registry (consistent with deployment-api fix
-  `fff55c6`). Shipped `deployment-ui@32a99e5` via quickmerge (QG green, 51s, sentinel verified); verified on origin.

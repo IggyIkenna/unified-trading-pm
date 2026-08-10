@@ -920,13 +920,3 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   flake; 1 other run (`31356548320`) still `in_progress` at survey time. Zero pytest-timeout recurrence anywhere in this
   survey. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via skip-current-task with
   `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
-- **slot-27 2026-08-10 (twenty-third pass, same task)**: surveyed last 5 `quality-gates-v2` runs on all 10 tracked repos
-  (runs up to ~12:55Z 2026-08-10). 9 service repos + PM `tests`-slice: clean. Two NEW-ish signals (both NOT the tracked
-  pytest-timeout class): (1) instruments-service had 2 transient red runs (`31379355300`/`31378853803`, ~10:23-10:31Z)
-  failing the SAME real assertion `test_oscillation_guard_drops_season_gate_empty_over_captured_atom` (`assert 0 == 1`,
-  1 failed/5343 passed) — recovered on the 2 subsequent runs (`31383384391`/`31387347660` green), i.e. a flaky assertion
-  test, first appearance in this survey history; flagged here for the instruments-service CI owner, not the monitored
-  timeout class. (2) unified-trading-pm `31387381223` failure = `QG slice (checks)` Plan-hygiene/ratchet class (known,
-  ruled out). Zero pytest-timeout (`Timeout (>150s)`) recurrence anywhere. Window NOT yet closed (day ~10 of ~14, closes
-  ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
-  slot-32's fix.

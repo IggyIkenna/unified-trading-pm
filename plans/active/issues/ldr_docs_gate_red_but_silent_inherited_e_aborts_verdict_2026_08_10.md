@@ -83,33 +83,11 @@ when the violation list is empty.
 
 ## Todos
 
-- [x] ✅ [BACKEND] P1. **The gate's redness was a FALSE POSITIVE, root-caused once the signal came back.** With `set +e`
-      live, a `--ref live-defi-rollout` dispatch finally emitted the excerpt: every violation was a
-      `related:`/`context_scope:` citation of a SIBLING-REPO doc — seven `instruments-service/docs/*.md` files
-      (ADAPTER_ARCHITECTURE, CEFI/DEFI/PREDICTION/SPORTS/TRADFI_INSTRUMENTS, SETUP_GUIDE) plus
-      `market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md`. **All seven instruments-service docs exist and are
-      tracked in git.** `docspec.py`'s resolution step 5 looks for sibling repos at `pm_root.parent`, but
-      `ldr-docs-gate.yml`'s job clones ONLY PM — so with no siblings on disk, every real cross-repo citation fell
-      through to `HARD: does not exist`. Fail-UNSAFE, exactly like the `DIFF_BASE_REF` class: when the thing you would
-      compare against is absent, it must degrade to "cannot verify", never to "violation". FIXED 2026-08-10
-      (`scripts/docs/docspec.py`): a citation whose first segment names a repo in `workspace-manifest.json` but whose
-      directory is not checked out is SKIPPED as unverifiable; if the sibling IS checked out and the file genuinely is
-      not there, it still flags. Membership comes from the manifest (26 repos, dict-keyed) rather than "any unrecognised
-      first segment", so a typo'd PM-internal path (`plns/foo.md`) is still a real violation. The full-QG path clones
-      siblings and still checks these for real, so no coverage is lost. Verified: local full corpus still 2022 docs /
-      zero violations; simulated PM-only checkout skips the two real cross-repo citations and still flags the typo.
-- [ ] [BACKEND] P2. `market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md` is cited by
-      `/plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md` but exists only as an
-      UNTRACKED local file in at least one slot checkout — so it is dead for everyone else and will still flag once MTDS
-      is checked out alongside PM. Either commit it in market-tick-data-service or drop the citation. Repo:
-      market-tick-data-service / unified-trading-pm.
-- [ ] [BACKEND] P2. **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
-      checked-out ref** — so this doc's own `set +e` fix was inert for every scheduled run the moment it landed on LDR,
-      and stays inert until promotion carries it to main. That is a circular dependency: the fix for a silent-alert bug
-      is gated behind the promotion it exists to help unblock. Any future fix to a scheduled workflow's own YAML has the
-      same property. Document it in `/codex/08-workflows/ci-cd-flow.md` next to the existing "a scheduled/push workflow
-      fires ONLY from the DEFAULT branch" line, and note the `gh workflow run <wf> --ref <branch>` escape hatch used to
-      verify this one. Repo: unified-trading-pm.
+- [ ] [BACKEND] P1. **The gate is still genuinely RED** — this fix restores the SIGNAL, it does not fix the corpus. Once
+      a run emits its excerpt/attribution, read the named violating docs and fix them. Note
+      `check_frontmatter_schema.py --quiet` exits **0** against a slot checkout at `715e40cad2`, so the violation is
+      either in commits newer than that or is CI-environment-specific (the runner installs only `pyyaml`); diff the
+      corpus at the failing run's SHA rather than assuming a local pass means a clean corpus. Repo: unified-trading-pm.
 - [ ] [BACKEND] P2. **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
       `-uo pipefail` (without `e`) and then captures a checker's output into a variable whose failure is meant to be
       handled by a following `RC=$?`: `rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`. Each hit is

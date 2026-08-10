@@ -132,26 +132,11 @@ depends_on: []
           ETA ~14:30Z.
         - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet.
 
-      - **Session compacting 2026-08-10 ~12:30Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2023-04-20` (~46%), ~1207 days remaining. Pace steady at ~10 dates/min.
-          ETA ~14:30Z.
-        - VM confirmed RUNNING; no `exit_code=` yet.
-
-      - **Session compacting 2026-08-10 ~12:32Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2023-04-30` (~47%), ~1197 days remaining. Pace steady at ~10 dates/min.
-          ETA ~14:30Z.
-        - VM confirmed RUNNING; no `exit_code=` yet.
-
-      - **Session compacting 2026-08-10 ~12:36Z** — VM still RUNNING:
-        - Progress: GCS tee `last_completed_date=2023-05-13` (~48%), ~1184 days remaining. Pace steady at ~10 dates/min.
-          ETA ~14:30Z.
-        - VM confirmed RUNNING; no `exit_code=` yet.
-
-## Deferred work after 2026-08-10 ~12:36Z
+## Deferred work after 2026-08-10 ~12:27Z
 
 | Item                                                                                                                | State / why deferred                              | Blocked on                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2023-04-30` (~47%), ETA ~14:30Z | VM completion (real infra)                                                                           |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2023-03-27` (~45%), ETA ~14:30Z | VM completion (real infra)                                                                           |
 | **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM       | INJURIES VM exit_code                                                                                |
 | **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                 | All entity backfills complete                                                                        |
 | **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                             | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |

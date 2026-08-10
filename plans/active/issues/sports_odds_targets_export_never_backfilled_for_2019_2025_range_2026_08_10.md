@@ -187,16 +187,6 @@ parent issue doc's Progress Log for the exact VM names / evidence.
   liveness = PIPELINE_HEARTBEAT freshness + growing log line-count. At 10:23Z all 5 VMs were ~55min in, mid-train-season
   scan.
 
-- 2026-08-10 (slot-24, cont. 12:46Z): **COVERAGE MILESTONE — the P0 `odds_targets` backfill is confirmed end-to-end.**
-  All 5 trainer VMs reached `CLVTargetBuilder: built 6 targets from 121376 rows (5.7% non-null)` at 12:46:22-24Z — up
-  from **0.0% non-null** in every prior attempt, with NO `odds_targets export has none` warning and NO
-  `no data available, run aborted`. CLV targets now carry real values on the exact same 121,376-row train set that
-  previously built all-NaN targets. Runner proceeded to load the val (2024) + test (2025) windows, then trains the
-  ensemble. The **coverage delta (0.0% → 5.7% non-null)** is now measured; the **performance delta (rmse/mae/r2 per
-  outcome per horizon)** comes from the `complete:` line's `test_metrics` at terminal — both to be reported into this
-  P1's text + `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2 +
-  `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` per the handoff.
-
 ## Deferred work after 2026-08-10
 
 | Item                                                                                                                                                                                                                                       | State / why deferred                                                                    | Blocked on                |

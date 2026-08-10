@@ -195,23 +195,3 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   (which also checks the `VM_TARDIS_CONSUMER=1` metadata stamp) still reads 1, confirming none of them are additional
   Tardis-consumers. Todo 1's precondition remains unmet — not attempting the capture. Did not touch todo 2 (separately
   dispatchable). Releasing via `/skip-current-task {"reason_code": "GATED"}` again.
-- **2026-08-10T12:31Z (slot 19, data_engineering)** — re-dispatched on todo 1, re-checked the precondition via the
-  CANONICAL guard (as slot 8): `tardis_running_vm_count asia-northeast1-c central-element-323112` now returns **4**
-  (rc=0) — up from slot 8's 1. Pre-flight `tardis_concurrency_guard 1 ...` REFUSES (rc=1: 4+1=5 > cap 1). Breakdown of
-  the 4: (1) the genuine stamped Tardis consumer `cefi-queue-heavy-binancefutu-x17-20260809-083733` (created
-  08-09T08:37Z, still RUNNING, `VM_TARDIS_CONSUMER=1`) — same VM slots 27/8 found, STILL holding the sole N=1 slot;
-  (2-4) **three `tradfi-bf-*-light-*` VMs caught ONLY by the name-pattern fallback, NOT stamped, and NOT Tardis
-  consumers** — `tradfi-bf-es-opt-light-2026-…`, `tradfi-bf-vix-light-2020-…`, `tradfi-bf-vix-light-2022-…` (launched
-  2026-08-10; Databento OHLCV backfills per `launch-tradfi-backfill-vm.sh`'s "serialize across the shared Databento
-  account" + the Databento es-opt watcher). That name-pattern over-count is a real guard finding, filed separately (see
-  `issues/tardis_guard_name_pattern_over_counts_tradfi_bf_databento_vms_2026_08_10.md`). **Important timing fact**:
-  `market-tick-data-service@e24199df` (the fix) landed **2026-08-09T13:10Z**, ~4.5h AFTER the cefi-queue VM was created
-  (08:37Z) — so the running slot holder executes PRE-fix code and cannot itself prove the fix. Fresh bounded manifest
-  re-measurement (single column-pruned read via `measure_honest_coverage._read_manifest`;
-  blob.updated=2026-08-10T12:16Z): **DERIBIT futures_chain STILL captured=0, attempted_failed=423,
-  empty_confirmed=19,095 (was 16,695 on 08-09T20:08Z) — coverage 0.0%**; the empty_confirmed delta (+2,400) is
-  consistent with the pre-fix VM still writing that shard. By contrast DERIBIT options_chain is captured=2,230 (84.06%)
-  — the machinery works for options_chain, futures_chain remains the broken surface. Conclusion: N=1 Tardis slot STILL
-  fully occupied (genuine consumer running pre-fix code); a fresh post-fix DERIBIT capture cannot run without breaching
-  the hard cap → do NOT force. Precondition unmet; releasing via `/skip-current-task {"reason_code": "GATED"}`. Did not
-  touch todo 2 (separately dispatchable).

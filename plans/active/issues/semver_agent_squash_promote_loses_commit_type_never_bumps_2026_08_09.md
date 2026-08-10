@@ -360,15 +360,3 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available (no `workflow_dispatch` on
   `Semver Agent`'s caller stub; classifier fetch still unpinned to PM's live default branch). This is the 12th
   consecutive identical re-check. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
-- **2026-08-10 (infra worker, slot 27, todo 2 re-check — 13th)**: Re-verified from scratch —
-  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
-  (`origin/main..origin/live-defi-rollout` now 1471 commits, up from 769 at slot 10's check);
-  `origin/main:scripts/cicd/detect_breaking_change.py` still has NO `source_touched` (0 hits). Promote pipeline still
-  stuck: latest auto-drain PR #2712 OPEN, prior #2709-2711 CLOSED (same plan-hygiene ratchet class per the sibling doc —
-  hand off, don't chase serially). `unified-trading-library`: latest tag still `v0.77.0`, `git tag --contains 609299ad…`
-  = empty (fix still unreleased), main HEAD at `765db606` (chore(promote)); the 2026-08-10 Semver Agent runs
-  (`31382663481`/`31379526667`) report `success` but the classifier still fetches PM's unfixed
-  `detect_breaking_change.py` so they reproduce the same skip. No alternate lever (no `workflow_dispatch` on the caller
-  stub). 13th consecutive identical re-check — same blocker
-  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent. Leaving todo 2
-  open/unchecked; skipping with `reason_code: GATED`.

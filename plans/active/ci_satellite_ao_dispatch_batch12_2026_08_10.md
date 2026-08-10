@@ -83,18 +83,39 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
 
 ## Todos
 
-- [x] ✅ [DOC] P2. **Resolve the `check_archive_candidates.sh --only` vs. never-combine-flip-and-mv SSOT conflict.** —
-      unified-trading-pm@a4b2248b6f. Path (a) confirmed: the M3 gap IS closed for mode 1. Direct trial (slot 17,
-      scratch-repo simulation) verified `_archival_rename_disposition` detects a same-commit flip+`git mv`; the existing
-      test `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES. Codex narrowed to mode-2
-      only; `archive_exempt` bridge documented for the cross-repo two-commit split. Source doc's both todos now `[x]`.
-      See Progress Log for full evidence trail.
+- [ ] [DOC] P2. **Resolve the `check_archive_candidates.sh --only` vs. never-combine-flip-and-mv SSOT conflict.** Full
+      context: `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`. Both mechanisms
+      landed 2026-08-09 and directly contradict each other for any plan whose last-remaining todo's completion also
+      makes it archival-eligible (the `<X>_finalize_<date>.md` single-todo self-archiving pattern this tranche alone has
+      produced 10+ instances of): the hook hard-blocks a flip-only commit that leaves its doc 0-open/done/unlocked,
+      demanding same-commit archival; the codex SSOT forbids exactly that combination.
 
-  **Resolution (2026-08-10, slot 17): path (a) taken.** Direct trial confirmed `_archival_rename_disposition` detects a
-  same-commit flip+`git mv` → `plan_ref_self_archived_with_marker`. Codex narrowed (`79171795f2` + citation-fix
-  follow-up); `archive_exempt` bridge already documented + shipped (todo 2 of the source doc). All 3 sub-steps complete:
-  investigation done (real trial, not code read), codex rule narrowed to mode-2 only, both source-doc todos flipped with
-  citations.
+  1. **Investigate first** (source doc's own todo 1): determine whether `agent-orchestrator/server/verify.py`'s mode-1
+     `_mode1_disposition` + `_resolve_current_plan_text` fallback (`checkbox_currently_checked_sha_mismatch`) actually
+     resolves the 2026-07-30 combined-commit M3-verification gap for single-repo plan-flip verification. Do this via a
+     REAL trial — a scratch `/done` call (or a targeted unit test against `verify.py` directly) exercising a same-commit
+     flip+`git mv`, not a code read alone.
+  2. **Then act on exactly one of the 3 paths the source doc names**, per what step 1 finds:
+     - If the M3 gap is closed for mode 1: narrow
+       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine" rule to mode-2
+       (cross-repo PM flip) only, so same-commit flip+archival becomes the sanctioned, hook-compliant path for the
+       common single-repo finalize-plan case.
+     - If the M3 gap is still real for mode 1 too: add a narrow carve-out to `check_archive_candidates.sh --only` for
+       the specific shape "this commit's diff on this file is itself the checkbox flip that produces the 0-open state"
+       (don't flag a file in the SAME commit that just closed its own last todo; a follow-up commit's hook run still
+       catches it if the archival never happens).
+     - Either way, also document the `archive_exempt: true` one-commit-bridge workaround (already used twice this
+       tranche — `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`,
+       `ci_satellite_ao_dispatch_batch10_2026_08_09.md`'s finalize) as the sanctioned pattern in
+       `plan-completion-and-archival-discipline.md` itself, so it's citable instead of re-derived per occurrence.
+  3. Flip both of the source doc's own `[DOC] P2` todos `[x]`, citing the commit(s) and which path was taken + why.
+
+  **Done when**: the source doc's 2 todos are both closed with a verified commit citation, AND a fresh test case (a
+  same-commit flip+archival attempt on a scratch/throwaway doc, or the next real occurrence) demonstrates the winning
+  path actually works end to end — not just that the code was edited. Source:
+  `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` (both of its own `[DOC] P2`
+  todos — internally sequential, combined into one todo here per SKILL.md's "sequential multi-step work in one source
+  doc becomes ONE combined todo" guidance). Repos: agent-orchestrator, unified-trading-pm.
 
   - Conflict-checked 2026-08-10: grepped `plans/active/` for `check_archive_candidates`,
     `never combine the checkbox flip`, `_mode1_disposition`, `_resolve_current_plan_text` — all hits are incidental
@@ -103,7 +124,7 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
     `plan_reconciler_findings_*` process journals listing it as a hygiene-check name). Grepped every active plan for
     this doc's own basename — zero hits. No active plan already claims this exact ground.
 
-- [x] ✅ [DOC] P2. **Record the live-verified resolution of the Tier-A `ci_status` promotion deadlock; leave the
+- [ ] [DOC] P2. **Record the live-verified resolution of the Tier-A `ci_status` promotion deadlock; leave the
       structural-fix ask open.** Full context: `issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`. The
       doc's own "Suggested resolution paths" #1 (merge `instruments-service#1136` to force a fresh main-branch GREEN)
       already happened — **merged 2026-08-09T12:31:02Z**, `quality-gates-v2` + `sit-gate/fleet-green` both SUCCESS on
@@ -150,9 +171,3 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
   conflict-clear, bounded, worker-determinable work. Both share `parent_epic: infrastructure_master`, combined into one
   batch per the established grouping precedent (batch7/9). Full delta-check + per-doc disposition for every OTHER
   candidate (unchanged from yesterday) is in this run's own report, `issues/ag_closeout_audit_ci_parked_2026_08_10.md`.
-- **2026-08-10 (slot 17, infra worker)** — completed todo 1. Direct `verify.check_plan_flip` trial (scratch-repo
-  simulation) confirmed `_archival_rename_disposition` detects same-commit flip+`git mv` →
-  `plan_ref_self_archived_with_marker`; existing test
-  `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES. Codex narrowed to mode-2 only
-  (`79171795f2` + citation-fix follow-up correcting the stale test-name reference). Source doc's both todos now `[x]`.
-  Path (a) taken — the `check_archive_candidates.sh --only` hook and the codex rule now align.
