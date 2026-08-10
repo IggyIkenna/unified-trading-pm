@@ -639,3 +639,17 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   if it resolves into a full triple-signal silence + delete op, will log as the 11th occurrence and relaunch immediately
   per the established pattern. If it recovers/resumes cleanly, that would be the first-ever self-recovery from this
   signature — also worth noting either way.
+- **03:50Z — 11th silent-hang occurrence CONFIRMED for `smallchunk16` (chunk 18, ~19.8min gap, longest yet); relaunched
+  as `smallchunk17`; INJURIES needed 13,957 → 11,001.** The watch item flagged last tick resolved as a confirmed hang,
+  not a self-recovery: `smallchunk16` stayed silent from `03:26:39Z`, was caught live in `STOPPING` at `03:46:52Z` (2nd
+  live catch this session), delete op confirms insert `03:46:30Z` — a ~19.8min gap, the longest confirmed so far though
+  still within the established ~16-24min range, not a new outlier. Chunk 18 is now the dominant death site at 7/11 (vs
+  4/11 at chunk 26); EPL has recurred as the death-league 3 times. Relaunched immediately as
+  `mtds-backfill-odds-smallchunk17-20260810`, guard confirmed `0 running + 1 planned = 1 <= cap 1`, tarballs fresh,
+  instance created and `RUNNING`; boot-health verification (first real run.log line) pending as of this entry — not yet
+  trusting exit_code/creation alone. Full detail + Timeline row + Progress Log entry:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 11x). **Separately**: INJURIES continued
+  strong, unambiguous progress — `[[VM_PROGRESS]]` advanced 2025-09-20 → 2025-12-19 this tick, census confirms needed
+  dropped **13,957 → 11,001** (-2,956); manifest row total has now been flat at 16,181,741 for a 4th consecutive reading
+  while needed keeps declining every tick — a stable, reproducible decoupled-metric pattern (not a stall; both
+  independent signals keep confirming real forward movement). Other AF entities unchanged at their floors.
