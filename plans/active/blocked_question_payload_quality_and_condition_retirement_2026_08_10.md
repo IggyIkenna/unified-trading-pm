@@ -31,8 +31,9 @@ related:
 created: 2026-08-10
 last_updated: "2026-08-10"
 parent_epic: escalation_and_disaster_recovery_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+sequential: true
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
@@ -186,6 +187,46 @@ Post-phase codex audit: once the condition-cleared exit lands, the alerting SSOT
 transition documented, and the scheduled-jobs SSOT needs `plan_health`'s new "closes rows it previously opened"
 behaviour recorded.
 
+## Why this is two plans, and why this one is `sequential: true`
+
+Both choices are forced by the file map, not by taste.
+
+**`sequential: true` on this plan.** CLAUDE.md's default is that a plan's independent same-priority todos run
+CONCURRENTLY across workers, with one hard rule — concurrent todos MUST touch different files. That rule cannot be
+satisfied here: **five of these todos edit `server/plan_health.py`** (A1, A2, A4, C1, C3) and three more edit
+`server/orm.py` (B1, C2, C3). Dispatching them concurrently would put multiple workers in the same file in different
+slots, which is exactly the collision the rule forbids. This is the sanctioned "real same-file overlap" case for
+`sequential: true`, not a reflexive serialisation.
+
+**Why the UI work is a separate, gated plan.** `sequential: true` serialises the WHOLE plan, so folding the two `[UI]`
+todos in here would be correct but would also hide a real dependency behind mere ordering. Per CLAUDE.md's
+"partial-parallelism isn't expressible in one plan → SPLIT", the UI work goes in
+[`/plans/active/blocked_question_card_context_rendering_2026_08_10.md`](/plans/active/blocked_question_card_context_rendering_2026_08_10.md)
+with `depends_on: [blocked_question_payload_quality_and_condition_retirement_2026_08_10]` + `gate_on_depends: true`, so
+the dispatcher cannot offer the UI todos before the `context` column they render actually exists.
+
+That gate is not hypothetical. The sibling doc
+[`/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md)
+has an ungated UI-todo-on-backend-todo pair in this exact subject area, and its Progress Log records the outcome twice
+in one day — slot-11 and slot-27 (both `ui_developer`, 2026-08-08) were each dispatched onto the UI todo while its
+backend dependency was still `queued`, and both burned a dispatch declining it as GATED. Two wasted dispatches is the
+measured cost of not setting this field.
+
+## Dispatch eligibility — every todo is worker-determinable
+
+No todo here is `[OPERATOR]`-tagged or operator-gated (operator direction 2026-08-10). Each has an outcome a worker can
+determine alone — a scoped code change with a machine-checkable done-when, a doc edit against a stated target shape, or
+an audit with a stated done-when. Two that could look operator-shaped, and why they are not:
+
+- **C4 (audit every `add_blocked` call site)** is a bounded enumeration with a stated deliverable (a table in this
+  plan's Progress Log), not an open-ended judgment call — and any class it finds with zero reachable exits becomes a new
+  `- [ ]` todo rather than a decision the worker has to make.
+- **C5 (close the currently-open orphaned rows)** carries no delete-safety gate: it is not a GCS delete, an `--apply`
+  sweep, or a VM launch. It closes blocked-queue rows **only** through the auto-retirement path C1/C2 build, and only
+  for keys the latest `plan_health` run does not report — i.e. it is running the new mechanism against existing rows,
+  not a manual DB edit. Safe-idempotent by construction: re-running it closes nothing new, and a row whose key reappears
+  is re-opened by the detector on its next run.
+
 ## Todos
 
 ### A — payload correctness
@@ -215,21 +256,26 @@ behaviour recorded.
 
 ### B — structured context, collapsed by default
 
+> The two `[UI]` todos that render this field MOVED to the gated companion plan
+> [`/plans/active/blocked_question_card_context_rendering_2026_08_10.md`](/plans/active/blocked_question_card_context_rendering_2026_08_10.md)
+> (`depends_on` this plan, `gate_on_depends: true`) — they both edit `dashboard/src/layout.tsx` and cannot start until
+> the `context` column below exists. See § "Why this is two plans". Their disposition markers stay below so the move is
+> recorded rather than read as a todo deletion.
+
+- **[UI] P2. CANCELLED — SUPERSEDED 2026-08-10 (slot-3 interactive, per
+  /plans/active/blocked_question_card_context_rendering_2026_08_10.md).** Render `context` as a `<details>` block
+  collapsed by default in `BlockedCard` — MOVED to the gated companion plan, not dropped; still open there.
+- **[UI] P3. CANCELLED — SUPERSEDED 2026-08-10 (slot-3 interactive, per
+  /plans/active/blocked_question_card_context_rendering_2026_08_10.md).** Replace the raw `#{q.slot_id}` render with a
+  named source chip so `NO_WORKER_SLOT_SENTINEL` never shows as `#-1` — MOVED to the gated companion plan, not dropped;
+  still open there.
+
 - [ ] [BACKEND] P1. **Add a nullable `context` column to `BlockedRow` plus an idempotent migration**, mirroring
       `_migrate_blocked_queue_claude_session_id`'s no-backfill pattern in `bootstrap.py`. Populate it on the `doc_drift`
       path with both sides' verbatim quotes, their `file:line` anchors, the worker's `description`, and first-detected /
       last-reconfirmed timestamps; expose it on `BlockedView`. **Done when**: column + migration + API field + a test
       proving an old row with `context IS NULL` still renders, and `quality-gates.sh` is green. Repo:
       agent-orchestrator.
-- [ ] [UI] P2. **Render `context` as a `<details>` block collapsed by default** under `.question` in `BlockedCard`
-      (`agent-orchestrator/dashboard/src/layout.tsx` — NOT `deployment-ui`, see the correction todo below). The headline
-      question stays one line; expanding reveals the full structured context. **Done when**: collapsed-by- default and
-      expand-to-full are both covered by a `pw:L2` Playwright spec, a `context: null` row renders with no empty
-      disclosure widget, and `tsc` / `vitest` are clean. Repo: agent-orchestrator.
-- [ ] [UI] P3. **Replace the raw `#{q.slot_id}` render with a source chip** so `NO_WORKER_SLOT_SENTINEL` never reaches
-      the screen as `#-1` — show `#N` for a real slot, and a named chip (`plan_health`, `operator-gated`) for synthetic
-      rows, with a tooltip explaining there is no originating worker session. **Done when**: no code path can render
-      `#-1`, a `pw:L2` spec covers both chip variants, and `tsc` / `vitest` are clean. Repo: agent-orchestrator.
 
 ### C — condition-derived retirement (the general fix)
 
@@ -286,9 +332,12 @@ behaviour recorded.
   boundary above rather than folding into it (that doc is `assigned_vm: planning`, this one is human/NA per operator
   instruction, and their subject matter is disjoint). While cross-checking it, found its `[UI]` todo and `repos:`
   frontmatter name `deployment-ui` for a component that lives in `agent-orchestrator/dashboard/` — filed as todo D.
-- **NA-corpus ratchet note**: this doc adds 1 NA doc and 13 open NA todos against the
-  `scripts/plan-hygiene/na_corpus_baseline.yaml` buffers (10 docs / 30 todos over baselines 372 / 1109). It fits inside
-  the buffer, but consumes roughly half the todo headroom — if `check_na_corpus_ratchet.py` fails on a later run, this
-  is a genuine reviewed spike, not drift. Most todos here are bounded with machine-checkable done-whens and would be
-  AO-eligible if the operator ever wants to flip this plan to `assigned_vm: planning`; it is NA by explicit operator
-  instruction 2026-08-10, not by eligibility.
+- **2026-08-10 (flipped to AO dispatch, operator direction)**: operator changed the destination — `assigned_vm: NA` →
+  `planning`, `execution_scope: local-only` → `orchestrator-agent`, with the explicit instruction that no part be
+  operator-blocked. Re-checked every todo against the dispatch-scope eligibility bar
+  (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") — all are
+  bounded with worker-determinable outcomes; none was or is `[OPERATOR]`-tagged; the two that could read as
+  operator-shaped (C4, C5) are justified in § "Dispatch eligibility" above. Set `sequential: true` (five todos edit
+  `plan_health.py`, three edit `orm.py` — the same-file-overlap case the rule sanctions) and SPLIT the two `[UI]` todos
+  into the `gate_on_depends` companion plan rather than leaving a real dependency expressed as mere ordering. The
+  NA-corpus ratchet note filed with the original version is dropped — this doc no longer counts against that corpus.
