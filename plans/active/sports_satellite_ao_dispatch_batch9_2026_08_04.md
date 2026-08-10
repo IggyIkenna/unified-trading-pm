@@ -322,13 +322,17 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `sports_curated_universe_domestic_selection_remaining_2026_07_25.md`. Done when: root cause is identified, or the
       jump is ruled out as a one-time campaign artifact — and if a real consolidator gap is confirmed, a follow-up todo
       is filed against it.
-- [ ] [DATA] P2. Verify the 2026-08-04 sports honest-coverage rollup (VM `measure-honest-coverage-20260804-110554`)
+- [x] ✅ [DATA] P2. Verify the 2026-08-04 sports honest-coverage rollup (VM `measure-honest-coverage-20260804-110554`)
       completed by confirming `gs://central-element-323112-honest-coverage/2026-08-04/coverage.json`'s `generated_at`
       advanced past `09:38:21Z`, then re-read `GET /api/data-status/distinct-values/sports` and compare against the
       expected result (venues 3/13 non-canonical, or fewer if FOOTBALL already cleared; instrument_types 0/37;
       data_types 0/10). Source: `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`. Done when: the
       coverage.json timestamp and the live endpoint response are both captured in the doc's Progress Log with any
-      deviation from the expected counts explicitly noted.
+      deviation from the expected counts explicitly noted. — **DONE 2026-08-10 (slot-7)**: coverage.json
+      `generated_at 2026-08-04T13:16:32Z` (past 09:38:21Z, rollup completed; sports coverage_pct 98.38%) + live endpoint
+      `non_canonical_count {venues: 2, instrument_types: 1, data_types: 2, chains: 1}` (source_date 2026-08-10) captured
+      in `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`'s Progress Log, with deviations noted
+      (FOOTBALL cleared ✓; residual = badge-not-hide-surfaced set, taxonomy chain P2/P3/P4 owns it).
 - [ ] [DIAG] P3. Query the sports manifest for `venue=FOOTBALL capture_status=attempted_failed` rows (baseline 194)
       after the `market-data-processing-service@595a1ff` `live_workers.py` fix. If the count has dropped to 0 on natural
       retry, record it cleared; if rows persist, diagnose whether the remaining failure is a distinct root cause before
