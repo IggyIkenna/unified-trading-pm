@@ -8,7 +8,7 @@ summary: >-
   update-dependency-version.yml, and request-major-bump.yml — none in the file this task touched
   (python-quality-gates-v2.yml). Confirmed PRE-EXISTING: identical 30-finding count on the commit immediately prior to
   this task's push, byte-for-byte same signature.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
+last_updated: "2026-08-10"
 author: worker-slot18
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -33,10 +34,13 @@ assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
-archive_exempt: true
+resolved_by: unified-trading-ci@a12e147/@6105330/@14be063/@369a96d
 source: ["discovered 2026-08-09 while shipping uac_value_only_config_change_breaks_utl_untested_2026_07_20.md item [A]"]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 4/4 todos `[x]`, unlocked). All 30 shellcheck findings across
+> the 4 flagged workflow files fixed and verified green live in CI (`unified-trading-ci` `lint` job, run `31359123014`
+> on `main` HEAD `369a96d` — first green run in this doc's history). Archived by cicd worker (slot 4).
 
 # unified-trading-ci `lint` job is red on pre-existing shellcheck findings
 
