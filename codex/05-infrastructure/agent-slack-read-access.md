@@ -2,12 +2,12 @@
 doc_type: codex-ssot
 title: Agent Slack read-access — scripts/dev/slack-read-channel.py
 summary:
-  An agent session can read any Slack channel's recent history directly, right now, with zero setup — no MCP server, no
-  OAuth flow, no pasted screenshots. `scripts/dev/slack-read-channel.py` resolves a read-scoped bot token from GCP
-  Secret Manager via gcloud ADC (the token never touches disk or argv) and dumps rendered + raw-JSON channel history.
-  This doc exists because that capability was previously hard to find — an agent asked "do I have Slack access?"
-  reflexively checked for an MCP tool (found none) and concluded no access, instead of checking for an existing
-  capability script.
+  An agent session on a GCP-hosted host (operator laptop slot, dispatched worker) can read any Slack channel's recent
+  history directly, right now, with zero setup — no MCP server, no OAuth flow, no pasted screenshots.
+  `scripts/dev/slack-read-channel.py` resolves a read-scoped bot token from GCP Secret Manager via gcloud ADC (the token
+  never touches disk or argv) and dumps rendered + raw-JSON channel history. **NOT yet true for the AO orchestrator VM**
+  (AWS-hosted, zero GCP credential configured — verified 2026-08-10, see the Auth section) — that gap is real and
+  tracked separately, don't assume it's closed without re-verifying live.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -43,15 +43,25 @@ the CWD) so alert triage ("is something broken?") can be done from a terminal, w
 python3 scripts/dev/slack-read-channel.py [channel=ci-failures] [hours=24] [--json-only]
 ```
 
-## Auth — why it needs zero setup
+## Auth — why it needs zero setup (GCP-hosted hosts only — NOT the AO orchestrator VM)
 
 The bot token is `SLACK_ALERTS_READER_BOT_TOKEN` in GCP Secret Manager, resolved in-process via
 `gcloud secrets versions access latest --secret=SLACK_ALERTS_READER_BOT_TOKEN` — **the token never touches disk or
-argv.** Every host this runs on (operator laptop slots, the AO orchestrator VM, any dispatched worker) already has a
-gcloud identity configured for the prod project, so this is genuinely fleet-wide with no per-host credential
-provisioning step. Degraded-path fallback (every gcloud identity hits `PERMISSION_DENIED` or a stale-token reauth prompt
-that can't run non-interactively): supply the token directly via a `SLACK_ALERTS_READER_BOT_TOKEN` env var for that one
-invocation — never as a default, never silently.
+argv.** Every GCP-side host this runs on (operator laptop slots, any dispatched worker with a gcloud identity for the
+prod project) already has that identity configured, so this is zero-setup there. Degraded-path fallback (a gcloud
+identity hits `PERMISSION_DENIED` or a stale-token reauth prompt that can't run non-interactively): supply the token
+directly via a `SLACK_ALERTS_READER_BOT_TOKEN` env var for that one invocation — never as a default, never silently.
+
+**Correction (2026-08-10, direct verification via AWS SSM on `i-0c9b283b31d6b5ca7`)**: the AO orchestrator VM does
+**NOT** have this today — it's an AWS EC2 instance, not GCP-hosted, and cross-cloud GCP access was never provisioned on
+it. Verified live: `gcloud auth list` → "No credentialed accounts", `GOOGLE_APPLICATION_CREDENTIALS` unset, no
+service-account key file present. This isn't a missing IAM binding (which would be a quick grant) — there is currently
+NO GCP identity on that VM to grant a binding to. Setting this up properly means standing up real cross-cloud auth
+(Workload Identity Federation is the right pattern here, not deploying a static SA key JSON to a production orchestrator
+VM) — tracked as its own scoped follow-up, not a quick fix. Until that lands, **AO cannot run this script or any
+skill/task that depends on it** (e.g. `/data-pipeline-alerts-reconcile` is interactive-session-only today for exactly
+this reason). The "genuinely fleet-wide" framing below and in this doc's original version was aspirational, not yet
+verified for the AO VM specifically — don't repeat that mistake without live-testing it first.
 
 The bot must be a member of the target channel to read it; `channel not visible to the reader bot` names the channels it
 CAN see, which is the fastest way to tell "bot not invited" from "channel name typo."
