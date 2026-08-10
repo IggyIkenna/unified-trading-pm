@@ -136,12 +136,14 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
       post-push ancestry verified against `origin/live-defi-rollout`). The stale-UTL-base-image hypothesis in this
       todo's original text was WRONG — step 5 `pull-base-image` completed fine. Verified by local reproduction before
       shipping (§ "Verification"). The done-when (a fresh LDR build reaching SUCCESS) is carried by the next todo.
-- [ ] [BACKEND] P2. **Confirm the fix build is green, then close this issue.** Build
-      `6fee191d-5133-407b-a384-d81e702f3803` (market-tick-data-service@0eb8aa2, live-defi-rollout) fired on the fix sha
-      and was WORKING at 15:11Z. Verify with
-      `gcloud builds describe 6fee191d-5133-407b-a384-d81e702f3803     --project=central-element-323112 --region=asia-northeast1`.
-      If it fails, re-read step 6 — the local repro in § "Verification" diagnoses this class without a Cloud Build
-      round-trip.
+- [x] [BACKEND] P2. ✅ **Confirm the fix build is green.** `Evidence: cloudbuild=6fee191d-5133-407b-a384-d81e702f3803` —
+      SUCCESS, 15:11:50Z → 15:20:09Z (8m19s), market-tick-data-service@0eb8aa2, `live-defi-rollout`. Step 6 cleared and
+      the log proves all three defects fixed at once: `+ unified-api-contracts==0.110.1.dev910+gc48238266` and
+      `+ unified-trading-library==0.77.1.dev636+g640466d22` (both TRUE git-derived versions, replacing the mis-stamped
+      `0.76.3`), both installed from local `file://` paths with no registry lookup, and the UAC version now satisfies
+      UTL's `>=0.110.0` floor locally. First green MTDS image build since 09:22Z, ending 20 consecutive failures. NOTE:
+      MTDS builds on `main` stay red until LDR→main promotion carries this sha across — expected, self-resolving, not a
+      separate defect.
 - [ ] [BACKEND] P3. **Sibling repos mis-stamp their own package version from the same inherited ENV.** The UTL base
       image bakes `ENV SETUPTOOLS_SCM_PRETEND_VERSION`, and every repo that `FROM`s it inherits that value live in each
       `RUN`. Measured 2026-08-10: `strategy-service` and `greeks-service` declare
@@ -179,6 +181,13 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
 
 ## Progress Log
 
+- **2026-08-10 15:20Z (/ci-reconcile, slot-2·laptop)** — **VERIFIED GREEN.**
+  `Evidence: cloudbuild=6fee191d-5133-407b-a384-d81e702f3803` SUCCESS (8m19s) on market-tick-data-service@0eb8aa2 —
+  first green MTDS image build since 09:22Z, ending 20 consecutive failures. The step-6 log confirms the predicted
+  outcome exactly: both workspace deps installed from local `file://` paths at their TRUE git-derived versions
+  (`unified-api-contracts==0.110.1.dev910`, `unified-trading-library==0.77.1.dev636`) instead of the mis-stamped
+  `0.76.3`. The build-break todos are closed; this issue stays OPEN only for its three P3s (the `-prod` trigger
+  confirmation, the stale `hosted-baseline` snapshot, and the sibling-repo version mis-stamp).
 - **2026-08-10 ~15:15Z (/ci-reconcile, slot-2·laptop)** — Root-caused and FIXED; shipped
   market-tick-data-service@0eb8aa2c8e. Build `6fee191d-5133-407b-a384-d81e702f3803` fired on that sha and was WORKING at
   15:11Z — this issue stays OPEN until it reaches SUCCESS. Two corrections to earlier text in this doc: the
