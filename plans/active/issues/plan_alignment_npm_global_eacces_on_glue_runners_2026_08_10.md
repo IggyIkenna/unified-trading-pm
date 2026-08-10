@@ -14,7 +14,10 @@ summary: >-
   time, which is the tell that this is an environment fault rather than a code one. The SSOT template
   `scripts/templates/plan-alignment-agent.yml` is FIXED (unified-trading-pm@d901c4e050) — it now prefers the install,
   accepts a working pre-existing CLI on EACCES, and still fails CLOSED when no CLI exists at all. The per-repo copies
-  are NOT yet updated, so CI behaviour is unchanged until the rollout runs; that is the one open todo.
+  were then propagated the same day, surgically rather than by rendering the template (which was measured to carry
+  unrelated passengers): execution-service@62ca29a43, features-service@5e7f2fe3, market-tick-data-service@89cdd578,
+  strategy-service@86696b7e. Scope correction worth keeping: only FOUR repos run `[self-hosted, glue]` —
+  `instruments-service` and `market-data-processing-service` are `ubuntu-latest` and never had this bug.
 status: open
 nature: issue
 asset_group: [ci]
@@ -93,25 +96,33 @@ unified-trading-pm@d901c4e050 — YAML parses, `bash -n` clean, actionlint uncha
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **Propagate the fixed template to the per-repo copies — CI is unchanged until this runs.** The
-      mechanism is `bash scripts/propagation/rollout-agent-workflows.sh` (`--dry-run` / `--repo <name>` available; it
-      renders `{{SERVICE_NAME}}`, runs a full `quality-gates.sh` per repo, then `quickmerge --agent`). **Three cautions
-      measured 2026-08-10, do NOT skip them**: (1) the script has NO per-template filter, so a blanket run ALSO syncs
-      `agent-audit.yml` into ~13 repos from market-tick-data-service's live copy (it uses that as the prototype source —
-      `PROTOTYPE_AUDIT` at line 78 — there is no `scripts/templates/agent-audit.yml`); that is NOT a benign sync — the
-      MTDS prototype is a migrated "canonical thin form" and e.g. strategy-service still carries the legacy
-      full-autonomous-agent version, a 134-line functional divergence. Prefer `--repo` per repo, or review that diff
-      first. (2) **RESOLVED before it bit, keep the lesson**: the TEMPLATE was itself the stale side of a drift — 5 of
-      the 6 glue repos matched it byte-for-byte at 84 lines, but strategy-service had drifted AHEAD at 88 with a
-      `concurrency:` block the template lacked, so a rollout would have SILENTLY STRIPPED it. Adopted into the template
-      in unified-trading-pm@90069a38ba, which is now a SUPERSET of every live copy (the only remaining non-comment delta
-      against any repo is the EACCES guard the rollout exists to deliver). **Re-run that superset check before any
-      future rollout of this template** — "never hand-edit a per-repo copy" is usually framed as protecting the
-      template, and this is the same rule pointing the other way. (3) it runs a full QG per repo serially — deferred
-      this session because the host was at load 189/10-cores, where that is hours of gates. Affected repos are the
-      `[self-hosted, glue]` ones carrying `plan-alignment-agent.yml`: execution-service, features-service,
-      instruments-service, market-data-processing-service, market-tick-data-service, strategy-service. Repo:
-      unified-trading-pm.
+- [x] [DEVOPS] P2. **Propagate the guard to the affected per-repo copies.** ✅ Done 2026-08-10, surgically, NOT via the
+      template renderer. Evidence: execution-service@62ca29a43 · features-service@5e7f2fe3 ·
+      market-tick-data-service@89cdd578 · strategy-service@86696b7e — each `-1/+16`, each gated
+      (`quality-gates.sh --no-fix` green, sentinel == HEAD) and shipped by `quickmerge --agent --files`, guard verified
+      present on the remote in all four via `git ls-remote` + `git show origin/…`. **The scope was WRONG in the first
+      draft of this doc and the correction is the point**: only **4** repos run `[self-hosted, glue]`.
+      `instruments-service` and `market-data-processing-service` are `ubuntu-latest`, where the runner user owns the
+      global prefix and the install succeeds — they never had this bug and were deliberately left untouched. The earlier
+      "5 of 6 matched the template byte-for-byte at 84 lines" was derived from LINE COUNT, not content; equal length is
+      not equal content, and checking the actual removed lines is what exposed it. **Why not
+      `rollout-agent-workflows.sh`**: rendering the SSOT template over these copies was measured to carry passengers
+      into a commit labelled as a one-line npm fix — `runs-on: ubuntu-latest` → `[self-hosted, glue]` for the two
+      unaffected repos (an infrastructure migration), `actions/checkout` v4→v5 in market-tick-data-service, and the
+      `claude --print` invocation plus `GH_ORG` form in execution-service. Separately the script has NO per-template
+      filter, so a blanket run also syncs `agent-audit.yml` into ~13 repos from market-tick-data-service's live copy
+      (`PROTOTYPE_AUDIT`, line 78 — there is no `scripts/templates/agent-audit.yml`), and that is NOT benign: the MTDS
+      prototype is a migrated "canonical thin form" while strategy-service still carries the legacy
+      full-autonomous-agent version, a 134-line functional divergence. One fix, no passengers. **Keep this lesson**: the
+      TEMPLATE was itself the stale side of a drift — strategy-service had a `concurrency:` block the template lacked,
+      so a render would have SILENTLY STRIPPED it. Adopted into the template in unified-trading-pm@90069a38ba (now a
+      superset of every live copy) and confirmed preserved on strategy-service's remote after shipping. "Never hand-edit
+      a per-repo copy" is usually framed as protecting the template; this is the same rule pointing the other way.
+      **Re-run the superset check before any future rollout of this template.** To re-apply the guard by hand if a
+      future render ever strips it, copy the `Install Claude Code CLI` step verbatim out of
+      `scripts/templates/plan-alignment-agent.yml` — that is the SSOT and it stays current, whereas the one-off patch
+      script written for this propagation was deliberately not promoted (all four repos are done; a tool with no
+      remaining consumer is debt). Repo: unified-trading-pm.
 - [ ] [DEVOPS] P3. **Decide whether the runner image should stop shipping a root-owned global
       `@anthropic-ai/claude-code` at all.** The workflow guard makes the symptom survivable, but the underlying setup —
       a root-installed global package that the runner user is then asked to update on every run — will keep producing
