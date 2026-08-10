@@ -221,7 +221,7 @@ findings.
       `markets(skip: Int, ...)` is a valid argument; if yes, implement the same `while skip <= _MAX_SKIP` loop already
       proven in `uniswap_v2.py`/`uniswap_v3.py`; if no, document the confirmed absence in the code comment and leave the
       warning-only mitigation in place.
-- [ ] [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
+- [x] ✅ [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
       cap.**
       `instruments_service/reference_data/adapters/sports/adapters/{api_football,     base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
       have zero grep hits for `page`/`offset`/`cursor`/`has_more`/`MAX_` — each call appears naturally bounded by its
@@ -229,7 +229,23 @@ findings.
       docs for a hidden default page size on a list-style endpoint called with no explicit `limit`/`page` param
       (vendor-side default silently applies). Repo: instruments-service. Done when: each vendor's API docs (or a live
       probe) confirms whether any unparented list-style call in these files can silently truncate; document the finding
-      per file (even a "confirmed no cap" note closes this out) or fix any confirmed cap.
+      per file (even a "confirmed no cap" note closes this out) or fix any confirmed cap. —
+      instruments-service@2d7c19827: vendor-doc review (2026-08-10) confirmed TWO hidden caps fixed + one conditional
+      cap + documented no-caps: (a) FootyStats `/todays-matches` returns max 500 matches/page and paginates by default
+      (`&page=N`) — added `_fetch_todays_matches` page loop (get_fixtures / get_fixture_predictions /
+      get_fixture_odds_snapshot all rewired), short-page exhaustion + `_TODAYS_MATCHES_MAX_PAGES` safety-net; documented
+      `/league-teams` (100/page, safe for ~18-40-team leagues) + `/league-list` (no documented page param). (b) SFI
+      `/championships/list/` paginates unconditionally (`p` param, 100/page, ~1954 total) and `/matches/day/basic/`
+      paginates for present/future days (100/page) — added shared `_fetch_paginated` loop (get_leagues +
+      get_match_descriptors_for_date; short-page + count-confirmed + safety-net termination; unpaginated historical-day
+      responses stop after page 1). (c) api-football endpoints used are documented single-page but the `paging` envelope
+      was ignored — added `_warn_on_unfetched_pages` guard so a future vendor-side page cap is LOUD, not silent. (d)
+      confirmed-no-cap documented per file for transfermarkt (Apify dataset items have no default limit; standings
+      naturally bounded), understat (full-season single response, no pagination concept), open_meteo (point+date-range
+      timeseries), api_football_reference (wrapper, delegates), base (shared HTTP layer). 5 new regression tests
+      prove >page-size universes are no longer truncated (footystats 700-match date; SFI 150-championship list +
+      250-match present-day + 2 pagination-parser units). Full quality-gates.sh green (exit 0, 173s first run / 35s
+      content-sentinel re-run), quickmerge landed + ancestry-verified on origin/live-defi-rollout.
 - [ ] [SCRIPT] P3. **Market-tick-data-service prediction/transfer bounded max-page loops — same cap-exhaustion-warning
       gap as this session's Kalshi/Polymarket fix, lower priority given confirmed call-graph usage.**
       `market_interface/clients/alchemy_transfers_client.py::get_all_transfers` already got a warning-only fix this
@@ -285,6 +301,9 @@ findings.
 - 2026-08-10 (slot 19, review): shipped the Kalshi nested series-scoped mitigation caps todo — see the todo's own
   evidence line above for detail. instruments-service@74763c05, QG green (127s), quickmerge landed + ancestry-verified
   on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-10 (slot 19, review): shipped the sports-adapters hidden-vendor-page-cap todo — see the todo's own evidence
+  line above for detail. instruments-service@2d7c19827, QG green (exit 0), quickmerge landed + ancestry-verified on
+  origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
