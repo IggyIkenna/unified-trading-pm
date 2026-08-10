@@ -23,7 +23,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
-    /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
@@ -226,13 +226,13 @@ below rather than duplicated here.
       `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
       only). Repo: agent-orchestrator (verification, read-only + a possible checkbox flip).
 
-- [ ] [DOCS] P2. [OPERATOR] **Fold the 2026-08-01 multi-agent slot-collision incident into two governance docs, scoped
-      to DESCRIPTIVE content only — do not attempt to resolve or pre-empt the still-open `[OPERATOR] P1` decision in the
-      source doc.** In `/codex/05-infrastructure/per-tab-worktrees.md`'s "Troubleshooting" section, add a subsection
-      naming this as a DISTINCT failure mode from AO-worker-to-AO-worker slot collision: multiple concurrent `claude`
-      processes/operators sharing ONE slot's single git checkout (observed: up to 6 concurrent processes on `.tabs/1`,
-      repeated `.git/index.lock` contention, autostash-pop re-fights, wrong commit author attribution since
-      `.git/config`'s `user.name`/`user.email` is shared state) — cite the interim mitigation available today
+- [ ] [DOCS] P2. [OPERATOR] **DESCRIPTIVE content only — do NOT resolve or pre-empt the still-open `[OPERATOR] P1`
+      decision in the source doc.** Fold the 2026-08-01 multi-agent slot-collision incident into two governance docs. In
+      `/codex/05-infrastructure/per-tab-worktrees.md`'s "Troubleshooting" section, add a subsection naming this as a
+      DISTINCT failure mode from AO-worker-to-AO-worker slot collision: multiple concurrent `claude` processes/operators
+      sharing ONE slot's single git checkout (observed: up to 6 concurrent processes on `.tabs/1`, repeated
+      `.git/index.lock` contention, autostash-pop re-fights, wrong commit author attribution since `.git/config`'s
+      `user.name`/`user.email` is shared state) — cite the interim mitigation available today
       (`scripts/dev/safe-doc-push.sh` for doc-only batches) and point to the source issue doc for full analysis + the
       still-open operator decision + candidate root-cause fixes. In `cursor-configs/CLAUDE.md`'s "Multi-agent safety
       (per-slot worktrees)" section, make ONLY a byte-minimal pointer edit — extend the existing trailing parenthetical

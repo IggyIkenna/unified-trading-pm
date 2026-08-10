@@ -120,12 +120,17 @@ source: >-
       since nothing moved. Verified via
       `grep -rl orchestrator_failover_double_dispatch_duplicate_work_2026_07_25 plans/ codex/` — 13 referrer hits, all
       still pointing at the live `plans/active/issues/` path (no archived copy exists to repoint to).
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+- [x] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`,
       fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
       `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py`. **Done when**: the batch plan is archived
       with a banner, the inventory regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py` no
-      longer names this pair.
+      longer names this pair. — verified by plan_reconciler agt-c7578b 2026-08-10: file confirmed at the archived path
+      (this doc's own `related:`/banner already cite it correctly); corpus-wide grep for the stale active path found 0
+      live referrers (2 hits are both inside already-archived historical docs, correctly describing history);
+      `check_finalize_plan_coverage.py` run live — 0 violations, pair not named. Corpus-wide inventory orphan count is
+      currently 2, but both are unrelated `tradfi_satellite_ao_dispatch_batch12_2026_08_10`(`_finalize`) docs, not this
+      pair — not a blocker for this specific archival.
 
 ## Codex SSOTs
 
