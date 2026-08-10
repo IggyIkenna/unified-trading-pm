@@ -100,7 +100,11 @@ the VM-scale run:
       `/codex/05-infrastructure/vm-launcher-runbook.md` — this is exactly the multi-year GCS-walk + heavy-compute case
       that rule exists for) for `model_2a`/`model_2b`/`model_2c`/`model_2d`/`model_2e`, and report the measured
       coverage + performance delta (rmse/mae/r2 per outcome per horizon) back into this doc and
-      `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service)
+      `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service) — **BLOCKED
+      2026-08-10**: the driver itself is now correct (`ml-service@68a4b82`), but the 3rd relaunch attempt revealed a
+      deeper, real data gap one layer up in features-service — see
+      `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. This todo
+      cannot proceed until that doc's backfill todo lands.
 - [ ] [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
       `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
       `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler
@@ -265,16 +269,37 @@ the VM-scale run:
   workspace's own "commit only from a green tree" rule — sequence is stage → QG on the staged tree → commit → sentinel
   now matches HEAD → ship), not QG-then-commit.
 
+- 2026-08-10 (slot-22): **the "if any model still honest-absence-aborts" contingency below fired — all 5 did, but NOT
+  because the fix is wrong.** Resumed monitoring the 3rd-attempt VMs; ~3h in, all 5 hit the identical
+  `CLVTargetBuilder: built 6 targets from N rows (0.0% non-null)` line — the SAME symptom as before the fix. Traced this
+  fully before concluding anything: `merge_clv_target_columns` (`ml-service@68a4b82`'s fix) IS running and IS correctly
+  querying `feature_groups=["odds_targets","derived_features"]` — it's logging its own honest
+  `odds_targets export has none of (...) -- CLV target will fall through` warning, which is the function working exactly
+  as designed when the export it queries has no data. Confirmed via spot-checked `gcloud storage ls` (not a full-corpus
+  walk) that `feature_group=odds_targets/` **does not exist for ANY date in the features-sports bucket** — not for
+  2019-2025, not even for the most recent dates checked (2026-07-15, 2026-08-01). Traced to the archived
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`: the ONLY historical backfill this export has
+  ever received was a 17-day verification window (`2026-04-01..2026-04-17`), run to prove the merge code path, never
+  extended to the real 2019-2025 training range. Confirmed the upstream raw source
+  (`market-data-tick-sports-.../odds_horizon_bucket`) already exists for historical dates, so this is a pure-compute
+  backfill, not a new-data-capture or credentials gap. **Deleted all 5 running VMs**
+  (`ml-train-sports-model-2a/b/c/d/e-20260809-23xxxx`, `gcloud compute instances delete`, confirmed via an empty
+  `gcloud compute instances list`) rather than let them burn several more hours of compute toward an outcome already
+  conclusively known. Filed the real blocker as its own issue (cross-repo, features-service, precisely-scoped
+  AO-eligible backfill — not a judgment call):
+  `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. Todo 2 above now
+  explicitly cites it as a hard blocker.
+
 ## Deferred work after 2026-08-10
 
-| Item                                                                                                                                                | State / why deferred                                                                                                                                 | Blocked on                              |
-| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Monitor the 5 third-attempt VMs to terminal, extract each `run.log` result line                                                                     | Cannot be done yet — needs real elapsed time on GCE (multi-year GCS feature load + ensemble train per model); all 5 still `RUNNING` as of last check | Elapsed time / GCE compute              |
-| Write measured coverage + rmse/mae/r2-per-outcome delta into this doc AND `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` | Not done — depends on the item above                                                                                                                 | The item above                          |
-| Flip todo 2's checkbox with evidence (`ml-service@68a4b82` + 5 result lines)                                                                        | Not done — depends on the two items above                                                                                                            | The two items above                     |
-| If any model still honest-absence-aborts even with the `merge_clv_target_columns` fix                                                               | Not started — would be a NEW finding requiring its own issue doc per findings-closure rules, not a silent retry                                      | Depends on what the VMs actually report |
+| Item                                                                                             | State / why deferred                                                                                                | Blocked on                                                                                                        |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Backfill `odds_targets` across `2019-08-01..2026-07-31`                                          | Not done — real, scoped AO-eligible work, unclaimed                                                                 | Nobody — see `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` |
+| Relaunch the 5 sports CLV ensemble trainer VMs (4th attempt) and report the measured delta       | Not done — depends on the backfill above; do NOT relaunch before it lands, confirmed 3× now this exact failure mode | The backfill item above                                                                                           |
+| Write measured coverage + rmse/mae/r2-per-outcome delta into this doc AND the T2H/T6H parent doc | Not done — depends on the relaunch above                                                                            | The relaunch item above                                                                                           |
+| Flip todo 2's checkbox with evidence                                                             | Not done — depends on all of the above                                                                              | The items above                                                                                                   |
 
-**Recommended next item**: check `gcloud compute instances list --filter="name~ml-train-sports-model"` — once a VM
-disappears (self-deleted, `VM_SHUTDOWN_ON_COMPLETION=true`) it's terminal; pull its `run.log` first since it's the most
-informative one to have resolved. Do not re-launch anything unless a `run.log` shows a genuine new failure (not "still
-running").
+**Recommended next item**: pick up
+`/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`'s backfill todo
+first — relaunching the trainer VMs again before that lands would just reproduce this exact 3-hours-burned-for-nothing
+cycle a 4th time.

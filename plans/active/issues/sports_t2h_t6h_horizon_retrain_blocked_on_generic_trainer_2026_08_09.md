@@ -113,3 +113,9 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   that leaves a 0-open doc sitting in `plans/active/`. Exemption is a same-session bridge, not a standing state —
   removing it and running the full 6-step archival ritual (git mv, banner, referrer fix) as the very next commit in this
   session.
+- 2026-08-10 (slot-22): pointer update per this doc's own todo text ("report ... back into this doc") — the decomposed
+  driver work landed (`ml-service@3232e17` build, `ml-service@68a4b82` real-data fix), but the actual measured-delta
+  retrain remains blocked, now on a real upstream data gap (features-service `odds_targets` export never backfilled for
+  the 2019-2025 training range) rather than a driver bug. Full evidence + the backfill todo:
+  `/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md`. No measured
+  delta exists yet to report.
