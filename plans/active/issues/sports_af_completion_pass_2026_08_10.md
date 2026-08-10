@@ -101,11 +101,16 @@ depends_on: []
           (~36%). Pace steady at ~10 dates/min. ETA: ~14:40Z.
         - SSH remains unavailable (transient, same as prior session). VM healthy per GCS tee progression + watchdog.
 
-## Deferred work after 2026-08-10 ~12:15Z
+      - **Session compacting 2026-08-10 ~12:04Z** — VM still RUNNING:
+        - Progress: GCS tee `last_completed_date=2022-09-28` (direct `gsutil cat`). ~844/2256 days done (~37%). Pace
+          steady at ~10 dates/min, ~1412 days remaining → ETA ~14:25Z.
+        - VM confirmed RUNNING via `gcloud compute instances list`; no `exit_code=` yet (expected — still mid-flight).
+
+## Deferred work after 2026-08-10 ~12:04Z
 
 | Item                                                                                                                | State / why deferred                              | Blocked on                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2022-08-27` (~36%), ETA ~14:40Z | VM completion (real infra)                                                                           |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2022-09-28` (~37%), ETA ~14:25Z | VM completion (real infra)                                                                           |
 | **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM       | INJURIES VM exit_code                                                                                |
 | **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                 | All entity backfills complete                                                                        |
 | **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                             | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
