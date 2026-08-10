@@ -41,6 +41,8 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 locked_by:
 resolved_by:
+  "agent-orchestrator@5353b6b (cefi one-shot-role fix + regression test), unified-trading-pm@6f7ed49c2 (review.md fix +
+  checkbox flips)"
 depends_on: []
 gate_on_depends: false
 supersedes:
@@ -110,32 +112,32 @@ context_scope:
       required? → file declares it?):
 
       | role | shape | needs worker.md | file declares it |
-                      |---|---|---|---|
-                      | backend_engineer, infra, quant_dev, ui_developer, data_engineering | craft worker | yes | yes (all 5, already correct) |
-                      | review, main, monitor | register/poll | no | review.md corrected this pass (was stale-claiming it, see below); main/monitor never claimed it |
-                      | cicd, conflict_resolver, data_pipeline_failure, plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor, context_scout_auditor, escalation_queue_reconciler | one-shot | no | none claim it (already correct) |
-                      | cefi_reconciliation_auditor, cefi_mtds_smoke_tester | one-shot (but see finding below) | no | neither claims it (already correct) |
+                                  |---|---|---|---|
+                                  | backend_engineer, infra, quant_dev, ui_developer, data_engineering | craft worker | yes | yes (all 5, already correct) |
+                                  | review, main, monitor | register/poll | no | review.md corrected this pass (was stale-claiming it, see below); main/monitor never claimed it |
+                                  | cicd, conflict_resolver, data_pipeline_failure, plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor, context_scout_auditor, escalation_queue_reconciler | one-shot | no | none claim it (already correct) |
+                                  | cefi_reconciliation_auditor, cefi_mtds_smoke_tester | one-shot (but see finding below) | no | neither claims it (already correct) |
 
-                      **New finding, fixed same pass (was NOT anticipated by this doc):** `cefi_reconciliation_auditor` and
-                      `cefi_mtds_smoke_tester` (added to `plan_health.py`'s `_MODE_PROMPT_TEMPLATE`/`_MODE_AGENT_KIND` 2026-08-05,
-                      `agent-orchestrator@83314de2`) were never mirrored into `_ONE_SHOT_ESCALATION_ROLES` — a live gap in the exact
-                      mechanism this todo audits, so fixed in the same commit rather than filed as a separate issue (findings-triage:
-                      "in your file → fix in same commit"). Both roles' own files already correctly document the one-shot contract
-                      (`lifecycle: scheduled`, `one_shot_complete: true`); only the composer-side mirror was missing, meaning a real
-                      spawn would have been told to `POST /boot` for a task-fetch that doesn't exist for them.
+                                  **New finding, fixed same pass (was NOT anticipated by this doc):** `cefi_reconciliation_auditor` and
+                                  `cefi_mtds_smoke_tester` (added to `plan_health.py`'s `_MODE_PROMPT_TEMPLATE`/`_MODE_AGENT_KIND` 2026-08-05,
+                                  `agent-orchestrator@83314de2`) were never mirrored into `_ONE_SHOT_ESCALATION_ROLES` — a live gap in the exact
+                                  mechanism this todo audits, so fixed in the same commit rather than filed as a separate issue (findings-triage:
+                                  "in your file → fix in same commit"). Both roles' own files already correctly document the one-shot contract
+                                  (`lifecycle: scheduled`, `one_shot_complete: true`); only the composer-side mirror was missing, meaning a real
+                                  spawn would have been told to `POST /boot` for a task-fetch that doesn't exist for them.
 
-                      **Second finding, fixed same pass:** `review.md`'s STEP-0 still claimed "the live read-confirmation gate enforces
-                      `worker.md` for this role's boot path" — true historically (2026-07-27→2026-08-08, the 225+-rejection incident
-                      this doc opened with) but stale post-`6166269`: `review` no longer calls `/api/slots/<N>/boot` at all (its
-                      composed stub routes to the register/poll shape), so the gate described can't fire for it anymore. Corrected to a
-                      historical note; kept the recommendation to read `worker.md` (still useful for review's actual job — auditing
-                      workers against the contract worker.md documents — just not because a gate demands it).
+                                  **Second finding, fixed same pass:** `review.md`'s STEP-0 still claimed "the live read-confirmation gate enforces
+                                  `worker.md` for this role's boot path" — true historically (2026-07-27→2026-08-08, the 225+-rejection incident
+                                  this doc opened with) but stale post-`6166269`: `review` no longer calls `/api/slots/<N>/boot` at all (its
+                                  composed stub routes to the register/poll shape), so the gate described can't fire for it anymore. Corrected to a
+                                  historical note; kept the recommendation to read `worker.md` (still useful for review's actual job — auditing
+                                  workers against the contract worker.md documents — just not because a gate demands it).
 
-                      **14:30-16:30Z 2026-08-08 recurrence timing, answered:** PREDATES the fix, not a regression of it —
-                      `agent-orchestrator@6166269` landed 2026-08-08T19:35:33Z, ~3-5h after the reported window; the earlier
-                      `@41da3e578` (one-shot-family extension) landed 08:29:53Z the same day, also before the window. No P0 issue
-                      needed. Evidence: `unified-trading-pm@6f7ed49c2` (review.md fix), `agent-orchestrator@5353b6b` (cefi fix +
-                      regression test).
+                                  **14:30-16:30Z 2026-08-08 recurrence timing, answered:** PREDATES the fix, not a regression of it —
+                                  `agent-orchestrator@6166269` landed 2026-08-08T19:35:33Z, ~3-5h after the reported window; the earlier
+                                  `@41da3e578` (one-shot-family extension) landed 08:29:53Z the same day, also before the window. No P0 issue
+                                  needed. Evidence: `unified-trading-pm@6f7ed49c2` (review.md fix), `agent-orchestrator@5353b6b` (cefi fix +
+                                  regression test).
 
 - [x] ✅ [BACKEND] P2. **Regression test shipped 2026-08-09 — flip reconciled 2026-08-09 (slot 24, review craft,
       batch9-finalize todo 3): re-ran `tests/test_role_file_worker_md_read_sync.py` fresh at
@@ -257,6 +259,6 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
 
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: MOOT, superseded before this marker landed — both
   checkboxes were flipped `[x]` by `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md` todo 3 (see the entry
-  directly above, same day this audit ran) via a real independent re-verification, not a bare pointer. `grep -cE
-  '^[[:space:]]*[-*] \[ \]'` = **0** as of this read. This doc is pending archival via that same finalize plan's todo
-  4 — not archived here (outside this sweep's scope), just noting real remaining work is genuinely zero.
+  directly above, same day this audit ran) via a real independent re-verification, not a bare pointer.
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **0** as of this read. This doc is pending archival via that same finalize
+  plan's todo 4 — not archived here (outside this sweep's scope), just noting real remaining work is genuinely zero.
