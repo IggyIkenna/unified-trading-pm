@@ -371,3 +371,9 @@ secrets, workspace files `post_mdps_pipeline.{sh,log}` still present but regener
 created, discovered, or flipped this session. Todo 7 remains done (`eb096a69b7` + `98c8bd10f3`). **Recommended next**:
 Todo 5 (P2 DATA, BITGET-FUTURES backfill retry) is the highest-priority open item. Deliberately dropped: stale monitor
 `bxwd163js` (pipeline log watcher) timed out and not re-armed.
+
+**Session 8 verdict (pre-compact ~13:22 UTC)**: **Safe to compact: YES** — `ahead=0`, clean tree, no new changes.
+Continuation-only session (post-compaction resume). Step 1 audit: clean git tree, two regenerable workspace files
+(`post_mdps_pipeline.{sh,log}`) — no dangling references, no secrets, no chat-only findings. Steps 2-7 no-op — nothing
+created, discovered, or flipped. Todo 7 remains done (`eb096a69b7` + `98c8bd10f3`). Deliberately dropped: same workspace
+files (regenerable, session-specific). **Where to resume**: Todo 5 (P2 DATA, BITGET-FUTURES).
