@@ -275,3 +275,12 @@ premature run triggered, now has 4 at 12:50. Pipeline v5 will re-run on full dat
 Deliberately NOT saved: `/tmp/post_mdps_pipeline_stdout_v{2,3,5}.log` (regenerable, superseded by workspace log).
 Resume: `ps aux | grep post_mdps_pipeline` → if dead, re-arm from `.tabs/14/post_mdps_pipeline.sh` → wait for VM
 TERMINATED → check pipeline log for funding_oi + returns results → flip checkboxes + POST /done.
+
+**Session 5 resumed 2026-08-10 ~12:50 UTC** (fifth compaction). Pipeline script v4 was dead (compaction kill #3);
+re-armed as v5 (PID 2679779). VM still RUNNING at 12:53 UTC — Aug 03 subprocess (PID 19261, 132% CPU, 7.9% RAM, started
+12:47, 6:29 runtime). This is the LAST day. Earlier premature pipeline run (`b3xnq4wbw`) completed manifest merge
+(62,102 entries) but both features failed on partial Aug 03 data. Pipeline v5 polls VM status (not GCS) and will trigger
+correctly when VM terminates. Estimated VM completion ~12:54 UTC.
+
+**Session 5 verdict (pre-compact ~12:54 UTC)**: Safe to compact: YES — tree already clean, `ahead=0` from session 4's
+`60d50a547e`. No new findings, commits, or artifacts. Pipeline v5 alive. VM on last day. Resume: same as session 4.
