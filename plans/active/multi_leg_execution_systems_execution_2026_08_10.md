@@ -83,10 +83,17 @@ source: >-
       `route_atomic_instructions` → paper-default `AtomicLegExecutor`. Unit tests on both sides
       (`test_live_routing_publish_wiring.py`, `test_atomic_routing_live_wiring.py`) prove the round-trip;
       `quality-gates.sh` green both repos.
-- [ ] [SCRIPT] P1. **Fix `BenchmarkFillEngine.settle()`** per the audit's recommended approach — the target is paper and
-      batch BOTH exercising the same leader/hedge-deadline/unwind sequencing logic `AtomicLegExecutor` uses live
+- [x] ✅ [SCRIPT] P1. **Fix `BenchmarkFillEngine.settle()`** per the audit's recommended approach — the target is paper
+      and batch BOTH exercising the same leader/hedge-deadline/unwind sequencing logic `AtomicLegExecutor` uses live
       (simulated fills, real sequencing), not a second parallel model. If the audit recommended the IBKR-MEL
-      synthetic-callback pattern, follow that precedent's actual mechanics rather than inventing a new one.
+      synthetic-callback pattern, follow that precedent's actual mechanics rather than inventing a new one. —
+      strategy-service@aae2ae064d + evidence: `_compute_atomic_fill` now branches on LEADER_HEDGE mode to
+      `_compute_atomic_leader_hedge_fill` (leader-first → hedge(s) within modeled deadline → compensation on failure);
+      `_compute_single_leg_benchmark_fill` returns None on missing market state (modeled hedge failure);
+      `_compute_unwind_fill` offsets the leader at 50 bps penalty; `_NO_FILL_ACTIONS` legs
+      (TRANSFER/BRIDGE/CANCEL/CONVERT_DUST) are skipped in hedge loop (not failures). Updated
+      `test_atomic_missing_leg_state_raises`→`test_atomic_missing_leg_state_models_hedge_failure` to assert
+      leader+unwind fills instead of KeyError. QG green (5849 passed, 248 skipped, 3 xfailed).
 - [ ] [SCRIPT] P1. **Regression test: unhedged-position risk is now VISIBLE in paper/batch results** — construct a test
       scenario where the follower/hedge leg would fail after the leader/lead leg fills (a real, not hypothetical, market
       condition) and confirm paper mode now surfaces the resulting unhedged-position alert/unwind behavior, where
