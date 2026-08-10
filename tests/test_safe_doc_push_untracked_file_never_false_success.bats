@@ -48,6 +48,16 @@ setup() {
   mkdir -p "${WORK}/bin"
   printf '#!/usr/bin/env bash\nexit 0\n' > "${WORK}/bin/sleep"
   chmod +x "${WORK}/bin/sleep"
+
+  # Force the shared-index path. Test 1 below induces the incident by planting a stale
+  # `.git/index.lock`, and that premise went inert when isolated-worktree mode became the
+  # default: a linked worktree has its OWN index (`.git/worktrees/<name>/index`), so the
+  # planted lock stops blocking `git add`, staging succeeds, the push lands and the test's
+  # `[ "$status" -ne 0 ]` fails. Measured 2026-08-11 -- failing at HEAD, passing at HEAD under
+  # SDP_ISOLATED=0, so the mechanism, not the fix, is what had gone stale. Scoping it here is
+  # correct rather than a workaround: the false-success branch this file guards is reachable
+  # only through the shared index, which is exactly what isolation exists to avoid.
+  export SDP_ISOLATED=0
 }
 
 @test "a brand-new untracked file is NEVER reported as already-matching-HEAD, even when staging keeps failing" {
@@ -68,10 +78,18 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD) still short-circuits to success" {
-  # Control case: the fallback's ORIGINAL intended scenario -- an existing tracked file whose
-  # working-tree content matches HEAD exactly (a peer already landed the identical edit) --
-  # must still report success. The fix must not break this.
+@test "a tracked file already identical to HEAD at entry no longer short-circuits to success" {
+  # SUPERSEDED ASSERTION (2026-08-11, pm_repo_commit_rate_exceeds_precommit_hook_duration F8).
+  # This test used to assert exit 0 here, on the reading that "working-tree content matches
+  # HEAD" means "a peer already landed the identical edit". Measured 2026-08-10 disproved that
+  # reading: the same state is produced when the caller's edit is REVERTED before this script
+  # hashes it, and the script reported "✅ Named files already match HEAD (a concurrent session
+  # landed identical content)" and exited 0 for a todo whose content had just been destroyed.
+  # The two causes are indistinguishable from inside the process, so the run now refuses to
+  # resolve them to a silent success and exits 12 with the command that tells them apart.
+  # SDP_ALLOW_NOOP=1 restores the old behaviour for callers that genuinely want idempotence --
+  # covered, with the rest of the gate, in
+  # tests/test_safe_doc_push_landed_content_certification.bats.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -80,6 +98,13 @@ setup() {
   # Nothing changed on disk since the commit -- "no diff vs HEAD" is genuinely true here.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
+  [ "$status" -eq 12 ]
+  [[ "$output" != *"✅ Named files already match HEAD"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
+
+  # The fallback's ORIGINAL intent -- a peer genuinely landed the identical content -- is still
+  # honoured, just as an explicit opt-in rather than an inference.
+  SDP_ALLOW_NOOP=1 PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
   [ "$status" -eq 0 ]
   [[ "$output" == *"✅"* ]]
 }

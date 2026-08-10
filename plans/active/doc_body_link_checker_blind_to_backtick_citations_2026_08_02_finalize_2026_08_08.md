@@ -66,14 +66,14 @@ source: >-
       live run, not copied from the estimate. Repo: unified-trading-pm. — **Verified 2026-08-10 (slot-9 review)**: fresh
       live run of `check_doc_body_links.py` over the full corpus (2041 docs) → **12 unresolved** codex-backtick
       citations total, of which **8 are angle-bracket/ellipsis placeholders** and **4 are genuine broken refs** (the 4
-      specific refs — incl. `codex/CLAUDE.md` and an `archetypes/xyz-foo.md` example cited in two audit-result docs —
-      are recorded verbatim in the 23-entry `doc_body_link_baseline.yaml` ratchet = 11 original markdown-link + 12
-      backtick entries; not inlined here to avoid re-introducing dangling `/codex/…` refs in prose). All 12 are already
-      baselined, so the checker gate exits 0 (zero NEW). **Estimate validated — no material divergence**: actual genuine
-      count (4) is at/below the estimated 6-8 range; the total (12) tracks the investigation's 14 (2 docs fixed/tracked
-      since round5). The divergence from "~6-8 genuine" is downward, because several round5-unresolved targets are
-      placeholder illustrations, and the 13 genuine dead refs surfaced by the widened scan are already tracked in
-      `docs_reconcile_remaining_broken_links_2026_08_02.md`.
+      specific refs — incl. a `codex/`-prefixed CLAUDE.md citation and an `archetypes/xyz-foo.md` example cited in two
+      audit-result docs — are recorded verbatim in the 23-entry `doc_body_link_baseline.yaml` ratchet = 11 original
+      markdown-link + 12 backtick entries; not inlined here to avoid re-introducing dangling `/codex/…` refs in prose).
+      All 12 are already baselined, so the checker gate exits 0 (zero NEW). **Estimate validated — no material
+      divergence**: actual genuine count (4) is at/below the estimated 6-8 range; the total (12) tracks the
+      investigation's 14 (2 docs fixed/tracked since round5). The divergence from "~6-8 genuine" is downward, because
+      several round5-unresolved targets are placeholder illustrations, and the 13 genuine dead refs surfaced by the
+      widened scan are already tracked in `docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [x] ✅ [REVIEW] P2. **Confirm the baseline was seeded via `--update-baseline` immediately after landing (not shipped
       zero-tolerance day one), matching how the original markdown-link checker itself was seeded 2026-07-23.** Check
       `scripts/quality_gates/doc_body_link_baseline.yaml` for a fresh `codex/`-prefix entry set consistent with the

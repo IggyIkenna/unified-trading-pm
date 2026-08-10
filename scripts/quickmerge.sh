@@ -257,6 +257,12 @@ NOTES
     another session's partial work.
   - If quickmerge fails and you fix the underlying issue: just re-run quickmerge. Do not run
     quality-gates.sh by hand first — quickmerge already runs it.
+  - EXIT 10 is the one exception to that "just re-run" advice: the push landed, but a --files
+    path that had a real diff at entry is still byte-identical to the pre-run HEAD, so your
+    change is not in what shipped. Read the printed diagnosis first — it says whether your
+    content is intact on disk (re-run is safe) or was reverted mid-run (recover from the named
+    stash ref FIRST, or the re-run ships the reverted content). Never cite the printed SHA as
+    evidence for those paths. EXIT 11 is a defect in this script itself, not in your invocation.
 
 SSOT: unified-trading-pm/scripts/quickmerge.sh — /codex/08-workflows/ci-cd-flow.md
 QM_USAGE
@@ -531,6 +537,75 @@ _qm_content_vanished() {
     echo "     Extract ONE file (these autostashes often hold a peer session's WIP):"
     echo "       git show 'stash@{0}:<path>' > <path>"
     echo "     Also check: ls -t ~/.cache/prek/patches/ | head"
+  } >&2
+  return 1
+}
+
+# ── WHAT WAS IN HEAD WHEN WE STARTED (F8, 2026-08-11) ──────────────────────────────────────
+# _QM_ENTRY_FINGERPRINT above only answers "is your file still what you handed me", and until
+# this was added NOTHING CALLED IT -- the detection existed as dead code while the losses it was
+# written for kept happening. It also cannot see the more common shape: a commit that simply
+# dropped a named file leaves the worktree untouched (nothing was reverted on disk, the file
+# just never got committed), so the fingerprint matches and the run reports SHIPPED anyway.
+# Measured 2026-08-10: a `--files` run pushed a commit containing NEITHER named file, both left
+# dirty on disk, post-push ancestry verified, exit 0.
+#
+# HEAD's blob per named path AT ENTRY makes it decidable: had a real diff at entry and HEAD's
+# blob for that path is STILL the entry one after the push => none of your work is in what
+# shipped. Deliberately not "HEAD must equal your entry blob" -- the prek hook chain rewrites
+# files legitimately (prosewrap/prettier), so a landed change routinely differs from what you
+# handed over; "still identical to the PRE-RUN HEAD" is immune to that.
+_qm_head_blob() { git rev-parse -q --verify "HEAD:$1" 2>/dev/null || echo ABSENT; }
+_QM_ENTRY_HEAD_BLOBS=""
+if [ -n "$FILES_ARG" ]; then
+  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+  for _qm_f in $FILES_ARG; do
+    _QM_ENTRY_HEAD_BLOBS="${_QM_ENTRY_HEAD_BLOBS}$(_qm_head_blob "$_qm_f")  ${_qm_f}
+"
+  done
+fi
+# Field lookup into either fingerprint ($1 path, $2 fingerprint text). Paths cannot contain
+# spaces -- --files is a space-separated list, so a spaced path is unrepresentable here anyway.
+_qm_blob_of() { printf '%s\n' "$2" | awk -v f="$1" '$2 == f { print $1; exit }'; }
+
+# _qm_assert_entry_change_landed -- post-push ground truth, run right after the ancestry gate.
+# Ancestry proves a commit reached the branch; this proves YOUR change is in it. Non-fatal for
+# unnamed work (that is wip_guard_report's job) -- scoped strictly to --files.
+_qm_assert_entry_change_landed() {
+  [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
+  local stuck="" disk entry_head now_head
+  # shellcheck disable=SC2086
+  for _qm_f in $FILES_ARG; do
+    disk="$(_qm_blob_of "$_qm_f" "$_QM_ENTRY_FINGERPRINT")"
+    entry_head="$(_qm_blob_of "$_qm_f" "$_QM_ENTRY_HEAD_BLOBS")"
+    # Absent/unhashable at entry = a staged deletion or a rename's source half; "your change
+    # landed" is not expressible as a blob move for those, so they are not asserted.
+    case "$disk" in ABSENT | MISSING | "") continue ;; esac
+    [ "$disk" = "$entry_head" ] && continue # nothing of ours to land for this path
+    now_head="$(_qm_head_blob "$_qm_f")"
+    [ "$now_head" = "$entry_head" ] && stuck="${stuck} ${_qm_f}"
+  done
+  [ -z "$stuck" ] && return 0
+  {
+    echo
+    echo "[$REPO_NAME] 🛑 THE PUSH LANDED BUT YOUR CHANGE DID NOT."
+    echo "   These --files had a real diff when this run started, and HEAD's content for them is"
+    echo "   STILL byte-identical to what it was before the run, so ${_QM_PUSHED_SHA:0:9} contains"
+    echo "   none of your work on them:"
+    for _qm_f in $stuck; do echo "     $_qm_f"; done
+    echo
+    if _qm_content_vanished; then
+      echo "   Your files are unchanged on disk since you handed them over, so this is the"
+      echo "   DROPPED-FROM-THE-COMMIT shape (a peer's bare commit or a reconcile took the index"
+      echo "   out from under the staging step), not a revert -- re-running should land them."
+      echo "   Confirm first:  git diff HEAD --$stuck"
+    else
+      echo "   ...and the on-disk content ALSO moved during the run (detail above; note the prek"
+      echo "   hook chain reformats files legitimately, so check the diff before assuming loss)."
+      echo "   If it is a revert, recover from the stash BEFORE re-running."
+    fi
+    echo "   Do NOT cite ${_QM_PUSHED_SHA:0:10} as evidence for these paths -- it does not carry them."
+    echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
   } >&2
   return 1
 }
@@ -2816,6 +2891,13 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# Ancestry proves A commit landed. It does not prove YOURS is in it -- measured 2026-08-10, a
+# scoped run passed this exact gate having pushed a commit with neither named file. Exit 10 is
+# the fleet-wide "your edits are not where you think they are, recover before re-running" code
+# (CLAUDE.md git-discipline; safe-doc-push.sh has used it since 2026-08-10, quickmerge had no
+# path to it at all). Deliberately AFTER the push: the commit is real and public, so the honest
+# outcome is a loud non-zero on a landed push, never a silent SHIPPED line.
+_qm_assert_entry_change_landed || exit 10
 # The SHA to put in the plan checkbox. Stated explicitly because the SHA a worker sees at
 # `git commit` time is NOT the one that lands: every push here rebases first, which rewrites
 # it. Citing the pre-rebase SHA is the single most common source of a FALSE

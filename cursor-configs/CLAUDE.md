@@ -32,12 +32,11 @@
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
 truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = ZERO categories** — opus is manual-only
 (`main.md` is sonnet+`default`). **`sonnet_variant: light|default` picks sonnet-4.6 vs sonnet-5** — **sonnet-5 is the
-default for EVERYTHING** (2026-08-08 ruling: smarter, 1M-vs-200K context AND cheaper through end of Aug 2026); `light`
-is an explicit opt-in nothing declares — re-check pricing before re-arming it. Every `assigned_vm: planning` plan
-defaults to `effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
-`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
-every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
-`/codex/06-coding-standards/model-tier-selection.md`.
+default for EVERYTHING** (2026-08-08 ruling); `light` is an explicit opt-in nothing declares — re-check pricing before
+re-arming it. Every `assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**: no declared
+tier → todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls
+MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP.
+SSOT: `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 
@@ -62,41 +61,40 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   **CODE reaches the integration branch ONLY via quickmerge** (a raw `git push` of code is BANNED — it dodges the dep
   gates + early-exits on a clean tree so commits pile up behind main). Closed carve-out direct pushes: (1) dirty-deps;
   (2) the FF-pull-in & cross-repo PM `docs(plans):` flip; (3) any repo's `scripts/**` & any `.github/**` change that
-  must reach `main` to unblock the pipeline (D16, operator-ruled 2026-08-08 — all-repos, matching what
-  `check_strict_quickmerge.py`'s repo-agnostic `CARVE_PREFIX` already did in practice; was mis-stated as "PM
-  scripts/**"). Machine guard: `Quickmerge:` trailer + `check_strict_quickmerge.py` pre-push hook; per-repo
-  `quickmerge.sh` are SYMLINKS to the PM SSOT.
+  must reach `main` to unblock the pipeline (D16, operator-ruled 2026-08-08 — ALL repos, not just PM, matching
+  `check_strict_quickmerge.py`'s repo-agnostic `CARVE_PREFIX`). Machine guard: `Quickmerge:` trailer +
+  `check_strict_quickmerge.py` pre-push hook; per-repo `quickmerge.sh` are SYMLINKS to the PM SSOT.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
   ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index). **Ship
-  scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer session sharing your checkout can't revert your edits (measured
-  0/6→6/6): always-on in safe-doc-push, laptop-only in quickmerge (`--isolated`/`--no-isolated`, auto-OFF on the AO VM).
-  They bake in retry/mutex/flock/drift — never re-improvise reconcile-retry. **Exit 10 = edits reverted, RECOVER from
-  the printed stash ref, never plain re-run**; 11=script defect; 5=safe. SSOT:
-  `/codex/05-infrastructure/per-tab-worktrees.md`. Shared-host ≤2 full QGs at once, auto-enforced by
-  `quality-gates.sh`'s own `qg-host-governor.sh` (`max(2, floor(cores/4))`, queues rather than fails — just invoke
-  normally); never bulk-kill another slot's `pytest`/QG. **Per-repo + safe-docs concurrency caps (2026-08-09)**: QG's
-  total-instance gate now composes a per-repo sub-cap (PM≤4, every other repo≤1) with the host-wide cap (≤6) — never two
-  concurrent QG runs on the SAME service repo; `safe-doc-push.sh` gets its own separate host-wide 8-cap
-  (`push-host-governor.sh`), not competing with QG's budget. Both scripts reconcile against origin before every commit
-  attempt and hard-fail (never silently proceed) on a genuine unresolvable conflict. A `check-quickmerge-provenance`
-  commit-msg hook now ALSO catches a raw source commit missing the `Quickmerge:` trailer at commit time, not just push
-  (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT:
+  scripts COMMIT FROM AN ISOLATED WORKTREE** so a peer sharing your checkout can't revert your edits (0/6→6/6 measured):
+  always-on in safe-doc-push, laptop-only in quickmerge (`--isolated`/`--no-isolated`, auto-OFF on the AO VM). They bake
+  in retry/mutex/flock/drift — never re-improvise reconcile-retry. **`ahead=0` + clean tree ≠ landed** (≡ work DESTROYED
+  — verify `git show HEAD:<f>`; Write+`git add` in ONE step, where every measured loss sat). Ship scripts assert it:
+  **quickmerge 10 / safe-doc-push 12 (nothing of yours to ship) · 13 (pushed, change absent) = RECOVER from the printed
+  ref, never plain re-run**; 11=script defect; 5=safe. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`. **QG
+  concurrency is RESOURCE-based, not a fixed count** (default `reservation`, 2026-08-10): admission weighs the repo's
+  MEASURED peak RSS (`scripts/dev/qg_resource_baseline.json`, unmeasured→5500 MB) vs live RAM budget + CPU slots under
+  one ledger lock — just invoke `quality-gates.sh`, it queues. Fixed counts (PM≤4/others≤1; flat cap = 7 on a 10-core
+  Mac, NOT 6) are LEGACY `QG_GOVERNOR_MODE=token` ONLY; `safe-doc-push.sh` keeps its own host-wide 8-cap
+  (`push-host-governor.sh`). Never bulk-kill a peer's `pytest`/QG. Both ship scripts reconcile against origin before
+  every commit and hard-fail on a genuine unresolvable conflict (never silently proceed); `check-quickmerge-provenance`
+  catches a missing trailer at COMMIT time too (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT:
   `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
-  (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
-  `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a
-  host via `scripts/dev/check-slot-commit-identity.sh [--fix]`.
+  (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config`. Derivation SSOT
+  `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a host via
+  `scripts/dev/check-slot-commit-identity.sh [--fix]`.
 - **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging DORMANT** (per-repo
   `promotion_model: ldr_main` toggle; standing `ldr-to-main-promote-fleet.yml` + PM's `ldr-to-main-promote.yml`, `*/15`,
   auto-merge). **The LDR→main gate set is exactly THREE**: `sit-gate/fleet-green` (fleet-shared SIT signal, REQUIRED
   check on `ldr_main` repos) + `quality-gates-v2` (promote PR) + quickmerge-provenance — label-check / SIT-digest /
-  dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT but the toggle is REVERSIBLE (major/breaking bump or
-  operator decision routes THROUGH staging; gates unchanged). **LDR never runs server QG**; `main` = reconciled
-  projection back-merged to LDR (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on
-  `push:[main]` → git-tag mint + `publish-package` wheel to AR; major/1.0.0 via human staging;
-  `reconcile_release_tags.py` = stall detector, not minter. `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
+  dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT + REVERSIBLE (major/breaking bump or operator decision
+  routes THROUGH it; gates unchanged). **LDR never runs server QG**; `main` = reconciled projection back-merged to LDR
+  (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on `push:[main]` → git-tag mint +
+  `publish-package` wheel to AR; major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not
+  minter. `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
@@ -199,16 +197,16 @@ architecture (L0–L4)".
 ## Plans — format + authoring discipline
 
 - **Authoring a plan? READ `plans/active/task_template.md` FIRST (HARD RULE)** — it carries the LOCAL (`assigned_vm: NA`
-  + `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`planning`) tracks and the full authoring rules.
-  Headlines: **10-100 todos**; independent same-priority todos run CONCURRENTLY by default (the ONE rule: they MUST
-  touch different files); `sequential: true` serialises the WHOLE plan — don't reflex-set it; partial parallelism isn't
-  expressible in one plan → **SPLIT** (gated step in Plan B via `depends_on` + `gate_on_depends: true`); no per-todo
-  prereq syntax; per-task `[TAG]` roles route each todo; **any AO todo with a GCS delete/`--apply` or VM launch needs
-  `[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification** (pre-filter
-  `check_delete_vm_launch_gating.sh`, SSOT delete-safety codex §3a); **AO-eligible = outcome DETERMINABLE by the worker
-  alone**, never an open-ended judgment/design call — resolve that first as a LOCAL plan, then dispatch against its
-  outcome (SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
-  eligibility"); draft-gated phase chains. **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
+  - `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`planning`) tracks and the full authoring rules.
+    Headlines: **10-100 todos**; independent same-priority todos run CONCURRENTLY by default (the ONE rule: they MUST
+    touch different files); `sequential: true` serialises the WHOLE plan — don't reflex-set it; partial parallelism
+    isn't expressible in one plan → **SPLIT** (gated step in Plan B via `depends_on` + `gate_on_depends: true`); no
+    per-todo prereq syntax; per-task `[TAG]` roles route each todo; **any AO todo with a GCS delete/`--apply` or VM
+    launch needs `[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification** (pre-filter
+    `check_delete_vm_launch_gating.sh`, SSOT delete-safety codex §3a); **AO-eligible = outcome DETERMINABLE by the
+    worker alone**, never an open-ended judgment/design call — resolve that first as a LOCAL plan, then dispatch against
+    its outcome (SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
+    eligibility"); draft-gated phase chains. **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
@@ -264,11 +262,11 @@ architecture (L0–L4)".
   data audit FREEZES layer-N+1 work (foundation-completion-gate). **External data is always available** — exhausting the
   free path = a credential ask, NOT a descope; build the adapter scaffold anyway + status `BLOCKED-CREDENTIALS`. SSOTs:
   `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`.
-- **A doc/comment/pointer that MISLED you is a finding — fix it in the same turn.** Stale path, wrong claim,
-  rotted count, dead reference: you already paid the search; leaving it makes every future agent pay it again.
-  Correct it where it lives, state what you verified, and delete the number/name that rotted rather than
-  updating it (counts like "the 2 hooks" re-rot). Too big for a line → `- [ ]` todo. Confirm the doc is really
-  wrong first — a truncated `head` read is not evidence of absence.
+- **A doc/comment/pointer that MISLED you is a finding — fix it in the same turn.** Stale path, wrong claim, rotted
+  count, dead reference: you already paid the search; leaving it makes every future agent pay it again. Correct it where
+  it lives, state what you verified, and delete the number/name that rotted rather than updating it (counts like "the 2
+  hooks" re-rot). Too big for a line → `- [ ]` todo. Confirm the doc is really wrong first — a truncated `head` read is
+  not evidence of absence.
 - **Findings triage**: in your file → fix in same commit; adjacent → fix in YOUR plan; outside-plan small+clear → ≤30
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
   `plans/active/issues/<slug>_<date>.md` — issue resolves to folded-in-plan/AO-scope/operator-gated, never passive.
@@ -410,11 +408,11 @@ deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orch
 **`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code TEAM settings = git-TRACKED `cursor-configs/settings.json`, inherited via the per-slot
-`.claude/settings.json` symlink (`link-claude-skills.sh`, run by workspace-bootstrap + `quality-gates.sh`), so a
-hook registered there reaches every slot/machine on an LDR pull; `~/.claude/settings.json` is PERSONAL, never
-tracked, NOT a symlink → `/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
-`send-keys`-forced `/pre-compact` then `/compact`; needs a terminal-hosted `claude` session — the Cursor/VS Code chat
-panel isn't tmux-reachable, its terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`.
+`.claude/settings.json` symlink (`link-claude-skills.sh`, run by workspace-bootstrap + `quality-gates.sh`), so a hook
+registered there reaches every slot/machine on an LDR pull; `~/.claude/settings.json` is PERSONAL, never tracked, NOT a
+symlink → `/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation**
+(tmux `send-keys`-forced `/pre-compact` then `/compact`; needs a terminal-hosted `claude` session — the Cursor/VS Code
+chat panel isn't tmux-reachable, its terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`.
 Analysis: `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (`regen_backlog_from_plan.py`, never
