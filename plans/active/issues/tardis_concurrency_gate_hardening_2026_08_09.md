@@ -177,10 +177,16 @@ diff, per the "fits another plan → annotate it, don't fix" triage rule.
 
 ## Todos
 
-- [ ] [OPS] P1. **Relaunch `vm-zombie-watchdog-20260807-075242`** (kill old + `bash launch-vm-zombie-watchdog.sh`) once
-      this fix ships, so the Tardis-cap self-check pass actually goes live — the running instance will not pick up the
-      code change on its own. Verify via a dry-run log line ("Tardis-cap self-check: N Tardis-consuming VM(s) found,
-      cap=1, 0 excess") within one 5-min cycle of relaunch. Repo: deployment-service.
+- [x] ✅ [OPS] P1. **Relaunch `vm-zombie-watchdog-20260807-075242`** (kill old + `bash launch-vm-zombie-watchdog.sh`)
+      once this fix ships, so the Tardis-cap self-check pass actually goes live — the running instance will not pick up
+      the code change on its own. Verify via a dry-run log line ("Tardis-cap self-check: N Tardis-consuming VM(s) found,
+      cap=1, 0 excess") within one 5-min cycle of relaunch. Repo: deployment-service. — **DONE 2026-08-10
+      (`deployment-service@3d545372`, relaunched as `vm-zombie-watchdog-20260810-124145` 2026-08-10T12:41:45Z)**: first
+      sweep logged `Tardis-cap self-check: 1 Tardis-consuming VM(s) found, cap=1, 0 excess` at 12:51:45Z — within one
+      5-min cycle. Also fixed + shipped two pre-existing crashes that aborted every prior sweep before pass 3 (see
+      `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` Progress Log): `_persist_zombie_alert`'s except missed
+      `GoogleAPIError` (IAM-denied alert write) and `_vm_age_minutes` lacked 404 tolerance — plus granted `uts-prd-sa`
+      `roles/storage.objectCreator` on `unified-trading-cicd-events`.
 - [ ] [SCRIPT] P3. Add a focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap` in
       `tests/unit/test_vm_zombie_watchdog.py` (fake compute client fixture already exists in that file —
       `_FakeComputeClient`/`_FakeComputeInstance`) covering: name-pattern match, metadata-stamp match, neither (not
