@@ -375,12 +375,15 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       (`odds_api_adapter.py:579` `all_rows.extend(rows)` across all candidate leagues → single in-memory `pd.DataFrame`
       at `download_batch`), unreachable from DEFI/PREDICTION paths. Verdict confirmed: OOM risk class **ABSENT** for
       both PREDICTION and DEFI — no new issue doc required per the done-when.
-- [ ] [CODE] P2. Soften the manifest-consolidator staleness error text in
+- [x] ✅ [CODE] P2. Soften the manifest-consolidator staleness error text in
       `unified_trading_library/manifest_writer/_read_index.py` (~lines 289-297) to distinguish a genuinely-DOWN
       consolidator (no recent successful Cloud Run Job execution) from a too-tight staleness budget (consolidator
       executing successfully, index merely older than `MANIFEST_CONSOLIDATED_STALENESS_SEC`). Source:
       `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. Done when: the error message/log
       distinguishes the two cases with different text, a unit test covers both branches, and quality-gates.sh is green.
+      — unified-trading-library@471dee02: `_read_slow_path` now checks blob age vs 5× budget threshold; age < 5× budget
+      → "staleness budget may be too tight" (softened); age ≥ 5× or blob missing → "consolidator appears DOWN". 2 new
+      unit tests + 2 existing tests updated; QG green.
 - [ ] [DATA] P2. Run a manifest census on the exact 61 `rateLimit` `attempted_failed` cells produced during the
       2026-07-18 15:27-15:57Z api-football 5-VM concurrency window (entities
       FIXTURE_EVENTS/FIXTURE_LINEUPS/FIXTURE_STATS/PLAYER_STATS in `instruments-sports`) and confirm each (date, entity)
