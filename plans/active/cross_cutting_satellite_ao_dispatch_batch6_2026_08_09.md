@@ -119,7 +119,7 @@ drift_direction: advance-code
       side; the "next natural daily fire" VM-metadata confirmation happens automatically at the 00:30 UTC
       `honest-coverage-daily` Cloud Scheduler trigger — no separate action needed since `create-code-tarballs.sh`
       already auto-publishes the launcher script per its own header comment).
-- [ ] [SCRIPT] P3. **Add a template-content lint pre-flight to `rollout-workflow-templates.sh`.** Source:
+- [x] ✅ [SCRIPT] P3. **Add a template-content lint pre-flight to `rollout-workflow-templates.sh`.** Source:
       `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` (its remaining `[SCRIPT] P3`
       todo). `prettier --write` deterministically mangles a bare `{{PLACEHOLDER}}` YAML flow-mapping-shaped token
       (root-caused + fixed for `{{RUNS_ON}}` → `__RUNS_ON__` in this same doc's own resolution) — the residual risk is
@@ -135,7 +135,7 @@ drift_direction: advance-code
       of the original 9 templates were converted to `unified-trading-ci`-hosted `workflow_call` stubs by a separate,
       larger dedup effort and no longer flow through this rollout mechanism. Done when: the pre-flight check is wired
       into the rollout script, verified to catch a deliberately-reintroduced mangled placeholder in a scratch test, and
-      the 4 still-flat templates all pass it cleanly today. Repo: unified-trading-pm.
+      the 4 still-flat templates all pass it cleanly today. Repo: unified-trading-pm. — unified-trading-pm@8a7b1860a0
 
 ## Codex SSOTs
 
