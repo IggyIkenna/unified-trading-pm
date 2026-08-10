@@ -107,9 +107,12 @@ operations log (all times UTC):
 
 ## Todos
 
-- [ ] [DATA] P1. Fix DatabentoAdapter VIX/CBOE (XCBF.PITCH) ohlcv_1m schema mapping to emit canonical `timestamp`
+- [x] ✅ [DATA] P1. Fix DatabentoAdapter VIX/CBOE (XCBF.PITCH) ohlcv_1m schema mapping to emit canonical `timestamp`
       instead of `ts_event` (repo: market-tick-data-service) — today's files fail
-      `Schema validation FAILED:     missing columns=['timestamp']`; prior-07-27 VIX + CME ES files carry `timestamp`.
+      `Schema validation FAILED:     missing columns=['timestamp']`; prior-07-27 VIX + CME ES files carry `timestamp`. —
+      market-tick-data-service@dcd3b7c401 (restore ts_event→timestamp dual-write copy in `_COLUMN_ALIASES`; source
+      `ts_event` preserved for MDPS priority-3 readers, `timestamp` copy satisfies
+      `_TICK_REQUIRED_COLUMNS["ohlcv_1m"]` + pre-Phase-4 on-disk corpus; QG green)
 - [x] [DATA] P1. Fix futures_chain manifest `record_captured` row_key to omit `chain` when empty (repo:
       market-tick-data-service) — currently every VIX shard write fails `MalformedRowKeyError: chain explicitly empty`,
       so captured rows never reach the manifest. — market-tick-data-service@f0345e7df4 (omit empty chain from the
