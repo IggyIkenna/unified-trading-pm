@@ -3296,6 +3296,21 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > gating (CPU slots) actually binding. SSOT:
 > `plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`.
 
+> **🟢 2026-08-09/10 — TOTAL-INSTANCE gate added, then tightened.** The reservation gate above only ever brackets the
+> heavy TESTS+TYPECHECK phase — BOOTSTRAP/AUTO-FIX/LINT/CODEX-COMPLIANCE ran fully ungated, so a host could carry far
+> more live `quality-gates.sh` PROCESSES than the heavy-phase gate ever capped (12-19 observed against a live K≤6,
+> `plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`). Fix:
+> `qg_governor_acquire_total_ instance` / `qg_governor_release_total_instance` wrap the WHOLE run (nesting around the
+> heavy-phase gate, not replacing it) and bound TOTAL concurrent script instances host-wide via a separate flock token
+> bucket, plus a per-repo sub-cap (unified-trading-pm gets 4 concurrent, every other repo gets 1 — the two caps
+> compose). Default cap was a flat `physical cores` (floored at 6); **tightened 2026-08-10** to
+> `floor(physical cores × 0.75)` (still floored at 6) once the CI-glue-runner and interactive-slot reservation ledgers
+> were unified into one shared root (same day, `_qg_shared_root()`) — combined demand from both topologies is now
+> visible to the same admission gates for the first time, so the cap needed headroom for that, not just interactive-slot
+> load alone. Same tightening lowered `QG_HOST_RAM_ABORT_PCT` (runtime abort-monitor trip point) 80 → 75. Override via
+> `QG_TOTAL_INSTANCE_CAP` / `QG_REPO_INSTANCE_CAP` / `QG_HOST_RAM_ABORT_PCT`. SSOT:
+> `plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md` (todos 1, 2, 4).
+
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a
    shared host always permits 2 concurrent full QGs — on the macOS operator host `lscpu`+`nproc` are both absent → cores

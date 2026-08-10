@@ -58,8 +58,10 @@
 #   QG_GOVERNOR_DIR       token dir (default ${TMPDIR:-/tmp}/qg-host-governor)
 #   QG_GOVERNOR_DISABLE   set to "true" to make acquire/release no-ops (CI / single-run)
 #   QG_GOVERNOR_NICE      nice increment applied to the QG tree (default 10)
-#   QG_TOTAL_INSTANCE_CAP override the total-instance gate's cap (default: physical
-#                         cores, floored at 4)
+#   QG_TOTAL_INSTANCE_CAP override the total-instance gate's cap (default:
+#                         floor(physical cores × 0.75), floored at 6 — see
+#                         _qg_total_default_cap; tightened 2026-08-10,
+#                         ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4)
 #   QG_TOTAL_GOVERNOR_DIR total-instance token dir (default: host-shared dir, same
 #                         placement rule as the RAM ledger — see _qg_shared_root)
 #   QG_TOTAL_GOVERNOR_DISABLE  set to "true" to make the total-instance gate a no-op
@@ -69,7 +71,8 @@
 #                         ${HOME:-/home/ubuntu}/unified-trading-system-repos — NOT
 #                         /opt, which is outside every interactive slot's sandboxed
 #                         ReadWritePaths) — see _qg_shared_root
-#   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default 80)
+#   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default
+#                                75 — tightened from 80 on 2026-08-10, same todo as above)
 #   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
 #   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
 #   QG_GOVERNOR_WATCHDOG_DISABLE  set to "true" to disable the runtime abort-monitor (reservation mode only)
@@ -102,16 +105,26 @@ _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"
 # plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
 # 2026-08-09: BOOTSTRAP/AUTO-FIX/LINT and the large CODEX-COMPLIANCE phase run fully
 # UNGATED, so a host can carry many more live script instances than the heavy-phase K
-# ever caps — 12-19 observed against a live K<=6). Default cap = physical cores (a
-# looser bound than the heavy-phase K, since most of a run's wall-clock is lighter than
-# pytest/basedpyright), floored at 6 (operator ruling 2026-08-09, matching the measured
-# safe cross-repo ceiling on the shared dev host — was 4; raised alongside the new
-# per-repo sub-cap below, since the two now compose instead of one flat number doing
-# both jobs). Overridable via QG_TOTAL_INSTANCE_CAP; separate lock dir from the
-# heavy-phase token dir above so the two gates never collide.
+# ever caps — 12-19 observed against a live K<=6). Default cap = floor(cores × 0.75),
+# floored at 6 (TIGHTENED 2026-08-10,
+# plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4 —
+# was a flat `cores` with no headroom discount, e.g. 8 on this host's 8 physical cores;
+# now that the CI-glue-runner and interactive-slot reservation ledgers are unified
+# (todo 2, same doc), BOTH topologies' load is visible to the SAME admission gates for
+# the first time, so the old cap needs to leave headroom for combined demand rather than
+# interactive-slot demand alone. The 0.75 multiplier reserves ~25% of cores as non-QG /
+# light-phase overhead margin (git operations, python cold-starts, the AO server itself)
+# instead of letting total-instance count climb to the full core count. Still floored at
+# 6 (unchanged from the 2026-08-09 operator ruling — matches the measured safe
+# cross-repo ceiling on a small/macOS host) so this stays a monotonic TIGHTENING on
+# every host size, never a loosening: floor(cores×0.75) ≤ cores always, and the floor=6
+# guarantees small hosts don't regress below the already-validated minimum. On THIS
+# 8-core host: floor(8×0.75)=6 (was 8) — a real, live reduction from today's measured
+# `total-instance gate: K=8` reading. Overridable via QG_TOTAL_INSTANCE_CAP; separate
+# lock dir from the heavy-phase token dir above so the two gates never collide.
 _qg_total_default_cap() {
     local cores; cores="$(_qg_physical_cores)"
-    local k="$cores"
+    local k=$(( cores * 3 / 4 ))
     (( k >= 6 )) || k=6
     echo "$k"
 }
@@ -550,7 +563,7 @@ _qg_governor_acquire_reservation() {
 _qg_watchdog_pressure_hit() {
     local mt ma abort_pct min_avail
     mt="$(_qg_mem_total_kb)"; ma="$(_qg_mem_available_kb)"
-    abort_pct="${QG_HOST_RAM_ABORT_PCT:-80}"
+    abort_pct="${QG_HOST_RAM_ABORT_PCT:-75}"
     min_avail=$(( mt * (100 - abort_pct) / 100 ))
     (( ma < min_avail ))
 }
@@ -592,12 +605,12 @@ _qg_watchdog_loop() {
                     echo "aborted_by=qg-governor-watchdog"
                     echo "target_pid=${target_pid}"
                     echo "repo=${repo}"
-                    echo "reason=host_ram_pressure_ge_${QG_HOST_RAM_ABORT_PCT:-80}pct_for_${hits_needed}_consecutive_checks"
+                    echo "reason=host_ram_pressure_ge_${QG_HOST_RAM_ABORT_PCT:-75}pct_for_${hits_needed}_consecutive_checks"
                     echo "mem_total_kb=$(_qg_mem_total_kb)"
                     echo "mem_available_kb=$(_qg_mem_available_kb)"
                     echo "aborted_at_epoch=$(date +%s 2>/dev/null || echo 0)"
                 } > "$marker" 2>/dev/null
-                echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-80}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
+                echo "[qg-governor-watchdog] ${repo} pid=${target_pid}: host RAM pressure >= ${QG_HOST_RAM_ABORT_PCT:-75}% for ${hits_needed} consecutive checks — sending SIGTERM to its process tree (self-scoped, loud abort; marker: ${marker})" >&2
                 _qg_watchdog_signal_tree "$target_pid"
                 return 0
             fi
