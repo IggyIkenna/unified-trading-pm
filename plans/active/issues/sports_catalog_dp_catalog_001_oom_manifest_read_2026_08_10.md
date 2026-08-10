@@ -136,3 +136,7 @@ tradfi/prediction — a provisioning fix for a real data-volume growth curve, no
   (instruments-service@783b448a) + fixed the unrelated SEGUNDA_DIVISION→LA_LIGA_2 test break (UAC@3cca8360, 2026-08-10)
   to restore a green tree. Manual verification run at 16Gi cleared the manifest read and entered the FTP rollup. Pinging
   dp-fleet-monitor (authoring slot) and completing once verified.
+- **slot-25 (backend_engineer, P1 verification) 2026-08-10**: Independent verification of the manual run — execution
+  `lifecycle-catalogue-regen-sports-gg4kh` reached `Completed=True` ("Execution completed successfully in 15m37.77s"),
+  and `prod/catalog.parquet` mtime advanced 2026-08-09T01:15:36Z → 2026-08-10T10:52:49Z (12,121,446 → 12,142,085 bytes,
+  verified via `gsutil stat`). Matches slot-19's flip (8bac881309); DP-CATALOG-001 cleared.
