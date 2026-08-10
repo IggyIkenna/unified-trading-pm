@@ -112,9 +112,9 @@ continuously across all 10 tranches.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Extend `body_content_hash()`'s marker-line stripping to also exclude `/context-scout`'s body-level
-      Progress Log line, generalized to a sibling-marker family rather than a second one-off special case.** In
-      `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (`_VERDICT_MARKER_LINE_RE` at line ~61,
+- [x] ✅ [SCRIPT] P2. **Extend `body_content_hash()`'s marker-line stripping to also exclude `/context-scout`'s
+      body-level Progress Log line, generalized to a sibling-marker family rather than a second one-off special case.**
+      In `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (`_VERDICT_MARKER_LINE_RE` at line ~61,
       `body_content_hash()` at line ~78): add a sibling regex (or broaden the existing one) matching
       `**context-scout YYYY-MM-DD**...` body lines and strip them the same way before hashing. Before writing the fix,
       grep the active corpus for other dated bookkeeping-marker conventions already in informal use
@@ -128,7 +128,20 @@ continuously across all 10 tranches.
       Done when: the regression fixture passes, and re-running the exact reproduction from the source doc's evidence
       table (`git diff <marker-sha>..HEAD` on the 11 named tradfi docs) shows `incremental_skip: true` for each. Source:
       `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` todo 1. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@a1f72c11c8. `_BOOKKEEPING_MARKER_SKILL_NAMES` generalizes stripping to
+      `{na-eligibility-audit, context-scout}` (corpus-grepped for other `**<name> YYYY-MM-DD**:` conventions;
+      docs-reconcile/plan-reconcile/ag-closeout-audit write doc-specific analysis in their marker lines, not
+      boilerplate, so deliberately excluded — see the code comment). New regression fixture
+      `test_body_content_hash_stable_across_context_scout_marker_line` passes; full 23-test file green. Re-running the
+      evidence table's 11 named docs: 3 (no fresh verdict marker yet) directly confirm `incremental_skip: true` via the
+      git-fallback path — exactly the false-positive class this fixes. The other 8 already carry a same-day
+      `na-eligibility-audit` re-verification marker written before this fix (dispatch agt-3df41f) or a genuine
+      post-marker content edit (e.g. `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s later commit) —
+      `incremental_skip` correctly reads `false` for those since the corpus moved past the issue's evidence-table
+      snapshot in the hours since filing; not a fix defect (verified: their stored `[body-hash:…]` predates/differs from
+      what a same-content run of this code produces, and does NOT match what a pre-fix run of this code produces either
+      — a pre-existing single-line-only marker-stripping limitation, out of this todo's scope, that already applied
+      identically to na-eligibility-audit's own multi-line verdict markers before this change).
 - [ ] [DOCS] P3. **Cross-reference this issue in `SKILL.md`'s Phase 0 "Interim mitigation for date-fallback
       false-positives" section.** In `cursor-configs/skills/na-eligibility-audit/SKILL.md` (~line 116): add a one-line
       pointer naming the context-scout-specific sub-case explicitly, so the next tranche run that hits it can cite this
