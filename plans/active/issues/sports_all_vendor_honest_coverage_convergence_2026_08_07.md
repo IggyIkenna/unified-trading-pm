@@ -587,3 +587,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (~11s heartbeat lag) — 1 chunk from chunk 18, watching closely next tick. Census: INJURIES needed **35,732 → 29,480**
   (-6,252 in ~31min, ~12,101/hr — steady, consistent with the recent accelerated pace; ETA ~2.4h). Not yet near the
   convergence floor (~1000-2000 range) — no "campaign done" planning needed yet. No intervention needed.
+- **01:28Z — 10th silent-hang occurrence (smallchunk15, chunk 18 again — now 6/10, the clear majority), relaunched;
+  caught the STOPPING transition live for the first time this session; discovered + filed a separate manifest
+  consolidator finding.** `smallchunk15` died with clean 3-signal evidence (~15.5min gap, standard watchdog account,
+  RSS=22.8GiB — not OOM); a background poll caught it in `status=STOPPING` at 01:27:33Z before full deletion at
+  01:28:47Z (first live catch this session, previously always found already-gone). Relaunched as
+  `mtds-backfill-odds-smallchunk16-20260810`, confirmed genuinely booted (chunk 1/452, correct skip-fast). Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 10x). **Separately**: two consecutive INJURIES
+  census reads ~50min apart were byte-identical (needed=29,480 both times) despite the VM's own `[[VM_PROGRESS]]` marker
+  confirming real, substantial date advancement in that window — root-caused via Cloud Logging: the sports manifest
+  consolidator for this bucket has been reporting a static `rows_out=17090683` across
+  > =5 genuine merges spanning 1h+ (rows_in and dedup_dropped both climbing in lockstep, netting zero canonical growth),
+  > plus a 15min streak where every consolidator attempt returned `error=locked`. This matches the symptom signature of
+  > the already-RESOLVED `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` incident (that one was
+  > odds_api-specific, root-caused to a freshness-sentinel bug, not a consolidator defect) but for a different entity
+  > (INJURIES) — NOT assumed to be the same root cause without verification. Filed as its own P1 doc:
+  > `sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md`. **Practical implication for this monitoring
+  > loop going forward**: during a stall like this, trust a live VM's own progress marker (`[[VM_PROGRESS]]`/chunk
+  > markers) over a flat census reading — the underlying campaigns are NOT actually stalled, only the aggregate
+  > measurement is currently blind. Both fleets' underlying work is healthy; the census-based "needed" numbers from the
+  > last ~1h+ should be treated as a lower bound on true progress, not a stall signal.
