@@ -181,11 +181,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       force past someone else's live job. **Re-attempt once `tradfi-bf-fred-full-*` completes** (re-check via the same
       `gcloud compute instances list` filter). **CITATION (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED
       2026-08-07)**: this item, combined with the manifest-verify item below, is extracted verbatim as todo #2 in
-      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — that plan was activated 2026-08-06
-      (`assigned_vm: planning`) with a live autonomous watcher session polling the singleton lock and launching ES_OPT
-      as of 2026-08-07T~04:46Z, and has since been **completed and ARCHIVED** (path updated 2026-08-10; its todo #2 is
-      `[x]` there with evidence). This item stays open until someone verifies that outcome against this plan's own gate
-      — read the archived plan's Progress Log, do not assume it is still being tracked live.
+      `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — that plan is now `status: active`
+      (`assigned_vm: planning`, activated 2026-08-06) with a live autonomous watcher session actively polling the
+      singleton lock and launching ES_OPT as of 2026-08-07T~04:46Z (see that plan's own Progress Log) — track there, the
+      "once that batch activates" condition is satisfied.
 - [ ] [DATA] P1. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
       /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
       **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator ruling
@@ -195,9 +194,8 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
       post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts. **CITATION
       (na-eligibility-audit 2026-08-02, tradfi tranche; UPDATED 2026-08-07)**: combined with the ES_OPT launch item
-      above into the same `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction
-      — that plan is now **completed and ARCHIVED** (path updated 2026-08-10), not a live tracking session — see the
-      citation above for detail.
+      above into the same `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2 extraction — that
+      plan is now `status: active` with a live tracking session — see that citation for detail.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +

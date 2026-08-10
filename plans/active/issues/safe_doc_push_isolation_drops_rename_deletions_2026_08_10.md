@@ -125,45 +125,14 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       updated: safe-doc-push option-1 now carries an isolation caveat — documents that isolated-worktree mode previously
       dropped deletions silently (pre-`18ae9a4312`), the fix now propagates them, pre-fix checkouts need
       `SDP_ISOLATED=0` for archival commits with a rename. Cites this issue doc.
-- [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — the assertion existed but was structurally blind; coverage widened.**
-      `scripts/plan-hygiene/check_create_only_archive_commits.py` (added `43e88b720d`, already wired into
-      `run_hygiene_sweep.sh` as a HARD check) did assert the both-sides shape — but only for `plans/archive/issues/`
-      against `plans/active/issues/`, via a path substitution. **Real archivals land in DATED directories**
-      (`plans/archive/2026_08/issues/X.md`, `plans/archive/2026_08/X.md`), which that substitution never matched, so the
-      guard reported a clean corpus while **10 live duplicate pairs sat on origin**. Rewritten to match by BASENAME
-      across all of `plans/archive/**` vs `plans/active/**`, with two exemptions that keep the signal honest:
-      `ALLOWED_DUPLICATE_STEMS` (a shrinking ratchet of pre-existing pairs, each carrying a recorded verdict — a pair
-      NOT listed fails immediately, so no new duplicate can hide behind a shrinking count) and `_is_redirect_stub()` (an
-      INTENDED pair). Verified: flags exactly the 2 genuinely-stale pairs, exempts the other 8, `ruff check` +
-      `ruff format --check` clean.
-- [x] ✅ [REVIEW] P2. **DONE 2026-08-10 — full sweep run; 10 pairs found, each given a verdict** (table below). 2
-      reconciled here by deleting the strictly-stale active copy (16 referrer repoints across 10 docs); 1 is an
-      intentional redirect stub; the remaining 7 are carried on the ratchet with per-pair verdicts and the 3 follow-up
-      todos below. Sweeping by basename across every archive subdirectory — rather than by the mirrored path the old
-      guard assumed — is what surfaced the 8 pairs beyond the 2 recorded here earlier.
-- [x] ✅ [SCRIPT] P1. **DONE 2026-08-10 — skill gate added; the 3 existing pairs stay on the ratchet.** Root cause of 3
-      of the 10 pairs: the skill wrote its per-tranche parked report to
-      `plans/active/issues/ag_closeout_audit_<tranche>_parked_<date>.md` and its "APPEND to a same-day doc if one
-      already exists" rule only ever looked at `plans/active/issues/` — so a doc archived EARLIER THE SAME DAY was
-      invisible and the write re-created it (`42247c0405`, `064019f77f`, `6b7ddb7944` each `A`-added a doc an earlier
-      commit had archived that morning). `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Every parked finding
-      lands in a durable doc" now carries a HARD pre-write `git ls-tree … plans/archive/` check with the exact command,
-      and the two sanctioned responses (deliberately un-archive with a banner, or write a distinct `_run2` slug citing
-      the archived doc). **Scope note**: this closes the RECURRENCE. The 3 already-existing pairs each hold two
-      genuinely different reports and still need a per-doc merge decision — they stay on `ALLOWED_DUPLICATE_STEMS` until
-      that happens, which is the [DOCS] P3 merge todo's sibling and deliberately not bundled here.
-- [ ] [OPERATOR] P2. **Two LOCKED docs were archived without an unlock.** `plan_reconciler_findings_2026_08_06.md`
-      (`locked_by: plan_reconciler — run in progress`) and `plan_reconciler_findings_tradfi_2026_08_09.md`
-      (`locked_by: plan_reconciler (agt-642862) since 2026-08-09T16:00:00Z`) each still carry their lock in the ACTIVE
-      copy while an archived copy sits at `status: resolved`. Archiving a locked plan is human-only, so deleting the
-      active copy would silently complete an unauthorised unlock — left untouched deliberately. The `[unlock-plan]` ask
-      is already tracked in `/plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md`. **Done when**: the
-      operator rules on the unlock, the surviving copy is reconciled, and both stems come off the ratchet.
-- [ ] [DOCS] P3. **Merge the 2 content-diverged pairs.** `ao_satellite_ao_dispatch_batch2_2026_07_30.md` (the active
-      copy carries 30 lines of unique verification detail with shas, plus `archive_exempt: true`) and
-      `infra_satellite_ao_dispatch_batch7_2026_08_04.md` (active carries 2 extra `related:` refs + `superseded_by`).
-      Neither active copy is a stale duplicate, so neither may be deleted. **Done when**: the unique content is merged
-      into the archived copy, the active copy removed, and both stems come off the ratchet.
+- [ ] [SCRIPT] P2. **Add a post-commit assertion to the ritual.** After any archival commit, assert
+      `git show --name-status <sha>` contains a `D`/`R` for every `plans/active/**` path named. A create-only archival
+      commit should fail the ship script, not reach origin. **Done when**: the check exists and is wired into the same
+      place the provenance check runs.
+- [ ] [REVIEW] P2. **Sweep for other create-only archival commits since isolation went default (2026-08-10).** Any
+      archival routed through safe-doc-push in that window has the same defect. **Done when**: every commit touching
+      `plans/archive/**` since isolation shipped is checked for a missing delete side, and any duplicate pair found is
+      reconciled (compare both copies first — reconcile divergence, do not blind-delete).
 
 ## Progress Log
 
@@ -178,50 +147,21 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   `unified-trading-pm@37bbd172be` via quickmerge; regression test updated
   (`tests/test_safe_doc_push_isolated_deletion_propagates.bats` now asserts exit 2 + path-naming for the caller-typo
   case), 24/24 bats tests + full `quality-gates.sh` green.
-- **slot-1 2026-08-10 (todos 4+5, SHIPPED)** — The deletion-propagation fix was exercised live for the first time by
-  this session's Kaiko archival (`c62dc42470`): the log printed `isolation: propagating deletion of …` and both docs
-  landed as `R` renames with no surviving twin. That is the end-to-end proof the original defect is closed on the happy
-  path. Widening `check_create_only_archive_commits.py` from mirrored-path to basename matching then exposed 8 further
-  pairs; see the sweep table. **A caution for whoever picks up the 3 remaining todos**: the guard is now the corpus's
-  only mechanical duplicate detector, and its `ALLOWED_DUPLICATE_STEMS` ratchet is the ONLY record that those 7 pairs
-  are known-and-triaged rather than unnoticed. Removing a stem without actually reconciling the pair re-hides it.
 
-## Full sweep — 10 duplicate pairs on origin, with a verdict each (closes todo 5)
+## Sweep result — TWO diverged pairs found 2026-08-10 (feeds todo 5)
 
-An earlier pass here recorded only 2 pairs, found via `scripts/plan-hygiene/archive_completed_parked_reports.py`. **That
-count was wrong, and the reason matters**: both that tool and the `check_create_only_archive_commits.py` guard compared
-a mirrored path (`plans/archive/issues/` ↔ `plans/active/issues/`). Real archivals land in DATED directories, so the
-mirrored-path assumption was blind to the majority of the corpus. Re-running the sweep by **basename across every
-`plans/archive/**` subdirectory** found 10:
+Running `scripts/plan-hygiene/archive_completed_parked_reports.py` (promoted from this session's scratchpad) surfaced
+two live duplicate pairs beyond the 17 already recovered in `1653006e52`:
 
-| pair (basename)                                              | verdict                                                                                       |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`          | **RECONCILED** — active strictly stale (2 open todos are `[x]`+evidence in archive); deleted  |
-| `tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md` | **RECONCILED** — same shape, 3 stale open todos; deleted                                      |
-| `promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`      | **INTENDED** — active is a documented redirect stub (`title: MOVED —`, `status: blocked`)     |
-| `plan_reconciler_findings_2026_08_06.md`                     | **OPERATOR-GATED** — active still `locked_by`; archiving a locked plan is human-only          |
-| `plan_reconciler_findings_tradfi_2026_08_09.md`              | **OPERATOR-GATED** — same                                                                     |
-| `ag_closeout_audit_cefi_parked_2026_08_10.md`                | **SKILL DEFECT** — active is a NEWER, independent audit report re-created at an archived slug |
-| `ag_closeout_audit_prediction_parked_2026_08_10.md`          | **SKILL DEFECT** — same                                                                       |
-| `ag_closeout_audit_tradfi_parked_2026_08_10.md`              | **SKILL DEFECT** — same                                                                       |
-| `ao_satellite_ao_dispatch_batch2_2026_07_30.md`              | **MERGE** — active holds 30 lines of unique verification detail; not a stale copy             |
-| `infra_satellite_ao_dispatch_batch7_2026_08_04.md`           | **MERGE** — active holds 2 extra `related:` refs + `superseded_by`                            |
+| doc                                                 | state                                                                                            |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `ag_closeout_audit_prediction_parked_2026_08_10.md` | exists at BOTH `plans/active/issues/` and `plans/archive/2026_08/issues/`, contents **DIVERGED** |
+| `ag_closeout_audit_tradfi_parked_2026_08_10.md`     | exists at BOTH paths, contents **DIVERGED**                                                      |
 
-**Three lessons this sweep paid for, worth more than the pair count:**
+Neither was touched. Divergence means the archived copy is NOT automatically authoritative — the two have taken
+different edits since the split, exactly the drift the 2026-08-06 incident documented (5 diverged pairs). Reconciling
+them is a per-doc read-and-merge, not a delete, so it belongs to todo 5 rather than being done blind here.
 
-1. **"Duplicate" was three different failure modes wearing one name.** Only 2 of 10 were the create-only shape this doc
-   was filed about. Three were a _later_ audit run re-creating an already-archived slug (a forward-writing defect, not a
-   dropped deletion); two were archivals of a LOCKED doc; one was deliberate. A sweep that had blind-deleted "the
-   duplicate" would have destroyed newer content, completed an unauthorised unlock, and broken a link the stub exists to
-   keep alive.
-2. **The blast radius of a duplicate is not the duplicate.** The 2 reconciled pairs were feeding **5 phantom open
-   todos** into the AO dispatch backlog for work already flipped `[x]` with evidence — agents were being dispatched to
-   redo finished work. Deleting them also required repointing **16 references across 10 docs**, debt the original
-   create-only archival commit silently deferred.
-3. **A guard reporting zero is not evidence of zero.** This one printed a clean `✅` for the entire window while all 10
-   pairs sat on origin. The correct reading of a green check is "the condition it actually tests is absent" — confirm
-   the test's scope matches the claim before trusting it.
-
-The archival tool now REFUSES to `git mv` onto an existing destination and reports an identical-vs-diverged verdict
-instead — before hardening it raised `CalledProcessError` mid-run, having already written `status: resolved` into the
-source doc (that partial write was reverted, not committed).
+The script now REFUSES to `git mv` onto an existing destination and reports the pair with an identical-vs-diverged
+verdict instead — before hardening it raised `CalledProcessError` mid-run, having already written `status: resolved`
+into the source doc (that partial write was reverted, not committed).

@@ -15,7 +15,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
 | `cloud-build-failure-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
-| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | Firestore, Slack | change-freeze-check |
+| `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | manifest→main, Firestore, Slack | change-freeze-check |
 | `deterministic-promotion-conflict-resolve` | dispatch:promotion-conflict · manual | `det-resolve-<var>-<var>` | Slack | conflict-resolution-agent* |
 | `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
 | `ldr-to-staging-promote` | manual | `ldr-to-staging-promote` | manifest, opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
@@ -31,7 +31,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `cascade-qg-ordering` | dispatch:cascade-qg-trigger · manual | `cascade-qg-ordering` | manifest, Firestore, Slack | escalate-to-orchestrator*, quality-gates-v2 |
 | `change-freeze-check` | callable | — | Firestore, Slack | — |
 | `freeze-deferred-build-replay` | schedule(0 * * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router*, cloud-build-router-aws* |
-| `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` | Firestore | cloud-build-router*, cloud-build-router-aws* |
+| `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` cancel | Firestore | cloud-build-router*, cloud-build-router-aws* |
 | `readiness-verifier` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
 | `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | escalate-to-orchestrator* |
 | `sit-gate` | dispatch:sit-lock | `manifest-update` | manifest, Firestore, Slack | escalate-to-orchestrator* |
@@ -86,7 +86,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `agent-runner` | callable | — | read-only | escalate-to-orchestrator* |
 | `branch-health` | schedule(0 * * * *) · manual | `branch-health` cancel | Firestore, Slack | main-backmerge-to-ldr |
 | `ci-health` | schedule(0 * * * *) · dispatch:ci-failure-alert,glue-runner-health,ci-vm-resource-alert · manual | — | Firestore, Slack | — |
-| `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | Slack | change-freeze-check |
+| `cloud-build-router-aws` | dispatch:qg-passed | `cloud-build-router-aws-<var>` | manifest→main, Slack | change-freeze-check |
 | `digest-drift-sweep` | schedule(0 */6 * * *) · manual | — | read-only | — |
 | `glue-pool-starvation-monitor` | manual | `glue-pool-starvation-monitor` cancel | Slack | — |
 | `glue-runner-health-monitor` | manual | `glue-runner-health-monitor` cancel | Slack | — |

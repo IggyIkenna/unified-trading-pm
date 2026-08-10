@@ -126,18 +126,12 @@ parent issue doc's Progress Log for the exact VM names / evidence.
       PIPELINE_HEARTBEAT), so deployment-ui/vm-life classification labels these trainer VMs as features-backfill.
       Cosmetic (the real `op=sports-ensemble-train` is correct in run.log), but fix the label to
       `VM_TASK=sports-ensemble-train` so fleet monitoring/classification reads correctly. (repo: deployment-service)
-- [x] ✅ [CODE] P3. `SportsModel2ATrainer.train()` passes the now-partially-non-null CLV targets (5.7%/17.2%/15.6%
-      non-null post-backfill) straight to CatBoost with an RMSE metric, which rejects NaN in the target — all 5 trainer
-      VMs crashed identically at the first fit (`_catboost.CatBoostError` — "RMSE does not allow nan values in target
-      data", 2026-08-10 14:08:34Z, `DEPLOYMENT_FAILED exit_code=1`). Fix the NaN handling before CatBoost (drop
-      per-outcome NaN target rows aligned with X, or a NaN-tolerant objective/metric), then re-run the 5 trainer VMs to
-      obtain the rmse/mae/r2-per-outcome-per-horizon performance delta this doc's P1 deferred. (repo: ml-service)
-      **RESOLVED (2026-08-10, slot-17)** — the NaN-handling code fix shipped `ml-service@9b68494b76`:
-      `SportsModel2ATrainer.train()` now drops per-outcome NaN CLV target rows (aligned with X, train + val) before the
-      ensemble fit, skips an all-NaN outcome, and `evaluate()` masks NaN test targets so rmse/mae/r2 stay finite — full
-      `quality-gates.sh` green (139s, sentinel `9b68494b7626fa2ff3a4894ee5de826adff0b568`), landed on
-      `origin/live-defi-rollout`, verified ancestor-of-origin. The 5-VM re-run for the
-      rmse/mae/r2-per-outcome-per-horizon perf delta is the Deferred-table item below, now unblocked by this fix.
+- [ ] [CODE] P3. `SportsModel2ATrainer.train()` passes the now-partially-non-null CLV targets (5.7%/17.2%/15.6% non-null
+      post-backfill) straight to CatBoost with an RMSE metric, which rejects NaN in the target — all 5 trainer VMs
+      crashed identically at the first fit (`_catboost.CatBoostError` — "RMSE does not allow nan values in target data",
+      2026-08-10 14:08:34Z, `DEPLOYMENT_FAILED exit_code=1`). Fix the NaN handling before CatBoost (drop per-outcome NaN
+      target rows aligned with X, or a NaN-tolerant objective/metric), then re-run the 5 trainer VMs to obtain the
+      rmse/mae/r2-per-outcome-per-horizon performance delta this doc's P1 deferred. (repo: ml-service)
 
 ## Progress Log
 
@@ -225,9 +219,9 @@ parent issue doc's Progress Log for the exact VM names / evidence.
 
 ## Deferred work after 2026-08-10
 
-| Item                                                                                                                                                                                                                                                   | State / why deferred                                                                                                                                                                                                      | Blocked on                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Report the rmse/mae/r2-per-outcome-per-horizon **performance delta** into this P1's text + `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2 + `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` | Not done — 5-VM re-run for the perf delta still pending; coverage delta already measured (0.0% → 5.7%/17.2%/15.6% non-null). The P3 CatBoost-NaN crash that blocked it is now fixed (`ml-service@9b68494b76`, 2026-08-10) | Nothing — re-run the 5 `ml-train-sports-model-2a/b/c/d/e` VMs now (unblocked by the P3 fix) |
+| Item                                                                                                                                                                                                                                                   | State / why deferred                                                                                                                                       | Blocked on                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Report the rmse/mae/r2-per-outcome-per-horizon **performance delta** into this P1's text + `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`'s todo 2 + `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` | Not done — trainer crashes at CatBoost fit on NaN CLV targets (all 5 VMs, exit_code=1); coverage delta already measured (0.0% → 5.7%/17.2%/15.6% non-null) | The new P3 CatBoost-NaN fix lands, then re-run the 5 VMs |
 
 **Recommended next item**: the P3 CatBoost-NaN handling fix (ml-service — drop per-outcome NaN target rows before
 CatBoost, or a NaN-tolerant objective/metric), then re-run the 5 `ml-train-sports-model-2a/b/c/d/e` VMs to capture the

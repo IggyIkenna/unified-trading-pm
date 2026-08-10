@@ -11,7 +11,7 @@ summary: >-
   carried-forward mistag candidates (still untriaged, no new information). Drafted
   `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (1 conflict-cleared todo) + gated finalize — batch 1 (2026-08-06) is
   STILL unapproved, 3 days running; that remains the top recommendation.
-status: resolved
+status: open
 nature: issue
 asset_group: [ui]
 stage: [meta]
@@ -52,9 +52,6 @@ context_scope:
     /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_07.md,
   ]
 ---
-
-> **ARCHIVED (2026-08-10) — complete.** All 3 todos shipped (Finding 1 at `bd812c57ad`, Finding 3 at `bd812c57ad`,
-> Finding 4 also already shipped at `bd812c57ad` — same commit, closure confirmed). 0 open todos, unlocked.
 
 # ag-closeout-audit ui parked findings — 2026-08-08
 
@@ -209,15 +206,11 @@ only, no action needed until the infra-tranche migration progresses further.
       "STILL OPEN," but Phase 7 closed 2026-08-07 (verified 2026-08-10: batch1 doc still reads "STILL OPEN — prod is
       silent..." at line 202). Update when batch1 is next touched (approval or its finalize plan's re-check) so the
       framing reads "9 known + Finding 2's newly-found item," not a clean drop.
-- [x] ✅ [DOC] P3. **DONE 2026-08-10 — already shipped `unified-trading-pm@bd812c57ad`.** The operator-gated taxonomy
-      entry now states that "operator-ruled" and "worker-determinable" are two separate tests (lines 200-203), and
-      additionally carries finding U's positive test (lines 204-216). Commit message explicitly cites "(Closes the ui
-      tranche's 2026-08-08 Finding 4.)" — no additional edit needed. Original text preserved for record. Was: **Add a
-      one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated" category's current
-      wording ("Once ruled, it becomes a normal batch candidate") should note a ruled item still needs the ordinary
-      bounded-outcome/worker-determinable check before drafting; "operator-ruled" and "worker-determinable" are two
-      separate tests, not one. Verified 2026-08-10: not yet present in SKILL.md (line 198 still reads the un-clarified
-      version).
+- [ ] [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
+      category's current wording ("Once ruled, it becomes a normal batch candidate") should note a ruled item still
+      needs the ordinary bounded-outcome/worker-determinable check before drafting; "operator-ruled" and
+      "worker-determinable" are two separate tests, not one. Verified 2026-08-10: not yet present in SKILL.md (line 198
+      still reads the un-clarified version).
 
 **Already resolved (Finding 2)**: `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open"
 vulnerability-scan sentence was already converted to a real `- [ ]` checkbox by the 2026-08-08 na-eligibility-audit pass
@@ -271,9 +264,3 @@ duplicate todo needed here.
   `status: active` (no `status: draft` satellite in flight to collide with); `ui_consolidated_closeout_2026_07_30.md`
   cites SKILL.md only in `context_scope`/`related`, claims no overlapping edit. Added `sequential: true` (todos 1 and 3
   both touch `SKILL.md`, different sections — same-file overlap per the plan-authoring same-file rule).
-- **2026-08-10 (slot 3, todo 3 flip)**: Finding 4's operator-gated taxonomy addition was already shipped in
-  `unified-trading-pm@bd812c57ad` (committed 2026-08-10 09:45 UTC, the same commit that closed Finding 1). The SKILL.md
-  text at lines 200-203 ("operator-ruled" and "worker-determinable" are two separate tests) and lines 204-216 (finding
-  U's positive test) is live; the commit message explicitly cites "(Closes the ui tranche's 2026-08-08 Finding 4.)".
-  Flipped todo 3 checkbox — the work is done, no additional edit needed. All 3 todos now complete; plan is fully
-  checked, unlocked, and eligible for archival.

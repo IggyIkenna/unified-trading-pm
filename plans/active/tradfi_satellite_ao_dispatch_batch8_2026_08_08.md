@@ -28,8 +28,8 @@ tags: [tradfi, ao-dispatch, close-out, batch-8, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
-    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,

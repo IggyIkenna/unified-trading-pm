@@ -1531,7 +1531,7 @@
         "large_file_count": 19,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "server"
     },
     "unified-trading-ci": {
@@ -2224,8 +2224,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.111.1.dev1+gf4dd2002b",
-      "published_at": "2026-08-10T15:52:46Z",
+      "version": "0.111.0",
+      "published_at": "2026-08-10T15:22:38Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {

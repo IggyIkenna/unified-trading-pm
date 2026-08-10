@@ -70,19 +70,10 @@ source: >-
       audit DELETE verdicts) + 4 orphaned test files; fresh grep (2026-08-10) confirmed zero non-test importers remain;
       QG green (7892 passed) + adapter-contract baseline entry for `multi_leg_orchestrator.py` removed (ratchet OK, 327
       files).
-- [x] ✅ [SCRIPT] P1. **Wire `publish_atomic_instruction`/`route_atomic_instructions` into live dispatch** at the exact
+- [ ] [SCRIPT] P1. **Wire `publish_atomic_instruction`/`route_atomic_instructions` into live dispatch** at the exact
       call sites the audit plan mapped (`colocated_engine.py`/`client_worker.py`/`live_execution_handler.py` or wherever
       the audit's todo actually found) — `AtomicInstruction` composites from `CarryStakedBasisEngine` and the
-      prediction-arb engine the audit identified must actually reach `AtomicLegExecutor` in live mode. —
-      strategy-service@4ca4385c + execution-service@27a4bd59 + evidence: publish side wired into the shared paper/batch
-      tick path — `GroupBRunner` gains an opt-in `atomic_publisher` hook fired per LEADER_HEDGE `AtomicInstruction` at
-      `_process_tick` (the audit-mapped call site), and `paper_run_handler.replay_carry_strategy` + `group_b_handler`
-      wire it to `publish_atomic_instruction` via a new sync adapter in `live_routing.py` (family-derived `asset_group`
-      shard key, e.g. CARRY_AND_YIELD→defi / ARBITRAGE_STRUCTURAL→prediction); subscribe side wired into
-      `live_execution_handler._run_live_async` — a background task drains `(asset_group, atomic_instruction)` via
-      `route_atomic_instructions` → paper-default `AtomicLegExecutor`. Unit tests on both sides
-      (`test_live_routing_publish_wiring.py`, `test_atomic_routing_live_wiring.py`) prove the round-trip;
-      `quality-gates.sh` green both repos.
+      prediction-arb engine the audit identified must actually reach `AtomicLegExecutor` in live mode.
 - [ ] [SCRIPT] P1. **Fix `BenchmarkFillEngine.settle()`** per the audit's recommended approach — the target is paper and
       batch BOTH exercising the same leader/hedge-deadline/unwind sequencing logic `AtomicLegExecutor` uses live
       (simulated fills, real sequencing), not a second parallel model. If the audit recommended the IBKR-MEL
@@ -111,14 +102,3 @@ source: >-
 
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. This closes a confirmed real gap in the
   workspace's own "Batch=Live determinism" HARD RULE for multi-leg execution specifically.
-- 2026-08-10 (todo 2, slot 20): **Seam wired into live dispatch on both sides.** Publish: `GroupBRunner`'s
-  `_process_tick` (the shared paper/batch tick path the audit mapped) now forwards each emitted LEADER_HEDGE
-  `AtomicInstruction` to an opt-in `atomic_publisher` hook; `replay_carry_strategy` (paper) + `GroupBHandler` (batch)
-  wire it to `publish_atomic_instruction` via `live_routing.publish_atomic_instruction_sync` (sync adapter over the
-  async seam; family-derived `asset_group` shard key via `resolve_asset_group_for_family`). Subscribe:
-  `live_execution_handler._run_live_async` starts a background `_run_atomic_routing_loop` that drains the
-  `(asset_group, atomic_instruction)` shards (configured + defi + prediction) through `route_atomic_instructions` into a
-  PAPER-default `AtomicLegExecutor` — a LEADER_HEDGE composite from `CarryStakedBasisEngine` /
-  `ArbitragePriceDispersionEngine` now actually reaches `AtomicLegExecutor` in live/paper dispatch. Unit tests both
-  sides prove the publish→InMemory→route round-trip settles COMPLETE. `quality-gates.sh` green both repos (exit 0,
-  sentinel = shipping HEAD). Remaining gated work unchanged (todo 3 settles `BenchmarkFillEngine` on the SAME executor).

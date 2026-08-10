@@ -21,7 +21,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
-    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
@@ -95,44 +95,43 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       RESOLVED 2026-08-10** — operator reported believing the block had cleared ("check live i think we found that
       databento wasnt blocked anymore"); independently live-verified rather than trusted at face value. Ran the
       codebase's own account-level connectivity check (`DatabentoBaseClient.warmup()`,
-      `market-tick-data-service/market_tick_data_service/market_interface/clients/databento_base_client.py`) — resolved
-      the API key via the existing Secret Manager path (`get_secret_client`, secret `databento-api-key`, no key
-      printed/hardcoded), then called `client.metadata.list_datasets()` (the same **unscoped, account-level**
-      lightweight call the client's own `_AUTH_ERROR_PATTERNS` warmup logic uses to detect a locked/suspended account).
-      Result: **succeeded — 29 datasets returned, no 401/403/locked/suspended error.** This is broader evidence than the
-      2026-08-09 narrow carve-out below (which covered only the MVP-of-MVP in-scope item list) — an unscoped
-      `list_datasets()` success indicates the ACCOUNT itself is active, not just specific in-scope datasets.
-      Corroborates the same conclusion the 2026-08-09 scope-ruling doc reached (`metadata.list_datasets` + a real
-      `ES.FUT ohlcv-1m` pull, both succeeded that day too). Gated every open TradFi Databento-fetch todo across the
-      corpus (see "Plans/issues gated by this doc" below for the sweep — re-swept same session, see Progress Log). Repo
-      checked: market-tick-data-service (this repo, `unified-trading-pm`, was the only one editable;
-      instruments-service's parallel `databento/adapter.py` reference-data path and the live `databento_tradfi_ws`
-      connector were NOT independently re-verified this pass — both share the same account/credential as the MTDS
-      historical client just proven live, so account-level restoration should cover them too, but flagging as not
-      directly re-tested).
-- [ ] [DOCS] P2. **Archive this doc via the 6-step ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) once the corpus-wide referrer-path sweep
-      is done.** Deliberately NOT done in the same edit as the resolution above — a `git grep` found 9 referrer files
-      citing this doc's path (`data_completion_tradfi_2026_07_15.md`,
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+      `market-tick-data-service/market_tick_data_service/market_interface/clients/databento_base_client.py`) —
+      resolved the API key via the existing Secret Manager path (`get_secret_client`, secret `databento-api-key`, no
+      key printed/hardcoded), then called `client.metadata.list_datasets()` (the same **unscoped, account-level**
+      lightweight call the client's own `_AUTH_ERROR_PATTERNS` warmup logic uses to detect a locked/suspended
+      account). Result: **succeeded — 29 datasets returned, no 401/403/locked/suspended error.** This is broader
+      evidence than the 2026-08-09 narrow carve-out below (which covered only the MVP-of-MVP in-scope item list) —
+      an unscoped `list_datasets()` success indicates the ACCOUNT itself is active, not just specific in-scope
+      datasets. Corroborates the same conclusion the 2026-08-09 scope-ruling doc reached
+      (`metadata.list_datasets` + a real `ES.FUT ohlcv-1m` pull, both succeeded that day too). Gated every open
+      TradFi Databento-fetch todo across the corpus (see "Plans/issues gated by this doc" below for the sweep —
+      re-swept same session, see Progress Log). Repo checked: market-tick-data-service (this repo,
+      `unified-trading-pm`, was the only one editable; instruments-service's parallel
+      `databento/adapter.py` reference-data path and the live `databento_tradfi_ws` connector were NOT independently
+      re-verified this pass — both share the same account/credential as the MTDS historical client just proven live,
+      so account-level restoration should cover them too, but flagging as not directly re-tested).
+- [ ] [DOCS] P2. **Archive this doc via the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`)
+      once the corpus-wide referrer-path sweep is done.** Deliberately NOT done in the same edit as the resolution
+      above — a `git grep` found 9 referrer files citing this doc's path
+      (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
       `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`,
       `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`,
       `issues/tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`,
       `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`,
       `tradfi_phase_d_terminal_gate_2026_07_24.md`, `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`,
-      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`) — several with dated Progress Log history entries (e.g. the
-      mdps doc's DP-FETCH-009 alert diagnosis chain) that need a careful per-doc read before repointing their path
-      citations to `/plans/archive/2026_08/issues/...`, not a blind sed. Done when: all 9 referrers' path citations
-      updated (or confirmed already historical/no-op), then the standard `git mv` + banner + codex- align steps. Kept
-      this doc `status: resolved` but un-archived in the interim per this workspace's own `archive_exempt`-bridge
-      precedent (`RULED 2026-08-09` in the archival-discipline SSOT) — the doc also still functions as the standing
-      awareness/runbook record for this incident class until the sweep lands.
+      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`) — several with dated Progress Log history entries
+      (e.g. the mdps doc's DP-FETCH-009 alert diagnosis chain) that need a careful per-doc read before repointing
+      their path citations to `/plans/archive/2026_08/issues/...`, not a blind sed. Done when: all 9 referrers'
+      path citations updated (or confirmed already historical/no-op), then the standard `git mv` + banner + codex-
+      align steps. Kept this doc `status: resolved` but un-archived in the interim per this workspace's own
+      `archive_exempt`-bridge precedent (`RULED 2026-08-09` in the archival-discipline SSOT) — the doc also still
+      functions as the standing awareness/runbook record for this incident class until the sweep lands.
 
 ## Plans/issues gated by this doc (sweep log)
 
-**RESOLVED 2026-08-10 — all 4 docs re-swept, all 7 todos unblocked.** See the Progress Log entry below for what changed
-in each. This section is kept as the historical sweep record (method + original gate rationale); it is no longer a live
-blocking list.
+**RESOLVED 2026-08-10 — all 4 docs re-swept, all 7 todos unblocked.** See the Progress Log entry below for what
+changed in each. This section is kept as the historical sweep record (method + original gate rationale); it is no
+longer a live blocking list.
 
 **Method**: swept every active plan/issue whose `asset_group` frontmatter includes `tradfi` (61 docs), narrowed to the
 15 carrying an open (`- [ ]`) todo matching backfill/databento/mtds/ohlcv/launch/download/capture/fetch, then read each
@@ -147,16 +146,16 @@ sweep, historical):
   post-launch manifest-verify todo.
 - `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` — the "MVP backfill readiness gate" (tradfi MVP backfills,
   SPOT VMs, single Databento IP) and its dependent post-backfill reconciliation-run checkpoint.
-- `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — the combined ES_OPT launch +
-  manifest-verify todo (same task as the instruments_tradfi_g1_g5 pair above, tracked here too since batch6 is the live
-  AO-dispatch surface; its own Progress Log recorded a watcher session actively polling the singleton lock and launching
-  as of 2026-08-07T~04:46Z — if that watcher is still running, it will now fail every attempt until billing is
-  restored). **RETAGGED 2026-08-09 (was stale — flagged by two separate sessions as needing this fix, now applied): this
-  specific gate is LIFTED.** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (same day,
-  same author) recorded a live Databento API verification (`metadata.list_datasets` + a real `ES.FUT ohlcv-1m` pull,
-  both succeeded) that lifted this gate specifically for its in-scope list — which includes S&P 500 futures+options.
-  Live evidence since: 2 real `tradfi-bf-es-opt-*` launches on 2026-08-09 both fetched genuine Databento data (confirmed
-  via manifest — 1,407/1,728 distinct trading dates already carry real OHLCV bars, see
+- `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — the combined ES_OPT launch + manifest-verify todo
+  (same task as the instruments_tradfi_g1_g5 pair above, tracked here too since batch6 is the live AO-dispatch surface;
+  its own Progress Log recorded a watcher session actively polling the singleton lock and launching as of
+  2026-08-07T~04:46Z — if that watcher is still running, it will now fail every attempt until billing is restored).
+  **RETAGGED 2026-08-09 (was stale — flagged by two separate sessions as needing this fix, now applied): this specific
+  gate is LIFTED.** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (same day, same
+  author) recorded a live Databento API verification (`metadata.list_datasets` + a real `ES.FUT ohlcv-1m` pull, both
+  succeeded) that lifted this gate specifically for its in-scope list — which includes S&P 500 futures+options. Live
+  evidence since: 2 real `tradfi-bf-es-opt-*` launches on 2026-08-09 both fetched genuine Databento data (confirmed via
+  manifest — 1,407/1,728 distinct trading dates already carry real OHLCV bars, see
   `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`). The account-level suspension this
   doc as a whole describes may still be real for OUT-of-scope Databento calls; this retag narrowly resolves only the
   batch6/ES_OPT entry per the scope-ruling doc's own explicit carve-out — not a claim that the broader billing issue is
@@ -187,25 +186,27 @@ archival — no live Databento dependency).
 - **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — the sole open todo is paying an
   outstanding vendor bill, an explicit `[OPERATOR]`-tagged business/spend decision with no data-derivable answer
   (`status: blocked`, `BLOCKED-OPERATOR-DECISION` per the doc's own text). Doc stays NA.
-- **2026-08-10 (live-verification session, operator prompted "check live i think we found that databento wasnt blocked
-  anymore") — CONFIRMED RESOLVED, account access restored.** Did not trust the operator's recollection at face value —
-  independently live-verified via the existing `market-tick-data-service` `DatabentoBaseClient.warmup()` connectivity
-  check (no new fetch code written): API key resolved from Secret Manager (`databento-api-key`, via `get_secret_client`
-  — never printed), then `client.metadata.list_datasets()` (an unscoped, account-level call) succeeded — 29 datasets
-  returned, no auth/locked/suspended error. This is stronger evidence than the 2026-08-09 scope-ruling doc's narrower
-  in-scope-only verification, since `list_datasets()` is not scoped to any particular dataset/subscription. Also checked
-  for any other corpus record of resolution: `git log --all --since=2026-08-09 -- '*databento*'` showed nothing new
-  beyond the already-known 2026-08-09 narrow retag; no other doc had recorded a broader resolution before this session.
-  Flipped the `[OPERATOR] P0` "Pay the bill" todo to `[x]` with this evidence. Re-swept the "7-todo/4-doc gate list":
-  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` were
-  already retagged UNBLOCKED on 2026-08-09 (no change needed). Lifted the remaining databento-specific citations in
-  `data_completion_tradfi_2026_07_15.md` (the catalogue-scheduler todo + the `--source databento` replacement-path todo,
-  plus 2 consistency-citation notes on dependent items) and `tradfi_phase_d_terminal_gate_2026_07_24.md` (the MVP
-  backfill readiness gate + its dependent reconciliation checkpoint — databento portion lifted, but the readiness gate's
-  SEPARATE chain-bundle-sampler blocker is unrelated and stays open, not touched). Added a `[DOCS] P2` todo to archive
-  this doc via the 6-step ritual once a 9-file corpus-wide referrer-path sweep is done (deliberately not attempted in
-  this same pass — several referrers carry dated Progress Log history needing a careful per-doc read before repointing,
-  not a blind path swap). Doc frontmatter `status` flipped `blocked` → `open` (NOT `resolved` —
-  `resolved`/`false-positive`/`superseded` are `check_terminal_status_archived.py`'s TERMINAL set and would force
-  archival in this same commit; `open` accurately reflects "underlying block cleared, doc still carries a real open
-  todo" without tripping that gate). Stays in `plans/active/issues/` per the new todo above.
+- **2026-08-10 (live-verification session, operator prompted "check live i think we found that databento wasnt
+  blocked anymore") — CONFIRMED RESOLVED, account access restored.** Did not trust the operator's recollection at
+  face value — independently live-verified via the existing `market-tick-data-service`
+  `DatabentoBaseClient.warmup()` connectivity check (no new fetch code written): API key resolved from Secret
+  Manager (`databento-api-key`, via `get_secret_client` — never printed), then `client.metadata.list_datasets()`
+  (an unscoped, account-level call) succeeded — 29 datasets returned, no auth/locked/suspended error. This is
+  stronger evidence than the 2026-08-09 scope-ruling doc's narrower in-scope-only verification, since
+  `list_datasets()` is not scoped to any particular dataset/subscription. Also checked for any other corpus record
+  of resolution: `git log --all --since=2026-08-09 -- '*databento*'` showed nothing new beyond the already-known
+  2026-08-09 narrow retag; no other doc had recorded a broader resolution before this session. Flipped the
+  `[OPERATOR] P0` "Pay the bill" todo to `[x]` with this evidence. Re-swept the "7-todo/4-doc gate list":
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`
+  were already retagged UNBLOCKED on 2026-08-09 (no change needed). Lifted the remaining databento-specific
+  citations in `data_completion_tradfi_2026_07_15.md` (the catalogue-scheduler todo + the `--source databento`
+  replacement-path todo, plus 2 consistency-citation notes on dependent items) and
+  `tradfi_phase_d_terminal_gate_2026_07_24.md` (the MVP backfill readiness gate + its dependent reconciliation
+  checkpoint — databento portion lifted, but the readiness gate's SEPARATE chain-bundle-sampler blocker is
+  unrelated and stays open, not touched). Added a `[DOCS] P2` todo to archive this doc via the 6-step ritual once a
+  9-file corpus-wide referrer-path sweep is done (deliberately not attempted in this same pass — several referrers
+  carry dated Progress Log history needing a careful per-doc read before repointing, not a blind path swap). Doc
+  frontmatter `status` flipped `blocked` → `open` (NOT `resolved` — `resolved`/`false-positive`/`superseded` are
+  `check_terminal_status_archived.py`'s TERMINAL set and would force archival in this same commit; `open` accurately
+  reflects "underlying block cleared, doc still carries a real open todo" without tripping that gate). Stays in
+  `plans/active/issues/` per the new todo above.

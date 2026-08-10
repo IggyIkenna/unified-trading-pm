@@ -200,7 +200,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       — that's for authoring a NEW plan, not general "task entry"), or (c) strip the table because the
       per-tool-onboarding-doc concept itself was retired without anyone updating this index. Needs a human who knows
       whether these were ever built.
-- [x] ✅ [SCRIPT] P2. **Root cause of most of this doc's own truncated-summary findings, identified 2026-08-08**:
+- [ ] [SCRIPT] P2. **Root cause of most of this doc's own truncated-summary findings, identified 2026-08-08**:
       `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` (used to auto-backfill a missing
       `summary:` field) hard-truncates at char 197 + `"..."` with NO sentence/word-boundary awareness (the function
       body: `if len(result) > 200: result = result[:197] + "..."`). Harmless when a doc's first paragraph is under 200
@@ -212,11 +212,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       doc with a long first paragraph. Recommended fix (not implemented): truncate at the last sentence or word boundary
       before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
       review before it ships, rather than silently landing a partial sentence. **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — SHIPPED 2026-08-10: unified-trading-pm@2022f4142f
-      (slot-24). Fix replaces hard `result[:197] + "..."` with sentence/word-boundary-aware truncation (sentence
-      boundary `.`/`!`/`?` + space → word boundary (last space) → hard-cut fallback). 6/6 regression tests pass
-      (`tests/unit/test_fix_frontmatter_summary_truncation.py` — sentence-boundary, word-boundary, short/no-op,
-      exactly-200, unbroken-token hard-cut, no-paragraph-returns-None). VERIFIED 2026-08-10 (slot 27, review).**
+      `ao_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — do NOT action here.**
 
 ## New from 2026-08-09 sweep — 3 genuinely-new dead links, 1 self-consistency content-investigation finding
 
@@ -470,11 +466,11 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   stale). Structural-integrity hunters found 8 total candidates across the 69 touched docs (7 fixed above,
   `mvp-universe-per-asset-group.md`'s total-count one filed as a new finding since it needs investigation not a
   mechanical fix) — zero false positives on independent re-verification.
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — read end-to-end;
-  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **16**, matching. Confirmed the one item this doc's own text flagged
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — read end-to-end; `grep -cE
+  '^[[:space:]]*[-*] \[ \]'` = **16**, matching. Confirmed the one item this doc's own text flagged
   `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (the `fix_frontmatter.py` truncation-bug item) is already correctly
   `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch11_2026_08_09.md` (verified live: that batch exists,
-  `status: active`, `assigned_vm: planning`, its sole todo still genuinely `- [ ]` open — not a stale/dead pointer). The
-  remaining 15 items are the same accumulated set of genuine VALID_JUDGMENT calls (ambiguous dead-link successors, a
-  root-README pass explicitly scoped out, a design observation the doc's own text says "not proposing a fix here")
+  `status: active`, `assigned_vm: planning`, its sole todo still genuinely `- [ ]` open — not a stale/dead pointer).
+  The remaining 15 items are the same accumulated set of genuine VALID_JUDGMENT calls (ambiguous dead-link successors,
+  a root-README pass explicitly scoped out, a design observation the doc's own text says "not proposing a fix here")
   re-verified across 6+ prior audit passes since 2026-08-02 — no new bounded item found on this independent re-read.
