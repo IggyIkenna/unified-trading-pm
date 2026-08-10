@@ -14,7 +14,7 @@ summary: >-
   no-regression-proven: 9999 passed vs 9996 baseline, delta = exactly its 3 new tests). Both failures need a decision
   from the declaring UAC-owner side (are the declarations aspirational or is capture being wired?); neither is safely
   guessable from the MTDS side.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, prediction]
 stage: [data]
@@ -42,6 +42,11 @@ context_scope:
     /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by review (slot-24) after
+> confirming all three MTDS QG blockers cleared: AAVE `collect-rewards` removed (`unified-api-contracts@5f441e0d`),
+> POLYMARKET/KALSHI `fills` + `market_metadata` removed (`@ce9d8f12`), AAVE_V3 orphaned `rewards` seed/capability
+> entries removed (`@9e44d861`), rule11 DEFI shard pin bumped (`market-tick-data-service@d5882379`). MTDS full QG green.
 
 # MTDS QG red from UAC capability-declaration drift
 
