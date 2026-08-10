@@ -470,6 +470,24 @@ durable surface, and an AO-dispatched run has no human reading its chat at all.
   carries: the doc/finding, which taxonomy category it is parked under, and an options block with a marked
   recommendation (`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § escalation format). **ASK > PARK still applies** — if
   the operator is reachable, ask; the issue doc is for a genuinely absent operator, not a mode flag.
+
+  **HARD — check `plans/archive/**` for the slug BEFORE writing it (added 2026-08-10).** "APPEND to a same-day doc if
+  one already exists" only ever looked at `plans/active/issues/`. A doc archived EARLIER THE SAME DAY is not there, so
+  the write re-creates it at the active path and the corpus ends up with two different documents sharing one slug —
+  which breaks `[[wikilink]]` resolution, defeats the create-only duplicate guard's basename matching, and makes "which
+  one is authoritative?" unanswerable. Measured 2026-08-10: this produced **3 of the 10 live duplicate pairs** on origin
+  (`42247c0405`, `064019f77f`, `6b7ddb7944` each `A`-added a doc an earlier commit had archived that morning).
+
+  ```bash
+  # BEFORE writing plans/active/issues/ag_closeout_audit_<tranche>_parked_<DATE>.md:
+  git ls-tree -r --name-only origin/live-defi-rollout plans/archive/ | grep -F "ag_closeout_audit_<tranche>_parked_<DATE>.md"
+  ```
+
+  A hit means today's report is a SECOND run of a tranche already closed out today. Do **not** re-create the active
+  path. Either append your new findings to the archived doc (and un-archive it deliberately, with the 6-step ritual in
+  reverse and a banner saying why), or — if the findings are genuinely new work rather than a re-report — write to a
+  distinct slug that says so (`…_parked_<DATE>_run2.md`) and cite the archived doc. Never resurrect a slug silently.
+
 - **`all` mode** → each tranche writes its OWN doc; the aggregated report cites every one by path.
 - **Count it, don't eyeball it.** Mirror `/plan-reconcile`'s Phase 5.9(a) ledger: assert
   `parked_findings == entries_actually_written_to_the_issue_doc(s)` and print BOTH numbers in the final report. That

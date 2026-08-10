@@ -141,13 +141,17 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       intentional redirect stub; the remaining 7 are carried on the ratchet with per-pair verdicts and the 3 follow-up
       todos below. Sweeping by basename across every archive subdirectory — rather than by the mirrored path the old
       guard assumed — is what surfaced the 8 pairs beyond the 2 recorded here earlier.
-- [ ] [SCRIPT] P1. **Stop `/ag-closeout-audit` re-creating an already-archived slug.** Root cause of 3 of the 10 pairs:
-      the skill writes its per-tranche parked report to
-      `plans/active/issues/ag_closeout_audit_<tranche>_parked_<date>.md` without checking whether that exact slug is
-      already archived, so a later run resurrects it at the active path — `42247c0405`, `064019f77f` and `6b7ddb7944`
-      each `A`-added a doc an earlier commit had archived. **Done when**: the skill checks `plans/archive/**` for the
-      slug before writing and either appends to the archived doc or picks a distinct slug, and the 3 stems come off
-      `ALLOWED_DUPLICATE_STEMS`.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-08-10 — skill gate added; the 3 existing pairs stay on the ratchet.** Root cause of 3
+      of the 10 pairs: the skill wrote its per-tranche parked report to
+      `plans/active/issues/ag_closeout_audit_<tranche>_parked_<date>.md` and its "APPEND to a same-day doc if one
+      already exists" rule only ever looked at `plans/active/issues/` — so a doc archived EARLIER THE SAME DAY was
+      invisible and the write re-created it (`42247c0405`, `064019f77f`, `6b7ddb7944` each `A`-added a doc an earlier
+      commit had archived that morning). `cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Every parked finding
+      lands in a durable doc" now carries a HARD pre-write `git ls-tree … plans/archive/` check with the exact command,
+      and the two sanctioned responses (deliberately un-archive with a banner, or write a distinct `_run2` slug citing
+      the archived doc). **Scope note**: this closes the RECURRENCE. The 3 already-existing pairs each hold two
+      genuinely different reports and still need a per-doc merge decision — they stay on `ALLOWED_DUPLICATE_STEMS` until
+      that happens, which is the [DOCS] P3 merge todo's sibling and deliberately not bundled here.
 - [ ] [OPERATOR] P2. **Two LOCKED docs were archived without an unlock.** `plan_reconciler_findings_2026_08_06.md`
       (`locked_by: plan_reconciler — run in progress`) and `plan_reconciler_findings_tradfi_2026_08_09.md`
       (`locked_by: plan_reconciler (agt-642862) since 2026-08-09T16:00:00Z`) each still carry their lock in the ACTIVE
