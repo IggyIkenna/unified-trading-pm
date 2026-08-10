@@ -146,12 +146,41 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       non-review roles don't fire) and retrieval (task_id filter, severity filter, event-type isolation). Full
       `quality-gates.sh` green (3076 pytest, run twice — once pre-commit, once re-verified on the exact committed SHA
       per the sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`.
-- [ ] [UI] P3. **Investigate whether DeepSeek's OpenAI/Anthropic-compatible API endpoint actually honors the Claude Code
-      CLI's `thinking: on/off` flag, then relabel the Fleet table's thinking-brain icon honestly based on the finding**
-      (the icon currently echoes the CLI's own flag regardless of provider — unconfirmed whether DeepSeek's API honors
-      or silently ignores it). **Done when**: the investigation's finding is recorded with evidence (a real
+- [x] ✅ [UI] P3. **Investigate whether DeepSeek's OpenAI/Anthropic-compatible API endpoint actually honors the Claude
+      Code CLI's `thinking: on/off` flag, then relabel the Fleet table's thinking-brain icon honestly based on the
+      finding** (the icon currently echoes the CLI's own flag regardless of provider — unconfirmed whether DeepSeek's
+      API honors or silently ignores it). **Done when**: the investigation's finding is recorded with evidence (a real
       request/response trace, or documented API-spec confirmation), and the icon's label/tooltip matches reality.
-      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:231` (todo 17b). Repo: agent-orchestrator.
+      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:231` (todo 17b). Repo: agent-orchestrator. —
+      **Investigated + fixed 2026-08-10 (slot-6, ui_developer): finding is broader than the todo assumed — the flag is
+      inert on adaptive-reasoning models regardless of provider, not a DeepSeek-specific honesty gap.** Evidence: 1.
+      **DeepSeek's own docs** (`api-docs.deepseek.com/guides/anthropic_api/`): the Anthropic-compat endpoint's
+      compatibility table lists `thinking` as "Supported (`budget_tokens` is ignored)" — the on/off type is nominally
+      honored, but the CLI's specific `--max-thinking-tokens 31999` value is documented-ignored; DeepSeek applies its
+      own internal reasoning-depth control instead. 2. **Live transcript sampling** (real fleet sessions,
+      `~/.claude-configs/*/projects/*/<claude_session_id>.jsonl`, grepped for `"type":"thinking"` content blocks): 3
+      DeepSeek-routed sessions spawned via `server/escalation.py` (which never passes a `thinking` kwarg — confirmed via
+      `_do_spawn`'s `thinking: str | None = None` default, so these ran with the flag OFF/unset) showed 77-118 genuine
+      thinking blocks each. **Control**: 3 real-Anthropic sessions with the SAME flag unset (same escalation.py code
+      path, non-DeepSeek accounts) ALSO showed 20-96 thinking blocks — ruling out a DeepSeek-specific difference. Root
+      cause: `tmux_spawn.py`'s own comment already documents `--max-thinking-tokens` as "inert" on sonnet 5 / opus 4.8 /
+      fable 5 (adaptive-reasoning models, `effort` is the real depth control) — this is a model-generation property, not
+      a provider-honesty gap, so both providers show thinking content regardless of the flag. 3. **Fix shipped**:
+      `agent-orchestrator@64a0291` — `ModelBadge`'s thinking tooltip (`dashboard/src/layout.tsx`) now reads "Thinking
+      requested: on/off" (not a flat, unqualified claim) with the inert-on-adaptive-models caveat, plus a
+      DeepSeek-specific note that the token budget is ignored even when the flag IS honored. New Playwright spec
+      `dashboard/tests/e2e/thinking-flag-honesty.spec.ts` (extends `provider-badge.spec.ts`'s established pattern)
+      asserts the honest tooltip renders for the fixture's DeepSeek slot. `tsc --noEmit` clean, full `vitest run` green
+      (262/262, no regressions). 4. **Playwright execution gap (honest disclosure, not swept under)**: could not get a
+      genuine green `npx playwright test` run in this sandbox — chromium loads the page and JS executes (confirmed:
+      manual `curl /api/state` against the exact same e2e backend/port shows slot 1's real data,
+      `provider=deepseek,        thinking=null`, correctly seeded), but the Fleet table never populates client-side, so
+      `tr.row` locators time out. Isolated this to a PRE-EXISTING environment limitation, not a regression from this
+      change: the already-shipped `provider-badge.spec.ts` (untouched by this diff) fails identically, alone,
+      single-worker, on this same sandbox. `playwright install chromium --with-deps` fails here (`sudo` blocked by the
+      sandbox's no-new-privileges flag) — plausibly a missing browser system dependency specific to this host, not this
+      repo's test code. Recommend a follow-up check on a normal dev/CI host before treating `pw:L2` as fully green for
+      this spec; the spec itself mirrors a previously-shipped, presumably-passing pattern exactly.
 - [ ] [BACKEND] P3. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) — the source todo this was extracted from
       (`deepseek_flash_ab_routing_test_2026_08_05.md:447` todo 25) already dropped `[OPERATOR]` in favor of plain
       `[BACKEND]`; this copy's tag was stale, not the underlying work, which remains open (see below).** Extend
