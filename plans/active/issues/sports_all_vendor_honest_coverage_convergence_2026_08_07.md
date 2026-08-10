@@ -728,3 +728,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `run.log` boot-health (first real log line) not yet available as of this entry (still within the normal ~1-2min
   tarball-extraction boot window) — will confirm genuine progress next tick, not trusting VM-created/RUNNING alone. AF
   sanity check remains clean (no new `af-backfill-*` instance).
+- **06:44Z — `smallchunk18` boot-health CONFIRMED healthy; the ~5.5min-and-counting run.log delay was just slower
+  tarball extraction, not a genuine problem.** Real log content now present: chunk 3/425, zero OOMs/CHUNK_FAILED,
+  correctly skip-fasting through already-covered dates. Still 12x hang occurrences (no 13th). AF sanity check remains
+  clean (no new `af-backfill-*` instance). No intervention needed.
