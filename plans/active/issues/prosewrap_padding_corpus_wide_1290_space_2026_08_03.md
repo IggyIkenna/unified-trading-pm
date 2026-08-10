@@ -117,16 +117,12 @@ Mechanical, bounded remediation — not a design/judgment call:
       `bash scripts/plan-hygiene/check_prosewrap_padding.sh` for the live list), collapsing over-indented continuation
       lines back to their structurally-correct indent and any 3+-space run inside a backtick span back to a single
       space. Verify content-only via `git diff -w` per file before committing. Fine to split across multiple
-      commits/sessions — not a single-commit requirement. **Automation available (2026-08-10, 18th promote-wall dispatch
-      agt-e56165): `scripts/plan-hygiene/fix_prosewrap_padding.py` automates exactly this repair for a given set of
-      files — run it on the live-flagged list, then verify with the gate. Read its docstring first (it encodes the
-      `--only`-mode trap, the anchor-indent rule, and the formatter-mangling trap).** **Known narrow overlap
-      (na-eligibility-audit 2026-08-03, conflict-check § 3): `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`
-      carries its own P3 todo to hand-fix ONE of these 82 files
-      (`issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`, still flagged as of this run's live
-      check). Not treated as a blocking conflict — both fixes converge on the identical whitespace-only repair, so
-      whichever lands first makes the other a no-op; skip re-touching that file if batch3's todo has already landed by
-      the time this todo executes.** (repo: unified-trading-pm)
+      commits/sessions — not a single-commit requirement. **Known narrow overlap (na-eligibility-audit 2026-08-03,
+      conflict-check § 3): `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` carries its own P3 todo to
+      hand-fix ONE of these 82 files (`issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`,
+      still flagged as of this run's live check). Not treated as a blocking conflict — both fixes converge on the
+      identical whitespace-only repair, so whichever lands first makes the other a no-op; skip re-touching that file if
+      batch3's todo has already landed by the time this todo executes.** (repo: unified-trading-pm)
 - [ ] [BACKEND] P3. Once the flagged-line count reaches 0 (or a deliberately-accepted lower plateau), run
       `check_prosewrap_padding.sh --update-baseline` to lower the ratchet from 4472 toward 0 and commit the updated
       `scripts/plan-hygiene/prosewrap_padding_baseline.yaml`. (repo: unified-trading-pm)

@@ -418,16 +418,3 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this exact bug class (now 16 touches post-park: slot
   19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15, 25 all bypassing the park). No code/report
   changes; this Progress Log entry is the only change this turn.
-
-- **2026-08-10 (slot 18, data_engineering craft, 17th stale re-dispatch of the same already-parked task)**: Same pattern
-  again — a heartbeat handoff surfaced this task directly (`dispatch_reason: "tier=1 priority=50 plan_order=0..."`, task
-  `cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete-f73f17b4c2b8`, `status: dispatched` to slot
-  18). Re-verified the gate independently (fresh, not trusting the parked-state read alone):
-  `gcloud compute instances list --filter="name~cefi-queue-heavy"` shows the SAME instance
-  (`cefi-queue-heavy-binancefutu-x17-20260809-083733`, still `RUNNING`, created 2026-08-09T01:37Z) — unchanged since
-  slot 25's check (~2 days with no termination); the gate condition (aggregate backfill reaches these 3 venues' full
-  chronological range) remains unmet. Declining to redo the venue-scoped completeness check for the same stale-baseline
-  reason given 16 times above. Re-`skip-current-task`ing with `reason_code: "PARKED"` + `park_now: true` to reinforce
-  the durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
-  exact bug class (now 17 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
-  25, 18 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
