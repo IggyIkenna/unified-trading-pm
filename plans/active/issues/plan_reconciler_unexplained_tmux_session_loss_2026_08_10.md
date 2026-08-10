@@ -87,7 +87,11 @@ source: >-
       the prose monitoring recommendation into a tracked todo per the todos-not-prose rule). Fire when ≥N sessions are
       lost within a rolling window (e.g. ≥3 in 10 min); exclude `one_shot`/`scheduled` lifecycle agents and
       `idle`-status slots so standing churn doesn't page. Detects the account-cluster session-loss failure mode
-      regardless of root cause. Repo: agent-orchestrator.
+      regardless of root cause. Repo: agent-orchestrator. — RECOVERY NOTE (main 2026-08-10): the canary is ALREADY
+      implemented as orphan commit `2d2a436` (slot-5, `agent-orchestrator`, "feat(canary): add TmuxSessionLossRateCanary
+      — page when tmux sessions die in clusters") — 1 ahead of origin and unshipped. Recover it
+      (`git -C <tabs>/5/agent-orchestrator show 2d2a436`), verify against this done-when, ship via quickmerge — do NOT
+      re-author it. (NOTE: this same cluster death fired 2026-08-10 09:35/09:45 — see review tick.)
 
 ## Progress Log
 

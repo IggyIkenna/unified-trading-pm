@@ -349,20 +349,25 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
       delete needs its own Part-5 100%-coverage measurement before either a human or an agent fires `--apply`.
 
       **RE-CHECKED 2026-08-07 (operator: "does need sign off if its been checked as safe which you can do now")**: the
-                  hard-stop #2 contradiction cited above IS now resolved —
-                  `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (archived, `status: resolved`) ruled
-                  2026-08-03 that codex's reading is correct: §3a DOES extend to hard-stop #2 once Part 5's proof is measured for
-                  real (not just dry-run-tested), confirmed by actually running the CeFi equivalent (`cefi-drop-stale`,
-                  `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase B — 287,074/287,074 deleted, 0 errors,
-                  twin-verified per-object). **BUT this specific delete cannot re-use that precedent directly**:
-                  `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` has NO `sports-drop-stale` category registered
-                  (only `cefi-drop-stale` exists in the launcher's category list) — there is nothing to dry-run against yet. Per
-                  CLAUDE.md's VM-launcher rule ("grep the registry FIRST, never hand-roll a name — unregistered silently vanishes
-                  from deployment-ui/cockpit/Slack"), this needs a real code change (add a `sports-drop-stale` category mirroring
-                  `cefi-drop-stale`'s exact pattern, line ~1229) before any dry-run census can even run — genuinely more than "a
-                  check," this is its own scoped piece of engineering, not done this pass. Bucket-retention condition (a) is
-                  still confirmed met (604800s both buckets, 2026-07-29); condition (b) (Part 5 100% twin-coverage) remains
-                  unmeasured for the real sports target population pending that launcher work.
+      hard-stop #2 contradiction cited above IS now resolved —
+      `cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (archived, `status: resolved`) ruled
+      2026-08-03 that codex's reading is correct: §3a DOES extend to hard-stop #2 once Part 5's proof is measured for
+      real (not just dry-run-tested), confirmed by actually running the CeFi equivalent (`cefi-drop-stale`,
+      `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase B — 287,074/287,074 deleted, 0 errors,
+      twin-verified per-object). **BUT this specific delete cannot re-use that precedent directly**:
+      `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` has NO `sports-drop-stale` category registered
+      (only `cefi-drop-stale` exists in the launcher's category list) — there is nothing to dry-run against yet. Per
+      CLAUDE.md's VM-launcher rule ("grep the registry FIRST, never hand-roll a name — unregistered silently vanishes
+      from deployment-ui/cockpit/Slack"), this needs a real code change (add a `sports-drop-stale` category mirroring
+      `cefi-drop-stale`'s exact pattern, line ~1229) before any dry-run census can even run — genuinely more than "a
+      check," this is its own scoped piece of engineering, not done this pass. Bucket-retention condition (a) is
+      still confirmed met (604800s both buckets, 2026-07-29); condition (b) (Part 5 100% twin-coverage) remains
+      unmeasured for the real sports target population pending that launcher work.
+      — RECOVERY NOTE (main 2026-08-10): the `sports-drop-stale` launcher category is ALREADY implemented as orphan
+      commit `7ca5045b` (slot-13, `deployment-service`, "feat(vm): register sports-drop-stale category in
+      canonical-migration launcher", 2026-08-10 09:43) — 1 ahead of origin and unshipped. Recover it
+      (`git -C <tabs>/13/deployment-service show 7ca5045b`), verify (unit-tested), ship via quickmerge —
+      do NOT re-author it.
 
 - [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
       `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything;
@@ -438,7 +443,7 @@ materialized.
 - `/codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
 - `/codex/02-data/availability-manifest-and-data-status.md` — honest-coverage eligibility rules (per-source league
   caps).
-- New: `/codex/02-data/sports-canonical-league-cup-registry.md` — the canonical id/name/season/transfer-window SSOT.
+- New: a canonical league/cup registry SSOT (id/name/season/transfer-window) — planned but not yet created; tracked as a todo in `docs_reconcile_remaining_broken_links_2026_08_02.md`.
 
 ## Operator verbatim directives (2026-06-24) — preserved in full (do NOT lose nuance to summary)
 
@@ -599,7 +604,7 @@ materialized.
   safe prep half (register a `sports-drop-stale` launcher category + run a real dry-run census) was already extracted
   into `sports_satellite_ao_dispatch_batch12_2026_08_09.md` (today) with its finalize twin's own reconciliation todo
   (`sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md`); the actual `--drop-stale`/`--apply` firing remains a
-  genuine operator sign-off residual per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked
-  — operator-gated" entry (hard-stop #2, reversibility-qualified per §3a but not yet exercised for this specific
+  genuine operator sign-off residual per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked —
+  operator-gated" entry (hard-stop #2, reversibility-qualified per §3a but not yet exercised for this specific
   population — needs the dry-run census's Part-5 twin-coverage proof first). No flip, no further extraction (would
   duplicate batch12).

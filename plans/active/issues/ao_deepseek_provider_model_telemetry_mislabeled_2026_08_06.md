@@ -140,7 +140,11 @@ and nothing on the server side catches the mismatch.
       `--max-thinking-tokens 31999` are passed to DeepSeek spawns where they are at best ignored and at worst could
       cause API errors. Done when: a unit test boots a `deepseek-v4-flash` account and asserts the persisted
       `SlotRow.effort`/`SlotRow.thinking` are provider-corrected (NOT raw Anthropic labels), and non-Anthropic spawns
-      omit `--effort`/`--max-thinking-tokens` from the CLI flags. (repo: agent-orchestrator)
+      omit `--effort`/`--max-thinking-tokens` from the CLI flags. (repo: agent-orchestrator) — RECOVERY NOTE (main
+      2026-08-10): this todo is already implemented as orphan commit `cf9eef3` (slot-11, `agent-orchestrator`, "fix(ao):
+      provider-gate effort/thinking telemetry + spawn flags for non-Anthropic", 2026-08-10 08:56) — 1 ahead of origin
+      and unshipped. Recover it (`git -C <tabs>/11/agent-orchestrator show cf9eef3`), verify against this done-when,
+      ship via quickmerge — do NOT re-author it.
 
 ## Progress Log
 

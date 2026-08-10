@@ -149,7 +149,12 @@ Fix the writers + registry FIRST, then run the delete pass:
 - [ ] [DATA] P2. After the writer/registry fixes land: run the gated delete pass
       (`market-tick-data-service/scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`)
       for the 12,988 verified-twin objects + fresh census = 0 for the 3 mappings; 928 differing-twin objects stay
-      quarantined pending a content-union decision (repo: market-tick-data-service / instruments-service).
+      quarantined pending a content-union decision (repo: market-tick-data-service / instruments-service). — RECOVERY
+      NOTE (main 2026-08-10): this script already exists as orphan commit `0dcddec1` (slot-22,
+      `market-tick-data-service`, "feat(sports): add gated delete-pass...", dry-run exit 0) — on `live-defi-rollout` it
+      is **1 ahead of origin and unshipped**. The worker picking up this todo MUST recover that commit
+      (`git -C <tabs>/22/market-tick-data-service show 0dcddec1`), verify against the migration script, and ship it via
+      quickmerge BEFORE running the pass — do NOT re-author it.
 
 ## Progress Log
 
