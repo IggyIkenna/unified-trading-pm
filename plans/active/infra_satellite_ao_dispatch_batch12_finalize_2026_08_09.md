@@ -15,12 +15,12 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, close-out, batch-12, satellite-docs, archival, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -34,9 +34,10 @@ thinking_tier: medium
 drift_direction: advance-code
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/PLAN_FORMAT.md,
   ]
@@ -59,16 +60,13 @@ source: >-
 
 ## Todos
 
-- [ ] [DOCS] P3. **Archive batch 12 per the 6-step ritual.** (1) Confirm no Deferred/held-back items exist (batch 12 is
-      a single bounded todo — none expected, but confirm rather than assume); (2) add the archival banner + set
-      `status: complete`; (3) run the codex-alignment check against `/codex/05-infrastructure/vm-launcher-runbook.md`;
-      (4) no new durable contract expected from a label-string addition — confirm; (5) update every referrer's path
-      corpus-wide — grep for `infra_satellite_ao_dispatch_batch12_2026_08_09` and repoint each hit to the archived path,
-      leading-slash repo-root-relative form; (6) clear the lock (batch 12 has none — confirm, not assume). Then
-      physically move it under `plans/archive/2026_08/`. Done when:
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard,
-      `python3 scripts/plan-hygiene/check_reference_paths.py` shows no NEW dangling reference above baseline, and
-      `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py` reports 0 orphans. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P3. **Archive batch 12 per the 6-step ritual.** (1) Confirmed no Deferred/held-back items (0 open todos,
+      the 5 "Deferred" mentions are historical context in summary/source); (2) archival banner added +
+      `status: complete` set; (3) codex-alignment check: no new contract from a label-string investigation that
+      confirmed 0 genuine gaps — `vm-launcher-runbook.md` unchanged; (4) confirmed no new durable contract; (5) referrer
+      paths repointed corpus-wide: INDEX.md, infrastructure_master.md, ag_closeout_audit_infra_parked_2026_08_10.md, and
+      this finalize plan's own `related:`/`context_scope:` frontmatter; (6) confirmed no lock (`locked_by:` empty, not
+      set). Batch 12 physically moved to `plans/archive/2026_08/`. — unified-trading-pm@SHA_PLACEHOLDER
 
 ## Codex SSOTs
 
@@ -82,3 +80,8 @@ source: >-
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (that plan's own finalize todo 4). Set `status: active` per the
   no-double-gate ruling (its own `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early
   dispatch — plan-hygiene flagged a redundant `status: draft` on a gated finalize as a hygiene violation).
+- **2026-08-10 (slot 11, infra)** — Executed the 6-step archival ritual on batch 12: (1) confirmed 0 open todos + no
+  Deferred items; (2) added archival banner + set `status: complete` + `superseded_by`; (3) codex-alignment check: no
+  new contract (label-string investigation with 0 genuine gaps); (4) confirmed no new durable contract; (5) repointed
+  all referrers (INDEX.md, infrastructure_master.md ×2, ag_closeout_audit_infra_parked_2026_08_10.md, this finalize
+  plan's `related:`/`context_scope:`); (6) confirmed no lock, physically moved to `plans/archive/2026_08/`.

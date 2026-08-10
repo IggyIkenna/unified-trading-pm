@@ -61,7 +61,7 @@ related_plans:
   - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md
   - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
-  - ../active/infra_satellite_ao_dispatch_batch12_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
@@ -720,7 +720,7 @@ deprecate/delete audit + strict-quickmerge carve scope (D16)
 
 ## P3 — backlog; revisit quarterly
 
-### [`infra_satellite_ao_dispatch_batch12_2026_08_09`](../active/infra_satellite_ao_dispatch_batch12_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch12_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md)
 
 **status**: active · **estimate**: 0.15 cal AI-days (class: infra) **title**: Infra satellite AO batch 12 — managed-by
 launcher label standardization (batch1's last cleared deferral)

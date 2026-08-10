@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [infra, ci, ag-closeout-audit, parked-findings, linkage-fix, clean-run]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md,
     /plans/active/infra_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md,
     /plans/active/reference_path_convention_2026_07_23_finalize_2026_08_08.md,
@@ -201,9 +201,9 @@ its own source doc (10 carried-forward items, re-verified unchanged). The one it
 ## Progress Log
 
 - **2026-08-10 (prose-findings formalization sweep)**: converted 0 prose findings into a NEW todo in this doc (this
-  doc's own findings were all either already-resolved-with-evidence or already tracked in their own source docs, per
-  its own accurate "## Todos: None" framing); 1 genuinely-open item (item 12's mistag corroboration) was cross-referenced
-  to the formal todo added in the sibling `ag_closeout_audit_ci_parked_2026_08_10.md` doc rather than duplicated here.
+  doc's own findings were all either already-resolved-with-evidence or already tracked in their own source docs, per its
+  own accurate "## Todos: None" framing); 1 genuinely-open item (item 12's mistag corroboration) was cross-referenced to
+  the formal todo added in the sibling `ag_closeout_audit_ci_parked_2026_08_10.md` doc rather than duplicated here.
 - **2026-08-10 (scheduled `ag_closeout_auditor`, slot 20, `agt-7788a0`, ~4.7h later)**: Second same-day dispatch,
   infra-only (sharded). Ran the full Phase 0-3 procedure (candidate generator + 17-agent Phase-1 Workflow) rather than
   the lighter linkage-only pre-filter slot 26 used. Fixed 4 stale operator-approval banners, archived 1 fully-done doc
