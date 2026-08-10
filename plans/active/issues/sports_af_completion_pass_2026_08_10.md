@@ -147,28 +147,44 @@ depends_on: []
           ETA ~14:30Z.
         - VM confirmed RUNNING; no `exit_code=` yet.
 
-## Deferred work after 2026-08-10 ~12:36Z
+      - **2026-08-10 (slot 28, data_engineering, 12:57Z–15:31Z)** — Monitored INJURIES VM to near-completion:
+        - **Progress trajectory** (GCS tee `[[VM_PROGRESS]]` markers):
+          - 12:57Z: `2023-07-24` (~51%) · 13:10Z: `2023-09-27` (~54%) · 13:26Z: `2024-02-09` (~59%) · 13:45Z:
+            `2024-05-20` (~66%) · 14:01Z: `2024-09-21` (~80%)
+          - 14:17Z: `2025-01-25` (~93%, crossed into 2025) · 14:44Z: `2025-07-31` · 14:59Z: `2025-11-07` (~88%) ·
+            15:08Z: `2026-01-11` (crossed into 2026!)
+          - 15:18Z: `2026-03-16` (~94%) · 15:26Z: `2026-05-04` (~96%) · 15:31Z: `2026-05-22` (~98%)
+        - **Pace**: variable — ranged from ~3 dates/min (rate-limited windows) to ~16 dates/min (fast bursts through
+          sparse dates). Average ~6-8 dates/min across the full range. Multiple API rate-limit backoffs observed
+          (sleeping 58-60s, attempts 1-2/10) — normal, self-recovering.
+        - **Current at compaction (15:31Z)**: VM RUNNING, `last_completed_date=2026-05-22`, ~79 days remaining
+          (2026-05-23→2026-08-10). ETA ~15:46Z (~15 min from last progress marker). VM healthy — PIPELINE_HEARTBEAT
+          emitting.
+        - **CANONICAL_LEAGUE_ID_LOOKUP_MISS warnings**: api_football_id=223, 252, 270 — non-lossy (pass through as raw
+          numeric IDs). Resolved when UAC registry is updated.
+        - **Rightsizing note**: VM has been running ~5h on `e2-standard-8` (on-demand). The new CLAUDE.md rule
+          (2026-08-10) calls for `/vm-resource-rightsizing-check` on any VM >30min — flagged for next session.
+        - **No code shipped** — pure monitoring task. The VM is the same one launched by slot 15; no new launches.
 
-| Item                                                                                                                | State / why deferred                              | Blocked on                                                                                           |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, GCS tee `2023-04-30` (~47%), ETA ~14:30Z | VM completion (real infra)                                                                           |
-| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM       | INJURIES VM exit_code                                                                                |
-| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                 | All entity backfills complete                                                                        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                             | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+## Deferred work after 2026-08-10 ~15:31Z
 
-**Recommended NEXT item**: Check `af-backfill-20260810-103218` status:
+| Item                                                                                                                | State / why deferred                                     | Blocked on                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `2026-05-22` (~98%), ~79 days left, ETA ~15:46Z | VM completion (real infra)                                                                           |
+| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM              | INJURIES VM exit_code=0                                                                              |
+| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                        | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                    | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+| **VM rightsizing check** (`af-backfill-20260810-103218`)                                                            | VM running >5h on `e2-standard-8`                        | After VM terminates (or now if CPU/mem telemetry accessible)                                         |
+
+**Recommended NEXT item**: Check `af-backfill-20260810-103218` — by now it should be TERMINATED or very close:
 
 ```bash
 gcloud compute instances list --filter='name=af-backfill-20260810-103218' --format='table(name,status)'
-# If TERMINATED: check exit_code:
 gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260810-103218/run.log | grep 'exit_code=' | tail -1
-# If exit_code=0: launch ALL-ENTITY VM (no --entity) to close remaining 5 entities in one pass:
+# If exit_code=0: launch ALL-ENTITY VM (no --entity):
 cd deployment-service && bash scripts/vm/launch-api-football-backfill-vm.sh --on-demand 2020-06-06 2026-08-10
-# If RUNNING: monitor until completion, then launch all-entity VM
+# If exit_code!=0: diagnose from run.log tail
 ```
 
-**Strategy for follow-up**: a single all-entity VM (no `--entity` flag) is now preferred over sequential entity-scoped
-launches. Campaign history shows entities resolve in lockstep and the chunk-loop architecture handles all entities
-efficiently in one pass. Validated from launcher source (line 308: `ENTITY_DESC="all entities"` when `$ENTITY` is
-empty). Always use `--on-demand` — `asia-northeast1-c` SPOT preemption killed the first launch
-(`af-backfill-20260810-102659`) before it could write `run.log`.
+**Strategy**: single all-entity VM (no `--entity` flag) preferred. Always `--on-demand` — SPOT preemption killed the
+first launch (`af-backfill-20260810-102659`).
