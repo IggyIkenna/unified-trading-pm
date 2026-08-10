@@ -157,18 +157,20 @@ change needs a caller audit across the repo before touching it — out of scope 
 ## Suggested next steps
 
 1. [INFRA] P1. ✅ DONE 2026-07-25 — see Resolution above.
-2. [INFRA] P2. Align `UnifiedCloudServicesConfig.environment`'s alias with `BaseConfig.environment`'s (add
-   `populate_by_name` and the bare `"environment"` entry to `AliasChoices`) so the real constructor's `environment=`
-   kwarg isn't silently dropped in favour of ambient env — confirmed root cause in Resolution above, not yet fixed
-   (needs a caller audit: anywhere in the repo passing `environment=` to `UnifiedCloudServicesConfig(...)` expecting it
-   to win is currently silently getting the ambient value instead, which is worth auditing FOR before changing the
-   precedence).
+2. [INFRA] P2. ✅ **DONE — corrected 2026-08-07, this item was stale.** Align `UnifiedCloudServicesConfig.environment`'s
+   alias with `BaseConfig.environment`'s (add `populate_by_name` and the bare `"environment"` entry to `AliasChoices`)
+   so the real constructor's `environment=` kwarg isn't silently dropped in favour of ambient env — confirmed root cause
+   in Resolution above. Per the Todos section below (corrected 2026-08-07 by na-eligibility-audit): shipped
+   `unified-trading-library@dc1dc7df`. This numbered list was not updated at the time; the Todos section is
+   authoritative — see there for the evidence citation.
 3. [INFRA] P2. ONLY once (2) is done (or confirmed non-breaking): revisit whether `scripts/quickmerge.sh`'s branch check
    should ALSO be broadened to recognise `live-defi-rollout`/`staging` — blast radius is now safer for the 7 sites fixed
    here, but (2) is a separate latent risk the broadening would still expose if any other in-repo caller relies on the
    silently-dropped-kwarg behavior in a way this issue didn't probe.
-4. [INFRA] P3. Grep the other ~20 repos for the same ambient-default-reliant test pattern before assuming this is unique
-   to `unified-trading-library` — not done this session.
+4. [INFRA] P3. ✅ **DONE — corrected 2026-08-07, this item was stale.** Grep the other ~20 repos for the same
+   ambient-default-reliant test pattern before assuming this is unique to `unified-trading-library`. Per the Todos
+   section below: fleet grep result was "none found — fleet is clean." This numbered list was not updated at the time;
+   the Todos section is authoritative — see there for the evidence citation.
 
 ## Todos
 

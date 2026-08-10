@@ -31,8 +31,8 @@ repos: [market-tick-data-service]
 scope: [engineer]
 tags: [ci, testing, pytest-xdist, flake, quickmerge-blocker, test-isolation, monkeypatch]
 related:
-  - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
+  - /plans/active/defi_consolidated_closeout_2026_07_18.md
+  - /plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
   - /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md
 created: 2026-07-23
 author: unknown

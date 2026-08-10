@@ -62,27 +62,91 @@ classified as not worth extracting, re-confirmed, not re-litigated this run.
 
 ## Flips verified
 
-(pending — Phase 1/2 sweep not yet run)
+None this run so far (hunter batch 3/6 report no checkbox-flip candidates with HARD evidence — every open todo checked
+is either genuinely open or already correctly flipped).
 
 ## Contradictions
 
-(pending)
+1. **`quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`** — self-contradiction (P3, one doc): the
+   `## Suggested next steps` numbered list (items 2 and 4) still read as "not yet fixed"/"not done this session", but
+   the `## Todos` section below it was already corrected 2026-08-07 (na-eligibility-audit) to state both steps shipped
+   (`unified-trading-library@dc1dc7df`; fleet grep "none found"). Independently re-verified: Todos section is
+   authoritative (carries the sha + dated correction marker). **FIXED**: annotated items 2+4 in the numbered list as
+   done, citing the Todos section — `unified-trading-pm` (this run's commit).
+2. **`ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`** — self-contradiction (P1, one doc), hunter
+   batch 1: the `## Deferred work after 2026-08-06` table (2 rows) was never resynced after later checkboxes flipped —
+   "Fix the 6 plan-hygiene ratchets" shows `[x] DONE — closed 2026-08-07` at line 594 but the table still says "Not
+   done" at line 703 (+ a "Recommended NEXT item" pointer at line 706 telling a reader to redo already-finished work);
+   "Downsize CI VM / planning VM" shows both `[x] DONE 2026-08-08`/`[x] DONE 2026-08-07` at lines 638/687 but the table
+   still says "Operator-owned... pending" at line 701. Independently re-verifying line numbers before fixing (see
+   Progress Log) — not yet applied as of this checkpoint.
+3. **`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`** — stale "protected repos" list (P1, hunter batch
+   1): line 845's "6 explicitly-protected repos" (incl. `greeks-service`, `ibkr-gateway-infra`, `instruments-service`,
+   `fund-administration-service`) is superseded — 4 of those 6 were public repos REMOVED from self-hosted entirely on
+   2026-08-05 per the live `scripts/workflow-templates/self-hosted-qg-repos.txt` header and corroborated by
+   `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`'s own more-current list. Not yet independently
+   re-verified against the live file or fixed as of this checkpoint.
+4. **K=cores/4 physical-vs-logical-core disagreement** (P2, hunter batch 1, cross-doc): `ci_vm_io_starvation_audit...`
+   (2026-08-06) claims the governor code uses physical cores (`floor(8/4)=2`); `qg_host_adaptive_resource_governor...`
+   (2026-08-09, "NEW FINDING") claims it actually uses `lscpu -p=core` logical-CPU counting with no HT dedup, so K could
+   be up to 2x too permissive on this host class. This is a claim about actual CODE behavior — provable by reading
+   `_qg_governor_default_k()` directly. Not yet independently verified as of this checkpoint.
 
 ## Doc-drift
 
-(pending)
+Batch 1's codex checks came back clean (4 codex docs spot-checked, no drift). Batch 4 found one real item — see Codex
+corrections below. Batches 2/5/6 still arriving.
+
+- **`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md:related`** doesn't list
+  `github_actions_operator_gated_followups_2026_07_17.md` even though named directly in that doc's own "Why this plan
+  exists" prose (batch 4, P3, mechanical). Not yet fixed as of this checkpoint.
+- **`shared_ci_workflow_repo_extraction_2026_08_06.md` todo 3's premise is false** (batch 4, P3): its cited
+  "UNCONFIRMED" propagation-mechanism gap was already resolved the PREVIOUS DAY in
+  `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 1 (DONE 2026-08-05) — `rollout-workflow-templates.sh`
+  byte-copies via a directory glob (confirmed at line 410), no per-file registration needed. Batch 4 independently
+  triple-confirmed (script read, file-existence-since-2026-06-27, sibling doc's already-resolved todo 1). Recommend
+  closing todo 3 as moot, not doing the work. Not yet fixed as of this checkpoint.
+- **`github_actions_operator_gated_followups_2026_07_17.md`'s Phase-7 "fully shipped" checkbox lacks a forward-pointer**
+  (batch 4, P3) to the later, much larger `self_hosted_runner_public_repo_revert_2026_08_05.md` (17-18 of the same
+  fanned-out repos reverted back to `ubuntu-latest` for public-repo billing/visibility reasons) — doc 1 only records an
+  unrelated single-repo caveat (deployment-ui/host-contention). Not currently misleading in a P0/P1 sense (both docs are
+  individually accurate for their own dates), but worth a pointer. Not yet fixed as of this checkpoint.
 
 ## Codex corrections applied (mechanical, evidence-cited)
 
-(pending)
+- **`/codex/08-workflows/ci-cd-flow.md:1258-1262`** claims `staging-lock-check.yml` is "still full content —
+  deliberately NOT yet converted, see todo 11 in `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`" —
+  but that todo 11 is `[x]` **DONE 2026-08-08** (all 24 repos converted, template source deleted). Independently
+  re-verified via `ls scripts/workflow-templates/`: `staging-lock-check.yml` is genuinely absent (only
+  `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` remain, matching the plan's own
+  dry-run-verified claim). Qualifies for the mechanical codex-staleness auto-apply carve-out (STEP 5.f2): HARD evidence
+  (live filesystem + a verified-DONE todo), single unambiguous substitution, no HARD-STOP governance area touched, no
+  new measurement needed. **Not yet applied as of this checkpoint** — queued for the consolidated STEP 5 pass once all
+  hunter batches land, so the codex edit and its citation land together.
 
 ## Hygiene fixes
 
+**Applied (hunter batch 3, independently re-verified before fixing):**
+
+1. `quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` `related:` entry pointed to
+   `plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`, which no longer exists
+   there — confirmed via `ls` (target absent at that path, present at
+   `plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`, `status: resolved`).
+   Repointed to the leading-slash archive path.
+2. `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` had 2 of 3 `related:` entries missing the
+   leading-slash repo-root-relative convention — confirmed both targets exist at their stated paths (not dangling, pure
+   format). Added leading slashes to both.
+
 Corpus-wide `run_hygiene_sweep.sh --ci` hard failures at run start (3): `prettier proseWrap continuation-padding`
 (ratchet), `Reference path convention` (ratchet), `assigned_vm:NA corpus size` (ratchet). Per 2026-08-09's precedent,
-checking whether any land in-tranche before actioning (these are corpus-wide ratchets with standing owners —
-`/na-eligibility-audit` for the NA-corpus ratchet, `reference_path_convention_2026_07_23.md` for the ref-path ratchet —
-not blanket ci-tranche findings).
+checked whether any land in-tranche before actioning — **none do** (corpus-wide ratchets with standing owners, not
+ci-tranche findings): re-ran `check_reference_paths.py` directly (no `--quiet`) mid-run — both its format (62
+violations, baseline 81) and existence (61 dangling, baseline 86) sub-checks currently PASS their ratchets (the `--ci`
+sweep's FAIL at run-start was a transient snapshot on this high-churn shared branch, not a stable state — see Progress
+Log), and zero of the 123 itemized violations touch any `asset_group: ci` doc as either violator or target.
+`assigned_vm:NA corpus size` is a pure corpus-wide count ratchet with no per-tranche attribution and an explicitly
+disjoint owner (`/na-eligibility-audit` — this skill does not adjudicate NA-classification correctness, per its own
+scope note). No ci-tranche hygiene action needed from the Phase-0 corpus-wide checks.
 
 ## Filed
 
@@ -108,7 +172,15 @@ not blanket ci-tranche findings).
 
 ## Refuted (dropped by verify)
 
-(pending)
+- **`plan_reconciler_ci_late_findings_2026_08_06.md`'s 2 remaining open todos** (batch1 D1 "todo 2"→"todo 1" typo on an
+  archived doc; the mtds monkeypatch-leak title/summary editorial rewrite) — re-read in full this run (not delegated to
+  a hunter, already fully read directly): both were re-confirmed as recently as the 2026-08-09 round-9 sweep as
+  correctly-left-open (cosmetic-on-an-archived-doc not worth a dedicated pass; genuine editorial-characterization
+  judgment call, not a deterministic grep-and-fix). No new evidence this run changes either determination — not
+  re-extracted, not re-litigated, candidate dropped.
+- **`plan_reconciler_findings_ci_2026_08_09.md`** — 0 open / 0 done checkboxes (pure narrative run-journal, not a
+  todo-tracked doc) — not a done-but-unchecked candidate by construction. Its `locked_by:` staleness is tracked
+  separately (see Filed).
 
 ## Coverage (hunters / batches / docs)
 
