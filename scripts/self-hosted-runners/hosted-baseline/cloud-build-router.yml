@@ -47,8 +47,9 @@ permissions:
 # repository_dispatch payload is permanently lost for the cancelled run).
 # Scoping to the repo name means same-repo builds serialise (only one {repo}-build can be
 # in-flight or pending at a time), while different repos build concurrently — no eviction risk.
-# The deployed_versions manifest write is per-repo-key (no cross-repo merge conflict) and
-# already has a soft push (`|| true`) — no regression from decoupling the manifest-update group.
+# (The deployed_versions manifest write was RETIRED 2026-08-10 — see dual-cloud-image-builds.md
+# Provenance; the per-repo-key note is historical. The manifest-update concurrency group was
+# already decoupled from the payload-routing group.)
 # SSOT: cicd_consolidated_remaining_2026_06_24.md § WS-B #27 "cloud-build-router manifest-update eviction".
 concurrency:
   group: cloud-build-router-${{ github.event.client_payload.repo || github.run_id }}
@@ -279,7 +280,9 @@ jobs:
 
           echo "Lower-level repos: $LOWER_LEVEL_REPOS"
 
-          # Check deployed_versions for each lower-level non-library repo
+          # Check released-version registry for each lower-level non-library repo. The old
+          # `.deployed_versions.prod` provenance signal was retired 2026-08-10 (never populated;
+          # field removed) — the released `.versions` registry is the live ordering signal now.
           BLOCKING_REPOS=""
           IFS=',' read -ra DEP_REPOS <<< "$LOWER_LEVEL_REPOS"
           for dep in "${DEP_REPOS[@]}"; do
@@ -289,15 +292,14 @@ jobs:
               continue
             fi
 
-            # Check if this dep has a deployed version in prod
-            DEPLOYED_VERSION=$(jq -r --arg dep "$dep" '.deployed_versions.prod[$dep].version // "none"' workspace-manifest.json 2>/dev/null || echo "none")
+            # Check if this dep has a released version
             MANIFEST_VERSION=$(jq -r --arg dep "$dep" '.versions[$dep] // "unknown"' workspace-manifest.json 2>/dev/null || echo "unknown")
 
-            if [ "$DEPLOYED_VERSION" = "none" ] || [ "$DEPLOYED_VERSION" = "null" ]; then
-              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no prod deployment recorded"
-              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-deployed) "
+            if [ "$MANIFEST_VERSION" = "unknown" ] || [ "$MANIFEST_VERSION" = "null" ]; then
+              echo "  BLOCKED: $dep (type=$DEP_TYPE) has no released version recorded"
+              BLOCKING_REPOS="${BLOCKING_REPOS}${dep}(not-released) "
             else
-              echo "  OK: $dep deployed=$DEPLOYED_VERSION manifest=$MANIFEST_VERSION"
+              echo "  OK: $dep released=$MANIFEST_VERSION"
             fi
           done
 
@@ -693,8 +695,7 @@ jobs:
       # ──────────────────────────────────────────────────────────────
       # Task 3 (hardening): Post-deploy health check polling
       # Polls /health endpoint for up to 5 min after Cloud Build
-      # success. Only proceeds to smoke test + deployed_versions
-      # update if health check passes.
+      # success. Only proceeds to smoke test if health check passes.
       # ──────────────────────────────────────────────────────────────
       - name: "Post-deploy: Health check polling (5 min timeout)"
         id: health-check
@@ -853,44 +854,6 @@ jobs:
           bash scripts/deploy/trading-kill-switch.sh resume "$GH_TOKEN" "${{ github.repository_owner }}"
           # Telegram alert migrated to notify-emergency-resume job
 
-      - name: Update manifest on build success (gated on health + smoke)
-        if: |
-          steps.route.outputs.repo_type != 'library' &&
-          steps.docker-build.outputs.build_exit_code == '0' &&
-          steps.docker-build.outputs.build_triggered == 'true' &&
-          (steps.health-check.outputs.health_check_passed == 'true' || steps.health-check.outputs.health_check_passed == 'skip') &&
-          (steps.smoke-test.outputs.smoke_test_passed == 'true' || steps.smoke-test.outputs.smoke_test_passed == '')
-        run: |
-          set -euo pipefail
-
-          REPO="${{ steps.route.outputs.repo }}"
-          ENV="${{ steps.route.outputs.env }}"
-          VERSION="${{ steps.route.outputs.version }}"
-          IMAGE_TAG="${{ steps.route.outputs.image_tag }}"
-          BUILD_ID="${{ steps.docker-build.outputs.build_id }}"
-
-          # Write deployed_versions back to manifest (populate-deployed-versions)
-          cd "${GITHUB_WORKSPACE}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          jq --arg env "${ENV}" \
-             --arg repo "${REPO}" \
-             --arg version "${VERSION}" \
-             --arg tag "${IMAGE_TAG}" \
-             --arg ts "${DEPLOYED_AT}" \
-             --arg build_id "${BUILD_ID}" \
-             '(.deployed_versions[$env] //= {}) | .deployed_versions[$env][$repo] = {version: $version, image_tag: $tag, deployed_at: $ts, build_id: $build_id}' \
-             workspace-manifest.json > workspace-manifest.json.tmp \
-            && mv workspace-manifest.json.tmp workspace-manifest.json \
-            && echo "deployed_versions[${ENV}][${REPO}] = ${VERSION}" \
-            || echo "WARNING: failed to update deployed_versions (non-fatal)"
-          if ! git diff --quiet workspace-manifest.json; then
-            git add workspace-manifest.json
-            git commit -m "chore: update deployed_versions[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
-            git push origin main || true
-          fi
-
       # Telegram alerts migrated to separate notification jobs below
 
       - name: Trigger Cloud Build (Python wheel — library)
@@ -951,9 +914,10 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   # BUILD-ONLY PRE-CUTOVER gate (2026-06-24): the tier-order check flags every lower-tier dep whose
-  # `deployed_versions.prod[dep]` is unset — but PRE live-cutover NOTHING is deployed to prod by design
+  # released version (`.versions[dep]`, formerly `.deployed_versions.prod[dep]` — provenance field
+  # RETIRED 2026-08-10) is unset — but PRE live-cutover NOTHING is released to prod by design
   # (core service/trading repos are intentionally build-only: a `<repo>-build` trigger, no `<repo>-prod`
-  # deploy trigger). So "all deps (not-deployed)" is the EXPECTED steady state, not a tier-ORDER violation,
+  # deploy trigger). So "all deps (not-released)" is the EXPECTED steady state, not a tier-ORDER violation,
   # and the page fired on EVERY prod build for every service = pure noise about a known intentional posture
   # (e.g. deployment-service blocked by 13 not-deployed services). Gate it behind the SAME explicit opt-in
   # repo variable as the "trigger not configured" page below (`CLOUD_BUILD_PROD_DEPLOY_EXPECTED`, default
@@ -990,8 +954,7 @@ jobs:
       message:
         "Post-Deploy Health Check FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
-        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
-        NOT updated."
+        needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min."
       # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
       # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
       subject_repo: ${{ needs.route-build.outputs.repo }}
@@ -1010,7 +973,7 @@ jobs:
       message:
         "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
-        or response shape failed. deployed_versions NOT updated."
+        or response shape failed."
       # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
       # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
       subject_repo: ${{ needs.route-build.outputs.repo }}

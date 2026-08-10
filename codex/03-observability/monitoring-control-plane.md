@@ -61,9 +61,12 @@ Code: `deployment_api/routes/repo_ci.py` + `_repo_ci_{types,stuck,manifest,githu
   rate-limit → 503 + `retry_after`, never silent-stale): branch heads, 3-way compare (content delta = changed-file
   count, never squash-skewed commit counts), commit history, check runs, open PRs (+ per-PR `mergeable_state`).
 - **workspace-manifest.json** (PM `main` via contents API, TTL 120 s) through ONE accessor —
-  `_repo_ci_manifest.ManifestView`: repo registry, `ci_status` (9-state), `staging_status.breaking_pending` + lock,
-  `deployed_versions`. **`ManifestView.ci_status_for` is THE Firestore swap point** for
-  `ci_status_firestore_side_store_2026_06_10.md` Phase 2 — no other consumer changes at cutover.
+  `_repo_ci_manifest.ManifestView`: repo registry, `ci_status` (9-state), `staging_status.breaking_pending` + lock.
+  (`deployed_versions` RETIRED 2026-08-10 — the manifest field + its write step were removed; see
+  `dual-cloud-image-builds.md` Provenance section. `ManifestView.deployed_version_for` in deployment-api still exists
+  but reads a removed field → always `None`; a deployment-api-side follow-up is tracked.) **`ManifestView.ci_status_for`
+  is THE Firestore swap point** for `ci_status_firestore_side_store_2026_06_10.md` Phase 2 — no other consumer changes
+  at cutover.
 - **Cloud builds** (image-level deploy signal v1): reuses `_cloud_builds_*` plumbing; `image_stale` = main HEAD sha ≠
   last successful build sha; honest-unknown (None) when build data unavailable; AWS/CodeBuild parity tracked in the
   sub-plan (cloud-toggle).

@@ -170,7 +170,7 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       verified both absent from `gcloud builds triggers list` and the current `unified-api-contracts-live-defi-rollout`
       trigger intact. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo:
       unified-trading-pm / GCP project central-element-323112)
-- [ ] [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
+- [x] ✅ [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
       `cloud-build-router.yml` and `cloud-build-router-aws.yml` write-intend these `workspace-manifest.json` fields on a
       successful build, but live state (verified 2026-08-08) shows `deployed_versions` present-but-empty
       (`{"dev": {},     "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path
@@ -181,9 +181,23 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       as a build-provenance source anywhere in the codebase/docs. Done when: a real build's `deployed_versions` entry is
       confirmed populated post-fix (option a), or all dead write-intent code + any doc claiming provenance-via-manifest
       is removed (option b) — worker's call on which, since the doc's own "why it matters" note argues (a) is more
-      valuable (provenance should be answerable), but either resolves the finding. Source:
-      `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 5 / todo 4. (repo:
-      unified-trading-pm)
+      valuable (provenance should be answerable), but either resolves the finding. **Chose option (b) — RETIRED
+      2026-08-10.** Root cause of the dead write path: (1) both workflows declare `permissions: contents: read`, so the
+      manifest `git push origin main` can never succeed (silently swallowed by `|| true`); (2) `main` branch protection
+      requires `Quality Gates (unified-trading-pm) / quality-gates-v2`, so a `[skip ci]` direct push from the non-admin
+      `GITHUB_TOKEN` is rejected anyway; (3) the write step is gated on `build_triggered == 'true'`, which never fired
+      for most repos (trigger-name mismatch, e.g. `greeks-service-prod` vs actual `greeks-service-build`); (4) the field
+      was empty for 5 months (created 2026-03-11, never populated). Removed: the `Update manifest on build success` step
+      in both router workflows (+ hosted-baseline copies), the `deployed_versions` field in `workspace-manifest.json` (+
+      `deployed_versions_aws` which never existed), and the now-dead `deployed_versions` entry in
+      `reconcile_manifest_backmerge.py`'s `_TOPLEVEL_CI_FIELDS`; updated codex docs (dual-cloud-image-builds.md
+      Provenance section, monitoring-control-plane.md) and the GCP router's tier-check to read `.versions` instead of
+      the removed field. Cross-repo dead reads (deployment-api `deployed_version_for`, UI mock, openapi docstrings)
+      filed as `issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status` remains
+      the live-SSOT for deploy state. Verified: `grep deployed_versions` clean in both router workflows + manifest;
+      reconcile unit test still green (no `deployed_versions`/`_TOPLEVEL_CI_FIELDS` assertions); QG green on
+      unified-trading-pm. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 5 /
+      todo 4. (repo: unified-trading-pm)
 
 ## Operator approval gate
 
@@ -216,3 +230,12 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
   daily `main` pushes while the current `unified-api-contracts-live-defi-rollout` trigger builds SUCCESS daily;
   `api-contracts-feature-build` had zero builds ever. Deleted both via `gcloud builds triggers delete --quiet` and
   verified them absent from `gcloud builds triggers list` with the current trigger intact.
+- **2026-08-10 (slot 17, infra)**: Todo 4 shipped — **option (b): retired the
+  `deployed_versions`/`deployed_versions_aws` manifest provenance**. Root cause of the never-working write: workflow
+  `permissions: contents: read` (blocked the `git push origin main`, swallowed by `|| true`) + `main` branch-protection
+  QG gate + write step gated on `build_triggered` which never fired for most repos (trigger-name mismatch) + field empty
+  since 2026-03-11. Removed the write step from both router workflows (+ hosted-baseline copies), the manifest
+  `deployed_versions` field, and the dead `reconcile_manifest_backmerge.py` `_TOPLEVEL_CI_FIELDS` entry; retargeted the
+  GCP router tier-check to `.versions`; updated dual-cloud-image-builds.md + monitoring-control-plane.md. Cross-repo
+  dead reads filed as `issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status`
+  remains live-SSOT.
