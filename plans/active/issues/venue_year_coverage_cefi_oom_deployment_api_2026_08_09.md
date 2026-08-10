@@ -304,7 +304,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   a genuine `semver-agent.yml` classifier gap (squash-promote loses the original commit's conventional-commit type, and
   an internal fix with no new public export doesn't trip the AST-differ fallback either), NOT specific to this fix —
   filed as its own P0 issue doc with full root-cause + fix recommendation:
-  `/plans/active/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Steps (c) (
+  `/plans/archive/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Steps (c) (
   dependency-update PR) and (d) (redeploy) cannot happen until (b) does — this INFRA todo stays open, blocked on the new
   issue doc's fix landing + `unified-trading-library` getting a fresh push to re-trigger classification. Not flipping
   the checkbox — the live-prod OOM is confirmed still unresolved in production as of this session.

@@ -26,7 +26,7 @@ summary: >-
   squash-promoted internal `fix:`/`feat:` commit that doesn't touch the public export surface, on every repo using the
   `ldr_main` model (all of them, per CLAUDE.md's default-promote ruling), whenever it happens to be the only commit in a
   given baseline→HEAD scan window.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -59,6 +59,9 @@ priority: P0
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED** — 2026-08-10. Both todos resolved. Todo 1: `source_touched` classifier fix shipped + promoted to PM main.
+> Todo 2: blocker self-resolved — `unified-trading-library@609299ad` released via v0.78.0-v0.78.3.
 
 # `semver-agent.yml` never bumps when a squash promote is the only commit in the scan window
 
@@ -153,10 +156,11 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
       `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` fix + its 2026-08-09 `source_touched` refinement;
       this todo verified it against the real incident SHAs, mirrored it into PM's own standalone copy, and added the
       regression test.
-- [ ] [INFRA] P1. Once the semver-agent fix is live, manually trigger (or wait for the next `main` push to) re-classify
-      `unified-trading-library`'s current `main` HEAD so `609299ad`'s fix actually mints a release — this repo is the
-      confirmed live-blocked case and should not silently wait for the next unrelated push to main to accidentally pick
-      it up. Repo: unified-trading-library.
+- [x] ✅ [INFRA] P1. Once the semver-agent fix is live, manually trigger (or wait for the next `main` push to)
+      re-classify `unified-trading-library`'s current `main` HEAD so `609299ad`'s fix actually mints a release — this
+      repo is the confirmed live-blocked case and should not silently wait for the next unrelated push to main to
+      accidentally pick it up. Repo: unified-trading-library. — plan-flip only (no service-repo code) (plan-flip; fix
+      self-resolved via v0.78.0-v0.78.3).
 
 ## Progress Log
 
@@ -372,3 +376,10 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   stub). 13th consecutive identical re-check — same blocker
   (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent. Leaving todo 2
   open/unchecked; skipping with `reason_code: GATED`.
+- **2026-08-10 (infra worker, slot 12, todo 2 closure — 14th check)**: Re-verified from scratch —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` now returns **YES** (first time across 14
+  checks — `origin/main..origin/live-defi-rollout` = 166 commits). `origin/main:scripts/cicd/detect_breaking_change.py`
+  now has `source_touched` (5 hits — the fix IS live on main). `unified-trading-library`: `git tag --contains e94be221`
+  (the squash commit carrying `609299ad`) returns `v0.78.0`-`v0.78.3` — the fix was released across four patch bumps
+  since the classifier reached PM's main. Todo 2 complete: blocker self-resolved, no manual trigger needed (nor possible
+  — `Semver Agent`'s caller stub still has no `workflow_dispatch`). Flipping checkbox; this closes the last open todo.
