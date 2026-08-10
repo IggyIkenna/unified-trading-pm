@@ -100,31 +100,35 @@ access from this worktree).
 
 ## Todos
 
-- [x] ✅ [INFRA] P3. **KEEP-NA-STALE — CLOSED 2026-08-09 (reclassify+satellite sweep, round 9): duplicated verbatim in
-      `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2, which is now `status: active`** (flipped by operator
-      2026-08-09, confirmed live in this same session — an earlier same-day na-eligibility-audit pass found this exact
-      duplication but withheld the close because batch9 was still `status: draft` at that time; it has since activated).
-      Tracked there going forward. Original: Update `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` default
-      from `"unified-trading"` to `"unified-trading-system"` (or confirm the template is fully superseded by the
-      per-repo `_REGISTRY_REPO` convention and delete/retire it instead — check whether
-      `rollout-workflow-templates.sh --template cloudbuild.yaml` is still ever run). Repo: unified-trading-pm.
-- [x] ✅ [INFRA] P3. **KEEP-NA-STALE — CLOSED 2026-08-09, same batch9 todo 2 as above** (todo 2 explicitly bundles both
-      the template default AND the workflow hardcode as one two-part fix). Original: Remove or correct the hardcoded
-      `_AR_REPO=unified-trading` substitution in `.github/workflows/cloud-build-router.yml`'s `gcloud builds triggers run`
-      call (confirm it's genuinely unused by every per-repo `cloudbuild.yaml` before deleting — grep the fleet for any
-      repo whose `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO`). Repo: unified-trading-pm.
-- [x] ✅ [INFRA] P3. **KEEP-NA-STALE — CLOSED 2026-08-09: duplicated verbatim in
-      `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 3 (status: active).** Original: Check whether the
-      `api-contracts-build` / `api-contracts-feature-build` GCP Cloud Build triggers are orphaned (pre-rename leftovers
-      from before `unified-api-contracts`'s current name) and, if confirmed dead, delete them via
-      `gcloud builds triggers delete`. Repo: unified-trading-pm (trigger ownership) / central-element-323112 (GCP
-      project).
-- [x] ✅ [INFRA] P3. **KEEP-NA-STALE — CLOSED 2026-08-09: duplicated verbatim in
-      `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 4 (status: active).** Original: Decide + fix
-      `deployed_versions`/`deployed_versions_aws` manifest provenance: either wire up the actual write path in
-      `cloud-build-router.yml` / `cloud-build-router-aws.yml` so these fields get populated on a successful build, or
-      remove the dead write-intent code and stop presenting the manifest as a provenance source anywhere in the
-      codebase. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P3. **SHIPPED 2026-08-10 — `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2,
+      unified-trading-pm@809d6b8d22.** Deleted dead `scripts/propagation/templates/cloudbuild.yaml` (fully superseded by
+      `configs/cloudbuild-*-template.yaml` using `_REGISTRY_REPO`; not referenced by `rollout-workflow-templates.sh`).
+      Fixed `_AR_REPO=unified-trading`→`unified-trading-system` in `.github/workflows/cloud-build-router.yml` +
+      `scripts/self-hosted-runners/hosted-baseline/{cloud-build-router,image-build-validate}.yml`. Original: Update
+      `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` default from `"unified-trading"` to
+      `"unified-trading-system"`. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P3. **SHIPPED 2026-08-10 — same batch9 todo 2, unified-trading-pm@809d6b8d22** (todo 2 bundles both the
+      template default AND the workflow hardcode as one two-part fix). Original: Remove or correct the hardcoded
+      `_AR_REPO=unified-trading` substitution in `.github/workflows/cloud-build-router.yml`'s
+      `gcloud builds triggers run` call (confirm it's genuinely unused by every per-repo `cloudbuild.yaml` before
+      deleting — grep the fleet for any repo whose `cloudbuild.yaml` still references `_AR_REPO` instead of
+      `_REGISTRY_REPO`). Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P3. **SHIPPED 2026-08-10 — `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 3 (GCP-only; no repo
+      commit).** Both `api-contracts-build` and `api-contracts-feature-build` confirmed dead (bound to stale
+      `repositories/api-contracts` connection — repo was renamed to `unified-api-contracts`; `api-contracts-build`
+      silent since 2026-06-19 despite daily `main` pushes; `api-contracts-feature-build` had 0 builds ever) and deleted
+      via `gcloud builds triggers delete --project=central-element-323112 --region=asia-northeast1 --quiet`. Current
+      `unified-api-contracts-live-defi-rollout` trigger verified intact. Original: Check whether the
+      `api-contracts-build` / `api-contracts-feature-build` GCP Cloud Build triggers are orphaned and, if confirmed
+      dead, delete them. Repo: unified-trading-pm / GCP project central-element-323112.
+- [x] ✅ [INFRA] P3. **SHIPPED 2026-08-10 — `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 4,
+      unified-trading-pm@ad3fb19596 (option b: retired).** Removed the `Update manifest on build` step from both
+      `cloud-build-router.yml`/`cloud-build-router-aws.yml` (+ hosted-baseline copies), the `deployed_versions` field in
+      `workspace-manifest.json`, and the dead `reconcile_manifest_backmerge.py` `_TOPLEVEL_CI_FIELDS` entry; updated
+      codex docs (dual-cloud-image-builds.md, monitoring-control-plane.md); cross-repo dead reads filed as
+      `/plans/active/issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status`
+      remains the live-SSOT for deploy state. Original: Decide + fix `deployed_versions`/`deployed_versions_aws`
+      manifest provenance. Repo: unified-trading-pm.
 - [ ] [OPERATOR] P3. **RULED 2026-08-09 (operator): grant `ikenna-worker`'s AWS IAM identity read-only
       `codebuild:ListProjects`/`codebuild:BatchGetBuilds`.** STANDING-ACTION — the decision is made, execution is still
       pending: applying this grant requires the operator's own AWS console/CLI access, not a worker-self-serviceable
@@ -135,6 +139,11 @@ access from this worktree).
 
 ## Progress Log
 
+- **reconcile 2026-08-10 (slot 10, review)**: Batch9 (`infra_satellite_ao_dispatch_batch9_2026_08_09.md`) now fully
+  shipped — todos 1-4 updated above to cite the actual batch9 commit SHAs (809d6b8d22, ad3fb19596) + GCP trigger
+  deletion evidence, replacing the "KEEP-NA-STALE" placeholder notes that predated batch9's completion. Verified: todo 5
+  remains `[ ] [OPERATOR]` (standing-action, operator-owned AWS IAM grant) → this doc is NOT an archival candidate,
+  exactly as predicted by the finalize plan.
 - **reclassify+satellite sweep 2026-08-09 (infra tranche, round 9)**: KEEP-NA-STALE — closed all 4 `[INFRA]` todos.
   Confirmed live: `infra_satellite_ao_dispatch_batch9_2026_08_09.md` flipped `status: draft` → `status: active` earlier
   today (operator-approved) — this closes exactly the gap the same-day na-eligibility-audit pass below identified

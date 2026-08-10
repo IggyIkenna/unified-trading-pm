@@ -48,8 +48,8 @@ related:
     /plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
     /plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
-    /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
-    /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
+    /plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
+    /plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md,
     /plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
@@ -105,7 +105,7 @@ source: >-
 > item below was migrated to a real home before archival — see the "Deferred item disposition" note at the end of the
 > `## Deferred` section, and the finalize plan's own todo 4 RESULT for full detail. One genuinely new AO-eligible item
 > (item 5, `managed-by` launcher label standardization) was cleared and drafted as
-> `/plans/active/infra_satellite_ao_dispatch_batch12_2026_08_09.md`; every other Deferred item was confirmed
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md`; every other Deferred item was confirmed
 > already-resolved, already-shipped, or already tracked in its own live doc — nothing was lost.
 
 ## Why this plan exists (the coverage gap, measured)
@@ -760,7 +760,9 @@ side ships or is superseded; this is the ONLY category a batch2 can convert):
    drift-guard) into one unit in the NEXT infra batch (`sequential: true`, since they share these 2 files), rather than
    continuing to park them individually batch over batch.
 3. **Moving the `0.10.8` constant into `resolve-canonical-versions.py`** — same `base-service.sh`/`base-library.sh`
-   contention (the constant lives in 3 hardcoded sites, 2 of them there).
+   contention (the constant lives in 3 hardcoded sites, 2 of them there). **RESOLVED 2026-08-10:
+   `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1, unified-trading-pm@e5697ac5c — UV version centralization
+   shipped.**
 4. **deployment-ui `DATA_PIPELINE_SERVICES` (GAP G-UI).** Stale `features-cefi/defi/tradfi/prediction-service` names +
    omitted strategy-service in `DataStatusTab.tsx`. `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)
    already edits `DataStatusTab`/`HonestCoverageCard` for a different change. Same file, two batches — parked.
@@ -854,7 +856,7 @@ Every item above was migrated to a real home before this plan archived:
 - **2+3 (base-service.sh/base-library.sh bundle incl. `0.10.8`)** — CLEARED (finalize todo 2) and already SHIPPED by
   `infra_satellite_ao_dispatch_batch9_2026_08_09.md` (G1 + G2 both `[x]`). No batch-2 todo needed.
 - **5 (managed-by launcher label)** — CLEARED; genuinely unbatched, so drafted fresh:
-  `/plans/active/infra_satellite_ao_dispatch_batch12_2026_08_09.md`.
+  `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md`.
 - **6 (repo_scripts DEPRECATE / item (k))** — STILL-CONFLICTING; real home confirmed:
   `repo_scripts_governance_audit_2026_06_18.md`'s own open `[AUDIT] P2` todo + Progress Log already record this exact
   CONFLICT-GATED status.
