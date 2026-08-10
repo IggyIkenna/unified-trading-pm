@@ -16,7 +16,7 @@ tags: [ao, ao-dispatch, close-out, batch-17, finalize, satellite-extraction]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md,
-    /plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
+    /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -42,7 +42,7 @@ sequential: true
 context_scope:
   [
     /plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md,
-    /plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
+    /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -75,8 +75,9 @@ source: >-
       checkbox carries real evidence, not a bare pointer.
 - [ ] [REVIEW] P0. **Archive the source doc** — confirm all 3 of its todos are now `[x]` (todos 1-2 were already done
       pre-extraction; this finalize closes todo 3), then run the 6-step archival ritual: banner
-      `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md`, move to `plans/archive/2026_08/issues/`,
-      fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`.
+      `/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md`, move to
+      `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
+      `related:`/`depends_on:`.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan

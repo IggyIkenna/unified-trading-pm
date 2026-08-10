@@ -17,7 +17,7 @@ summary: >-
   review-cascade-verified but not in main's orchestrator-host clones so not independently re-checked here. Zero
   data-loss risk — all four are safety-net-preserved on origin/wip-preserve/* refs. Main cannot respawn slots
   (backend-owned) or push code (quickmerge is worker-side), hence worker-rescue todos.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Multi-repo is just WHERE
@@ -35,7 +35,6 @@ assigned_vm: NA
 execution_scope: local-only
 resolved_by:
 locked_by:
-archive_exempt: true
 source:
   "review worktree-health finding msg #3630 (2026-08-04 00:06Z), cascade-verification STILL-ORPHANED verdicts
   00:02:14-18Z; c927ec58 + 06c8e90b independently orphan-verified by main agt-1756f6 via git merge-base --is-ancestor"
@@ -49,6 +48,12 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (all 3 todos `[x]`, unlocked; status flipped from `open` to `resolved`). All
+> orphaned-WIP rescue items are closed: todos 1-2 resolved as MOOT (independently landed under fresh SHAs, evidenced
+> inline), todo 3 landed via `market-data-processing-service@5b30f41` (proactive GCS-429 throttle, verified ancestor of
+> `origin/live-defi-rollout`). Archived by `ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md` (slot 23) per the
+> 6-step archival ritual.
 
 # Orphaned worktree WIP (slot-12 x3 + slot-8 bd0e231f) — mechanical worker rescue
 

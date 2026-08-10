@@ -111,7 +111,7 @@ todos of its own**. The plans that actually work these docs' open items:
   `parent_epic`, each verified by reading the doc's real content, not tag shape):
   [ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02](/plans/archive/2026_08/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md),
   [boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31](/plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md),
-  [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
+  [orphaned_wip_slot12_slot8_recovery_2026_08_04](/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md),
   [backlog_regen_reverted_p1_2_park_2026_08_01](/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md),
   [p1_2_backlog_hand_park_did_not_persist_2026_07_31](/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md),
   [fleet_git_health_ip_185_known_human_planning_vm_2026_08_03](/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md),

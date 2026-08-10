@@ -21,7 +21,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-17, satellite-docs,
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
-    /plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
+    /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -46,7 +46,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
+    /plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
@@ -70,7 +70,7 @@ source: >-
       content diff proving equivalence (mirror todos 1-2's own evidence style in the source doc, not a bare "looks
       similar" claim). **Done when**: the 429-avoidance change is an ancestor of `origin/live-defi-rollout` under some
       SHA (either freshly landed or confirmed already-landed). Source:
-      `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its sole remaining todo). Repo:
+      `/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its sole remaining todo). Repo:
       market-data-processing-service. — **LANDED 2026-08-10 (slot 12)**: `036c568` confirmed a real orphan (not an
       ancestor of `origin/live-defi-rollout`); the crash-prevention guard had independently landed as `2eac1c1` +
       `d967e49`, but the proactive throttle itself was absent. Reconciled the throttle delta

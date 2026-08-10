@@ -249,8 +249,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `deployment-service@eff55ae7` ("chore(deps): lift fastapi/starlette caps to fastapi>=0.137/starlette>=1.3.1", same
       commit subject). **Done when** (outcome-defined, per the source issue doc's own reasoning) — all 3 commits'
       CONTENT is an ancestor of `origin/live-defi-rollout` under some SHA: MET for all 3, no rescue action needed.
-      Source: `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only — items 2/3 are
-      conditionally gated on a main-agent confirmation this run could not re-verify, see Deferred). Repo:
+      Source: `/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only —
+      items 2/3 are conditionally gated on a main-agent confirmation this run could not re-verify, see Deferred). Repo:
       unified-trading-library, unified-api-contracts, deployment-service.
 
 ## Deferred — the 45 declined orphans from the Phase-1 fan-out + 3 conditional items from the orthogonality sweep
