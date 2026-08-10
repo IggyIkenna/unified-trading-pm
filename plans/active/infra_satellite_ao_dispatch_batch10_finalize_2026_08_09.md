@@ -41,6 +41,7 @@ depends_on: [infra_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     /plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
@@ -74,12 +75,15 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
       (todo 3). Left the 2 older `[DATA] P2` items untouched (open-ended investigations, gated by
       `block_destructive_commands.py`'s autonomous-cleanup block). Confirmed the source doc is NOT an archival
       candidate: the 2 `[DATA] P2` items remain open by design. (repo: unified-trading-pm)
-- [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch10_2026_08_09.md`** once both reconciliations above are done
-      and verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus
-      referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both stay clean).
-      Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip + `git mv` in one commit —
-      2026-07-30 incident, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo:
-      unified-trading-pm)
+- [x] ✅ [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch10_2026_08_09.md`** once both reconciliations above are
+      done and verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every
+      corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both stay
+      clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip + `git mv` in one
+      commit — 2026-07-30 incident, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo:
+      unified-trading-pm) — `unified-trading-pm` (this commit flips the checkbox; the `git mv` archival lands in a
+      separate follow-up commit per the rule above). Both `infra_satellite_ao_dispatch_batch10_2026_08_09.md` (all 3
+      todos done) and this finalize plan itself (all 3 todos now done, unlocked) are archival-eligible — archiving both
+      as a pair in the follow-up commit.
 
 ## Codex SSOTs
 
@@ -100,3 +104,11 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
   a separate commit from this flip per the never-combine-flip-with-git-mv rule.
 - **2026-08-09** — Authored alongside `infra_satellite_ao_dispatch_batch10_2026_08_09.md` by a manual
   satellite-batch-extraction pass over the infra-tranche NA candidate doc set.
+- **2026-08-10 (slot 17, infra)** — Todo 3 checkbox flipped (this commit). All 3 todos on this finalize plan are now
+  done, unlocked — this plan is itself archival-eligible alongside its parent. Archiving both
+  `infra_satellite_ao_dispatch_batch10_2026_08_09.md` and this doc as a pair in the immediately-following commit (the
+  `git mv` half of the ritual, per the never-combine-flip-with-mv rule). Set `archive_exempt: true` on this flip-only
+  commit per the codex-sanctioned bridge (`plan-completion-and-archival-discipline.md` § "`archive_exempt: true` is the
+  sanctioned bridge...") — this doc's own last todo IS its archival trigger, so the flip-only shape trips
+  `check_archive_candidates --only`'s immediate-archival demand; dropping `archive_exempt` is routine hygiene in the
+  immediately-following `git mv` commit.
