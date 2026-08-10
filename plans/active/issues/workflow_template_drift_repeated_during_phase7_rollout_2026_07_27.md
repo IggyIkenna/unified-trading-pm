@@ -27,7 +27,7 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci-cd, workflow-templates, drift, phase-7, self-hosted-runners, coordination]
-related: [/codex/08-workflows/ci-cd-flow.md, /plans/active/ci_consolidated_closeout_2026_07_25.md]
+related: [/codex/08-workflows/ci-cd-flow.md, /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-07-27
 author: unknown
 priority: P2

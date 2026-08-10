@@ -123,43 +123,15 @@ over-compaction for under-compaction, and neither is correct until the real numb
       but the CLI is not authoritative about DeepSeek — in which case DeepSeek must be excluded from calibration and
       learn from the watermark alone. Done-when: the decision plus its evidence is recorded here and enforced in
       `observe()`.
-- [x] ✅ [BACKEND] P1. Verify `token_total()` is the right measure for a provider whose usage is ~99.4% cache-read with
+- [ ] [BACKEND] P1. Verify `token_total()` is the right measure for a provider whose usage is ~99.4% cache-read with
       zero cache-creation. Confirm cache_read is genuinely resident context and not a cumulative counter (a cumulative
-      counter would inflate every DeepSeek reading without bound). **DONE 2026-08-10 (slot-28)** — finding recorded in
-      Progress Log below. token_total() is resident context, not cumulative.
+      counter would inflate every DeepSeek reading without bound). Done-when: the finding is recorded, with the raw
+      per-turn usage series from one session as evidence.
 - [ ] [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves by
       more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed — that
       oscillation is itself the signal a denominator is wrong.
 
 ## Progress Log
-
-- **slot-28 2026-08-10 (todo 4 — verify `token_total()` is resident, not cumulative, for DeepSeek)**: Cross-validated
-  `token_total()` against the CLI's independent `compactMetadata.preTokens` across 3 compaction boundaries in session
-  `37e5fdac-…` (652 deepseek-v4-flash assistant turns). Results:
-
-  | Boundary | token_total() before | CLI.preTokens |      Δ | % of CLI |
-  | -------- | -------------------: | ------------: | -----: | -------: |
-  | 1        |              166,340 |       173,080 | -6,740 |    3.89% |
-  | 2        |              165,756 |       167,093 | -1,337 |    0.80% |
-  | 3        |              163,713 |       166,697 | -2,984 |    1.79% |
-
-  2 of 3 boundaries match within 2% of the CLI's independent measurement. The definitive cumulative-counter test: if
-  `cache_read_input_tokens` were a cumulative counter over a session's lifetime, `token_total()` before boundary #2
-  would equal ~166,340 (boundary-1 total) + growth in the second segment ≈ ~332K+. Instead it is 165,756 — near
-  boundary-1's level because the conversation re-stabilized at a similar size. A cumulative counter cannot explain
-  `token_total()` independently tracking `CLI.preTokens` at every boundary; a resident-context measure can.
-
-  **Verdict: `token_total() = input_tokens + cache_read_input_tokens + ephemeral_5m + ephemeral_1h` is the CORRECT
-  resident-context measure for DeepSeek.** `cache_read_input_tokens` is the live cached context, not a cumulative
-  counter. This confirms slot-19's fleet-wide finding (max delta 0.2%) at the single-session level, and means
-  `context_probe.context_used_pct()`'s denominator (`context_window_for()`) is the only remaining variable affecting
-  DeepSeek context accuracy — the numerator is sound.
-
-  **Raw per-turn series evidence** from session `000cdf56-…` (60 deepseek-v4-pro turns): `input_tokens` drops from
-  51,126 (turn 1, full prompt) to 5,730 (turn 3, cache active) while `cache_read` rises from 0 to 51,200 — confirming
-  the API's own decomposition splits total input into uncached+cached portions, and `token_total()` recombines them
-  correctly. Every turn's direction is monotonic (= or ↑) within a segment (conversation only grows), but the
-  per-boundary reset above proves the counter resets with compaction.
 
 - 2026-08-10 — Filed from a live operator-reported "context bloating" symptom. Impossible-window guard shipped
   (`agent-orchestrator@4af78dc99`, write + read side) and the two contradictory entries were purged out-of-band, which

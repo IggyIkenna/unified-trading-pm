@@ -20,7 +20,7 @@ tags: [quality-gates, credential-ask, ping, stale-check, taxonomy]
 related:
   [
     /plans/archive/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
 author: unknown
@@ -94,9 +94,9 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
       credential-ask-orphan evidence"). Verified live 2026-07-30: `BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")` is
       defined and wired into `_has_ask_evidence()`'s accepted-evidence checks alongside `PING_PATH_RE`/`SECRET_NAME_RE`.
 - [ ] [SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact remedy
-      command, no secret needed) should be tagged with a distinct permissions-gap marker instead of the credential
-      marker going forward — a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful.
-      If adopted, migrate the two lines found here as part of the same change.
+      command, no secret needed) should be tagged with a distinct permissions-gap marker instead of the credential marker going forward —
+      a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the
+      two lines found here as part of the same change.
 
 ## Progress Log
 

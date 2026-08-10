@@ -23,7 +23,7 @@ related:
     /plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
 parent_epic: orchestrator_master

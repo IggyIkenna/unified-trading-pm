@@ -27,7 +27,7 @@ related:
   [
     /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
     /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-03
 author: unknown

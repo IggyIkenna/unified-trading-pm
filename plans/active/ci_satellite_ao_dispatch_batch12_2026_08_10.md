@@ -26,7 +26,7 @@ related:
     /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
