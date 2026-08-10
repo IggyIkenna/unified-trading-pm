@@ -203,17 +203,12 @@ fi
 # name makes them report a path failure AS A CONTENT VIOLATION (F7). Fixing those is F7's own
 # todo; naming the leaf correctly side-steps it for this path today.
 #
-# Escape hatch: SDP_ISOLATED=0 restores the legacy shared-index behaviour (this is the
-# DOCUMENTED escape hatch per safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10).
-# The default isolated-worktree mode now propagates the caller's slot identity into the worktree
-# (see the isolation branch below), so SDP_ISOLATED=0 is only needed to force the shared index
-# (e.g. a worktree-add failure). On ANY setup failure we fall back to the legacy path rather
-# than refusing to push -- degraded, never blocked.
+# Escape hatch: SDP_ISOLATED=0 restores the legacy shared-index behaviour. On ANY setup failure
+# we fall back to the legacy path rather than refusing to push -- degraded, never blocked.
 _SDP_ISOLATION_ROOT=""
 _sdp_cleanup_isolation() {
   [[ -z "$_SDP_ISOLATION_ROOT" ]] && return 0
-  local wt="${_sdp_iso_wt:-$_SDP_ISOLATION_ROOT/unified-trading-pm}"
-  git worktree remove --force "$wt" 2>/dev/null || true
+  git worktree remove --force "$_SDP_ISOLATION_ROOT/unified-trading-pm" 2>/dev/null || true
   git worktree prune 2>/dev/null || true
 }
 
@@ -256,27 +251,8 @@ _SDP_ISOLATED_EFFECTIVE="${SDP_ISOLATED:-$(_sdp_isolation_default)}"
 
 if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
   _sdp_iso_parent="${TMPDIR:-/tmp}/sdp-iso-$$"
+  _sdp_iso_wt="$_sdp_iso_parent/unified-trading-pm"
   _sdp_origin_repo="$(pwd)"
-  # Propagate the CALLER's slot identity into the isolated worktree path
-  # (safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10, confirmed live slot 31).
-  # fix-commit-identity.sh derives the label PURELY from the PATH: an isolated worktree at
-  # $TMPDIR/sdp-iso-$$/unified-trading-pm (no `.tabs/<N>/` segment) resolves `main` and actively
-  # REWRITES a slot worker's `[slot-N·host]` author to `[main·host]`. Build the worktree path WITH
-  # the caller's `.tabs/<N>/` segment (leaf dir stays `unified-trading-pm` — F7 requires that name)
-  # so the hook derives the caller's label and no-ops (commit lands on the FIRST attempt with the
-  # correct author). The identity lib path is derived relative to THIS script (which always has
-  # access to it); the label resolves against the caller repo path.
-  _sdp_identity_lib="$(dirname "$_SDP_SELF")/../hooks/slot-identity-lib.sh"
-  _sdp_slot_seg=""
-  if [ -f "$_sdp_identity_lib" ]; then
-    # shellcheck disable=SC1090
-    . "$_sdp_identity_lib"
-    slot_identity_resolve "$_sdp_origin_repo"
-    if [[ "${SLOT_ID_LABEL:-main}" =~ ^slot-([0-9]+)$ ]]; then
-      _sdp_slot_seg="/.tabs/${BASH_REMATCH[1]}"
-    fi
-  fi
-  _sdp_iso_wt="$_sdp_iso_parent${_sdp_slot_seg}/unified-trading-pm"
   if git fetch -q origin "$BRANCH" 2>/dev/null &&
     git worktree add --detach -q "$_sdp_iso_wt" "origin/$BRANCH" 2>/dev/null; then
     _SDP_ISOLATION_ROOT="$_sdp_iso_parent"
@@ -294,15 +270,6 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
       echo "🔒 isolated-worktree mode: committing from a private index at origin/$BRANCH"
       echo "   (your working tree is NOT touched by this script — see F6 in"
       echo "    plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md)"
-      # Belt-and-suspenders: also pre-stamp the worktree config so the hook no-ops even if the
-      # inherited caller config is stale (the PATH-derived label now matches by construction).
-      if [ -n "${SLOT_ID_EXPECTED_NAME:-}" ] && [ -n "${SLOT_ID_CANON_EMAIL:-}" ]; then
-        git -C "$_sdp_iso_wt" config extensions.worktreeConfig true 2>/dev/null || true
-        git -C "$_sdp_iso_wt" config --worktree user.name "$SLOT_ID_EXPECTED_NAME" 2>/dev/null \
-          || git -C "$_sdp_iso_wt" config user.name "$SLOT_ID_EXPECTED_NAME"
-        git -C "$_sdp_iso_wt" config --worktree user.email "$SLOT_ID_CANON_EMAIL" 2>/dev/null \
-          || git -C "$_sdp_iso_wt" config user.email "$SLOT_ID_CANON_EMAIL"
-      fi
       cd "$_sdp_iso_wt" || exit 2
       # Re-exec THIS script (the one the caller actually invoked), NOT the worktree's copy.
       # The worktree is checked out at origin/<branch>, so running its copy would silently

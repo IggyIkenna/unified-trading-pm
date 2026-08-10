@@ -999,13 +999,6 @@ are genuinely in scope for the operator's "no exceptions" directive.
   FIXTURE_STATS 136 · FIXTURE_LINEUPS 136 = ~976 (was 146,640). ~all `expected_unattempted`/absent tail, 19 TEAMS
   `attempted_failed` — completion pass would close it, NOT confirmed floors. LINEUPS+INJURIES backfills done since last
   entry (af-backfill-20260809-* exit_code=0). Checkbox OPEN.
-- **2026-08-10T04:58Z corroboration (independent session, `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`
-  commit `4a2d0c35bf`)**: for the 4 entities that doc tracked (PLAYER_STATS/INJURIES/STANDINGS/TEAMS), a repeat
-  re-census with zero active VM read byte-identical to the prior tick (INJURIES 334 both times) — per rule 4a, a stable
-  repeat reading with no writer running confirms a genuine floor, not consolidator lag. Matches this doc's slot-25
-  numbers exactly. Does NOT independently confirm FIXTURE_STATS/FIXTURE_LINEUPS (136 each, out of that doc's scope) —
-  this doc's own "NOT confirmed floors" caveat for those 2 entities still stands; checkbox correctly stays OPEN until
-  they're similarly re-verified stable.
 - **2026-08-10 (slot 18, data_engineering, `sports_af_full_entity_completion-9798da269f23` stale re-dispatch of the
   final re-census todo)**: The todo's done-when is explicitly "once every backfill above completes" — and a backfill is
   STILL in-flight: `gcloud compute instances list` shows `af-backfill-20260810-103218` RUNNING (created

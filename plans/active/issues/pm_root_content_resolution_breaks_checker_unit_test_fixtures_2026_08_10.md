@@ -25,7 +25,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md,
-    /plans/archive/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
+    /plans/active/issues/safe_doc_push_isolation_rewrites_slot_commit_identity_2026_08_10.md,
   ]
 created: "2026-08-10"
 parent_epic: infrastructure_master

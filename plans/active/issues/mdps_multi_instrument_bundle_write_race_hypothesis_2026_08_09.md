@@ -130,11 +130,10 @@ read-merge-write instead of overwrite) as a new P1 todo here.
       child log. **Done when**: either (a) confirmed FIXED — bundles carry both BTC+ETH legs, this doc is closed as a
       non-issue (the concurrent-write race did not manifest, e.g. because tasks per output path are actually serialized
       somewhere this reading missed), or (b) confirmed BROKEN — bundles still single-symbol with force correctly true,
-      in which case scope + implement the genuine fix (see the **2026-08-10 slot-27** Progress Log entry — the
-      cross-write-race hypothesis is REFUTED by current-code reading; the confirmed defect is WITHIN-bundle symbol
-      truncation, so the fix is expected in the streaming symbol-accumulation / eager-fallback path
-      (`live_workers_streaming.py`, `candle_write_mixin.py`), not merge-on-write or per-cell serialization) as a new P1
-      follow-up todo appended here, cross-linking `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`.
+      in which case scope + implement a genuine merge-on-write or per-cell write serialization fix in
+      `market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py` (or wherever the
+      confirmed race is) as a new P1 follow-up todo appended here, cross-linking
+      `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`.
 
 ## Progress Log
 
@@ -168,36 +167,3 @@ read-merge-write instead of overwrite) as a new P1 todo here.
   durably park rather than re-offering this to another fresh slot every cooldown cycle. **To unpark once the per-day
   relaunch has genuinely run + been audited**:
   `POST /api/prerequisites/auto_unpark__mdps_multi_instrument_bundle_write_race_hypothesis-c9274b858947 {"value": true}`.
-
-- **2026-08-10 (slot-27, data_engineering, dispatched on the sole todo above)**: Gate still unmet — re-verified live:
-  the per-day post-fix relaunch todo (`cefi_track7_candle_bundle_regeneration_vm-7eb3b7e1186c`) is still
-  `status: queued` (priority 50), and the pre-fix VM `mdps-backfill-cefi-20260808-095136` is STILL `RUNNING`
-  (asia-northeast1-c, created 2026-08-08). Two VMs launched 2026-08-10 (`mdps-backfill-cefi-20260810-114949`, `-115835`)
-  are UNRELATED CEFI backfills (derivative_ticker/1h 2026-07-27→08-03, BITGET-FUTURES/1h 2026-04-20→04-30, both
-  `FORCE=false` per their LAUNCH_PARAMS.json) — NOT the Track-7 relaunch. So the post-fix relaunch has not completed +
-  been audited → nothing to check live yet. Performed a code-reading + GCS verification of the write path that
-  materially REFINES the hypothesis, captured so the post-fix audit checks the right thing:
-  - **Hypothesis (as stated) REFUTED by current-code reading**:
-    `orchestration_scanner.py::_blob_matches_data_type_partition` admits ONLY
-    `instrument_type=futures_chain/underlying={U}/ticks.parquet` blobs into futures_chain processing (per-contract
-    `instrument_type=future/` files are EXCLUDED), and each such blob carries its own `underlying=` root →
-    `_build_candle_output_path` emits a DISTINCT `.../venue=BYBIT/underlying={U}/ticks.parquet` per root. BTC and ETH
-    writes do NOT share a path under current code, so the hypothesized last-writer-wins cross-write race cannot occur as
-    described.
-  - **But the single-symbol SYMPTOM is CONFIRMED and broader**: GCS ground truth for 2023-06-01/15s — raw BYBIT
-    futures_chain BTC bundle holds 7 contracts (`BTC-29DEC23` … `BTC-02JUN23`) and raw DERIBIT BTC bundle holds 7
-    (`DERIBIT:FUTURE:BTC-USD-inverse-*`), yet BOTH processed bundles contain exactly 1 (`BYBIT:FUTURE:BTC-20231229` at
-    the no-underlying `venue=BYBIT/ticks.parquet`, mtime 2026-08-03T01:59:07Z; `DERIBIT:FUTURE:BTC-USD-inverse-20240329`
-    at `underlying=BTC/ticks.parquet`, mtime 2026-07-22T21:06:26Z). The 2026-08-08 audit's "DERIBIT OK (1 instrument per
-    underlying-partitioned file)" label is WRONG — DERIBIT shows the SAME truncation, not the intended design. The real
-    defect is WITHIN-bundle (7 raw contracts → 1 emitted), not a cross-write race.
-  - **Current streaming code appears correct**: `live_workers_streaming.py::_process_chain_bundle_streaming` accumulates
-    every `_iter_chain_symbol_dfs` slice into `candles_by_tf` and writes ONE parquet with all symbols; the stale
-    1-contract bundles (both predating the force fix) were written by older/different code and may be fixed by the
-    current code — unverifiable without the live post-fix relaunch. **The post-fix audit MUST check per-underlying
-    CONTRACT COUNT (all contracts present), not just BTC+ETH presence, and must include DERIBIT (also truncated).** If
-    still 1-of-7, the fix is within-bundle symbol accumulation / the eager-fallback path, NOT merge-on-write/per-cell
-    serialization (todo (b) text corrected above).
-  - Declining via `reason_code: "GATED"` + `park_now: true` — same external gate as slot-25/slot-5 (per-day relaunch not
-    yet run); re-check once the relaunch's post-completion audit posts. No code change to market-data-processing-service
-    (gate not met; implementing a fix now would be speculative).

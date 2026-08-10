@@ -7,7 +7,7 @@ summary: >-
   hook derives `main` instead of the caller's slot and actively REWRITES a slot worker's `[slot-N·planning]` author to
   `[main·planning]`. Confirmed live on slot 31 (2026-08-10). Every slot worker's pure-doc commits silently ship
   mis-attributed to main, corrupting the attribution audit trail (a HARD RULE).
-status: resolved
+status: open
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -27,22 +27,19 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: infra
 drift_direction: advance-code
-resolved_by: unified-trading-pm@015b869269
+resolved_by:
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 source:
   - safe-doc-push.sh isolated-worktree mode (default since 2026-08-10)
+<<<<<<< Updated upstream
 depends_on: []
+archive_exempt: true
+=======
+>>>>>>> Stashed changes
 ---
-
-> **🟢 ARCHIVED 2026-08-10** — `status: resolved` with zero open todos; archived per
-> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
-> archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (unified-trading-pm@015b869269). Moved by
-> slot-29 per the flip-then-mv two-commit pattern: the checkbox flip + `archive_exempt: true` bridge landed in
-> `20b7784d1f` (file kept at the original path so the AO server's M3 flip verification saw the `- [x]`); this commit
-> performs the `git mv` to `plans/archive/issues/` and drops the now-moot exempt line. No content was rewritten.
 
 # safe-doc-push isolated-worktree mode silently mis-attributes slot commit identity to main
 
@@ -107,7 +104,7 @@ happen to know the `SDP_ISOLATED=0` escape hatch.
   landed with author `ikennaigboaka [slot-29·planning]`, NOT `[main·planning]` (the exact bug). **BLOCKER**: PM
   `quality-gates.sh` is red on 8 PRE-EXISTING live-corpus test failures (`check_workspace_code_workspace_drift.py` ×5 +
   `check_finalize_plan_coverage.py` ×3 — see
-  `/plans/archive/issues/pm_qg_pre_existing_red_workspace_drift_and_finalize_coverage_2026_08_10.md`, verified
+  `/plans/active/issues/pm_qg_pre_existing_red_workspace_drift_and_finalize_coverage_2026_08_10.md`, verified
   pre-existing at base HEAD). Fix committed locally as `7b84434c0f` (ahead=1) but NOT pushed — quickmerge sentinel
   requires a green PM QG, which the pre-existing red blocks. Joined fleet-wide repo-blocker `RB-5b82f02e` (PM qg_red,
   escalated). **Resume**: when PM QG is green (fleet fixing via the sibling issue's todos), re-run `quality-gates.sh` on

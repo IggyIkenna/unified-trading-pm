@@ -712,17 +712,3 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   `cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`) are already machine-linked via this doc's own
   `depends_on` frontmatter field rather than context_scope, and are each independently context-scouted in their own
   right.
-- **2026-08-10T12:25Z (slot 13, data_engineering, dispatched on the sole open todo — "re-run verify + archive")**:
-  blocker state re-checked. **Blocker 2 (pre-2025-11 duplicate residual) is now RESOLVED** — both fix todos `[x]` and
-  the doc is archived (`plans/archive/2026_08/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`,
-  `status: resolved`). **Blocker 1 (LIGHTER-ZKSYNC collision) remains OPEN** — root-cause todo `[x]` but the Range-2
-  apply todo is still `[ ]`, gated on `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s forward
-  backfill; live-checked the gating VM today: `cefi-fwd-daily-cron-20260809-110236` confirmed still `RUNNING` (created
-  2026-08-09T11:02Z), i.e. the frontier has still not reached the Range-2 window end (2026-07-24) — blocker 1 is
-  genuinely not ready, not stale. So the "once the 2 blockers above resolve" condition for this todo is still NOT met (1
-  of 2 cleared); re-running `verify_cefi_canonical_4surface_2026_07_20.py` now would be premature while the
-  LIGHTER-ZKSYNC wire/canonical dual-write is still live. No work done on the todo itself. Skipping
-  (`reason_code=GATED`, `estimated_unblock_minutes=180`) — genuinely new information (blocker 2 cleared + fwd VM
-  confirmed live), but the todo remains gated on blocker 1's Range-2 apply. **Next dispatch**: re-check blocker 1's
-  Range-2 apply todo / the fwd VM's terminal state; once BOTH blockers are resolved, run the verify → clean-PASS →
-  archive sequence.

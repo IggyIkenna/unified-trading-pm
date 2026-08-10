@@ -68,11 +68,11 @@ drift_direction: advance-code
       (162,692 instruments, 69,292→correct CQGs, 12,051 genuine OTHER), backup:
       `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Repo:
       unified-trading-pm.
-- [x] ✅ [REVIEW] P1. **Reconcile the 2 dead-code issue docs**: both confirmed `[x]` flipped. (1)
-      `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` — archived `status: resolved`, batch10 todo 4:
-      instruments-service@4b55c57b, QG green (`.qg_last_passed_sha=4b55c57b`), verified on origin. (2)
-      `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` — batch10 todo 5:
-      market-tick-data-service@a0b4957e. Repo: unified-trading-pm.
+- [ ] [REVIEW] P1. **Reconcile the 2 dead-code issue docs**
+      (`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`,
+      `issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`): confirm each sole todo is flipped
+      `[x]` with batch10 todo 3/4's commit SHA, and that `quality-gates.sh` was reported green for both deletions. Repo:
+      unified-trading-pm. Done when: both checkboxes are closed-by-citation.
 - [ ] [DOC] P2. **Re-check the 4 Deferred (not-extracted) items** from batch10's own Deferred section — in particular
       whether `data_completion_prediction_2026_07_15.md`'s Phase-B migration has finally gotten its own dedicated plan
       (now 6 audit passes deep without one), and whether `sports_master:Group E` has cleared for
@@ -103,12 +103,6 @@ drift_direction: advance-code
   (was 1). Backup location for future auditability:
   `gs://instruments-store-pred-prd-central-element-323112/_index/backups/reclassify_kalshi_other/`. Verdict: reconciled,
   backup location recorded. Todo 2 flipped.
-
-- 2026-08-10 (slot 8, review, todo 3): Reconciled both dead-code issue docs. (1)
-  `is_polymarket_dead_fixture_cross_reference_2026_07_31.md` — archived `status: resolved`, sole todo `[x] ✅`, batch10
-  todo 4: instruments-service@4b55c57b, QG green, verified on origin. (2)
-  `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` — sole todo `[x] ✅`, batch10 todo 5:
-  market-tick-data-service@a0b4957e. Verdict: both reconciled, no orphaned gaps. Todo 3 flipped.
 
 ## Deferred work — migrated to:
 

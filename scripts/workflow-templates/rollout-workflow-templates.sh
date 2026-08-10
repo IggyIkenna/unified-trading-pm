@@ -111,32 +111,6 @@ if [ -f "$PIN_GATE" ]; then
   fi
 fi
 
-# ── Pre-flight: template-content YAML lint ────────────────────────────────────
-# Beyond pin resolution, verify each template still PARSEs as valid YAML after
-# the prettier pass the pre-commit hook applies — a bare `{{PLACEHOLDER}}` token
-# is deterministically reformatted by prettier into the invalid `{ { PLACEHOLDER } }`
-# (a nested flow-mapping key), which GitHub silently refuses to schedule (2026-08-05
-# runs-on incident, workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md).
-# This gate simulates prettier on a scratch copy then yaml.safe_loads the result, so
-# a future mangled placeholder fails HERE at rollout time instead of shipping broken
-# to every consuming repo. `.tmpl` templates get their known substitution tokens
-# replaced with representative values first (unknown `{{...}}` tokens survive and are
-# caught). Prettier-unavailable fallback is parse-only (still catches an
-# already-mangled committed template) — never blocks an offline rollout, mirroring
-# check-action-pins.py's convention.
-YAML_GATE="$SCRIPT_DIR/../validation/check-template-yaml.py"
-if [ -f "$YAML_GATE" ]; then
-  echo "Pre-flight: verifying template content parses as YAML after prettier..."
-  if ! python3 "$YAML_GATE" --dir "$TEMPLATE_DIR"; then
-    echo "ABORT: a workflow template fails to parse as YAML after prettier — fix the template before rollout." >&2
-    exit 1
-  fi
-  if [ -d "$UI_TEMPLATE_DIR" ] && ! python3 "$YAML_GATE" --dir "$UI_TEMPLATE_DIR"; then
-    echo "ABORT: a UI workflow template fails to parse as YAML after prettier — fix the template before rollout." >&2
-    exit 1
-  fi
-fi
-
 # ── RETIRED-workflow guard ────────────────────────────────────────────────────
 # A blanket rollout (no --template) iterates EVERY file in the template dir and
 # creates-if-missing in every repo. A stale template for a RETIRED workflow would

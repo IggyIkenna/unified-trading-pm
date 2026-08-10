@@ -14,7 +14,7 @@ summary: >-
   `plans/active/` corpus and assert specific violation counts the current churning corpus no longer yields. Effect:
   every slot's PM `quality-gates.sh` is red on the shared host (no `.qg_last_passed_sha` sentinel), so quickmerge
   refuses PM code ships until a fix lands.
-status: resolved
+status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -39,12 +39,8 @@ superseded_by:
 source:
   - slot-29, 2026-08-10, blocking ship of safe_doc_push_isolation_rewrites_slot_commit_identity
 depends_on: []
+archive_exempt: true
 ---
-
-> **ARCHIVED 2026-08-10 — resolved.** Both fix todos done. Root cause was `_pm_root.py` not prioritizing explicit
-> `--workspace-root` over the `__file__` anchor (fix `465ea24093`), which broke the tests' own tmp_path fixtures; the
-> finalize-plan-coverage tests were restored to run against a fixed fixture corpus (`8a7b1860a0`). Verified: full PM
-> `quality-gates.sh` green at LDR HEAD `79171795f2` (1925 passed, 0 failed).
 
 # PM quality-gates.sh red on 8 pre-existing live-corpus tests
 
