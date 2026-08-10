@@ -978,11 +978,14 @@ provider; it is a genuine 846-line DeFi UI UAT walkthrough). KEEP (unchanged): t
 `coverage-matrix`, `*/per-strategy-acceptance`, `*/smoke-test-baseline`, `LIVE_ODDS_PROVIDERS`, scripts READMEs). No
 MIGRATE-TO-CODEX; no codex target needs creating.
 
+## Deferred work — migrated to:
+
+- unified-api-contracts DELETE half (L332-339): delete 4 `docs/` twins, SCHEMA_GOVERNANCE rewrite, 3 mirror refs.
+- deployment-service DELETE half (L825-828): delete 4 files. PARKED ibkr-gateway-infra (L818): owner call pending.
+
 ## Progress Log
 
 - **context-scout 2026-08-01**: populated/refreshed context_scope (5 entries).
-- **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- swapped the superseded consolidation issue for
-  the Phase-5 enforcement checker `check_repo_docs_ssot.py`, this plan's own real deliverable, since prior scope was
-  codex/plan-only.
-- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
-- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-03**: refreshed (5 entries) — swapped superseded consolidation issue for
+  `check_repo_docs_ssot.py`.
+- **context-scout 2026-08-05, 08-07**: re-scouted both; unchanged (5 entries).

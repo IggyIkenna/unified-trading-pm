@@ -109,7 +109,7 @@ jobs:
           gcloud builds triggers run "${PROJECT_NAME}" \
             --project="$GCP_PROJECT" \
             --region="$CLOUD_BUILD_REGION" \
-            --substitutions="_VERSION=${VER},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+            --substitutions="_VERSION=${VER},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading-system,_REPO_NAME=${REPO},_ENV=${ENV}" \
             --format="value(metadata.build.id)" \
             2>/tmp/gcp_build_err.txt
           TRIGGER_EXIT=$?
