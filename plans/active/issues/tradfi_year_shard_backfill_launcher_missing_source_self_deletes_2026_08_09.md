@@ -249,14 +249,20 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       change is needed. The residual post-fix recurrence check is split out below as its own standalone follow-up (it
       was previously embedded mid-paragraph here as an unparseable inline checkbox that the backlog regen could never
       have picked up as a separate task — fixed by giving it a real top-level bullet).
-- [ ] [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (`deployment-service@391ff7f5`, 2025+2026
-      gap per the third finding above), check whether the same RSS-spike/heartbeat-freeze signature recurs. If it does
-      NOT recur, this confirms "machine-type fix was sufficient, no watchdog change needed" (the working hypothesis as
-      of 2026-08-09). If it DOES recur (even on the bigger machine), THEN implement one of the two original remedies
-      (raise `--min-age` for this launcher class, or add incremental per-date progress logging) against real post-fix
-      evidence. As of 2026-08-09T~09:53Z no ES_OPT VM has launched since the fix landed (07:38:54Z) — slot-22 is
-      actively mid-retry on the sibling P1 action item above; this check should piggyback on that retry (or a subsequent
-      one) rather than triggering a dedicated launch. Repo: deployment-service.
+- [x] ✅ [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (`deployment-service@391ff7f5`,
+      2025+2026 gap per the third finding above), check whether the same RSS-spike/heartbeat-freeze signature recurs. If
+      it does NOT recur, this confirms "machine-type fix was sufficient, no watchdog change needed" (the working
+      hypothesis as of 2026-08-09). If it DOES recur (even on the bigger machine), THEN implement one of the two
+      original remedies (raise `--min-age` for this launcher class, or add incremental per-date progress logging)
+      against real post-fix evidence. **Done 2026-08-10 (slot 18)**: 3 post-fix ES_OPT VMs launched today (all
+      2026-only). VM 1 (`tradfi-bf-es-opt-light-2026-20260810-113302`, e2-highmem-4, 61 min life) shows the signature
+      did NOT recur: RSS cycled normally (464MiB→24GiB→6.5GiB, median 8GiB, 102 samples), CPU at normal single-core
+      levels (p50=100% on 4 vCPU, max=174%), both PIPELINE_HEARTBEAT and run.log ResourceProfiler remained active
+      throughout, 16 dates processed (2026-01-02→2026-01-26), 319,826 rows written, PROGRESS.json showed
+      last_completed_date advancing. The pre-fix signature (RSS spike to 8-10GiB then BOTH run.log AND heartbeat sidecar
+      freeze in lockstep) was absent. VMs 2+3 (4 min life each) were killed externally mid-first-fetch but with active
+      heartbeats — also NOT the OOM-hang pattern. **Machine-type fix confirmed sufficient; no watchdog change needed.**
+      Repo: deployment-service.
 - [x] [INFRA] P2. ✅ **2026-08-09, slot-12 (infra)** — **historical-manifest-provenance cross-check DONE: structurally
       impossible for the broken launcher to have ever written a "captured" row.** `_tradfi-ohlcv-launcher-lib.sh`
       (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not
@@ -418,6 +424,20 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   this item's own stated remedies (raise watchdog `--min-age` for this launcher class, or add incremental per-date
   progress logging).
 
+- **data_engineering (slot 18) 2026-08-10T~17:45Z**: Picked up the `[DATA] P2` post-fix ES_OPT re-observation task.
+  Found 3 post-fix ES_OPT VMs launched today (2026-08-10, all 2026-only, all on e2-highmem-4). VM 1
+  (`tradfi-bf-es-opt-light-2026-20260810-113302`, 61 min life, 11:33→12:34Z): RSS cycled normally (464MiB→24GiB→6.5GiB,
+  median 8GiB, 102 samples), CPU p50=100% on 4 vCPU (25% total, normal single-core workload), both PIPELINE_HEARTBEAT
+  (every 60s, last at 12:31:02Z) and run.log ResourceProfiler (every 30s, last at 12:30:45Z) remained active throughout
+  — the pre-fix signature (RSS spike to 8-10GiB then BOTH run.log AND independent heartbeat-sidecar blob freeze in
+  lockstep) did NOT recur. 16 dates processed (2026-01-02→2026-01-26), 319,826 rows written, PROGRESS.json showed
+  advancing last_completed_date (2026-01-21). In-VM WATCHDOG_TRACE.log showed mode=size with continuously growing log
+  size (16→26MB across 55 iterations) — the in-VM STALL watchdog also saw normal progress. VM was externally deleted at
+  12:32-12:34Z (not a self-delete from OOM hang — no DEPLOYMENT_FAILED line, no VM_SHUTDOWN_ON_COMPLETION). VMs 2+3
+  (125954/131309, 4 min life each, 12:59→13:03Z and 13:13→13:17Z): killed externally mid-first-fetch (RSS at 7.5-8.5GiB
+  after ~35s of fetch startup) but with active PIPELINE_HEARTBEAT at time of death — also NOT the OOM-hang pattern.
+  **Verdict: machine-type fix (`e2-highmem-4`) confirmed sufficient; no watchdog change evidenced as needed.** Flipped
+  checkbox.
 - **2026-08-09, slot-12 (infra)**: Picked up the `[INFRA] P2` historical-manifest-provenance cross-check action item.
   Traced the actual MTDS CLI failure ordering rather than re-verifying via manifest timestamps alone (a more direct
   proof): `TickDataHandler.process()` (`market_tick_data_service/cli/handlers/tick_data_handler.py:189`, the per-date
