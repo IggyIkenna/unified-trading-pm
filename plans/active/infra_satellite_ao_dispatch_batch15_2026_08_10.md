@@ -133,19 +133,16 @@ corrected, now conflict-clear todo is extracted here.
       `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md` (PM@9db60dd7d4) documents root cause + routing
       convention + sizing decision. `df -h /tmp` 8.0G 3.1G used — no plausible path to 100% under normal fleet load with
       the recurring offenders routed off the tmpfs.
-- [ ] [DOCS] P2. **Reconcile market-data-processing-service's `DEPLOYMENT_GUIDE.md`/`TESTING.md` via redirect stubs, not
-      new content.** Verify `DEPLOYMENT_GUIDE_FEMI.md` and `TESTING_GUIDE.md` genuinely cover what the canonical S5.1
-      filenames would need to say (read both against `/codex/06-coding-standards/documentation-standards.md`'s
-      S5.1/S5.1a required-content scope) — if confirmed, add S5.11-template thin redirect stubs at `DEPLOYMENT_GUIDE.md`
-      and `TESTING.md` pointing at the real content, mirroring instruments-service's already-shipped 6-stub pattern
-      exactly (stub → one-line "Canonical SSOT:" pointer + brief context, not a content fork). If the FEMI/GUIDE docs
-      turn out NOT to fully cover the S5.1-required scope, fall back to filling the specific gap directly instead of
-      forcing a redirect that would be misleading — worker's call, evidenced either way. Done when: both files are
-      either confirmed-adequate redirect stubs or genuinely-filled content,
-      `codex_vs_repo_docs_ssot_audit_2026_06_01.md` is updated to reflect the resolution (its own Appendix/registry
-      entry for these 2 files), and `s5_7_required_docs_gaps_2026_07_29.md`'s corrected todo is flipped `[x]`. Source:
-      `issues/s5_7_required_docs_gaps_2026_07_29.md` (corrected todo, 2026-08-10) /
-      `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (DELETE classification + redirect targets). Repo:
+- [x] ✅ [DOCS] P2. **Reconcile market-data-processing-service's `DEPLOYMENT_GUIDE.md`/`TESTING.md` via redirect stubs,
+      not new content.** — **MOOT per operator ruling BLK-2b076fa9 (2026-08-10, applied 08:45).** This todo was drafted
+      (06:11) BEFORE that ruling, which is newer + specifically on-point for exactly these 2 files: option A **DELETE
+      wins, NO redirect stubs needed** — `DEPLOYMENT_GUIDE_FEMI.md`/`TESTING_GUIDE.md` already cover the real content,
+      and the SSOT audit's 2026-07-27 ground-truthed registry classifies `DEPLOYMENT_GUIDE.md`/`TESTING.md` as DELETE.
+      The plan's bulk activation (12:10) did not amend this todo; the pre-task conflict check surfaced the contradiction
+      (BLK-e2c5b647) and the operator confirmed A. `s5_7_required_docs_gaps_2026_07_29.md`'s corrected todo is already
+      `[x]` CLOSED under the same ruling. Done when (satisfied): no redirect stubs created; SSOT audit registry already
+      reflects DELETE for both files. Source: `issues/s5_7_required_docs_gaps_2026_07_29.md` (corrected todo,
+      2026-08-10) / `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (DELETE classification + redirect targets). Repo:
       market-data-processing-service.
 
 ## Operator approval gate
@@ -188,3 +185,11 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
   0 orphans via the lighter linkage-check pre-filter). This run's fuller 17-agent Phase-1 Workflow found 2 genuinely
   AO-eligible, conflict-clear candidates among the 9 orphaned_never_touched verdicts. Paired with
   `infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md` in the same run per the finalize-plan-coverage rule.
+
+- **2026-08-10 (slot-3, infra)**: Flipped todo 2 `[x]` as **MOOT per operator ruling BLK-2b076fa9**. Pre-task
+  conflict-check surfaced a direct contradiction between this todo (add S5.11 redirect stubs at MDPS
+  `docs/DEPLOYMENT_GUIDE.md`/`docs/TESTING.md`) and the newer, on-point ruling BLK-2b076fa9 (applied 08:45, after this
+  plan's 06:11 draft): option A **DELETE wins, NO redirect stubs needed**; `DEPLOYMENT_GUIDE_FEMI.md`/`TESTING_GUIDE.md`
+  already cover the real content, and the SSOT audit registry (`codex_vs_repo_docs_ssot_audit_2026_06_01.md` line 874)
+  classifies both files DELETE. Escalated as BLK-e2c5b647; operator confirmed A. No redirect stubs created; `s5_7`
+  corrected todo already `[x]`-CLOSED under the same ruling.
