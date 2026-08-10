@@ -248,3 +248,86 @@ the todo-8 section above already found STALE vs this derivation. The family docs
 family-doc→runtime parser exists and none needs building. If the execution plan wants the family docs themselves to be
 runtime-read, that would be NEW work (nothing consumes them today) — the cheaper, already-machined path is updating the
 existing `archetypes/*.md` frontmatter the boot gate already enforces.
+
+## 2026-08-10 — FINAL DECISION ARTIFACT: family → latency → deployment_profile → premium coverage (audit todo 10)
+
+**Status: BINDING.** This is the consolidated decision artifact the paired execution plan
+(`/plans/active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`) implements against. It folds the
+per-archetype derivation (section above) and the premium-budget coverage check (audit todo 8 section) into one mapping
+with **no remaining judgment calls**. The row-level per-archetype table in the derivation section above is authoritative
+for individual archetypes; this section is the family-level contract its todos enumerate.
+
+### Consolidated family → deployment_profile → premium-coverage mapping
+
+| Family doc                                               | # archetypes | Latency category                     | Required deployment_profile           | min_sla_tier | Does premium's 40ms `latency_budget_ms` cover the family's real requirement? | Binding constraint / notes                                                                                        |
+| -------------------------------------------------------- | ------------ | ------------------------------------ | ------------------------------------- | ------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `market-making.md`                                       | 10           | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — real E2E <100ms exceeds 40ms                                        | Decision segments alone (tick <50ms + signal <50ms = 100ms) already exceed 40ms before venue fill.                |
+| `arbitrage-structural.md`                                | 8            | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — <200ms stat-arb / <300ms cross-exchange exceed 40ms                 | Cross-venue leg-and-hedge gap is the binding constraint.                                                          |
+| `carry-and-yield.md` — basis / staking-basis (multi-leg) | 8            | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — inter-leg gap <500ms operating target exceeds 40ms                  | Spot/perp + staked-basis hedge gap; decision E2E <40s is NOT the constraint.                                      |
+| `carry-and-yield.md` — single-sided yield/staking        | 2            | `Medium`                             | `distributed`                         | `standard`   | YES — seconds-to-minutes within premium                                      | `YIELD_ROTATION_LENDING` / `YIELD_STAKING_SIMPLE`; no hedge leg.                                                  |
+| `ml-directional.md`                                      | 2            | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — <200ms / <1s exceed 40ms                                            | Options-synthetics delta-hedge gap; event-settled cross-venue best-odds freshness.                                |
+| `rules-directional.md`                                   | 3            | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — <200ms / <1s exceed 40ms                                            | No model-inference leg (features→rule→exec, faster than ML); options delta-hedge + in-play odds freshness.        |
+| `stat-arb-pairs.md`                                      | 3            | `Low`                                | `co_located_vm`                       | `premium`    | **NO** — <200-300ms exceed 40ms                                              | Cross-venue leader/lagger gap; same-venue ATOMIC pairs bounded by the Atomic primitive.                           |
+| `vol-trading.md`                                         | 19           | `Medium` (2 intra-family edge cases) | `distributed` (2 ⚠️ under evaluation) | `standard`   | YES — <15s within premium                                                    | Edge cases `VOL_MARKET_MAKING` / `VOL_0DTE_GAMMA_SCALPING` have a ms-realm delta-hedge gap — see contract item 4. |
+| `event-driven.md`                                        | 1            | `Medium`                             | `distributed`                         | `standard`   | YES — <7s within premium                                                     | Seconds-scale time-bounded reaction; pre-positioned entry.                                                        |
+| `portfolio.md`                                           | 4            | `High`                               | `distributed`                         | `standard`   | YES — <60s within premium                                                    | Minutes-to-daily cadence; allocation directives, not trades.                                                      |
+
+### Binding implementation contract (execution plan — no judgment left open)
+
+1. **Every `Low`→`co_located_vm` archetype declares `min_sla_tier: premium` and `co_location: [execution, strategy]`.**
+   (Execution is already always-isolated; strategy isolation is the differentiator — the §6 table's
+   `execution: isolated / strategy: shared OK` cells for these rows must become `strategy: isolated`.) Premium is
+   REQUIRED even though its 40ms budget does not cover the family's real E2E — the binding constraint for these families
+   is the inter-leg execution gap, which is delivered by co-location (`in_memory` transport between exec+strategy) +
+   premium's `min_isolated_services`, not by the 40ms `latency_budget_ms` number.
+
+2. **The premium-40ms-vs-reality gap is a REAL, unresolved framework gap** (audit todo 8 verdict). The execution plan's
+   derivation logic MUST surface it as an explicit warning/exception whenever an active archetype's real requirement
+   exceeds the active tier's `latency_budget_ms` — never silently under-provision (execution plan todo 6). Reference
+   overrides: MM <100ms, arb <200-300ms, basis/ML/rules/stat-arb inter-leg gap ms-realm — all exceed premium 40ms.
+
+3. **Interpretation ruling for `latency_budget_ms`**: it is the DECISION-segment budget (tick-to-signal +
+   signal-to-order routing), NOT a total-E2E promise. `order-to-fill` is venue-controlled (20-70ms CeFi floors, per the
+   family docs' venue tables) and excluded from the SLA contract. Under this reading the Low families still exceed 40ms
+   on their decision segments alone (MM 50+50=100ms), so the gap stands — it is documented, not silently absorbed.
+
+4. **`client-isolation-sla-and-runtime-profiles.md` §6 `topology_requirements` changes** (10 current rows → full derived
+   set):
+   - FIX the **7 INCONSISTENT rows** to `co-location: yes`, `min SLA: premium`, `strategy: isolated`:
+     `ARBITRAGE_STRUCTURAL`, `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT`, `CARRY_BASIS_PERP`,
+     `CARRY_STAKED_BASIS`, `RULES_DIRECTIONAL` (currently the weakest at basic → premium), `STAT_ARB_PAIRS`.
+   - RESOLVE the `EVENT_SETTLED_SPORTS` cross-cutting label (not an archetype enum): split it into the underlying
+     archetypes (`ML_DIRECTIONAL_EVENT`, `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` — all
+     `Low`→`co_located_vm`) or remove the label row.
+   - ADD the **~37 missing rows** at their derived `deployment_profile` + tier (all Low→premium/co-located;
+     Medium/High→standard/distributed). `EVENT_DRIVEN` and the 4 `PORTFOLIO_*` rows are part of this set. Use the
+     per-archetype table in the derivation section above as the row-by-row source.
+   - KEEP `MARKET_MAKING_CONTINUOUS` (already correct) and `VOL_TRADING` (distributed-consistent) unchanged.
+   - **VOL edge cases**: evaluate `VOL_MARKET_MAKING` + `VOL_0DTE_GAMMA_SCALPING` for a `co_located_vm` override
+     (ms-realm delta-hedge inter-leg gap). **Default if evidence is inconclusive: keep `distributed` (family default)
+     and document the deferral** — do not block the rest of the rollout on this evaluation.
+
+5. **Runtime-enforced `archetypes/*.md` `topology_requirements` frontmatter is STALE and must be corrected in the SAME
+   change** (this is the surface `topology_enforcement.py::load_topology_requirements()` actually boots against — audit
+   todo 9 verdict):
+   - Correct to premium/co-located: `CARRY_BASIS_PERP` (currently 150ms/standard), `RULES_DIRECTIONAL_CONTINUOUS`
+     (500ms/basic), `ML_DIRECTIONAL_CONTINUOUS` (150ms/standard), `STAT_ARB_PAIRS_FIXED` (150ms/standard),
+     `ARBITRAGE_PRICE_DISPERSION` (150ms/standard).
+   - FIX the **5 INVALID `min_sla_tier` enum values** that raise on the `SLATier()` cast under enforcement: `high` ×4
+     (`ARBITRAGE_MEV_BACKRUN`/`SANDWICH`/`JIT_LIQUIDITY`/`LIQUIDATION_BUNDLE`) and `ultra-premium` ×1
+     (`MARKET_MAKING_QUEUE_MICROSTRUCTURE`) → all `premium`.
+   - The MM family archetype docs (10/20/30/40ms, premium, co-located) already match the derivation — leave unchanged.
+
+6. **Family docs stay the human-readable spec layer; the runtime link is the `archetypes/*.md` frontmatter** — no
+   `families/*.md` parser is to be built (audit todo 9 verdict). The execution plan's new `deployment_profile` field on
+   the strategy archetype registry, the `required_by_archetypes` reverse-index in `runtime-topology.yaml`, and the union
+   derivation must read values that MATCH this table.
+
+### Explicitly NOT decided here (out of scope for the execution plan's first pass)
+
+- **Recalibrating `premium.latency_budget_ms` (40ms)** to match reality — the gap is surfaced as a warning; changing the
+  SLA tier number is a separate commercial/architectural decision, not an execution-plan todo.
+- **Auto-applying infra changes** — the execution plan's derivation todos are read-only plan-computing; applying is a
+  later, separately-gated step.
+- **The VOL edge-case override** — deferred per contract item 4 (default `distributed` unless the evaluation finds
+  decisive evidence).
