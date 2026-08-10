@@ -170,11 +170,14 @@ Two independent causes, both now fixed:
       (closed/archived/record-only)" but that doc carries 1 open `[SCRIPT] P2` (widen the phantom audit to the full
       ~47-bucket kind×AG matrix). Re-verified still wrong 2026-08-10. **Done when**: the line reflects the target's real
       open-todo count.
-- [ ] [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
-      `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`. The
-      resolving evidence is already cited in `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 3 —
-      re-verify each against the real artifact (do not flip on the parked doc's say-so alone), then flip. **Done when**:
-      each of the 3 is either `[x]` with cited evidence or explicitly re-confirmed still open.
+- [x] ✅ [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
+      `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` —
+      unified-trading-pm@3fa34e2475. Items 2 (DP-FETCH-009 `[VERIFY] P1`) and 4 (code-fix `[REVIEW] P2`) were already
+      `[x]` — confirmed by direct doc read. Item 1 (DP-VM-003 `[OPERATOR] P1`) flipped `[x] ✅ [DATA] P1`: live
+      `gcloud compute instances describe` confirmed VM `mtds-backfill-odds-smallchunk14-20260809` RUNNING
+      (asia-northeast1-c, created 2026-08-10T09:29:02Z), matching the independent verification already recorded in this
+      plan's Progress Log (todo 11, slot 22). Item 3 was already extracted (prose, no checkbox). All 4 items resolved;
+      `archive_exempt: true` added — doc is the operator-visible historical-blast-radius record.
 - [ ] [DOCS] P3. **Fix the stale Phase 7 wording in `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md`**
       (~line 202): its Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
       "STILL OPEN — prod is silent...", but Phase 7 closed 2026-08-07. Re-verified still stale 2026-08-10. **Done
