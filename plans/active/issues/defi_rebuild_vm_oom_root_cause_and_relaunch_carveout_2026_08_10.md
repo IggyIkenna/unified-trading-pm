@@ -195,6 +195,17 @@ would mean this diagnosis was WRONG or incomplete (e.g. a second, independent me
 relaunching a 3rd time on a guess, and page the operator for real before any further attempt, per RB-INFRA- RELAUNCH's
 un-carved-out default.
 
+## Addendum — two SPOT preemptions, switched to on-demand (2026-08-10T~10:34Z)
+
+The `-093118` relaunch above was itself SPOT-preempted twice within ~90s of boot (`compute.instances.preempted`, zero
+`run.log` ever written) — a relaunch to `-101545` hit the identical signature (preempted twice within ~70s, again zero
+log). Two consecutive immediate preemptions on the same prefix within the hour indicates genuine `e2-standard-8` SPOT
+capacity scarcity in `asia-northeast1-c` right now, not bad luck — and this is an availability problem, not a code bug,
+so it doesn't fit RB-INFRA-RELAUNCH's root-cause-diagnosed carve-out (there is no fix to ship for "no spot capacity").
+Rather than a 3rd blind identical SPOT retry, relaunched with `ON_DEMAND=true`
+(`canonical-migration-defi-rebuild-20260810-113426`, non-preemptible, verified `RUNNING`) — the launcher's existing
+opt-out for exactly this case. Fresh watchdog armed for this instance name.
+
 ## Pointers
 
 - Full evidence trail:
