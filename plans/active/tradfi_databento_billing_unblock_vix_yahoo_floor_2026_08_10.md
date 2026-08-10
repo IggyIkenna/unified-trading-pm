@@ -160,7 +160,12 @@ discipline for whoever executes these:
       pulls both succeeded); this todo is the exact re-feed work that gate would have blocked in practice — now
       genuinely runnable." Repo: unified-trading-pm.
 
-- [ ] [DOCS] P1. **Add VIX futures to the MVP-of-MVP in-scope list — operator decision 2026-08-10**
+- [x] ✅ [DOCS] P1. **Add VIX futures to the MVP-of-MVP in-scope list — operator decision 2026-08-10** —
+      unified-trading-pm@9e2041f7ba. VIX futures row + rationale landed in
+      `plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (in-scope table row, rationale
+      citing the existing `launch-tradfi-bf-cfe-ohlcv-1m.sh` CFE launcher + the 2026-08-10 live-verification evidence of
+      57 real `XCBF.PITCH VX.FUT` rows, the sampler translation-bug caveat, and the out-of-scope bullet removed;
+      frontmatter summary updated to drop VIX futures from the November-gated list).
       (`plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`). Grep-check:
       `grep -c "VIX futures (CBOE, VX.FUT)" <file>` — skip if ≥1. In the "## In scope — proceed now" table, add a new
       row:
