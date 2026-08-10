@@ -191,3 +191,9 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   conflict-check (2026-07-26): sole todo bundles ~5 distinct deliverables across 4 repos, explicitly recommended to
   become its own scoped plan/epic, not one bounded outcome. Flagging (not a verdict change): this P0,
   data-correctness-tagged doc has sat unpromoted 3+ weeks past its own recommendation.
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: still unpromoted as of today — 3 audit
+  passes (07-30/08-03/08-06) all independently reached the same conclusion with zero action taken since. Given the
+  severity (P0, data-correctness) and the elapsed time, escalated to the operator now rather than re-stamping a 4th
+  identical verdict: `BLK-8bb28da4` (options A-D, recommendation A — promote now, `assigned_vm: planning`). Not creating
+  the wrapper plan myself — that is exactly the "ask before creating" call this doc's own prior audits already deferred
+  to the operator.
