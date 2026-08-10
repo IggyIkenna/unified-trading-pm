@@ -20,7 +20,7 @@ related:
 created: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2.0
@@ -284,30 +284,30 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       direction is SM ← vm-0, NOT apply-to-host). Agent-side secret writes are permission-blocked by design.
 
       **STAGED 2026-08-08 (operator ruling, ao round-5 apply session item 22): "Operator will run it - give exact
-                  staged commands."** Verified against the live `refresh_env_from_sm.sh` (its own `fetch_blob()`/usage header)
-                  before writing this, not guessed. Run entirely on vm-0 (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22) as one pass:
-                  ```bash
-                  cd "${WORKSPACE_ROOT}/agent-orchestrator"
-                  # 1. Fetch the current SM blob (same two-cloud fallback refresh_env_from_sm.sh itself uses):
-                  TMPFILE="$(mktemp)"; chmod 600 "$TMPFILE"
-                  trap 'rm -f "$TMPFILE" "${TMPFILE}.new"' EXIT
-                  { aws secretsmanager get-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --query SecretString --output text 2>/dev/null \
-                      || gcloud secrets versions access latest --secret=ORCHESTRATOR_ENV_LOCAL --project=central-element-323112; \
-                  } > "$TMPFILE"
-                  # 2. Replace the blob's ORCHESTRATOR_JWT_SECRET line with vm-0's own LIVE .env.local value (the direction this
-                  #    todo requires -- SM catches up to vm-0, not the reverse):
-                  LIVE_JWT_LINE="$(grep '^ORCHESTRATOR_JWT_SECRET=' .env.local)"
-                  grep -v '^ORCHESTRATOR_JWT_SECRET=' "$TMPFILE" > "${TMPFILE}.new"
-                  echo "$LIVE_JWT_LINE" >> "${TMPFILE}.new"
-                  mv "${TMPFILE}.new" "$TMPFILE"
-                  # 3. Write back to BOTH clouds (both are kept in sync per the blob's own two-cloud design):
-                  aws secretsmanager put-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --secret-string "file://$TMPFILE"
-                  gcloud secrets versions add ORCHESTRATOR_ENV_LOCAL --project=central-element-323112 --data-file="$TMPFILE"
-                  # 4. Verify (dry-run, no writes) -- expect ALL keys including JWT to report "keep" now that SM matches vm-0:
-                  bash scripts/refresh_env_from_sm.sh
-                  ```
-                  The `trap` removes the temp file on exit regardless of success/failure. Step 4's dry-run output is the
-                  done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write).
+                      staged commands."** Verified against the live `refresh_env_from_sm.sh` (its own `fetch_blob()`/usage header)
+                      before writing this, not guessed. Run entirely on vm-0 (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22) as one pass:
+                      ```bash
+                      cd "${WORKSPACE_ROOT}/agent-orchestrator"
+                      # 1. Fetch the current SM blob (same two-cloud fallback refresh_env_from_sm.sh itself uses):
+                      TMPFILE="$(mktemp)"; chmod 600 "$TMPFILE"
+                      trap 'rm -f "$TMPFILE" "${TMPFILE}.new"' EXIT
+                      { aws secretsmanager get-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --query SecretString --output text 2>/dev/null \
+                          || gcloud secrets versions access latest --secret=ORCHESTRATOR_ENV_LOCAL --project=central-element-323112; \
+                      } > "$TMPFILE"
+                      # 2. Replace the blob's ORCHESTRATOR_JWT_SECRET line with vm-0's own LIVE .env.local value (the direction this
+                      #    todo requires -- SM catches up to vm-0, not the reverse):
+                      LIVE_JWT_LINE="$(grep '^ORCHESTRATOR_JWT_SECRET=' .env.local)"
+                      grep -v '^ORCHESTRATOR_JWT_SECRET=' "$TMPFILE" > "${TMPFILE}.new"
+                      echo "$LIVE_JWT_LINE" >> "${TMPFILE}.new"
+                      mv "${TMPFILE}.new" "$TMPFILE"
+                      # 3. Write back to BOTH clouds (both are kept in sync per the blob's own two-cloud design):
+                      aws secretsmanager put-secret-value --secret-id ORCHESTRATOR_ENV_LOCAL --secret-string "file://$TMPFILE"
+                      gcloud secrets versions add ORCHESTRATOR_ENV_LOCAL --project=central-element-323112 --data-file="$TMPFILE"
+                      # 4. Verify (dry-run, no writes) -- expect ALL keys including JWT to report "keep" now that SM matches vm-0:
+                      bash scripts/refresh_env_from_sm.sh
+                      ```
+                      The `trap` removes the temp file on exit regardless of success/failure. Step 4's dry-run output is the
+                      done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write).
 
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
@@ -509,9 +509,9 @@ bans. Fleet VMs (setup-token env files) are unaffected.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
   **2**, matching. The `[CREDS] P0` SM-secret-write item is fully staged with exact operator-run commands (2026-08-08
   ruling: "Operator will run it") — an agent-side secret write, permission-blocked by design. Took a fresh second look
-  at the `[DESIGN] P0` dirty-worktree-resolution item per the 2026-08-07 marker's own flagged uncertainty: grepped
-  codex for whether the 4-step policy (QG→quickmerge / fix→re-QG / escalate / operator-sanctioned hard-reset) has since
-  been built elsewhere — found only the adjacent-but-distinct fresh-spawn dirty-state resolution
-  (`resolve_dirty_state`, FM2/FM3/FM8, already covered/cited in this same doc) and no implementation of the "committed-
-  able but unverified WIP" chain this item specifically describes. Still genuinely open, unbuilt design work — 4th
-  consecutive audit pass reaching the same conclusion, now with an actual second look performed, not just deferred.
+  at the `[DESIGN] P0` dirty-worktree-resolution item per the 2026-08-07 marker's own flagged uncertainty: grepped codex
+  for whether the 4-step policy (QG→quickmerge / fix→re-QG / escalate / operator-sanctioned hard-reset) has since been
+  built elsewhere — found only the adjacent-but-distinct fresh-spawn dirty-state resolution (`resolve_dirty_state`,
+  FM2/FM3/FM8, already covered/cited in this same doc) and no implementation of the "committed- able but unverified WIP"
+  chain this item specifically describes. Still genuinely open, unbuilt design work — 4th consecutive audit pass
+  reaching the same conclusion, now with an actual second look performed, not just deferred.

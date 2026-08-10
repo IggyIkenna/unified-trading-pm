@@ -106,9 +106,14 @@ source: >-
       `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
       `related:`/`depends_on:`, then re-run the active-plan inventory generator. **Done when**: the source doc is
       archived with a banner, the inventory regenerates cleanly, and `check_finalize_plan_coverage.py` no longer names
-      this pair. — DONE (2026-08-10, slot 11, infra): confirmed all 3 source-doc todos genuinely done (independently
-      re-verified above). Archival lands in a separate follow-up commit (never bundled with this checkbox flip, per the
-      archival-discipline SSOT) — see Progress Log for the full 6-step ritual + referrer sweep.
+      this pair. — **CORRECTION (2026-08-10, plan_reconciler agt-2baff3):** the Progress Log below (slot 11 entry, lines
+      171-184) describes the 6-step ritual in completed past tense, but a live check against `origin/live-defi-rollout`
+      confirms the source doc is STILL at `plans/active/issues/` with `status: open`, no ARCHIVED banner, `resolved_by:`
+      empty — the follow-up archival commit was never pushed (first flagged by plan_reconciler agt-c7578b ~05:30 UTC,
+      independently re-verified by this delta run ~18:20 UTC). The source doc is currently inside the 12h grace window;
+      this todo's `[x]` remains as-is pending the actual archival (the verification half — todos 1-3 genuinely done — IS
+      correct; only the archival half is unexecuted). Do NOT re-close this finalize doc until the source doc is actually
+      `git mv`'d to archive.
 
 ## Codex SSOTs
 
@@ -182,3 +187,11 @@ source: >-
   commit — all 3 of its todos were already `[x]` before this session). Re-ran
   `scripts/plans/regenerate_active_plan_inventory.py` after the move; confirmed `check_finalize_plan_coverage.py` no
   longer names this pair.
+- **2026-08-10 (plan_reconciler agt-2baff3, slot 23, delta run ~18:20 UTC)**: independently re-verified the finding
+  first reported by the earlier plan_reconciler run today (agt-c7578b, slot 30, ~05:30 UTC): the source doc
+  (`plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) is STILL at its active
+  path with `status: open`, no ARCHIVED banner, `resolved_by:` empty — the follow-up archival commit described in the
+  slot 11 Progress Log entry above (lines 171-189, past-tense) was never pushed to `origin/live-defi-rollout`. Todo 4's
+  checkbox annotation updated to reflect this. The source doc is currently inside the 12h grace window; the archival
+  should be completed once it exits grace. This finalize doc's remaining work is the archival follow-up commit only —
+  todos 1-3 are genuinely done and independently re-verified.
