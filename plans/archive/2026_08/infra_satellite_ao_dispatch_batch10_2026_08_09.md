@@ -14,7 +14,7 @@ summary: >-
   identify/stop or reap the writer, and add a free-space alert
   (`issues/shared_host_home_filesystem_full_2026_07_26.md`). Both source docs stay `assigned_vm: NA` — each retains
   genuine judgment-call/operator-gated remainder not extracted here.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -23,14 +23,14 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, satellite-docs, batch-10, vm-launcher, disk-space, monitoring, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -65,6 +65,13 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 10
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 3 todos done. Finalize plan
+> (`infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`) reconciled both distinct source docs the 3 todos cite
+> (`session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` todo,
+> `shared_host_home_filesystem_full_2026_07_26.md`'s 2 `[INFRA]` todos — neither source doc itself archived, both retain
+> genuinely open items by design), then archived this plan via the standard 6-step ritual. Finalize archived alongside
+> at `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
 
 ## Why this plan exists
 

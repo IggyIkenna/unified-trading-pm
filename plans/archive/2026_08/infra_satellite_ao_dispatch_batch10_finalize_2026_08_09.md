@@ -10,7 +10,7 @@ summary: >-
   `[DATA] P2` open-ended-investigation items untouched), checks whether either source doc is now an archival candidate
   (expected: NOT — both retain genuinely open items), then runs the standard 6-step archival ritual on the batch pair
   itself.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -19,13 +19,13 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, finalize, batch-10, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,10 +41,9 @@ depends_on: [infra_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 locked_by:
 locked_since:
-archive_exempt: true
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -57,6 +56,12 @@ source: >-
 ---
 
 # Infra satellite AO batch 10 — finalize
+
+> **🟢 ARCHIVED 2026-08-10** — all 3 todos done: reconciled both distinct source docs the batch's 3 todos cite
+> (`session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` todo,
+> `shared_host_home_filesystem_full_2026_07_26.md`'s 2 `[INFRA]` todos), confirmed neither source doc is an archival
+> candidate (both retain genuinely open items by design), then archived the parent via the standard 6-step ritual in
+> this same commit. Parent archived to `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.md`.
 
 Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
 `infra_satellite_ao_dispatch_batch10_2026_08_09.md`'s todos are done — this plan can never dispatch early.

@@ -29,7 +29,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
   ]
 created: 2026-07-26
 author: unknown

@@ -19,7 +19,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [infra, disk-space, shared-host, fleet-wide, blocking]
-related: [/plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md]
+related: [/plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.md]
 created: 2026-07-26
 author: unknown
 priority: P1

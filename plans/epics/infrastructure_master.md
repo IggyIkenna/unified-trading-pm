@@ -61,8 +61,6 @@ related_plans:
   - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md
   - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
-  - ../active/infra_satellite_ao_dispatch_batch10_2026_08_09.md
-  - ../active/infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch12_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md
@@ -695,15 +693,6 @@ fleet workflow templates into unified-trading-ci reusable workflows
 ### [`infra_consolidated_closeout_2026_07_25`](../active/infra_consolidated_closeout_2026_07_25.md)
 
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra)
-
-### [`infra_satellite_ao_dispatch_batch10_2026_08_09`](../active/infra_satellite_ao_dispatch_batch10_2026_08_09.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra)
-
-### [`infra_satellite_ao_dispatch_batch10_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 10 —
-finalize (reconcile source-doc checkboxes + archive)
 
 ### [`infra_satellite_ao_dispatch_batch13_2026_08_09`](../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md)
 

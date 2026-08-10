@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 311 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -1034,7 +1034,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) **[complete]** — Keep the UI quality-gate
   build cache warm so incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (29)
+### infrastructure (27)
 
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
@@ -1063,14 +1063,6 @@ by hand._
   — shared_ci_workflow_repo_extraction_2026_08_06.md extracted the 2 files every repo calls via `uses:` (the actual
   cross-repo dependency surface) into unified-trading-ci. It deliberately left alone a SECOND, larger class: ~9 more
   workflow…
-- [`infra_satellite_ao_dispatch_batch10_2026_08_09`](./infra_satellite_ao_dispatch_batch10_2026_08_09.md) — Tenth
-  AO-dispatch batch for the `infra` topic tranche, produced by a manual satellite-batch-extraction pass (mirrors
-  `/ag-closeout-audit`'s pattern) over the 14 NA docs the 2026-08-08 infra RECLASSIFY sweep found zero whole-doc
-  candidates…
-- [`infra_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md)
-  — Gated closeout for `infra_satellite_ao_dispatch_batch10_2026_08_09.md`, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
-  `scripts/quality_gates/check_finalize_plan_coverage.py`).…
 - [`infra_satellite_ao_dispatch_batch11_2026_08_09`](./infra_satellite_ao_dispatch_batch11_2026_08_09.md) — Eleventh
   AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-08-09,
   second run of the day — slot 9, dispatch agt-c74a01). Single source:…
