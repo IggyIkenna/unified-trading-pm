@@ -242,11 +242,19 @@ depends_on: []
           season), should be faster than per-date entities like INJURIES.
         - **No code shipped** — pure operations (VM stop + strategy pivot).
 
+      - **2026-08-10 (slot 28, data_engineering, ~16:33Z–16:45Z)** — STANDINGS VM confirmed working:
+        - VM `af-backfill-20260810-162910` boot complete at ~16:33Z, first progress `2020-06-06` at 16:35Z. Steady
+          progression: 16:38Z `2020-06-08` → 16:40Z `2020-06-12` → 16:42Z `2020-06-15` → 16:44Z `2020-06-18`. No stall —
+          13 dates in ~9 min (~1.4 dates/min). **Single-entity mode CONFIRMED as the working approach.**
+        - ETA at current pace: ~2258 days / 1.4 dates/min ≈ 26.9 hours to completion (~2026-08-11 19:00Z). Pace may
+          improve as season-scoped caching reduces redundant API calls for later seasons.
+        - **No code shipped** — pure monitoring.
+
 ## Deferred work after 2026-08-10 ~16:29Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | Just launched, RUNNING, `e2-standard-8`              | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2020-06-18`, ~1.4 dates/min, ETA ~27h      | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
