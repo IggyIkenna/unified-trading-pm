@@ -718,8 +718,10 @@ it.
 > `SlotRow`.** The premise of the paragraph below — _"Main has no `SlotRow`"_ — no longer holds: `main_agent_keeper`
 > `_sync_main_slot_row` keeps a genuine `SlotRow(slot_id=0)` current every keeper tick, sourced from main's own
 > `AgentRow` (see "main is a first-class slot" at the end of this doc). The `_main_pct()` floor mechanism described here
-> STILL runs in code — its collapse into the ordinary `_read_pct()` slot path is the issue's todo 5, not yet done — but
-> the structural reason it existed (a row-less main with no self-report floor at all) is gone.
+> has since been COLLAPSED into the ordinary `_read_pct()` slot path (issue todo 5, `agent-orchestrator@bef2f6b`):
+> `_read_pct` now applies the same probe-vs-self-report floor (max of {self-report, probe}, ratchet-up persisted) to
+> every target — main included — while the keeper writes main's raw self-report to the SlotRow; the special case is gone
+> along with its structural reason.
 
 **Main's `AgentRow` floor — the other half of the fix.** Every WORKER already had a self-reported floor: `_read_pct`
 took `max(SlotRow.context_used_pct, probe)`, so a poisoned/under-reading probe could only ever be overridden upward by
