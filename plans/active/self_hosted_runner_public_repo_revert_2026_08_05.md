@@ -11,7 +11,7 @@ summary: >-
   a private repo). PM is now in scope for the same revert this plan already does for the other 17.
 status: active
 nature: process
-asset_group: [ci, infrastructure]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

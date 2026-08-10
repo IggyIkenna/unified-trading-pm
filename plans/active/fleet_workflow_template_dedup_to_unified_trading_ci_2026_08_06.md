@@ -13,7 +13,7 @@ summary: >-
   in each calling repo.
 status: active
 nature: process
-asset_group: [ci, infrastructure]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

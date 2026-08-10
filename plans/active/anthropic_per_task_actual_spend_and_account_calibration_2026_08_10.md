@@ -131,13 +131,18 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       (pre-compaction turn resolves to correct account despite claude_session_id now pointing at post-compaction
       session; both pre+post turns agree) and `test_two_intervals_same_agent_different_sessions` (same account across a
       compaction split). See Progress Log.
-- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
       second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count.
+      count. — agent-orchestrator@ff2f1c5 (server/deepseek_usage.py: `scan_usage_across_transcripts` — global
+      `message.id` dedup across files, first-occurrence-wins; wired into `scan_account_transcripts` which clips to the
+      account window). **Verified 2026-08-10 (slot 19)**:
+      `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` (same message.id in two files → one counted
+      turn) and `test_scan_account_transcripts_dedups_and_clips_to_the_window` both pass; 2/2 dedup tests green. See
+      Progress Log.
 - [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
       session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
       per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
@@ -739,3 +744,19 @@ was never flipped. Verified:
   pass.
 - Consumers wired: `scan_account_transcripts` uses the interval map (todo 1 of this plan), so the calibration walker now
   resolves post-compaction turns correctly.
+
+### 2026-08-10 — Todo 3 (global message.id-deduped transcript walker) complete + verified (slot 19)
+
+Todo 3's code was already shipped (agent-orchestrator@ff2f1c5,
+`server/deepseek_usage.py::scan_usage_across_transcripts`) but the checkbox was never flipped. Verified:
+
+- **Walker**: `scan_usage_across_transcripts(paths)` walks MULTIPLE transcript files with GLOBAL `message.id` dedup —
+  first occurrence wins (deterministic: paths in input order, then line order). This is the account-level counterpart to
+  `scan_session_usage`'s within-file dedup, and it survives resume/replay copies (the CLI's local line `uuid` is
+  regenerated on replay; `message.id` is the stable per-API-call key). Wired into `scan_account_transcripts`, which
+  clips the deduped result to the account window.
+- **Done-when both met**: `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` proves the same `message.id`
+  in two files yields ONE counted turn; `test_scan_account_transcripts_dedups_and_clips_to_the_window` proves the walker
+  dedups AND clips to a known window. Both pass (2/2 dedup tests green).
+- The ~47% duplicate-turn problem this solves (588,821 dups vs 649,255 real) is the exact magnitude
+  `measure-claude-usage-value.py`'s docstring recorded — now handled at the walker level for the calibration path.

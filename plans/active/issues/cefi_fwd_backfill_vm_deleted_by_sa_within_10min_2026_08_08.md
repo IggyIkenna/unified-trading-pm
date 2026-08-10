@@ -561,3 +561,11 @@ before launch.
   re-filing a duplicate `/blocked` since slot-25's is presumably still open and nothing new to add. Releasing this task
   via `/skip-current-task` so this slot drains other queued work instead of sitting idle/blocked on an unchanged ~14-16h
   external wait; task stays queued for a slot dispatched closer to the ETA.
+- **slot-29 (data_engineering) 2026-08-10 ~16:50Z — forward-gap + cron-host re-verification (re-check for the [INFRA] P1
+  gate)**. Bounded list-only probe (`probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end 2026-08-10`,
+  reader-exact path) → **0 objects for all 7 RAW venues on every day 08-06→08-10 incl. today**. **The daily forward-cron
+  host `cefi-fwd-daily-cron-20260809-110236` is TERMINATED — audit log shows `v1.compute.instances.stop` at
+  2026-08-10T13:34Z by `unified-trading-sa`** — so the "[INFRA] P1" working assumption that "the daily cron's own 08-10+
+  fires cover days ≥08-10 via the tier=daemon fix" does NOT currently hold (nothing landed for 08-10). When the forward
+  backfill runs (once the Tardis slot frees — `cefi-queue-heavy-binancefutu-x17-20260809-083733` still RUNNING), or
+  before relaunching the cron host, RE-PROBE the still-empty days 08-06→08-10 rather than trusting that assumption.

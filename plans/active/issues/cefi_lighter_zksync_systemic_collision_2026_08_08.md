@@ -181,14 +181,47 @@ dates the backfill is still mid-processing, and could race a live write.
       (slot 20, 2026-08-08). Audit script + findings above; determination = (a) self-resolving race, culprit identified
       (`cefi-fwd-20260808-123230`, ETA ~2026-08-12T05:00Z). Zero mutation — audit only, per scope.
 - [ ] [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
-      **BLOCKED until `cefi-fwd-20260808-123230` (tracked in
-      `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`) terminates
-      (~2026-08-12T05:00Z estimated)**. Once terminated: confirm via a fresh spot-check that no NEW LIGHTER-ZKSYNC
-      wire-form `derivative_ticker` objects appear for the dense-run window, THEN pause cron, verify PAUSED, run, verify
-      0 unhandled collisions, resume cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
+      **Original gate (culprit `cefi-fwd-20260808-123230` terminated) is MET — confirmed deleted 2026-08-09T02:13:58Z.**
+      **2026-08-10 dry-run VERDICT: still BLOCKED — genuine unhandled collisions persist** (see Progress Log entry):
+      `would_rename=3524` but the tool logs `Refusing to proceed to --apply while unhandled collisions exist` (e.g.
+      `LIGHTER-ZKSYNC:PERPETUAL:APT-USDC@LIN` etc. on 2026-04-18). The premise that culprit termination clears the
+      collision population is empirically FALSE. Unblock = the BROAD-comparison fix tracked in the new P2 todo below
+      (extend `_confirm_would_patch_duplicate`'s exclusion set per Finding 11), then re-run this apply. Sequence once
+      the fix lands: confirm fresh spot-check, pause cron, verify PAUSED, run, verify 0 unhandled collisions, resume
+      cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
+
+- [ ] [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
+      `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition), then
+      re-run the LIGHTER-ZKSYNC Range-2 dry-run to confirm the FULL collision population resolves to
+      `renamed`/`deleted_dup_source` with 0 remaining STOP-ON-SURPRISE** — repo: market-tick-data-service. Finding 11
+      (2026-08-09, in `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) proved on a 26-pair sample that
+      the HYPERLIQUID/ASTER wire/canonical "collisions" are NOT genuinely-distinct content under this BROAD comparison
+      (0/26 distinct; 23 identical + 3 subset), and the strict `_confirm_would_patch_duplicate` (excludes only
+      `instrument_id`) misclassifies them as genuine collisions — the same pattern the 2026-08-10 Range-2 dry-run now
+      confirms for LIGHTER-ZKSYNC. Done when: fix shipped + a venue-scoped LIGHTER-ZKSYNC dry-run over
+      2026-04-18..2026-07-24 reports 0 STOP-ON-SURPRISE (full population, not just the 26-pair sample). This is the
+      gate-clearing work for the Range-2 apply todo above.
 
 ## Progress Log
 
+- **2026-08-10 (slot 6, data_engineering, dispatched on the Range-2 apply todo)** — Executed the todo's gate sequence.
+  (1) Culprit gate MET: `cefi-fwd-20260808-123230` confirmed terminated (deleted 2026-08-09T02:13:58Z per tracking doc
+  line 226; forward backfill reached full coverage through 08-05, past the 07-24 window end). Fresh spot-check of
+  LIGHTER-ZKSYNC `derivative_ticker` objects on dense-window dates shows the stable pre-existing population, no live
+  writer into the historical window. (2) Fresh same-run soft-delete retention check on `market-data-tick-cefi-prd-…`:
+  **604800s (7 days)** — delete-safety path (c) qualified. (3) Paused consolidator cron
+  `uts-prod-manifest-consolidator-market-data-cefi-cron`, verified `PAUSED`. (4) Launched the venue-scoped
+  `cefi-late-renames` dry-run (`canonical-migration-cefi-late-renames-20260810-161902`, `--venue LIGHTER-ZKSYNC`,
+  2026-04-18..2026-07-24). First two SPOT launches were preempted in the early-boot blind window (46s / 2.5min, zero
+  mutation); relaunched `ON_DEMAND=true`. **Dry-run VERDICT: still blocked** —
+  `Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3524, unresolved_wire: 19}` but the tool
+  logs "Refusing to proceed to --apply while unhandled collisions exist" with 40+ genuine-collision ERROR lines
+  (content-differs, e.g. `LIGHTER-ZKSYNC:PERPETUAL:APT-USDC@LIN` / `ARB-USDC@LIN` / `BTC-USDC@LIN` on 2026-04-18) — the
+  SAME strict-compare misclassification Finding 11 documented for HYPERLIQUID/ASTER. The apply CORRECTLY refused (no
+  mutation; the run also OOM'd rc=137 on e2-standard-8 after the collision verdict, consistent with Finding 6's
+  bigger-machine note). (5) RESUMED cron + verified `ENABLED`. **Conclusion**: the "culprit-terminates → collisions
+  clear" premise is falsified; the unblock is the BROAD-comparison fix (new P2 todo above), not re-attempting the apply
+  as-is. Skipped this task (`reason_code=GATED`) pending that fix.
 - **2026-08-08** — Filed during the `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` resume, slot 18.
   EXTENDED-STARKNET applied clean; LIGHTER-ZKSYNC blocked on this systemic collision after a safe single-day exclusion
   attempt proved insufficient; proceeding to BYBIT-SPOT/COINBASE-FUTURES independently.

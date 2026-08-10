@@ -42,8 +42,6 @@ context_scope:
   [
     /plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
-    market-tick-data-service/docs/canonical-write-conventions.md,
-    market-tick-data-service/docs/GCS_PATHS.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     market-tick-data-service/scripts/audit_bybit_futures_chain_shape2_duplicates_2026_07_13.py,
   ]

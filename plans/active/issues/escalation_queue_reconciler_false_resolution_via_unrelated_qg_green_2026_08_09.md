@@ -47,6 +47,7 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-09
 locked_since:
+archive_exempt: true # 2026-08-10 — all 4 todos resolved, but doc serves as operator-visible historical-blast-radius record per its own stated scope (§Disposition item 1)
 source: >-
   escalation_queue_reconciler's routine 3-hourly check (slot 11, task agt-21fadd) was triaging an unrelated wall when it
   found this bug in the reconciliation mechanism itself, filed BLK-2a812311 asking whether to (A) apply a scoped fix now
@@ -117,11 +118,13 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **CONFIRMED STILL OPEN 2026-08-09 (operator, interactive)** — checked live AO backlog status via
-      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` (the sanctioned read-only SSM path): no
-      `DP-VM-003` entry anywhere in the current queued/dispatched backlog. Confirms the doc's own framing — it was
-      auto-closed without any worker ever looking at it, and nothing since has picked it up through another channel.
-      This is a real gap, not a stale finding — the stalled backfill VM still needs an actual manual relaunch.
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-10 — DP-VM-003 relaunched and progressing.** Verified live: VM
+      `mtds-backfill-odds-smallchunk14-20260809` RUNNING in asia-northeast1-c, created 2026-08-10T09:29:02Z (fresh
+      relaunch by another actor after the 08:36Z SPOT-preemption STOP), `run.log` tail shows chunk 45/2171 progressing
+      (league=ARGENTINA_PRIMERA, date=2020-10-11), 0 CHUNK_FAILED/OOM/exit=137 since relaunch. Full live evidence +
+      Progress Log entry in `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` (todo 11, slot 22,
+      2026-08-10T16:10Z). Retagged `[OPERATOR]` → `[DATA]` per `task_template.md` finding U — a named-launcher relaunch
+      is not operator-gated; both cloud identities are IAM-self-service.
 - [x] ✅ [VERIFY] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
       investigated — **it has, extensively**:
       `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` carries a 25+-dispatch escalation
@@ -173,3 +176,10 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md` — the code-fix prerequisite it was waiting on has landed.
   Whole-doc RECLASSIFY not applied — the `[OPERATOR] P1` DP-VM-003 confirm/relaunch item stays open and genuinely
   operator-tagged.
+- **2026-08-10 (slot 17, infra, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-eab99d85fdc7`, todo 9)**: Verified +
+  flipped the 3 resolved checkboxes per `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 3. Items 2
+  (DP-FETCH-009 `[VERIFY] P1`) and 4 (code-fix `[REVIEW] P2`) were already `[x]` — confirmed by direct doc read. Item 1
+  (DP-VM-003 `[OPERATOR] P1`) flipped `[x] ✅ [DATA] P1`: live `gcloud compute instances describe` confirmed VM
+  `mtds-backfill-odds-smallchunk14-20260809` RUNNING (asia-northeast1-c, created 2026-08-10T09:29:02Z), matching the
+  independent verification in `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` Progress Log
+  (todo 11, slot 22). All 4 todos in this doc are now resolved (2 flipped `[x]`, 1 extracted to batch7, 1 flipped here).

@@ -51,7 +51,6 @@ context_scope:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/epics/strategy_master.md,
     e2e-testing/scripts/paper_trading/,
-    e2e-testing/scripts/paper_trading/RECOVERY.md,
   ]
 ---
 

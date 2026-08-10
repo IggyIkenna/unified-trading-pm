@@ -40,13 +40,6 @@ tags:
   ]
 related:
   [
-    instruments-service/docs/ADAPTER_ARCHITECTURE.md,
-    instruments-service/docs/CEFI_INSTRUMENTS.md,
-    instruments-service/docs/DEFI_INSTRUMENTS.md,
-    instruments-service/docs/PREDICTION_INSTRUMENTS.md,
-    instruments-service/docs/SETUP_GUIDE.md,
-    instruments-service/docs/SPORTS_INSTRUMENTS.md,
-    instruments-service/docs/TRADFI_INSTRUMENTS.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
@@ -659,12 +652,12 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   5 asset groups; sole open item is an open-ended meta-tracking pointer over prose-only findings sections, with an
   explicit 'Operator decisions required' section. Reaffirmed across 4 prior passes.
 - **round9-reclassify-satellite-sweep 2026-08-09** (cefi tranche): KEEP-NA, valid — reaffirms the same-day
-  na-eligibility-audit verdict above. Additionally checked per-item satellite-extraction potential on the doc's
-  smaller bounded-looking prose findings (A3 `.env.example` secret-name drift, A4 stale `feature_count=672` literal,
-  D5 dead `_resolve_*` helpers, C4 Solana venue key-vs-field mismatch): each either partially overlaps an
-  already-tracked finding elsewhere in the corpus in a way that needs dedicated de-duplication (e.g. D5's
-  `venue_resolution.py` and C4's `solblaze.py:95/98` both have near-hits in `tradfi_satellite_ao_dispatch_batch7/8`
-  and `issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md` respectively, covering adjacent-but-not-identical
-  bugs in the same files) or is small enough that extracting it alone risks a false sense of coverage over this doc's
-  much larger prose-only B-F sections. No clean, conflict-free extraction found this pass — reporting near-zero yield
-  rather than forcing a partial extraction. Doc stays `assigned_vm: NA`.
+  na-eligibility-audit verdict above. Additionally checked per-item satellite-extraction potential on the doc's smaller
+  bounded-looking prose findings (A3 `.env.example` secret-name drift, A4 stale `feature_count=672` literal, D5 dead
+  `_resolve_*` helpers, C4 Solana venue key-vs-field mismatch): each either partially overlaps an already-tracked
+  finding elsewhere in the corpus in a way that needs dedicated de-duplication (e.g. D5's `venue_resolution.py` and C4's
+  `solblaze.py:95/98` both have near-hits in `tradfi_satellite_ao_dispatch_batch7/8` and
+  `issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md` respectively, covering adjacent-but-not-identical bugs
+  in the same files) or is small enough that extracting it alone risks a false sense of coverage over this doc's much
+  larger prose-only B-F sections. No clean, conflict-free extraction found this pass — reporting near-zero yield rather
+  than forcing a partial extraction. Doc stays `assigned_vm: NA`.

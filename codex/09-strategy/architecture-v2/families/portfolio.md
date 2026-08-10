@@ -90,6 +90,49 @@ cadence-run strategies; tactical overlay may reduce to 10 000 ms for intraday re
 - **No direct instrument positions**: Portfolio strategies never emit `TRADE` instructions. Any instrument-level
   position arises inside child strategies.
 
+## Latency Requirements
+
+**Category: `High`** — minutes-scale, cadence-driven, live mode only (batch mode has no latency requirements; it replays
+historical data at compute speed). Baseline: the archived
+[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
+table — SUPERSEDED as a doc, but its **Yield Optimization** row (Tick-to-Signal <300 s / Signal-to-Order <30 s /
+Order-to-Fill 12–24 s L1 / Total E2E <360 s, Category **High**) is the closest analog (scheduled, batch-adjacent
+decision cadence). **Derivation reasoning** (per the 2026-08-10 audit rubric at
+[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
+the operator's ms-realm ruling did NOT name portfolio, and — decisive here — the doc's OWN content already declares the
+category explicitly in the Alpha thesis: "**Latency profile:** Higher-latency-tolerant. Portfolio archetypes re-run on
+scheduled cadences (daily / weekly / intraday for tactical overlay) — not on each market-data tick. `latency_budget_ms`
+is set to 60 000 (1 min) for cadence-run strategies; tactical overlay may reduce to 10 000 ms for intraday reweights."
+That is unambiguously the `High` pattern (minutes acceptable, batch-adjacent), consistent with the archived Yield
+Optimization / Funding Rate Harvest High rows. The family's output is `AllocationDirective` events to re-weight child
+strategies, not per-tick trade decisions — there is no tick-to-signal race by construction.
+
+| Segment         | Budget          | Notes                                                                                                                                                                                                                                                                |
+| --------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tick-to-Signal  | < 60 s          | Portfolio-state snapshot (realized vols, factor loadings, regime indicators) → allocation re-weight. Cadence-run (daily/weekly); not per-tick. `latency_budget_ms` = 60 000 for cadence-run strategies (doc's Alpha thesis).                                         |
+| Signal-to-Order | < 30 s          | `AllocationDirective` emission → child-strategy weight update. Child strategies execute the actual trades on their own latency profiles; portfolio's "order" is the directive event, seconds-scale is ample.                                                         |
+| Order-to-Fill   | N/A (no direct) | Portfolio archetypes never emit `TRADE` instructions — instrument positions arise inside child strategies (doc's "No direct instrument positions"). There is no portfolio-level order-to-fill; the child families' Order-to-Fill segments apply to their own trades. |
+| **Total E2E**   | **< 60 s**      | Cadence budget (`latency_budget_ms` = 60 000); tactical overlay may tighten to 10 000 ms for intraday reweights. Well inside the minutes-scale High envelope.                                                                                                        |
+
+**Deployment implication:** `High` ⇒ the `distributed` deployment profile per the `/configs/runtime-topology.yaml`
+`deployment_profiles` category mapping, referencing
+[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
+§ 6. There is currently **no `PORTFOLIO` row in the § 6 `topology_requirements` table** — the paired deployment-profile
+derivation todo
+([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+todo 8) should add one consistent with `distributed`: execution `isolated` (execution is always isolated), strategy
+`shared OK`, co-location `no`, min SLA `basic`-or-`standard` (a cadence-driven meta-allocator has no latency guarantee
+to sell; `basic` is the honest floor, `standard` is defensible). Nothing in this family needs co-location.
+
+### Decision latency vs. inter-leg execution gap
+
+Not applicable in the ms-realm sense. Portfolio archetypes emit `AllocationDirective` events to re-weight child
+strategies on a scheduled cadence — there is no lead/lag leg pair whose inter-leg gap captures the edge, which is the
+scenario the 2026-08-10 operator ruling ("lag leg followed by the lead leg is ms timing") targets. The family's
+"execution" is a directive, not a two-sided trade. The only sub-archetype with a tighter window is
+`PORTFOLIO_TACTICAL_OVERLAY` (intraday reweights, `latency_budget_ms` reduced to 10 000 ms) — still seconds-scale, well
+outside the sub-second/low category, and its reweight still goes through a directive rather than paired instrument legs.
+
 ## Related documents
 
 - Portfolio Allocator service: [`../cross-cutting/portfolio-allocator.md`](../cross-cutting/portfolio-allocator.md)
