@@ -3906,7 +3906,7 @@ fi
 # (never default-retry unknowns); branch on HTTP status directly BEFORE ever consulting the
 # classifier for the permanent-vs-transient split. Single global ratchet (baseline=2, LOWERED
 # 2026-08-10 from 3: the 2026-08-09 bump existed solely for kaiko.py, and the Kaiko provider was
-# removed fleet-wide by operator ruling — /plans/active/kaiko_provider_removal_2026_08_10.md.
+# removed fleet-wide by operator ruling — /plans/archive/2026_08/kaiko_provider_removal_2026_08_10.md.
 # Verified before lowering (rule 11a, a stricter gate must be one the whole fleet already passes):
 # the pattern has exactly 2 CODE sites fleet-wide, both in market-tick-data-service; every other
 # repo has 0, so a baseline of 2 cannot fail them) covers the whole fleet today:

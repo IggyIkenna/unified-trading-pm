@@ -41,6 +41,22 @@ setup() {
   mkdir -p "${WORK}/bin"
   printf '#!/usr/bin/env bash\nexit 0\n' > "${WORK}/bin/sleep"
   chmod +x "${WORK}/bin/sleep"
+
+  # PIN SHARED-INDEX MODE. Every test in this file plants an `index.lock` in the CALLER's
+  # .git and asserts the script reacts to it. Isolated-worktree mode builds its commit in a
+  # private worktree with its OWN index, so the caller's lock is simply irrelevant there and
+  # the contention path under test is unreachable.
+  #
+  # `_sdp_isolation_default()` turns isolation ON for any host labelled `laptop`, which is
+  # where these tests actually run -- so from the day isolation shipped (2026-08-10) this file
+  # stopped testing its own scenario. It did not fail quietly in one direction and pass in the
+  # other: tests 1 and 3 failed (no exit 8, because the escape hatch can never trigger) while
+  # test 2 kept PASSING for the wrong reason (it asserts "the run still succeeds", which an
+  # isolated run does trivially). A green test asserting a negative is the more dangerous half.
+  #
+  # Isolated mode has its own dedicated coverage (test_safe_doc_push_isolated_*.bats); this
+  # file owns the shared-index path, so pin it rather than letting the host label decide.
+  export SDP_ISOLATED=0
 }
 
 @test "a persistent index.lock stops looping after LOCK_CONTENTION_MAX failures and prints the separate-clone escape hatch, exit 8" {
