@@ -396,8 +396,8 @@ NOT AO and are deliberately out of scope here.
       `plan_health` flagged `data_completion_defi_2026_07_15` as CONTRADICTED/superseded by
       `defi_consolidated_closeout_2026_07_18` — which declares the per-instrument re-architecture supersedes the
       batch-model tracks, DeFi capture STOPPED, and backfill GATED on T1–T3 canonicalisation. If that plan never
-      progresses, this park **outlives its reason forever** (a permanent silent park). Operator ruling needed: re-point
-      the unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
+      progresses, this park **outlives its reason forever** (a permanent silent park). Decision needed: re-point the
+      unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
       re-architecture resumes. Source: doc #5 fix-todo 2 + plan_health contradiction output. **Gate**: the owning plan
       (whichever it now is) carries the flip instruction; condition documented; no park without a named live flipper.
       **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` — do NOT action here.**
@@ -937,78 +937,22 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Progress Log
 
-> **Line-cap remediation (2026-08-03)**: entries from this plan's 2026-07-17 authoring through the 2026-07-28 A7 ruling
-> were extracted verbatim to
+> **Line-cap remediation (2026-08-03, round 1)**: entries from this plan's 2026-07-17 authoring through the 2026-07-28
+> A7 ruling were extracted verbatim to
 > `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md` to bring this doc
-> back under the 1000-line hard cap. New entries append below the kept 2026-08-02 entry.
+> back under the 1000-line hard cap. **Line-cap remediation (2026-08-10, round 2)**: entries from the 2026-08-02 marker
+> through the 2026-08-08 Phase-8 measurement entry were extracted verbatim to
+> `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_10.md`. New entries append
+> below the kept 2026-08-09 (round9) entry.
 
-- **na-eligibility-audit 2026-08-02** (re-affirms the 2026-07-30 verdict, unchanged): KEEP-NA, valid — header declares
-  `Human plan — operator session executes it (assigned_vm: NA, never ingested)` /
-  `LOCAL track — operator-driven, never dispatched`. Of its 8 open todos, 4 are explicitly operator-timing-gated
-  (Layer-1 rewire 'do it at last'; plan_reconciler retry 'hold until the other concurrently-landing AO plans settle';
-  role-lifecycle 'Operator-owned timing'; tmux_session_lost root-cause '⛔ SEQUENCED, do NOT start before the
-  prereq-reaper P0 lands'). Flipping `assigned_vm` would dispatch those four alongside the two now-due calendar
-  re-measurements.
-- **na-eligibility-audit 2026-08-03** (ao tranche): **MIXED_NO_CLEAN_FLIP — doc stays NA, per-item read.** In scope
-  because the doc was edited since the 2026-08-02 marker (1000L→877L line-cap remediation extraction, no todo content
-  changed). Applied the per-item rubric fresh: 6 of 8 open items are genuinely VALID_JUDGMENT (4 carry the explicit
-  dated operator-timing citations already named above; the ao_docs_reconciliation close-out and archival-ritual items
-  are ongoing judgment-laden meta-work). But **2 items are clean BOUNDED_RECLASSIFY candidates whose gates have now
-  cleared and were never individually assessed** (only ever audited as part of the whole-doc NA framing) — naming them
-  explicitly so they aren't silently dropped:
-  - Line ~726, Phase 8 residual: re-measure the `tmux_session_lost` rate vs. the 192-events-since-07-18 baseline and
-    record the delta — pure read-only activity_log count query over a comparable window with a stated gate, no design
-    call.
-  - Line ~733, Phase 8 residual: the stale-dispatch invariant 24h spot-check (dispatched count == live-worker-held
-    count) — code + 9 regression tests already shipped (`agent-orchestrator@aa81706`); only the operational proof
-    remains, a pure read-only count comparison with a stated gate.
-
-  This skill's Phase 3 only flips a doc's `assigned_vm` IN PLACE as a whole — it does not carve out a partial-doc
-  satellite the way `/ag-closeout-audit` does for orphans, so the doc stays NA as a whole (flipping would also dispatch
-  the still-genuinely-gated items). Per this doc's own established pattern (8 prior child-plan spin-outs already visible
-  in its "Split-out child plans" table), the correct mechanism for these 2 items — if a human decides to act on this —
-  is a small dedicated satellite plan, not a whole-doc flip. NOT drafted by this audit (outside this skill's Phase 3
-  action set for a MIXED verdict); flagging for a human/future run to decide. Explicitly NOT recommending the Phase-8
-  line-738 `plan_reconciler` item despite its own operator-timing gate having since cleared (all 6 named prerequisite
-  plans now archived) — its content targets a since-deleted mechanism (`typed_agent_sessions`, replaced by
-  `ao_uniform_agent_liveness_contract_2026_07_20.md`) and touches the fleet's most incident-prone subsystem
-  (`WorkerLivenessWatchdog`); it needs a human re-scope pass before it could be safely dispatched, not a mechanical
-  bounded-check.
-
-- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in the Layer-1 recovery SSOT, the
-  `ao_docs_reconciliation` close-out target, and the two source files (`worker_liveness_watchdog.py`,
-  `stale_dispatch.py`) most load-bearing for the still-open Phase 8/LAST P0 items; dropped entries tied to
-  already-archived earlier phases.
-- **na-eligibility-audit 2026-08-04** (tranche `ao`): KEEP-NA re-affirmed, whole-doc (8 open items, still mostly
-  operator/timing-gated per the 2026-08-02/08-03 markers, independently confirmed on a fresh read). **Closes the loop
-  the 2026-08-03 marker left open**: the 2 flagged BOUNDED_RECLASSIFY items (Phase-8 `tmux_session_lost` re-measure +
-  stale-dispatch 24h spot-check) are now extracted into `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 (drafted
-  today by `/ag-closeout-audit ao`) — same two items, independently found. `assigned_vm` stays NA (extraction ≠
-  reclassify-in-place; flipping this doc would also dispatch the other 6 genuinely-gated items).
-- **context-scout 2026-08-05**: re-scouted; context_scope unchanged (6 entries), still accurate.
-
-- **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
-  superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
-- **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
-  2026-08-06 marker (only context-scout touched it 2026-08-07). Of the 8 open items, 4 remain explicitly
-  operator-timing-gated (Layer-1 rewire, plan_reconciler retry hold, role-lifecycle timing, tmux_session_lost
-  sequencing); the 2 Phase-8 re-measure items remain independently extracted into
-  `ao_satellite_ao_dispatch_batch6_2026_08_04.md` todo 1 per the 2026-08-04 marker (not a fresh finding); the
-  `ao_docs_reconciliation` close-out and archival-ritual items remain ongoing judgment-laden meta-work.
-- **2026-08-08 (ao_satellite_ao_dispatch_batch6-001, slot-3)**: Phase-8 items 5+6 measured and flipped `[x]`. (1)
-  `tmux_session_lost` re-measure: pre-fix 2-day window Jul 18-19 = 189 events (~95/day); post-fix 2-day window Aug 6-7 =
-  645 events (~322/day). **VERDICT: rate did NOT drop (~3.4× INCREASE); orphan-reaper hypothesis ELIMINATED; churn hunt
-  resumes.** (2) Stale-dispatch 24h invariant: `dispatched`-status tasks = 6, slots with `current_task` = 6, exact 1:1
-  match, zero orphans; 7 `stale_dispatch_reclaimed` events since 2026-07-26 confirm reclaimer active. **VERDICT: PASS.**
-- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — Prior verdict re-verified, no whole-doc RECLASSIFY.
-  Of the 5 remaining un-extracted open items (365, 474, 479-already-extracted-to-batch10, 677, 807): item 365
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — Prior verdict re-verified, no whole-doc RECLASSIFY. Of
+  the 5 remaining un-extracted open items (365, 474, 479-already-extracted-to-batch10, 677, 807): item 365
   (tmux_session_lost root-cause) stays genuinely open-ended per its own 2026-08-08 re-measure showing the rate
-  INCREASED, not a simple bounded task; item 474 (ao_docs_reconciliation close-out) requires deep cross-doc
-  verification spanning many scattered commits, not a mechanical check; item 677 (Layer-1 producer rewire) is
-  operator-sequenced to run last. Item 807 (prove one plan_reconciler run end-to-end) is flagged, not extracted:
-  `plan_reconciler` graduated to steady-state direct-push 2026-08-09 (see
-  `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`'s Background — 28+ consecutive clean runs
-  2026-08-02→08-09), which makes this item's literal gate (observe a pushed `plan_reconciler/<dispatch_id>` branch)
-  now inapplicable to the current mechanism — closing it properly needs to reconcile the gate's INTENT against the
-  new steady-state facts, not just cite one recent run; left open rather than force a possibly-wrong extraction.
+  INCREASED, not a simple bounded task; item 474 (ao_docs_reconciliation close-out) requires deep cross-doc verification
+  spanning many scattered commits, not a mechanical check; item 677 (Layer-1 producer rewire) is operator-sequenced to
+  run last. Item 807 (prove one plan_reconciler run end-to-end) is flagged, not extracted: `plan_reconciler` graduated
+  to steady-state direct-push 2026-08-09 (see `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`'s
+  Background — 28+ consecutive clean runs 2026-08-02→08-09), which makes this item's literal gate (observe a pushed
+  `plan_reconciler/<dispatch_id>` branch) now inapplicable to the current mechanism — closing it properly needs to
+  reconcile the gate's INTENT against the new steady-state facts, not just cite one recent run; left open rather than
+  force a possibly-wrong extraction.

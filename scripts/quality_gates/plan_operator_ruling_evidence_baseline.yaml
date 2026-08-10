@@ -1,11 +1,7 @@
-unsourced_ruling_baseline: 5
+unsourced_ruling_baseline: 2
 rule: plan-operator-ruling-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
 baseline_violations:
-  - path: plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
-    line: 391
-    phrase: Operator ruling
-    context: "- [x] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_se"
   - path: plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
     line: 407
     phrase: Operator ruling
@@ -15,13 +11,3 @@ baseline_violations:
     phrase: operator ruling
     context: "- [x] \u2705 [DATA] P0. D1 features-onchain-defi is near-empty (3 rows);\
       \ features-del"
-  - path: plans/active/sports_consolidated_closeout_2026_07_19.md
-    line: 720
-    phrase: operator ruling
-    context: "- [x] [DIAG] P2. \u2705 **Conclusion: CONFIRMED EMPTY \u2014 zero real\
-      \ consumers in either"
-  - path: plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md
-    line: 150
-    phrase: Operator ruling
-    context: "- [x] \u2705 [OPERATOR] P1. Ruling, with measured evidence in hand: **KEEP\
-      \ main/revie"
