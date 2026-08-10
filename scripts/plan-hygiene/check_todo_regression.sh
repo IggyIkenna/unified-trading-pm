@@ -33,10 +33,33 @@
 # closure, not a deletion. Count that pattern alongside checkbox lines so following the
 # documented convention doesn't false-positive as a todo loss. Fix for
 # todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md.
+#
+# Ancestor guard (2026-08-10): the origin/live-defi-rollout ref is only a valid comparison
+# BASE when it is an ancestor-or-equal of HEAD — i.e. when the working tree is genuinely on
+# top of that ref (a PR/promote branch, or a local commit on LDR with the origin ref still at
+# the pre-commit state). On a fast-moving shared branch the LOCAL origin ref can be a
+# DESCENDANT of HEAD — a peer pushed after this checkout, or, in CI, a workflow_dispatch on
+# live-defi-rollout re-fetches origin/live-defi-rollout after checkout while the branch keeps
+# advancing. Comparing today's tree against a FUTURE state of the branch inverts the
+# comparison and false-positives as a "todo lost". Seen 2026-08-10: a CI dispatch checked out
+# c00f943f0c (deployment_api_unauthenticated_prod_p0_2026_08_10.md had 5 todos) while the
+# mid-run-fetched origin had advanced to include 29aff230cd, which ADDED 3 todos to that plan
+# → the check reported "origin=8 current=5 lost=3" for a plan whose todos only ever grew. When
+# the base is not an ancestor, skip (matches the existing missing-ref no-op where gh_total
+# falls back to 0); a genuine deletion committed at the tip is still caught by the next
+# promote-PR run, whose origin base is a true ancestor.
 
 set -euo pipefail
 ORIGIN="origin/live-defi-rollout"
 CANCELLED_RE='^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED'
+
+# Early-out guard — see docstring above. Both --only and full-sweep modes skip when the base
+# ref is not an ancestor-or-equal of HEAD (or is absent locally).
+if ! git merge-base --is-ancestor "${ORIGIN}" HEAD 2>/dev/null; then
+  [ "${1:-}" != "--quiet" ] && \
+    echo "⏭  check_todo_regression: ${ORIGIN} is not an ancestor-or-equal of HEAD (a peer/CI push moved the base past this checkout) — origin-compare is meaningless this run, skipping (no-op)"
+  exit 0
+fi
 
 _check_one() {
   # $1 = file path (may be staged working-tree path or corpus-glob path), $2 = repo-relative path
