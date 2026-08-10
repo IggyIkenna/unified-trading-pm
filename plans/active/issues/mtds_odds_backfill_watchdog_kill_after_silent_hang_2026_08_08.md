@@ -160,6 +160,21 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       belongs in the fetch code's timeout handling instead — don't pre-emptively loosen the watchdog threshold without
       more evidence, since a genuinely-hung VM SHOULD be killed. Lower priority than todo 1 (catching a live hang) — a
       threshold change without knowing the actual root cause risks masking a real bug instead of fixing it.
+- [ ] [SCRIPT] P2. **`relaunch_stalled_vm.py`'s automated actuator races the watchdog's own kill and silently fails
+      (found 2026-08-10T01:03Z, escalation `agt-d2322e`).** Its captured `launch_env` carries the ORIGINAL
+      `VM_NAME_OVERRIDE` from `LAUNCH_PARAMS.json`, so a `DP_VM_STALL`-triggered relaunch attempt reuses the SAME
+      vm-name as the VM it's trying to replace. Confirmed live via `gcloud logging read` on `smallchunk14`: two
+      `instances.insert` attempts by the actuator (`23:07:18Z`/`23:12:16Z`) both failed `ALREADY_EXISTS` because the
+      watchdog's own `instances.delete` hadn't landed yet (`23:13:38Z`/`23:14:28Z`) — the actuator never actually
+      relaunches in this race window, and neither `relaunch_stalled_vm.py` nor its caller (`escalation.py`'s
+      `auto_recover` tier) appears to page/file_issue on the `ALREADY_EXISTS` failure (`FAILED` status falls through
+      to `file_issue` per the docstring, but no such issue surfaced for this occurrence) — it just silently no-ops
+      until a human/agent notices and relaunches under a fresh name. Fix: either (a) have the actuator poll/confirm
+      the target VM is actually gone (or generate a fresh timestamp-suffixed name unconditionally, mirroring the
+      manual relaunch convention already used throughout this doc) before attempting `instances.insert`, or (b) treat
+      `ALREADY_EXISTS` as "not yet ready, retry shortly" rather than a terminal `FAILED`. Repo: deployment-service
+      (`scripts/recovery/relaunch_stalled_vm.py`). Not yet root-caused whether `escalation.py` correctly falls through
+      to `file_issue` on this specific failure shape — worth confirming as part of the fix.
 
 ## Progress Log
 
@@ -413,3 +428,34 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   confirmed genuinely created and RUNNING via the launcher's own output (tarball fresh, guard passed); boot-health
   verification via run.log pending as of this entry (background poll in progress, not yet trusted on exit_code alone).
   Todo 1's blocker (no working SSH to catch a live hang) remains unchanged.
+
+- **2026-08-10T01:03Z (`data_pipeline_failure` escalation, `agt-d2322e`, slot 10, repo `deployment-service` — STALE
+  alert on `smallchunk14`, no action taken).** Dispatched with
+  `RELAUNCH vm=mtds-backfill-odds-smallchunk14-20260809 launcher=launch-mtds-sports-odds-backfill-vm.sh` per
+  `rb_infra_relaunch.md` — this is the SAME ninth-occurrence death the entry directly above already documents and
+  already relaunched, not a new event (a distinct escalation id from `agt-adfeaf`'s repeated-dispatch pattern noted in
+  the 2026-08-09T21:52Z entry — the escalation-dedup gap flagged there is recurring across events, not just the one
+  id). Per the pre-task plan/issue conflict-check HARD RULE, grepped `plans/active/issues/` for `smallchunk14` FIRST and
+  found this doc before acting. Verified live state before relaunching (never trust a WARN alert's snapshot once
+  time has passed): `gcloud compute instances list` shows no `smallchunk14` VM (confirmed deleted per the timeline
+  above) and audit-logged two `instances.insert` attempts for that EXACT vm-name at `23:07:18Z`/`23:12:16Z` (principal
+  `unified-trading-sa` via a Cloud Run serverless-robot delegation — the in-image `auto_recover` actuator itself,
+  attempting the relaunch) that both failed `ALREADY_EXISTS` (status code 6) because the original VM was still
+  technically alive at that point — the watchdog's own delete didn't land until `23:13:38Z`/`23:14:28Z`, ~1-6 min
+  later. **This is a genuine, previously-undocumented root-cause gap in the automated actuator**:
+  `relaunch_stalled_vm.py`'s captured `launch_env` (from `LAUNCH_PARAMS.json`) includes the ORIGINAL `VM_NAME_OVERRIDE`,
+  so the actuator's relaunch attempt reuses the exact same vm-name as the still-dying VM instead of minting a fresh
+  timestamped name — it raced the watchdog's slower kill and lost both attempts, silently no-oping (no page, no
+  file_issue fallthrough visible in this doc or the sibling budget-bug doc) rather than actually relaunching. The
+  campaign only kept progressing because a separate autonomous session (entry directly above) independently relaunched
+  under a fresh name (`smallchunk15`) ~10 min after the failed auto-relaunch attempts — confirmed via `gcloud logging
+  read` that `smallchunk15`'s `instances.insert` at `23:24:10Z` came from a `claude-code` agent session, not the
+  in-image actuator. **Confirmed `smallchunk15-20260810` is healthy right now** (heartbeat blob updated `01:02:39Z`
+  against a `01:03:07Z` check, ~30s stale; `run.log` actively processing dates with fresh `PIPELINE_HEARTBEAT` lines;
+  `gcloud compute instances describe` = RUNNING). **Action: none** — relaunching `smallchunk14` (already-deleted,
+  already-superseded) would either be refused by `odds-api-concurrency-guard.sh`'s cap=1 (since `smallchunk15` is the
+  one currently-running odds VM) or, if forced via `--allow-parallel`, would risk repeating the exact
+  `odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md` incident this guard exists to prevent, for no
+  benefit (the main lineage already covers the date range via presence-skip). Did not touch `smallchunk15` or the P1
+  root-cause investigation. **New todo filed below** for the actuator's same-name-collision gap — distinct from this
+  doc's existing silent-hang root-cause todos, since it's about the RECOVERY path, not the hang itself.
