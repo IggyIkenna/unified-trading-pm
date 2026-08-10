@@ -161,6 +161,12 @@ Fix the writers + registry FIRST, then run the delete pass:
 - **2026-08-10 (slot 23, data_engineering)**: Shipped todo 1 — replaced raw build_league_id(country, name) slug with
   registry-first get_league_by_api_football_id(fixture.league.api_football_id) at instruments-service@12cafa1b. Falls
   back non-lossy to build_league_id() when api_football_id is None.
+- **2026-08-10 (slot 23, data_engineering)**: Verified + flipped todo 3. The FOOTYSTATS_HISTORICAL_SEASON_IDS fix was
+  already shipped as part of todo 2's unified-api-contracts@3cca83603 — all 16 suspect competition IDs map to LA_LIGA_2;
+  zero BRAZIL_SERIE_A / ENGLAND_PREMIER_LEAGUE in values; only SEGUNDA_DIVISION remaining is the
+  HISTORICAL_LEAGUE_ID_NORMALISATION_MAP alias. All 3 writer/registry fixes are now in place (todo 1: registry-first
+  league key, todo 2: registry dedupe + FOOTYSTATS migration, todo 3: verified). Todo 4 (gated delete pass) is the sole
+  remaining item — needs a fresh census confirming zero new SEGUNDA_DIVISION writes.
 - **2026-08-10 (slot 25)**: Cross-reference — the plan-level P2 checkbox in
   `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task `sports_closeout_track_x_hygiene-006`)
   tracks the SAME migration completion as this issue's todo 4 (the gated delete pass, `-81828e9c8a94`, currently queued
