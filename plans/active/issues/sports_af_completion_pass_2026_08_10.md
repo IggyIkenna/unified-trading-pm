@@ -438,9 +438,18 @@ depends_on: []
           entire season's standings. Later seasons (2022+) are denser.
         - No code shipped — pure monitoring.
 
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-07` → `2021-11-13` → `2021-11-17` → `2021-11-20`. Cumulative ~4-season-start-date advance across
+          multiple monitoring ticks. Monotonic, forward progress. ~524/2258 days (~23.2%). Heartbeat alive, no
+          `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: season-scoped — each completed season-start-date covers an entire season's standings. Progress remains
+          steady with no stalls.
+        - No code shipped — pure monitoring across compact+resume cycles.
+
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-11-07`, ~511/2258 days (~22.6%)       | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-11-20`, ~524/2258 days (~23.2%)       | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
@@ -450,5 +459,5 @@ depends_on: []
 | **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
 | **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                  | After each VM >30min or terminates |
 
-**Recommended NEXT item**: STANDINGS VM at `2021-11-07` (~22.6%). Monitor for `exit_code=0`; then launch TEAMS →
+**Recommended NEXT item**: STANDINGS VM at `2021-11-20` (~23.2%). Monitor for `exit_code=0`; then launch TEAMS →
 FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
