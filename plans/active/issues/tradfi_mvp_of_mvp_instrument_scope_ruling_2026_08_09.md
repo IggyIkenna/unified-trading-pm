@@ -7,11 +7,11 @@ summary: >-
   narrowed to exactly the instruments needed for the equities-vs-perps basis strategy (Binance-listed equity perps
   launched 2026), **plus the macro/USD-strength backdrop instruments** (CBOE Treasury yield-curve INDEX, FRED macro
   series, KRW/USD, DXY) added by the 2026-08-09 (later same day) follow-up ruling below. Completing the REST of the
-  tradfi MVP universe (full-history equities beyond 2026, CME Treasury BOND FUTURES ZN/ZB/ZF/ZT, VIX futures) to 100% is
-  explicitly GATED until November 2026 — no plan/todo should drive that broader work before then. This doc is the SSOT
-  other tradfi plans point to; it supersedes the "MVP universe" framing in `tradfi_consolidated_closeout_2026_07_18.md`
-  for near-term dispatch purposes only (that doc's full 6-cell definition stays valid as the eventual November target,
-  it is not rewritten).
+  tradfi MVP universe (full-history equities beyond 2026, CME Treasury BOND FUTURES ZN/ZB/ZF/ZT) to 100% is explicitly
+  GATED until November 2026 — no plan/todo should drive that broader work before then. This doc is the SSOT other tradfi
+  plans point to; it supersedes the "MVP universe" framing in `tradfi_consolidated_closeout_2026_07_18.md` for near-term
+  dispatch purposes only (that doc's full 6-cell definition stays valid as the eventual November target, it is not
+  rewritten).
 status: open
 nature: process
 asset_group: [tradfi]
@@ -70,6 +70,7 @@ depends_on: []
 | Macro series (UST curve, TIPS, FedFunds/SOFR, CPI, breakevens, GDP, UNRATE, VIXCLS — ~25 series) | Full history from 2018                               | `yield_curve`/`ohlcv_1d` | FRED                     |
 | KRW/USD spot (FX)                                                                                | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
 | DXY (US Dollar Index)                                                                            | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
+| VIX futures (CBOE, VX.FUT)                                                                       | Full history (2018-11-04 → now, XCBF.PITCH L0 floor) | `ohlcv_1m`               | Databento (XCBF.PITCH)   |
 
 **Rationale**: Binance listed single-stock equity perps in 2026 — the equities-vs-perps basis strategy this is meant to
 feed only needs 2026-forward equities data to test against. S&P futures+options get the full window because the
@@ -85,6 +86,16 @@ sources** (not either/or) — FRED and the CBOE-Yahoo yield-curve index are two 
 third, separate Treasury surface (same Databento/CME venue as ES) — operator ruling 2026-08-09: **stays deferred to
 November**, not part of this in-scope list; do not confuse it with the now-in-scope CBOE yield-curve INDEX above.
 
+**Rationale — VIX futures, added 2026-08-10 (operator decision)**: VIX futures (CBOE/CFE, `XCBF.PITCH` `VX.FUT`) moved
+from the November-gated list into immediate scope. A dedicated launcher already exists —
+`deployment-service/scripts/vm/launch-tradfi-bf-cfe-ohlcv-1m.sh` (`CFE_INSTRUMENT_IDS="VX.FUT"`, window
+2018-11-04→today) — so this needs launch/verify only, not new code. Live-verified 2026-08-10: 57 real
+`XCBF.PITCH VX.FUT` rows pulled (`tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` § "Confirmed
+finding"). **Caveat**: `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (`status: open`) has a confirmed CBOE
+VIX canonical-name (`VIX`→`VX`/`VX.FUT`) translation bug in the CHECKER/sampler tooling — the dedicated launcher above
+uses the raw symbol `VX.FUT` directly and is unaffected, but post-launch coverage verification via the sampler/checker
+may misreport until that separate bug is fixed.
+
 ## Out of scope — gated until November 2026
 
 Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout_2026_07_18.md` § "MVP universe"):
@@ -94,7 +105,6 @@ Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout
 - CME Treasury **bond futures** (ZN/ZB/ZF/ZT, Databento `GLBX.MDP3`) — distinct from the now-in-scope CBOE Treasury
   yield-curve INDEX (Yahoo `ohlcv_24h`) above; registered + launcher-ready today (`CME_ROOTS` already has them) but not
   MVP-tagged in `/codex/02-data/mvp-scope-canonical.md`'s underlier set — deferred, operator ruling 2026-08-09.
-- VIX FUTURE (CBOE).
 - Any FX/commodity futures backfill not named above (the currently-running `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet —
   6A/6B/6C/6E/6J/6L currency futures, 6M/CL/CT/HG commodities — is **entirely out of this scope** and is being killed,
   not relaunched, per this ruling).
