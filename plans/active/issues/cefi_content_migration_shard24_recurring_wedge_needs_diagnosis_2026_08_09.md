@@ -46,6 +46,7 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: infra
 drift_direction: none
 sequential: false
+archive_exempt: true
 locked_by:
 context_scope:
   [
@@ -132,11 +133,12 @@ not `2026-01-07`.
       Verify STARTED <60s + ≥1 progress line/hr (per infra craft north-star — no fire-and-forget) and check back at
       T+90min for either completion, active progress past `2026-01-08`, or a repeat wedge (in which case STOP
       relaunching and treat todo 2 below as blocking). Repo: deployment-service.
-- [ ] [SCRIPT] P3. Only if todo 1 also wedges (3rd wedge on this exact shard): diagnose the shared root cause across
+- [x] ✅ [SCRIPT] P3. Only if todo 1 also wedges (3rd wedge on this exact shard): diagnose the shared root cause across
       `-032606` and `-133746`'s identical "possible wedged worker" signature — check whether shard 24's specific date
       range/file population has an outlier (e.g. one pathologically large/malformed parquet, a specific venue's file
       count spike) that the migration script's per-file loop chokes on, by comparing shard 24's file-count/size
-      distribution against a shard that completed cleanly. Repo: market-tick-data-service.
+      distribution against a shard that completed cleanly. Repo: market-tick-data-service. —
+      market-tick-data-service@483eb895
 
 ## Progress Log
 
@@ -184,3 +186,62 @@ not `2026-01-07`.
   valid terminal state, not a signal to keep relaunching) — no 5th relaunch attempted per the STOP instruction. Todo 2
   (root-cause diagnosis, market-tick-data-service) is now the actionable remaining work; leaving it for dispatch rather
   than absorbing it into this task (different investigation scope, no VM-launcher action left to take here).
+- **2026-08-10 (slot-17, infra)**: Todo 2 diagnosis complete. Compared shard 24 (2026-01-08..15, 85,086 files across 8
+  days, wedged 3/4 attempts) against shard 25 (2026-01-16..23, 79,134 files across 8 days, completed cleanly
+  EXIT_STATUS=0).
+
+  **Method**: Sampled per-day GCS file counts, per-venue distributions, per-data_type volume, and individual file-size
+  distributions for both shards. Read the migration script's stall-detection logic
+  (`market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`) and the latest failed
+  run's `run.log` (-213834, rc=137 at 50,800/85,086 files).
+
+  **Finding 1 — "possible wedged worker" warnings are a red herring, not a wedge signal.** The script's
+  `as_completed(timeout=30.0)` fires this WARNING whenever no future completes within 30s. This is EXPECTED for large
+  parquet files (book_snapshot_5 files are 11-130MB+ compressed, decompress to much larger in-memory DataFrames, and
+  take >30s to download+parse+patch+upload+verify over GCS). The `-213834` run.log proves this: warnings fire repeatedly
+  between healthy `Progress:` lines showing 200-file increments at 8.1-8.2 files/sec — the script was making genuine,
+  continuous progress. The REAL stall detector (`_STALL_TIMEOUT_SEC=900`, 15 min with zero completions) never fired. All
+  3 wedge-shaped deaths were rc=137 (SIGKILL from Linux OOM killer), not the stall timeout.
+
+  **Finding 2 — book_snapshot_5 is the dominant memory driver, and shard 24 has 63% more of it.** Per-data_type volume
+  comparison (single representative day, 2026-01-08 vs 2026-01-16):
+  - book_snapshot_5: shard 24 = 3,790 files / 42.0GB (11.3MB avg) vs shard 25 = 3,388 files / 25.8GB (7.8MB avg) → **63%
+    more data, 46% larger per-file**
+  - trades: shard 24 = 3,566 files / 8.6GB vs shard 25 = 3,183 files / 9.8GB (similar)
+  - derivative_ticker: shard 24 = 2,209 files / 2.0GB vs shard 25 = 2,230 files / 1.8GB (similar)
+  - All other data_types: negligible volume
+
+  The 63% delta holds across all 8 days: shard 24's book_snapshot_5 averages 9.6-11.3MB/file (peak 42.0GB/day on
+  2026-01-08) vs shard 25's 6.1-10.3MB/file (peak 33.1GB/day on 2026-01-20). Shard 24's worst day (42.0GB) is 27%
+  heavier than shard 25's worst day (33.1GB). KRAKEN-FUTURES is the most extreme single-venue outlier: shard 24 has 800
+  KRAKEN-FUTURES files/day averaging 5.3MB vs shard 25's 298 files/day averaging 1.8MB — a 7.6× total data volume
+  difference, reflecting more active futures instruments on that venue in the earlier date window.
+
+  **Finding 3 — No single poison-pill file; this is cumulative RSS creep.** The largest individual files are similar
+  across both shards (DERIBIT trades at 4.4GB/3.8GB, DERIBIT options_chain at 378MB/1.0GB, book_snapshot_5 at
+  130-255MB). No single file triggers the 2 GiB `_MAX_CLAIMED_UNCOMPRESSED_BYTES` ceiling. The pyarrow native pool
+  (`bytes_allocated`) stayed bounded at 3.7-4.0GB throughout the `-213834` run — the existing `release_unused()` every
+  200 files and `gc.collect()` every 50 files ARE working for pyarrow's own pool. But RSS still climbed to OOM-kill
+  despite these mitigations — the memory growth is in Python-managed objects (pandas DataFrames, their internal
+  BlockManagers and backing numpy arrays) that CPython's reference-counting + generational gc can miss when 12
+  concurrent workers each hold live references to recently-processed DataFrames. The cumulative `bytes_read` at time of
+  death (196GB across 50,800 files) confirms the volume: even a small per-file leak/miss compounds rapidly at this
+  throughput.
+
+  **Root cause summary**: Shard 24's book_snapshot_5 data is systematically larger (63% more volume, 46% larger
+  per-file) than comparator shard 25's, which completed cleanly. The migration script's 12-worker ThreadPoolExecutor
+  processes these large order-book-snapshot files concurrently, and Python's memory management cannot reclaim per-file
+  allocations fast enough to stay under the 64GB e2-standard-16 ceiling across an 8-day, ~85K-file corpus. Shard 25
+  stays under the OOM threshold because its lower book_snapshot_5 volume leaves enough headroom. The "possible wedged
+  worker" signature is a diagnostic artifact of the 30s poll timeout, not a genuine thread hang — every death was
+  rc=137, not the 900s STALL-break.
+
+  **Recommended fix (for a follow-up plan; this task is diagnosis-only)**:
+  1. Reduce default workers from 12 to 8 for the `cefi-content-apply` category (or make it env-overridable per-shard
+     based on data density) — `launch-canonical-migration-vm.sh` already supports `WORKERS=N`.
+  2. Add explicit `del df` after the verify step in `migrate_one_file()` and a `gc.collect()` call on the return path
+     for every file (not just every 50).
+  3. Tighten the pyarrow `release_unused()` cadence from every 200 files to every 50 files (same as the existing
+     `gc.collect()` cadence) to release native buffers sooner.
+  4. Raise the 30s `as_completed` timeout to 120s for large-file tolerance, suppressing the misleading "possible wedged
+     worker" warning noise — the 900s STALL timeout is the real safety valve.
