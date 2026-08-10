@@ -133,6 +133,26 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
       record which failure mode was hit on THIS doc (do not attempt to fix the Firebase-creds gap inline; that is the
       other doc's scope) and leave this todo open with the finding, rather than force a false pw:L2 ✓.
 
+      **Re-run result 2026-08-10 (slot-20)**: Confirmed the known caveat — hit the documented
+              Firebase-Admin-creds/dev-server class, NOT a clean pass. `npx playwright test --project=chromium
+              tests/e2e/admin-strategy-assignments.spec.ts` (workers=1, repo default): 1 passed / 2 failed.
+              `app/(ops)/admin/strategy-assignments/page.tsx` is backed by `app/api/v1/admin-strategy-assignments/*`, which
+              `lib/api/mock-handler.ts`'s `realRoutePrefixes` list (`/api/v1/`) deliberately passes through to the real Next.js
+              route — same family the other doc already flagged. Two symptoms observed, both consistent with that doc's
+              "dev server unstable/slow under sustained Playwright load" pattern rather than a clean 500:
+              (a) Tier-1 test — `loginAsAdmin` itself timed out (`waitForURL("**/dashboard**")`, 10s): the login page's
+              `handleLogin` (`app/(public)/login/page.tsx:240`) fetches `/api/v1/users/${email}/application` post-auth before
+              redirecting; direct `curl` of that exact endpoint against a freshly-started `pnpm dev:mock` returned 404 but took
+              4.1s (first-hit on-demand route compile) — under this shared-host Playwright run the combined latency evidently
+              exceeded the 10s login timeout. (b) Tier 2-5 `beforeEach` — login succeeded but
+              `page.waitForLoadState("networkidle")` after `goto('/admin/strategy-assignments')` timed out at 30s, i.e. the
+              page's own `/api/v1/admin-strategy-assignments` GET never let the network go idle. The 3rd test (`ORG_CONFLICT_ON_STRATEGY`)
+              passed in the same run, consistent with `ui-testing-layers.md`'s existing note that shared-host contention produces
+              non-reproducible per-run failure composition. No `pw:L2 ✓` recorded — not fixing the Firebase-Admin-creds gap
+              inline per this doc's own scope note; left for
+              `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` todo 1-2. This todo
+              stays open pending that fix.
+
 ## Codex SSOTs
 
 `/codex/06-coding-standards/ui-testing-layers.md`.
@@ -172,3 +192,8 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   `admin-strategy-assignments`/`e2e_login_persona_handoff` — zero hits. `assigned_role` set to `ui_developer` (was
   unset) to match the `[UI]` tag. Finalize twin:
   `/plans/active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`.
+
+- **worked 2026-08-10 (slot-20, adopted ui_developer craft)**: Re-ran `tests/e2e/admin-strategy-assignments.spec.ts` per
+  todo 3's done-when. Hit the documented Firebase-Admin-creds/dev-server-instability class (1 passed / 2 failed) — full
+  failure-mode detail appended to the todo itself. Did not attempt the Firebase-creds fix inline (out of this doc's
+  scope, per the todo's own instruction); todo stays open. No plan checkbox flip — nothing to flip false.
