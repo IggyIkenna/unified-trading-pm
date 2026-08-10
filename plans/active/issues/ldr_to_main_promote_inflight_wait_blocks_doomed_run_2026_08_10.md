@@ -40,6 +40,7 @@ execution_scope: local-only
 priority: P1
 estimate_class: small
 drift_direction: fix_shipped
+depends_on: []
 ---
 
 # PM ldr-to-main-promote inflight_wait wedges on a doomed run
