@@ -384,3 +384,21 @@ Continuation-only session (post-compaction resume). Step 1 audit: `ahead=0` afte
 references, no secrets, no chat-only findings. Steps 2-7 no-op — nothing created, discovered, or flipped. Todo 7 remains
 done (`eb096a69b7` + `98c8bd10f3`). Deliberately dropped: same workspace files (regenerable, session-specific). **Where
 to resume**: Todo 5 (P2 DATA, BITGET-FUTURES backfill retry).
+
+### 2026-08-10 — Slot 14 Session 10 (Todo 5 pickup)
+
+**Todo 5 — P2 DATA, MDPS 1h BITGET-FUTURES backfill retry (2026-04-20..04-30).**
+
+Discovered the backfill was **already dispatched** by the batch-5 worker (slot 22, 2026-08-09) — VM
+`mdps-backfill-cefi-20260810-115835` (SPOT, `venue=bitget-futures`, `timeframes=1h`, `2026-04-20..04-30`, prod bucket
+`market-data-tick-cefi-prd`). Launched 2026-08-10 11:58 UTC (startup finished 12:01 UTC).
+
+**Progress at 13:33 UTC**: 3/11 days done (04-20, 04-21, 04-22 — `trades` + `derivative_ticker` candles succeeding,
+`book_snapshot_5` mostly STALE_DATA as expected for April data). Currently on 04-23. ETA ~17:30 UTC (~6h total for 11
+days at ~33 min/date).
+
+**Background monitor armed**: task `b7lh7s141` polls every 5 min for `DEPLOYMENT_COMPLETED`/`DEPLOYMENT_FAILED` or VM
+termination (8h timeout). When it fires: manifest verification → checkbox flip.
+
+No relaunch needed — the existing VM IS the retry (the `--timeframes` fix from `deployment-service@8f1feb4eb9e4` is live
+in this VM's command: `MDPS_TIMEFRAMES='1h' MDPS_VENUES='BITGET-FUTURES'`).
