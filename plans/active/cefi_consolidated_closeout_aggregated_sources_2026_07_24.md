@@ -816,6 +816,18 @@ here is NOT dispatch, per this doc's own standing convention.
   — sole remaining item is a standing observability tripwire, not actionable now (classified 2026-08-06,
   orphaned_never_touched, not AO-eligible).
 
+## Digest additions for cefi-tagged linkage orphans (added 2026-08-10, ag-closeout-audit cefi run)
+
+`check_ag_closeout_linkage.py` flagged these cefi-tagged docs as having no graph/mention path to the cefi closeout
+family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27, dispatch agt-dab448).
+
+- [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_10.md) —
+  parked findings from the 2026-08-10 audit run; 0 parked findings, 1 orphaned doc extracted into batch18.
+- [`cefi_satellite_ao_dispatch_batch18_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md) —
+  batch18 draft (status: draft, single-item extraction from `mdps_manifest_staleness_check_inverted_2026_08_10.md`).
+- [`cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md)
+  — paired finalize plan (status: active, gate_on_depends: true).
+
 ## Todos
 
 - [ ] [DOC] P2. **Keep this discoverability index synced as sibling docs close out** — this doc's own "Aggregated source

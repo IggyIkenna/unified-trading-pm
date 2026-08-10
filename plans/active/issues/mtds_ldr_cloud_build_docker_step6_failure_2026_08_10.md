@@ -13,7 +13,7 @@ summary: >-
   easy to conflate (see § "Do not conflate" below).
 status: open
 nature: issue
-asset_group: [cefi, cross-cutting]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer]
