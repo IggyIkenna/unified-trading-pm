@@ -107,3 +107,8 @@ incur real metered billing the moment they're queried.
 - 2026-08-09 (slot-19): Filed as a scoped subscription ask (ICE + OPRA only), not a blanket Databento credential ask —
   re-verified the core 3-dataset subscription is already live and working before filing, per the pre-task plan/issue
   conflict-check rule (Step 4's original framing was too broad for Databento specifically).
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:069d64e66684fa12]: **KEEP-NA,
+  valid -- first audit pass.** A well-scoped, self-correcting credential/subscription ask -- the doc explicitly
+  re-verified before filing that Databento's core subscription is NOT actually blocked (live `databento-api-key`, 17
+  running backfill VMs), narrowing the ask to only the genuinely-excluded ICE/OPRA datasets. This is a real
+  billing/subscription commitment decision (`CREDENTIAL_BLOCKED`), not a missing key -- correctly `assigned_vm: NA`.

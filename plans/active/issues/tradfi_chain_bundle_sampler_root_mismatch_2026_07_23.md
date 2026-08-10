@@ -497,3 +497,9 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:96cb4205dc09e786]: **KEEP-NA,
+  valid -- fresh full read, 9th consecutive audit pass to confirm.** All 3 open todos unchanged since 08-09 (todo 1
+  DEPENDENCY_BLOCKED on the not-yet-built reverse-translation code; todo 2 MISCLASSIFIED_LIKELY_AO_ELIGIBLE, already
+  promoted "RECLASSIFY-READY" by the 08-08 pass but correctly gated at the DOC level by todos 1+3, extraction into a
+  satellite AO-dispatch batch recommended but not this skill's mechanism; todo 3 OPERATOR_QUESTION on the reverse
+  root-token derivation ruling). `assigned_vm` unchanged.

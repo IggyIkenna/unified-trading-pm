@@ -322,3 +322,16 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   context_scope refresh) -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full
   re-read; see `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying
   false-positive class this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:1c528fd3236a536e]: **KEEP-NA,
+  valid -- fresh full read; considered and DECLINED promoting to RECLASSIFY.** The sole open todo (standing
+  reconciliation: re-run 2 already-built/tested scripts dry-run after each future catalogue roll-up cycle, `--apply`
+  only if residual >0, small/idempotent, operator go-ahead already on record and executed 8x) reads as bounded for any
+  SINGLE execution, but its own framing is explicitly a perpetual "after each future roll-up cycle" check, not a
+  one-shot outcome -- flipping `assigned_vm` here would let the backlog derive ONE dispatch from this ONE checkbox; a
+  worker would run it once, flip the checkbox `[x]`, and the standing safety net for every LATER roll-up cycle would
+  have no open item left to catch it. That is a structural mismatch between "standing/recurring" checks and the
+  checkbox-driven one-shot dispatch mechanism, not a judgment call this doc's content itself resolves. Independently
+  corroborated same-day: `/ag-closeout-audit tradfi`'s `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` (drafted
+  hours earlier) evaluated this exact doc/item and reached the same conclusion under its own criteria -- filed under
+  "Deferred -- standing/recurring (not a single bounded AO outcome)." Two independent audit mechanisms agreeing today is
+  a strong signal, not a coincidence to re-litigate; staying KEEP-NA. `assigned_vm` unchanged.

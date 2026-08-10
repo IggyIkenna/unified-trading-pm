@@ -122,11 +122,19 @@ urgency, and warrants its own scoped implementation + test pass.
       genesis (~2020-06-01). Thread `data_types` through `_build_active_venues_for_date()` and its callers. Add
       regression tests confirming (a) CBOE Databento VX-futures dates before ~2020-06 still correctly skip as
       honest-absence, (b) CBOE Yahoo ohlcv_24h dates from 2000-2020-06 now attempt a real fetch. Repo:
-      market-tick-data-service.
+      market-tick-data-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): KEEP-NA-STALE
+      (already-duplicated) — this item is extracted verbatim into `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`
+      todo 1 (status: draft,
+      `Source: issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md todo 1`), drafted by
+      an earlier same-day `/ag-closeout-audit tradfi` pass. Not reclassifying `assigned_vm` here — that would risk a
+      double-dispatch once batch12 flips `active`. Fix is citation-only; leaving `assigned_vm: NA`.)**
 - [ ] [DATA] P3. Once the floor fix ships, relaunch the CBOE Treasury-INDEX launcher
       (`launch-tradfi-bf-cboe-indices-ohlcv-24h.sh`) with `--start-floor 2000-01-01` to backfill the 2000-2020-06 window
       that this bug currently blocks, and verify real captured coverage in the manifest for all 4 pre-2018 tenors. Repo:
-      market-tick-data-service / deployment-service.
+      market-tick-data-service / deployment-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch
+      agt-a70469): KEEP-NA-STALE (already-duplicated) — extracted verbatim into
+      `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 2 (status: draft, same Source citation as above, todo
+      2). Same reasoning — citation-only, `assigned_vm: NA` unchanged.)**
 
 ## Progress Log
 
@@ -134,3 +142,10 @@ urgency, and warrants its own scoped implementation + test pass.
   (data_engineering worker, slot 17). Root-cause `_resolve_source` bug (separate, already fixed —
   `market-tick-data-service@af2c53ce`) confirmed working for post-floor (~2020-06+) CBOE dates; this floor-granularity
   gap is the reason full 2000-history coverage isn't achievable yet even with that fix shipped.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:300c26b85b568267]:
+  **KEEP-NA-STALE (already-duplicated), first audit pass.** Both open todos (Phase-1 classifier initially flagged as a
+  clean whole-doc RECLASSIFY candidate — no `[OPERATOR]` tag, no gate, a definitive already-decided implementation
+  approach) are independently confirmed extracted verbatim into `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`
+  (status: draft, its own `Source:` citations name this doc's todo 1/todo 2 exactly), drafted by an earlier same-day
+  `/ag-closeout-audit tradfi` pass -- see the per-checkbox citations above. Declining to flip `assigned_vm` to avoid a
+  double-dispatch once batch12 activates; fix is citation-only.

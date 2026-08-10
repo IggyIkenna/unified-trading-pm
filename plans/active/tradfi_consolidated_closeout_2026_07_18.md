@@ -785,8 +785,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only; design doc superseded by
     `candle_canonical_path_migration_execution_2026_07_24.md`)
   - [`plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`](/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md)
-    — 0 open todos (closed/archived/record-only; the follow-up `tradfi_phase_d_terminal_gate_2026_07_24.md` P0 gates on
-    this finding)
+    — **CORRECTED 2026-08-10 (na-eligibility-audit, tradfi tranche, dispatch agt-a70469 — was stale, said "0 open
+    todos")**: actually 3 open todos (2 DEPENDENCY_BLOCKED, 1 OPERATOR_QUESTION); KEEP-NA valid, re-confirmed across 8
+    consecutive audit passes. The follow-up `tradfi_phase_d_terminal_gate_2026_07_24.md` P0 still gates on this finding.
   - [`/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`](/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md)
     — **CORRECTED 2026-07-30 (was stale — listed 3 items below as open after the doc had already closed all 35)**: 0
     open, `status: resolved`, **35/35 findings applied** (32 on 2026-07-21, final 3 — including these exact
@@ -877,3 +878,11 @@ operator activation.
   (narrows near-term dispatch only, doesn't rewrite this doc). FLAGGED not corrected (over-cap doc, append-only budget):
   the "Aggregated source docs" digest entry for `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` says "0 open
   todos" but that doc actually carries 3 -- see it directly. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:a306d90bafa82e1d]: **KEEP-NA,
+  valid.** `archive_exempt: true` + `depends_on` 3 still-active children
+  (`tradfi_manifest_content_recovery_completion_ 2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
+  `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless of this doc's own
+  0-native-open-todo count. **Fixed this pass** (small, in-cap): the stale "0 open todos" digest pointer for
+  `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` the 08-09 marker flagged-but-declined-to-correct (over-cap
+  budget concern) -- doc is 881 lines, well under the 1000-line hard cap, so a 1-line correction is safe; corrected
+  above to the real count (3). `assigned_vm` unchanged.

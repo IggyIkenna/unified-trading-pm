@@ -159,3 +159,10 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:c56bf43b9d580dfe]: **KEEP-NA,
+  valid -- fresh full read.** Independently re-verified the live CONFLICT citation by reading
+  `governance_sweep_deferred_followups_2026_08_06.md` directly: its `[DIAG] P2` todo ("Verify the exact CME
+  instrument_id string format before implementing this doc's ruled fix") is still open (`- [ ]`), and both docs still
+  cross-cite each other -- the conflict is live and current, not stale. Also cross-checked against
+  `tradfi_databento_account_billing_suspended_2026_08_09.md`, which lists this doc as "left ungated" (features-VM
+  relaunch reads existing data). `assigned_vm` unchanged.

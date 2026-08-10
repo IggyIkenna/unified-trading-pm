@@ -501,3 +501,12 @@ every day narrows or closes it permanently.
   todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:96bfa7daba6b7ee4]: **KEEP-NA,
+  valid -- fresh full read.** Sole open checkbox (propagation of the 3 already-ruled 2026-08-07 items 5/7/8)
+  re-verified: `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`(+finalize) is STILL `status: draft`/
+  `assigned_vm: NA` today (grep-confirmed), so item 5's flip genuinely remains undone. Still MISCLASSIFIED_LIKELY_AO_
+  ELIGIBLE, not promoted -- the bundle spans 3 discrete target-file actions (mechanical frontmatter flip + a
+  safe-idempotent text insert + a fold/archive-with-linkage-reindex) needing decomposition before any one piece is
+  independently dispatchable, same reasoning as 08-08. This exact gap is now ALSO independently tracked as its own
+  `[OPERATOR] P1` todo in `ag_closeout_audit_tradfi_parked_2026_08_10.md` (Finding 5, filed today) -- cross-referencing,
+  not duplicating. `assigned_vm` unchanged.

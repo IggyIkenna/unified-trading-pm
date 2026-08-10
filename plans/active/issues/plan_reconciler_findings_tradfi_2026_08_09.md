@@ -158,3 +158,17 @@ _(pending STEP 7, if applicable)_
   missed-flip hunter, 1 AO-dispatch-readiness hunter over the 5 batch6-10 pairs, 1 data-pipeline-milestones-drift hunter
   for the 7 tradfi-targeted todos in `data_pipeline_e2e_milestones_gate_2026_07_24.md`). All running in background;
   awaiting completion notifications before STEP 4 verification.
+
+## na-eligibility-audit
+
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:a529368dbf33f657]: **KEEP-NA,
+  valid -- first audit pass, genuine trap doc confirmed.** 0 literal `- [ ]` checkboxes, but this is a mid-run journal
+  for a `plan_reconciler` dispatch that stalled and was never resumed: every downstream section (`## Flips verified`,
+  `## Codex corrections applied`, `## Hygiene fixes`, `## Filed`, `## Archive candidates`, `## Refuted`, `## Coverage`,
+  `## Plans not reached`) still reads placeholder text `_(pending STEP N)_`. Independently re-verified via grep:
+  `locked_by: plan_reconciler (agt-642862) since 2026-08-09T16:00:00Z` is STILL set unchanged today, and no continuation
+  doc exists anywhere in the corpus. Real remaining work exists in prose (resume the stalled STEP-3->7 run, or
+  explicitly abandon + clear `locked_by`) -- not archive-eligible, not a checkbox-format issue, genuinely NA. Same
+  underlying issue as `ag_closeout_audit_tradfi_parked_2026_08_10.md` Finding 4, which independently discovered this
+  same stalled/locked state and already filed it as an `[OPERATOR] P1` ask there -- not duplicating. `assigned_vm`
+  unchanged.

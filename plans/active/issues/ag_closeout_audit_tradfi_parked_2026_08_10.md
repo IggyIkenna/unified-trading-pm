@@ -258,3 +258,7 @@ audit is far cheaper than a blind re-audit and still catches genuine gaps, as it
   QG-validated: `check_frontmatter_schema.py` + `check_todo_format.sh` + `check_line_caps.sh` all clean). 1 new finding
   parked here (finding 6, plus an `[OPERATOR]` todo on the 3-same-day-dispatches observation itself) — **balanced** (5
   never-cited hits = 4 already-accounted-for + 1 batched, all disposed with evidence, none silently dropped).
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:b709843b4e847dbb]: **KEEP-NA,
+  valid -- first audit pass.** All 6 open items are explicitly `[OPERATOR]`-tagged (1 `[DOC]`-tagged but itself framed
+  as a methodology/budget tradeoff decision) escalations freshly authored today -- no item clears the bounded-outcome
+  bar as a whole-doc; correctly NA. `assigned_vm` unchanged.

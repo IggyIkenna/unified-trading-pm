@@ -448,10 +448,15 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   > scoping list (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this
   > note describes); the actual native-shutdown-script code fix shipped `deployment-service@db5d3c7` — the gap this note
   > flags is now closed at both the doc-scoping and launcher levels.
-- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever
-      running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.
-      **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line -- was invisible to checkbox
-      tooling; content unchanged.)**
+- [x] ✅ [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever
+      running --apply — DONE. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): STALE,
+      closing.** This checkbox is a duplicate of the same Progress-Log-forked item already flipped `[x]` in the sibling
+      fork `tradfi_manifest_content_recovery_completion_2026_07_24.md` (line 840): "Retire-phase candidate list
+      reviewed + APPLIED — DONE 2026-07-26 (operator go-ahead)," citing `deployment-service@ab8e0d7` + completed VM
+      apply run `canonical-migration-tradfi-manifest-retire-20260726-160002` (65,628 rows retired, independently
+      re-verified present in the sibling doc this pass). Both docs fork the same parent Progress Log; only the sibling's
+      copy was flipped until now. **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line --
+      was invisible to checkbox tooling; content unchanged.)**
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
 
@@ -576,3 +581,11 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` narrows to, but confirming the exact narrowed-scope claim
   needs a direct read before editing a critical-path gate's citation -- left for a follow-up pass. Doc stays NA (still a
   genuine, multi-part gated mix).
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:cd6bd4d3bfd17533]: **KEEP-NA,
+  stale-items fixed.** Fresh full read, 4 open items. Closed 1 stale checkbox this pass (the retire-phase candidate-list
+  review — duplicate of the same Progress-Log-forked item already flipped `[x]` in the sibling fork
+  `tradfi_manifest_content_recovery_completion_2026_07_24.md`, independently re-verified at that doc's line 840:
+  `deployment-service@ab8e0d7` + completed VM apply run `canonical-migration-tradfi-manifest-retire-20260726-160002`,
+  65,628 rows retired). Remaining 3 items (MVP backfill readiness gate, its dependent reconciliation checkpoint, and a
+  test addition blocked on a separate flaky-test fix) stay DEPENDENCY_BLOCKED, established reasoning unchanged. Doc
+  stays NA.

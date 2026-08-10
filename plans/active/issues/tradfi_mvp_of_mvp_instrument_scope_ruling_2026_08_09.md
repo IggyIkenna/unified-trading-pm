@@ -189,30 +189,39 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       completeness denominator. **Shipped `unified-api-contracts@e6c66c382`** — `MVP_SCOPE_CONFIG_VERSION` bumped to 23,
       3 new/updated tests in `test_mvp_scope.py` (`test_ice_index_dxy_is_mvp`, `test_ice_other_cells_not_swept_in`,
       `test_extra_mvp_cells_exact_membership` updated to 8-triple). QG green.
-- [ ] [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the FRED
-      macro backfill reportedly ran 2026-07-30 per
+- [x] ✅ [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the
+      FRED macro backfill reportedly ran 2026-07-30 per
       `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
       Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
       manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above). **EXTRACTED
       2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
       `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (now `[x]` ✅, archived)** —
       all 4 cells are Yahoo/FRED-sourced, not gated by the open Databento billing-suspension issue; the DXY launcher
-      shipped same-day (see todo above, now `[x]`). Completion recorded there.
+      shipped same-day (see todo above, now `[x]`). Completion recorded there. **(na-eligibility-audit 2026-08-10,
+      tradfi tranche, dispatch agt-a70469): closing here too — this doc's own Progress Log (round-9 entry below) already
+      confirmed this exact item done/archived elsewhere; the checkbox itself was never flipped to match.)**
 - [x] ✅ [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to `/codex/02-data/mvp-scope-canonical.md`,
       `/codex/02-data/cross-asset-canonical-target-ssot.md`, and `/codex/09-strategy/mvp-universe-per-asset-group.md`.
       **Shipped `unified-trading-pm@d5d0b75cc` / `@22d0a07d0` / `@ecddf76ad`**. The closeout doc
       (`tradfi_consolidated_closeout_2026_07_18.md`) was deliberately NOT touched further — already over its 1000L hard
       cap from prior growth, no scoped-append exception applies to a content addition; its existing banner pointing at
       this doc is sufficient.
-- [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
+- [x] ✅ [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
       `market-tick-data-service/scripts/pipeline_e2e_check.py:330-338` so the MTDS `--mvp-only` smoke test exercises DXY
       (Treasury-INDEX/CME and KRWUSD/FX cells are already covered in that hand-listed set). Repo:
-      market-tick-data-service.
-- [ ] [SCRIPT] P3. **NEW (2026-08-09)** — add `IBIT`/`ETHA` to `_DEFAULT_TICKERS` in
+      market-tick-data-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): confirmed
+      LANDED — independently read `market-tick-data-service/scripts/pipeline_e2e_check.py` line 337 live on
+      `origin/live-defi-rollout`:
+      `("ICE", "ohlcv_24h"),  # daily DXY (US Dollar Index, Yahoo-sourced) -- added 2026-08-09 scope ruling` is present
+      in the `_TRADFI_MVP_SHARDS` frozenset. Missed flip, closing.)**
+- [x] ✅ [SCRIPT] P3. **NEW (2026-08-09)** — add `IBIT`/`ETHA` to `_DEFAULT_TICKERS` in
       `features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py:52-75` so the
       corporate-actions (dividends/splits/earnings) sweep covers the newly-in-scope BTC/ETH spot ETFs — the production
       sharding config doesn't pass `--tickers`, so it silently falls through to this hardcoded default today. Repo:
-      features-service.
+      features-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): confirmed LANDED —
+      independently read `features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py` lines
+      77-78 live on `origin/live-defi-rollout`: both `"IBIT"` and `"ETHA"` are present in `_DEFAULT_TICKERS`. Missed
+      flip, closing.)**
 
 ## Progress Log
 
@@ -269,3 +278,12 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
   Databento-billing-gated; now `[x]` ✅, archived). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both
   remaining action items are now tracked/closed elsewhere.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:ac4c223a308148ee]: **KEEP-NA,
+  stale-items fixed.** Fresh full read, 4 open items. Closed 3 this pass: todo "check FRED coverage, launch/verify
+  CBOE/KRW/DXY" (this doc's own round-9 Progress Log entry above already confirmed it EXTRACTED + archived, checkbox
+  simply never flipped to match); todo "add (ICE, ohlcv_24h) to `_TRADFI_MVP_SHARDS`" (independently confirmed LANDED
+  via direct read of `market-tick-data-service/scripts/pipeline_e2e_check.py` line 337 live); todo "add IBIT/ETHA to
+  `_DEFAULT_TICKERS`" (independently confirmed LANDED via direct read of
+  `features-service/.../corporate_actions_handler.py` lines 77-78 live). Sole remaining open item (`wave_launcher.py`
+  production-deployment-mechanism confirmation) is GENUINE_WORK, not promoted — matches this doc's established pattern
+  of staying NA as an SSOT ruling doc, extract rather than self-dispatch. `assigned_vm` unchanged.

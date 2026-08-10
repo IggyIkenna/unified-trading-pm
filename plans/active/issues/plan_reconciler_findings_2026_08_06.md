@@ -117,3 +117,19 @@ open).
 
 **Run completed**: 2026-08-06 ~20:25 UTC. No questions raised to operator (all findings are deferrals or
 non-actionable).
+
+## na-eligibility-audit
+
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469): **ARCHIVE-eligible, parked
+  BLOCKED-OPERATOR-DECISION — not archived this pass.** 0 open todos; this is a dated, point-in-time reconciler-run
+  snapshot, fully resolved and superseded as the live tradfi reconciler report by
+  `plans/active/issues/plan_reconciler_findings_tradfi_2026_08_09.md`. Archival is blocked by
+  `locked_by: plan_reconciler — run in progress`, which itself reads as stale (this doc's own body confirms the run
+  completed 2026-08-06, 4+ days and a newer same-tranche run have since passed) — per governance rules a stale lock
+  needs an explicit `[unlock-plan]` before archival, never autonomous. **Not filing a new ask**: this exact unlock is
+  already tracked as open todo 1 in `plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` ("Confirm
+  `plan_reconciler_findings_2026_08_06.md`'s `locked_by` is stale and issue `[unlock-plan]`") — see that doc for the
+  live ask. **Corpus-wide side-note** (not this doc's own verdict): none of the 14 currently-active
+  `plan_reconciler_findings_*` docs in `plans/active/issues/` have ever been archived; this is the oldest. Worth a
+  hygiene pass to archive superseded ones or mark the series `archive_exempt: true` if meant to accumulate as a standing
+  log by design.

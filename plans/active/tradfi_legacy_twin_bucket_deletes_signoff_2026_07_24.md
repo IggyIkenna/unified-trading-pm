@@ -337,3 +337,14 @@ restated here.
   content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
   `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
   this run found and filed.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:1edcd67dbf5276f3]: **KEEP-NA,
+  valid -- fresh full read found a NEW item the hash-check timing gap hid from every prior pass.** The 08-09 marker
+  above reaffirmed via hash-diff only, computed BEFORE a same-day root-cause investigation
+  (`tradfi_satellite_ao_dispatch_batch7-003`) added a brand-new second todo
+  (`cleanup_legacy_twins.py:: canonical_twin_path()` pre-hive shape lookup bug) that no audit pass had yet assessed --
+  this pass is the first fresh full read since. Todo 1 (the destructive 3-bucket delete) stays DEPENDENCY_BLOCKED,
+  established reasoning unchanged (twin-coverage last measured 0% vs required 100%). Todo 2 is tagged
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE, high confidence (root cause fully diagnosed with before/after path evidence via
+  `gcs_describe_object`, fix reuses an existing derivation helper + an existing UAC SSOT, crisp done-when) -- but per
+  the whole-doc RECLASSIFY rule, 1-of-2 bounded keeps the doc KEEP-NA; flagging for a future `/ag-closeout-audit`
+  satellite-extraction pass (not this skill's mechanism) rather than promoting unilaterally. `assigned_vm` unchanged.

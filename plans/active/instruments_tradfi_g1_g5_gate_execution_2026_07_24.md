@@ -716,3 +716,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   confirmation (distinct from the already-granted 4-leg go-ahead). One data-hygiene note (not actionable): the
   ICE-Databento parquet GCS-cleanup checkbox was converted today to a plain "EXTRACTED 2026-08-09" bullet (no longer a
   `- [ ]`), correctly explaining the 5->4 open-count drop since the 08-08 marker. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-10** (tradfi tranche, dispatch agt-a70469) [body-hash:a16006baae5f205f]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed.** Fresh full read, 4 open todos. Independently re-verified the
+  ES_OPT duplication citation by reading `tradfi_databento_account_billing_suspended_2026_08_09.md` directly: confirms 2
+  real `tradfi-bf-es-opt-*` launches already happened 2026-08-09 with genuine captured data, and names
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (status: active) as the live dispatch vehicle -- matching this
+  doc's own citation exactly. Todo 4 (residual catalogue-leg purge) stays OPERATOR_QUESTION, not bundled into the
+  already-granted 4-leg go-ahead. `assigned_vm` unchanged.
