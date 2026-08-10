@@ -881,12 +881,15 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 Fully closed (both items `[x]`) — extracted to
 `/plans/archive/2026_07/sports_consolidated_closeout_track_d_history_2026_07_23.md` (line-cap remediation).
 
-## Track X — CLEANUP + plan reconciliation · P2 (MOSTLY MOVED 2026-07-25)
+## Track X — CLEANUP + plan reconciliation · P2 (✅ DONE 2026-08-10)
 
-Open work forked to `sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos: the
-`sports_catalog_league_grain_only_scope` cross-link, the `sports_odds_bookmaker_coverage_enumeration` league_id fold-in,
-the peripheral-bucket league-vocabulary contamination fix, and shipping the 2 parked worktree changes) — see the Split
-notice near the top of this doc. 3 further items (the issue-doc index fix, the adapter dead-code/fallback audit, the
+All open work shipped via `sports_closeout_track_x_hygiene_2026_07_25.md` (4 todos + the split-out migration sub-todo):
+the `sports_catalog_league_grain_only_scope` cross-link (`unified-trading-pm@dc8b142a4e`), the
+`sports_odds_bookmaker_coverage_enumeration` league_id fold-in merge (`unified-trading-pm@69b8c3f7f3`), the
+peripheral-bucket league-vocabulary contamination fix (`unified-api-contracts@f3f1bbe0` write-path fix + the
+9,733-object migration `market-tick-data-service@b37b8553`), and the 2 parked worktree changes
+(`market-tick-data-service@03b9ffd6` + `deployment-service` no-op clean). All cited commits verified via `git log`
+(2026-08-10). 3 further items (the issue-doc index fix, the adapter dead-code/fallback audit, the
 `data_completion_sports_history_2026_07_24.md` aggregated-sources index entry) were independently extracted by
 `sports_consolidated_native_ao_extract_2026_07_25.md` before this split ran, so are not duplicated in the new child
 either. Every item that was already `[x]` done at split time is preserved verbatim in
