@@ -97,12 +97,20 @@ source: >-
       cited rows/PR; role lifecycle reclassification @c72daaa+4421129+14f1dcd); dashboard_prettier 2nd [INFRA] P3
       (prettier bump @fcbc736, `package.json:28` `^3.9.5`). No bare redirect pointers remain. NOTE: batch2 is now
       fully-closed (0 open todos) — `archive_exempt: true` set on its flip commit; its archival is checked under todo 3.
-- [ ] [REVIEW] P1. **Check whether any of the 3 source docs is now fully closed** (every remaining open todo done, not
-      just the extracted ones) — if so, run the standard 6-step archival ritual on it (banner, codex-alignment check,
-      corpus-wide referrer fixup, lock check). Each source doc is expected to retain other open, non-extracted items
-      (see batch10's own Progress Log for what was deliberately left behind in each), so this is a check, not an assumed
-      action — do not force an archival if real work remains. **Done when**: each of the 3 source docs' current
-      open-todo count is confirmed, and any doc found fully closed is archived with evidence cited here.
+- [x] ✅ [REVIEW] P1. **Check whether any of the 3 source docs is now fully closed** (every remaining open todo done,
+      not just the extracted ones) — if so, run the standard 6-step archival ritual on it (banner, codex-alignment
+      check, corpus-wide referrer fixup, lock check). Each source doc is expected to retain other open, non-extracted
+      items (see batch10's own Progress Log for what was deliberately left behind in each), so this is a check, not an
+      assumed action — do not force an archival if real work remains. **Done when**: each of the 3 source docs' current
+      open-todo count is confirmed, and any doc found fully closed is archived with evidence cited here. **CHECKED
+      2026-08-10 (slot 24, review)** — live open/done counts: `ao_satellite_ao_dispatch_batch2_2026_07_30.md` 0 open / 8
+      done → FULLY CLOSED; `ao_open_issues_consolidated_close_out_2026_07_17.md` 3 open / 38 done → retains work, no
+      archival; `dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md` 1 open / 2 done (the "decide whether to
+      gate on formatting at all" policy call) → retains work, no archival. batch2 IS fully closed, but its archival is
+      **owned by its own active finalize plan** `ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` (todo 5,
+      "archival ritual on the batch plan itself", now ungated + dispatchable since batch2 is fully done) — deliberately
+      NOT archived here to avoid double-archival with that tracked plan; `archive_exempt: true` stays on batch2 until
+      its own finalize's `git mv` drops it.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -147,3 +155,7 @@ source: >-
   (`unified-trading-pm@291e715e21`) — batch2 `[SCRIPT] P3` + `[DATA] P2`, ao_open_issues `[REVIEW] P0` + `[BACKEND] P0`
   ×2, dashboard_prettier 2nd `[INFRA] P3`. No bare redirect pointers remain. Side-effect noted for todo 3: batch2 is now
   fully closed (0 open todos) — `archive_exempt: true` set on its flip commit, archival to be checked/executed there.
+- **2026-08-10 (slot 24, review)** — P1 closure check done: batch2 fully closed (0 open / 8 done), ao_open_issues
+  retains 3 open / dashboard_prettier retains 1 open (no archival for either). batch2's archival is owned by its own
+  active finalize plan (`ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` todo 5, now ungated) — not duplicated
+  here.
