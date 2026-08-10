@@ -169,13 +169,23 @@ drift_direction: advance-code
       `tests/unit/test_extended_candles.py`, locking in the startTime-bound + capped-limit + loud-warning behavior for
       both the within-cap and oversized-window cases. Repo: market-tick-data-service@f8d9033b5. Evidence: QG green
       (sentinel-verified on HEAD), 6/6 tests in `test_extended_candles.py` pass, landed on `live-defi-rollout`.
-- [ ] [CODE] P3. **Align/consolidate the two parallel Extended candle paths.** Source: same doc. The live path is
-      `adapters/_umi_extended.py`; `market_interface/adapters/onchain_perps/extended_adapter.py::ExtendedAdapter` is a
-      separate, tested-but-unused parallel impl that still carries the global `EXTENDED_DEPLOY_DATE` pre-launch floor
-      (vs the live path's per-instrument genesis). Decide: wire `ExtendedAdapter` as canonical (making its
-      `_check_pre_launch` per-instrument first) OR delete it (confirm zero live importers first — a grep-then-READ
-      check, not an assumption). Parallel-paths anti-pattern per the Delete-Deprecated-Code HARD RULE. Done when: only
-      one Extended candle path remains live, QG green. Repo: mtds.
+- [x] ✅ [CODE] P3. **Align/consolidate the two parallel Extended candle paths — STALE PREMISE, already shipped
+      (verification only).** Source: same doc. The parallel `ExtendedAdapter`
+      (`market_interface/adapters/onchain_perps/extended_adapter.py`) was already DELETED at
+      `market-tick-data-service@f6bda91b` (2026-06-24 — six weeks before this batch-11 doc was authored 2026-08-09):
+      `refactor(market-interface): delete unused ExtendedAdapter/Starknet parallel path` removed `extended_adapter.py`,
+      `clients/extended_base_client.py`, the sole integration test (`integration/test_extended_starknet_adapter.py`),
+      and the `__init__` re-exports — the commit message explicitly names `adapters/_umi_extended.py` via
+      `umi_tick_provider._route_extended` as the canonical EXTENDED-STARKNET path. Verified against current HEAD, not
+      just the commit log: (1) zero references to `extended_adapter`/`ExtendedAdapter`/`extended_base_client` anywhere
+      in the tree (`rg` exit 1); (2) `onchain_perps/__init__.py` re-exports only Aster/Hyperliquid/Base,
+      `clients/__init__.py` has no extended_base_client; (3) the global `EXTENDED_DEPLOY_DATE` floor is gone — zero
+      matches — the live path `_umi_extended.py` uses per-instrument/venue-aware handling (`_EXTENDED_FUNDING_START_MS`
+      aligned to the UAC `coverage_start`, live symbol resolution from `/info/markets`); (4) exactly ONE candle-fetch
+      path remains live: `fetch_extended_candles` in `_umi_extended.py`, routed through
+      `umi_tick_provider._route_extended` (line 592) → `_fetch_extended_candles`, with current unit coverage
+      (`test_extended_candles.py`, `test_umi_extended_book_gate.py`, `test_umi_tick_provider_coverage.py`). Repo:
+      market-tick-data-service (verified, no change needed) @f6bda91b.
 - [ ] [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs `is_mvp()` canonical strings).**
       Source: same doc. `prod/catalog.parquet`'s `league_id` holds NUMERIC provider IDs (`'10'`/`'100'`) while
       `is_mvp()`'s sports MVP rule keys canonical strings — so no sports league ever tags `mvp=True` in the catalogue.
@@ -316,3 +326,12 @@ drift_direction: advance-code
   `get_write_bucket_name("instruments", asset_group)` — same `BucketNamingError` for prediction). Route both through
   `_get_instruments_bucket_for_asset_group`, the prediction-aware flat-kind resolver. Repo:
   instruments-service@c8e3686ca4.
+- **2026-08-10**: Extended candle parallel-path todo (P3, todo 6) flipped — STALE PREMISE, the parallel
+  `ExtendedAdapter`/Starknet path was already deleted at `market-tick-data-service@f6bda91b` (2026-06-24, six weeks
+  before this batch was authored): `refactor(market-interface): delete unused ExtendedAdapter/Starknet parallel path`
+  removed `extended_adapter.py` + `clients/extended_base_client.py` + the integration test + the `__init__` re-exports,
+  keeping `_umi_extended.py` (via `umi_tick_provider._route_extended`) as the single canonical EXTENDED-STARKNET path.
+  Verified against current HEAD: zero `extended_adapter`/`ExtendedAdapter`/`extended_base_client` references anywhere,
+  the global `EXTENDED_DEPLOY_DATE` floor is gone (live path uses per-instrument/venue-aware handling aligned to UAC
+  coverage_start), and exactly one candle-fetch path remains (`fetch_extended_candles` in `_umi_extended.py`). No code
+  change needed.
