@@ -84,14 +84,19 @@ depends_on: []
           days done (~31%). Pace steady at ~7-10 dates/min. ETA to completion: ~2.6-3.7h → finish ~14:30-15:30Z.
         - VM healthy: `instruments_chunk_loop.sh` + `heartbeat_daemon.py` both running, PIPELINE_HEARTBEAT emitting.
 
-## Deferred work after 2026-08-10 ~11:48Z
+      - **Session compacted 2026-08-10 ~11:53Z** — VM still RUNNING:
+        - Progress: `last_completed_date=2022-06-11` (local SSH, 11:52Z), `2022-05-26` (GCS tee, normal ~15-date lag).
+          ~735/2257 days done (~33%). Pace steady at ~10 dates/min. ETA to completion: ~2.5h → finish ~14:40Z.
+        - VM healthy: `instruments_chunk_loop.sh` + `heartbeat_daemon.py` both running.
 
-| Item                                                                                                                | State / why deferred                                       | Blocked on                                                                                           |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `last_completed_date=2022-05-01` (local), ~3h ETA | VM completion (real infra)                                                                           |
-| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM                | INJURIES VM exit_code                                                                                |
-| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                          | All entity backfills complete                                                                        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                      | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+## Deferred work after 2026-08-10 ~11:53Z
+
+| Item                                                                                                                | State / why deferred                                         | Blocked on                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `last_completed_date=2022-06-11` (local), ~2.5h ETA | VM completion (real infra)                                                                           |
+| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM                  | INJURIES VM exit_code                                                                                |
+| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                            | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                        | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
 
 **Recommended NEXT item**: Check `af-backfill-20260810-103218` status:
 
