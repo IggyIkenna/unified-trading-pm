@@ -624,3 +624,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   resolution apparently isn't purely a function of the aggregate row count, so not treating this as a fresh stall (both
   the VM's own marker and the entity-specific needed count independently confirm real movement). No intervention needed
   on either fleet.
+- **03:31Z — INJURIES strong progress; smallchunk16 POSSIBLE 11th hang developing (watching, not yet confirmed).** Same
+  instances as last tick, still 10x confirmed hang occurrences. INJURIES `[[VM_PROGRESS]]` monotonic advance 2025-05-04
+  → 2025-09-20 (~4.5 real months in ~19min, strong pace); census confirms INJURIES needed **17,135 → 13,957** (-3,178);
+  other entities unchanged at floor. Manifest row total still flat at 16,181,741 (3rd consecutive reading at this exact
+  value while INJURIES needed keeps dropping each tick) — now a stable, reproducible pattern across 2 ticks; treating
+  entity-level `needed` (corroborated independently by the VM's own progress marker every tick) as the trustworthy
+  signal, not reopening the filed consolidator issue since actual progress is unambiguous. **Watch item**:
+  `smallchunk16` hit chunk 18 at ~03:25Z with RSS climbing fast (1.7→10.2→16.4→21.5GiB across ~1min), then all
+  `run.log`/`WATCHDOG_TRACE.log` activity stopped at ~03:26:39-49Z; heartbeat blob's last update 03:27:19Z. As of this
+  entry (03:31:15Z, ~4.5min silent) the instance is still `RUNNING` (not yet `STOPPING`) — too early to call an 11th
+  occurrence (prior silences ran 15-21min before deletion) but the profile (chunk 18, fast RSS climb, silence onset)
+  matches the established signature closely. Not relaunching preemptively — will re-check on a shortened watch interval;
+  if it resolves into a full triple-signal silence + delete op, will log as the 11th occurrence and relaunch immediately
+  per the established pattern. If it recovers/resumes cleanly, that would be the first-ever self-recovery from this
+  signature — also worth noting either way.
