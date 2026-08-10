@@ -614,3 +614,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (16,176,107 → 16,181,741, +5,634) and INJURIES needed dropped **29,480 → 20,490** (-8,990) — both the census and the
   VM's own progress marker now agree on genuine forward movement (not reporting a precise hourly rate this tick since
   the stall window makes the elapsed-time denominator ambiguous). No intervention needed on either fleet.
+- **03:12Z — Both fleets healthy, no new hang, real forward progress on both measures.** Same live instances as last
+  tick (`af-backfill-20260809-222924`, `mtds-backfill-odds-smallchunk16-20260810`) — no rotation, still 10x hang
+  occurrences (no 11th). `smallchunk16`: chunk 16/452, zero OOMs/CHUNK_FAILED, fresh (log activity at current wall time)
+  — 2 chunks from chunk 18. INJURIES `[[VM_PROGRESS]]` monotonic advance 2024-11-02 → 2025-05-04 (~6 real months in
+  ~30min). Fresh census confirms genuine progress: INJURIES needed **20,490 → 17,135** (-3,355); other AF entities
+  unchanged at their floors (PLAYER_STATS=3, STANDINGS=271, TEAMS=96); grand total needed 20,860 → 17,505. Note:
+  manifest row total itself read flat (16,181,741, same as last tick) even though INJURIES needed dropped — entity-level
+  resolution apparently isn't purely a function of the aggregate row count, so not treating this as a fresh stall (both
+  the VM's own marker and the entity-specific needed count independently confirm real movement). No intervention needed
+  on either fleet.
