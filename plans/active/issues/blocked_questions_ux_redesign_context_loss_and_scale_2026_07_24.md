@@ -176,13 +176,13 @@ exists" section together before scoping the workstream.
       current occupant's), `pw:L2` Playwright coverage per this workspace's UI gate, and `tsc`/`vitest` clean. Repo:
       deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column populated first) — sequence via
       `sequential: true` if these are ever pulled into their own dispatched plan.
-- [ ] [BACKEND] P3. **Cross-question dedup/similarity surfacing.** Add a lightweight similarity signal across open
-      `BlockedRow` entries (per this doc's pain point 3: the same underlying question sometimes gets asked by multiple
-      different agents, or multiple times by different sessions on the same respawned slot) — start with an
-      exact/near-exact `question` text match (normalized whitespace/case) grouped and surfaced as "N other open
-      questions look like this one" on the dashboard queue, rather than a full embedding-similarity system (that's a
-      much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup proves
-      insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
+- [x] ✅ [BACKEND] P3. **Cross-question dedup/similarity surfacing.** — agent-orchestrator@514df29c07. Add a lightweight
+      similarity signal across open `BlockedRow` entries (per this doc's pain point 3: the same underlying question
+      sometimes gets asked by multiple different agents, or multiple times by different sessions on the same respawned
+      slot) — start with an exact/near-exact `question` text match (normalized whitespace/case) grouped and surfaced as
+      "N other open questions look like this one" on the dashboard queue, rather than a full embedding-similarity system
+      (that's a much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup
+      proves insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
       grouped/flagged in the dashboard queue API response, a regression test covers the grouping logic, and
       `quality-gates.sh` is green. Repo: agent-orchestrator (+ `deployment-ui` render of the grouping signal, small).
 
@@ -251,3 +251,12 @@ exists" section together before scoping the workstream.
   (verified 2026-08-10; its only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx`). Both
   `ui_developer` workers dispatched onto that todo (slot-11, slot-27, 2026-08-08) declined it as GATED on the backend
   dependency and neither caught the wrong repo.
+- **2026-08-10 (slot-32, backend_engineer, dispatched onto `-003`)**: shipped the `[BACKEND] P3` dedup/similarity todo —
+  agent-orchestrator@514df29c07. Added `normalize_question_text()` + `group_similar_blocked()` in
+  `server/routes/state.py`, surfacing `BlockedView.similar_ids` (blocked_ids of OTHER open rows whose normalized
+  whitespace/case-folded question text matches) in the `/api/state` `blocked_queue` response, computed once per request
+  over the already-in-memory rows. Regression test `tests/test_blocked_question_similarity_grouping.py` covers the
+  grouping; small `BlockedCard` render flags "N other open questions look like this one". Also hardened
+  `tests/test_tmux_spawn_deepseek_context_window.py` (its two "left alone" tests spuriously failed under a
+  deepseek-worker session's ambient `CLAUDE_CODE_MAX_CONTEXT_TOKENS` — now unset inside the test scripts).
+  `quality-gates.sh` green incl. dashboard tsc + vitest (270 tests).
