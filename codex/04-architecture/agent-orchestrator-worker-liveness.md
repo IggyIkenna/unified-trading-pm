@@ -857,7 +857,7 @@ main-specific branch + main-specific test: no self-reported context floor (main 
 disarmed for 4.3h), `context_pressure` hardcoded `"low"` (the thrashing-recycle trigger structurally unreachable), and a
 terminal wedge-recovery gated behind a force main could never receive. The fourth mechanism to assume "targets have
 SlotRows" would have started the class again. Issue:
-`plans/active/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`.
+`plans/archive/2026_08/issues/ao_model_main_agent_as_first_class_slot_2026_08_10.md`.
 
 **Prerequisite resolved — `slot_id` 0 meant two different things.** Before main could own a real row, the identifier had
 to be disambiguated: `autospawn._MAIN_SLOT_ID = 0` (main's identity) collided with a synthetic sentinel `slot_id=0` used

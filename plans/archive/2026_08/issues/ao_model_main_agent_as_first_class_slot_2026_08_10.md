@@ -12,7 +12,7 @@ summary: >-
   while scoping: slot_id 0 already carries TWO meanings — autospawn's _MAIN_SLOT_ID and a synthetic sentinel for
   plan-level/operator-gated activity rows — so the identifier must be disambiguated before main can safely own a real
   SlotRow.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -42,11 +42,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-# Temporary bridge for the flip-then-mv two-commit archival (todo 5's flip completes this
-# doc's LAST open todo, which is its own archival trigger — check_archive_candidates only-mode
-# deadlocks otherwise; see check_archive_candidates.sh's own docstring). Dropped in the
-# immediately-following git mv to plans/archive/.
-archive_exempt: true
 source: >-
   Operator ruling 2026-08-10, taken after the 2026-08-09 poisoned-calibration incident and its four sibling issues all
   root-caused to the same missing SlotRow.
@@ -60,6 +55,11 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (all todos `[x]`, unlocked; status flipped from `open` to `resolved` — content
+> verified complete, not just checkbox count). Archived via the flip-then-mv bridge (`check_archive_candidates` `--only`
+> mode's sanctioned exemption, then the immediately-following `git mv`) after `agent-orchestrator@bef2f6b` completed
+> todo 5 — the doc's LAST open todo.
 
 # Model the main agent as a first-class slot
 
