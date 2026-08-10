@@ -30,6 +30,7 @@ last_updated: 2026-08-10
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
+sequential: true
 priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0

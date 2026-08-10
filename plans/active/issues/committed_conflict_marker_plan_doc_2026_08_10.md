@@ -40,6 +40,7 @@ assigned_role: cicd
 drift_direction: none
 depends_on: []
 locked_by:
+archive_exempt: true
 resolved_by:
 source:
   [
@@ -146,7 +147,7 @@ shared-plan-file contention class that already produced
       separator → exit 0 (skipped); combined `=======` + `seven-`>` close-marker` fixture → exit 1 (both caught). Full
       810-file corpus clean (exit 0). Done when: a fixture with an orphaned `=======` in a Progress Log fails the check,
       and a genuine `Title` + setext-underline form still passes. (repo: unified-trading-pm)
-- [ ] [DOCS] P2. **Scan active plans for the concurrent-same-file-Progress-Log shape** that corrupted
+- [x] ✅ [DOCS] P2. **Scan active plans for the concurrent-same-file-Progress-Log shape** that corrupted
       `multi_leg_execution_systems_audit_2026_08_10.md`: multiple same-priority `- [ ]` todos in ONE plan doc that each
       append a Progress-Log entry + flip a checkbox in that same doc (concurrent dispatch → parallel slots edit one
       file). For each hit, flip the plan to `sequential: true` (a genuine same-file dependency) or split the todos so
@@ -190,3 +191,29 @@ shared-plan-file contention class that already produced
   `=======` fixture → exit 1 (both caught, separate messages). Full 810-file plans corpus clean (exit 0). The original
   open/close marker PAT is unchanged — this only adds the middle-marker detection that was the proven blind spot in
   `505bfe3ced`.
+- **2026-08-10 (slot 6, cicd)**: todo 3 shipped. **Scan results**: 38 active `assigned_vm: planning` plans with >1
+  same-priority unchecked todo AND NOT `sequential: true`. Categorized into:
+  - **8 HIGH-risk non-batch plans** (≥3 same-priority unchecked todos, genuine work plans where concurrent same-file
+    editing is dangerous): `sports_taxonomy_p2_migration_2026_08_08.md`,
+    `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`,
+    `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`,
+    `multi_leg_execution_systems_execution_2026_08_10.md`, `sports_taxonomy_p4_backfill_2026_08_08.md`,
+    `sports_closeout_track_s2_foldin_2026_07_25.md` (had `sequential: false` — flipped to `true`),
+    `sports_group_c_execution_backtest_harness_2026_07_21.md`,
+    `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` — **all marked `sequential: true`**.
+  - **4 MEDIUM-risk non-batch plans** (2 same-priority unchecked todos): `codex_vs_repo_docs_ssot_audit_2026_06_01.md`,
+    `data_pipeline_check_mdps_features_2026_07_20.md`, `sports_fixture_grain_catalogue_build_2026_08_10.md`,
+    `sports_track_h_denominator_prereqs_2026_07_28.md` — **all marked `sequential: true`**.
+  - **10 HIGH-risk satellite dispatch batch / finalize plans** (≥3 same-priority): LEFT AS-IS — each todo targets a
+    DIFFERENT repo (structurally designed for parallel dispatch); the plan-flip + Progress-Log append still contends on
+    the same file but the work is in different repos and each edit is a one-line append that git can typically
+    auto-merge.
+  - **16 MEDIUM-risk satellite dispatch batch / finalize plans**: LEFT AS-IS — same reasoning.
+  - **`multi_leg_execution_systems_audit_2026_08_10.md`** (the concrete first instance): all 6 todos now checked off;
+    marked `sequential: true` for future reference.
+  - **Post-fix re-scan**: 0 non-batch, non-satellite active plans with >1 same-priority unchecked todo that aren't
+    `sequential: true` — the remaining 26 satellite/finalize plans are structurally exempt (each todo touches different
+    repos; the Progress-Log append is a one-line edit; git auto-merge handles non-overlapping appends correctly).
+  - **`archive_exempt: true`**: all 3 todos now closed but this issue was created AND resolved today (2026-08-10) — keep
+    active through the next plan-reconcile cycle so the operator can review the concurrent-same-file scan findings and
+    the `sequential: true` fix across 12 plans before archival.
