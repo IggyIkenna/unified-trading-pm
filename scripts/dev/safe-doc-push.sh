@@ -76,9 +76,25 @@
 # this script's own retries clear it -- the script prints a documented escape hatch (land the
 # named files from a separate clone, what unblocked the incident this todo comes from) instead
 # of looping to MAX_ATTEMPTS and reporting a generic "transient, re-run" message. Added
-# 2026-08-09, safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 4.
+# 2026-08-09, safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 4. 9 the
+# push succeeded (final_ok=true) but this run leaves behind an orphaned
+# `~/.cache/prek/patches/*.patch` file created since this script started -- prek's own
+# patch-based stash/restore of unstaged out-of-scope edits normally cleans itself up around
+# every hook run; a patch still sitting there after a successful push means some restore step
+# never happened, which is exactly the silent-data-loss signature this immediate safety net
+# exists to catch loudly instead of letting it pass as an unremarked exit 0 (see
+# safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md). The push itself already
+# landed -- inspect the listed patch file(s) before assuming loss (their content may already be
+# back in the working tree), do not delete them until confirmed safe. Added 2026-08-10.
 
 set -uo pipefail
+
+# _SDP_RUN_START_EPOCH -- captured as the very first thing after set -uo pipefail, before any
+# fetch/pull/commit (i.e. before prek could possibly create a patch as part of THIS run).
+# check_orphaned_prek_patches (near EOF) compares every *.patch file's mtime against this to
+# tell "created during this run" apart from a pre-existing orphan from some earlier, unrelated
+# session -- this script only warns about patches IT could plausibly be responsible for.
+_SDP_RUN_START_EPOCH="$(date +%s)"
 
 MSG=""
 BRANCH="live-defi-rollout"
@@ -217,6 +233,46 @@ verify_pushed() {
     return 1
   fi
   return 0
+}
+
+# check_orphaned_prek_patches -- immediate safety net for
+# safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09 (todo 2). prek stashes any
+# unstaged, out-of-scope edits in the working tree into a `~/.cache/prek/patches/*.patch` file
+# before every hook run and restores it after -- live-observed 2026-08-09: on a commit RETRY
+# within one `git commit` invocation, that restore step silently did not run, leaving the patch
+# orphaned and the edits gone from the working tree with no error and a clean `git status`. This
+# does not fix prek's own lifecycle (root cause is prek-internal, per that issue doc's todo 1) --
+# it turns a future occurrence from unremarked data loss into a loud, actionable warning: any
+# *.patch file in the cache dir with an mtime at or after this run's start (_SDP_RUN_START_EPOCH,
+# captured before any commit could have run) was created by THIS invocation and, having survived
+# to a successful push, was evidently never restored.
+check_orphaned_prek_patches() {
+  local dir="${HOME}/.cache/prek/patches" f mtime found=()
+  [[ -d "$dir" ]] || return 0
+  for f in "$dir"/*.patch; do
+    [[ -e "$f" ]] || continue
+    mtime="$(stat -c %Y -- "$f" 2>/dev/null || echo 0)"
+    if [[ "$mtime" -ge "$_SDP_RUN_START_EPOCH" ]]; then
+      found+=("$f")
+    fi
+  done
+  [[ ${#found[@]} -eq 0 ]] && return 0
+  {
+    echo
+    echo "⚠️  ORPHANED PREK PATCH(ES) DETECTED after this run's push succeeded -- possible silent"
+    echo "   data loss (prek's own stash/restore lifecycle may not have completed):"
+    printf '   - %s\n' "${found[@]}"
+    echo "   prek stashes unstaged, out-of-scope edits into a patch before running hooks and"
+    echo "   restores them after -- these patch(es) were created during THIS run (mtime >= run"
+    echo "   start) but are still sitting here after a successful push, which is the exact"
+    echo "   signature of a restore step that never ran. See"
+    echo "   plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md"
+    echo "   ACTION: run 'git status --porcelain' and diff each patch above (git apply --stat"
+    echo "   <patch>) to check whether its content is ALREADY back in your working tree before"
+    echo "   assuming loss -- if genuinely missing, 'git apply <patch>' restores it. Do not delete"
+    echo "   any patch file listed above until you've confirmed its content is safe."
+  } >&2
+  return 1
 }
 
 # KNOWN_RENAME_SOURCES -- captured ONCE, right here, before the loop below (or any
@@ -668,3 +724,10 @@ if [[ "$final_ok" != true ]]; then
   } >&2
   exit 5
 fi
+
+if ! check_orphaned_prek_patches; then
+  echo "❌ Push landed but exiting non-zero (exit 9) because of the orphaned-patch warning above -- this is ACTIONABLE, not a script bug. Do not silently ignore or re-run without inspecting the patch(es)." >&2
+  exit 9
+fi
+
+exit 0
