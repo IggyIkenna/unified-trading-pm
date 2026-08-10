@@ -133,14 +133,23 @@ way).
       `^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED` bullets alongside checkbox lines; verified with a scratch-repo
       before/after repro — old logic flagged a fresh CANCELLED conversion as `lost=1`, fixed logic reports 0 violations;
       a genuine todo deletion still correctly fails). Full QG green.
-- [ ] [DOC] P3. **Grep the corpus for any EXISTING bold non-checkbox `CANCELLED —`/`SUPERSEDED` bullets that may have
+- [x] ✅ [DOC] P3. **Grep the corpus for any EXISTING bold non-checkbox `CANCELLED —`/`SUPERSEDED` bullets that may have
       already silently reduced a plan's checkbox total below its origin value without anyone noticing** (this check only
       runs `--only` on STAGED files today, so a prior conversion that landed via a path that skipped this hook — e.g.
       `safe-doc-push.sh` before its own recent hardening, or a raw push — could be sitting unnoticed). Report the list;
       no bulk-fix required beyond flagging. **Done when**: the corpus-wide grep result (matches, if any, with file:line)
       is recorded in this todo's evidence. Source:
       `/plans/active/issues/todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md:102`. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@\<sha\> (corpus-wide
+      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\.     (CANCELLED|SUPERSEDED)' plans/ codex/` found exactly 3 pre-existing
+      matches, all `CANCELLED` (no bare-SUPERSEDED instances):
+      `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md:90` (active plan),
+      `plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md:947` (archived),
+      `plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md:158` (archived). Ran
+      `check_todo_regression.sh --only <file>` against each individually — all 3 report `0 violation(s)` under the
+      now-fixed checker (`d01cd9ad41`'s `_check_one()` fix generalizes correctly to these pre-existing instances, not
+      just newly-staged ones), so no currently-undetected silent checkbox-loss exists in the live corpus from this
+      pattern. No bulk-fix needed per the todo's own scope — flagging only, done.).
 
 ## Codex SSOTs (read before starting a todo)
 
