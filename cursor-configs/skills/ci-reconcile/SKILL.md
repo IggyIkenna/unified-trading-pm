@@ -14,9 +14,11 @@ description:
   timers on the CI runner boxes that page via `repository_dispatch` — invisible to the GH Actions catalog entirely),
   never a hand-picked list of "other alert sources I happened to notice," because that whack-a-mole pattern already
   produced two false "all quiet"/"unblocked" declarations this skill had to walk back — once for a monitor the catalog
-  never listed, once for a monitor that doesn't run in GitHub Actions at all. Needs no Slack read access at all — every
+  never listed, once for a monitor that doesn't run in GitHub Actions at all. Doesn't NEED Slack read access — every
   signal it checks has a directly-queryable system of record via `gh`/`gcloud`, so it runs identically whether invoked
-  interactively or dispatched to AO (which has no Slack access and can't be pasted into). Always auto-fixes — no
+  interactively or dispatched to AO; both now also have direct Slack read access (`scripts/dev/slack-read-channel.py`,
+  `/codex/05-infrastructure/agent-slack-read-access.md`) usable as an optional § 0 bootstrap accelerant, never as a
+  substitute for the gh/gcloud re-verification. Always auto-fixes — no
   separate `--fix` flag, no propose-then-wait; it ships corrections directly (quickmerge / reprovenance_bypass.sh / a
   reviewed template rollout) the same way this workspace's background agents already do, and reports what it found + did
   + verified, closing with a visible checklist of every repo and monitor swept so "unblocked" doesn't have to be taken
@@ -64,6 +66,11 @@ gh run list --repo IggyIkenna/<repo> --branch live-defi-rollout --limit 3 --json
 A repo named in an old alert may have already self-recovered (measured: 6/8 repos in the 2026-08-07 incident were green
 again within 90 minutes, via a fix commit nobody re-announced). Build the CURRENT red/lagging list from this sweep, not
 from the alert text — the alert text tells you where to START looking, not what's still true.
+
+**That starting alert text no longer needs the operator to paste it** —
+`python3 scripts/dev/slack-read-channel.py ci-failures <hours>` pulls `#ci-failures` directly (GSM-backed, works
+identically on AO — see `/codex/05-infrastructure/agent-slack-read-access.md`). It is still only a starting pointer: the
+gh/gcloud sweep above is what decides truth, never the Slack text itself.
 
 ## 0b. The completeness contract — sweep EVERY standing monitor via the generated catalog, not a hand-picked list
 
