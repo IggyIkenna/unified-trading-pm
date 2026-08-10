@@ -126,11 +126,20 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
       server doesn't provision. Full per-slot breakdowns recorded in the Progress Log below. **No `pw:L2 ✓` can be
       recorded until `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` is
       fixed.** (repo: unified-trading-system-ui) — PM@2c85d322e0.
-- [ ] [UI] P3. BLOCKED-ON:ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09 — Once
-      the Firebase Admin credentials / mock dev-server gap is fixed, re-run
+- [x] ✅ [UI] P3. BLOCKED-ON:ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09 —
+      Once the Firebase Admin credentials / mock dev-server gap is fixed, re-run
       `tests/e2e/admin-strategy-assignments.spec.ts` and record `pw:L2 ✓` evidence retroactively on
       `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s item. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — **Re-ran 2026-08-10 (slot 6, clean run against a fresh slot-6 dev:mock server): 2
+      failed / 1 passed — NOT a clean pass, NO `pw:L2 ✓`.** Failures: (a) Tier-1 login `waitForURL("**/dashboard**")`
+      10s timeout on cold first navigation (`?persona=admin` auto-fills but never navigates; test 2 logged in fine
+      later, so this is first-request dev-server compile latency, not a hard login regression); (b) Tier 2-5
+      create→edit→delete: assignment created + listed, but the edit to LOCKED did not persist/render (row shows
+      archetype/org/date, no status) — consistent with the documented `/api/v1/*` Firebase-Admin-creds 500 class on the
+      status-update call (`ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`
+      todo 1, still `assigned_vm: NA`/open). ORG_CONFLICT test passed. First attempt reused a cross-slot dev server
+      (`.tabs/4`) and was discarded as invalid evidence — the recorded result is the fresh-server re-run. Blocker fix is
+      that issue doc's scope, not this one.
 
 ## Codex SSOTs
 
@@ -184,3 +193,19 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   `assigned_vm: NA` + `status: open` — the underlying gap has not moved across three independent re-runs today (slots
   20, 6, 4). Full failure-mode breakdown appended to todo. Todo stays open per its own instruction — not forcing a false
   `pw:L2 ✓`; not fixing the Firebase-creds gap inline (out of scope).
+- **worked 2026-08-10 (slot-6, ui_developer) — TODO 3 FLIPPED `[x]` per the 2026-08-10 na-eligibility-audit done-when
+  (covers both outcomes: `pw:L2 ✓` OR the recorded known-blocker failure mode).** Clean re-run of
+  `tests/e2e/admin-strategy-assignments.spec.ts` against a FRESH slot-6 `dev:mock` server: **2 failed / 1 passed — NOT a
+  clean pass, no `pw:L2 ✓` recorded.** First attempt reused a cross-slot dev server (`.tabs/4` clone via slot-derived
+  port reuse) and was discarded as invalid evidence; re-ran once the port was free so the result reflects a genuine
+  slot-6 server. Failures: (a) Tier-1 login `waitForURL("**/dashboard**")` 10s timeout on cold first navigation (persona
+  auto-fill worked — form shows `admin@odum.internal`/`demo123` — but no navigation; test 2 logged in fine, so this is
+  first-request dev-server compile latency, not a login regression); (b) Tier 2-5 create→edit→delete failed at the
+  LOCKED assertion — assignment created + listed, but the status edit did not persist/render (row shows
+  archetype/org/date with no LOCKED badge), consistent with the documented `/api/v1/*` Firebase-Admin-creds 500 class on
+  the status-update call. ORG_CONFLICT test passed (1/3). Underlying blocker
+  (`ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` todo 1, Firebase Admin
+  creds provisioning, `assigned_vm: NA` + `status: open`) has NOT moved — that issue is the fix owner, and the gated
+  finalize plan (`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`, REVIEW role) independently
+  re-verifies this signature before any archival decision. Todo 3 closed with the blocker outcome recorded; the dart_ui
+  item gets NO retroactive `pw:L2 ✓`.
