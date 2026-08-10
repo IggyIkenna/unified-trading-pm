@@ -111,6 +111,27 @@ if [ -f "$PIN_GATE" ]; then
   fi
 fi
 
+# ── Pre-flight: template-content YAML lint ────────────────────────────────────
+# `prettier --write` deterministically mangles a bare `{{PLACEHOLDER}}` YAML flow-mapping-shaped
+# token (root-caused + fixed for `{{RUNS_ON}}` → `__RUNS_ON__`, cicd escalation agt-62ba62,
+# 2026-08-07 — `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`).
+# That break was silent at commit time (no hook failure, no lint error) and surfaced only later
+# as a red `quality-gates-v2` on every repo that received the broken copy. This gate
+# `yaml.safe_load`s each template AFTER prettier would reformat it, so a FUTURE
+# prettier-mangled placeholder fails HERE, at rollout time, instead of propagating fleet-wide.
+YAML_LINT_GATE="$SCRIPT_DIR/../validation/check-workflow-template-yaml.py"
+if [ -f "$YAML_LINT_GATE" ]; then
+  echo "Pre-flight: verifying templates parse as YAML after prettier reformatting..."
+  if ! python3 "$YAML_LINT_GATE" --dir "$TEMPLATE_DIR"; then
+    echo "ABORT: a workflow template fails to parse as YAML after prettier would reformat it — fix the placeholder/token before rollout." >&2
+    exit 1
+  fi
+  if [ -d "$UI_TEMPLATE_DIR" ] && ! python3 "$YAML_LINT_GATE" --dir "$UI_TEMPLATE_DIR"; then
+    echo "ABORT: a UI workflow template fails to parse as YAML after prettier would reformat it — fix the placeholder/token before rollout." >&2
+    exit 1
+  fi
+fi
+
 # ── RETIRED-workflow guard ────────────────────────────────────────────────────
 # A blanket rollout (no --template) iterates EVERY file in the template dir and
 # creates-if-missing in every repo. A stale template for a RETIRED workflow would
