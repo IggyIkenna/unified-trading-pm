@@ -88,10 +88,14 @@ source: >-
       committed with the `docs(plans):` prefix and cites the real commit sha. — **DONE 2026-08-10 (slot 27)**: source
       doc's `[SCRIPT] P2` flipped with real evidence (unified-trading-pm@2022f4142f, 6/6 tests pass). Both checkboxes
       committed same-turn — unified-trading-pm@<this-commit>.
-- [ ] [REVIEW] P1. **Confirm `docs_reconcile_remaining_broken_links_2026_08_02.md` still has real open work and stays
+- [x] ✅ [REVIEW] P1. **Confirm `docs_reconcile_remaining_broken_links_2026_08_02.md` still has real open work and stays
       active** — it retains 11 other genuinely open judgment-call items untouched by this extraction, so it is NOT
       expected to be archival-eligible; this is a check, not an assumed no-op. **Done when**: the doc's current
-      open-todo count is confirmed and recorded here.
+      open-todo count is confirmed and recorded here. — **CONFIRMED 2026-08-10 (slot 27): 15 open `- [ ]` todos
+      remaining** (post-extraction: the fix_frontmatter `[SCRIPT] P2` is now `[x]` ✅). All 15 are genuine
+      judgment-call/investigation items (dead links needing human successor decisions, stale-claim investigations, a
+      design observation, a content-staleness gap). Doc correctly stays `status: open` / `assigned_vm: NA` — not
+      archival-eligible.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
