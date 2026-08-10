@@ -354,13 +354,27 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       (`tests/unit/test_sports_trigger_odds_coverage_filter.py`, 8 unit tests). Source doc's own checkbox already `[x]`
       citing `f78531e`. No action needed. Original text preserved below for record. **Add a league odds-coverage filter
       to deployment-service's `evaluate_pre_match_triggers`.**
-- [ ] [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
+- [x] ✅ [DIAG] P2. Run a scoped blast-radius check on `uts-prod-market-tick-data-service-fast-t1-recon` to determine
       whether PREDICTION and/or DEFI dispatches through the same shared Cloud Run Job carry the same OOM risk class as
       the confirmed SPORTS-specific unscoped-multi-league-fetch bug, using the same method as
       `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s prior DeFi/Prediction check. Source:
       `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`. Done when: a written verdict states, for each of
       PREDICTION and DEFI, whether the same OOM risk class is present (with cited log/code evidence) or confirmed
-      absent, and if present, a new issue doc is filed for the affected asset_group(s).
+      absent, and if present, a new issue doc is filed for the affected asset_group(s). — **DONE-ELSEWHERE (2026-08-05,
+      slot 13, in the source doc).** The identical blast-radius todo in
+      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (lines 555-559) was completed
+      there with a three-part verdict — **neither PREDICTION nor DEFI shares the SPORTS OOM class** — recorded in that
+      doc's Progress Log (2026-08-05, slot 13); this batch9 todo was extracted from that doc's pre-2026-08-05 state.
+      Re-verified at LDR HEAD this session (2026-08-10, slot 26): (1) DEFI not in scope —
+      `deployment-service/terraform/gcp/audit03_cron_provisioning.tf:76` fast-t1-recon job args are
+      `--asset-group SPORTS PREDICTION` only; DEFI runs separate jobs in `defi_collection_scheduler.tf`; (2) PREDICTION
+      uses separate adapters — `umi_tick_provider.py:109-112` `_SPORTS_VENUES={ODDS_API,BETFAIR}` vs
+      `_PREDICTION_VENUES={POLYMARKET,KALSHI}`, and the prediction adapters (`kalshi_adapter.py:605-606`,
+      `_polymarket_helpers.py:270-271,402-403`) stream per-chunk via `writer.write_chunk(df)` (no whole-day in-memory
+      accumulation); (3) the SPORTS OOM mechanism is exclusive to `OddsApiAdapter._fetch_all_leagues`
+      (`odds_api_adapter.py:579` `all_rows.extend(rows)` across all candidate leagues → single in-memory `pd.DataFrame`
+      at `download_batch`), unreachable from DEFI/PREDICTION paths. Verdict confirmed: OOM risk class **ABSENT** for
+      both PREDICTION and DEFI — no new issue doc required per the done-when.
 - [ ] [CODE] P2. Soften the manifest-consolidator staleness error text in
       `unified_trading_library/manifest_writer/_read_index.py` (~lines 289-297) to distinguish a genuinely-DOWN
       consolidator (no recent successful Cloud Run Job execution) from a too-tight staleness budget (consolidator
