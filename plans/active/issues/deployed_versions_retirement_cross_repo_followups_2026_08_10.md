@@ -16,10 +16,9 @@ author: "slot-17-infra"
 parent_epic: infrastructure_master
 assigned_vm: planning
 source:
-  - /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md (todo 4)
+  - /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md (todo 4)
 related:
   - /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md
-  - /plans/active/infra_consolidated_closeout_2026_07_25.md
 status: open
 repos: [deployment-api, deployment-ui, unified-api-contracts]
 nature: process

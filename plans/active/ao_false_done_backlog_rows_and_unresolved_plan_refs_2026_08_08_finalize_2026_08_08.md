@@ -63,13 +63,12 @@ context_scope:
       the unit's exit-code contract; the unit exiting 1 on a genuine breach is correct behavior. **Done when**: a fresh
       live run against `state.db` is cited with the actual bucket counts, not assumed clean because the 14 named rows
       were triaged. Repo: agent-orchestrator (read-only verification).
-- [x] ✅ [REVIEW] P2. **Spot-check 3 of the 14 REOPEN-or-FLIP verdicts against the actual evidence** (the cited
+- [ ] [REVIEW] P2. **Spot-check 3 of the 14 REOPEN-or-FLIP verdicts against the actual evidence** (the cited
       `done_sha` + the plan's real content), independently — not re-trusting the triaging worker's own claim. Prioritize
       the ones flagged in-doc as ambiguous: `mtds_migrate_executor_progress_checkpoint_gap-009`/`-010` (shared
       `done_sha`), and the two explicitly gate-shaped rows (`cefi_track2_backfill_vm_preempted_no_recovery-003`,
       `deployment_scripts_bucket_soft_delete_retention_drift-002`). **Done when**: each spot-checked row's verdict is
-      independently confirmed correct, or a discrepancy is reopened/corrected with evidence. **VERIFIED 2026-08-10 (slot
-      11, review)**: all 4 spot-checks independently CONFIRMED the verdicts — full evidence in Progress Log.
+      independently confirmed correct, or a discrepancy is reopened/corrected with evidence.
 - [ ] [DOCS] P2. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08` and repoint every referrer; clear any lock if
@@ -104,20 +103,3 @@ context_scope:
   audit is not clean. Filed the full finding + per-row reopen/FLIP todos in
   `plans/active/issues/audit_false_done_16_rows_still_red_2026_08_10.md`. This todo stays `- [ ]` until a fresh audit
   re-run exits 0 after the 16 rows are triaged.
-- **2026-08-10 (slot 11, review, task `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize-002`)**:
-  **Todo 2 done — all 4 spot-checks (3 groups) independently CONFIRMED.** (1)
-  `mtds_migrate_executor_progress_checkpoint_gap-009` — `6ddb0374` is a real on-origin commit (slot-8,
-  `feat(mtds): add record_vm_progress checkpoint to migrate_sports_casing_revert_2026_07_27.py`, ancestor of
-  `origin/live-defi-rollout`), `record_vm_progress` import + call confirmed present in the revert script at origin, and
-  the plan's Category A todo is `[x]` ✅ citing `6ddb0374` accurately (no -008-style citation defect). (2) `-010` — the
-  audit-time shared `6ddb0374` was genuinely a copied-sha defect (that commit belongs to -009's revert script); at
-  verdict time no `record_vm_progress` existed in `migrate_sports_league_id_casing_2026_07_21.py` and the todo was
-  `- [ ]`, so "no REOPEN/FLIP" was correct then; since then `3ec92a02` (2026-08-08, slot-10) added the checkpoint and
-  the todo is now honestly `[x]` ✅ citing it — the real work the verdict kept live in the backlog was picked up and
-  shipped. (3) `cefi_track2_backfill_vm_preempted_no_recovery-003` — gate-shaped todo (line 178) still `- [ ]`, gate
-  ("relaunched VM genuinely completes, measured exit") genuinely unmet (8th relaunch 2026-08-09), and no live `done`
-  backlog row holds the id — nothing to REOPEN, FLIP would be a false done. (4)
-  `deployment_scripts_bucket_soft_delete_retention_drift-002` — `97d37ce57` is a real on-origin commit (slot-6,
-  `docs(plans): exact - [x] brief match for 08-06 pre-gate verification flip`) that flipped the PRE-GATE checkpoint
-  (line 104, `[x]`, explicitly "NOT the final drain"); the real final-drain todo (line 114) is still `- [ ]`, date-gated
-  to on/after 2026-08-09. All 4 ids are absent from the live 3,168-row backlog. No discrepancy to reopen or correct.

@@ -64,34 +64,17 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 
 ## Todos
 
-- [x] ✅ [REVIEW] P2. **Reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`.** Once batch15's todo 1
-      ships, flip both of that source doc's todos (`[INFRA] P1` sizing/routing fix, `[INFRA] P2` ownership audit — both
-      folded into batch15's single combined todo) to `[x]`, citing the batch15 commit SHA. If both todos are now closed
-      and the doc is unlocked, it is archival-eligible — check before concluding either way. (repo: unified-trading-pm)
-      — **DONE 2026-08-10 (slot-7, review).** Batch15 todo 1 confirmed shipped: batch plan todo 1 is `[x]` (DONE by
-      slot-20, `infra_satellite_ao_dispatch_batch15-fc54cb24200b`), with `instruments-service@bc36e4a5` (scratch routing
-      off the tmpfs) + `unified-trading-pm@f6af641115`
-      (`feat(infra): reaper + codex SSOT for shared-host /tmp tmpfs large-parquet     scratch`) both verified on origin
-      (the batch plan's cited `9db60dd7d4` was a pre-push local SHA — landed as `f6af641115`). Source doc's P1
-      (sizing/routing fix) + P2 (ownership audit) todos were already flipped `[x]` citing the same batch commit —
-      nothing further to reconcile in the source doc. Archival-eligibility check: doc is 0-open + unlocked and therefore
-      archival-eligible, but correctly carries `archive_exempt: true` (bridge until the parent batch pair reaches
-      terminal status — `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), so its archival is
-      deferred past finalize todo 3, not this todo.
-- [x] ✅ [REVIEW] P2. **Reconcile `s5_7_required_docs_gaps_2026_07_29.md`.** Once batch15's todo 2 ships, flip that
-      source doc's corrected redirect-stub todo to `[x]`, citing the batch15 commit SHA, and update
+- [ ] [REVIEW] P2. **Reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`.** Once batch15's todo 1 ships,
+      flip both of that source doc's todos (`[INFRA] P1` sizing/routing fix, `[INFRA] P2` ownership audit — both folded
+      into batch15's single combined todo) to `[x]`, citing the batch15 commit SHA. If both todos are now closed and the
+      doc is unlocked, it is archival-eligible — check before concluding either way. (repo: unified-trading-pm)
+- [ ] [REVIEW] P2. **Reconcile `s5_7_required_docs_gaps_2026_07_29.md`.** Once batch15's todo 2 ships, flip that source
+      doc's corrected redirect-stub todo to `[x]`, citing the batch15 commit SHA, and update
       `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s own market-data-processing-service registry entry to mark the
       `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE-classification as executed (not just recommended). Do not archive
       `s5_7_required_docs_gaps_2026_07_29.md` without confirming its OTHER 2 (already-`[x]`) todos and this one are the
       full set — re-check `grep -cE '^- \[ \]'` is genuinely 0 first. (repo: unified-trading-pm,
-      market-data-processing-service) — **DONE 2026-08-10 (slot-7, review).** Batch15 todo 2 already `[x]` (MOOT per
-      operator ruling BLK-2b076fa9 option A — DELETE wins, no redirect stubs; ruling documented in
-      `/plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md`). Source doc verified `grep -cE '^- \[ \]'` = 0 (all
-      3 todos `[x]`, incl. the corrected redirect-stub todo closed under the same ruling) — nothing to flip in the
-      source doc. MDPS registry entry in `codex_vs_repo_docs_ssot_audit_2026_06_01.md` updated:
-      `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE marked EXECUTED 2026-08-10 (both absent repo-wide, deleted at
-      `market-data-processing-service@6da3e45` Phase-4). Source doc keeps `archive_exempt: true` (bridge until the
-      parent audit plan reaches terminal status) — not archived, per the todo's own guard.
+      market-data-processing-service)
 - [ ] [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch15_2026_08_10.md` and
       `infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`** once both reconciliations above are verified — run
       the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
@@ -110,14 +93,3 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 - **2026-08-10** — Drafted alongside `infra_satellite_ao_dispatch_batch15_2026_08_10.md` by `/ag-closeout-audit infra`
   (autonomous mode, scheduled daily run, slot 20, dispatch agt-7788a0). Set `status: active` per the no-double-gate
   ruling (its own `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early dispatch).
-- **2026-08-10 (slot-7, review)** — Executed todo 1 (reconcile `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`).
-  Batch15 todo 1 already `[x]` + shipped (verified on origin: `instruments-service@bc36e4a5`,
-  `unified-trading-pm@f6af641115`); source doc's P1 + P2 todos already `[x]`-CLOSED citing
-  `infra_satellite_ao_dispatch_batch15-fc54cb24200b`. Flipped this plan's todo 1 `[x]` — no source-doc edits needed, and
-  its `archive_exempt: true` bridge means archival is deferred past finalize todo 3, not this todo.
-- **2026-08-10 (slot-7, review)** — Executed todo 2 (reconcile `s5_7_required_docs_gaps_2026_07_29.md`). Batch15 todo 2
-  already `[x]` (MOOT per operator ruling BLK-2b076fa9 option A — DELETE wins, no redirect stubs); source doc's
-  corrected todo already `[x]`-CLOSED under the same ruling, `grep -cE '^- \[ \]'` = 0 (all 3 todos `[x]`). Updated the
-  MDPS registry entry in `codex_vs_repo_docs_ssot_audit_2026_06_01.md`: `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE marked
-  EXECUTED 2026-08-10 (both absent repo-wide, deleted at `market-data-processing-service@6da3e45` Phase-4). Flipped this
-  plan's todo 2 `[x]`; source doc not archived (kept `archive_exempt: true` bridge) per the todo's guard.

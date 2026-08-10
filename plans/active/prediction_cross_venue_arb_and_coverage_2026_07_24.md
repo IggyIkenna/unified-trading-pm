@@ -255,48 +255,6 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
     2026-08-09 na-eligibility-audit note below flags ("Finding 5" — whether `instruments-service@62a8b1d8` covers 3a/3b
     for every league or MLB only) — parent checkbox stays unchecked pending that independent verification.
 
-    **INDEPENDENT VERIFICATION 2026-08-10 (slot 7, review, task
-    `meta_plan_corpus_hygiene_ao_dispatch_batch1-f41c803633f5`) — per-part verdict against the real diff of
-    `instruments-service@62a8b1d8` (2 files, +59 lines: `kalshi.py` +25, `test_prediction_adapters_comprehensive.py`
-    +34):**
-
-    - **3a (registry-resolution — resolve `SportsFixtureKey` to canonical sport fixture via sports-domain registry):**
-      PARTIALLY COVERED. The commit stamps `canonical_instrument_id` via
-      `build_fixture_id(league, build_team_id(home), build_team_id(away), date)` — a LOCAL, deterministic computation
-      with NO network call to api-football or odds-api. This is NOT the external-registry resolution 3a's plan text
-      describes ("reuse the `ApiFootballAdapter.get_fixtures` cross-ref"). However, it is the SAME approach the
-      already-shipped Polymarket adapter uses (`polymarket/parsing.py::_build_instrument_id`), and the partial-progress
-      note above already accepted this as the 3a implementation. Verdict: covers what was actually built and accepted as
-      3a; does NOT match the plan text's original registry-resolution spec. No code change needed unless someone wants
-      to revisit the registry-resolution design.
-
-    - **3b (populate `PredictionMarketCrossVenueMapping` + `mapped_sport_event_id`):** COVERED (Kalshi half). The commit
-      stamps `canonical_instrument_id` on Kalshi `InstrumentRecord` for every `SPORTS_*` market — the Kalshi-side
-      prerequisite. Without this, `_build_mapping()` (UAC@1dddc680) cannot pair Kalshi↔Polymarket instruments because
-      the Kalshi side has no fixture ID to match on. `mapped_sport_event_id` (`CanonicalPredictionMarket`) was
-      separately investigated and found DEAD/unwired — populating it would not advance the real arb-pairing mechanism;
-      the field this pipeline actually reads/writes is `api_football_fixture_id` on `PredictionMarketCrossVenueMapping`,
-      which the UAC half of this batch populates. Verdict: commit covers its half of 3b; the full 3b requires both this
-      commit AND `unified-api-contracts@1dddc680`.
-
-    - **3c (team-name canonicaliser):** NOT COVERED. The commit uses raw venue-rendered team names via `build_team_id`
-      directly — no alias registry, no cross-venue normalization. This was explicitly deferred to batch6's `[DATA] P2`
-      "team-name alias tables" todo, which shipped 2026-08-05 (`unified-api-contracts@41c13454`,
-      `strategy-service@217e5b0e`). Verdict: correctly excluded — the commit message and diff are honest about this.
-
-    - **League scope:** ALL LEAGUES structurally. The code gates on `underlying_axis.value.startswith("SPORTS_")` and
-      calls `parse_kalshi_sports_fixture()` which covers every league `fixture_parsing.py` knows (MLB/NFL/NBA/tennis/
-      soccer). Test coverage is MLB-only (one `KXMLBGAME-26JUN261910SEACLE-SEA` case + one season-future honest-absence
-      case), but the code path is league-agnostic. Verdict: structurally covers all leagues the commit message claims,
-      not MLB-only; test gap is a coverage concern, not a code-gap.
-
-    **Overall:** The commit does what its own message claims — stamps `canonical_instrument_id` for Kalshi sports
-    fixtures (3a/3b, Kalshi half), honest-absence for non-fixtures, no team-name canonicalisation (3c excluded). The gap
-    between the plan text's 3a spec (external registry) and what was actually built (local fixture ID) is a design
-    divergence already accepted by the partial-progress note above, not a defect in this commit specifically. Parent
-    checkbox remains unchecked — the fixture-pairing residual is NOT fully closed (the team-name canonicaliser shipped
-    separately, and the design divergence on 3a means someone could reasonably reopen it).
-
 ### 2026-06-26 (autonomous /autonomous) — Kalshi fallback path fixed; IS enum + Polymarket book backfill VMs launched; stale-image alert shipped
 
 **Shipped this session (continuation of prior context):**

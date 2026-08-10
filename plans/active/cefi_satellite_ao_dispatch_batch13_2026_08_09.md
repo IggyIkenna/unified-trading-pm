@@ -72,7 +72,7 @@ context_scope:
       `tests/unit/test_ledgers_taker_vwap.py` (5 cases) verifies `_vwap_walk` against hand-computed VWAPs for synthetic
       order books (single-level, multi-level partial-fill, thin-book, empty-book). `quality-gates.sh` green (174
       passed), sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`.
-- [x] ✅ [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
+- [ ] [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
       (market-tick-data-service) for the 5 already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES,
       OKX-SWAP) so it lands under `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types
       already wired there (`book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades`) — locate how those 4 are
@@ -95,23 +95,6 @@ context_scope:
 
 ## Progress Log
 
-- **2026-08-10 (slot 6, data_engineering, dispatched on the depth_of_book_10 wiring todo)** — Verified the done-when
-  end-to-end. The launcher wiring had already landed from a prior session (`deployment-service@28e64163` "feat(cefi):
-  wire depth_of_book_10 into the consolidated live-capture launcher", confirmed ancestor of `origin/live-defi-rollout`):
-  `depth_of_book_10` shards for the 5 capable venues are in BOTH `setup-cefi-live-consolidated-vm.sh`'s `MVP_SHARDS`
-  arrays (outer export loop + embedded supervisor heredoc, which must match) and the connector factories dispatch it
-  (`market-tick-data-service@15f5657b`, also on origin). The running live VM
-  `mtds-live-cefi-consolidated-20260809-121034` was created ~20min after `28e64163`, so it picked the wiring up without
-  a restart. **Live evidence** (all measured directly, not inferred): (1) `depth_of_book_10/` is present under
-  `gs://central-element-323112-events/live-events/warm/cefi/` with **1,743 warm parquet objects** landing (timestamps
-  2026-08-09T12:23Z onward) alongside the other 4 data_types; (2) availability-index read
-  (`market-data-tick-cefi-prd…/_index/availability_index.parquet`, column-pruned pyarrow) shows **9,156 depth_of_book_10
-  rows** covering ALL 5 capable venues — DERIBIT 5,994 · BINANCE-FUTURES 1,437 · OKX-SWAP 876 · COINBASE-SPOT 848 ·
-  BYBIT-FUTURES 1 — with `capture_status`: 1,434 `captured` + 7,722 `empty_confirmed` (honest-absence, not failures),
-  active dates 2026-08-09/2026-08-10, pipeline_modes `live_deribit`/`live_binance`/`live_okx`/
-  `live_mtds_microstructure`/`live_bybit`. **Done-when fully met**: `depth_of_book_10` is the 5th data_type under the
-  prefix and the manifest confirms rows for at least the 5 capable venues. No code change was needed this pass (prior
-  session's `28e64163` already shipped it); this pass verified + flipped the checkbox.
 - **2026-08-09** — drafted from the same 4-agent item-level classification pass as batch11 (see that doc's Progress Log
   for the full methodology). This doc carries the 2 extractable items whose source doc's `parent_epic: strategy_master`.
   Both confirmed as literal open checkboxes at drafting time: `crypto_alpha_research_2026_07_24.md` line 181,

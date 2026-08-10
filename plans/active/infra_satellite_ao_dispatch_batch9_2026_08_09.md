@@ -13,7 +13,7 @@ summary: >-
   possible orphaned trigger pair, and a dead provenance write-path. That source doc's own 4th item (AWS IAM read access)
   is operator-gated and NOT extracted here. Two of the four todos below (2 and 4) both touch
   `.github/workflows/cloud-build-router.yml`, so this plan runs `sequential: true`.
-status: complete
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-9, plan-hygiene, cloud-build, uv]
 related:
   [
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -69,13 +69,6 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 9
-
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 4 todos done. Finalize plan
-> (`infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`) reconciled both distinct source docs the 4 todos cite
-> (`issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`'s todos 1-4, leaving its `[OPERATOR]` todo 5
-> open — source doc correctly NOT archived; and `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s G2 via
-> batch1's Deferred item 3), then archived this plan via the standard 6-step ritual. Finalize archived alongside at
-> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`.
 
 ## Why this plan exists
 
@@ -246,7 +239,3 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
   GCP router tier-check to `.versions`; updated dual-cloud-image-builds.md + monitoring-control-plane.md. Cross-repo
   dead reads filed as `issues/deployed_versions_retirement_cross_repo_followups_2026_08_10.md`. Firestore `ci_status`
   remains live-SSOT.
-- **2026-08-10 (slot-17, infra)**: Archived via the standard 6-step ritual — `git mv` to `plans/archive/2026_08/`,
-  banner + `status: complete`, all corpus referrers repointed, INDEX.md regenerated. Finalize plan archived alongside
-  (all 3 of its todos done). `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
-  `regenerate_active_plan_inventory.py` clean.

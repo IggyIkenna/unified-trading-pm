@@ -229,20 +229,52 @@ context_scope:
       passed** (captured_depth=20 for every venue; sample: BINANCE-FUTURES imbalance=0.55/queue_position bid=7.012
       ask=2.083, DERIBIT bid=2510.0 ask=146280.0, etc. — full per-venue output in the session transcript). Exit 0.
       `quality-gates.sh` green (147s, sentinel-verified at the shipped SHA).
-- [x] ✅ [SCRIPT] P2. **DONE via `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2** (2026-08-09/10) —
-      `depth_of_book_10` is now the 5th data_type under `gs://central-element-323112-events/live-events/warm/cefi/`,
-      wired into the CeFi live event-log capture dispatcher for all 5 capable venues (COINBASE-SPOT, BYBIT-FUTURES,
-      DERIBIT, BINANCE-FUTURES, OKX-SWAP). **Key commits (all verified ancestors of `origin/live-defi-rollout`
-      2026-08-10):** `deployment-service@28e64163` (launcher shard wiring), `deployment-service@778ee0e3` (FORCE env-var
-      fix), `deployment-service@4b947b63` (Pub/Sub topic + warm-sink subscription for `persist-cefi-depth-of-book-10`),
-      `market-tick-data-service@52383e877` (OKX instrument_id fix), `market-tick-data-service@55fac6f5` (MDPS DataType
-      skip on `CandleBoundaryCrossedEvent`), `market-tick-data-service@15f5657b` (WS connectors, pre-existing). **Live
-      evidence (slot 6, 2026-08-10):** 1,743 warm parquet objects landing since 2026-08-09T12:23Z; availability-index:
-      9,156 rows across all 5 venues (DERIBIT 5,994 · BINANCE-FUTURES 1,437 · OKX-SWAP 876 · COINBASE-SPOT 848 ·
-      BYBIT-FUTURES 1), `capture_status` 1,434 `captured` + 7,722 `empty_confirmed` (honest-absence, not failures),
-      active dates 2026-08-09/2026-08-10. **Remaining open items in this doc (2026-08-10): 1 — todo 5
-      (`BLOCKED-DATA-CORRECTNESS`, gated on operator authorization to greenlight an MDPS column-pipeline extension plan
-      for `CanonicalBookMicrostructure`).**
+- **[SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2 for AO
+  dispatch (parent_epic: strategy_master). See that doc for the live checkbox + evidence.** (Wire `depth_of_book_10`
+  into the CeFi live event-log capture dispatcher — the source doc's own round5-cefi-question-resolution 2026-08-08
+  entry below re-scoped this from an operator question to a bounded wiring gap.) Historical investigation trail retained
+  below for context (do not re-derive): **BLOCKED-DATA-CORRECTNESS (historical)** — Do NOT flip
+  `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent plan's Phase E1, gated on this
+  data landing AND a passing `GroupBRunner` backtest (which needs historical deeper-book replay, still no backfill
+  authorised). This todo is DONE when the feed is honestly live for the capable venues, not when the engine registers.
+  **BLOCKED-DATA-CORRECTNESS (2026-07-14, slot-11):** verified the done-condition before flipping — it is NOT true.
+  Manifest check found `depth_of_book_10` has 0 rows ever captured, AND — much bigger — the entire CeFi live WS
+  tick-capture pipeline (every `live_*` pipeline_mode, every data_type, every venue) has produced no manifest rows since
+  2026-06-29 (15 days stale); no running compute instance in the project looks like a persistent live-WS process. Filed
+  [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+  (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything myself
+  (needs operator context on the correct deployment target + whether this is an intentional pause). **Checkbox NOT
+  flipped** pending that finding's resolution; the engine-registration guard itself is trivially satisfied (not
+  touched), but that's not what this todo's done-condition actually gates on. **RE-VERIFIED STILL DORMANT (2026-07-16,
+  slot-7):** re-dispatched 2 days after the issue doc's "intentional pause" resolution (`BLK-55d45a68`) — checked
+  whether the pause had lifted before assuming it still applied. Bounded `read_availability_index` query over
+  `2026-06-30..2026-07-16` on the CeFi tick bucket: 502,153 rows, **0** with a `live_*` pipeline_mode (all
+  `batch_tardis`/`batch_aster`/`batch_hyperliquid`/`batch_extended`/`batch_deribit`). Bounded GCS prefix check on
+  `day=2026-07-15` and `day=2026-07-16`: no `pipeline_mode=live_*` directory either day. `gcloud compute instances list`
+  (project-wide): the identified relaunch target (`mtds-live-cefi-consolidated*`, per the issue doc's "Relaunch targets
+  identified") has never been launched, in any state. Nothing has changed since 2026-07-14 — the intentional pause is
+  still in effect, done-condition still false. **Checkbox NOT flipped** (still correct). No infra touched (read-only
+  check).
+
+      **RESOLVED — premise now stale (round5-cefi-question-resolution 2026-08-08).** The "is the pipeline dormant,
+      should it be relaunched" question no longer needs an operator answer: it already WAS relaunched, on
+      2026-07-31, and has run continuously since (confirmed via
+      `plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md`, filed 2026-08-07
+      — VM `mtds-live-cefi-consolidated-20260806-163414` running all 16 shards; warm capture flowing continuously
+      since `2026-07-31T13:07Z`). The architecture also changed underneath this todo: live capture no longer writes
+      the legacy `raw_tick_data/pipeline_mode=live_*` path this todo's own checks were probing (confirmed permanently
+      empty by that same doc — it's now a retired path) — it writes an event-log spine instead
+      (`gs://central-element-323112-events/live-events/warm/cefi/`). **But todo 7's actual done-condition is still
+      false, for a different, now-precise, NON-operator reason**: live-checked 2026-08-08,
+      `gcloud storage ls "gs://central-element-323112-events/live-events/warm/cefi/"` lists exactly 4 data_types —
+      `book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades` — **`depth_of_book_10` is NOT among them.** The
+      deeper-book WS connectors this plan's todo 2 shipped (`market-tick-data-service@15f5657b`) were never wired
+      into the new event-log-based live-capture dispatcher, so `depth_of_book_10` still has 0 live rows despite the
+      general pipeline being healthy again. This is now a bounded, worker-determinable `[SCRIPT]` gap (wire
+      `depth_of_book_10` into the live event-log capture path, mirroring how `book_snapshot_5`/`trades`/etc. are
+      already wired), not an operator question — checkbox correctly stays unflipped, but the blocking reason changes
+      from "ask the operator whether to relaunch" to "wire one more data_type into the already-running live
+      capture." Not fixed in this pass (documentation-question audit, not an implementation dispatch).
 
 ## Progress Log
 

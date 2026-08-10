@@ -17,9 +17,9 @@ tags: [infra, ao-dispatch, deferred, batch3-followup, base-service]
 related:
   [
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
-    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
   ]
 created: "2026-08-07"

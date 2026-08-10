@@ -848,76 +848,18 @@ sites also fixed (session 14).
 - Pipeline: PID 535127 (re-armed at 16:56 after this compaction kill #16), polls VM every 30s, PROD bucket all 3 steps
 - Heartbeat: PID 3231770, 30-min watchdog (survived this compaction — background process, not harness-tracked)
 
+**Lessons — compaction survival**:
+
+- `Monitor` tool watches CAN survive compaction (confirmed #14) — but the JSON polling overhead makes them less
+  practical than direct SSH for log inspection. Pipeline scripts are still the primary automation.
+- 16 compactions across this Todo 5 monitoring chain — each kill requires re-arming the pipeline. A `systemd` timer or a
+  VM-side callback would eliminate this failure mode.
+- book_snapshot_5 all-STALE_DATA for 04-29 (375/375) — when cascaded residuals cover 100% of a date's instruments,
+  book_snapshot_5 effectively becomes a fast no-op (1369s scanning 375 STALE markers at ~0.27/s, 0 actual writes). The
+  slow 0.27/s STALE_DATA rate suggests the staleness check itself is per-file expensive (manifest read per instrument).
+
 **Where to resume**: `ps aux | grep post_mdps_pipeline` → if dead, re-arm from `.tabs/14/post_mdps_pipeline.sh`. Check
 VM:
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
 Next milestones: 04-29 deadline 17:01:56 → 04-30 spawn ~17:02 → 04-30 deadline ~17:32. Full completion ETA ~17:30 UTC.
-
-### Sessions 17–18 — VM monitoring continues (post-compacts #16–#18, 17:03–17:17)
-
-Pipeline killed + re-armed through compactions #17–#18. VM progressed through dates 04-28 (TIMED OUT 16:31:56, trades
-100/203), 04-29 (TIMED OUT 17:01:57, book_snapshot_5 375/375 STALE, trades 219/391 TO, derivative_ticker never reached,
-0 candles), and 04-30 spawned at 17:01:57. By 17:12, 04-30 had derivative_ticker complete (395/395, 9,480 candles),
-liquidations all schema-failed, options_chain done, book_snapshot_5 at D* tickers (all STALE_DATA, ETA ~17:26). 1h
-candle outlook for 04-30 was GOOD — only trades + futures_chain remaining within the 17:31:57 deadline. Worst-case
-compaction count reached 18 kills — Bash `run_in_background` fundamentally mismatched for multi-hour monitoring.
-
-### Session 19 — 04-30 final outcome + GCS verification (2026-08-10 ~17:17–17:36)
-
-**Compaction kills #19–#20**: Pipeline re-armed at 17:17 (PID 1902031), killed again ~17:23. Final verification run
-manually.
-
-**04-30 final outcome — TIMED OUT at 17:31:57** (1800s from 17:01:57 spawn):
-
-| #   | data_type         | Result                                        | Time          |
-| --- | ----------------- | --------------------------------------------- | ------------- |
-| 1   | derivative_ticker | 395/395 ✅, 9,480 candles, 5.7/s              | 69s           |
-| 2   | liquidations      | 237/237, 0 candles (all schema-failed)        | 11s           |
-| 3   | options_chain     | ✅                                            | 1s            |
-| 4   | book_snapshot_5   | 379/379 ✅, 378 STALE_DATA, 0.3/s             | 1402s (17:27) |
-| 5   | futures_chain     | ✅ (silent)                                   | ~60s          |
-| 6   | trades            | ~70-80/196 at timeout, 0.3/s, 50/196 at 17:29 | killed 17:32  |
-
-VM terminated 17:32:00 (SIGTERM), deployment archived as `DEPLOYMENT_FAILED`. Per-VM shard at
-`_index/per_vm/mdps-backfill-cefi-20260810-115835.parquet` (91.54 KiB, 2,700+ entries, last update 17:31:53).
-
-**🔴 CRITICAL: Pipeline GCS paths were WRONG.** The PROD bucket `market-data-tick-cefi-prd-central-element-323112` uses:
-`processed_candles/by_date/day={date}/pipeline_mode=batch_tardis/timeframe=1h/data_type={type}/instrument_type=PERPETUAL/venue=BITGET-FUTURES/`
-NOT `cefi/candles_1h/venue=BITGET-FUTURES/day={date}/`. The pipeline script inherited wrong paths from a Todo 7
-template.
-
-**BITGET-FUTURES 1h candle inventory (GCS canonical paths, pre-manifest-consolidation)**:
-
-| Date  | trades | deriv_ticker | book_snapshot_5 | 1h Status |
-| ----- | ------ | ------------ | --------------- | --------- |
-| 04-20 | 376    | 376          | 318             | COMPLETE  |
-| 04-21 | 377    | 0            | 334             | PARTIAL   |
-| 04-22 | 222    | 0            | 345             | PARTIAL   |
-| 04-23 | 325    | 0            | 219             | PARTIAL   |
-| 04-24 | 209    | 0            | 346             | PARTIAL   |
-| 04-25 | 378    | 0            | 216             | PARTIAL   |
-| 04-26 | 378    | 378          | 211             | COMPLETE  |
-| 04-27 | 177    | 378          | 342             | PARTIAL   |
-| 04-28 | 331    | 394          | 349             | PARTIAL   |
-| 04-29 | 290    | 0            | 375             | PARTIAL   |
-| 04-30 | 286    | 395          | 378             | PARTIAL   |
-
-**IMPORTANT**: derivative_ticker=0 for 04-21..04-25, 04-29 may reflect pre-consolidation state — the VM completed
-derivative_ticker on several of these dates (e.g. 04-28 dt=394 ✅, 04-30 dt=395 ✅). The manifest consolidator (Cloud
-Run) must merge the per-VM shard before all data appears at canonical paths. Re-run candle inventory after
-consolidation.
-
-**Lessons**:
-
-- **Path structure trap**: Bucket uses `processed_candles/by_date/` with `pipeline_mode=batch_{source}/` partitioning.
-  Always verify GCS path structure before writing pipeline scripts — don't inherit paths from templates for different
-  AGs.
-- **Per-VM shard ≠ canonical paths**: Data written by the VM IS at canonical paths (MDPS writer writes parquet
-  directly), but the manifest INDEX is in the per-VM shard. The 0-count dates may have data that wasn't indexed yet.
-- **1800s timeout is exact**: 04-30 killed at precisely 17:31:57 = 17:01:57 + 1800s. Trades was mid-processing.
-- **20 compactions across this Todo 5**: Background Bash processes are a fundamental mismatch for multi-hour monitoring.
-  A VM-side callback or systemd timer would eliminate this failure mode.
-
-**Where to resume**: Fix `post_mdps_pipeline.sh` paths (Step 2+3 to `processed_candles/by_date/`). Wait for manifest
-consolidator to merge per-VM shard, then re-run candle inventory. Flip Todo 5 when 1h candle counts are final.

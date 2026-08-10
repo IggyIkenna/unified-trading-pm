@@ -19,7 +19,6 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, escalation, ux, dashboard, dead-agent-context]
-archive_exempt: true
 related:
   [
     /plans/epics/escalation_and_disaster_recovery_master.md,
@@ -28,7 +27,7 @@ related:
   ]
 created: 2026-07-24
 author: unknown
-last_updated: 2026-08-10
+last_updated: 2026-07-24
 priority: P2
 parent_epic: escalation_and_disaster_recovery_master
 source: "Operator design context, relayed 2026-07-24 after the /api/escalation/{id} scope question"
@@ -228,13 +227,16 @@ exists" section together before scoping the workstream.
 
 ## Todos (continued)
 
-- [x] ✅ [INFRA] P3. **Gate `-002` (UI transcript-jump) behind `-001` (BACKEND `claude_session_id` capture) so the
-      dispatcher can't offer the UI todo before its dependency lands** — resolved naturally: `-001` shipped
-      agent-orchestrator@37f73f9 (2026-08-08), `-002` shipped agent-orchestrator@c6273b2 (2026-08-10, after `-001`). The
-      specific dispatch-race gap this todo flagged (slot-11 + slot-27 both declined `-002` on 2026-08-08 while `-001`
-      was still queued) is moot — both todos are now shipped in correct dependency order. The general mechanism
-      (per-todo `depends_on_todo` in regen vs doc-split for partial parallelism) remains an open design question for
-      future plans but is not actionable for this already-resolved pair. Repo: unified-trading-pm.
+- [ ] [INFRA] P3. **Gate `-002` (UI transcript-jump) behind `-001` (BACKEND `claude_session_id` capture) so the
+      dispatcher can't offer the UI todo before its dependency lands** — confirmed 2026-08-08 (slot-11) that it can:
+      `-002` was dispatched while `-001` was still `queued`. Per CLAUDE.md's "partial-parallelism isn't expressible in
+      one plan → SPLIT" guidance, `sequential: true` on this whole doc would over-serialize (it would also block the
+      independent `[BACKEND] P3` dedup todo behind the UI todo for no reason) — either split the UI todo into its own
+      `depends_on`-gated companion doc, or attach a
+      `prereqs.completed_tasks: [blocked_questions_ux_redesign_context_loss_and_scale-001]` tuning entry to `-002`'s
+      derived backlog row (RULES.md §4/§5) once regen re-derives it. Repo: unified-trading-pm (doc restructure) or
+      agent-orchestrator (if `regen_backlog_from_plan.py` needs a new per-todo `depends_on_todo` primitive to express
+      this without a doc split — worth checking before hand-rolling the split).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **2026-08-10 (cross-link, slot-3 interactive)**: linked
@@ -249,20 +251,12 @@ exists" section together before scoping the workstream.
   (verified 2026-08-10; its only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx`). Both
   `ui_developer` workers dispatched onto that todo (slot-11, slot-27, 2026-08-08) declined it as GATED on the backend
   dependency and neither caught the wrong repo.
-- **2026-08-10 (slot-4, review/infra, dispatched onto `-004`)**: flipped the `[INFRA] P3` gate-`-002`-behind-`-001`
-  todo. Verified both SHAs on `origin/live-defi-rollout`: `-001` agent-orchestrator@37f73f9 (2026-08-08T20:21:14Z),
-  `-002` agent-orchestrator@c6273b2 (2026-08-10T12:43:49Z) — correct dependency order, shipped after `-001`. The
-  specific dispatch-race gap this todo flagged is moot; the general mechanism (per-todo `depends_on_todo` in regen)
-  remains an open design question but is not actionable here. Set `archive_exempt: true` — all 4 build todos now checked
-  off, but the doc carries standing context + cross-references for the active companion plan
-  `/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`; premature archival would
-  orphan those references.
-
 - **2026-08-10 (slot-32, backend_engineer, dispatched onto `-003`)**: shipped the `[BACKEND] P3` dedup/similarity todo —
-  agent-orchestrator@514df29c07. Added `normalize_question_text()` + `group_similar_blocked()` in whitespace/case-folded
-  question text matches) in the `/api/state` `blocked_queue` response, computed once per request over the
-  already-in-memory rows. Regression test `tests/test_blocked_question_similarity_grouping.py` covers the grouping;
-  small `BlockedCard` render flags "N other open questions look like this one". Also hardened
+  agent-orchestrator@514df29c07. Added `normalize_question_text()` + `group_similar_blocked()` in
+  `server/routes/state.py`, surfacing `BlockedView.similar_ids` (blocked_ids of OTHER open rows whose normalized
+  whitespace/case-folded question text matches) in the `/api/state` `blocked_queue` response, computed once per request
+  over the already-in-memory rows. Regression test `tests/test_blocked_question_similarity_grouping.py` covers the
+  grouping; small `BlockedCard` render flags "N other open questions look like this one". Also hardened
   `tests/test_tmux_spawn_deepseek_context_window.py` (its two "left alone" tests spuriously failed under a
   deepseek-worker session's ambient `CLAUDE_CODE_MAX_CONTEXT_TOKENS` — now unset inside the test scripts).
   `quality-gates.sh` green incl. dashboard tsc + vitest (270 tests).

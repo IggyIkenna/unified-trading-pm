@@ -12,7 +12,7 @@ summary: >-
   (`ui_build_warm_cache_2026_06_17.md` now zero open work, blocked from archival only by `locked_by`). Also completed a
   flagged housekeeping gap: archived both `ag_closeout_audit_ci_parked_2026_08_08.md` and `_2026_08_09.md` (superseded,
   never archived — the 2026-08-09 na-eligibility-audit marker explicitly flagged this for the next run).
-status: resolved
+status: open
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -22,8 +22,8 @@ tags: [ag-closeout-audit, parked, ci, orphan, mistag, batch12, final-report]
 related:
   [
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
+    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
@@ -46,18 +46,12 @@ supersedes: ag_closeout_audit_ci_parked_2026_08_09
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/active/ci_satellite_ao_dispatch_batch12_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
   ]
 ---
 
 # ag-closeout-audit ci final report — 2026-08-10
-
-> **ARCHIVED 2026-08-10** — Both formal todos (Finding 1's 4-doc `ci`↔`infrastructure` retag → batch1 todo 2
-> @`unified-trading-pm@242e239214`; Finding 2's `[ci, cross-cutting]` dual-tag resolution → batch1 todo 6) are done or
-> RE-HOMED to `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`; the doc reached 0 open todos and was archived
-> as a completed dated report (same lifecycle as its superseded siblings `ag_closeout_audit_ci_parked_2026_08_08`
-> /`_2026_08_09`).
 
 > **Supersedes `ag_closeout_audit_ci_parked_2026_08_09.md`** (now archived — see Housekeeping below). That doc's
 > findings are re-confirmed unchanged below except where explicitly noted as a delta.
@@ -340,13 +334,8 @@ run re-confirmed rather than newly escalated it).
 > the workspace's "every follow-up is a `- [ ]` todo, never prose" hard rule applies regardless of a finding's own
 > "informational" label. `assigned_vm`/`status` left untouched.
 
-- [x] ✅ [DOC] P2. **DONE 2026-08-10 — dispatched as todo 2 of
-      `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, landed
-      `unified-trading-pm@242e239214`** (all 4 docs retagged `asset_group: [ci]`; `check_frontmatter_schema` 2013 docs
-      zero violations. Note: the 4th target `shared_ci_workflow_repo_extraction_2026_08_06.md` was archived under
-      `plans/archive/2026_08/` but still retagged for corpus orthogonality). Original text preserved for record. Was:
-      **Corpus-wide `ci`↔`infrastructure` retag pass** (from Finding 1). 4 docs dual-tagged `[ci, infrastructure]` —
-      `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`,
+- [ ] [DOC] P2. **Corpus-wide `ci`↔`infrastructure` retag pass** (from Finding 1). 4 docs dual-tagged
+      `[ci, infrastructure]` — `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`,
       `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,
       `self_hosted_runner_public_repo_revert_2026_08_05.md`, `shared_ci_workflow_repo_extraction_2026_08_06.md` — have
       been independently confirmed CI-pipeline-internal (real owner `ci`, not `infra`'s Track 1-3 scope) across 5-6

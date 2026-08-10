@@ -72,8 +72,8 @@ context_scope:
 >
 > Operator ruling 2026-08-07 ("less work and edits, still correct"): both todos citation-closed — the identical
 > content-hash/frontmatter-blind-diff fix is already tracked verbatim in
-> `plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md` (status: active). No work duplicated here;
-> the parent plan owns the fix from here.
+> `plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md` (status: active). No work duplicated here; the parent
+> plan owns the fix from here.
 
 # na-eligibility-audit's incremental diff false-positives on frontmatter-only backfill commits
 

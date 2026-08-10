@@ -74,28 +74,15 @@ source: >-
       data for BOTH tasks across all four dimensions (prompt-size table incl. 393/132 plan lines + 103/14 progress-log
       lines; tool-call patterns; `du -sm` repo-size table; worktree ~12GB identical) plus a cross-cutting
       dispatch-ordering amplification finding + measured temporal-overlap table. Both claims hold.
-- [x] ✅ [DOC] P0. **RECONCILED 2026-08-10 (slot 29, review) — both source docs updated.** (1)
-      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md`: `[DOC] P1`'s standing-followup note marked
-      CLOSED (task `-0d5981dddb99` verified absent from live `/api/backlog`; no unpark needed; sibling `-9d123dff13e8`
-      deferred-archival todo live at priority 999) and `[REVIEW] P3` flipped `[x]` with the dispatch-outcome verdict
-      (task gone → no dispatch → no re-nudge, per batch19's "report either outcome" clause). (2)
-      `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md`: `[BACKEND] P1` annotated with the
-      independent finalize re-verification (flip `unified-trading-pm@d875b73ed3` on origin; four-dimension measured data
-      confirmed). Note: `[BACKEND] P2` (ao_dispatch doc) + `[OPERATOR] P2`/`[REVIEW] P3` (citadel doc) intentionally
-      left open (design question / operator decision / live-task status respectively).
-- [x] ✅ [REVIEW] P1. **VERIFIED 2026-08-10 (slot 22, review) — neither source doc archives; both still carry
-      open-by-design todos.** Checked both live (`rg -c "^- \[ \]"` on each active doc): (1)
-      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` has **1 open todo** — `[BACKEND] P2`
-      (authoring-convention design question re `task_template.md`, line 81), intentionally open per the doc's own
-      RULED/CLOSED annotations; (2) `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` has **2
-      open todos** — `[OPERATOR]     P2` (unpark decision, line 100) + `[REVIEW] P3` (post-unpark independent verify,
-      line 113). Both docs `status:     open`, unlocked. **Verdict**: neither is at zero open todos → **no archival from
-      this finalize**; each stays open for its operator-gated / design-question work to resolve independently. (Archive
-      remains possible later once those resolve; nothing else has independently closed them in the interim.) —
-      `ao_dispatch_...` still has todo 2 (the authoring-convention design question) open by design, so it will NOT reach
-      zero here; `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` still has todos 2/3
-      (operator unpark decision + post-unpark verify) open by design — neither should archive from this finalize alone
-      unless something else independently closed their other todos in the interim (check first).
+- [ ] [DOC] P0. **Reconcile verified evidence into both source docs' own checkboxes** —
+      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` (todos 1's standing-followup note + todo 3)
+      and `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` (todo 1).
+- [ ] [REVIEW] P1. **Archive either source doc ONLY if it is genuinely at zero open todos** —
+      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` still has todo 2 (the authoring-convention
+      design question) open by design, so it will NOT reach zero here;
+      `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` still has todos 2/3 (operator unpark
+      decision + post-unpark verify) open by design — neither should archive from this finalize alone unless something
+      else independently closed their other todos in the interim (check first).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch19_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
@@ -127,15 +114,3 @@ source: >-
   archival" `[INFRA] P1` in `plan_hygiene..._2026_08_08.md` (line ~144) is live-queued as
   `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-9d123dff13e8` at priority 999 (deliberately deferred) — not
   mentioned by batch19, worth a note when todo 2 reconciles into source docs.
-- **2026-08-10 (slot 29, review, task `ao_satellite_ao_dispatch_batch19_finalize-5c1c9677d8f8`)** — executed finalize
-  todo 2: reconciled the verified evidence into both source docs (see the todo flip above). ao_dispatch doc: standing
-  follow-up closed + `[REVIEW] P3` flipped. citadel doc: `[BACKEND] P1` annotated with the independent re-verification
-  (placeholder `@<sha>` replaced with `@d875b73ed3`). Left open by design: `[BACKEND] P2` (ao_dispatch, template
-  convention design question), `[OPERATOR] P2` + `[REVIEW] P3` (citadel, operator decision + live-task verify — the
-  `citadel_satellite_ao_dispatch_batch1-004` task itself is currently dispatched to slot 30).
-- **2026-08-10 (slot 22, review, task `ao_satellite_ao_dispatch_batch19_finalize-3311ef75ca46`)** — executed finalize
-  todo 3: archive-checked both source docs live (`rg -c "^- \[ \]"` on each). **Neither archives** — both still carry
-  open-by-design todos: ao_dispatch doc has 1 open (`[BACKEND] P2` template-convention design question), citadel doc has
-  2 open (`[OPERATOR] P2` unpark decision + `[REVIEW] P3` post-unpark verify). Both `status: open`, unlocked. No
-  independent interim closure. Verdict recorded on the checkbox; both docs remain open for their operator-gated /
-  design-question work.

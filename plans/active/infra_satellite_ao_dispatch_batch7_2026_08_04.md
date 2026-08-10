@@ -18,7 +18,7 @@ summary: >-
   batch dispatches the former and leaves the latter gated. Re-verified all 3 still-open carried-forward `[OPERATOR]`-
   tagged findings from `ag_closeout_audit_infra_parked_2026_08_03.md` live before this triage (findings 6, 10, 11 — none
   resolved since yesterday); not re-drafted here, they remain operator-gated exactly as reported.
-status: complete
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -32,13 +32,13 @@ related:
     /plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-10"
+last_updated: "2026-08-06"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -52,7 +52,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by: /plans/active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
+superseded_by:
 depends_on: []
 context_scope:
   [

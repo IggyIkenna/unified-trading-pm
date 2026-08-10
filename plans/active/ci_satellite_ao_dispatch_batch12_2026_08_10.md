@@ -13,7 +13,7 @@ summary: >-
   live-verified resolution of the Tier-A `ci_status` promotion deadlock (filed 2026-08-09 as a P1 incident; PR #1136
   merged 2026-08-09T12:31Z, live-reverified this run — instruments-service + system-integration-tests both green on
   `main` since, deadlock self-cleared exactly per the doc's own "Immediate unblock" path).
-status: complete
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
   [
     /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md,
     /plans/active/issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md,
-    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
+    /plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_09.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -67,13 +67,6 @@ source: >-
 ---
 
 # CI satellite AO batch 12 (infrastructure_master group)
-
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** Both todos done. Finalize plan
-> (`ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md`) reconciled both distinct source docs the 2 todos cite
-> (`archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` — done-with-evidence, codex
-> narrowed to mode-2 only; `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` — deadlock self-cleared, doc
-> stays open with `[OPERATOR]` structural-fix paths #2/#3), then archived this plan via the standard 6-step ritual.
-> Finalize archived alongside at `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md`.
 
 > **Status: draft.** Per the skill's autonomous-mode rule (`/ag-closeout-audit` SKILL.md § Modes — "Phase 3... is a
 > `status: draft` doc creation, which is safe to do autonomously... but flipping it to `status: active` is an operator
@@ -163,7 +156,3 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
   `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES. Codex narrowed to mode-2 only
   (`79171795f2` + citation-fix follow-up correcting the stale test-name reference). Source doc's both todos now `[x]`.
   Path (a) taken — the `check_archive_candidates.sh --only` hook and the codex rule now align.
-- **2026-08-10 (slot-17, infra) — archived**. `git mv` to `plans/archive/2026_08/` via the standard 6-step ritual —
-  banner + `status: complete`, all corpus referrers repointed, INDEX.md regenerated. Finalize plan archived alongside
-  (all 3 of its todos done). `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
-  `regenerate_active_plan_inventory.py` clean.

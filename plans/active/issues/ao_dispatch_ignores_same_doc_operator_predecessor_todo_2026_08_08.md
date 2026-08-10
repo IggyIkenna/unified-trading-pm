@@ -91,19 +91,9 @@ Live, directly-observed during routine blocked-queue sweeps:
       `POST /api/backlog/.../unpark` call against the running AO server — this doc-editing session has no dashboard
       JWT/API access to actually issue that call. Whoever next has AO API access should unpark it now that the decision
       has landed — its remaining work (the sibling doc's now-unblocked "complete the deferred archival" `[INFRA]` todo)
-      is ready to dispatch/execute. **FOLLOW-UP CLOSED 2026-08-10 (batch19 finalize, slot 29 review)**: verified against
-      the live `/api/backlog` — the parked task `-0d5981dddb99` is ABSENT (cleaned up when its source doc's
-      `[INFRA]     P1` flip was re-derived by PlanRegenLoop; no cooldown row remains, so the `/unpark` call correctly
-      returned 404 "not auto-parked"). No unpark needed. The sibling "complete the deferred archival" `[INFRA]` todo is
-      live-queued as `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-9d123dff13e8` at priority 999
-      (deliberately deferred).
-- [x] ✅ [REVIEW] P3. **VERIFIED 2026-08-10 (batch19 finalize, slot 29 review) — dispatch-outcome closed.** The task
-      (`plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99`) was NOT unparked-and-redispatched because
-      it no longer exists: verified absent from the live `/api/backlog` (its source-doc `[INFRA] P1` flip removed it via
-      PlanRegenLoop; `/unpark` returned 404 "not auto-parked", batch19 slot-4). No dispatch possible → no blocked-nudge
-      can re-trigger — a valid terminal outcome per the batch19 todo's own "report either outcome" clause. The
-      alternate-path resolution (`unified-trading-pm@d765b4cfb1`) is on `origin/live-defi-rollout`. Repo:
-      unified-trading-pm (verification + checkbox flip only).
+      is ready to dispatch/execute.
+- [ ] [REVIEW] P3. Once the decision lands and the task is unparked, verify it dispatches and completes cleanly without
+      re-triggering a blocked-nudge. Repo: unified-trading-pm (verification + checkbox flip only).
 
 ## Progress log
 
