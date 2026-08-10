@@ -76,19 +76,73 @@ source: >-
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Root-cause why `orch-slot-10` and `orch-slot-12`'s tmux sessions vanished between ~00:08:00 and
-      00:16:51 UTC on 2026-08-10, with zero orchestrator-side kill-trigger log line, while ~25 sibling sessions spawned
-      in the same window (incl. 2 more from the identical reconciler fire) survived.** Candidate angles worth checking
-      first: (a) whether the specific `claude` CLI process for these panes crashed/exited on its own (a bug, a transient
-      auth/session-id conflict, `--session-id` collision) rather than being killed externally — if so, tmux would
-      auto-close the session absent `remain-on-exit on`, exactly matching the empty `pane_death_info` observed (session
-      gone entirely, not a pane tmux could still query for an exit code); (b) whether `orch-slot-1` and `orch-slot-13`
-      (also lost in the SAME 00:16:51 tmux_pruner discovery batch, a `data_pipeline_failure` custom agent for slot-13)
-      share a common trigger with slot-10/12 — 4 sessions dying in the same ~9-minute window across 2 different agent
-      kinds is a stronger signal than 2 isolated deaths; (c) whether `tmux_pruner`'s own sweep interval had a gap
-      between ~00:08 and 00:16:51 (interval is nominally 60s) that let a genuinely-earlier death go undetected for
-      longer than usual, vs. the sessions actually dying right at/after the 00:15:11-00:15:33 restart despite
-      `KillMode=process`. **Done when**: either a concrete root cause is identified + fixed, or a documented
-      negative-result investigation (checked X/Y/Z, none reproduce/explain it) with a monitoring recommendation (e.g. a
-      `tmux_session_lost` rate canary analogous to `PlanReconcilerLivenessCanary`) is recorded. Repo:
+- [x] ✅ [BACKEND] P2. **Root-cause investigation complete — see Progress Log.** Agent-orchestrator code-path analysis
+      identified the `remain-on-exit on` bug (silently broken for all sessions, now fixed) as the proximate cause of
+      empty `pane_death_info` — without it, tmux destroys the session entirely when claude exits, leaving no forensic
+      trace. The most likely trigger for claude's exit is account-level rate-limiting (4 sessions sharing one account,
+      mid-task limit hit). A `tmux_session_lost` rate canary is recommended for future detection. Repo:
       agent-orchestrator.
+
+## Progress Log
+
+### 2026-08-10 — Slot 27 (backend_engineer) investigation
+
+**Context**: Read all 4 `context_scope` files + resume_lifecycle.py. Full code-path analysis of the death→discovery
+chain. Config: `watchdog_session_gone_grace_seconds=90`, `boot_grace_seconds=300`.
+
+#### Finding 1 (CONFIRMED — proximate cause of empty `pane_death_info`)
+
+**`remain-on-exit on` was silently broken for EVERY spawned session** from its introduction until the fix in
+`review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08`.
+
+Root cause in `tmux_spawn.py:_start_session`: the `tmux set-option remain-on-exit on` call used `exact_target(session)`
+(the `=name` SESSION-exact-match form) as the target for a WINDOW-scoped option. tmux's `set-option` resolves a
+window-option target as a WINDOW, and `=name` with no window component fails outright (`"no such window: =name"`). The
+call's return code was never checked, so this failed silently for every session.
+
+**Impact**: Without `remain-on-exit on`, when claude exits for ANY reason, tmux destroys the pane AND session entirely —
+exactly matching the observed signature (session gone, `pane_death_info` empty). If working, the dead pane would have
+preserved `#{pane_dead_status}`/`#{pane_dead_signal}`.
+
+**Status**: ALREADY FIXED via `exact_pane_target(session)` (the `=name:` form). Verify whether deployed before 00:01:05
+UTC on 2026-08-10.
+
+#### Finding 2 — Why the pre-restart watchdog didn't detect the deaths
+
+`watchdog_session_gone_grace_seconds=90s`. Last activity ~00:08:00, restart at 00:15:11 — ~7 min, ~7 watchdog ticks.
+With 90s grace, dead sessions should be detected within 2 ticks. Zero kill-trigger lines means either:
+
+- **(Most likely)** Sessions were still technically alive (`has_session()`=True, claude alive but stuck/idle) until
+  close to the restart. "Last log activity" ≠ "tmux session gone."
+- Slot status may have transitioned to `idle` (not in active-slots scan) before sessions died.
+- Pre-restart watchdog thread stuck is less likely (would affect all slots).
+
+#### Finding 3 — Candidate (a) & (b): claude self-exit + account-level trigger
+
+`--session-id` collision ruled out: `uuid.uuid4()` collision probability is astronomically low. The 4-session cluster
+(slots 1, 10, 12, 13 — 2 different agent kinds, same discovery batch) points to **account-level** trigger: all 4 likely
+shared an account that hit a mid-task rate limit or usage cap. 6/10 tranche dispatches failed to spawn at all with
+"benign account/boot-prompt races" — consistent with an account nearing quota.
+
+**Recommended**: Query production DB for `account_id` on SlotRows 1, 10, 12, 13 at incident time.
+
+#### Finding 4 — Candidate (c): TmuxPruner sweep timing consistent
+
+Initial delay `min(interval, 5)` × 1s sleeps on startup. After 00:15:11-00:15:33 restart, first `prune_once()` lands at
+~00:16:00-00:16:51 — matching the 00:16:51 discovery. Pre-restart pruner should have caught earlier deaths — reinforces
+Finding 2.
+
+#### Monitoring recommendation
+
+Add `tmux_session_lost` **rate canary**: fire when ≥N sessions lost within a rolling window (e.g. ≥3 in 10 min). Exclude
+`one_shot`/`scheduled` lifecycle agents and `idle`-status slots.
+
+#### Conclusion
+
+Root cause indeterminate without forensic evidence `remain-on-exit` would have preserved. Most likely: account-level
+rate-limiting/usage-cap on 4 sessions sharing one account, causing claude to exit mid-task. Without `remain-on-exit`,
+tmux destroyed sessions leaving no trace. The fix ensures future occurrences preserve pane death info. The rate canary
+would detect this failure mode regardless of root cause.
+
+**Evidence quality**: Code-path analysis only — no production log/DB access. Operator should verify account-id
+clustering hypothesis against production DB.
