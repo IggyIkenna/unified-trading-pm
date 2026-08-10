@@ -6,7 +6,7 @@ summary: >-
   the batch's sole todo is done. Reconciles the completed todo's evidence back into its TRUE source issue doc (the batch
   was an extraction, so the source doc's own checkbox is the one that goes stale), archives the source doc if it reaches
   zero open todos, and runs the standard 6-step archival ritual on the batch plan itself.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -53,6 +53,11 @@ source: >-
 ---
 
 # AO satellite AO batch 4 — finalize
+
+> **🟢 ARCHIVED 2026-08-10** — all 5 todos `[x]`, `locked_by:` empty. Batch 4's sole todo re-verified + evidence
+> reconciled into its true source doc, source doc confirmed correctly NOT archived (2 open todos remain outside this
+> pair's scope), file-adjacency caution against batch3 confirmed respected, and batch4 itself archived alongside this
+> plan — verified by plan_reconciler agt-c7578b.
 
 > **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until that plan's sole todo is `done`. No separate `status` flip needed
