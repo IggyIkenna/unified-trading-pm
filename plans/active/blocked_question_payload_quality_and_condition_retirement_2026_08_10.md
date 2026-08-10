@@ -231,11 +231,13 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
 
 ### A — payload correctness
 
-- [ ] [BACKEND] P1. **Give `doc_drift` blocked questions their own untruncated formatter**, separate from
+- [x] ✅ [BACKEND] P1. **Give `doc_drift` blocked questions their own untruncated formatter**, separate from
       `_format_drift_item` (which stays Slack-digest-only, 137-char cap intact). New formatter renders both sides plus
       the worker's `description`. **Done when**: a finding with a >500-char claim reaches the card intact, a regression
       test asserts no truncation on the blocked-question path AND that the Slack path still truncates, and
-      `quality-gates.sh` is green. Repo: agent-orchestrator.
+      `quality-gates.sh` is green. — agent-orchestrator@4ba24dd37 (QG green 3122 passed; 5 new tests covering
+      no-truncation, both-sides+description, Slack-path-still-truncates, and end-to-end blocked-question path). Repo:
+      agent-orchestrator.
 - [ ] [BACKEND] P1. **Refuse to raise a blocked row for an undecidable or self-resolving finding** — require non-empty
       `contradicted_by` AND `claim`, and honour a new `resolution_required` boolean from the worker. A finding failing
       the gate still emits its `doc_drift_open` activity row and its Slack digest line, but creates no `BlockedRow`.
