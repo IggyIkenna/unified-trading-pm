@@ -118,9 +118,15 @@ was healthy and progressing, heartbeats current to ~19:40Z).
       (agent-orchestrator@40d6ff0855):** `block_destructive_commands.py` now refuses `gcloud compute instances delete`
       on any VM matching `canonical-migration-*` prefix. This covers AO-dispatched workers. The second todo (explicit
       intent marker for operator-principal laptop agents) is still needed for full coverage of the laptop case.
-- [ ] [INFRA] P0. **Require an explicit intent marker (e.g. `--confirm-delete` or an env gate) before any
+- [x] ✅ [INFRA] P0. **Require an explicit intent marker (e.g. `--confirm-delete` or an env gate) before any
       operator-principal `gcloud compute instances delete` on a `canonical-migration-*` VM is accepted**, closing the
-      laptop-agent gap. (repo: deployment-service)
+      laptop-agent gap. (repo: deployment-service) — **Done**: deployment-service@54cd393728
+      (`scripts/vm/gcloud-vm-delete-guard.sh` + `scripts/vm/install-gcloud-vm-delete-guard-shell-env.sh` +
+      `tests/test_gcloud_vm_delete_guard.bats`, 18 bats tests green, QG green, landed + verified ancestor of
+      `origin/live-defi-rollout`). Guard shadows `gcloud` in interactive/agent shells and REFUSES
+      `compute instances     delete` on a `canonical-migration-*` VM unless `--confirm-delete` or
+      `CANONICAL_MIGRATION_DELETE_CONFIRM=1` is present. Installer must be run on the operator's laptop (where the
+      2026-08-10 delete originated) + the planning VM.
 - [x] ✅ [SCRIPT] P1. **Resolve operator attribution of the 2026-08-10 defi-rebuild delete** (BLK-13334ded) — once
       answered, either proceed with the gated SUSHISWAP `--apply` (intent confirmed) or hold + document the rogue-delete
       disposition. (repo: unified-trading-pm; source: defi_satellite_ao_dispatch_batch11_2026_08_09.md) — **RESOLVED
@@ -136,3 +142,13 @@ was healthy and progressing, heartbeats current to ~19:40Z).
   HARD-RULE-violation pattern, now from a laptop-hosted agent principal. SUSHISWAP launch stays HELD; the rebuild is NOT
   re-launched (clean reconciliation: zero bare-SUSHISWAP re-registration). The remaining guardrail gap (intent marker
   for operator-principal laptop-agent deletes — todo 2 above) remains open.
+- **2026-08-10 (slot 23, infra worker)**: Shipped todo 2 (explicit intent-marker guard for operator-principal
+  `gcloud compute instances delete` of `canonical-migration-*` VMs). implementation mirrors the proven pkill-guard
+  pattern: `deployment-service/scripts/vm/gcloud-vm-delete-guard.sh` defines a `gcloud()` shell function that shadows
+  the real binary and REFUSES `compute instances delete <canonical-migration-*> VM` unless an explicit marker
+  (`--confirm-delete` in argv, stripped before the real gcloud runs, OR `CANONICAL_MIGRATION_DELETE_CONFIRM=1`) is
+  present. `scripts/vm/install-gcloud-vm-delete-guard-shell-env.sh` installs it into `~/.bashrc`/`~/.zshrc` (planning VM
+  - operator laptop — the 2026-08-10 delete originated from a laptop-hosted agent shell). 18 bats tests cover the
+    decision functions + refuse path. QG green; landed `deployment-service@54cd393728`, verified ancestor of
+    `origin/live-defi-rollout`. **Follow-up (operator action, not a tracked todo)**: run the installer on the operator's
+    Mac so the guard is actually live in laptop shells; the code shipping alone does not install it.
