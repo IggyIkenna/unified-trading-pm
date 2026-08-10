@@ -131,11 +131,11 @@ never executed". With forces now firing from 60, the two separate cleanly — an
   68 · `forced_compact` 65 · **`forced_compact_ineffective` 51** · `context_compact_observed` 48, all `role=worker`.
   That is **51/65 = 78% of forced compactions producing no context reduction**, ~13.8 ineffective-force events/hr.
   Recorded here as a BASELINE for the still-open todo above ("Verify forced compaction by its EFFECT, not its
-  submission" — `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10, still `- [ ]`), NOT as evidence
-  of a regression: only todo 9 (queued-message latch) has landed, so the decisive effect-verification fix has not been
-  exercised yet. The figure is not directly comparable to this doc's "~3.5 wedges/hr" baseline — that counts WEDGES,
-  this counts ineffective-force EVENTS — so whoever closes the re-measurement todo should state which metric they are
-  reporting.
+  submission" — `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10, still `- [ ]`), NOT as
+  evidence of a regression: only todo 9 (queued-message latch) has landed, so the decisive effect-verification fix has
+  not been exercised yet. The figure is not directly comparable to this doc's "~3.5 wedges/hr" baseline — that counts
+  WEDGES, this counts ineffective-force EVENTS — so whoever closes the re-measurement todo should state which metric
+  they are reporting.
   - Contrast in the same window, same fleet: `role=main` and `role=review` used the COOPERATIVE path and succeeded —
     main `proactive_compact_guidance` 1 → `context_compact_observed` 1 (idle gate blocked only once), review
     `context_compact_observed` 16 with zero forces. The cooperative path was 100% effective on 17 compactions while the

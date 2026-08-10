@@ -36,7 +36,7 @@ drift_direction: advance-process
 resolved_by:
   "Finding 1: /plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md (already resolved,
   discovered as a stale duplicate). Finding 2: extracted into
-  /plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md for AO dispatch."
+  /plans/archive/2026_08/ao_satellite_ao_dispatch_batch12_2026_08_09.md for AO dispatch."
 locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4113, ~2026-08-08T12:58:58Z); main independently corroborated slot 3 state
