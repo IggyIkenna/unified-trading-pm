@@ -62,10 +62,14 @@ source: >-
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Retire whichever system(s) the audit verdicted DELETE** — remove the dead code entirely (no shim,
-      no `# removed` comment, per this workspace's HARD RULE), update/remove its now-orphaned tests, confirm nothing
-      else imports it before deleting (a final grep, not trust in the audit's earlier grep alone — code may have moved
-      between the audit and this execution phase).
+- [x] ✅ [SCRIPT] P1. **Retire whichever system(s) the audit verdicted DELETE** — remove the dead code entirely (no
+      shim, no `# removed` comment, per this workspace's HARD RULE), update/remove its now-orphaned tests, confirm
+      nothing else imports it before deleting (a final grep, not trust in the audit's earlier grep alone — code may have
+      moved between the audit and this execution phase). — execution-service@0a2f6018 + evidence: deleted
+      `execution_service/engine/multi_leg_orchestrator.py` + `execution_service/engine/instruction_adapter.py` (both
+      audit DELETE verdicts) + 4 orphaned test files; fresh grep (2026-08-10) confirmed zero non-test importers remain;
+      QG green (7892 passed) + adapter-contract baseline entry for `multi_leg_orchestrator.py` removed (ratchet OK, 327
+      files).
 - [ ] [SCRIPT] P1. **Wire `publish_atomic_instruction`/`route_atomic_instructions` into live dispatch** at the exact
       call sites the audit plan mapped (`colocated_engine.py`/`client_worker.py`/`live_execution_handler.py` or wherever
       the audit's todo actually found) — `AtomicInstruction` composites from `CarryStakedBasisEngine` and the
