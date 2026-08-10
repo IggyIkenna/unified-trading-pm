@@ -39,12 +39,16 @@ related_plans:
   - ../active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md
   - ../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
   - ../active/carry_strategy_ensemble_productionization_2026_07_24.md
+  - ../active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md
+  - ../active/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md
   - ../active/cross_venue_funding_reversion_research_2026_07_24.md
   - ../active/crypto_alpha_research_2026_07_24.md
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
+  - ../active/family2_position_registry_unwind_consumption_2026_08_09.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
+  - ../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
+  - ../active/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-  - ../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -108,7 +112,7 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+_13 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -122,20 +126,6 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 1.0 cal AI-days (class: brand-new) **title**: Capability wizard — client-lite
 successor + CI-runner openapi regen follow-up
 
-### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
-
-**status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
-Construction, Signal Research & Paper-Trading POC
-
-### [`vol_dvol_backtestable_engines_2026_07_13`](../archive/2026_08/vol_dvol_backtestable_engines_2026_07_13.md)
-
-**status**: ✅ ARCHIVED 2026-08-03 to `plans/archive/2026_08/` — all 5 todos done; both VOL_CARRY and VOL_ARB_RV_IV
-backtests came back non-passing (BLOCKED-INSUFFICIENT-EDGE), stay `not_available`; matrix regen confirmed 0/2 flipped
-**estimate**: 5.0 cal AI-days (class: brand-new) **title**: DVOL-Backtestable VOL Engines — VOL_CARRY + VOL_ARB_RV_IV
-register-or-honest-absent
-
-## P2 — useful; opportunistic
-
 ### [`carry_staked_basis_funding_scan_experiment_2026_06_16`](../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis funding-carry scan —
@@ -145,6 +135,28 @@ exploratory analysis harness + journal
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis — ensemble
 orchestrator engine + strategy-service productionization
+
+### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
+
+**status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
+Construction, Signal Research & Paper-Trading POC
+
+### [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — RecursiveLoopOrchestrator
+wiring plan reconciliation + archival
+
+## P2 — useful; opportunistic
+
+### [`cefi_satellite_ao_dispatch_batch13_2026_08_09`](../active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — item-level
+extraction from 19 non-qualifying NA docs (strategy_master group)
+
+### [`cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize`](../active/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — finalize
+(reconcile source docs + archive)
 
 ### [`cross_venue_funding_reversion_research_2026_07_24`](../active/cross_venue_funding_reversion_research_2026_07_24.md)
 
@@ -161,6 +173,11 @@ opportunity-checker + wizard full-parameterization
 **status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: Deeper-Than-L5 Order Book Capture —
 populate queue_position_* for MARKET_MAKING_QUEUE_MICROSTRUCTURE
 
+### [`strategy_service_family2_close_unwind_emission_2026_08_09`](../active/strategy_service_family2_close_unwind_emission_2026_08_09.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design) **title**: Family-2 (CARRY_BASIS_PERP_INV)
+close/unwind instruction emission — strategy-service
+
 ### [`v2_engine_venue_buildout_2026_06_15`](../active/v2_engine_venue_buildout_2026_06_15.md)
 
 **status**: active · **estimate**: 66.0 cal AI-days (class: research) **title**: v2 Engine + Venue Build-Out — 22
@@ -168,7 +185,10 @@ engineless archetypes + 9 unwired venues
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`family2_position_registry_unwind_consumption_2026_08_09`](../active/family2_position_registry_unwind_consumption_2026_08_09.md)
+
+**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Family2PositionRegistry — consume the
+Family-2 close/unwind event once it exists
 
 ## Archived plans
 

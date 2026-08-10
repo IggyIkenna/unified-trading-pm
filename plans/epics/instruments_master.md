@@ -38,22 +38,29 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  - ../active/canonical_id_builder_retrofit_checklist_2026_07_08.md
   - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
+  - ../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md
   - ../active/infra_capture_and_devops_leftovers_2026_07_06.md
+  - ../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md
   - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
   - ../active/instruments_completion_tracker_2026_07_06.md
   - ../active/instruments_foundation_completeness_2026_06_24.md
   - ../active/instruments_foundation_phase0_cross_cutting_2026_07_24.md
   - ../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
-  - ../archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md
+  - ../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md
   - ../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md
   - ../active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
   - ../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md
   - ../active/mvp_scope_catalogue_tagging_2026_06_08.md
   - ../active/prediction_capture_incident_remediation_2026_07_06.md
   - ../active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md
+  - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md
+  - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md
 last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
@@ -445,7 +452,7 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_16 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+_23 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -474,20 +481,25 @@ Completeness — gated rebuild, every asset group
 **status**: active · **estimate**: 5 cal AI-days (class: design) **title**: Instruments Foundation — tradfi G1→G5 gate
 execution
 
+### [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: MTDS venue onboarding + ops-hardening
+residuals
+
 ### [`prediction_capture_incident_remediation_2026_07_06`](../active/prediction_capture_incident_remediation_2026_07_06.md)
 
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra)
 
-### [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](../active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi legacy-twin bucket deletes — Ikenna
-sign-off gate
-
 ## P1 — important; post-current-gate
 
-### [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
+### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09`](../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md)
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
+**status**: active · **estimate**: 4.4 cal AI-days (class: infra)
+
+### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
+finalize (reconcile source docs + archive)
 
 ### [`infra_capture_and_devops_leftovers_2026_07_06`](../active/infra_capture_and_devops_leftovers_2026_07_06.md)
 
@@ -499,23 +511,10 @@ sign-off gate
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Instruments <-> MTDS F1-N9 consistency
 remediation -- residual continuation
 
-### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md)
-
-**status**: complete (archived 2026-07-26 — pure entry-point index, 0 todos of its own) · **estimate**: 0.2 cal AI-days
-(class: infra) **title**: Instruments ↔ MTDS subset + consistency remediation. Substantive scope lives on in the 3
-sibling cards in this section (`instruments_mtds_consistency_remediation_residuals_2026_07_24`,
-`instruments_store_cf_canonicalization_single_walk_2026_07_24`,
-`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`).
-
 ### [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Instruments-store CF canonicalisation —
 inherited single-walk lineage
-
-### [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: MTDS venue onboarding + ops-hardening
-residuals
 
 ### [`mvp_scope_catalogue_tagging_2026_06_08`](../active/mvp_scope_catalogue_tagging_2026_06_08.md)
 
@@ -523,9 +522,47 @@ residuals
 
 ## P2 — useful; opportunistic
 
-### [`canonical_id_builder_retrofit_checklist_2026_07_08`](../active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+### [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
 
-**status**: active · **estimate**: 2 cal AI-days (class: refactor)
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
+
+### [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09`](../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
+
+**status**: active · **estimate**: 1.76 cal AI-days (class: infra)
+
+### [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 11 —
+finalize (reconcile source doc + archive)
+
+### [`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`](../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Finalize — defi A_TOKEN/DEBT_TOKEN
+instrument_type-alias + oracle_prices validity fix close-out
+
+### [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers —
+finalize (reconcile parent checkboxes + archive)
+
+### [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md)
+
+**status**: active · **estimate**: 0.1 cal AI-days (class: refactor) **title**: Instruments <-> MTDS F1-N9 consistency
+remediation residuals — finalize
+
+### [`tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24`](../active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)
+
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi legacy-twin bucket deletes — Ikenna
+sign-off gate
+
+### [`tradfi_satellite_ao_dispatch_batch9_2026_08_09`](../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md)
+
+**status**: active · **estimate**: 0.96 cal AI-days (class: infra)
+
+### [`tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize`](../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: TradFi satellite AO batch 9 — finalize
+(reconcile 2 source docs + archive)
 
 ## P3 — backlog; revisit quarterly
 

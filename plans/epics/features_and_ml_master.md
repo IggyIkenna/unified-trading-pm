@@ -35,7 +35,11 @@ created: 2026-05-07
 name: features_and_ml_master
 tier: L1
 priority: P1
-assigned_vm: vm-ml
+assigned_vm:
+  NA # corrected 2026-08-10 (plan_reconciler, cross-cutting tranche, generalising the 2026-08-02/06 § 2e
+  # ruling already applied to agent_operating_framework_master/orchestrator_master/plan_hygiene_master);
+  # PLAN_FORMAT.md:211 -- NA is the expected value on every current epic, a legacy vm-<id> is optional-historical only.
+  # (was: vm-ml)
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:

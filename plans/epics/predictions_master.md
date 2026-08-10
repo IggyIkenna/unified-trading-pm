@@ -36,11 +36,20 @@ related_plans:
   - ../active/prediction_consolidated_closeout_2026_07_18.md
   - ../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md
   - ../active/prediction_live_clob_depth_capture_2026_07_24.md
-  - ../archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
   - ../active/prediction_phase_ab_residuals_2026_07_24.md
   - ../active/prediction_phase_c_data_status_ui_2026_07_24.md
   - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
   - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
+  - ../active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md
+  - ../active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md
+  - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
+  - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
+  - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
+  - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md
+  - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md
+  - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md
+  - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md
+  - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
 last_updated: 2026-07-12
@@ -904,15 +913,14 @@ features predict.
 
 ## Assigned active plans
 
-_10 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
+_19 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
+### [`prediction_satellite_ao_dispatch_batch6_2026_07_29`](../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Predictions ML Model 2A walk-forward +
-arb_calculator (sports_predictions_e2e predictions half)
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra)
 
 ### [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md)
 
@@ -942,6 +950,21 @@ honest-coverage UI (split from prediction_consolidated_closeout_2026_07_18)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
+### [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — the
+un-triaged A3-relocated sibling-doc gap (cross-venue-arb + live-clob-depth)
+
+### [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](../active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
+
+**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: Prediction satellite AO batch 4 — finalize
+(reconcile sibling source docs + resolve deferrals + archive)
+
+### [`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`](../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md)
+
+**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Prediction satellite AO batch 6 — finalize
+(reconcile source docs + re-check deferrals + archive)
+
 ## P2 — useful; opportunistic
 
 ### [`prediction_cross_venue_arb_and_coverage_2026_07_24`](../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
@@ -954,14 +977,39 @@ arb detection + honest-coverage correctness
 **status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction (Kalshi/Polymarket) live +
 batch CLOB depth & trades capture infrastructure
 
-### [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+### [`prediction_satellite_ao_dispatch_batch10_2026_08_09`](../active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
 
-**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures —
-PARKED crypto-perp venue track
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+
+### [`prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize`](../active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
+
+**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: Prediction satellite AO batch 10 —
+finalize (reconcile 4 source docs + archive)
+
+### [`prediction_satellite_ao_dispatch_batch8_2026_08_08`](../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: refactor)
+
+### [`prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+
+**status**: active · **estimate**: 0.1 cal AI-days (class: infra) **title**: Prediction satellite AO batch 8 — finalize
+(reconcile source doc + re-check deferrals + archive)
+
+### [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Predictions ML Model 2A walk-forward +
+arb_calculator (sports_predictions_e2e predictions half)
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`prediction_satellite_ao_dispatch_batch7_2026_08_04`](../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md)
+
+**status**: active · **estimate**: 0.18 cal AI-days (class: research)
+
+### [`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize`](../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md)
+
+**status**: active · **estimate**: 0.12 cal AI-days (class: infra) **title**: Prediction satellite AO batch 7 — finalize
+(reconcile source doc + re-check deferrals + archive)
 
 ## Archived plans
 

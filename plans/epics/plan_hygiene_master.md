@@ -25,6 +25,8 @@ codex_ssots:
 related_plans:
   - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01.md
   - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md
+  - ../active/infra_satellite_ao_dispatch_batch11_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
   - ../active/june_2026_vintage_audit_findings_2026_07_27.md
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
@@ -207,7 +209,7 @@ single-walk discipline) consistently aligned. Residual items:
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: plan_hygiene_master` in their frontmatter. Workers pick up in priority order (P0
+_5 active plans declare `parent_epic: plan_hygiene_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -231,6 +233,16 @@ archives, migrations, rehomes, operator-gate queue
 ### [`codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27`](../active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md)
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+
+### [`infra_satellite_ao_dispatch_batch11_2026_08_09`](../active/infra_satellite_ao_dispatch_batch11_2026_08_09.md)
+
+**status**: active · **estimate**: 0.08 cal AI-days (class: refactor) **title**: Infra satellite AO batch 11 —
+na-eligibility-audit body-hash blind to context-scout's Progress Log marker line
+
+### [`infra_satellite_ao_dispatch_batch11_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
+
+**status**: active · **estimate**: 0.06 cal AI-days (class: refactor) **title**: Infra satellite AO dispatch batch 11 —
+finalize (reconcile source-doc checkboxes + archive)
 
 ## P3 — backlog; revisit quarterly
 

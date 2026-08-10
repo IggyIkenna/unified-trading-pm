@@ -132,25 +132,28 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       sports MTDS launcher; --tier has no MTDS CLI arg)
 
       > **WAIVER (2026-07-12, finding 144, operator ruling 'RATIFY + VERIFY')**: The 2026-06-21 sports backfill VMs
-                                                                                                                                                                                                                                                                                                                                          > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
-                                                                                                                                                                                                                                                                                                                                          > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
-                                                                                                                                                                                                                                                                                                                                          > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
-                                                                                                                                                                                                                                                                                                                                          > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
-                                                                                                                                                                                                                                                                                                                                          > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
-                                                                                                                                                                                                                                                                                                                                          > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
-                                                                                                                                                                                                                                                                                                                                          > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
-                                                                                                                                                                                                                                                                                                                                          > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
-                                                                                                                                                                                                                                                                                                                                          > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
-                                                                                                                                                                                                                                                                                                                                          > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
-                                                                                                                                                                                                                                                                                                                                          > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
-                                                                                                                                                                                                                                                                                                                                          > — it caused no canonical-form regression. Recorded in
-                                                                                                                                                                                                                                                                                                                                          > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
+                                                                                                                                                                                                                                                                                                                                                  > (mtds-backfill-odds-{2020..2026}, sports-full-sweep-{2019..2026}, IS gap-fill,
+                                                                                                                                                                                                                                                                                                                                                  > footystats-fwd-20260621-142249) launched before the canonical-walk C-GREEN gate closed were verified
+                                                                                                                                                                                                                                                                                                                                                  > read-only against the live manifest _index + sampled GCS objects. Verdict: CANONICAL. Sampled writes (1.88M
+                                                                                                                                                                                                                                                                                                                                                  > rows: 1.23M MTDS + 0.65M IS) carry schema_version=9 (int, 100%), fully populated source-aware
+                                                                                                                                                                                                                                                                                                                                                  > pipeline_mode/source (0% blank), a compliant 4-state capture_status, 99.65%+ typed honest-absence reasons,
+                                                                                                                                                                                                                                                                                                                                                  > and canonical hive-partitioned GCS paths (verified by direct sample). Zero writes landed in the legacy MTDS
+                                                                                                                                                                                                                                                                                                                                                  > bucket. Two residual gaps are pre-existing/schema-evolution artifacts already tracked by this plan's own
+                                                                                                                                                                                                                                                                                                                                                  > gates, not defects from this launch: (1) available_at blank on MTDS rows — the column was added to the v9
+                                                                                                                                                                                                                                                                                                                                                  > schema 2026-06-26, 5 days after this write (CF-8); (2) IS entity=fixtures objects use a non-hive GCS path
+                                                                                                                                                                                                                                                                                                                                                  > though their manifest column values are canonical (documented CF-2-paths probe characteristic). The
+                                                                                                                                                                                                                                                                                                                                                  > sequencing gate breach (launch preceded C-GREEN) is ratified retroactively as a **process** violation only
+                                                                                                                                                                                                                                                                                                                                                  > — it caused no canonical-form regression. Recorded in
+                                                                                                                                                                                                                                                                                                                                                  > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 finding 144.
 
-- [ ] [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target asset_group's
-      canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144. **na-eligibility-audit
-      2026-08-03**: already tracked (still open) as part of `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s
-      combined todo (sub-item (b), `assigned_vm: planning`, `status: active`) — not closing here, just citing to avoid
-      this reading as unclaimed.
+- [x] ✅ [INFRA] P2. Add a gate-check step to the VM-launch protocol (launcher refuses/warns when the target
+      asset_group's canonicalisation gate is not GREEN) — recurrence-prevention follow-up from finding 144. **DONE —
+      verified by plan_reconciler 2026-08-10**: the tracking doc this cited
+      (`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`) is now archived (`plans/archive/2026_08/...`,
+      `status: resolved`) with its combined todo's sub-item (b) shipped — added `lc_verify_canonicalisation_gate` to
+      `deployment-service/scripts/vm/lib/launcher_common.sh`, auto-wired into `lc_gcloud_create` via the existing
+      `VM_ASSET_GROUP=` metadata convention (warn/enforce modes, 29 new pytest tests exercising GREEN/RED/missing-
+      marker states) — `deployment-service@c97fefc9`.
 - [x] [DATA] P0. **cefi — 802k `attempted_failed` TRIAGED** (CEFI lane 2026-06-21, measured from consolidated v9
       `_index`): by source — **tardis 753,341 + 22,519 phantom = 775,860 (96.7%) Tardis-gated** (batch_tardis;
       historical billing EXCLUDED → BLOCKED-CREDENTIALS) · **hyperliquid 30,835 + aster 17,675 = 48,510 free-venue
@@ -576,11 +579,16 @@ formula.) (v9 `schema_version` uniformity is a SEPARATE P3 axis, HARD-gated on a
       LIGHTER/PACIFICA/EXTENDED, BITGET gap days) so MTDS↔IS subset closes both ways.
 - [ ] [DATA] P2. **Step 3 — cross-data_type completeness** capture the FULL expected data_type set per listed instrument
       (not just `trades`), per `venue_data_types.yaml`.
-- [ ] [DATA] P1. **Step 4 — credential-gated venues** `BLOCKED-CREDENTIALS`: file the asks (Helius/Alchemy, Glassnode/
-      Kaiko, Tardis, Databento, Sportradar/Odds-API); build scaffold + tests now, backfill on creds.
-      **na-eligibility-audit 2026-08-03**: already tracked (still open) as part of
-      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s combined todo (sub-item (a), `assigned_vm: planning`,
-      `status: active`) — not closing here, just citing.
+- [x] ✅ [DATA] P1. **Step 4 — credential-gated venues** `BLOCKED-CREDENTIALS`: file the asks (Helius/Alchemy,
+      Glassnode/ Kaiko, Tardis, Databento, Sportradar/Odds-API); build scaffold + tests now, backfill on creds. **DONE —
+      verified by plan_reconciler 2026-08-10**: `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s sub-item
+      (a) (archived, `status: resolved`) re-verified all 5 vendor groups live 2026-08-09 — Tardis already resolved
+      (billing lifted 2026-07-12), Helius/Alchemy/Databento-core/Odds-API already carry live secrets, so only the 2
+      genuinely-uncredentialed gaps got fresh issue docs:
+      `plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md` and
+      `plans/active/issues/sportradar_credential_ask_2026_08_09.md` (both scaffolded + mocked-test-covered, correctly
+      still `BLOCKED-CREDENTIALS`), plus `plans/active/issues/databento_ice_opra_subscription_ask_2026_08_09.md` for the
+      separately-excluded ICE/OPRA datasets (a billing decision, not a missing credential).
 - [ ] [DATA] P1. **Step 5 — keep it 100%**: live capture per AG (batch=live) + continuous verification green
       (consolidator healthy, data-status dashboard = standing proof, alert on regression).
 - [ ] [CODE] P0. **DeFi catalogue MVP filter** — MTDS reads the IS catalogue as the MVP filter (TVL-qualifying
@@ -724,12 +732,11 @@ above):**
       `dex_pools`/`swaps_ohlcv` for `UNISWAP_V2`/`UNISWAP_V3`/`CURVE` + `lending_indices`/`lst_rates` for named Solana
       protocols, spanning ~703 dates. This is a physical-relabel/backfill migration pass, not a blind same-session fix.
       **operator ruling 2026-08-08 (NA-corpus blocker digest round 5, id=49)**: yes, scope it and dispatch. Filed as a
-      concrete follow-up plan: `defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md` (NOT present in the repo as of
-      this edit — link removed pending re-filing; do not re-add the link until the file actually exists at that path)
-      (`assigned_vm: NA` pending a proper scoping/sizing pass — the ~703-date backfill/relabel campaign needs a
-      dedicated scoping session before it's AO-dispatch-ready, not blind-flipped to `planning`). This todo closes by
-      having filed the successor; the successor plan is the new owner of the actual scope+dispatch work. parent_epic:
-      mtds_mdps_master.
+      concrete follow-up plan: `/plans/active/defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md` — **now filed and
+      confirmed present** (verified by plan_reconciler 2026-08-10: `status: active`, `priority: P1`) (`assigned_vm: NA`
+      pending a proper scoping/sizing pass — the ~703-date backfill/relabel campaign needs a dedicated scoping session
+      before it's AO-dispatch-ready, not blind-flipped to `planning`). This todo closes by having filed the successor;
+      the successor plan is the new owner of the actual scope+dispatch work. parent_epic: mtds_mdps_master.
 - [x] ✅ [INFRA] P1. **Cross-cutting — scheduled `uts-prod-cf-manifest-audit` Cloud Run Job has NEVER produced a
       successful run in this window** (asia-northeast1, meant to run this exact CF-1..CF-14 audit daily 06:00 UTC for
       ALL 5 asset_groups automatically). Confirmed failing every day 2026-07-04→2026-07-13 ("Application exec likely
@@ -777,34 +784,34 @@ above):**
       entry is the durable record.
 
       Original text (superseded by the above, retained for provenance): One important distinction to
-                                                      flag, not to relitigate the operator's decision: this specific delete is tagged hard-stop #2 in
-                                                      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3, which the doc's own repeated reviews (2026-07-27,
-                                                      2026-07-28) confirm is a PERMANENT hard-stop that §3a's reversibility carve-out explicitly does NOT cover,
-                                                      "regardless of how thoroughly the pre-checks are" — a different category from the god-SA/VM-launch items ruled
-                                                      alongside this one, which ARE reversibility-eligible. Per the protocol's own text this class requires literal
-                                                      human execution (the actual `gcs_delete_object` call run by a person at the keyboard), not an agent dispatch, even
-                                                      a pre-approved one — so this todo stays off the AO-dispatchable path. Parity is fully verified (835/835 objects,
-                                                      exhaustive, confirmed twice) — the moment the operator (or another human, with them present) runs the delete, it's
-                                                      ready to execute with the evidence already in hand; cite `Evidence:` per the protocol on completion.
-                                                      **BLOCKED-OPERATOR-DECISION** — delete the non-canonical (glued + bare-underlying) BYBIT `futures_chain` originals
-                                                      in `market-data-tick-cefi-prd-central-element-323112` once ready. Version-aware, snapshot first, same rigor as
-                                                      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly NOT bundled with the reshape
-                                                      apply step. (FOLDED IN from bybit_futures_chain_write_shape_migration_2026_07_13, 2026-07-15, plan-reconcile §6
-                                                      operator ruling). **Prerequisite CLEARED**: Phase 3.5's parity verification is fully green and doubly-confirmed
-                                                      (835/835 objects, exhaustive not sampled, independently re-run by two slots — see the archived source plan's Phase
-                                                      3.5). **Gate re-verified 2026-07-27, stays `[OPERATOR]` — this is NOT the Category-C reversibility carve-out**
-                                                      (finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): a fresh check confirms the bucket
-                                                      carries 604800s soft-delete retention, but this delete is a legacy-object-delete-**after-copy** (the reshape
-                                                      script copied these originals into canonical hive form before this step) — that is hard-stop #2 in the protocol's
-                                                      §3 human-only list, and §3a's reversibility exception explicitly overrides ONLY hard-stop #1, never #2, regardless
-                                                      of soft-delete config. Hard-stop #2 additionally requires the full five-part proof (§1, especially Part 5's 100%
-                                                      canonical-twin-coverage invariant) before even a delete SUGGESTION may be emitted — not independently re-verified
-                                                      here — and execution stays human-only either way. Correctly gated; no downgrade. **Reviewed 2026-07-28 (operator
-                                                      gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**: this is hard-stop #2 (irreversible legacy-object
-                                                      delete-after-copy) in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3, which the §3a reversibility
-                                                      carve-out never covers regardless of how thoroughly the pre-checks (dry-run, canonical-twin verification,
-                                                      zero-intersection) are re-verified — every pre-check being green does not change the disposition. Not retagged,
-                                                      not unlocked; the operator must personally execute or sign off on the actual delete/apply command.
+                                                              flag, not to relitigate the operator's decision: this specific delete is tagged hard-stop #2 in
+                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3, which the doc's own repeated reviews (2026-07-27,
+                                                              2026-07-28) confirm is a PERMANENT hard-stop that §3a's reversibility carve-out explicitly does NOT cover,
+                                                              "regardless of how thoroughly the pre-checks are" — a different category from the god-SA/VM-launch items ruled
+                                                              alongside this one, which ARE reversibility-eligible. Per the protocol's own text this class requires literal
+                                                              human execution (the actual `gcs_delete_object` call run by a person at the keyboard), not an agent dispatch, even
+                                                              a pre-approved one — so this todo stays off the AO-dispatchable path. Parity is fully verified (835/835 objects,
+                                                              exhaustive, confirmed twice) — the moment the operator (or another human, with them present) runs the delete, it's
+                                                              ready to execute with the evidence already in hand; cite `Evidence:` per the protocol on completion.
+                                                              **BLOCKED-OPERATOR-DECISION** — delete the non-canonical (glued + bare-underlying) BYBIT `futures_chain` originals
+                                                              in `market-data-tick-cefi-prd-central-element-323112` once ready. Version-aware, snapshot first, same rigor as
+                                                              `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase-7. Explicitly NOT bundled with the reshape
+                                                              apply step. (FOLDED IN from bybit_futures_chain_write_shape_migration_2026_07_13, 2026-07-15, plan-reconcile §6
+                                                              operator ruling). **Prerequisite CLEARED**: Phase 3.5's parity verification is fully green and doubly-confirmed
+                                                              (835/835 objects, exhaustive not sampled, independently re-run by two slots — see the archived source plan's Phase
+                                                              3.5). **Gate re-verified 2026-07-27, stays `[OPERATOR]` — this is NOT the Category-C reversibility carve-out**
+                                                              (finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): a fresh check confirms the bucket
+                                                              carries 604800s soft-delete retention, but this delete is a legacy-object-delete-**after-copy** (the reshape
+                                                              script copied these originals into canonical hive form before this step) — that is hard-stop #2 in the protocol's
+                                                              §3 human-only list, and §3a's reversibility exception explicitly overrides ONLY hard-stop #1, never #2, regardless
+                                                              of soft-delete config. Hard-stop #2 additionally requires the full five-part proof (§1, especially Part 5's 100%
+                                                              canonical-twin-coverage invariant) before even a delete SUGGESTION may be emitted — not independently re-verified
+                                                              here — and execution stays human-only either way. Correctly gated; no downgrade. **Reviewed 2026-07-28 (operator
+                                                              gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**: this is hard-stop #2 (irreversible legacy-object
+                                                              delete-after-copy) in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3, which the §3a reversibility
+                                                              carve-out never covers regardless of how thoroughly the pre-checks (dry-run, canonical-twin verification,
+                                                              zero-intersection) are re-verified — every pre-check being green does not change the disposition. Not retagged,
+                                                              not unlocked; the operator must personally execute or sign off on the actual delete/apply command.
 
 ## Deferred work — migrated to:
 
