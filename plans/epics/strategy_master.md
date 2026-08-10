@@ -94,8 +94,9 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 ## Codex SSOTs
 
-- [`codex/09-strategy/architecture-v2/`](../../codex/09-strategy/architecture-v2/) — strategy v2 SSOT (53 archetypes
-  - 7 axes + 11 cross-cutting + 2 architecture docs)
+- [`codex/09-strategy/architecture-v2/`](../../codex/09-strategy/architecture-v2/) — strategy v2 SSOT (archetype count
+  is a live code figure, see the "59 archetypes (was: 53)" note above — 7 axes + 11 cross-cutting + 2 architecture docs;
+  corrected 2026-08-10 to drop the stale hardcoded "53" this same section's own remedy warns against restating)
 - [`/codex/04-architecture/shadow-deployment-pattern.md`](/codex/04-architecture/shadow-deployment-pattern.md) — shadow
   window contract for archetype builds
 - [`/codex/11-project-management/epic-execution-with-sub-agents.md`](/codex/11-project-management/epic-execution-with-sub-agents.md)

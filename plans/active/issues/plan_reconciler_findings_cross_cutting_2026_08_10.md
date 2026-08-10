@@ -48,23 +48,80 @@ with zero committed content is not, by itself, an actionable finding for this ru
 
 ## Flips verified
 
-(none yet)
+1. `bucket_iam_write_protection_per_tier_2026_06_09.md` P1.3 — closed MOOT (superseded by P2.3's already-passing
+   real-tier-pair test; P1.3 as worded tests the permanently-retired dev/stg pair). Doc now 100% done, locked
+   (`live-defi-rollout`) — archive-ready-once-unlocked, see Archive candidates below. `unified-trading-pm@388f07d0d0`.
+2. `data_completion_to_100_all_ag_2026_06_21.md` — 2 todos flipped: (a) VM-launch canonicalisation-gate check, verified
+   via the archived `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s cited `deployment-service@c97fefc9`;
+   (b) Step-4 credential-gated venues, verified via the same archive's re-verification (Tardis/Helius/Databento-core/
+   Odds-API already live, Glassnode+Kaiko/Sportradar/Databento-ICE-OPRA correctly filed as their own issue docs).
+   `unified-trading-pm@29d8e89f42`.
+3. `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` — both main checkboxes (deployment-api quote_asset/
+   margin_type API, deployment-ui heatmap filter) confirmed genuinely shipped (`deployment-api@c250348`,
+   `deployment-ui@e2d109a`, both verified live-on-origin 2026-08-05) despite the doc's own pre-existing stale prose
+   saying otherwise. Doc reached 0 open todos — archived, see Archive candidates. `unified-trading-pm@83a81279dc`.
+4. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` — 2 todos flipped (`--live` 11-venue snapshot mode; dYdX
+   v4 + Vertex wiring), both verified shipped via `e2e-testing@6e2ffb8` (live-code-grepped in the current file, not
+   sha-ancestry — this repo's history predates a documented 2026-08-05 rewrite that broke ancestor-checking for older
+   commits). A 3rd (Drift creds/RPC) NOT flipped — genuinely ambiguous whether it duplicates a sibling MTDS todo, routed
+   instead of guessed. `unified-trading-pm@<pending final push>`.
 
 ## Contradictions
 
-(none yet)
+1. `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` — checkbox-vs-prose contradiction (both checkboxes
+   correctly `[x]`, the doc's OWN 08-03 prose was stale by the time a later 08-06 audit read it) — bridging notes added,
+   2 malformed/duplicate Follow-up todos closed as moot rather than deleted. Resolved + archived (see Flips).
+2. 3 docs citing `cross_cutting_consolidated_closeout_2026_07_25.md` as "over the 1000-line hard cap" — live-verified
+   720 lines (already split via a prior commit). **Not yet fixed in the 3 citing docs** — routed, see Filed below (low
+   priority, the citations are individually stale but harmless; a future pass can batch-fix).
+3. `is_catalogue_g1_root_audit_log_2026_07_24.md` self-contradicts on G1.run-full-history ownership (one line says
+   EXTRACTED elsewhere, another says still-owned-here) — **not yet resolved**, see Plans not reached.
+4. `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s "Deferred work — migrated to:" section is
+   orphaned/stale (dead line-number refs, one successor citation points at an archived doc) — **not yet resolved**, see
+   Plans not reached.
+5. `live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` (`status: blocked`) — the blocking condition (a dead
+   compactor job) is very likely resolved per a cross-repo grep, but needs a live `gcloud run jobs executions list`
+   re-verify before flipping — **not yet resolved**, see Plans not reached.
 
-## Doc-drift
+## Codex corrections applied (mechanical, evidence-cited — STEP 5.f2 carve-out)
 
-(none yet)
+1. `/codex/05-infrastructure/manifest-consolidator-ssot.md` — ml-store consolidator fold ratio corrected "5 → 1" to "2 →
+   1", matching `bucket_fold_ml_2026_07_17.md`'s own twice-stated ground truth (only 1 of 5 ml kinds ever had a
+   consolidator). Single-row substitution, no governance area touched, no new measurement.
+   `unified-trading-pm@<pending>`.
+2. `/codex/02-data/carry-venue-live-integration-reference.md` §8 items 1 and 6 — added a "DONE for the e2e read" marker
+   matching item 7's existing pattern, both verified shipped in the same `e2e-testing@6e2ffb8` change (live-code
+   confirmed, see Flips #4). `unified-trading-pm@<pending>`.
 
-## Codex corrections applied (mechanical, evidence-cited)
-
-(none yet)
+**Self-correction (important — logged for the record):** an EARLIER fix this run (part of `29d8e89f42`) corrected 3
+epics' stale-looking `assigned_vm: vm-cross-cutting`/`vm-operator-ops`/`vm-ml` to `NA`, reasoning from the precedent of
+3 sibling epics already fixed from `assigned_vm: planning`. That precedent does NOT actually apply — `planning` on an
+epic is a live, misleading claim (D2 explicitly dropped epic-level dispatch); a legacy `vm-<id>` is EXPLICITLY
+sanctioned as historical archaeology per an on-the-record 2026-07-12 ruling (finding 123/262, §A2 B-queue, cited
+verbatim in `instruments_master.md`/`sports_master.md`: "RETAINED WORKSPACE-WIDE... migration OUT OF SCOPE"). Self-
+caught while reviewing my own diff; reverted in `unified-trading-pm@27781e212d` before it could compound into a fresh
+contradiction for a future audit to untangle. Logged here per the "report what did NOT land cleanly" honesty rule — this
+was a genuine near-miss, not something to bury.
 
 ## Hygiene fixes
 
-(none yet)
+1. `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` — repaired 9 instances of mojibake corruption
+   (double-encoded 🔴/🟢 emoji + `×` multiplication sign, likely from the 2026-07-24 verbatim split from an archived
+   parent). Content-only, isolated to this file (corpus-checked). `unified-trading-pm@42b68c8ba8`.
+2. **Epic-roster regeneration** (`scripts/plans/populate_epic_bodies_2026_05_21.py --apply`) — ALL 22 epics were stale
+   (derived "Assigned active plans" roster + `related_plans:` frontmatter drifted from live corpus state); ran
+   corpus-wide since the tool is a pure DERIVED-projection regenerator (Phase-4's "regenerate via tooling, never
+   hand-sync" pattern) with no narrative-content risk (spot-checked diffs on `mtds_mdps_master`/`defi_master`/
+   `infrastructure_master` — only the roster section + `related_plans:` changed). `mtds_mdps_master` alone was 4 real
+   docs behind (4→8); `instruments_master` undercounted 16→23. `unified-trading-pm@29d8e89f42`.
+3. `strategy_master.md` epic hub — dropped a hardcoded "53 archetypes" from its own Codex-SSOTs pointer line, which
+   contradicted the SAME doc's body 2 paragraphs above (which already explains the count is a live code figure, not a
+   constant, and specifically warns against this exact restatement pattern).
+4. `capability_wizard_analysis_findings_2026_06_11.md` — F5's "Status: OPEN" corrected to RESOLVED (verified fixed
+   2026-07-27 via `unified-trading-pm@ce6eb1775` in the sibling gap-discovery doc, never reflected back); F12/F14's
+   hedge-pointer ("decision deferred to the UI-phase owner") resolved to a confirmed real successor doc.
+5. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` — annotated a duplicate Aave-Ethereum backfill todo as
+   superseded-in-place by its own doc's more refined follow-up todo (same gap, tracked twice).
 
 ## Filed
 
@@ -78,7 +135,10 @@ with zero committed content is not, by itself, an actionable finding for this ru
 
 ## Archive candidates (operator review)
 
-(none yet)
+1. `bucket_iam_write_protection_per_tier_2026_06_09.md` — 100% done (last todo closed this run),
+   `locked_by: live-defi-rollout` — needs `[unlock-plan]` before the standard archival ritual can run. Its gated
+   finalize plan (`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27.md`) can dispatch once the parent
+   flips `active`.
 
 ## Refuted (dropped by verify)
 

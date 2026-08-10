@@ -203,6 +203,17 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - [ ] [DATA] P2. Backfill Aave (Ethereum) supply/borrow rates + maxLTV/e-mode into GCS — unblocks the recursive loop
       (strategy 5, both USD-cash-floor and ETH-borrow) and the real cash-floor rate. Only Solana (Kamino/Solend) exists
       today. **Repo: market-tick-data-service + deployment-service.**
+
+      **SUPERSEDED-IN-PLACE (plan_reconciler 2026-08-10).** The backfill VM this todo asked for ran and partially
+              completed (see the 2026-06-16 log entries below).
+
+              Aave V3 wrote for Arbitrum/Avalanche/Base. ETH coverage is spotty (429-throttled).
+
+              Remaining scope is narrower now. It is tracked by the "Complete Aave-Ethereum lending backfill" todo under
+              "Open data gaps (part 2)" below (same gap, refined after the first run's real result).
+
+              Leaving this checkbox open since the work is genuinely not done. Do not dispatch both todos independently.
+
 - **2026-06-16** — 🟢 **VM RUNNING — Aave + lending-indices backfill** `mtds-lending-indices-20260616-225256`
   (e2-standard-4, asia-northeast1-c). Verdict from investigation: Aave V3 is a **config-run, not new code** — `aave_v3`
   is first in the MTDS handler's `_DEFAULT_PROTOCOLS` (subgraph + RPC fallback + parser + maxLTV/e-mode all wired).
@@ -599,11 +610,15 @@ history, so the live path uses **every venue we can reach by public API or hold 
 estimates (filed below) where a characteristic isn't yet verified. **Probed reachable 2026-06-17** (public, no auth):
 Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget, Kraken Futures, MEXC** (11 venues).
 
-- [ ] [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current funding
-      from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
+- [x] ✅ [STRATEGY] P2. Build the harness `--live` multi-venue snapshot mode per the spec doc §1–§3: fetch current
+      funding from all 11 venues (interval-aware annualise — HL+Kraken hourly, Kraken `fundingRate÷markPrice`, Deribit
       8h-figure, Gate/MEXC interval from the API), `FundingPoint(day="LIVE")` → existing
       `_build_panel`/ensemble/`_build_instructions`/ `_diff_to_target` (batch==live). New venues default to cash-margin
-      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.**
+      (conservative). Expand coins to ~40. **Repo: e2e-testing harness.** **DONE — verified by plan_reconciler
+      2026-08-10.** Per this doc's own 2026-06-17 progress-log entry above (`--live` multi-venue paper path shipped
+      `e2e-testing@6e2ffb8`, 14 venues incl. dYdX/Vertex/Drift, coins 30→40) — every element named here (11-venue base,
+      `FundingPoint(day="LIVE")`, coins→40) matches. Live-verified today: `_build_panel`/`FundingPoint` snapshot logic
+      is present in `e2e-testing/scripts/defi/staked_basis_funding_scan.py`.
 - [ ] [DATA] P2. UAC `perp_funding_cadence`: add Gate/KuCoin/Bitget/Kraken/MEXC cadences (+ per-pair non-8h exceptions);
       prefer the interval the API returns. **Repo: unified-api-contracts.**
 - [ ] [DATA] P2. UAC `venue_collateral`: verify + add the 5 new venues' real collateral programs (several run
@@ -616,9 +631,12 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
 - [ ] [DATA] P2. Live Aave reserve-data adapter (supply/borrow APY from `getReserveData`
       liquidityRate/variableBorrowRate, RAY-scaled) for the cash floor + recursive borrow leg; Compound v3 source.
       **Repo: e2e-testing → mtds.**
-- [ ] [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
+- [x] ✅ [STRATEGY] P2. Wire **dYdX v4 + Vertex** (both PUBLIC, verified 2026-06-17) into the live snapshot: dYdX
       `indexer.dydx.trade/v4/perpetualMarkets` (`nextFundingRate`, hourly); Vertex `gateway.prod`/`archive.prod`
-      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.**
+      (public; `api.vertexprotocol.com` is a stale 404). **Repo: e2e-testing harness.** **DONE — verified by
+      plan_reconciler 2026-08-10.** Same `e2e-testing@6e2ffb8` commit as the todo above. Live-verified: both `DYDX` and
+      `VERTEX` branch handling present in `staked_basis_funding_scan.py` today (Vertex warn-skips at runtime on hosts
+      its edge TLS-resets — a host-connectivity condition, not a missing wire-up).
 - [ ] [DATA] P2. Production Drift funding in **MTDS** via the isolated-venv reader pattern (a Drift handler that shells
       out to the driftpy venv / a Drift gateway subprocess; canonize into `derivative_ticker` like other venues). Same
       isolation — driftpy stays out of MTDS flat deps. **Repo: market-tick-data-service.**
@@ -630,6 +648,21 @@ Binance, Bybit, OKX, Deribit, Hyperliquid (POST), Aster, **Gate, KuCoin, Bitget,
       RPC. Drift **takes jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). Already in UAC
       (`venue_mapping`/`chain_env`). Not BLOCKED-CREDENTIALS — a wiring task. **Repo: e2e-testing → mtds drift
       handler.**
+
+      **NOT FLIPPING, clarifying only (plan_reconciler 2026-08-10).** The e2e-testing/harness half is verified done.
+
+              Shipped commit `e2e-testing@6e2ffb8`. Confirmed live today in `drift_funding_reader.py` and
+              `install_driftpy_venv.sh`.
+
+              This matches item 7 of the carry-venue-live-integration-reference codex doc, which already carries its own
+              DONE-for-e2e marker.
+
+              This todo's own `Repo:` tag also names "mtds drift handler" — the same scope as the next todo below
+              (Production Drift funding in MTDS).
+
+              It is genuinely unclear whether this duplicates that todo or tracks something narrower. That is a merge/close
+              call, not an evidence-checkable fact, so both stay open. Routed in this run's findings doc.
+
 - [ ] [STRATEGY] P2. Live/paper **history carve-out** (operator 2026-06-17): no funding history for a venue → WARN + use
       the current snapshot (+ whatever spot history exists); never block a venue/coin for missing history. EWMA gate
       degrades to a point estimate under < halflife days. Backtest still needs history; this is live/paper only. **Repo:
