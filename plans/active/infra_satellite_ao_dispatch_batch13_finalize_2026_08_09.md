@@ -22,7 +22,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,6 +46,7 @@ supersedes:
 superseded_by:
 depends_on: [infra_satellite_ao_dispatch_batch13_2026_08_09]
 gate_on_depends: true
+archive_exempt: true
 source: >-
   Paired with `infra_satellite_ao_dispatch_batch13_2026_08_09.md` per `plans/active/task_template.md` §4's
   finalize-plan-coverage rule (every AO batch plan needs a paired gated finalize).
@@ -70,7 +71,7 @@ early, regardless of whether the batch is `draft` or `active` at the time.
       the source doc stays active with 2 open items regardless of batch13's outcome. (repo: unified-trading-pm) — done.
       Verified `unified-trading-system-ui@1c59c624` against the live commit, flipped the source doc's todo 2, confirmed
       todos 1 and 3 remain genuinely open (source doc stays active, not archived).
-- [ ] [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch13_2026_08_09.md` and
+- [x] ✅ [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch13_2026_08_09.md` and
       `infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md`** once the reconciliation above is verified — run the
       standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
       `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both stay clean). Do this as a SEPARATE
@@ -92,3 +93,7 @@ early, regardless of whether the batch is `draft` or `active` at the time.
   verified against the live commit content, and the source issue doc's todo 2 flipped citing that SHA; confirmed the
   source doc's todos 1 and 3 remain genuinely open, so it stays active (not archived). Todo 2 (archive the batch pair)
   not yet done — separate commit per the no-combine-flip-and-git-mv rule.
+- **2026-08-10 (slot-10)** — Todo 2 (archive the batch pair) in progress. Flipped this checkbox; archival commit follows
+  as a separate commit per the no-combine-flip-and-git-mv rule (6-step ritual: git mv both docs to
+  `plans/archive/2026_08/`, fix referrers in INDEX.md, infrastructure_master.md, ag_closeout_audit_infra_parked, and the
+  source issue doc, add archived banners, verify hygiene scripts clean).
