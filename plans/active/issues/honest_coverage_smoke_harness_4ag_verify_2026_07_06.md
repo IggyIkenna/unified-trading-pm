@@ -50,7 +50,7 @@ thinking_tier: high
 estimate_class: brand-new
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-06
+last_updated: 2026-08-10
 supersedes:
 superseded_by:
 depends_on:
@@ -180,7 +180,7 @@ numbering.)**
       `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue → WARNING + empty matrix (0 atoms → exit
       1), never silent skip. QG-green 74s (sentinel `be37c75660585e9b88f494f6a8e942afdbe0d048`). Completes the 4-AG
       runner set alongside -001 (prediction, slot-4@1ca3672) + -002 (cefi, slot-9@ceb09fd).
-- [ ] [VERIFY] P2. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE #4).** Once Plan 2
+- [x] ✅ [VERIFY] P2. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE #4).** Once Plan 2
       (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land and `catalog.parquet` is written to
       `gs://instruments-store-tradfi-prd-central-element-323112/prd/`, re-run `run_live_verify_tradfi.py` and publish
       the fresh matrix + smoke set. Attach output as evidence. (repo: e2e-testing; PREREQ:
@@ -206,34 +206,55 @@ numbering.)**
       re-run + prd/prod path reconciliation has not been done or evidenced.
 
       **round5-cross-cutting-audit 2026-08-08: option (d) resolved — amend the task text, do NOT wait for the operator
-                          to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
-                          pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
-                          `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
-                          writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
-                          text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
-                          marker for a re-run.
+                              to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
+                              pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
+                              `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
+                              writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
+                              text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
+                              marker for a re-run.
 
-                      **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
-                      BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
-                      task**: re-run `run_live_verify_tradfi.py` against
-                      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
-                      fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
-                      matrix/smoke-set citation.
+                          **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
+                          BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
+                          task**: re-run `run_live_verify_tradfi.py` against
+                          `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
+                          fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
+                          matrix/smoke-set citation.
 
-                      **STATUS 2026-08-10 (slot 2) — AMENDED `prod/` path VALIDATED, but the runner is pathologically slow on a real
-                      catalogue (NEW finding).** Re-ran `run_live_verify_tradfi.py --output-dir <dir> --today 2026-08-10 --cloud gcp
-                      --deployment-env prod` (bounded 10G via run-bounded-analysis.sh) against
-                      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the canonical long-env prefix
-                      per the round5 finding). **The AMENDED path works — the catalogue loads: `tradfi catalogue loaded: 13
-                      (venue, instrument_type) cells, 919184 total instruments`** (non-empty — this definitively resolves the
-                      original 404-empty-matrix problem). **BUT the runner then burned 97% CPU for 1.5h with zero output** — root
-                      cause is a harness scaling defect that was latent because no prior run ever had a real tradfi catalogue
-                      (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`: a
-                      **full-DataFrame linear-scan boolean mask per atom** over the cached manifest, so the run is O(atoms × rows);
-                      tradfi's 919k instruments ⇒ millions of atoms × a ~1M-row manifest ⇒ estimated multi-hour total). Stopped the
-                      run (unacceptable shared-host CPU for a smoke check) — matrix NOT yet published, done-when not met. Follow-up
-                      tracked below: fix the per-atom lookup (indexed/pre-grouped manifest, or sample-based verification for large
-                      catalogues), then re-run + publish.
+                          **STATUS 2026-08-10 (slot 2) — AMENDED `prod/` path VALIDATED, but the runner is pathologically slow on a real
+                          catalogue (NEW finding).** Re-ran `run_live_verify_tradfi.py --output-dir <dir> --today 2026-08-10 --cloud gcp
+                          --deployment-env prod` (bounded 10G via run-bounded-analysis.sh) against
+                          `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the canonical long-env prefix
+                          per the round5 finding). **The AMENDED path works — the catalogue loads: `tradfi catalogue loaded: 13
+                          (venue, instrument_type) cells, 919184 total instruments`** (non-empty — this definitively resolves the
+                          original 404-empty-matrix problem). **BUT the runner then burned 97% CPU for 1.5h with zero output** — root
+                          cause is a harness scaling defect that was latent because no prior run ever had a real tradfi catalogue
+                          (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`: a
+                          **full-DataFrame linear-scan boolean mask per atom** over the cached manifest, so the run is O(atoms × rows);
+                          tradfi's 919k instruments ⇒ millions of atoms × a ~1M-row manifest ⇒ estimated multi-hour total). Stopped the
+                          run (unacceptable shared-host CPU for a smoke check) — matrix NOT yet published, done-when not met. Follow-up
+                          tracked below: fix the per-atom lookup (indexed/pre-grouped manifest, or sample-based verification for large
+                          catalogues), then re-run + publish.
+
+          **DONE 2026-08-10 (slot 6) — re-run completed, matrix published (amended done-when met); slice
+          RED with discrepancy filed.** Re-ran `run_live_verify_tradfi.py --deployment-env prod` against
+                          `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (bounded 10G).
+          Fresh matrix: **1,749,310 shards — RUNNABLE=0, INSUFFICIENT_HISTORY=1,749,310, HONEST_EMPTY=0**;
+          smoke-set reps=0; 8 uncovered_combos (CME/KRX/NASDAQ/NYSE × ohlcv_1m/ohlcv_1s). Outputs:
+          `/tmp/slot6_smoke_output/tradfi2/live_tradfi_matrix.jsonl` (1.2GB),
+          `live_tradfi_smoke_set.jsonl`, `live_tradfi_summary.json`. Run completed ~21 min — the per-atom
+          lookup fix (`e2e-testing@7c54d16`) works. **The slice is NOT green, and the root cause is a NEW
+          finding (harness atom-construction vs tradfi manifest grain)**: the tradfi availability manifest
+          records coverage at the (date, venue, data_type) CELL grain — instrument_id is NULL/empty on the
+          majority of captured rows (probe: 1,910 recent CME ohlcv_1m captured rows, only 481 with a
+          non-null id / 35 distinct) — while the harness expands each tradfi catalogue cell to one atom per
+          instrument (~919k) and looks up exact instrument_id, so ~every atom finds captured=0 →
+          INSUFFICIENT_HISTORY. cefi/defi manifests ARE per-instrument so their slices work; tradfi is the
+          mismatch. The reference `measure_honest_coverage.py` counts at the (date, venue, data_type)
+          fallback shard key precisely because tradfi instrument_id is unreliable. Gate satisfied via
+          **discrepancy filed** (follow-up todo below), not a green slice. Also shipped the pre-requisite
+          registry fix this run: `('tradfi','ohlcv_1s')` was unclassified in `MVP_REQUIRED_WINDOW_REGISTRY`
+          and hard-failed the harness gate before any matrix could be produced
+          (unified-api-contracts@9e5e4e21f7, QG green + quickmerge landed, verified on origin).
 
 - [x] ✅ [CODE] P2. Fix the honest-coverage smoke harness's per-atom manifest lookup
       (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`): it did a
@@ -245,6 +266,14 @@ numbering.)**
       `TestIndexedPerAtomLookup` asserts a 10k-row manifest is sliced via indexed lookup, never a full boolean mask. —
       e2e-testing@7c54d16 (slot-12, 2026-08-10). Done when: the tradfi live-verify matrix completes in <10 min and the
       -004 re-run publishes it (gated on -004 re-run; fix code is shipped).
+- [ ] [CODE] P2. Fix the smoke harness tradfi slice's atom construction to match the tradfi manifest's (date, venue,
+      data_type) CELL grain (instrument_id NULL/empty on most captured rows — probe 2026-08-10: 1,910 recent CME
+      ohlcv_1m captured rows, only 481 with a non-null id / 35 distinct). `MdpsUniverseProvider.iter_atoms` expands each
+      tradfi catalogue cell to one atom per instrument (~919k) and the exact-id lookup then matches ~nothing → the whole
+      slice classifies INSUFFICIENT_HISTORY (measured on this doc's -004 re-run: 1,749,310 shards all INSUFFICIENT,
+      captured=0). Yield per-cell atoms for tradfi (or match the manifest's actual id vocabulary), modelled on
+      `measure_honest_coverage.py`'s (date, venue, data_type) fallback shard key, so the tradfi slice can classify
+      RUNNABLE/INSUFFICIENT honestly. (repo: e2e-testing)
 
 ## Evidence
 
@@ -380,3 +409,20 @@ numbering.)**
   scan per atom; `_filter_to_atom` now does `df.iloc[positions]` for O(matching rows) per atom. Checkbox flipped. **-004
   re-run is now unblocked** — the tradfi live-verify matrix should complete in <10 min with the indexed lookup (was
   multi-hour); next dispatch of -004 can re-run and publish.
+
+- **2026-08-10 (slot 6, data_engineering, dispatched on -004 re-run)**: Re-ran
+  `run_live_verify_tradfi.py --deployment-env prod` against the canonical `prod/catalog.parquet` (bounded 10G) after the
+  per-atom lookup fix (`e2e-testing@7c54d16`) landed. Two outcomes. (1) **The re-run completes (~21 min) and yields a
+  fresh matrix** — 1,749,310 shards, all INSUFFICIENT_HISTORY (RUNNABLE=0, HONEST_EMPTY=0), 8 uncovered_combos
+  (CME/KRX/NASDAQ/NYSE × ohlcv_1m/ohlcv_1s); outputs at `/tmp/slot6_smoke_output/tradfi2/`. (2) **Root-caused why the
+  whole tradfi slice classifies INSUFFICIENT**: the tradfi availability manifest records coverage at the (date, venue,
+  data_type) CELL grain with instrument_id NULL/empty on the majority of captured rows (targeted probe: 1,910 recent CME
+  ohlcv_1m captured rows, only 481 with a non-null id / 35 distinct; catalogue carries 919k instruments), while the
+  harness (`MdpsUniverseProvider.iter_atoms`) expands each tradfi cell to one atom per catalogue instrument and looks up
+  exact instrument_id — so ~every atom finds captured=0. The reference `measure_honest_coverage.py` counts at the (date,
+  venue, data_type) fallback shard key precisely because tradfi instrument_id is unreliable here. Also shipped a
+  pre-requisite registry fix this run: `('tradfi','ohlcv_1s')` was unclassified in `MVP_REQUIRED_WINDOW_REGISTRY` and
+  hard-failed the harness gate before any matrix could be produced (unified-api-contracts@9e5e4e21f7, QG green +
+  quickmerge landed, verified on origin). -004 flipped `[x]` with the fresh matrix/smoke-set citation (gate satisfied
+  via **discrepancy filed** — the slice is RED by the atom-vs-manifest-grain mismatch, not by missing data); follow-up
+  `[CODE] P2` todo filed for the tradfi atom-construction fix (repo: e2e-testing).
