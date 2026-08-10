@@ -140,8 +140,8 @@ way).
       no bulk-fix required beyond flagging. **Done when**: the corpus-wide grep result (matches, if any, with file:line)
       is recorded in this todo's evidence. Source:
       `/plans/active/issues/todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md:102`. Repo:
-      unified-trading-pm. — unified-trading-pm@\<sha\> (corpus-wide
-      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\.     (CANCELLED|SUPERSEDED)' plans/ codex/` found exactly 3 pre-existing
+      unified-trading-pm. — unified-trading-pm@4eb3f143ac (corpus-wide
+      `grep -rnE '^\- \*\*\[[A-Z]+\] P[0-9]+\. (CANCELLED|SUPERSEDED)' plans/ codex/` found exactly 3 pre-existing
       matches, all `CANCELLED` (no bare-SUPERSEDED instances):
       `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md:90` (active plan),
       `plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md:947` (archived),
