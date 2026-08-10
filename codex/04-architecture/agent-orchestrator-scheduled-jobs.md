@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: agent-orchestrator — scheduled-job dispatch mechanism
 summary: >-
-  SSOT for the AO scheduled-job dispatch layer: the 9 systemd timers, the plan_health modes they POST, the status model
+  SSOT for the AO scheduled-job dispatch layer: the 10 systemd timers, the plan_health modes they POST, the status model
   (dispatched/queued/no_capacity/quarantined/timeout/error), which statuses page, the capacity queue
   (ScheduledJobQueueRow), the 503-classification allowlist (BENIGN_503_RE), and the HARD RULE that a git pull does NOT
   reinstall a live timer unit.
@@ -21,7 +21,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-08
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-10
 authoritative_for: scheduled-job dispatch
 referenced_by: []
 owner: ""
@@ -39,6 +39,7 @@ code_refs:
   - agent-orchestrator/scripts/install-cefi-reconciliation-timer.sh
   - agent-orchestrator/scripts/install-cefi-mtds-smoke-timer.sh
   - agent-orchestrator/scripts/install-ci-reconciler-timer.sh
+  - agent-orchestrator/scripts/install-data-pipeline-alerts-reconciler-timer.sh
   - agent-orchestrator/scripts/scheduled_job_already_ran.py
 ---
 
@@ -46,7 +47,7 @@ code_refs:
 
 ## Overview
 
-Nine systemd timer units on the orchestrator VM drive planning-cleanup, audit, and CI-health work. Each timer fires a
+Ten systemd timer units on the orchestrator VM drive planning-cleanup, audit, and CI-health work. Each timer fires a
 shell script that POSTs to `POST /api/plan-health/dispatch` (server/plan_health.py). The server spawns a worker on a
 free slot, records the attempt in `ScheduledJobRunRow` (SQLite), and — on no-capacity — queues the work in
 `ScheduledJobQueueRow` for AutoSpawn to drain later.
@@ -57,25 +58,26 @@ live `AgentRow` to show real-time run status. A row labelled `dispatched` is a S
 
 ---
 
-## The 9 timers
+## The 10 timers
 
 Each installer (`scripts/install-<name>-timer.sh`) creates a systemd **`--user`** `.service` + `.timer` pair under
 `~/.config/systemd/user/` and copies `scripts/scheduled_job_already_ran.py` to `~/.local/bin/`. The already-ran guard
 (`--job <job_name>`) keyed on `agent_exit_reason == "lifecycle-complete"` (or a still-in-flight `queued`/`dispatched`
-row) prevents duplicate work in the same window (the same DAY for every job except `ci_reconciler`, which uses
-`--window hour`; see below).
+row) prevents duplicate work in the same window (the same DAY for every job except `ci_reconciler` (`--window hour`) and
+`data_pipeline_alerts_reconciler` (`--window 6hour`); see below).
 
-| Timer service name                    | mode param             | job_name                      | Sharded?                                    | Cadence (UTC)              | curl --max-time | systemd TimeoutStartSec |
-| ------------------------------------- | ---------------------- | ----------------------------- | ------------------------------------------- | -------------------------- | --------------- | ----------------------- |
-| `plan-reconciler.service`             | `reconcile`            | `plan_reconciler`             | Yes (Sun–Fri); unsharded Saturday `all` run | every 2 h (even hours)     | 5950 s          | 6000 s                  |
-| `ag-closeout-auditor.service`         | `ag_closeout`          | `ag_closeout_auditor`         | Yes (10 tranches)                           | every 2 h (even hours)     | 7200 s          | 21600 s                 |
-| `na-eligibility-auditor.service`      | `na_eligibility`       | `na_eligibility_auditor`      | Yes (10 tranches)                           | every 2 h (odd hours)      | 7200 s          | 21600 s                 |
-| `docs-reconciler.service`             | `docs_reconcile`       | `docs_reconciler`             | No                                          | hourly                     | 5950 s          | 6000 s                  |
-| `context-scout.service`               | `context_scout`        | `context_scout_auditor`       | No                                          | hourly                     | 5950 s          | 6000 s                  |
-| `escalation-queue-reconciler.service` | `escalation_reconcile` | `escalation_queue_reconciler` | No                                          | every 3 h                  | 5950 s          | 6000 s                  |
-| `cefi-reconciliation-auditor.service` | `cefi_reconciliation`  | `cefi_reconciliation_auditor` | No                                          | every 2 h (even hours)     | 5950 s          | 6000 s                  |
-| `cefi-mtds-smoke-tester.service`      | `cefi_mtds_smoke`      | `cefi_mtds_smoke_tester`      | No                                          | every 2 h (odd hours)      | 5950 s          | 6000 s                  |
-| `ci-reconciler.service`               | `ci_reconcile`         | `ci_reconciler`               | No                                          | every 15 min, hourly guard | 5950 s          | 6000 s                  |
+| Timer service name                        | mode param                       | job_name                          | Sharded?                                    | Cadence (UTC)              | curl --max-time | systemd TimeoutStartSec |
+| ----------------------------------------- | -------------------------------- | --------------------------------- | ------------------------------------------- | -------------------------- | --------------- | ----------------------- |
+| `plan-reconciler.service`                 | `reconcile`                      | `plan_reconciler`                 | Yes (Sun–Fri); unsharded Saturday `all` run | every 2 h (even hours)     | 5950 s          | 6000 s                  |
+| `ag-closeout-auditor.service`             | `ag_closeout`                    | `ag_closeout_auditor`             | Yes (10 tranches)                           | every 2 h (even hours)     | 7200 s          | 21600 s                 |
+| `na-eligibility-auditor.service`          | `na_eligibility`                 | `na_eligibility_auditor`          | Yes (10 tranches)                           | every 2 h (odd hours)      | 7200 s          | 21600 s                 |
+| `docs-reconciler.service`                 | `docs_reconcile`                 | `docs_reconciler`                 | No                                          | hourly                     | 5950 s          | 6000 s                  |
+| `context-scout.service`                   | `context_scout`                  | `context_scout_auditor`           | No                                          | hourly                     | 5950 s          | 6000 s                  |
+| `escalation-queue-reconciler.service`     | `escalation_reconcile`           | `escalation_queue_reconciler`     | No                                          | every 3 h                  | 5950 s          | 6000 s                  |
+| `cefi-reconciliation-auditor.service`     | `cefi_reconciliation`            | `cefi_reconciliation_auditor`     | No                                          | every 2 h (even hours)     | 5950 s          | 6000 s                  |
+| `cefi-mtds-smoke-tester.service`          | `cefi_mtds_smoke`                | `cefi_mtds_smoke_tester`          | No                                          | every 2 h (odd hours)      | 5950 s          | 6000 s                  |
+| `ci-reconciler.service`                   | `ci_reconcile`                   | `ci_reconciler`                   | No                                          | every 15 min, hourly guard | 5950 s          | 6000 s                  |
+| `data-pipeline-alerts-reconciler.service` | `data_pipeline_alerts_reconcile` | `data_pipeline_alerts_reconciler` | No                                          | every 60 min, 6h guard     | 5950 s          | 6000 s                  |
 
 **`ci-reconciler` is the one job whose already-ran guard runs `--window hour`, not the default `--window day`** (added
 2026-08-10). Its timer fires every 15 minutes and the guard admits at most ONE successful run per clock hour, so the job
@@ -90,6 +92,17 @@ is covered by `ci_failure_watcher.py`'s automated recovery, and `/ci-reconcile` 
 workspace with no standing timer. See
 `/plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md` and
 `/plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md`.
+
+**`data-pipeline-alerts-reconciler` uses a THIRD guard shape, `--window 6hour`** (added 2026-08-10, same day as
+`ci-reconciler`): its timer fires every 60 minutes and the guard admits at most ONE successful run per 6-hour bucket
+(00/06/12/18 UTC), so the job is "every 6 hours, with up to 6 attempts" — deliberately **1/6th `ci-reconciler`'s
+cadence** (4x/day vs. 24x/day). The `/data-pipeline-alerts-reconcile` skill was, like `/ci-reconcile` before it, the
+only reconcile skill in the workspace with no standing timer — its own doc explicitly framed it as "on-demand ... not a
+permanent standing watcher." The slower cadence relative to `ci-reconciler` is deliberate, not an oversight: the
+underlying DP_* Cloud Run Job monitors already page reactively into `agents/data_pipeline_failure.md` via
+`/api/escalate` for anything needing code judgment, so this sweep's job is catching what that reactive path structurally
+cannot (routing/dedup bugs, self-heal actuator gaps, already-self-resolved noise, registry-unregistered events) — a
+class that does not compound hour-by-hour the way an unconvergeable CI promotion deadlock does.
 
 The sharded jobs (plan-reconciler, ag-closeout, na-eligibility) POST one request per tranche. Non-sharded jobs POST
 once. The `job_name` field in each POST is the dedup key for the capacity queue and the already-ran guard.
