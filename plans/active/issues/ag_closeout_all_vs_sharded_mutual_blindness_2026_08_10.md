@@ -35,8 +35,6 @@ source:
     "2026-08-10 investigation (slot 11, review) of tradfi triple-dispatch —
     `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 12",
   ]
-drift_direction: advance-code
-depends_on: []
 ---
 
 ## What I found

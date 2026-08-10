@@ -107,14 +107,10 @@ re-running the classification from scratch. That re-check (2026-08-08) found:
   - `test_one_shot_lifecycle_role_unaffected_by_register_poll_guard`, both passing). The source doc's own
     `boot_composer_misroutes...` checkboxes are still unflipped pending the finalize plan's own todo 2 reconciliation
     pass — that is a separate, already-tracked gap, not evidence the underlying fix is missing.
-- **Everything else (the remaining ~35 items** — NOTE: arithmetic doesn't foot; the breakdown above totals 13+9+1+1=24
-  resolved/cleared/stale/new, but the doc's own stated total is 48 (45+3), which would leave ~24 remaining, not ~35; the
-  correct count was not independently re-verified by either plan_reconciler run that flagged this — the actionable
-  conclusion is unchanged, 1 new AO-eligible finding) genuinely remains gated for the same reasons stated in batch6's
-  Deferred section, or was updated to a fresh-but-still-open reason (e.g.
-  `orchestrator_host_memory_exhaustion_4th_recurrence`'s primary item shipped but a NEW `[OPERATOR] P2` item was filed
-  2026-08-07). Full per-item detail lives in `ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`'s Progress Log —
-  not restated here.
+- **Everything else (the remaining ~35 items)** genuinely remains gated for the same reasons stated in batch6's Deferred
+  section, or was updated to a fresh-but-still-open reason (e.g. `orchestrator_host_memory_exhaustion_4th_recurrence`'s
+  primary item shipped but a NEW `[OPERATOR] P2` item was filed 2026-08-07). Full per-item detail lives in
+  `ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`'s Progress Log — not restated here.
 
 ## Rules for every worker on this plan
 

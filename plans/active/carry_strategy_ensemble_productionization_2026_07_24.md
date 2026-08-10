@@ -118,10 +118,9 @@ is the validated foundation + a runnable paper path TODAY.
       (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`) remains a further increment
       (cross-sectional rank currently computed upstream / fed as the `funding_rank_pct` feature; engine is the
       per-instrument leg engine, batch==live). **Repo: unified-api-contracts + strategy-service.**
-- [x] ✅ [STRATEGY] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19)** Add the cross-sectional
+- [ ] [STRATEGY] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19)** Add the cross-sectional
       `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK` AllocatorArchetype so the rank is computed
-      inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). —
-      **unified-api-contracts@95faaed2b8** + **strategy-service@be6acc8572** (2026-08-10). **Repo:
+      inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). **Repo:
       unified-api-contracts + strategy-service.**
 - [ ] [UI] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19; operator-raised)** Surface `CARRY_FUNDING_DISPERSION`
       in the strategy wizard/catalog. **NOT CI-breaking** — the UI's `lib/architecture-v2/enums.ts` is a hand-maintained

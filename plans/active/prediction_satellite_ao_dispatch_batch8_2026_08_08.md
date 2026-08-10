@@ -12,11 +12,10 @@ summary: >-
   minus 1 archived, plus 1 new). Cheap frontmatter re-verification confirmed all 12 carryover candidates unchanged (same
   multi-AG `asset_group` markers, same `status`) — genuinely cross-cutting, correctly excluded again, no full Phase-1
   re-read needed per the skill's iterative-drain guidance. A fresh independent Phase-1 classification (one agent) on the
-  single genuinely new candidate —
-  `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed 2026-08-07 by a
-  concurrent na-eligibility-audit pass, one day after the last full audit, so no prior round could have seen it) — found
-  it singly-tagged `asset_group: [prediction]` (not multi-AG), zero coverage in any of the 11 covering plans or
-  elsewhere in the corpus, and a bounded AO-eligible fix (extract a closed Progress Log section from
+  single genuinely new candidate — `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed
+  2026-08-07 by a concurrent na-eligibility-audit pass, one day after the last full audit, so no prior round could have
+  seen it) — found it singly-tagged `asset_group: [prediction]` (not multi-AG), zero coverage in any of the 11 covering
+  plans or elsewhere in the corpus, and a bounded AO-eligible fix (extract a closed Progress Log section from
   `prediction_cross_venue_arb_and_coverage_2026_07_24.md` to clear the 1000-line hard cap it's sitting at). The
   classifying agent's first-pass verdict leaned `exclude_cross_cutting` on a "generic tooling, not domain work"
   substance argument; this run overrode that to `orphaned_never_touched` because — unlike the 12 carryover exclusions,
@@ -117,10 +116,9 @@ discover it either (see the frontmatter summary's reasoning on why this classifi
       weeks), `bash scripts/plan-hygiene/check_line_caps.sh` still passes for both the source doc and the new history
       doc, every open checkbox that existed before the extraction still exists verbatim in the source doc afterward
       (diff the open-item line texts before/after, not just the count — 3 items in, 3 items out, byte-identical text),
-      and `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`'s own todo is
-      checked off with a commit citation. Repo: unified-trading-pm. Source:
-      `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (its own todo,
-      verbatim).
+      and `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`'s own todo is checked off with a
+      commit citation. Repo: unified-trading-pm. Source:
+      `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (its own todo, verbatim).
 
 ## Deferred
 
@@ -143,8 +141,8 @@ already covered. Full per-doc reasoning: `ag_closeout_audit_prediction_parked_20
   the under-tag flavor of the same bug). No operator escalation needed — this was resolvable from the skill's own stated
   design intent, not a genuine two-sided judgment call.
 - **Possible retag worth a future look, not actioned here.** If a future audit round wants to reduce recurrence of this
-  exact judgment call, `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md`
-  could arguably carry an additional `meta` or `ci`/`infra` tag alongside `prediction` (mirroring how
+  exact judgment call, `issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` could arguably carry an
+  additional `meta` or `ci`/`infra` tag alongside `prediction` (mirroring how
   `mtds_available_at_cross_asset_backfill_2026_07_31.md`-shaped docs get dual-tagged) — but retagging is outside this
   skill's remit (ag-closeout-audit classifies and drafts batches; it does not itself rewrite frontmatter tags except for
   the Orthogonality HARD CHECK's own dual-tag-mistag case, which this isn't). Not filed as a separate issue — low

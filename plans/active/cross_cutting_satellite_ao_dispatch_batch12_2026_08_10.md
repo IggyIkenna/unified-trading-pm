@@ -78,20 +78,14 @@ drift_direction: advance-code
 
 ## Todos
 
-- [x] ✅ [STRATEGY] P3. **Add the `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`
+- [ ] [STRATEGY] P3. **Add the `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`
       AllocatorArchetype** so the cross-sectional funding-dispersion rank is computed inside strategy-service instead of
       arriving as the upstream `funding_rank_pct` feature. Model on the existing per-instrument
       `CarryFundingDispersionEngine` (`strategy_service/engine/strategies/v2/carry_and_yield/funding_dispersion.py`,
       already shipped `strategy-service@6b285fad`). **Repo: unified-api-contracts + strategy-service.** Source:
       `carry_strategy_ensemble_productionization_2026_07_24.md` (line 121-124). **Done when**: the new allocator
       archetype is registered end-to-end (UAC enum + leg-spec seed + `ARCHETYPE_TO_FAMILY` + strategy-service allocator
-      implementation + unit test), `quality-gates.sh` green, shipped via quickmerge. —
-      **unified-api-contracts@95faaed2b8** + **strategy-service@be6acc8572** (2026-08-10): UAC:
-      `CARRY_FUNDING_DISPERSION_RANK` added to `AllocatorArchetype` enum. Strategy-service:
-      `CarryFundingDispersionRankAllocator(BaseRankAllocator)` — single-stage cross-sectional rank by `funding_apy_bps`,
-      eligible if `coin` populated, threshold gate + top-N truncation, proportional weighting. Registered in
-      `ALLOCATOR_ARCHETYPE_REGISTRY`. 5 unit tests cover basic weighting, below-threshold filtering, ineligible-slot
-      dropping, top-N truncation, all-below-zero. Both repos QG green, shipped via quickmerge.
+      implementation + unit test), `quality-gates.sh` green, shipped via quickmerge.
 - [ ] [UI] P3. **Surface `CARRY_FUNDING_DISPERSION` in the strategy wizard/catalog.** Add `CARRY_FUNDING_DISPERSION` to
       `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in
       `unified-trading-system-ui/lib/architecture-v2/enums.ts`, bump `enums.test.ts`'s `toHaveLength(18)` → 19,

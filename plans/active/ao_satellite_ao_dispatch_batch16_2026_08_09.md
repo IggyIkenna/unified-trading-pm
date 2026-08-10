@@ -68,8 +68,8 @@ source: >-
 
 # AO satellite AO batch 16
 
-> **`status: active`** — operator-approved, sole todo shipped (`unified-trading-pm@b427499b33`).
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`**, same as the rest of this series.
+> **`status: draft`** — pending operator approval, same convention as batch5-15: flip to `active` to dispatch.
+> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once approved, same as the rest of this series.
 
 ## Why this plan exists
 
