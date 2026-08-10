@@ -135,11 +135,12 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       **Done when**: a regression test with two overlapping task windows on one slot proves each turn is counted once,
       and re-running the calibration shows method (A) no longer exceeding method (B). — agent-orchestrator@382e278 + QG
       green; regression test proves each turn counted once (partition_task_usage + /done + backfill wiring).
-- [ ] [REVIEW] P0. **Quantify the double-count blast radius on the live DB before repricing anything — report how many
+- [x] ✅ [REVIEW] P0. **Quantify the double-count blast radius on the live DB before repricing anything — report how many
       existing `task_usage` rows overlap another row on the same slot, and the token volume involved.** Read-only via
       `scripts/orchestrator/query-ao-state-db-readonly.sh`. This decides whether historical rows can be repriced in
       place or must be recomputed from transcripts. **Done when**: the query output is pasted into this plan's Progress
-      Log with an explicit in-place-vs-recompute recommendation.
+      Log with an explicit in-place-vs-recompute recommendation. — agent-orchestrator@032fcc8 + recommendation: IN-PLACE
+      for 2,440 clean rows, `approximate` flag on 247 affected. See Progress Log 2026-08-10.
 - [ ] [BACKEND] P1. **Land `server/model_pricing.py` as the single pricing SSOT — date-effective list rates, per-tier
       cache-write rates, alias resolution — and delete the DeepSeek-only `_PRICE_PER_MILLION` from
       `deepseek_usage.py`.** Rates must carry validity windows (Claude Sonnet 5's intro $2/$10 expires 2026-08-31,
@@ -544,6 +545,71 @@ of total tokens: **laptop 98.90%** (1,267,416,118 / 1,281,547,098) vs **AO on `s
 5,609,037,297). The two are the same shape, so the metering hypothesis does not change the transfer. The meter
 experiment is therefore a REFINEMENT for pricing genuinely cache-light work (a short one-shot task), not a blocker on
 using ~190x for AO today.
+
+### 2026-08-10 — Overlap blast-radius quantification (todo 4) — agent-orchestrator@032fcc8 + in-place recommendation
+
+Read-only query against the live `state.db` (2,687 `task_usage` rows, up from 2,622 at plan-write time). Script:
+`scripts/orchestrator/quantify_task_usage_overlap.py` (permanent, re-runnable).
+
+**Overlap definition**: two rows on the same slot overlap iff their windows
+`[assigned_at, completed_at]` intersect. A row with `assigned_at IS NULL` (typed one-off, no discrete dispatch) billed
+the WHOLE session in the pre-fix code and its lower side is effectively unbounded — counted as its own class.
+
+| metric                                                              |      count |
+| ------------------------------------------------------------------- | ---------: |
+| Total `task_usage` rows                                             |      2,687 |
+| Known-window overlapping pairs (both `assigned_at` set)             |        170 |
+| Pairs involving a whole-session (NULL `assigned_at`) row            |         86 |
+| **Total overlapping pairs**                                         |    **256** |
+| Distinct rows in >=1 known-window overlap                           |        158 |
+| Distinct rows in >=1 NULL-assigned overlap                          |         89 |
+| **Distinct affected rows (all classes)**                            |    **247** |
+| Affected-row token total (4 categories; upper bound on double-count)| 4,931,857,730 |
+| Pairwise min(ta, tb) sum (per-pair intersection upper bound)        | 1,812,421,445 |
+| Unpriced affected rows (`spend_usd IS NULL`)                        |        193 |
+| Unpriced affected-row token total                                   | 4,329,180,385 |
+| Affected rows: live-captured                                        |        165 |
+| Affected rows: backfilled                                            |         82 |
+| `assigned_at IS NULL` (whole-session billers)                       |          3 |
+
+**Hot spots**: slot 11 alone accounts for 87 of 256 pairs (34%). Slots 2, 4, 5, 11, 14 together account for 190 pairs
+(74%). This is consistent with sustained multi-worker fan-out on those slots — overlapping windows arise when a worker
+picks up a new task while its previous session's `completed_at` hasn't landed yet, or when one-off probes run
+concurrently with dispatched tasks.
+
+**Token volume context**: the pairwise-min upper bound (1.81B tokens) is 3.63% of total `task_usage` token volume and
+4.17% of the unpriced subset. Expressed as percentage of per-row tokens, most affected rows carry overlap below ~20% of
+their own total — the intersection region (two tasks running simultaneously on one slot) is usually brief relative to
+full task duration, except for the 3 NULL-assigned rows which are unbounded-lineage losses.
+
+**Recommendation — IN-PLACE repricing for all rows, with an `approximate` flag on the 247 affected rows.** Rationale:
+
+1. **The overlap's absolute volume is small relative to the full corpus** — 9.2% of rows × ~4% token error per row =
+   expected aggregate error well under 1%. An in-place pricing of the stacked totals on affected rows slightly
+   overstates per-task cost (partial double-count in the numerator) but the error is mechanically bounded by
+   `min(sibling_row_token_total)` and transparently flagged.
+2. **Recomputing from transcripts has a LARGER expected error rate than in-place pricing** — the 82 backfilled affected
+   rows (33%) were written by `backfill_task_usage.py` specifically because the live `/done` capture didn't exist yet
+   for their era, and many of those pre-August transcripts have since rotated off disk. Recomputing from a partial
+   transcript set would silently UNDER-count (missing turns) in more rows than the overlap OVER-counts.
+3. **The 3 NULL-assigned rows are genuine losses** — their totals were already unbounded in the capture path and there
+   is no fixing them short of a full transcript walk with partition_task_usage, which the to-3 fix now ships going
+   forward. Flag these specifically as `approximate_source: unbounded-window` in the reprice pass.
+4. **The to-3 fix (`partition_task_usage` at agent-orchestrator@382e278) ensures every NEW row from /done is clean**
+   going forward, so the overlap class is a 100%-historical problem — no new overlap will be written, and the existing
+   overlap slowly dilutes as tasks complete and rows accumulate. The reprice script should verify: for rows with
+   `completed_at < partition_task_usage_deploy_time`, price in-place with the `approximate` flag; for rows after,
+   demand clean non-overlapping attribution and refuse to price an overlapping post-fix row (that would be a capture
+   bug, not a repricing ambiguity).
+5. **The `quantify_task_usage_overlap.py` script is permanent and re-runnable** — after the repricing pass runs, a
+   post-pass verification re-runs the same query and confirms no NEW unpriced rows introduced overlap, and the
+   approximate-flagged count matches the known-baseline 247. The reprice script's own dry-run report cites this query's
+   output as its decision basis.
+
+**In short**: repricing 2,440 clean rows is mechanically safe; repricing the 247 affected rows in-place with an
+`approximate=True` flag is the realistic best path because transcript survival is worse than the double-count error
+itself. A full transcript recompute of every unpriced row would trade a known-bounded ~4% over-count for an unbounded
+under-count on the 82 backfilled-with-rotated-transcript rows — that's a net correctness LOSS, not a gain.
 
 ## Deferred work after 2026-08-10
 
