@@ -469,3 +469,25 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   step, NOT a launcher hang) — relaunched as `mtds-backfill-odds-smallchunk18-20260810`, confirmed created and
   `RUNNING`; `run.log` boot-health still pending as of this entry, not yet trusted on VM-created/RUNNING alone. Todo 1's
   blocker (no working SSH to catch a live hang) remains unchanged.
+
+- **2026-08-10T08:36Z (data_pipeline_failure escalation agt-d2322e, slot 3) — `smallchunk14` (this table's row)
+  DP-VM-003 relaunch: relaunched twice per runbook, BOTH preempted by GCP SPOT capacity in asia-northeast1-c within
+  minutes — NEW failure dimension distinct from the silent-hang deaths, runbook STOP condition now binds.** Dispatched
+  for DP-VM-003 `DP_VM_STALL` on `mtds-backfill-odds-smallchunk14-20260809` (the occurrence captured at 22:56Z above,
+  killed 23:13Z). Recovered exact launch env from `vm-logs/<vm>/LAUNCH_PARAMS.json` (START 2020-08-29, END 2026-08-08,
+  CHUNK 5, LEAGUE empty, prod) + monotonic checkpoint `PROGRESS.json` (last_completed 2020-08-29) → relaunch #1
+  @08:25:46Z was **SPOT-preempted at 08:26:38Z (~50s after create, pre-boot)**; preemption-recovery relaunch #2
+  @08:33:57Z (same env, checkpoint-resume) was **preempted again at 08:36:10Z (~2.3min after create, cloud-init still
+  installing packages)**. No PREEMPTED/EXIT_STATUS marker on either (both preempted before guest teardown could write).
+  Two consecutive preemptions of the same shard in 11 min = **zone SPOT-capacity problem in asia-northeast1-c, NOT the
+  VM / NOT the silent-hang signature** — the preemption actuator's own docstring ("investigate why this VM keeps
+  preempting (zone SPOT capacity?) rather than relaunching blindly again") + runbook "re-fails the SAME way twice → STOP
+  relaunching" both bind. STOPPED relaunching per runbook. Budgets stamped today: stall
+  `uts_stalled_relaunch_budget/mtds-backfill-odds-.json` = 2/2 (1 pre-existing + mine), preemption
+  `uts_preempted_relaunch_budget/...` = 1/2. Work (2020-08-29→2026-08-08 odds backfill) still incomplete at the
+  2020-08-29 frontier. **BLOCKED-OPERATOR-DECISION**: relaunch on-demand (launcher `--on-demand` / `ON_DEMAND=true`,
+  real cash — SPOT promo credits exhausted 2026-06-20) vs wait for SPOT capacity to return vs investigate the
+  zone/instance-policy; do NOT blind-retry SPOT a 3rd time today (preemption budget would hit 2/2; a 3rd preemption =
+  capacity problem confirmed, not fixable by relaunch). This is genuinely new information (preemption, not the hang) —
+  recorded here rather than a new issue to keep this campaign's history in one doc; the silent-hang root cause (Todo 1)
+  remains the P1 across the whole family regardless.
