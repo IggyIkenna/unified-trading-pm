@@ -139,8 +139,24 @@ collapsing them into one number the way the archived doc did.
       event-settled cross-venue best-odds freshness), and the Low→`co_located_vm` deployment implication flagging the
       current `ML_DIRECTIONAL_CONTINUOUS` / `ML_DIRECTIONAL_EVENT` § 6 topology_requirements rows (`no` co-location /
       min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves.
-- [ ] [DOC] P2. **Populate `rules-directional.md`** with the same section, category `Low` per operator correction — same
-      greenfield situation as ml-directional.
+- [x] ✅ [DOC] P2. **Populate `rules-directional.md`** with the same section, category `Low` per operator correction —
+      same greenfield situation as ml-directional. **Done**: `unified-trading-pm@a7bc00e23c` — formal
+      `## Latency Requirements` section added (category `Low`; greenfield — archived `latency-profiles.md` has no Rules
+      Directional row; closest analogs `Momentum` < 7s Medium / `Mean Reversion` < 3s Medium, the pre-v2 docs mapped to
+      `RULES_DIRECTIONAL_CONTINUOUS`, are superseded by the 2026-08-10 operator ms-realm ruling). Segment budgets
+      derived from the archived internal pipeline budgets (features <100ms single-instrument / strategy rule-evaluator
+      <20ms / execution submit <50ms + the sports venue-latency table) — with the family's **no model-inference leg**
+      noted as the differentiator from ml-directional (rule fires directly off features; tick-to-signal is
+      feature-update-dominated). 3-row per-expression table (continuous single-instrument / continuous options
+      expression / event-settled → totals <200ms / <200ms / <1s, all `Low`), the
+      `### Decision latency vs. inter-leg execution gap` subsection (options synthetics + delta hedges at ms-realm
+      inter-leg timing per the operator ruling
+      (`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`); in-play
+      event-settled rules bounded by odds/feature freshness), and the Low→`co_located_vm` deployment implication
+      flagging the current `RULES_DIRECTIONAL` § 6 topology_requirements row (`no` co-location / min SLA `basic` — the
+      weakest of any latency-relevant family) as a discrepancy the deployment-profile derivation todo resolves. Same
+      commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md`
+      → leading-slash paths) flagged by plan-hygiene.
 - [ ] [DOC] P2. **Populate `stat-arb-pairs.md`** with the same section, category `Low`.
 - [ ] [DOC] P3. **Populate `vol-trading.md`, `event-driven.md`, `portfolio.md`** with the same section — derive category
       from the archived doc's closest analog per the rubric table above; state the derivation reasoning inline in each
@@ -205,3 +221,17 @@ collapsing them into one number the way the archived doc did.
   timing; event-settled cross-venue best-odds freshness), and Low→`co_located_vm` deployment implication flagging the
   `ML_DIRECTIONAL_CONTINUOUS` / `ML_DIRECTIONAL_EVENT` § 6 topology_requirements rows (`no` co-location / min SLA
   `standard`) as a discrepancy the deployment-profile derivation todo resolves.
+- **quant_dev (slot 8) 2026-08-10T16:10Z**: Todo 5 done. Added formal `## Latency Requirements` to
+  `rules-directional.md` (`unified-trading-pm@a7bc00e23c`): category `Low` — greenfield (archived `latency-profiles.md`
+  has no Rules Directional row; closest analogs `Momentum` < 7 s Medium / `Mean Reversion` < 3 s Medium, the pre-v2 docs
+  mapped to `RULES_DIRECTIONAL_CONTINUOUS`, superseded by the 2026-08-10 operator ms-realm ruling), segment budgets
+  derived from the archived internal pipeline budgets (features <100ms single-instrument / strategy rule-evaluator <20ms
+  / execution submit <50ms) + sports venue-latency table, with the family's **no model-inference leg** noted as the
+  differentiator from ml-directional (a rule fires directly off features; tick-to-signal is feature-update-dominated).
+  3-row per-expression table (continuous single-instrument / continuous options expression / event-settled → totals
+  <200ms / <200ms / <1s, all `Low`), `### Decision latency vs. inter-leg execution gap` subsection (options synthetics +
+  delta hedges at ms-realm inter-leg timing; in-play event-settled rules bounded by odds/feature freshness), and Low→
+  `co_located_vm` deployment implication flagging the current `RULES_DIRECTIONAL` § 6 topology_requirements row (`no`
+  co-location / min SLA `basic`) as a discrepancy the deployment-profile derivation todo resolves. Same commit fixed a
+  pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md` → leading-slash
+  paths) flagged by plan-hygiene.
