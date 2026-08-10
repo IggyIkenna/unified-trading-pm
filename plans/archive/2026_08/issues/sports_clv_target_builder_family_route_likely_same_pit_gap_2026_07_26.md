@@ -15,7 +15,7 @@ summary: >-
   was NOT touched by the ratified [DATA] P2 / [ML] P2 fix (that fix only repoints the LEGACY `"clv"` string path). Not
   verified end-to-end against real data (out of scope for this session) -- flagging so it is checked, not silently
   assumed broken or silently assumed fine.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [backtest]
@@ -47,10 +47,9 @@ source:
     (named with a literal ''_clv_'' target_type) used the LEGACY path, not this one -- but noticed CLVTargetBuilder
     along the way and did not verify it.',
   ]
-resolved_by: "features-service@b4b7ad82, ml-service@38edeba"
+resolved_by: "features-service@b4b7ad82, ml-service@38edeba, unified-trading-pm@904dfa2301"
 locked_by:
 locked_since:
-archive_exempt: true
 context_scope:
   [
     /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
@@ -59,6 +58,10 @@ context_scope:
     features-service/features_service/sports/exporters/odds_features_exporter.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Fix shipped and verified on real GCS
+> parquet — see `resolved_by` + Follow-ups below. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 # CLVTargetBuilder (family route) may share the legacy CLVTargetGenerator's PIT-gate emptiness
 
@@ -218,5 +221,7 @@ they would silently inherit the same architecture gap this whole chain exists to
 
 - **2026-08-10 (slot-29)**: sole remaining Follow-up ([DATA] P3, real-parquet verification) flipped `[x]` — see its own
   DONE note for the GCS path + confirmed non-null `odds_closing_*` values. 0 open todos remain; `archive_exempt: true`
-  set on this flip-only commit per the RULED-2026-08-09 two-commit bridge (this doc's own last todo is its archival
-  trigger) — dropped in the immediately-following `git mv` archival commit.
+  set on the flip-only commit (`unified-trading-pm@904dfa2301`) per the RULED-2026-08-09 two-commit bridge (this doc's
+  own last todo is its archival trigger). This commit is the immediately-following `git mv` archival: `status: resolved`
+  - archive banner + `resolved_by` updated with the flip SHA, `archive_exempt` dropped, doc moved to
+    `plans/archive/2026_08/issues/`.

@@ -23,7 +23,7 @@ tags: [sports, ao-dispatch, close-out, batch-12, satellite-docs, ag-closeout-aud
 related:
   [
     /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
-    /plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
+    /plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
@@ -142,10 +142,10 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
       real GCS parquet — the standing data-side verification for the CLVTargetBuilder repoint that
       `features-service@b4b7ad82` has so far only proven at unit-test level. `quality-gates.sh --no-fix` green before
       commit; ship via quickmerge if any code changes are needed (expected to be a pure re-run, no code change). Source:
-      `/plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (## Follow-ups,
-      `[DATA] P3`). Done when: at least one real GCS parquet for a recent date is cited by path showing non-null
-      `odds_closing_{home,draw,away}` columns. **✅ DONE 2026-08-10 (slot-29)**: pure re-run, no code change needed —
-      `--operation compute --mode batch --date 2026-08-06 --tables odds_targets --skip-fetch`. Wrote
+      `/plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (##
+      Follow-ups, `[DATA] P3`). Done when: at least one real GCS parquet for a recent date is cited by path showing
+      non-null `odds_closing_{home,draw,away}` columns. **✅ DONE 2026-08-10 (slot-29)**: pure re-run, no code change
+      needed — `--operation compute --mode batch --date 2026-08-06 --tables odds_targets --skip-fetch`. Wrote
       `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-08-06/feature_group=odds_targets/features.parquet`;
       fresh `pd.read_parquet` confirms `event_id=4e5c385bec9516e786c4876ac68413f7` has non-null
       `odds_closing_home=2.415`, `odds_closing_draw=2.7`, `odds_closing_away=3.625`. Source doc's Follow-ups updated to
@@ -343,6 +343,7 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
 | Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | **DONE, independently verified (data-level fact).** `market-tick-data-service@56df68f7f`; 0 confirmed-missing remain post-write. The verifying process only survived via a resource-watchdog rate-limit fluke (see Progress Log) — the data outcome is trustworthy, the process-survival mechanism is not repeatable.                                                                                                                                               | Nothing — complete. |
 | Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | **DONE, independently verified (data-level fact).** `market-tick-data-service@22a305ff1` (column-projected rewrite) + `975d6a4f8` (`.length`->`len()`); a first post-fix-5 attempt was killed by the resource-watchdog (7.9GB RSS vs. a temporarily-lowered 4GB "high pressure" cap, confirmed via kill marker), a retry under confirmed-lower cgroup pressure succeeded — 1,210 rows relabeled, 0 confirmed-missing verified via a separate dry-run (pid 2169822). | Nothing — complete. |
 | Flip todo 1's checkbox + final evidence citation               | **DONE.** Both populations independently verified 0 confirmed-missing; todo 1 flipped `[x]` with both commit SHAs + both verification runs cited. Source doc `canonical_player_stats_fixture_events_quality_2026_07_16.md` Follow-ups also updated to match.                                                                                                                                                                                                        | Nothing — complete. |
+| Todo 2 — re-run `odds_targets` export + confirm real parquet   | **DONE.** Pure re-run, no code change (`features-service`'s `@b4b7ad82` already emits the columns). Confirmed via a fresh `pd.read_parquet` on `gs://features-sports-.../day=2026-08-06/feature_group=odds_targets/features.parquet`: non-null `odds_closing_{home,draw,away}`. Source doc `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` Follow-ups updated to match and the doc archived (0 open todos remained).                     | Nothing — complete. |
 
 **Recommended next action**: do NOT blindly retry the 2018-2020 dry-run with fix 3 as-is — the RSS evidence shows it
 reads the same oversized 17M-row, 5-column frame regardless of population filter, and fix 3 only shaved peak RSS from
