@@ -118,13 +118,23 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `agent-orchestrator@7d73ded`). **Done when**: the spec asserts the pro/flash filter actually narrows the rendered
       rows, is tagged `pw:L2`, and passes in CI. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:97`
       (todo 4). Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. **Build a structured `review_finding` activity-log event** (`task_id`, `severity`, `finding_text`,
-      `agent_id`, `created_at`) emitted from the review role's existing finding-post path in agent-orchestrator, plus a
-      query/report endpoint or script and a regression test proving emission + retrieval. Operator already ruled "yes,
-      build it" (2026-08-08, ao round-5 apply session, item 2). **Done when**: the event is emitted on every real review
-      finding, the query endpoint/script returns it, the regression test passes, and `bash scripts/quality-gates.sh` is
-      green. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:170` (todo 12a). Repo:
-      agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Build a structured `review_finding` activity-log event** (`task_id`, `severity`,
+      `finding_text`, `agent_id`, `created_at`) emitted from the review role's existing finding-post path in
+      agent-orchestrator, plus a query/report endpoint or script and a regression test proving emission + retrieval.
+      Operator already ruled "yes, build it" (2026-08-08, ao round-5 apply session, item 2). **Done when**: the event is
+      emitted on every real review finding, the query endpoint/script returns it, the regression test passes, and
+      `bash scripts/quality-gates.sh` is green. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:170`
+      (todo 12a). Repo: agent-orchestrator. — agent-orchestrator@7a7ef2e. `POST /api/slots/{slot_id}/message` now logs a
+      `review_finding` activity event (task_id/severity/finding_text/agent_id) whenever `from_role == "review"` —
+      task_id falls back to the target slot's `current_task` when the caller omits it, severity defaults to
+      `needs-rework` (this send path is documented in `review.md` as reserved for worker-actionable defects), so
+      emission requires no `review.md` change to start firing on real findings today. Added a new
+      `GET /api/review-findings` query endpoint (task_id/slot/severity/date-range filters, severity applied post-fetch
+      since it lives in `details_json`) plus a `task_id` SQL filter on `list_activity()`. 7 new regression tests
+      (`tests/test_review_findings.py`) cover emission (explicit task_id+severity, slot-current_task fallback,
+      non-review roles don't fire) and retrieval (task_id filter, severity filter, event-type isolation). Full
+      `quality-gates.sh` green (3076 pytest, run twice — once pre-commit, once re-verified on the exact committed SHA
+      per the sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [UI] P3. **Investigate whether DeepSeek's OpenAI/Anthropic-compatible API endpoint actually honors the Claude Code
       CLI's `thinking: on/off` flag, then relabel the Fleet table's thinking-brain icon honestly based on the finding**
       (the icon currently echoes the CLI's own flag regardless of provider — unconfirmed whether DeepSeek's API honors
