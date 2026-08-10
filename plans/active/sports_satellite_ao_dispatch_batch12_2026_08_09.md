@@ -137,14 +137,19 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
       cap; 1,210 rows relabeled, 0 confirmed-missing among 2,184 remaining captured rows (verified pid 2169822, fresh
       separate dry-run, no `--apply-prod`). Full diagnostic detail in the Progress Log below (2026-08-09/10 entries) and
       in the source doc's Follow-ups.
-- [ ] [DATA] P2. **Re-run the features-service `odds_targets` export** (batch handler, idempotent overwrite) over at
+- [x] [DATA] P2. **Re-run the features-service `odds_targets` export** (batch handler, idempotent overwrite) over at
       least 1 recent date and confirm `odds_closing_home`/`odds_closing_draw`/`odds_closing_away` actually appear in the
       real GCS parquet — the standing data-side verification for the CLVTargetBuilder repoint that
       `features-service@b4b7ad82` has so far only proven at unit-test level. `quality-gates.sh --no-fix` green before
       commit; ship via quickmerge if any code changes are needed (expected to be a pure re-run, no code change). Source:
       `/plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (## Follow-ups,
       `[DATA] P3`). Done when: at least one real GCS parquet for a recent date is cited by path showing non-null
-      `odds_closing_{home,draw,away}` columns.
+      `odds_closing_{home,draw,away}` columns. **✅ DONE 2026-08-10 (slot-29)**: pure re-run, no code change needed —
+      `--operation compute --mode batch --date 2026-08-06 --tables odds_targets --skip-fetch`. Wrote
+      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-08-06/feature_group=odds_targets/features.parquet`;
+      fresh `pd.read_parquet` confirms `event_id=4e5c385bec9516e786c4876ac68413f7` has non-null
+      `odds_closing_home=2.415`, `odds_closing_draw=2.7`, `odds_closing_away=3.625`. Source doc's Follow-ups updated to
+      match.
 - [ ] [DIAG] P3. **Explain the 23 sentinel-free missing `odds_api` days** (2020-06-06..2026-04-15, dates with neither an
       `odds_api` row nor an `ODDS_API` sentinel row) not accounted for by the already-diagnosed-and-fixed
       sentinel-collision mechanism (`check_shard_freshness` ODDS_API-sentinel collision,

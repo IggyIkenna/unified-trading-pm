@@ -26,9 +26,11 @@ related:
   [
     /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
+    /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
   ]
 created: 2026-07-26
 author: unknown
+last_updated: "2026-08-10"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,9 +47,10 @@ source:
     (named with a literal ''_clv_'' target_type) used the LEGACY path, not this one -- but noticed CLVTargetBuilder
     along the way and did not verify it.',
   ]
-resolved_by:
+resolved_by: "features-service@b4b7ad82, ml-service@38edeba"
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
@@ -190,12 +193,30 @@ they would silently inherit the same architecture gap this whole chain exists to
       test `test_builds_non_degenerate_clv_with_odds_targets_column_names` proves non-degenerate `*_clv_bps` with the
       odds_targets column names; `test_merge_clv_target_columns` proves the closing/opening legs merge in;
       `_FT_REALIZED_COLUMNS` now strips `odds_closing_*` so the closing line stays out of the model-input matrix)
-- [ ] [DATA] P3. Re-run the `odds_targets` export over ≥1 recent date (features-service batch handler, idempotent
+- [x] [DATA] P3. Re-run the `odds_targets` export over ≥1 recent date (features-service batch handler, idempotent
       overwrite) and confirm `odds_closing_{home/draw/away}` appear in the GCS parquet — the standing data-side
       verification for the CLVTargetBuilder repoint (features-service @b4b7ad82 proves the columns emit at unit level;
-      this confirms on real parquets). (repo: features-service)
+      this confirms on real parquets). (repo: features-service) — **DONE 2026-08-10 (slot-29)**: pure re-run, no code
+      change
+      (`.venv/bin/python3 -m features_service.sports.cli.main --operation compute --mode batch --date     2026-08-06 --tables odds_targets --skip-fetch`,
+      real captured `odds_horizon_bucket` data for that date, 147 rows / 8 shards). Wrote
+      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-08-06/feature_group=odds_targets/features.parquet`
+      (2 fixture rows). Confirmed via a fresh `pd.read_parquet` on that path:
+      `event_id=4e5c385bec9516e786c4876ac68413f7` has non-null `odds_closing_home=2.415`, `odds_closing_draw=2.7`,
+      `odds_closing_away=3.625` (the other row's whole CLV block is null — expected honest-absence for a fixture lacking
+      a T-24h leg, not a defect).
 
 > **2026-08-06 archive-candidate audit**: The sole [DATA] P3 todo (verdict ALWAYS-NULL) is checked but its own text and
 > the 2026-08-05 Progress Log defer an explicit follow-up — 'either (a) file [DESIGN]->2 implementation todos ... OR (b)
 > confirm pregame_clv_family is not used in any real production retrain and mark this doc resolved as moot' and 'whether
 > it drives actual retrains was not determined in this session' — that decision was never turned into a tracked todo.
+> **Resolved 2026-08-06→2026-08-10**: option (a) was already what happened — the fix-or-moot [DECISION] todo above chose
+> FIX (not moot) on 2026-08-06, and both implementation todos + the final real-parquet verification todo are now all
+> done. The "drives actual retrains" question is moot given (a) was chosen and executed; no separate todo needed.
+
+## Progress Log
+
+- **2026-08-10 (slot-29)**: sole remaining Follow-up ([DATA] P3, real-parquet verification) flipped `[x]` — see its own
+  DONE note for the GCS path + confirmed non-null `odds_closing_*` values. 0 open todos remain; `archive_exempt: true`
+  set on this flip-only commit per the RULED-2026-08-09 two-commit bridge (this doc's own last todo is its archival
+  trigger) — dropped in the immediately-following `git mv` archival commit.
