@@ -192,25 +192,25 @@ context_scope:
       the todo's own "if genuinely different, do not purge" branch.
 
       **UPDATE 2026-08-03 — items 1+2 resolved, figures now authoritative (see
-                                                                                  `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
+                                                                                      `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
 
-                                                                                  **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
-                                                                                  authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
-                                                                                  `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
-                                                                                  full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
-                                                                                  ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
-                                                                                  `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
-                                                                                  same cut.
+                                                                                      **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
+                                                                                      authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
+                                                                                      `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
+                                                                                      full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
+                                                                                      ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
+                                                                                      `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
+                                                                                      same cut.
 
-                                                                                  **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
-                                                                                  does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
-                                                                                  `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
-                                                                                  raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
-                                                                                  non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
-                                                                                  10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
-                                                                                  intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
-                                                                                  `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
-                                                                                  `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
+                                                                                      **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
+                                                                                      does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
+                                                                                      `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
+                                                                                      raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
+                                                                                      non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
+                                                                                      10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
+                                                                                      intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
+                                                                                      `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
+                                                                                      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
 
 - [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
       fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
@@ -592,3 +592,10 @@ context_scope:
   ("P2a/P2b confirmed done AND features matrix extension completes with fresh coverage census") unmet on both clauses.
   Same root cause as prior dispatches: `BLOCKED-PREREQUISITES` marker not recognized by `_NON_DISPATCHABLE_RE`
   (`blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` case (b)).
+- **2026-08-10T~09:57Z (slot 25, data_engineering)** — Features-recompute monitoring dispatch. Live-check of
+  `fts-backfill-20260809-012626`: status=RUNNING, run.log + PIPELINE_HEARTBEAT fresh (ts=09:55:05Z, ~1.5 min before
+  check). Actual last-processed day (full-log tail, not grep-substring): `day=2021-08-28` — ~449 calendar days into the
+  2020-06-06..2026-08-06 range (~20%, up from slot-17's 2021-04-08 / ~13.6%). Measured rate ~11-15 days/h → ETA ~6.5
+  more days. The `firestore dual-write heartbeat ... best-effort, GCS authoritative` warnings are non-fatal (documented
+  known). Done-when (VM exit 0, manifest rows written) unmet. Did NOT flip checkbox, did NOT launch a duplicate.
+  Declining via `/skip-current-task` `reason_code=GATED` — ETA ~6.5 days, well past any useful re-poll window.
