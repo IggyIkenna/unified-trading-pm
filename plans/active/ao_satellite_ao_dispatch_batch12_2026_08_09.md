@@ -237,12 +237,24 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       Evidence: `agent-orchestrator@a1e2969`. Source:
       `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md:85` (P1 item 1). Repo:
       agent-orchestrator.
-- [ ] [BACKEND] P1. **Verify forced compaction by its EFFECT, not its submission.** Change forced-compact verification
-      in `agent-orchestrator/server/context_lifecycle.py` to confirm success via a new `compact_boundary` record
-      surfaced by `server/context_probe.py`'s `stale_after_compaction`, instead of trusting
-      `tmux_spawn.submit_to_pane()`'s `True` return (which only proves submission, not execution). **Done when**: the
-      verification path checks for the boundary record, a regression test proves it catches a queued-but-not-executed
-      case the old check would have missed, and `bash scripts/quality-gates.sh` is green. Source:
+- [x] ✅ [BACKEND] P1. **Verify forced compaction by its EFFECT, not its submission.** Added
+      `context_probe.compaction_confirmed_since(session_name, since)` — reads the transcript's own `compact_boundary`
+      system record (the same marker `stale_after_compaction` detects) and returns whether one landed at/after a given
+      reference time, independent of any subsequent usage record or self-reported pct. `context_lifecycle.py`'s
+      compaction-detection block in `_tick_target` now treats `pct_dropped OR boundary_confirmed` as the "compaction
+      observed" signal (boundary check only consulted once the pct-drop heuristic has failed to confirm AND a force is
+      actually outstanding, so no added per-tick cost on the common path); `context_compact_observed` activity now
+      records `confirmed_by: "pct_drop" | "compact_boundary"`. Closes a real blind spot: a worker's
+      `SlotRow.     context_used_pct` only ever ratchets UP from the out-of-band pane sample — a real drop is only ever
+      recognised through a worker-initiated `/progress`/`/done`/`/heartbeat` self-report — so a worker that compacts and
+      then goes quiet before the retry deadline left `pct` stuck high and the old pct-only check would mislabel a
+      genuinely successful compaction as ineffective.
+      `test_boundary_confirms_compaction_the_old_pct_check_would_have_missed` (tests/test_context_lifecycle.py) proves
+      this exact case: pct pinned at 65% the whole time, boundary confirms success, `ineffective_forces` stays 0 (the
+      old check would have set it to 1, same shape as `test_ineffective_force_rearms_after_retry_window`). Four new unit
+      tests in tests/test_context_probe.py cover `compaction_confirmed_since` directly (boundary after reference /
+      before reference / absent entirely — the genuine queued-but-never-executed case / no transcript).
+      `bash scripts/quality-gates.sh` green (3109 passed). Evidence: `agent-orchestrator@59d9417`. Source:
       `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md:89` (P1 item 2). Repo:
       agent-orchestrator.
 - [ ] [BACKEND] P2. **Build a deliberate repro for the queued-not-executed `/compact` mechanism** — submit `/compact` to
