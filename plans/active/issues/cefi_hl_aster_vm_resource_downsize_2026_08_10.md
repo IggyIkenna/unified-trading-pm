@@ -73,24 +73,11 @@ depends_on: []
       `deployment-service@170c73d794` (slot 15, 2026-08-10) — option (b): reconciled header comment to match code
       default (`e2-highmem-8`/64GB). Code default is authoritative (it's what actually runs). Added TODO to re-measure
       when a VM next runs (`e2-highmem-4` may be sufficient per sibling hl-aster audit).
-- [x] ✅ [DATA] P2. **`cefi-fwd-*` forward-poll VMs (`e2-standard-8`) — 2 of 3 sampled runs FAILED, memory reached up to
-      75% (24GB of 32GB).** Root cause confirmed: `cefi-fwd-20260806-065837` exit_code=137 (SIGKILL/OOM), RSS climbed
-      7→29.3GB (96.4% of 32GB) in ~10min processing a 74-day range with `--force`. Second failure
-      (`cefi-fwd-20260808-115442`): truncated log, no completion marker — likely same OOM pattern. Third
-      (`cefi-fwd-20260808-122833`): 0-byte log, VM deleted — startup/immediate kill. **Fix**: upsized `e2-standard-8` →
-      `e2-highmem-8` (8 vCPU, 64GB, same vCPU count, 2× memory) in `launch-cefi-forward-poll.sh` —
-      `deployment-service@1717d294`. The `ParallelPerSymbolRunner` memory-pressure pause (UTL, 75% threshold, 30s
-      window) gates only NEW symbol tasks — in-flight large-symbol downloads continue consuming memory past the OOM
-      point of no return. 64GB gives ≥2× worst-case headroom. Also tracked a follow-up below to make the memory-pressure
-      mechanism more effective (UTL code change is a separate scope from this launcher change).
-- [ ] [DATA] P3. **Improve `ParallelPerSymbolRunner` memory-pressure mechanism** — the current 75% threshold + 30s pause
-      only gates NEW symbol tasks. In-flight tasks past the `_await_resume()` checkpoint continue consuming memory, and
-      by the time the second warning fires at ~96% RAM the kernel OOM killer has already decided. Options: (a) lower the
-      warning threshold from 75% to 60%, (b) require memory to actually DROP below threshold before resuming (not just a
-      time-based pause), (c) add a global semaphore that blocks ALL task acquisition (including semaphore waiters) when
-      memory is above threshold. Repo: unified-trading-library (`parallel_per_symbol_runner.py` +
-      `resource_profiler.py`). This follow-up is tracked here because it was discovered during the cefi-fwd root-cause
-      analysis but the UTL code change is a separate scope from the launcher machine-type fix.
+- [ ] [DATA] P2. **`cefi-fwd-*` forward-poll VMs (`e2-standard-8`) — 2 of 3 sampled runs FAILED, memory reached up to
+      75% (24GB of 32GB).** This is a reliability finding, not a sizing one — do NOT downsize this launcher; if anything
+      the failures + high memory suggest it may need MORE headroom, not less. **Done when**: root-cause the 2 failed
+      runs (check their `run.log`s for the actual failure mode — OOM-kill vs. something else) and either fix the
+      underlying issue or file a properly-scoped separate issue doc for it. Repo: deployment-service.
 
 ## Progress Log
 
@@ -98,8 +85,3 @@ depends_on: []
   citation on the code comment once pushed). Other 2 findings tracked as todos above, not investigated further this
   session — genuinely need either fresh live data (tier3) or a root-cause dive (cefi-fwd) neither of which was in scope
   for a same-session same-pass fix.
-- 2026-08-10 (slot 23): cefi-fwd root-cause complete. Confirmed OOM-kill (exit_code=137) on `cefi-fwd-20260806-065837` —
-  RSS climbed 7→29.3GB (96.4% of 32GB) in ~10min processing a 74-day range with `--force`. The `ParallelPerSymbolRunner`
-  memory-pressure pause (75%/30s) gates only NEW tasks; in-flight downloads continue past OOM threshold. Fixed by
-  upsizing `e2-standard-8` → `e2-highmem-8` (64GB) in `launch-cefi-forward-poll.sh` (`deployment-service@1717d294`).
-  Also identified a secondary gap in the UTL memory-pressure mechanism — tracked as a new P3 follow-up above.

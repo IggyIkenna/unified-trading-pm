@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                              (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                              #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                              walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                              pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                              content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                              then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                              re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                              273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                              build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                              verification.
+                  (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                  #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                  walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                  pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                  content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                  then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                  re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                  273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                  build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                  verification.
 
 - [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -883,45 +883,3 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   quickmerge on green. **Resume**: quickmerge `e25dcfb3` → republish MTDS code tarball (`create-code-tarballs.sh`) →
   launch `bash launch-canonical-migration-vm.sh prediction-shape4-merge 2025-03-14 2026-04-14 full` → verify VM
   STARTED + progress (many-hours run) → 4b-iii checkbox flips only after VM completion verified.
-
-- **2026-08-10T20:06Z (slot 25, data_engineering, 4b-iii continuation)**: **VM LAUNCHED.** MTDS tarball refreshed to the
-  pinned SHA (mtds-code@`b9ce3b65e862`, manifest commit_sha + git_status_clean=true, SHA-pinned copy in
-  `deployment-scripts-central-element-323112/code/`). Launched
-  `canonical-migration-prediction-shape4-merge-20260810-200603` (asia-northeast1-c, e2-standard-8, SPOT) via
-  `MTDS_TARBALL_SHA=b9ce3b65e862 bash launch-canonical-migration-vm.sh prediction-shape4-merge 2025-03-14 2026-04-14 full`
-  → runs
-  `scripts/migrate_prediction_trades_shape4_2026_08_10.py --start-date 2025-03-14 --end-date 2026-04-14 --apply --delete-legacy`
-  (dry=no flag, full=`--apply --delete-legacy`). All 4 tarballs fresh at launch (UAC/UTL/MTDS/ deployment-service).
-  **NOTE on sequencing**: deployment-service QG (e25dcfb3 launcher) was QUEUED on the saturated host, so the launch was
-  DECOUPLED — it depends only on the MTDS tarball (pushed + pinned ✓); the deploy-service quickmerge lands separately
-  when its QG frees up. Logs tee to
-  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-prediction-shape4-merge-20260810-200603/`
-  (run.log = migration progress; EXIT_STATUS + VM auto-shutdown = terminal). 4b-iii checkbox stays OPEN until the VM run
-  completes (expected many-hours; same multi-session pattern as 4b-i).
-
-- **2026-08-10T20:09Z (slot 25, data_engineering, 4b-iii continuation)**: **VM STARTED VERIFIED (not fire-and-forget).**
-  Serial console (20:08:20): setup completed exit 0 (UAC OK 390 leagues, MTDS OK, deps installed); migration launched
-  PID 4983/4997
-  `python -u scripts/migrate_prediction_trades_shape4_2026_08_10.py --start-date 2025-03-14 --end-date 2026-04-14 --apply --delete-legacy`,
-  `VM_MODE=full`, `VM_ASSET_GROUP=PREDICTION`; python process still running after startup-scripts.service detached; GCS
-  run.log appeared (migration teeing progress). Migration now runs (many hours, day-by-day; deletes only
-  content-verified cells, keeps + flags the subset-divergent cells). **Resume when the VM completes** (EXIT_STATUS +
-  auto-shutdown): read the migration report from the GCS vm-logs run.log, verify 0-loss + post-delete counts, then flip
-  4b-iii. Separately: deployment-service QG (e25dcfb3) still QUEUED on the saturated host — quickmerge when green (does
-  NOT block the VM).
-
-- **2026-08-10T20:12Z (slot 25, data_engineering, 4b-iii continuation)**: **VM #1 FAILED at start — IAM grant →
-  RELAUNCHED.** First VM (`...-200603`) exited rc=1 within ~12s of migration start: the script's delete-safety retention
-  check (`gcs_bucket_soft_delete_retention_seconds()` on `market-data-tick-pred-prd-central-element-323112`) needs
-  `storage.buckets.get`, which the VM SA `uts-prd-sa` lacked (403 Forbidden; it has project-level `storage.objectAdmin`/
-  `objectViewer` but no bucket-metadata read). The 4b-i template's similar delete path evidently never needed
-  `buckets.get`, so this is a NEW requirement of the shape-#4 retention gate. **FIX (IAM-self-service, additive +
-  scoped, per governance rule — grant, don't pause)**: added `roles/storage.legacyBucketReader` for
-  `uts-prd-sa@central-element-323112.iam.gserviceaccount.com` on the prediction tick bucket (grants
-  `storage.buckets.get`
-  - objects list/get; SA already had object write/delete via objectAdmin). **RELAUNCHED as
-    `canonical-migration-prediction-shape4-merge-20260810-201105`** (same pin `MTDS_TARBALL_SHA=b9ce3b65e862`, full
-    mode), RUNNING. NOTE: at relaunch the launcher warned `mtds-code manifest=b9ce3b65e862 but repo=47966bf50ab1` (a
-    peer pushed newer MTDS commits) — the pinned-SHA tarball copy guarantees the VM runs MY exact commit; verify via the
-    migration log once started. **Resume**: confirm 201105 passes the retention check + progresses (Monitor
-    `br5h30v30`), then wait for many-hour completion.
