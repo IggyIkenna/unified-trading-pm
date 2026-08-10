@@ -318,8 +318,8 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       are now deleted, plus the now-empty `docs/specs/` dir removed and the dangling `IMPLEMENTATION_MAX_WORKERS` /
       `ML_IMPLEMENTATION` / `SPECS.md` links in `cli.md`/`BIGQUERY_INTEGRATION_GUIDE.md`/`INDEX.md` fixed. Phase-3/4
       hold itself LIFTED 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao).
-- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED + FIX-STALE
-      APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
+- [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED +
+      FIX-STALE APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
       `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
       `_venue_errors_*` now `normalize_utils/errors`) and the 4 DELETE-class docs (`ICLOUD_REPO_MIGRATION_PROMPT`,
       `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH`) each
@@ -336,7 +336,13 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       with NO 1:1 live target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 +
       `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` → pick live equivalent). Un-checked 2026-08-10 — see
       deployment-service item above for rationale. Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
-      2026-08-06 (/plan-reconcile ao).
+      2026-08-06 (/plan-reconcile ao). **DELETE half + rest ✅ SHIPPED 2026-08-10 (unified-api-contracts@156c1eca,
+      verified ancestor).** 4 DELETE-class docs removed (twins confirmed first; 6 cross-refs repointed to
+      `docs/archive/`); `SCHEMA_GOVERNANCE.md` placement table rewritten to live layout (`normalize_utils/`,
+      `canonical/domain/`+`crosscutting/` — no more `canonical/normalize/`/`schemas/`/`shared/`);
+      `SCHEMA_CHANGELOG` L13 → `/codex/04-architecture/schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 already
+      fixed @`f952e17f`; `UAC_FULL_GAP…` L278 moot (deleted). Also deleted dead `check_schema_organization.py`
+      (zero callers) + its sole doc consumer. QG-green; `quickmerge --agent`.
 - [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
       REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
       LONGER un-tiered (edited 2026-07-21, now `{env}`-carrying; residual staleness is only inline `gs://`/`gsutil` vs
