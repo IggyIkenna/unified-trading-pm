@@ -32,6 +32,8 @@ source: >-
   already correctly isolated, not silently swallowed).
 resolved_by:
 locked_by:
+archive_exempt: true  # 2026-08-10 slot-22
+archive_exempt: true  # 2026-08-10 slot-22: two-commit ritual
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -84,14 +86,14 @@ distinct from the current retry-on-`aiohttp.ClientError` path, since a `JSONDeco
 subclass and today gets zero retries before falling through to shard-level failure isolation). Low priority given the
 ~0.4% measured rate and existing honest-failure recording.
 
-- [ ] [CODE] P3. Diagnose why `SoccerFootballInfoAdapter.get_progressive_stats` occasionally receives a truncated JSON
+- [x] ✅ [CODE] P3. Diagnose why `SoccerFootballInfoAdapter.get_progressive_stats` occasionally receives a truncated JSON
       body from the SFI API (10/2254 date-completions in `sfi-backfill-20260807-123519`'s run.log,
       `gs://deployment-scripts-central-element-323112/vm-logs/sfi-backfill-20260807-123519/run.log`, error shape
       `Unterminated string starting at: line 1 column N`) and consider adding a targeted retry for
       `json.JSONDecodeError` in `instruments_service/reference_data/adapters/sports/adapters/base.py::_get_with_retry`
       (currently only `aiohttp.ClientError` is retried; a JSON decode error falls straight through to per-match shard
       isolation with zero retries). Done when: root cause identified and either fixed or documented as a genuine
-      upstream provider limitation. Repo: instruments-service.
+      upstream provider limitation. Repo: instruments-service. — instruments-service@ecfc2749
 
 ## Progress Log
 
