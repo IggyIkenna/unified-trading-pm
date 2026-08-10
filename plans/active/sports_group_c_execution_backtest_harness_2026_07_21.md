@@ -106,11 +106,19 @@ CLI wiring, same shape as the 3 domains that already have it.
       and the engine-core extractor branch. 10 new unit tests (8 extractor + 2 runner wiring) + updated
       `test_all_members` (5 domains). `quality-gates.sh` full green on the committed HEAD (sentinel=37c83f3d; shipped as
       5e80d437 + test-fix 4ceaec57).
-- [ ] [BACKEND] P3. Wire a data source: reuse the Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
+- [x] ✅ [BACKEND] P3. Wire a data source: reuse the Group-B fixture dataset shipped in `strategy-service@9a7de7f8`
       (`tests/fixtures/sports_odds/premier_league_arb_sample.py`, 3 synthetic EPL ticks) as the first hermetic input —
       port or import it into execution-service's catalog/data layer rather than inventing a second fixture format.
       Confirm whether `CatalogManager` needs a new sports/prediction data-type branch or can consume the same
-      synthetic-tick shape CeFi uses.
+      synthetic-tick shape CeFi uses. — execution-service@51bee662a. Ported `premier_league_arb_sample.py`
+      (byte-compatible, same format — port, not import, per the no-service↔service-dep tier rule) to
+      `execution_service/data/fixtures/sports_odds/`, and added `execution_service/data/sports_fixture_source.py`
+      projecting it into the harness's hermetic input shapes: `strategy.instruction_data` (direction gated by value-bet
+      `min_edge`, benchmark = decimal odds) + synthetic L0 TOB `QuoteTick`s registered through `CatalogManager`, plus a
+      `build_sports_fixture_backtest_config()` hermetic config builder. **CatalogManager question confirmed: NO new
+      branch needed** — CatalogManager is a domain-agnostic Nautilus `ParquetDataCatalog` wrapper; the sports
+      synthetic-tick shape is the same QuoteTick shape CeFi registers (verified by write+read-back in
+      `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd; shipped as 51bee662a.
 - [ ] [DESIGN] P3. **RESOLVED by the 2026-08-08 OPERATOR RULING banner above — option (a), delete it.** Resolve the
       `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
@@ -143,6 +151,20 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Progress Log
 
+- **2026-08-10 (slot 19, backend_engineer)**: Todo 2 shipped — `execution-service@51bee662a`. Ported the Group-B fixture
+  (`strategy-service@9a7de7f8`'s `premier_league_arb_sample.py`, 3 synthetic EPL ticks) into
+  `execution_service/data/fixtures/sports_odds/` (byte-compatible — port, not import, per the T4 no-service↔service-dep
+  tier rule; reuses the exact same fixture format rather than inventing a second). Added
+  `execution_service/data/sports_fixture_source.py` wiring it as the first hermetic input for `run_sports_backtest`: (1)
+  `build_sports_fixture_instruction_data()` projects each tick's prediction into `strategy.instruction_data` (direction
+  gated by the archetype `min_edge` 0.03 — 2 of 3 ticks fire, 1 no-trades; benchmark_price = home decimal odds), (2)
+  `build_sports_fixture_quote_ticks()` projects the odds into synthetic L0 TOB `QuoteTick`s, (3)
+  `register_sports_fixture_catalog()` writes them through `CatalogManager`, (4) `build_sports_fixture_backtest_config()`
+  assembles a hermetic `run_sports_backtest`-consumable config (L0_TOB venue, embedded instruction stream,
+  `data_source: local`). **CatalogManager question confirmed**: it is a domain-agnostic Nautilus `ParquetDataCatalog`
+  wrapper — it stores Nautilus data objects (QuoteTick/TradeTick) keyed by instrument, so sports consumes the SAME
+  synthetic-tick shape CeFi uses; NO new sports/prediction data-type branch needed (proven by register+read-back in
+  `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd.
 - **2026-08-10 (slot 25, backend_engineer)**: Todo 1 shipped — `run_sports_backtest` + `extract_sports_instrument` +
   full dispatch wiring (DomainType.SPORTS/PREDICTION, domain detection, backtest.py map/date-skip, engine-core branch).
   Read the prerequisite context first: `backtest-groups.md` Group-C contract, `run_defi_backtest` as the structural
