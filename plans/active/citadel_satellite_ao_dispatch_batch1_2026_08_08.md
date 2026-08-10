@@ -306,13 +306,25 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
     `LAUNCH_PARAMS.json` was captured so no exact auto-relaunch; deleted-no-op.
   - Attempt 2 (`features-delta-one-cefi-20260810-141704`): first create failed `asia-northeast1-c` STOCKOUT
     (`e2-standard-8` resource_availability); retried 15s later → **CREATED + RUNNING** (SPOT, e2-standard-8,
-    asia-northeast1-c). Watcher armed for terminal state (run.log marker / TERMINATED). **NEXT STEP for whoever
-    resumes**: wait for terminal state, then (a) verify run.log `rc=0`, (b) manifest-row check that the delta_one
-    feature corpus carries non-null `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` for the paper window
-    (`_index/availability_index.parquet` under features-cefi, or a parquet-schema probe), (c) flip this todo `[x]` with
-    the VM name + manifest evidence, per the plan's done-when. Note: the launcher's printed post-backfill manifest
-    rebuild snippet uses `prefix='sports_features/by_date'` (sports template) — the cefi delta_one verify must use the
-    actual `delta_one/by_date` prefix / availability_index read, not copy that string.
+    asia-northeast1-c). Watcher armed for terminal state (run.log marker / TERMINATED). **Attempt 2 outcome: PREEMPTED
+    at boot ~14:21Z (2026-08-10 07:21:28-07:00 `compute.instances.preempted` system event, "Instance was preempted") —
+    ZERO progress again (no run.log, no EXIT_STATUS, no parquet written).** Verified via
+    `gcloud compute operations list --filter="targetLink~features-delta-one-cefi-20260810"` that BOTH attempts
+    (140712 + 141704) carry genuine `compute.instances.preempted` DONE events — root cause closed, preemption-recovery
+    path (fresh relaunch from START_DATE) is the correct response since no measured progress exists.
+  - Attempt 3 (`features-delta-one-cefi-20260810-142400`): relaunched 2026-08-10 14:24Z, **CREATED + RUNNING** (SPOT,
+    e2-standard-8, asia-northeast1-c), same exact params + `FEATURE_GROUP=returns`. Watcher re-armed with the CORRECT
+    log convention (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` + `EXIT_STATUS` marker — not
+    the features bucket, per launcher_common.sh:1516). Per spot-vms-for-backfill.md, SPOT stays correct (on-demand for
+    backfill is "a bug, not a default"; this is a presence-skip backfill, not a verify-script carve-out). **NEXT STEP
+    for whoever resumes**: wait for terminal state, then (a) verify run.log `rc=0` / `EXIT_STATUS=0`, (b) manifest-row
+    check that the delta_one feature corpus carries non-null `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol`
+    for the paper window (`_index/availability_index.parquet` under features-cefi, or a parquet-schema probe), (c) flip
+    this todo `[x]` with the VM name + manifest evidence, per the plan's done-when. Note: the launcher's printed
+    post-backfill manifest rebuild snippet uses `prefix='sports_features/by_date'` (sports template) — the cefi
+    delta_one verify must use the actual `delta_one/by_date` prefix / availability_index read, not copy that string. If
+    attempt 3 also preempts at boot, escalate: document the 3×-preemption in an issue doc + request operator ruling on
+    `--on-demand` for this tiny bounded 4-date window.
 
 - 2026-08-09 (slot 9, citadel_satellite_ao_dispatch_batch1-006, "features-service: recompute the corpus for the intraday
   BTC mean-reversion cs-ML feature"): **item remains OPEN — blocked, not done.** Attempted the `returns` +
