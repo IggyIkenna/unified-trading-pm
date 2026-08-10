@@ -95,8 +95,9 @@ aggregator-fanned venues are `executable=False` — we receive via aggregator, n
 ### `BETFAIR` as operator-group parent
 
 `BETFAIR` (bare, without region suffix) is the operator-group parent, not a data-axis venue. It does not appear in
-`VENUES_BY_ASSET_GROUP["sports"]`. The three exchange venues (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `BETFAIR_EX_AU`) roll up
-to it in the venue→operator hierarchy. **Landed** — `unified-api-contracts@49e83239` (P1, archived 2026-08-09:
+`VENUES_BY_ASSET_GROUP["sports"]`. The two exchange venues (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`) roll up to it in the
+venue→operator hierarchy (`BETFAIR_EX_AU` was never actually registered — see § "Venue Axis" below). **Landed** —
+`unified-api-contracts@49e83239` (P1, archived 2026-08-09:
 `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`).
 
 ---

@@ -3008,11 +3008,11 @@ family as the checks above — count <= baseline passes, a NEW violation fails):
   Per-line opt-out: `# noqa: swallowed-credential-fetch` + reason. Per-repo baseline:
   `scripts/quality_gates/no_swallowed_credential_fetch_baseline.yaml`.
 
-All three are wired as unnumbered PM-only post-gates (same style as the `.code-workspace` drift guard above — no
-`STEP 5.X` id, enforced inline in `scripts/quality-gates.sh` rather than `base-service.sh`/`base-library.sh`, so they
-don't appear in the per-repo STEP table). Each has a dedicated unit-test suite proving a synthetic new violation fails
-at the seeded baseline. Re-baseline (`--baseline-write` / `--update-baseline`, per-checker flag) only for genuinely
-intentional/tracked debt — never to silence a real new regression.
+All three are wired as unnumbered PM-only post-gates — no `STEP 5.X` id, enforced inline in `scripts/quality-gates.sh`
+rather than `base-service.sh`/`base-library.sh`, so they don't appear in the per-repo STEP table. Each has a dedicated
+unit-test suite proving a synthetic new violation fails at the seeded baseline. Re-baseline (`--baseline-write` /
+`--update-baseline`, per-checker flag) only for genuinely intentional/tracked debt — never to silence a real new
+regression.
 
 ---
 

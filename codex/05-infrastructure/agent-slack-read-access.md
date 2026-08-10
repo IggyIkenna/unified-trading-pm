@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Agent Slack read-access — scripts/dev/slack-read-channel.py
 summary:
   An agent session can read any Slack channel's recent history directly, right now, with zero setup — no MCP server, no
-  OAuth flow, no pasted screenshots. `scripts/dev/slack-read-channel.py` resolves a read-scoped bot token from GCS
+  OAuth flow, no pasted screenshots. `scripts/dev/slack-read-channel.py` resolves a read-scoped bot token from GCP
   Secret Manager via gcloud ADC (the token never touches disk or argv) and dumps rendered + raw-JSON channel history.
   This doc exists because that capability was previously hard to find — an agent asked "do I have Slack access?"
   reflexively checked for an MCP tool (found none) and concluded no access, instead of checking for an existing

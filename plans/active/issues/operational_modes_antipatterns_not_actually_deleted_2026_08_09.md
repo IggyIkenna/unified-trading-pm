@@ -169,14 +169,26 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
 - **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — first audit pass on
   this doc (never previously touched by na-eligibility-audit). Of the 4 open items: the `paper_target_registry` rename
   is a pure mechanical corpus-wide rename with a code-verified real symbol name, no judgment call — extracted to
-  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The other 3 stay KEEP-NA, valid: the `TestingStage` codex-doc
-  update is downstream of the operator-only owner/date placeholder (self-declared "not worker-determinable"), and the
+  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The other 3 stay KEEP-NA, valid: the `TestingStage` codex-doc update
+  is downstream of the operator-only owner/date placeholder (self-declared "not worker-determinable"), and the
   `aave_live.py` constructor-arg item is an explicit "decide" design call. Whole-doc RECLASSIFY bar not cleared.
 
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
   **4**, matching. Re-affirms the round9 (2026-08-09) satellite-extraction verdict: the sole mechanical item
-  (`paper_target_registry` corpus-wide rename) is already correctly `➡️ EXTRACTED 2026-08-09 to
-  ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The 3 survivors remain genuinely gated — the `TestingStage` codex
-  update is downstream of an explicit `[OPERATOR]` placeholder (owner + target date, "not worker-determinable" per its
-  own text, not invented here), and the `aave_live.py` constructor-arg item is an explicit "decide" design call. No new
-  bounded item found on independent re-read.
+  (`paper_target_registry` corpus-wide rename) is already correctly
+  `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The 3 survivors remain genuinely gated —
+  the `TestingStage` codex update is downstream of an explicit `[OPERATOR]` placeholder (owner + target date, "not
+  worker-determinable" per its own text, not invented here), and the `aave_live.py` constructor-arg item is an explicit
+  "decide" design call. No new bounded item found on independent re-read.
+- **docs-reconcile 2026-08-10**: this doc's own "What was already done" (line ~126, "Both codex docs were corrected in
+  place") was itself incomplete — independently re-verified via adversarial dual-agent read (not just trusting the
+  claim) and found TWO of this issue's own findings never actually landed in the cited docs: (a) Finding 5's
+  `TestingStage.LIVE_TESTNET` "not deleted" correction was applied to the Anti-patterns section of
+  `operational-modes.md` but never propagated to that same doc's TL;DR (line ~68) or frontmatter `summary:` (line ~7),
+  which both still asserted "deleted" — self-contradicting the doc's own later section; (b) Finding 2+3's `FORK` enum
+  member was documented in prose (paper-vs-live-execution-seam.md's Review note, line ~177) but the seam diagram two
+  sections above it was never redrawn — still nested "EVM: Tenderly fork" under the `TESTNET` branch, exactly the wrong
+  grouping the review note itself flags. Fixed both today (doc-internal-only, no code/design change, same class of fix
+  as this doc's own already-applied corrections) — TL;DR/summary now say "NOT deleted... still live", diagram now has a
+  separate `target == FORK` branch. Not re-opening any todo above; this was a docs-reconcile self-consistency finding,
+  not new design work.

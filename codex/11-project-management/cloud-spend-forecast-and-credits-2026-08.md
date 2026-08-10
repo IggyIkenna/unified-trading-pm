@@ -233,7 +233,8 @@ to ~$1,000/mo. Framing agreed with the operator: state plainly that we do NOT wa
 secure, more billing to reconcile, engineering weeks lost) but will do it if the arithmetic does not close.
 
 **$25,000/mo is a FLOOR, not a ceiling** — August already tracks ~$23,000. The scenario model shows the same workload
-reaching $99,700/mo in the base case. Gross above $25k is upside for Google, not a larger ask from us.
+reaching $99,700/mo in the Ambitious case (the committed Base plan itself exits at $28,100/mo — see § "Scenario model
+RE-ANCHORED" below). Gross above $25k is upside for Google, not a larger ask from us.
 
 ### Committed run-rate composition (the $25k/mo, by cost line)
 
@@ -260,29 +261,31 @@ coverage) · BigQuery. Plus AWS migration support and Spot/Batch job-shaping gui
 ### Scenario model — RE-ANCHORED 2026-08-09 (operator ruling; supersedes the model's own labels)
 
 **The committed plan IS the base case.** The operator rejected the earlier presentation twice: first because the plan
-sat *below* a "base" case, which reads as asking for less than our own conservative estimate; then again because a
+sat _below_ a "base" case, which reads as asking for less than our own conservative estimate; then again because a
 relabel alone still left three lines. Final structure in the deliverable is exactly three series:
 
-| Series in the deliverable                     | 12-mo gross | Exit $/mo | What it is                                            |
-| --------------------------------------------- | ----------: | --------: | ----------------------------------------------------- |
-| **Base — the committed plan** (the ask)       |     300,000 |    28,100 | $20.7k→$28.1k/mo; what the taper is priced on         |
-| **Ambitious — same roadmap, unconstrained**   |     780,300 |    99,700 | was the model's "base"; now the upside line           |
-| **No arrangement — GCP reduced to storage**   |      32,750 |     1,000 | $5k/mo decaying to $1k as compute moves to AWS+Azure  |
+| Series in the deliverable                   | 12-mo gross | Exit $/mo | What it is                                           |
+| ------------------------------------------- | ----------: | --------: | ---------------------------------------------------- |
+| **Base — the committed plan** (the ask)     |     300,000 |    28,100 | $20.7k→$28.1k/mo; what the taper is priced on        |
+| **Ambitious — same roadmap, unconstrained** |     780,300 |    99,700 | was the model's "base"; now the upside line          |
+| **No arrangement — GCP reduced to storage** |      32,750 |     1,000 | $5k/mo decaying to $1k as compute moves to AWS+Azure |
 
 **Mapping back to `cloud_spend_forecast_2026_08.py`** (the script's labels are now STALE — do not quote them raw):
 
 - script `base` (780,300) → deliverable **"Ambitious"**
-- script `ambitious` (1,740,400) → **DROPPED ENTIRELY.** It dwarfed the other lines, forced the y-axis to $300k and
-  squashed the committed plan onto the axis; it was also never the ask. Dropping it rescaled the chart to $125k and made
-  the plan legible.
-- script `conservative` (162,860, a $13k/mo self-imposed cap) → **DROPPED**, superseded by the measured declined-case
+- script `ambitious` (1,740,400) → **DROPPED ENTIRELY.** It dwarfed the other lines, forced the y-axis to
+  $300k and
+  squashed the committed plan onto the axis; it was also never the ask. Dropping it rescaled the chart to $125k
+  and made the plan legible.
+- script `conservative` (162,860, a
+  $13k/mo self-imposed cap) → **DROPPED**, superseded by the measured declined-case
   position (~$1k/mo storage-only).
 - deliverable **"Base"** (300,000) is NOT in the script at all — it is the quarterly service-family plan from section 4.
 
 **If the script is re-run, re-label its output to match this table** or the deliverable and the tooling will disagree.
-The reconciliation that makes the whole document hang together: *ambitious reaches within twelve months a scale the
-committed plan does not reach until year two ($780k vs the plan's $600k in Y2)* — same roadmap, different speed, so
-funding changes WHEN Google's consumption arrives, not WHAT gets built.
+The reconciliation that makes the whole document hang together: _ambitious reaches within twelve months a scale the
+committed plan does not reach until year three ($780k vs the plan's $600k in Y2, $1.1M in Y3)_ — same roadmap, different
+speed, so funding changes WHEN Google's consumption arrives, not WHAT gets built.
 
 ## 5. Deliverable restructure — DART-led narrative (2026-08-09, second pass)
 

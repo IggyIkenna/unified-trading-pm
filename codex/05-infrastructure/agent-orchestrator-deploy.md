@@ -154,10 +154,11 @@ of post-fix live load data (14,819 samples, `load_avg_1m` max 7.84 against the t
 confirmed the downsize was safe; operator-confirmed before execution. Live-confirmed 2026-08-09 (this update):
 `aws ec2 describe-instances --instance-ids i-042a6332509482556` → `m8i.2xlarge`, `running`, private IP `172.31.3.59`, AZ
 `ap-northeast-1c`. Its root volume, `vol-03880fe9bf1ea805b`, is live-confirmed at **12,000 IOPS / 312 MB/s**
-(`aws ec2 describe-volumes --volume-ids vol-03880fe9bf1ea805b`) — matching that instance size's own EBS baseline, up
-from the pre-downsize interim bump of 6,000 IOPS / 500 MB/s. Do not describe this box as still hosting runners on the
-planning VM, and do not assume it is still `c8i.4xlarge` or on the interim 6,000/500 volume spec. Full runbook for a
-from-scratch relaunch of this box specifically: `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
+(`aws ec2 describe-volumes --volume-ids vol-03880fe9bf1ea805b`) — matching that instance size's own EBS baseline: IOPS
+up from the pre-downsize interim bump's 6,000, throughput down from its 500 MB/s (both now at the smaller instance's own
+baseline, not a straight "up from" on both axes). Do not describe this box as still hosting runners on the planning VM,
+and do not assume it is still `c8i.4xlarge` or on the interim 6,000/500 volume spec. Full runbook for a from-scratch
+relaunch of this box specifically: `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
 
 ### Disk hygiene
 

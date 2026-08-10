@@ -302,7 +302,7 @@ batch-live-reconciliation-service (+ UTL TTL helper). Agreement-rule details:
 3. Across strata, apply the **M4 mode-contextual precedence** (§ "Ratified TARGET design" above): a live consumer reads
    `live > replay > batch`; a batch consumer reads `batch > replay > live`. (The legacy single-context "live always
    wins" rule at `source_priority.py:628` is the live-consumer special case — the full `select_for_mode` resolver is the
-   gated M4 item.)
+   M4 item (LANDED, see § M4 above).)
 
 This makes batch-vs-live reconciliation straightforward: pivot the same query by `pipeline_mode` and diff the per-shard
 output. See `live_pipeline` Phase 12 for the full reconciliation gate criteria.

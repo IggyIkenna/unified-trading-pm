@@ -4,9 +4,10 @@ title: operational-modes
 summary:
   "The workspace SSOT for the operating-mode taxonomy — ONE OperationalMode enum {LIVE, MANUAL, BACKTEST, PAPER} plus
   additive (ExecutionTarget, ExecutionTrigger) axes via a pure decompose() helper; composes orthogonally with
-  RuntimeMode. Deletes the anti-patterns paper_trade:bool and the parallel TestingStage.LIVE_TESTNET; sports
-  _PAPER_VENUE_KEYS relocated to adapters/sports_factory.py as a legitimate per-adapter venue-key allowlist (mode
-  dispatch itself already reads OperationalMode.PAPER directly)."
+  RuntimeMode. Deletes the anti-pattern paper_trade:bool; the parallel TestingStage.LIVE_TESTNET enum is NOT deleted —
+  still live and more entangled than before, see Anti-patterns section; sports _PAPER_VENUE_KEYS relocated to
+  adapters/sports_factory.py as a legitimate per-adapter venue-key allowlist (mode dispatch itself already reads
+  OperationalMode.PAPER directly)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -64,9 +65,9 @@ implements_in: plans/archive/2026_07/master_to_live_defi_2026_05_23.md
 The workspace has ONE operating-mode SSOT:
 `unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }`. Everything else (the additive
 `ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper, `PAPER_EXECUTION_TARGETS`/`get_paper_target()`)
-is derived from or composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service,
-parallel `TestingStage.LIVE_TESTNET` enum) are deleted; sports `_PAPER_VENUE_KEYS` was relocated (not deleted) — see
-item 2 below.
+is derived from or composes with this single enum. Anti-pattern `paper_trade: bool` field in execution-service is
+deleted; the parallel `TestingStage.LIVE_TESTNET` enum is **NOT deleted** (still live, more entangled than before — see
+Anti-patterns section); sports `_PAPER_VENUE_KEYS` was relocated (not deleted) — see item 2 below.
 
 ## Closed-set 4-cell mode matrix
 
