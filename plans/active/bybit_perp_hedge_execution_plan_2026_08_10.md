@@ -128,7 +128,7 @@ context_scope:
       connector, unwired Bybit connector returns NOT_WIRED, mixed HL+Bybit dispatch routes to correct connector);
       `quality-gates.sh` green. — execution-service@133ac40e30, QG green (7945 passed, 21 skipped, 174s).
 
-- [ ] [BACKEND] P2. Build Bybit credential hot-reloader + wiring module at
+- [x] ✅ [BACKEND] P2. Build Bybit credential hot-reloader + wiring module at
       `execution_service/defi_execution/wiring/bybit_wiring.py` (mirrors `hyperliquid_wiring.py`'s pattern).
       `build_bybit_wiring(config)` resolves the Bybit API key + secret from GSM (secret `bybit-api-credentials`, or the
       UAC `DATA_SOURCE_TO_SECRET` registry name if different), builds `BybitPerpHedgeConnector` (testnet/early-mainnet
@@ -137,7 +137,9 @@ context_scope:
       `start_bybit_key_reloader` watches the GSM secret and pushes new credentials to the connector on rotation (mirrors
       `start_hl_key_reloader`). Repo: execution-service. Done-when: wiring tests (connector built with real GSM secret
       resolution, testnet mode gating, connect starts reloader / disconnect stops it, missing credentials → honest
-      NOT_WIRED); `quality-gates.sh` green.
+      NOT_WIRED); `quality-gates.sh` green. — execution-service@03c69a3767, QG green (all gates passed 193s; new wiring
+      tests 17/17 pass), credential resolution mirrors `LiveExecutionHandler._load_bybit_trade_credentials` (trade-scope
+      pair preferred, unscoped fallback).
 
 - [ ] [BACKEND] P2. Wire Bybit connector at `app.py` startup/shutdown. Add `_wire_bybit_connector` startup handler +
       `_stop_bybit_connector` shutdown handler. `_start_perp_hedge_monitors` now binds the Bybit connector into
