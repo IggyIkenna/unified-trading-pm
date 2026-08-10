@@ -106,10 +106,23 @@ row appear to belong to main.
       existing rows on live DBs) + `tests/test_migrate_blocked_queue_no_slot_sentinel.py` proving a legacy `slot_id=0`
       row migrates to -1, a real worker row is untouched, and the migration is idempotent; full test suite (3069
       passed) + ruff + basedpyright clean.
-- [ ] [BACKEND] P1. Create and maintain a real `SlotRow` for main (id per the audit's decision), owned by
+- [x] [BACKEND] P1. Create and maintain a real `SlotRow` for main (id per the audit's decision), owned by
       `MainAgentKeeper`: `status`, `context_used_pct`, `context_pressure`, `last_ping`, `claude_session_id` kept current
       on the keeper's own tick. Done-when: `/api/state` shows main's row with a live context pct that tracks its
-      AgentRow, and a unit test asserts the keeper writes it every tick.
+      AgentRow, and a unit test asserts the keeper writes it every tick. — agent-orchestrator@8fedf51:
+      `MAIN_SLOT_ID = 0` (matches every pre-existing "main identity" call site the todo-1 audit found — kept as an
+      independent literal, not a shared import with `autospawn._MAIN_SLOT_ID`, to avoid a circular import;
+      `test_main_slot_id_matches_autospawn` pins the two equal). `tick_once()` is now a thin wrapper around the renamed
+      `_tick_once_inner` so the new `_sync_main_slot_row` runs EVERY tick regardless of which branch fired (not threaded
+      into each of the many early returns). `context_used_pct`/`context_pressure`/`last_ping`/compaction-tracking are
+      written via `state_store.update_slot_ping` — the SAME function every worker's own /progress\|/done\|/heartbeat
+      already calls — sourced from main's own `AgentRow.context_used_pct` (already ratcheted by `_main_pct` against the
+      measured probe during `_context_lifecycle.tick()`, called earlier the same tick), so the SlotRow genuinely tracks
+      the AgentRow rather than re-deriving anything; `status` comes from a fresh `tmux_spawn.has_session` read (not the
+      tick's own branch outcome) and `claude_session_id` from the AgentRow. New tests
+      `test_main_slot_row_created_and_tracks_agent_row_every_tick` (two ticks, proves update-in-place not
+      recreate-on-tick, asserts context_pressure derivation) and `test_main_slot_row_status_idle_when_session_dead`;
+      full suite 3079 passed, 2 skipped, ruff + basedpyright clean.
 - [ ] [BACKEND] P1. Prove the dispatch exclusion still holds with the row present: main must never be handed a backlog
       task and must never count toward claimable capacity. Done-when: a unit test asserts `_task_is_routable_to` rejects
       main's slot and that AutoSpawn skips it, with the `dispatch.py:606-611` incident cited in the test's docstring.
