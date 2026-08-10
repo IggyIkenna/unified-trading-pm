@@ -56,15 +56,11 @@ context_scope:
 
 ## Todos
 
-- [x] ✅ [REVIEW] P1. **Flip `sports_consolidated_closeout_2026_07_19.md`'s Track X "MOVED 2026-07-25" pointer to a ✅
-      DONE line**, citing the Track X plan's shipped commits for the cross-link note, the league_id fold-in merge, the
+- [ ] [REVIEW] P1. **Flip `sports_consolidated_closeout_2026_07_19.md`'s Track X "MOVED 2026-07-25" pointer to a ✅ DONE
+      line**, citing the Track X plan's shipped commits for the cross-link note, the league_id fold-in merge, the
       peripheral-bucket contamination fix, and the 2 shipped worktree changes — verify each cited commit exists
       (`git log`, not the source plan's own claim alone). **Done when**: the parent's Track X pointer line reads ✅ DONE
-      with all shipped commits cited. — **DONE 2026-08-10, `unified-trading-pm` (this commit)**: parent's Track X
-      pointer flipped to `## Track X — CLEANUP + plan reconciliation · P2 (✅ DONE 2026-08-10)` citing 4 verified
-      commits (`unified-trading-pm@dc8b142a4e` cross-link, `unified-trading-pm@69b8c3f7f3` league_id fold-in,
-      `unified-api-contracts@f3f1bbe0` contamination fix, `market-tick-data-service@03b9ffd6` worktree changes +
-      `deployment-service` no-op) — each confirmed on origin via `git log` (not the child plan's claim alone).
+      with all shipped commits cited.
 - [ ] [REVIEW] P1. **Confirm the league_id fold-in item's landing has actually unblocked the parent's Track V league_id
       todos** — re-read Track V's league_id-migration section and verify it now cites the merged `LEAGUE_ID_TO_TIER`
       mapping + 28-unmapped-`league_id` gap-analysis rather than treating them as still-external. If Track V's own text
