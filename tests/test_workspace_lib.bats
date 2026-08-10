@@ -149,29 +149,8 @@ teardown() {
 
 # ── Helper functions ──────────────────────────────────────────────────────────
 
-@test "count_rules_local: returns correct count" {
-    source_lib_with_fake_paths
-    # setup created 3 rules in .cursor/rules/
-    result=$(count_rules_local)
-    [ "$result" -eq 3 ]
-}
-
-@test "count_rules_repo: returns 0 when cursor-rules/ is empty" {
-    source_lib_with_fake_paths
-    result=$(count_rules_repo)
-    [ "$result" -eq 0 ]
-}
-
-@test "get_last_sync: returns 'never' when .last-sync missing" {
-    source_lib_with_fake_paths
-    result=$(get_last_sync)
-    [ "$result" = "never" ]
-}
-
-@test "update_last_sync: writes ISO timestamp to .last-sync" {
-    source_lib_with_fake_paths
-    update_last_sync
-    [ -f "$FAKE_PM/.last-sync" ]
-    content=$(cat "$FAKE_PM/.last-sync")
-    [[ "$content" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]
-}
+# NOTE: suites for count_rules_local / count_rules_repo / get_last_sync / update_last_sync
+# were removed on 2026-08-10 — those functions no longer exist in scripts/_workspace-lib.sh.
+# validate_workspace_structure is the only surviving subject, and IS covered above. A test
+# whose subject is gone does not fail loudly; it dies in setup and becomes a number
+# nobody reads, which is exactly how these went unnoticed for five months.

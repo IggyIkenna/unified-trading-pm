@@ -28,7 +28,7 @@ _write_plan_two_todos_one_open() {
 
 # Flip the sole open todo to done — the doc's own archival trigger.
 _flip_last_todo() {
-    sed -i 's/^- \[ \]/- [x]/' "$1"
+    sed -i.bak 's/^- \[ \]/- [x]/' "$1" && rm -f "$1.bak"
 }
 
 @test "check_archive_candidates.sh has valid bash syntax" {
@@ -72,7 +72,7 @@ _active_issues_dir() {
     archive_dir="${BATS_TEST_TMPDIR}/plans/archive/issues"
     mkdir -p "$archive_dir"
     archived="$archive_dir/archived_source.md"
-    sed -i '/^archive_exempt: true$/d' "$plan"
+    sed -i.bak '/^archive_exempt: true$/d' "$plan" && rm -f "$plan.bak"
     mv "$plan" "$archived"
 
     # --only is invoked with the STAGED (original) path per run_hygiene_sweep.sh's own convention
