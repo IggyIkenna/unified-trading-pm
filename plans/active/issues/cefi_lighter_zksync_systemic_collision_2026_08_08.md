@@ -175,6 +175,34 @@ the VM) but does not change the recommended next action either way.
 the sibling doc) — do NOT re-attempt the Range 2 apply before then; it would re-hit the same collisions for whatever
 dates the backfill is still mid-processing, and could race a live write.
 
+## Root-cause update 2026-08-10 (slot 27) — the dense-window residual is a CANONICAL-SCHEMA-COMPLETENESS discrepancy, NOT the Finding-11 label/casing class
+
+Shipped two comparison fixes and re-ran the venue-scoped LIGHTER-ZKSYNC dry-run
+(`canonical-migration-cefi-late-renames-20260810-202723`, e2-standard-16, 2026-04-18..2026-07-24):
+`Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3678, unresolved_wire: 19, would_merge: 0, mislabel_left_raw: 0}` +
+**11,151 UNHANDLED collisions** (down from 11,305 — the fixes resolved 154 genuine label/schema dups). The remaining
+population is a DIFFERENT class from Finding 11's HYPERLIQUID/ASTER label/casing artifact. Sample-diffed a dense-window
+pair (2026-07-03 `0G`):
+
+- **WIRE (`...:0G.parquet`) = 15 cols**
+  (`exchange, symbol, timestamp, local_timestamp, funding_timestamp, funding_rate, predicted_funding_rate, open_interest, last_price, index_price, mark_price, data_type, ts_event, next_funding_timestamp, instrument_id`);
+  **CANON (`...:0G-USDC@LIN.parquet`) = 13 cols** — the canonical LACKS `ts_event` (REAL per-tick timestamps, 0/12885
+  null) and `next_funding_timestamp` (all-null). Same 12,885 rows.
+- The 11 shared non-excluded columns are semantically identical after dtype normalization — the only divergence is
+  `predicted_funding_rate` (wire `float64`/all-NaN vs canon `object`/all-None; pure dtype artifact, equal after
+  `pd.to_numeric`). So the WIRE is a strict column-SUPERSET of the canonical with no real content difference.
+- **Why it still STOP-ON-SURPRISE**: the canonical is schema-OLDER (missing `ts_event` the newer writer emits). Deleting
+  the wire would LOSE `ts_event` — the dup-confirm correctly refuses (the wire is not a redundant dup; it is the MORE
+  complete capture). The reverse (BTC-type, canonical-superset) DOES resolve — that is what the column-superset fix
+  (46db6785) handles.
+- **This is a data-completeness finding**: the 2026-07-25 canonicalization pass wrote schema-OLDER canonical objects
+  (pre-`ts_event` writer) for the dense window, while the newer `--force` backfill wires carry `ts_event`. Resolving the
+  11,151 safely requires either (a) REPLACE the schema-stale canonical with the newer wire capture (content-upgrade —
+  extend the migration's dup-confirm to copy-over instead of delete when the WIRE is a verified column-superset), (b) an
+  operator decision that `ts_event` is not needed (accept the column loss on delete), or (c) leave-both-as-is. **No
+  `--apply` should run until this is decided** — the current would-clobber semantics are the wrong resolution for this
+  class. The comparison-extension work itself is complete + shipped + regression-tested.
+
 ## Todos
 
 - [x] ✅ [DATA] P2. **Root-cause the LIGHTER-ZKSYNC wire/canonical dual-write collision** — market-tick-data-service
@@ -191,14 +219,47 @@ dates the backfill is still mid-processing, and could race a live write.
       cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
 
 - [x] ✅ [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
-      `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition)** —
-      market-tick-data-service@5c0c7f3f (slot 27, 2026-08-10T19:33Z). BROAD comparison fix shipped. Slot 7 dry-run
-      (below) confirmed the fix resolves the false-positive collision class (content-identical wire/canonical pairs now
-      correctly classified as DUP-CONFIRMED) but 11,305 genuine collisions remain where wire and canonical objects have
-      genuinely different content — this is NOT a comparison bug, it's real divergent data.
+      `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition), then
+      re-run the LIGHTER-ZKSYNC Range-2 dry-run to confirm the FULL collision population resolves to
+      `renamed`/`deleted_dup_source` with 0 remaining STOP-ON-SURPRISE** — repo: market-tick-data-service. Finding 11
+      (2026-08-09, in `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) proved on a 26-pair sample that
+      the HYPERLIQUID/ASTER wire/canonical "collisions" are NOT genuinely-distinct content under this BROAD comparison
+      (0/26 distinct; 23 identical + 3 subset), and the strict `_confirm_would_patch_duplicate` (excludes only
+      `instrument_id`) misclassifies them as genuine collisions — the same pattern the 2026-08-10 Range-2 dry-run now
+      confirms for LIGHTER-ZKSYNC. Done when: fix shipped + a venue-scoped LIGHTER-ZKSYNC dry-run over
+      2026-04-18..2026-07-24 reports 0 STOP-ON-SURPRISE (full population, not just the 26-pair sample). This is the
+      gate-clearing work for the Range-2 apply todo above. **EXECUTED 2026-08-10** — BROAD comparison fix shipped
+      `market-tick-data-service@5c0c7f3f` (slot 27, 2026-08-10T19:33Z). A dry-run confirmed it resolves the
+      false-positive label/casing collision class (content-identical wire/canonical pairs now correctly classified as
+      DUP-CONFIRMED) but collisions remain where wire and canonical objects have genuinely different content — real
+      divergent data, not a comparison bug. **Column-superset tolerance shipped `market-tick-data-service@46db6785`**
+      and the dry-run re-run (e2-standard-16, 2026-04-18..2026-07-24) reduced unhandled collisions 11305→11151 —
+      **0-STOP gate NOT met.** The 11,151 residual is a NEW class (canonical schema-OLDER, missing `ts_event` the wires
+      carry) — see "Root-cause update 2026-08-10 (slot 27)" + the follow-up todo below. Comparison-extension work done +
+      shipped + regression-tested; the Range-2 apply stays BLOCKED pending the follow-up's data decision.
+
+- [ ] [DATA] P2. **Decide + implement the resolution for the LIGHTER-ZKSYNC dense-window canonical-schema-OLDER residual
+      (11,151 wire-superset collisions: canonical objects lack `ts_event`/`next_funding_timestamp` the newer wires
+      carry)** — repo: market-tick-data-service. Options (see "Root-cause update 2026-08-10 (slot 27)"): (a)
+      content-upgrade the canonical (replace with the newer wire capture — extend `_confirm_would_patch_duplicate` to
+      copy-over instead of delete when the WIRE is a verified column-superset with dtype-equal shared columns), (b)
+      operator decision to accept `ts_event` loss, (c) leave-both-as-is. Requires an operator/plan decision on which
+      capture is authoritative (schema-OLDER canonical vs schema-NEWER wire) before the Range-2 apply can clear.
 
 ## Progress Log
 
+- **2026-08-10 (slot 27, data_engineering, dispatched on the BROAD-comparison todo)** — Shipped `mtds@5c0c7f3f` (BROAD
+  label/casing exclusions + casefolded `instrument_type`) + `mtds@46db6785` (canonical column-superset tolerance in
+  `_broad_compare_equal`), each QG-green + LDR-verified + tarball-republished. Re-ran the venue-scoped LIGHTER-ZKSYNC
+  dry-run (`canonical-migration-cefi-late-renames-20260810-202723`, e2-standard-16, 2026-04-18..2026-07-24):
+  would_rename 3524→3678, unhandled collisions 11305→11151. **0-STOP gate NOT met.** Root-caused the 11,151 residual:
+  dense-window CANONICAL objects are schema-OLDER (13 cols) — missing `ts_event` the newer writer emits into the wires
+  (sample-verified 2026-07-03 `0G`: 11 shared non-excluded cols dtype-equal, wire a strict column-superset carrying real
+  `ts_event`). The wire is the MORE complete capture, so the dup-confirm correctly refuses (deleting it would lose
+  `ts_event`); the reverse canonical-superset subset resolves via 46db6785. **This is a data-completeness discrepancy,
+  not the Finding-11 label/casing class** — resolving it requires a data decision (replace schema-stale canonicals with
+  the newer wires / accept `ts_event` loss / leave-both). Filed the follow-up todo above. No `--apply` attempted (would
+  clobber the more-complete wire or lose data). 11,151 collisions persist independent of any VM.
 - **2026-08-10 (slot 6, data_engineering, dispatched on the Range-2 apply todo)** — Executed the todo's gate sequence.
   (1) Culprit gate MET: `cefi-fwd-20260808-123230` confirmed terminated (deleted 2026-08-09T02:13:58Z per tracking doc
   line 226; forward backfill reached full coverage through 08-05, past the 07-24 window end). Fresh spot-check of
