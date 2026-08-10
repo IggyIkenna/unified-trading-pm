@@ -263,3 +263,9 @@ every ~31s. Scheduled wakeup at ~12:50 UTC.
 status — if still RUNNING, wait. If TERMINATED/STOPPED, check pipeline log to see if steps auto-triggered. If pipeline
 triggered, verify delta_one output at `gs://features-cefi-test-central-element-323112/delta_one/funding_oi/` and
 `.../returns/`. Flip both plan checkboxes. Commit with `docs(plans):`. POST `/done`.
+
+**Session 4 verdict (pre-compact ~12:48 UTC)**: Safe to compact: YES — pushed `35d3cfc4cf`, `ahead=0`. Saved: (1) gsutil
+false-positive discovery — earlier data-completeness checks were counting error messages as data; pipeline merge step is
+load-bearing. (2) Exact VM state (PID 17151 processing Aug 02, 18,713+ manifest entries). (3) Pipeline script v4 alive
+(PID 2280335). Deliberately NOT saved: `/tmp/post_mdps_pipeline_stdout_v{2,3}.log` (regenerable, superseded by workspace
+log). Resume: `ps aux | grep post_mdps_pipeline` → check VM status → wait or run pipeline manually.
