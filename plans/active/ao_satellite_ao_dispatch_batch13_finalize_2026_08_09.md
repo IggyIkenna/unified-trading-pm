@@ -15,13 +15,13 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-13, finalize, satellite-extraction]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,7 +41,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -52,7 +52,7 @@ source: >-
 
 # AO satellite AO batch 13 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md`** (`depends_on` +
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until its sole todo is `done`. The batch itself stays `status: draft`
 > until the operator approves it; this finalize plan needs no separate flip either way.
 
@@ -84,9 +84,12 @@ source: >-
       `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`'s own `[SCRIPT] P2` checkbox** — replace the
       redirect-pointer text batch13 left behind with the real completion evidence. **Done when**: the source checkbox
       carries real evidence, not a bare redirect pointer.
-- [ ] [REVIEW] P1. **Check whether the source doc is now fully closed** (both its todos done) — if so, run the standard
-      6-step archival ritual on it. **Done when**: the doc's current open-todo count is confirmed, and it is archived
-      with evidence cited here if fully closed.
+- [x] ✅ [REVIEW] P1. **Checked whether the source doc is now fully closed — it is, archived.** Both batch13 todos were
+      already `[x]` done (baseline 52→2 via 22 fixes + 2 extracted as a new follow-on todo; over-cap files trimmed under
+      1000L). No `locked_by`. Ran the full 6-step archival ritual: added archival banner, status→archived, set
+      `superseded_by`, updated all corpus-wide referrers (batch12 `related:` + body, epic `related_plans:` + section,
+      INDEX.md, parked issue `related:`, inventory dashboard, finalize plan's own `related:`/`context_scope:`), `git mv`
+      to `plans/archive/2026_08/`. No deferred items to migrate; no new codex contracts. Repo: unified-trading-pm.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -105,3 +108,7 @@ source: >-
   already machine-holds every task until batch13's own todo is done, matching the batch7-12 finalize precedent.
 - **2026-08-10 (slot-18, review)** — Flipped todo 1: independently re-verified batch13's done-claim, no discrepancy. See
   the todo's own checkmark text for full evidence.
+- **2026-08-10 (slot-26, review)** — Flipped todo 3: confirmed batch13 fully closed (2/2 todos `[x]`, no `locked_by`),
+  ran the 6-step archival ritual — banner added, status→archived, `superseded_by` set, all 6 corpus-wide referrers
+  updated (batch12, epic, INDEX.md, parked issue, inventory dashboard, finalize plan), `git mv` to
+  `plans/archive/2026_08/`. See todo's own checkmark text for full evidence.

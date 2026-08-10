@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 315 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 316 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -834,7 +834,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (48)
+### ao (47)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
@@ -865,10 +865,6 @@ by hand._
   Gated closeout for `ao_satellite_ao_dispatch_batch12_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until all 11 of that batch's todos are done. Reconciles each verified todo's evidence back into its
   TRUE source doc's…
-- [`ao_satellite_ao_dispatch_batch13_2026_08_09`](./ao_satellite_ao_dispatch_batch13_2026_08_09.md) — THIRTEENTH
-  AO-dispatch batch for the `ao` topic tranche — a single-item satellite extraction from
-  `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, produced by the same 2026-08-09
-  `/ag-closeout-audit ao` Phase 1 run as…
 - [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch13_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until its sole todo is done. Reconciles the verified todo's evidence back into…
@@ -925,10 +921,6 @@ by hand._
   Gated closeout for ao_satellite_ao_dispatch_batch3_2026_07_31.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
-- [`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01`](./ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md) —
-  Gated closeout for ao_satellite_ao_dispatch_batch4_2026_08_01.md — machine-held via depends_on + gate_on_depends until
-  the batch's sole todo is done. Reconciles the completed todo's evidence back into its TRUE source issue doc (the
-  batch…
 - [`ao_satellite_ao_dispatch_batch5_2026_08_03`](./ao_satellite_ao_dispatch_batch5_2026_08_03.md) — FIFTH AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-03, autonomous mode,
   scheduled dispatch, real `Workflow` fan-out over all 41 currently mechanically-flagged never-cited…
@@ -967,6 +959,10 @@ by hand._
   — Two tracks. (A) Drain the 25 remaining plan_reconciler review-branch PRs stuck open since 2026-08-02 (0 merged, 0
   reviewed) after graduating plan_reconciler to steady-state direct-push — each needs real per-PR judgment (rebase +
   re-verify…
+- [`blocked_question_payload_quality_and_condition_retirement_2026_08_10`](./blocked_question_payload_quality_and_condition_retirement_2026_08_10.md)
+  — Operator-reported 2026-08-10 from a live `#-1 doc_drift` card — the question named one side of a claimed
+  disagreement, truncated it mid-word at 137 chars, dropped the worker's own explanation, and asked "which side is
+  stale?" about a…
 - [`content_derived_backlog_task_ids_2026_08_08`](./content_derived_backlog_task_ids_2026_08_08.md) —
   `regen_backlog_from_plan` derives a task id as `slug` + next free positional index, so a todo's id is a function of
   its POSITION among that plan's todos, not its text. When earlier todos are checked off and their yaml entries pruned,…
@@ -1055,7 +1051,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) **[complete]** — Keep the UI quality-gate
   build cache warm so incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (27)
+### infrastructure (29)
 
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
@@ -1110,6 +1106,13 @@ by hand._
 - [`infra_satellite_ao_dispatch_batch14_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch14_2026_08_09.md`, per the finalize-plan-coverage gate
   (task_template.md §4). Once the batch's single todo is done, reconciles the corresponding item back into…
+- [`infra_satellite_ao_dispatch_batch15_2026_08_10`](./infra_satellite_ao_dispatch_batch15_2026_08_10.md) **[draft]** —
+  Fifteenth AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
+  2026-08-10). Two independent, conflict-clear sources: (1) `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md` —
+  the…
+- [`infra_satellite_ao_dispatch_batch15_finalize_2026_08_10`](./infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md)
+  — Gated closeout for `infra_satellite_ao_dispatch_batch15_2026_08_10.md`, per the finalize-plan-coverage gate
+  (task_template.md §4). Once both of the batch's todos are done, reconciles each item back into its own source doc…
 - [`infra_satellite_ao_dispatch_batch7_2026_08_04`](./infra_satellite_ao_dispatch_batch7_2026_08_04.md) — Seventh
   AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-08-04).
   Phase 0 re-derived the covering set (13 covering docs, unchanged since 2026-08-02; 50 members, up from 45 on…

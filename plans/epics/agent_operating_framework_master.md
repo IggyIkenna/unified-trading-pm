@@ -29,7 +29,7 @@ related_plans:
   - ../active/ag_closeout_audit_rollout_2026_07_25.md
   - ../active/ao_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
-  - ../active/ao_satellite_ao_dispatch_batch13_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch15_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch15_finalize_2026_08_09.md
@@ -437,7 +437,7 @@ fix_frontmatter.py's summary-truncation bug (agent_operating_framework_master ep
 
 **status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: AO satellite AO batch 11 — finalize
 
-### [`ao_satellite_ao_dispatch_batch13_2026_08_09`](../active/ao_satellite_ao_dispatch_batch13_2026_08_09.md)
+### [`ao_satellite_ao_dispatch_batch13_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch13_2026_08_09.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: refactor)
 
