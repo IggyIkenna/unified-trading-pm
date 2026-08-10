@@ -44,6 +44,7 @@ source:
 resolved_by:
 locked_by:
 locked_since:
+archive_exempt: true
 supersedes:
 superseded_by:
 context_scope:
@@ -119,7 +120,7 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
 
 ## Todos
 
-- [ ] [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** Same rationale as the sibling
+- [x] ✅ [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** — market-tick-data-service@a0b4957e
       instruments-service finding (`is_polymarket_dead_fixture_cross_reference_2026_07_31.md`): prediction markets
       should get fixture/market availability from the canonical manifest/GCS-objects batch path, not a live-polling REST
       interface. Delete
