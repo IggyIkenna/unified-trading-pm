@@ -392,7 +392,7 @@ Then POST the result (final completion is STEP 8 below). The result JSON is the 
 `pr_url` is retired (steady state has no review PR); omit it or send null:
 
 ```bash
-curl -sS -X POST $SERVER_URL/api/plan_health/result \
+curl -sS -X POST $SERVER_URL/api/plan-health/result \
   -H 'Content-Type: application/json' \
   -H 'X-Orchestrator-Secret: '"$ORCHESTRATOR_INTERNAL_SECRET" \
   -d '{"dispatch_id": "'"$DISPATCH_ID"'", "findings": {"contradictions": [...], "doc_drift": [...], "fixes_applied": [{"file": "...", "kind": "flip|frontmatter|todo-format|superseded-banner|archive", "detail": "..."}], "filed": ["<issue doc or plan todo ref>"], "verified_confirmed": <n>, "verified_refuted": <n>, "coverage": {"hunters": <n>, "batches": <n>, "docs_read": <n>}, "skipped_grace": <n>, "commit_sha": "<sha or null>", "pr_url": null, "archive_candidates": [{"plan": "<path>", "why_ready": "<one line>", "locked": false, "archived": true}]}}'
