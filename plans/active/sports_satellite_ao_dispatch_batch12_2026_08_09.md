@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-12, satellite-docs, ag-closeout-audit]
 related:
   [
-    /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
+    /plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/active/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
@@ -127,9 +127,9 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
       default, snapshot-before-write, CAS-filtered index rewrite, post-write verification), and the census already
       confirmed 0 GCS objects exist at any candidate path for this population, so there is nothing to lose.
       `quality-gates.sh --no-fix` green before commit; ship via quickmerge. Source:
-      `/plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (## Follow-ups, `[DATA] P3`).
-      Done when: a post-write `read_capture_status_counts` (manifest-only, no GCS walk) shows 0
-      `captured`-with-no-GCS-object `PLAYER_STATS` cells in the target population, each relabeled with the correct
+      `/plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (now archived; ##
+      Follow-ups, `[DATA] P3`). Done when: a post-write `read_capture_status_counts` (manifest-only, no GCS walk) shows
+      0 `captured`-with-no-GCS-object `PLAYER_STATS` cells in the target population, each relabeled with the correct
       `error_reason`, cited by commit + verification output in the source doc. **✅ DONE 2026-08-10 (slot-29)**: 2025
       population — `market-tick-data-service@56df68f7f`, 88 rows relabeled, 0 confirmed-missing (verified pid 4057523).
       2018-2020 population — required two additional fixes beyond `25c7a3f2` (`market-tick-data-service@22a305ff1`
@@ -453,8 +453,9 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
   `captured`-with-no-GCS-object `PLAYER_STATS` cells**: 2025 -- `market-tick-data-service@56df68f7f` (88 rows, verified
   via pid 4057523); 2018-2020 -- `market-tick-data-service@22a305ff1` + `975d6a4f8` (1,210 rows, verified via pid
   2169822). **Todo 1 flipped `[x]`**; source doc
-  `/plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` Follow-ups updated to match.
-  **Lesson for future sessions**: on this shared host, a script's peak RSS is necessary-but-not-sufficient evidence of
-  whether it will survive -- always check live cgroup pressure (`memory.current`/`memory.max` on
-  `/sys/fs/cgroup/system.slice/orchestrator.service/`) before deciding whether a resource-watchdog kill was a code
-  problem, a genuinely-too-high peak, or a transient host-contention spike worth retrying against.
+  `/plans/archive/2026_08/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (now archived) Follow-ups
+  updated to match. **Lesson for future sessions**: on this shared host, a script's peak RSS is
+  necessary-but-not-sufficient evidence of whether it will survive -- always check live cgroup pressure
+  (`memory.current`/`memory.max` on `/sys/fs/cgroup/system.slice/orchestrator.service/`) before deciding whether a
+  resource-watchdog kill was a code problem, a genuinely-too-high peak, or a transient host-contention spike worth
+  retrying against.

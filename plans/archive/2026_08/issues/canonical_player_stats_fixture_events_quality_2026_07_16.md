@@ -14,7 +14,7 @@ summary:
   against importing already pervades canonical independent of legacy. Both warrant a de-dup + schema-normalisation pass
   over canonical player_stats/fixture_events, ideally folded into the fixture_events re-fetch campaign the OR-1 ruling
   calls for.'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -23,13 +23,14 @@ scope: [engineer, admin]
 tags: [sports, data-correctness, player-stats, fixture-events, duplicates, schema-drift, canonical, cutover-surfaced]
 related:
   [
-    ../sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/archive/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
-    ../../epics/sports_master.md,
+    /plans/epics/sports_master.md,
+    /plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md,
   ]
 created: 2026-07-16
 author: unknown
-last_updated: 2026-07-26
+last_updated: "2026-08-10"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -45,7 +46,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
-archive_exempt: true
+  "market-tick-data-service@56df68f7f (2025 pop), market-tick-data-service@22a305ff1+975d6a4f8 (2018-2020 pop),
+  unified-trading-pm@10c16bb8d1"
 source: [sports cutover T2.4 measurement 2026-07-16]
 context_scope:
   [
@@ -56,6 +58,12 @@ context_scope:
     market-tick-data-service/scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both findings long since resolved
+> (Finding 1 2026-07-25, Finding 2 nested-schema sub-finding 2026-07-26); the sole remaining Follow-up (`--apply-prod`
+> for the 88 2025-era + 1,210 2018-2020-era `PLAYER_STATS` captured-without-GCS-object cells) is now also done and
+> independently verified 0 confirmed-missing for both populations. Archived by
+> `/plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md` todo 1's reconciliation.
 
 # Canonical sports player_stats / fixture_events data-quality defects (cutover-surfaced)
 
