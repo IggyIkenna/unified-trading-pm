@@ -164,3 +164,10 @@ justification (why BTC, why BITGET) and doesn't generalize to the next base that
   (`TestRunForwardsPreflightFlags` in `tests/delta_one/unit/test_batch_handler_expected_unattempted.py`) asserting
   `run()` forwards `preflight_only`/`skip_preflight` through to `_run_batch_pipeline`. Escalating this issue's
   venue-representative question via `/blocked` before continuing.
+- 2026-08-10 (slot-6, resumed task `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a`): Resumed after a
+  slot restart. The prior session's `/blocked` escalation above was never actually registered via the orchestrator API
+  (confirmed by querying `GET /api/state`'s `blocked_queue` — no entry existed for this question, despite the Progress
+  Log text claiming it was filed; likely the session ended before the API call landed) — filed it for real now
+  (`blocked_id: BLK-13405a35`, same 3 options/recommendation as the "Recommended decision" section above). Repos all
+  clean (no uncommitted WIP from the prior session survived). Waiting on the operator/main ruling; no other in-scope
+  work remains on this P2 todo until the venue-representative decision lands.
