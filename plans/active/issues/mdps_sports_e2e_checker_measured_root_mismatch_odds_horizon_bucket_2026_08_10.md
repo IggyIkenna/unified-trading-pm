@@ -226,3 +226,12 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
   `gcloud compute instances describe mdps-backfill-sports-pipelinecheck-20260810-082603-d0c755 --zone=asia-northeast1-c`
   or re-run (idempotent — fresh VM each run). If done, read report. Done-when: report shows `passed` for 15m/1h, total=2
   (not 8).
+
+  - **2026-08-10 (slot 29, data_engineering, VM run FAILED — diagnosis)**: The checker launched at 08:25 UTC completed at 08:33 with `total=6 passed=0 failed=4 skipped=2` — FAILURE. Two root causes:
+
+    1. **Stale-code enumeration (primary)**: Report enumerates 4h/24h cells alongside 15m/1h (6 cells total, not 2), meaning `_valid_timeframes()` fix at `f89112b` was NOT active in the running Python process at 08:25 despite being in git history — likely `.pyc` cache or import-path resolution to a pre-fix module. **Confirmed NOW fixed**: fresh `--dry-enumerate` on same checkout returns `tfs=[15m,1h]`, total=2. Import-chain verification: `SPORTS ceiling: ('1m', '15m', '1h')`, filter → `['15m', '1h']` — correct.
+
+    2. **Force VM self-deleted in ~3 min** (launched 08:26:03, vanished by 08:29:06 — vs expected ~30 min). No `run.log` found in GCS. Checker treated as `vm_self_deleted_no_exit_status` for 15m/1h (no parquet output), `vm_exit_nonzero=1` for 4h/24h (some output before crash). Skip VM also self-deleted quickly (~4 min). VM crash root cause NOT chased — secondary to stale-code issue; fresh run should resolve.
+
+    **Re-running at ~08:38 UTC** with confirmed-active fix. Expected: total=2 (15m+1h), both `passed`.
+
