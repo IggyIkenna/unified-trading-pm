@@ -64,10 +64,13 @@ source: >-
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Add a `deployment_profile` field to the strategy archetype registry** (wherever `StrategyArchetype`
-      enum / `ARCHETYPE_ENGINE_REGISTRY` is defined in `strategy-service/strategy_service/engine/strategies/v2/` —
-      confirm the exact file via the audit plan's own findings) — populate it from the audit's decision table
-      (co_located_vm vs distributed, per archetype family). This is the archetype-side half of the link.
+- [x] ✅ [SCRIPT] P2. **Add a `deployment_profile` field to the strategy archetype registry** — `DeploymentProfile`
+      enum + `ARCHETYPE_TO_DEPLOYMENT_PROFILE` mapping (60/60 archetypes) added to
+      `unified_api_contracts/internal/architecture_v2/enums.py`, re-exported through `architecture_v2/__init__.py` and
+      `internal/__init__.py`. Populated from the audit plan's decision artifact: Low→`co_located_vm` (market-making,
+      arbitrage-structural, carry-and-yield basis, ml-directional, rules-directional, stat-arb-pairs),
+      Medium/High→`distributed` (vol-trading, event-driven, portfolio, single-sided yield/staking). —
+      unified-api-contracts@f39e800992
 - [ ] [SCRIPT] P2. **Add a `required_by_archetypes` reverse-index to `runtime-topology.yaml`'s `co_location_rules`
       /`deployment_profiles` sections** (or a new adjacent section if retrofitting the existing ones is awkward — state
       the reasoning) so a deployment-profile entry can be traced back to which archetypes require it — the
@@ -102,6 +105,13 @@ source: >-
       not just a unit-test pass.
 
 ## Progress Log
+
+- **backend_engineer (slot 8) 2026-08-10**: Todo 1 done. Added `DeploymentProfile` StrEnum (`distributed` /
+  `co_located_vm`) + `ARCHETYPE_TO_DEPLOYMENT_PROFILE` mapping (60/60 `StrategyArchetype` values) to
+  `unified_api_contracts/internal/architecture_v2/enums.py`, with re-exports through `architecture_v2/__init__.py` and
+  `internal/__init__.py`. Populated from the audit plan's decision artifact
+  (`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`): 41 Low-family archetypes → `co_located_vm`, 19
+  Medium/High-family archetypes → `distributed`. Shipped via unified-api-contracts@f39e800992.
 
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. Implements the operator's "union of
   registered deployments from union of registered archetypes, resources derived live from configuration" design
