@@ -158,10 +158,10 @@ row appear to belong to main.
 - [x] ✅ [BACKEND] P2. Add a standing guard against the regression class: a test asserting every context-lifecycle
       target returned by the policy's own target list has a SlotRow. Done-when: the test fails if a future target is
       added without one. — agent-orchestrator@c8109bd
-- [ ] [DOCS] P2. Post-phase codex audit: record the ruling and the resulting shape in
+- [x] ✅ [DOCS] P2. Post-phase codex audit: record the ruling and the resulting shape in
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md`, superseding the sections that document main's
       slot-less special-casing as expected. Done-when: the SSOT describes main as a first-class slot and names the
-      dispatch exclusion as the one deliberate difference.
+      dispatch exclusion as the one deliberate difference. — unified-trading-pm@a333c492c2
 
 ## Progress Log
 
@@ -251,3 +251,13 @@ row appear to belong to main.
   `tick()`'s target construction must also update this test, at which point the author verifies the new target has a
   SlotRow. Full suite 3093 passed, 2 skipped + ruff + basedpyright clean via `quality-gates.sh`; landed on LDR via
   quickmerge.
+- 2026-08-10 — Todo 8 (post-phase codex audit) complete. Rewrote
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md`: appended a new "main is a first-class slot — the
+  slot-less special case is retired (operator ruling 2026-08-10)" section recording the ruling, the slot_id-0
+  dual-meaning prerequisite resolved via `orm.NO_WORKER_SLOT_SENTINEL = -1` (@0efa913), the real `SlotRow(slot_id=0)`
+  owned by `MainAgentKeeper` (@8fedf51), and the dispatch exclusion as the ONE deliberate difference (@3fa500e — the
+  `_task_is_routable_to` early-return + `slot_is_spawnable`-never-satisfied, per the `dispatch.py:606-611` incident),
+  plus the standing-guard test (@c8109bd). Also SUPERSEDED-in-part-banner'd the "Main's AgentRow floor" paragraph that
+  still claimed main had no SlotRow (the `_main_pct` collapse is todo 5, not yet done — the banner says so explicitly),
+  and bumped `last_reviewed`. Corpus-wide grep confirmed this codex doc was the only place in `codex/` still documenting
+  main's slot-less special-casing as expected. Shipped via safe-doc-push.sh (pure docs).
