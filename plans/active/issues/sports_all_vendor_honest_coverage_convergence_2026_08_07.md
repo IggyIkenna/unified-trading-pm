@@ -607,3 +607,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   > markers) over a flat census reading — the underlying campaigns are NOT actually stalled, only the aggregate
   > measurement is currently blind. Both fleets' underlying work is healthy; the census-based "needed" numbers from the
   > last ~1h+ should be treated as a lower bound on true progress, not a stall signal.
+- **02:39Z — Manifest consolidator stall has RESOLVED; both fleets healthy.** `smallchunk16`: chunk 13/452, zero OOMs
+  across the entire run so far, fresh — 5 chunks from chunk 18. `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance continuing to 2024-11-02. Census confirms the manifest consolidator finding from last tick
+  (`sports_manifest_consolidator_static_rows_out_injuries_2026_08_10.md`) has self-resolved: manifest rows grew
+  (16,176,107 → 16,181,741, +5,634) and INJURIES needed dropped **29,480 → 20,490** (-8,990) — both the census and the
+  VM's own progress marker now agree on genuine forward movement (not reporting a precise hourly rate this tick since
+  the stall window makes the elapsed-time denominator ambiguous). No intervention needed on either fleet.
