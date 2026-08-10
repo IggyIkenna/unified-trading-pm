@@ -64,6 +64,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
 resolved_by:
 locked_by:
+archive_exempt: true
 depends_on: []
 source: [DP_RUN_MOSTLY_EMPTY escalation agt-e488d1, wall_type=data_pipeline_failure]
 ---
@@ -157,11 +158,17 @@ tarball-staleness finding if confirmed).
       this slot's checkout) already excludes ASTER book_snapshot_5 from the batch fetch universe; the burst is a
       non-reproducible historical artifact of a stale-tarball run that already stopped.** No code shipped (none needed).
       — unified-trading-pm (doc-only, 2026-08-09).
-- [ ] [DATA] P3. If this specific signature (venue=ASTER, data_type=book_snapshot_5, pipeline_mode=batch_aster,
+- [x] ✅ [DATA] P3. If this specific signature (venue=ASTER, data_type=book_snapshot_5, pipeline_mode=batch_aster,
       error_reason=UpstreamTimestampBiasError) recurs with a NEW `attempted_at` after 2026-08-09, escalate as a P0
       tarball-staleness finding (a currently-live process is running code >=3 weeks stale) rather than re-filing this
       doc — cite this doc + `tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`. **Done when**:
       either confirmed non-recurring at a future audit pass, or a fresh recurrence is escalated per this note.
+      **RESOLVED (2026-08-10, slot 22)** — confirmed non-recurring: bounded cefi manifest query
+      (`read_availability_index_safe`, bucket `market-data-tick-cefi-prd-central-element-323112`,
+      `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError]`)
+      returned 2,000 rows, of which **0 have `attempted_at` strictly newer than the microsecond-precision cutoff
+      `2026-08-09T01:24:28.273974+00:00`** (max attempted_at equals the cutoff exactly). Signature did not recur as of
+      2026-08-10 — flipped via `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` todo 3 (doc-only, no code change).
 
 ## Codex SSOTs
 
@@ -192,3 +199,17 @@ tarball-staleness finding if confirmed).
   the full microsecond timestamp and confirmed no new write). Confirms the P3 follow-up condition above ("no
   recurrence") as of this second check, several hours after the first. No code change needed; closing this dispatch of
   the escalation without a ship, same conclusion as the first.
+- **2026-08-10 (slot 22, data_engineering, via `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` todo 3)**: ran the P3
+  recurrence check per its done-when. Bounded manifest query (`read_availability_index_safe`, bucket
+  `market-data-tick-cefi-prd-central-element-323112`,
+  `columns=[date, venue, data_type, capture_status, error_reason, attempted_at, pipeline_mode, source, service_name]`,
+  `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError]`)
+  → 2,000 rows, all with `error_reason=UpstreamTimestampBiasError`. Compared `attempted_at` at FULL microsecond
+  precision against this doc's cutoff `2026-08-09T01:24:28.273974+00:00` (per batch-17 todo 3's explicit warning not to
+  truncate to seconds — the same over-match trap slot 4 documented): **0 rows strictly newer than the cutoff** — max
+  attempted_at equals the cutoff exactly. Confirmed non-recurring as of 2026-08-10. Flipped this doc's P3 todo
+  checkbox + the batch-17 plan's todo 3 checkbox. Doc-only flip, no code change (read-only manifest query). Set
+  `archive_exempt: true` in this same commit per `check_archive_candidates.sh`'s sanctioned flip-then-mv bridge
+  (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`): this doc reached 0 open todos on the
+  flip, but its git-mv archival is owned by the gated `cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md` (todo
+  "archive it via the standard 6-step ritual") — the flag is dropped in that archival commit.

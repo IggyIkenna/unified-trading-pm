@@ -92,7 +92,7 @@ context_scope:
       is kept. Repo: deployment-service. Source: `issues/tardis_concurrency_gate_hardening_2026_08_09.md` todo 2 (line
       184). — **DONE 2026-08-10 (`deployment-service@0c14f54050`)**: 21 new tests (13 `_is_tardis_consumer` + 8
       `_enforce_tardis_cap`), QG green (3282 passed), quickmerge landed.
-- [ ] [DATA] P3. **ASTER/book_snapshot_5 stale-tarball recurrence check.** Query the cefi manifest
+- [x] ✅ [DATA] P3. **ASTER/book_snapshot_5 stale-tarball recurrence check.** Query the cefi manifest
       (`read_availability_index_safe`, bucket `market-data-tick-cefi-prd-central-element-323112`,
       `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError]`)
       for any row with `attempted_at` strictly newer than `2026-08-09T01:24:28.273974+00:00` (the doc's own
@@ -103,7 +103,11 @@ context_scope:
       <today's date>, 0 rows newer than the cutoff" — OR a newer row is found, in which case do NOT close the source
       doc's todo; instead file a fresh P0 tarball-staleness escalation per that todo's own stated procedure (cite this
       doc + `tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`) and leave the source todo open with
-      a note pointing at the new escalation.
+      a note pointing at the new escalation. **DONE (2026-08-10, slot 22)** — bounded cefi manifest query returned 2,000
+      matching rows, **0 with `attempted_at` strictly newer than the microsecond-precision cutoff
+      `2026-08-09T01:24:28.273974+00:00`** (max attempted_at == cutoff exactly). Confirmed non-recurring as of
+      2026-08-10 — source doc `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md` todo 2
+      flipped. Read-only query, no code change (doc-only flip).
 
 ## Deferred — operator-gated (not drafted; genuine cefi-specific work, but design/sign-off gated)
 
@@ -154,3 +158,12 @@ context_scope:
   cross-cutting (excluded), 1 genuine cefi orphan but operator-gated (deferred above), 2 genuine AO-eligible cefi
   orphans (extracted above). `status: draft` per the skill's autonomous-mode safety rail — awaiting operator review to
   flip to `active`.
+- **2026-08-10 (slot 22, data_engineering, todo 3)**: ran the ASTER/book_snapshot_5 stale-tarball recurrence check per
+  the todo's done-when. Bounded cefi manifest query (`read_availability_index_safe`, bucket
+  `market-data-tick-cefi-prd-central-element-323112`,
+  `columns=[date, venue, data_type, capture_status, error_reason, attempted_at, pipeline_mode, source, service_name]`,
+  `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError]`)
+  → 2,000 matching rows; **0 have `attempted_at` strictly newer than the microsecond-precision cutoff
+  `2026-08-09T01:24:28.273974+00:00`** (max attempted_at == cutoff exactly). Confirmed non-recurring as of 2026-08-10 —
+  flipped the source doc (`cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`) todo 2
+  checkbox + this plan's todo 3. Read-only query, no code change (doc-only flip).
