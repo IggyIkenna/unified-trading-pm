@@ -29,19 +29,21 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/15-runbooks/devops-ci-walls.md,
     /agents/cicd.md,
+    /plans/active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md,
   ]
 created: "2026-08-03"
 author: unknown
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
+sequential: true
 locked_by:
 source: [agt-aa84f7]
 depends_on: []
@@ -261,3 +263,21 @@ and just burn more contended compute.
   this as supporting evidence. Eventually shipped via the operator-approved `scripts/**` direct-push carve-out rather
   than continuing to retry QG, per operator ruling that repeated retries under active contention may themselves feed the
   loop (msg 6203, full detail in `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s own Progress Log).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3) — RECLASSIFY, `assigned_vm: NA` → `planning`.**
+  Fresh re-read of all 3 open todos found the 2026-08-04/06 "genuinely investigative/judgment calls, not bounded
+  worker-determinable facts" verdict too broad — each todo actually carries a concrete, deterministic done-when: todo 1
+  is a pure code-trace (does the glue-runner's QG invocation call `qg_governor_acquire()`? YES/NO with the code path
+  cited); todo 2 is a live measurement + comparison against `qg_resource_baseline.json` (undersized/adequate verdict
+  with numbers cited — and this doc's own 2026-08-09 slot-29 entry already supplies strong supporting evidence, so this
+  may be mostly synthesis of already-gathered evidence rather than fresh investigation); todo 3 is a single `gh api`
+  branch-protection query (YES/NO). None require a design call — each explicitly says "if [gap found], file a follow-up
+  todo" rather than asking the worker to design the fix inline, matching the audit-with-a-stated-done-when eligibility
+  bar. All 3 are read-only (code grep, `gh api`, `uptime`/`ps aux`/`qg-host-governor.sh --status`) — no CI retrigger, no
+  host-state mutation, so the doc's own repeated "did NOT force-retrigger/touch the governor" cautions do not apply to
+  this audit work. Conflict-check: grepped every `ao_satellite_ao_dispatch_batch*` (1-16, `status: draft`/`active`) +
+  finalizes + `ao_open_issues_consolidated_close_out_2026_07_17.md` for `qg_governor_acquire`/`glue-runner`/
+  `ldr_qg_v2_ci_host_contention` — only `ao_satellite_ao_dispatch_batch5_2026_08_03.md` mentions `qg_governor_acquire`,
+  for a DIFFERENT source doc (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`, already
+  archived) — no overlap. `sequential: true` added (all 3 todos record findings into this same doc). Finalize twin:
+  `/plans/active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md`.

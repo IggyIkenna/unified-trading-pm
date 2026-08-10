@@ -17,13 +17,16 @@ related:
   [
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
     unified-trading-system-ui/tests/e2e/user-management.spec.ts,
+    /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
+    /plans/active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md,
   ]
 created: "2026-07-22"
 author: unknown
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: ui_developer
 drift_direction: advance-code
 source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]
 resolved_by:
@@ -34,6 +37,8 @@ context_scope:
     unified-trading-system-ui/app/(public)/login/page.tsx,
     unified-trading-system-ui/lib/auth/personas.ts,
     unified-trading-system-ui/tests/e2e/user-management.spec.ts,
+    unified-trading-system-ui/tests/e2e/admin-strategy-assignments.spec.ts,
+    /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
   ]
 depends_on: []
 ---
@@ -118,7 +123,15 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 - [ ] [UI] P3. Re-run `tests/e2e/admin-strategy-assignments.spec.ts` (written 2026-07-22 for the
       `AdminStrategyAssignment` admin CRUD feature) once the login helper is fixed, and record the `pw:L2 ✓` evidence
       retroactively on `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s
-      item. (repo: unified-trading-system-ui)
+      item. (repo: unified-trading-system-ui) **Prerequisite now cleared** (the two todos above shipped
+      `unified-trading-system-ui@15e4b4bc`, confirmed a live ancestor of `origin/live-defi-rollout`). **Known caveat**:
+      `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` (filed AFTER this
+      todo, while repairing the same login helper) found `/api/v1/*` admin routes 500 locally/in-CI without real
+      Firebase Admin credentials, and the mock dev server can die mid-run under sustained Playwright load — since this
+      spec is also admin-CRUD, it may hit the SAME blocker. **Done when**: either the spec passes and `pw:L2 ✓` evidence
+      is recorded, OR it fails on the documented Firebase-Admin-creds/dev-server-instability class — in the latter case,
+      record which failure mode was hit on THIS doc (do not attempt to fix the Firebase-creds gap inline; that is the
+      other doc's scope) and leave this todo open with the finding, rather than force a false pw:L2 ✓.
 
 ## Codex SSOTs
 
@@ -143,3 +156,19 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 - **fixed 2026-08-06 (/plan-reconcile ao)**: frontmatter `related:` cited the bare path
   `tests/e2e/user-management.spec.ts`, which does not resolve from this repo (unified-trading-pm). Repointed to
   `unified-trading-system-ui/tests/e2e/user-management.spec.ts`, matching `context_scope`'s already-correct form.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3) — RECLASSIFY, `assigned_vm: NA` → `planning`.** The
+  prior 3 markers (07-30, 08-03, 08-06) correctly kept this whole doc NA while all 3 todos formed one sequential chain
+  gated on a genuine, unresolved login-redirect design/diagnostic question. That question is now RESOLVED — todos 1-2
+  were flipped `[x]` on 2026-08-09 (`unified-trading-system-ui@15e4b4bc`, independently re-verified as a live
+  `origin/live-defi-rollout` ancestor), one day AFTER the last na-eligibility-audit marker, so no prior pass ever
+  re-assessed the doc with its prerequisite actually cleared. The sole remaining item (re-run the spec, record `pw:L2 ✓`
+  evidence, or record the specific known-blocker failure mode if hit) is now a bounded verification task with a stated
+  done-when either way — added an explicit caveat to the todo pointing at
+  `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` (filed 2026-08-09, same
+  investigation) since this admin-CRUD spec may hit the same Firebase-Admin-creds gap; the todo's done-when now covers
+  both outcomes so a worker can't force a false pass. Conflict-check: grepped every `status: draft`/`active`
+  `ao_satellite_ao_dispatch_batch*` (1-16) + finalizes + `ao_open_issues_consolidated_close_out_2026_07_17.md` for
+  `admin-strategy-assignments`/`e2e_login_persona_handoff` — zero hits. `assigned_role` set to `ui_developer` (was
+  unset) to match the `[UI]` tag. Finalize twin:
+  `/plans/active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`.
