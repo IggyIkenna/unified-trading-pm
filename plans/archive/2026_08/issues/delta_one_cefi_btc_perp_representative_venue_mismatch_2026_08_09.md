@@ -6,7 +6,7 @@ title:
 created: 2026-08-09
 author: slot-29
 assigned_vm: planning
-status: open
+status: resolved
 tags: [data-correctness, features-service, delta_one, cefi, btc, universe-filter, perp-collapse, instrument-id]
 source:
   [
@@ -27,7 +27,9 @@ repos: [features-service]
 scope: [engineer, admin]
 related: [delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09]
 parent_epic: cefi_master
-resolved_by: null
+resolved_by: >-
+  delta_one_cefi_btc_perp_representative_venue_mismatch-d8b052488b6e (slot 17, infra/data_engineering, 2026-08-10) —
+  features-service@2ea0c8cb, see Progress Log
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
@@ -35,8 +37,13 @@ depends_on: []
 sequential: false
 locked_by:
 locked_since:
-archive_exempt: true
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). `features-service@2ea0c8cb` threaded
+> an `explicit_instrument_override` flag from `BatchHandler._resolve_instrument_list` through
+> `filter_instruments_for_family`, skipping `_collapse_to_perp_representative` whenever the caller named specific
+> `--instruments` — per the operator ruling in this doc's own "Operator ruling (2026-08-10)" section. Archived by task
+> `delta_one_cefi_btc_perp_representative_venue_mismatch-d8b052488b6e` (slot 17, 2026-08-10).
 
 ## What I found
 

@@ -176,22 +176,27 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   COINBASE-FUTURES instead — a real venue, with genuine captured coverage for the target window, but one the
   already-shipped legacy BTC corpus (momentum, same day) never used. This is a NEW correctness/design question (which
   venue IS "cefi/BTC" for delta_one), not a bug in either of the two fixes above — filed separately as
-  `/plans/active/issues/delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md` with 3 candidate
-  resolutions (recommend: explicit `--instruments` should bypass the collapse). Also found + fixed an independent,
-  unrelated bug while diagnosing: `--preflight-only`/`--skip-preflight` were dead CLI flags in `BatchHandler.run()`
-  (named parameters never forwarded into the `**kwargs` dict `_run_preflight` reads) — every `--preflight-only`
-  invocation, including this issue's OWN documented repro commands, silently ran the full write path instead of stopping
-  after the lookback check (confirmed live: my own diagnostic run wrote a real `capture_status=attempted_failed`
-  manifest row for CEFI/returns/2026-05-03 to the PROD features-cefi bucket — honest failure record, not corrupted data,
-  but not the intended side-effect-free check). Fixed + shipped `features-service@0c70a43f` with regression tests
-  (`TestRunForwardsPreflightFlags`); `bash scripts/quality-gates.sh` green on the committed HEAD (sentinel matched; host
-  was under heavy shared-VM contention — basedpyright's 120s internal timeout needed `PYRIGHT_TIMEOUT=300` to clear the
-  noise, not a code issue), shipped via `quickmerge --agent`, post-push ancestry verified (`0c70a43f0` is an ancestor of
-  `origin/live-defi-rollout`). Escalating the venue-representative question via `/blocked`; this P2 todo stays open
-  pending that decision.
+  `/plans/archive/2026_08/issues/delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md` (archived
+  2026-08-10, resolved) with 3 candidate resolutions (recommend: explicit `--instruments` should bypass the collapse).
+  Also found + fixed an independent, unrelated bug while diagnosing: `--preflight-only`/`--skip-preflight` were dead CLI
+  flags in `BatchHandler.run()` (named parameters never forwarded into the `**kwargs` dict `_run_preflight` reads) —
+  every `--preflight-only` invocation, including this issue's OWN documented repro commands, silently ran the full write
+  path instead of stopping after the lookback check (confirmed live: my own diagnostic run wrote a real
+  `capture_status=attempted_failed` manifest row for CEFI/returns/2026-05-03 to the PROD features-cefi bucket — honest
+  failure record, not corrupted data, but not the intended side-effect-free check). Fixed + shipped
+  `features-service@0c70a43f` with regression tests (`TestRunForwardsPreflightFlags`); `bash scripts/quality-gates.sh`
+  green on the committed HEAD (sentinel matched; host was under heavy shared-VM contention — basedpyright's 120s
+  internal timeout needed `PYRIGHT_TIMEOUT=300` to clear the noise, not a code issue), shipped via `quickmerge --agent`,
+  post-push ancestry verified (`0c70a43f0` is an ancestor of `origin/live-defi-rollout`). Escalating the
+  venue-representative question via `/blocked`; this P2 todo stays open pending that decision.
 - 2026-08-10 (slot-6, resumed task `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a`): The
   venue-representative `/blocked` question was answered (option (a) — see
-  `delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md`'s "Operator ruling" section) — a new scoped fix
-  todo is filed there (explicit `--instruments` bypasses `_collapse_to_perp_representative`). Both of this doc's open P2
-  re-run todos stay blocked until that fix lands; skipping this dispatched instance with `reason_code: GATED` rather
-  than attempting a re-run that would still fail the same way.
+  `/plans/archive/2026_08/issues/delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md`'s "Operator
+  ruling" section) — a new scoped fix todo was filed there (explicit `--instruments` bypasses
+  `_collapse_to_perp_representative`). Both of this doc's open P2 re-run todos stay blocked until that fix lands;
+  skipping this dispatched instance with `reason_code: GATED` rather than attempting a re-run that would still fail the
+  same way.
+- 2026-08-10 (slot-17, task `delta_one_cefi_btc_perp_representative_venue_mismatch-d8b052488b6e`): The venue-collapse
+  fix landed (`features-service@2ea0c8cb`) and that issue doc is now archived at
+  `/plans/archive/2026_08/issues/delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md`. This doc's two P2
+  re-run todos are now unblocked — the `GATED` skip reason above no longer applies.
