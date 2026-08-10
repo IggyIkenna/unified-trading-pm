@@ -89,6 +89,17 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
 - Every cache write in the sample is **1h TTL** (`ephemeral_5m_input_tokens` = 0 across 17,446+ turns), so the 2.0x
   cache-write tier is the one that matters, not 1.25x.
 
+## Where each piece of work has to run (operator ask 2026-08-10)
+
+| Runs on                    | What                                                                                                                                                                                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operator's laptop ONLY** | Anything reading `~/.claude` interactive history or `~/.claude.json` — laptop-side consumption, the local login identity, and any `claude /usage` run against the laptop's account. This data exists on no other machine. Tagged `[OPERATOR]` so AO never tries to dispatch it. |
+| **AO VM only**             | The meter-history sampler, calibration over `sub-c/d/e/f`, and any query against the live `state.db` or the VM's per-slot transcripts.                                                                                                                                          |
+| **Either (repo work)**     | Price table, attribution fixes, per-account aggregation, dashboard, repricing script, tests — ordinary code a worker can do anywhere.                                                                                                                                           |
+
+The laptop-only items are genuinely small: the laptop's contribution is confined to `sub-b-iggy2london`, so they exist
+to quantify and quarantine ONE account, not to feed the main calibration.
+
 ## Todos
 
 - [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
@@ -191,14 +202,39 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
       `spend_usd` in every window.
-- [ ] [BACKEND] P1. **Gate the calibration set to windows fully inside the `account_id` capture era and require >= 98%
-      meter consumption; treat every other window as a LOWER BOUND, never a measurement.** Consuming fraction `p` of an
-      entitlement yields `p x M`, so a partial window cannot measure the multiplier (operator ruling 2026-08-10).
-      Capture began ~2026-08-06, so `sub-e-odum2default`'s window (opens 2026-08-05 23:00) is structurally undercounted
-      and must be excluded — this, not double-counting, is the leading explanation for the 6x list-value spread across
-      four identically-entitled max20 accounts. **Done when**: the calibration script refuses to emit a multiplier for a
-      sub-98% or partially-captured window, labelling it a lower bound instead, with a test covering both rejection
-      paths.
+- [ ] [BACKEND] P1. **Scale partial windows by their consumed percentage instead of discarding them, and gate only on
+      capture completeness.** Operator correction 2026-08-10: a window at 50% is still a valid sample — the
+      entitlement-equivalent value is `V / p`, so every window becomes usable and the sample size stops being
+      one-per-account. The real disqualifier is not partial consumption but partial CAPTURE: `account_id` capture began
+      ~2026-08-06, so `sub-e-odum2default`'s window (opens 2026-08-05 23:00) is missing its first day and must be
+      excluded — that, not double-counting, is the leading explanation for the 6x list-value spread across four
+      identically-entitled max20 accounts. Derive the window as `resets_at - 7d` (verified consistent with the stored
+      `weekly_window_start` for every account). **Done when**: the script emits a scaled multiplier for a partial
+      window, refuses any window not fully inside the capture era, and a test covers both paths.
+- [ ] [BACKEND] P1. **Calibrate on the four pure-agent-orchestrator accounts and exclude the laptop-shared one.**
+      Measured 2026-08-10 on the operator's laptop: the interactive login is `iggy2london@gmail.com` =
+      `sub-b-iggy2london`, and local slot config dirs went dormant 2026-08-04 while every current calibration window
+      opens 08-05 or later. `sub-c`, `sub-d`, `sub-e`, `sub-f` therefore have NO laptop contamination in their current
+      windows and are clean calibration subjects; `sub-d-odum1default` is doubly clean (no local account env file has
+      ever existed for it). `sub-b` mixes agent-orchestrator with the operator's interactive tabs and its usage cannot
+      be split, because local transcripts carry no account identifier. **Done when**: the calibration reports the four
+      clean accounts separately from `sub-b`, and `sub-b` is labelled contaminated rather than silently averaged in.
+- [ ] [BACKEND] P1. **Correct the cost denominator to subscription PLUS extra-usage spend — overage was paid, contrary
+      to the first reading.** `overage_status='rejected'` + `overage_disabled_reason='out_of_credits'` means overage is
+      currently REFUSED because the credit pool is exhausted, not that none was used: the laptop account's live `/usage`
+      payload shows `extra_usage.used_credits = 15078` against `monthly_limit = 20000` (GBP, 2dp) — £150.78 of real
+      additional billing this month. Any account with non-zero `used_credits` in a calibrated window must have that
+      added to its subscription cost, and the currency recorded (GBP here, not USD). **Done when**: the calibration
+      reports cost as subscription + extra usage per window with currency, and a test proves a window with overage is
+      not priced at bare subscription cost.
+- [ ] [BACKEND] P1. **Persist the FULL `/usage` payload, not just the two percentage fields AO currently keeps.** The
+      live payload carries `seven_day_opus` / `seven_day_sonnet` per-model sub-meters, a `limits[]` array with
+      model-scoped buckets (`kind: weekly_scoped`, `scope.model.display_name`), `extra_usage` money fields, and
+      `limit_dollars`/`used_dollars`/`remaining_dollars` (null for subscription windows, populated for extra usage). The
+      per-model sub-meters are precisely the quota-weight signal todo 7 needs and Anthropic already exposes them — AO
+      discards everything except `weekly_pct` and `five_hour_pct`. Compose with the todo-1 sampler so history captures
+      the whole structure. **Done when**: a sampled row round-trips the per-model sub-meters and `extra_usage` block,
+      verified against a live capture.
 - [ ] [BACKEND] P1. **Calibrate the 5-hour meter as its own track, and record which meter was BINDING for each window.**
       `representative_claim` shows 5 of 6 accounts are `five_hour`-bound and only `sub-c-ikenna-odum` is
       `seven_day`-bound (2026-08-10), so weekly-only calibration measures the non-binding constraint for most accounts.
@@ -230,6 +266,20 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
       replayed turns were never re-billed and must not inflate list value, but the probe's own genuine turns do consume
       quota. **Done when**: a test proves a replayed turn is excluded from value and a probe's own turn is retained, and
       the calibrated totals change in the expected direction.
+- [ ] [OPERATOR] P2. **LAPTOP-ONLY — measure this laptop's own Claude consumption per window so `sub-b-iggy2london` can
+      be decontaminated rather than discarded.** Scan `~/.claude/projects/**/*.jsonl` (4,026 transcripts, ~4.1G, four
+      concurrent interactive tabs active as of 2026-08-10 15:01) deduping by `requestId`, and sum tokens per model
+      inside each `sub-b` calibration window. Local transcripts carry NO account identifier, so this is only sound
+      because the laptop's login is known to be `sub-b` alone; state that assumption in the output. Runs on the
+      operator's laptop by necessity — `~/.claude` exists nowhere else. Read-only, no VM, no deletes. **Done when**:
+      laptop token totals per window are recorded here, and `sub-b`'s AO-only value plus laptop value is compared
+      against its meter percentage.
+- [ ] [OPERATOR] P2. **LAPTOP-ONLY — record whether the laptop login changes accounts over time, since that silently
+      reassigns all laptop consumption.** `~/.claude.json`'s `oauthAccount` is current-state only (today:
+      `iggy2london@gmail.com`), so a past re-login is invisible and would misattribute every earlier laptop turn.
+      Capture the current identity plus `cachedUsageUtilization.fetchedAtMs` on a cadence, or confirm with the operator
+      that the laptop has only ever been logged into `sub-b`. **Done when**: either a login timeline is recorded, or the
+      single-account assumption is explicitly confirmed and dated.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
@@ -303,6 +353,39 @@ measure fully-consumed windows?" — four findings that reshaped the todo list:
 Also unresolved and now tracked: the `weekly_sonnet_pct` sub-meter is NULL/0 on every account, so there is currently no
 per-model quota signal to validate a scalar multiplier against (todo 7); and ~78% of our list-priced value is cache
 reads, whose quota weighting is unknown (todo 8).
+
+### 2026-08-10 — Laptop-side probe: the contamination is confined to ONE account
+
+Operator flagged that the same Claude accounts are used on their laptop (including the session authoring this plan), so
+agent-orchestrator-only token sums would understate consumption and bias the multiplier DOWNWARD. Measured on the
+laptop:
+
+- **The laptop's interactive login is `iggy2london@gmail.com` = `sub-b-iggy2london`** (`~/.claude.json` `oauthAccount`).
+- **Local slot config dirs went dormant 2026-08-04** (`~/.claude-configs/orch-slot-90{1..5}`, `orch-slot-99` — newest
+  transcript 2026-08-04 14:35), while every current calibration window opens 2026-08-05 or later.
+- Therefore **`sub-c`, `sub-d`, `sub-e`, `sub-f` are pure agent-orchestrator for their current windows**;
+  `sub-d-odum1default` is doubly clean (no local account env file has ever existed for it). This is the clean
+  calibration subject the operator hoped for, and there are four of them, not one.
+- `sub-b` is genuinely contaminated and cannot be split: **local transcripts carry no account identifier** (fields are
+  `cwd`, `effort`, `entrypoint`, `gitBranch`, `sessionId`, `requestId`, `timestamp`, `version` — no account/org id). It
+  is also the only account not at 100% weekly (63%), consistent with being the shared one.
+
+**CORRECTION to the 2026-08-10 feasibility probe — overage WAS paid.** That entry recorded "no overage was ever paid,
+the denominator needs no adjustment", reading `overage_status='rejected'`. That reading was wrong: `rejected` +
+`out_of_credits` means overage is currently REFUSED because the pool is exhausted, not that none was consumed. The
+laptop account's live `/usage` payload shows `extra_usage.used_credits = 15078` of `monthly_limit = 20000` (GBP, 2
+decimal places) — **£150.78 of real additional billing this month**. Cost denominators must be subscription + extra
+usage, with currency recorded (todo 8).
+
+**No definitive dollar figure exists for subscription usage.** `limit_dollars` / `used_dollars` / `remaining_dollars`
+are present in the `/usage` schema but `null` for both the `five_hour` and `seven_day` windows — only `extra_usage`
+carries money. So the "ask Claude directly for the billing number" route yields percentages, not dollars, and local
+transcripts remain the only ground truth for token volume.
+
+**AO is discarding most of the `/usage` payload** (todo 9): it keeps `weekly_pct` and `five_hour_pct` and drops the
+`seven_day_opus` / `seven_day_sonnet` per-model sub-meters, the `limits[]` array with model-scoped buckets
+(`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
+sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
 
 **Incidental findings**: every cache write on this fleet is 1h TTL (`ephemeral_5m_input_tokens` = 0 across 17,446+
 sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is enormous (5.2B tokens on `sub-c` in one
