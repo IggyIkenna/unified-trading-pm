@@ -55,6 +55,12 @@
 # that carve-out. Do NOT use this for source/code changes: quality-gates.sh is mandatory
 # there and this script never runs it. Run from the target repo's root.
 #
+# EXIT CODE 10 (2026-08-10, pm_repo_commit_rate_exceeds_precommit_hook_duration): retries were
+# exhausted AND the caller's named files no longer match what they handed this script -- their
+# edits were reverted mid-run (measured twice on 2026-08-10). Distinct from 5 precisely because
+# the remedy is opposite: 5 means "re-run, your content is intact"; 10 means "RECOVER FIRST, a
+# re-run would push whatever is on disk now". See _sdp_warn_if_content_vanished.
+#
 # EXIT CODES: 0 success -- verified end-to-end (incl. "nothing to commit" -- another slot
 # already landed the identical content; every success path, including that fallback, only
 # reports 0 after independently confirming `git log --oneline -1 -- <path>` is non-empty for
@@ -146,6 +152,49 @@ if [[ ! -d .git ]]; then
   echo "Refusing: run from a repo root (no .git here: $(pwd))." >&2
   exit 2
 fi
+
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (F4): fingerprint the caller's
+# named files AT ENTRY so a non-success exit can tell "your content is still on disk, this really
+# was transient" apart from "your edits were reverted out from under you". Measured twice on
+# 2026-08-10: an exhausted-retries run printed "this is transient, not a defect. Re-run." while the
+# caller's uncommitted TRACKED file had been reverted to HEAD content by an autostash/prek cycle
+# (untracked files in the same --files list survived). An agent that believes that message re-runs
+# and pushes nothing. Content was recoverable from stash@{0} both times, but only by going to look.
+_sdp_fingerprint_named() {
+  local f
+  for f in "${FILES[@]}"; do
+    if [[ -f "$f" ]]; then
+      printf '%s  %s\n' "$(git hash-object -- "$f" 2>/dev/null || echo MISSING)" "$f"
+    else
+      printf 'ABSENT  %s\n' "$f"
+    fi
+  done
+}
+_SDP_ENTRY_FINGERPRINT="$(_sdp_fingerprint_named)"
+
+# Print a loud, actionable warning if the named files no longer match what the caller handed us.
+# Returns 1 when content changed (caller should NOT report a plain transient failure).
+_sdp_warn_if_content_vanished() {
+  local now
+  now="$(_sdp_fingerprint_named)"
+  [[ "$now" == "$_SDP_ENTRY_FINGERPRINT" ]] && return 0
+  {
+    echo
+    echo "🛑 YOUR EDITS ARE NO LONGER ON DISK AS YOU HANDED THEM TO THIS SCRIPT."
+    echo "   The named file(s) changed content DURING this run — this is NOT a plain transient failure,"
+    echo "   and re-running will push whatever is on disk now (possibly nothing you intended)."
+    echo
+    diff <(printf '%s\n' "$_SDP_ENTRY_FINGERPRINT") <(printf '%s\n' "$now") | sed 's/^/   /' || true
+    echo
+    echo "   RECOVER BEFORE RE-RUNNING. Your content is most likely parked in a stash entry:"
+    git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+    echo "     Inspect:  git stash show -p 'stash@{0}'"
+    echo "     Extract ONE file (safer than popping — these autostashes often hold a peer session's WIP):"
+    echo "       git show 'stash@{0}:<path>' > <path>"
+    echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F4)."
+  } >&2
+  return 1
+}
 
 # push-host-governor.sh (2026-08-09, cross-slot push contention): stubs defined FIRST so a
 # missing/stale PM checkout can never break this script (no `set -e` here, but keep the same
@@ -370,6 +419,18 @@ RETRIABLE_HOOK_IDS="check-branch-drift"
 # Returns 0 = retriable, 1 = deterministic.
 commit_failure_is_retriable() {
   local err_file="$1" hook_ids id
+  # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (F2): prek fails the run
+  # when a hook AUTOFIXES a file ("- files were modified by this hook") even though nothing
+  # rejected the content -- the documented remedy is re-stage and re-run, which succeeds.
+  # Classifying that as deterministic printed "Retrying will fail identically. Do NOT re-run
+  # this script" over a run whose every sub-check had reported OK and whose sweep had printed
+  # its own "staged files clean" (observed twice, 2026-08-10). Treat it as RETRIABLE: the
+  # retry re-stages the autofixed content. If a genuine content violation is ALSO present it
+  # is unchanged by the retry and the next attempt exits 6 with the hook's remedy line, so
+  # the worst case is one extra attempt rather than a false hard-stop on a fixable tree.
+  if grep -qi "files were modified by this hook" "$err_file" 2>/dev/null; then
+    return 0
+  fi
   hook_ids="$(sed -n 's/^- hook id: //p' "$err_file" 2>/dev/null || true)"
   [[ -z "$hook_ids" ]] && return 0
   while IFS= read -r id; do
@@ -531,6 +592,15 @@ locked_git_commit() {
   local lock_fd=222 lock_file rc before_snapshot race_files
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
   before_snapshot="$(_prek_race_snapshot)"
+  # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (P0): the pre-commit
+  # drift gate is ADVISORY for this script's own commit, because this script provably
+  # reconciles AFTER committing (the retry loop below rebases onto origin and re-verifies
+  # before every push). Measured 2026-08-10: the hook chain is 118s while PM's commit
+  # inter-arrival is 60-80s, so origin moves during EVERY hook run and the gate fired on
+  # essentially every attempt -- each failure re-paying the full 118s sweep for an outcome
+  # fixed before it started. Scoped to this one call (exported for the `git commit`
+  # subprocess, unset immediately after) so it can never leak to an unrelated commit.
+  export DRIFT_GATE_ADVISORY=1
   # push-host-governor.sh (2026-08-09): host-wide validation-phase token (K=8 default) around
   # the hook-chain-running commit call, nested OUTSIDE the pre-existing per-checkout flock below
   # (same split as quickmerge.sh's _qm_locked_git_commit).
@@ -548,6 +618,7 @@ locked_git_commit() {
     git commit "$@"
     rc=$?
   fi
+  unset DRIFT_GATE_ADVISORY
   push_gov_release_validate
   if [[ -n "$before_snapshot" ]] && ! race_files="$(_prek_race_check "$before_snapshot")"; then
     echo "❌ prek stash/restore race detected — these unstaged file(s) changed content DURING the commit (not something this script did):" >&2
@@ -725,10 +796,17 @@ done
 push_gov_release_push
 
 if [[ "$final_ok" != true ]]; then
+  # F4: check BEFORE printing the transient wording, so the two cases never get the same advice.
+  if ! _sdp_warn_if_content_vanished; then
+    echo "❌ Exhausted ${MAX_ATTEMPTS} attempts AND the named file(s) were reverted during the run (see above)." >&2
+    echo "   Recover the content first; re-running as-is would NOT re-land your edits." >&2
+    exit 10
+  fi
   {
     echo "❌ Exhausted ${MAX_ATTEMPTS} attempts. Deterministic pre-commit content failures now exit 6 BEFORE"
     echo "   reaching here, so this path means a genuine race (fetch/pull/push contention) that did not settle."
-    echo "   Re-running is reasonable -- but READ the last error below first rather than assuming transience:"
+    echo "   Your named file(s) are byte-identical to what you handed this script, so re-running is safe."
+    echo "   READ the last error below first rather than assuming transience:"
     echo
     for _last in /tmp/_sdp_commit_err /tmp/_sdp_push_err /tmp/_sdp_pull_err /tmp/_sdp_fetch_err; do
       if [[ -s "$_last" ]]; then
