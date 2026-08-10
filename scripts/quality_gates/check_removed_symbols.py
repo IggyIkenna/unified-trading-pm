@@ -44,6 +44,23 @@ from typing import Final
 
 import yaml
 
+
+def _pm_root_or_legacy(workspace_root):
+    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
+
+    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
+    named checkout; fixes resolution when running from a git worktree."""
+    import pathlib as _pathlib
+    import sys as _sys
+
+    _d = str(_pathlib.Path(__file__).resolve().parent)
+    if _d not in _sys.path:
+        _sys.path.insert(0, _d)
+    from _pm_root import pm_root_or_legacy as _impl
+
+    return _impl(workspace_root)
+
+
 # ── Constants ────────────────────────────────────────────────────────────────
 
 #: Top-level directories to skip when walking the workspace.
@@ -464,7 +481,7 @@ def main(argv: list[str] | None = None) -> int:
         # (parent of unified-trading-pm).
         workspace_root = script_dir
         while workspace_root != workspace_root.parent:
-            if (workspace_root / "unified-trading-pm").is_dir():
+            if (_pm_root_or_legacy(workspace_root)).is_dir():
                 break
             workspace_root = workspace_root.parent
         else:  # pragma: no cover — defensive fallback

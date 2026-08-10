@@ -79,6 +79,23 @@ from typing import cast
 
 import yaml
 
+
+def _pm_root_or_legacy(workspace_root):
+    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
+
+    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
+    named checkout; fixes resolution when running from a git worktree."""
+    import pathlib as _pathlib
+    import sys as _sys
+
+    _d = str(_pathlib.Path(__file__).resolve().parent)
+    if _d not in _sys.path:
+        _sys.path.insert(0, _d)
+    from _pm_root import pm_root_or_legacy as _impl
+
+    return _impl(workspace_root)
+
+
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_operator_ruling_evidence_baseline.yaml"
 
 # unified-trading-pm repo root — baseline paths are stored relative to this so the file is
@@ -355,7 +372,7 @@ def main() -> int:
     baseline_path: Path = cast(Path, ns.baseline_path)
     baseline_write: bool = cast(bool, ns.baseline_write)
 
-    active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
     if not active_dir.is_dir():
         print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
         return 2

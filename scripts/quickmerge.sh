@@ -398,6 +398,64 @@ if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
   exit 1
 fi
 
+# ── CONTENT FINGERPRINT (2026-08-10, pm_repo_commit_rate_exceeds_precommit_hook_duration) ──
+# quickmerge destroyed a caller's uncommitted edits on 2026-08-10 the same way safe-doc-push
+# did: STAGE 0.4's reconcile / prek's patch save-restore reverted the named files to HEAD
+# mid-run, and the script carried on with no indication. safe-doc-push grew an entry
+# fingerprint + exit 10 for exactly this; quickmerge had NO equivalent detection at all, so
+# the loss was silent here in a way it no longer is there.
+#
+# Full isolation (committing from a throwaway worktree, safe-doc-push's fix) is NOT applied
+# here on purpose: quickmerge runs quality-gates.sh, which depends on the repo's own .venv and
+# per-repo tooling layout, so relocating its working directory is a materially larger and
+# riskier change than the doc fast path's. Detect-and-report is the proportionate fix; a
+# separate todo tracks whether full isolation is worth it for quickmerge.
+_QM_ENTRY_FINGERPRINT=""
+if [ -n "$FILES_ARG" ]; then
+  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+  for _qm_f in $FILES_ARG; do
+    if [ -f "$_qm_f" ]; then
+      _QM_ENTRY_FINGERPRINT="${_QM_ENTRY_FINGERPRINT}$(git hash-object -- "$_qm_f" 2>/dev/null || echo MISSING)  ${_qm_f}
+"
+    else
+      _QM_ENTRY_FINGERPRINT="${_QM_ENTRY_FINGERPRINT}ABSENT  ${_qm_f}
+"
+    fi
+  done
+fi
+
+# Returns 1 when the caller's named files no longer match what they handed us.
+_qm_content_vanished() {
+  [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
+  local now=""
+  # shellcheck disable=SC2086
+  for _qm_f in $FILES_ARG; do
+    if [ -f "$_qm_f" ]; then
+      now="${now}$(git hash-object -- "$_qm_f" 2>/dev/null || echo MISSING)  ${_qm_f}
+"
+    else
+      now="${now}ABSENT  ${_qm_f}
+"
+    fi
+  done
+  [ "$now" = "$_QM_ENTRY_FINGERPRINT" ] && return 0
+  {
+    echo
+    echo "🛑 YOUR NAMED FILE(S) CHANGED CONTENT DURING THIS QUICKMERGE RUN."
+    echo "   They no longer match what you handed this script. This is the silent-revert"
+    echo "   failure mode from pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md"
+    echo "   (measured: a concurrent session's prek/autostash cycle reverting a tracked file)."
+    echo "   Do NOT simply re-run — that would ship whatever is on disk now."
+    echo "   Your content is most likely recoverable:"
+    git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+    echo "     git stash show -p 'stash@{0}'"
+    echo "     Extract ONE file (these autostashes often hold a peer session's WIP):"
+    echo "       git show 'stash@{0}:<path>' > <path>"
+    echo "     Also check: ls -t ~/.cache/prek/patches/ | head"
+  } >&2
+  return 1
+}
+
 # B (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix is an auditable break-glass. Require an
 # explicit [hotfix] marker in the commit message so a queue-jumping immediate staging promote is
 # never silent (it bypasses the batched Tier-C drain + opens a staging PR that hits the staging lock).
