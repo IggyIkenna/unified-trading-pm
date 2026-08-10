@@ -250,11 +250,20 @@ depends_on: []
           improve as season-scoped caching reduces redundant API calls for later seasons.
         - **No code shipped** — pure monitoring.
 
-## Deferred work after 2026-08-10 ~16:29Z
+      - **2026-08-10 (slot 28, data_engineering, ~16:50Z–~17:00Z)** — Continued monitoring STANDINGS VM:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-02-05` → `2021-02-08` (pre-compact around 16:29Z) → `2021-02-11` (~17:00Z). Monotonic, forward progress.
+          ~248/2258 days done (~11.0%). Pace ~1.4 dates/min confirmed from launch (~16:33Z). ETA at current pace: ~24h
+          remaining → ~2026-08-11 17:00Z. Standings is season-scoped (not per-date) — pace is per-season-start-date, ETA
+          may be conservative.
+        - No `exit_code=` yet. VM healthy — PIPELINE_HEARTBEAT emitting every 60s. No code shipped — pure monitoring.
+        - Session compacted ~17:00Z.
+
+## Deferred work after 2026-08-10 ~17:00Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2020-06-18`, ~1.4 dates/min, ETA ~27h      | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-02-11`, ~1.4 dates/min, ETA ~24h      | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
