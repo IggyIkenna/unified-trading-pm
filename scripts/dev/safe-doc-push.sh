@@ -901,9 +901,11 @@ final_ok=false
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
+# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
+# --files are passed as protected so the extreme-pile self-arrest never quarantines the very
+# work this run is shipping (dogfooded live 2026-08-10 slot-9).
 if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-  autostash_guard_bound_backlog "origin/${BRANCH}" || true
+  autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
 fi
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
