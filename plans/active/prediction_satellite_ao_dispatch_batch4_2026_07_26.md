@@ -703,18 +703,18 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                                      (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                                      #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                                      walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                                      pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                                      content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                                      then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                                      re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                                      273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                                      build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                                      verification.
+                                          (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                                          #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                                          walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                                          pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                                          content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                                          then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                                          re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                                          273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                                          build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                                          verification.
 
-- [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
+- [x] ✅ [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
       have a canonical twin carrying FEWER trades than the shape #4 object (2 vs 12 — metadata VALUES identical, row set
       divergent). The migration correctly keeps + flags these (delete would lose real trades), but the canonical
@@ -724,7 +724,8 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       the missing trades from shape #4 into the canonical (row-set union — a SEPARATE operation from 4b-iii's
       enrichment, with manifest implications) OR accept the canonical as the manifest-SSOT subset and keep the shape #4
       objects in place as honest non-canonical. (repo: market-tick-data-service). Done when: the population is counted +
-      a disposition decision is recorded in this plan's Progress Log.
+      a disposition decision is recorded in this plan's Progress Log. — **CHARACTERIZED 2026-08-10 (slot 24)**, full
+      evidence + disposition in the Progress Log below.
 
 - **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
   blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
@@ -925,6 +926,50 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
     peer pushed newer MTDS commits) — the pinned-SHA tarball copy guarantees the VM runs MY exact commit; verify via the
     migration log once started. **Resume**: confirm 201105 passes the retention check + progresses (Monitor
     `br5h30v30`), then wait for many-hour completion.
+
+- **2026-08-10T20:15Z (slot 24, data_engineering, dispatched on "characterize the shape-#4 subset-divergent cells")** —
+  **CHARACTERIZED via a bounded dry-run of the shipped merge script** (the VM report it was meant to read was still
+  mid-run / had only just relaunched as `...-201105`; a bounded dry-run is read-only, uses the exact same shipped
+  detection logic, and produces the same anomaly lines). No GCS mutation, no corpus walk — dry-run over a bounded sample
+  of 9 days (2025-03-14 [the documented divergent day] + 2025-06-14..22), plus per-cell object reads for mechanism
+  verification. Findings:
+
+  **(a) Population — 10.1% of cells, matching the expected ~10%.** 157 unique divergent cids across 1,558 sampled
+  condition_ids (9 days). Per-day divergent rates: 2025-03-14 9/85=10.6%; 2025-06-14 10.1%, 06-15 6.1%, 06-16 14.4%,
+  06-17 15.7%, 06-18 8.5%, 06-19 9.4%, 06-20 10.8%, 06-21 16.3%, 06-22 6.2% — a tight ~6–16% band, no day
+  concentrated/destructive outlier. (Anomaly lines deduped by cid — the script emits one line per naming-variant
+  candidate, so a cid can appear 1–2×.)
+
+  **(b) Mechanism — the subset is confined to the PREFIXED canonical naming variant; the BARE canonical object is
+  complete.** Each divergent cell has TWO canonical objects under
+  `venue=POLYMARKET/instrument_type=prediction_market/ data_type=trades/`: the bare `{cid}.parquet` and the
+  `POLYMARKET:PREDICTION_MARKET:{cid}.parquet` prefixed twin. For **all 157 sampled divergent cells**, the bare object
+  was COMPLETE — row-set + title/slug/event_slug metadata match the shape #4 source exactly (`_metadata_matches=True`).
+  The prefixed twin was the row-set SUBSET (e.g. 498/500 rows on 2025-06-14 `0x0a33...`; 2/12 on the documented
+  2025-03-14 `0x58b3...`), which is what trips the script's per-variant `_metadata_matches` check and flags the cell. So
+  the "canonical ⊂ shape #4" framing is exact for the PREFIXED twin, but the BARE canonical `trades` object — the
+  manifest-tracked shape — already carries the full shape #4 row set for these cells. This is a dual-write
+  naming-variant skew (one of the two canonical writes under-populated), not canonical row loss.
+
+  **(c) market_type — sharply `range_bracket`-specific.** On both mechanism-checked days, divergence is overwhelmingly
+  range_bracket: 2025-06-14 range_bracket 17.1% (24/140) vs binary 0.0% (0/98); 2025-06-17 range_bracket 23.2% (46/198)
+  vs binary 3.6% (4/112) vs categorical 0.0%. Consistent with the original discovery's `range_bracket` example; not
+  random across market types.
+
+  **(d) Disposition decision — ACCEPT the bare canonical as the manifest-SSOT subset and KEEP the shape #4 objects as
+  honest non-canonical for divergent cells (option B); do NOT backfill.** Rationale: (1) the manifest-tracked canonical
+  `trades` object (bare twin) already carries the full shape #4 row set for every sampled divergent cell — there is no
+  row loss to backfill from the canonical-SSOT side; (2) a row-set-union backfill into the bare canonical would be a
+  no-op there, and into the prefixed twin would recreate a redundant partial write (the prefixed variant is a
+  legacy/duplicate naming, not the SSOT shape); (3) the 4b-iii merge script's existing behavior is already correct — it
+  refuses to delete these cells' shape #4 objects (delete-safety Part 2 `_metadata_matches` gates deletion), so keeping
+  them as honest non-canonical is exactly what the shipped script does, no new code needed; (4) the
+  manifest/non-canonical inventory already reflects shape #4 as a distinct non-canonical tree
+  (`non-canonical-path-inventory.md` row 22). No follow-on action required beyond the 4b-iii merge run itself; this
+  characterization closes the todo. (Root-cause of the range_bracket skew — why the prefixed twin under-populated on
+  range_bracket cells specifically — is a write-path question out of this todo's scope; the census VM + merge report may
+  surface more, and if the bare twin ever turns up incomplete for a cell during the VM's `--apply` run, that cell should
+  be re-evaluated rather than blindly accepted.) (repo: market-tick-data-service — read-only analysis, no code shipped).
 
 - **2026-08-10T20:16Z (slot 25, data_engineering, 4b-iii continuation)**: **VM #2 (201105, SPOT) PREEMPTED before setup
   — RELAUNCHED ON-DEMAND.** The 201105 SPOT instance was preempted by GCE ~2 min after creation
