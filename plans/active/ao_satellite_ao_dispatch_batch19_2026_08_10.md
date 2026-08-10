@@ -110,7 +110,7 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
       near-identical blocked-nudge. **Done when**: the task is unparked, dispatches, and completes cleanly (or, if it
       re-triggers the same block, that itself is evidence for a fresh finding — report either outcome). Repo:
       agent-orchestrator (live API action, no code change).
-- [ ] [BACKEND] P1. **TmuxPruner-wedge workload-characteristic cross-check.** Source:
+- [x] ✅ [BACKEND] P1. **TmuxPruner-wedge workload-characteristic cross-check.** Source:
       `/plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` todo 1. Now that
       the fleet-wide TmuxPruner/keeper root cause is identified and fixed (`agent-orchestrator@e32d962`, TmuxPruner
       has-session debounce — see the archived `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`), check
@@ -119,7 +119,8 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
       size — that makes them disproportionately likely to trigger it vs. other tasks. **Done when**: a concrete
       comparison is written into the source doc citing the actual measured characteristics of both tasks (not just "no
       obvious pattern found" without having checked all four dimensions). Repo: agent-orchestrator (investigation +
-      doc-writeup only, read-only).
+      doc-writeup only, read-only). — unified-trading-pm@d875b73ed3 (source doc: citadel-004 todo flipped ✅, all four
+      dimensions measured + full Progress Log entry with concrete comparison).
 
 ## Codex SSOTs (read before starting)
 
