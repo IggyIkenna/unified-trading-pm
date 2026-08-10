@@ -271,6 +271,12 @@ Directions, cheapest first — each is a todo below:
       AFTER the wrapper's reconcile step rather than by declining to format at all. **Done when**: the guard is removed
       or moved after reconcile, a formatted-while-behind commit does not leave residue that breaks slot FF-sync, and the
       F3 loop is demonstrably broken. Repo: unified-trading-pm.
+- [ ] [INFRA] P1. **Re-derive the push-governor's validation cap from measured host cores.** `push-host-governor.sh`
+      admits a fixed K=8 validation-phase tokens. Profiling 2026-08-10 showed the sweep is ~18.6s of real work inflated
+      ~6x to 118s by concurrent hook chains on one laptop — 8 concurrent 19s sweeps produce exactly the observed wall
+      time. Mirror `qg-host-governor.sh`'s `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the
+      cap is core-derived, and a measured before/after shows per-run sweep wall time on a loaded host materially closer
+      to its idle 18.6s. Repo: unified-trading-pm.
 - [ ] [INFRA] P1. **Shrink the 118s critical section itself** — profile `run_hygiene_sweep.sh --precommit` per sub-check
       and move anything whose cost is corpus-wide-but-not-staged-file-dependent out of the per-commit path (to the
       hourly sweep or the promote-PR QG). The gate set only needs to be _sound for the staged files_ at commit time.
@@ -297,3 +303,16 @@ Directions, cheapest first — each is a todo below:
   subject is the git-internals stash-interleaving mechanism and its candidate mitigations, whereas this doc's subject is
   the measured rate/duration mismatch that makes the race fire constantly, plus three script-level defects that are
   independently fixable without resolving the git mechanism at all. Cross-linked both ways.
+
+- **2026-08-10 (profiling run — REFINES F1's 118s)**: profiled `run_hygiene_sweep.sh --precommit` per check by
+  timestamping its own output lines. In an IDLE isolated worktree the same sweep, on the same single staged plan file,
+  totals **18.6s**, not 118s. Breakdown of everything over 1s: Operator-ruling evidence **6.0s**, depends_on DAG
+  **5.3s**, Terminal-status-archived **3.9s**, Line caps **1.5s** (remaining ~20 checks are sub-second each). So the
+  118s measured in the loaded main checkout is roughly a **6x contention inflation of ~19s of real work**, not an
+  intrinsic cost — which changes the fix. Shrinking the sweep helps, but the dominant lever is how many hook chains run
+  concurrently on one host: `push-host-governor.sh` admits **K=8** validation-phase tokens, and 8 concurrent 19s sweeps
+  on a laptop produce exactly the ~2min per-run wall time observed. Two consequences: (a) the per-check shrink todo
+  should target the four checks above, which are ~89% of the sweep; (b) a separate todo should re-derive the validation
+  cap from measured host cores rather than a fixed 8, the same way `qg-host-governor.sh` already does
+  (`max(2, floor(cores/4))`). Filed as a correction to F1 rather than a new finding: F1's conclusion (hook chain longer
+  than commit inter-arrival) holds — this identifies WHY it is that long.

@@ -160,6 +160,78 @@ fi
 # caller's uncommitted TRACKED file had been reverted to HEAD content by an autostash/prek cycle
 # (untracked files in the same --files list survived). An agent that believes that message re-runs
 # and pushes nothing. Content was recoverable from stash@{0} both times, but only by going to look.
+# ---------------------------------------------------------------------------
+# ISOLATED-WORKTREE MODE (default since 2026-08-10) --
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md F6 + the operator
+# ruling the same day ("we should do these because it's never gonna get better otherwise").
+#
+# WHY: every remaining data-loss mode in that doc is a property of the SHARED INDEX, not of
+# this script's logic. A peer session dirties the checkout; prek saves those unstaged files
+# to a patch, runs the hook chain, and on restore-conflict reverts the hook's own autofix
+# ("Hook changes conflicted with the saved unstaged changes"); autostash push/pop pairs from
+# two processes interleave so the wrong entry is popped. Measured 2026-08-10: the caller's
+# uncommitted edits were destroyed THREE times in one session -- twice by this script, once
+# by quickmerge.sh -- and one recovery came back a PARTIAL, earlier version. No amount of
+# in-place hardening fixes this: the hazard is that two processes share one index.
+#
+# WHAT: stage+commit in a throwaway `git worktree` checked out at origin/<branch>, into which
+# we COPY the caller's named files. Consequences that matter:
+#   - This script no longer writes to the caller's working tree AT ALL, so it cannot destroy
+#     their edits. The original files stay exactly where the caller left them, whatever happens.
+#   - prek's patch save/restore only ever sees our own files -- no foreign unstaged WIP to
+#     conflict with, so the F6 revert-and-rerun loop cannot form.
+#   - The worktree starts AT origin/<branch>, so it is never "behind" -> the drift gate is
+#     satisfied structurally, and prettier-autostage stops declining to format (F3).
+# The worktree leaf is named `unified-trading-pm` deliberately: 13 call sites across 11
+# quality_gates scripts resolve the PM root as `<workspace>/unified-trading-pm`, so any other
+# name makes them report a path failure AS A CONTENT VIOLATION (F7). Fixing those is F7's own
+# todo; naming the leaf correctly side-steps it for this path today.
+#
+# Escape hatch: SDP_ISOLATED=0 restores the legacy shared-index behaviour. On ANY setup failure
+# we fall back to the legacy path rather than refusing to push -- degraded, never blocked.
+_SDP_ISOLATION_ROOT=""
+_sdp_cleanup_isolation() {
+  [[ -z "$_SDP_ISOLATION_ROOT" ]] && return 0
+  git worktree remove --force "$_SDP_ISOLATION_ROOT/unified-trading-pm" 2>/dev/null || true
+  git worktree prune 2>/dev/null || true
+}
+
+if [[ "${SDP_ISOLATED:-1}" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
+  _sdp_iso_parent="${TMPDIR:-/tmp}/sdp-iso-$$"
+  _sdp_iso_wt="$_sdp_iso_parent/unified-trading-pm"
+  _sdp_origin_repo="$(pwd)"
+  if git fetch -q origin "$BRANCH" 2>/dev/null &&
+    git worktree add --detach -q "$_sdp_iso_wt" "origin/$BRANCH" 2>/dev/null; then
+    _SDP_ISOLATION_ROOT="$_sdp_iso_parent"
+    trap _sdp_cleanup_isolation EXIT
+    _sdp_copy_ok=true
+    for _f in "${FILES[@]}"; do
+      if [[ ! -f "$_f" ]]; then
+        echo "  isolation: named file not present in caller tree, skipping copy: $_f" >&2
+        continue
+      fi
+      mkdir -p "$_sdp_iso_wt/$(dirname "$_f")" 2>/dev/null || true
+      cp "$_f" "$_sdp_iso_wt/$_f" || _sdp_copy_ok=false
+    done
+    if [[ "$_sdp_copy_ok" == true ]]; then
+      echo "🔒 isolated-worktree mode: committing from a private index at origin/$BRANCH"
+      echo "   (your working tree is NOT touched by this script — see F6 in"
+      echo "    plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md)"
+      cd "$_sdp_iso_wt" || exit 2
+      SDP_IN_ISOLATION=1 SDP_CALLER_REPO="$_sdp_origin_repo" \
+        bash "$_sdp_iso_wt/scripts/dev/safe-doc-push.sh" "$MSG" --files "${FILES[*]}" "$BRANCH"
+      _sdp_rc=$?
+      cd "$_sdp_origin_repo" || true
+      exit "$_sdp_rc"
+    fi
+    echo "  isolation: could not stage caller files into the worktree — falling back to shared index" >&2
+    _sdp_cleanup_isolation
+    _SDP_ISOLATION_ROOT=""
+  else
+    echo "  isolation: worktree setup unavailable — falling back to shared index" >&2
+  fi
+fi
+
 _sdp_fingerprint_named() {
   local f
   for f in "${FILES[@]}"; do
