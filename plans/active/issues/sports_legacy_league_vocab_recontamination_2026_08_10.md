@@ -125,14 +125,10 @@ Fix the writers + registry FIRST, then run the delete pass:
 
 ## Todos
 
-- [x] ✅ [DATA] P1. Fix the reference-data league-key derivation so standings/teams write under `LA_LIGA_2`, not
+- [ ] [DATA] P1. Fix the reference-data league-key derivation so standings/teams write under `LA_LIGA_2`, not
       `SEGUNDA_DIVISION` — replace `build_league_id(league_country, league_name)` in
       `instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football_reference.py:165`
-      with registry-first resolution (repo: instruments-service / unified-api-contracts). —
-      instruments-service@12cafa1b. Replaced raw build_league_id(country, name) slug with registry-first
-      get_league_by_api_football_id(fixture.league.api_football_id) when the numeric ID is populated, falling back
-      non-lossy to build_league_id(). This ensures the CanonicalLeague's api_football_id → LEAGUE_REGISTRY canonical key
-      path.
+      with registry-first resolution (repo: instruments-service / unified-api-contracts).
 - [ ] [DATA] P1. Reconcile the `SEGUNDA_DIVISION`/`LA_LIGA_2` duplicate registry entries in
       `unified-api-contracts/.../canonical/domain/sports/league_data.py` — decide the single canonical key and make
       `_is_in_canonical_write_universe` stop accepting the legacy key (repo: unified-api-contracts).
@@ -151,12 +147,3 @@ Fix the writers + registry FIRST, then run the delete pass:
   quarantined), and writer audit. Confirmed live re-contamination: `SEGUNDA_DIVISION` standings/teams written
   2026-08-06/07 dual with `LA_LIGA_2`; footystats_matches `available_at=2026-08-07`; raw-slug + registry-duplicate root
   causes above. Delete pass blocked (Part 3). Filed this doc; the plan-level P2 checkbox stays open.
-- **2026-08-10 (slot 23, data_engineering)**: Shipped todo 1 — replaced raw build_league_id(country, name) slug with
-  registry-first get_league_by_api_football_id(fixture.league.api_football_id) at instruments-service@12cafa1b. Falls
-  back non-lossy to build_league_id() when api_football_id is None.
-- **2026-08-10 (slot 25)**: Cross-reference — the plan-level P2 checkbox in
-  `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task `sports_closeout_track_x_hygiene-006`)
-  tracks the SAME migration completion as this issue's todo 4 (the gated delete pass, `-81828e9c8a94`, currently queued
-  behind the 3 P1 fix todos — all dispatched). **When todo 4's delete pass completes and a fresh census = 0 for the 3
-  mappings, ALSO flip that plan-level P2 checkbox** (`- [x]` + evidence). The `sports_closeout_track_x_hygiene-006`
-  backlog entry is parked/skipped GATED pending that completion — no separate worker needs to run the delete twice.

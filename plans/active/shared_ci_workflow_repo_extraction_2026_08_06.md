@@ -95,7 +95,6 @@ source:
   ]
 locked_by:
 locked_since:
-archive_exempt: true
 supersedes:
 superseded_by:
 ---
@@ -280,33 +279,33 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       comment lines removed); command content unchanged**:
 
       ```bash
-                      # 1. Clone the new sibling repo at Harsh's workspace root (same level as his other repo clones, NOT inside .tabs/N)
-                      cd /Users/harsh/Code/unified-trading-system-repos  # or wherever his workspace root actually is
-                      git clone git@github.com:IggyIkenna/unified-trading-ci.git
+                  # 1. Clone the new sibling repo at Harsh's workspace root (same level as his other repo clones, NOT inside .tabs/N)
+                  cd /Users/harsh/Code/unified-trading-system-repos  # or wherever his workspace root actually is
+                  git clone git@github.com:IggyIkenna/unified-trading-ci.git
 
-                      # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+                  # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
+                  #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+                  cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                      cd unified-trading-pm
-                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                      # ...etc for however many slots Harsh has
+                  # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+                  cd unified-trading-pm
+                  bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+                  bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+                  # ...etc for however many slots Harsh has
 
-                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                      for n in 1 2 3; do   # substitute his real slot numbers
-                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                      done
-                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
-                      ```
+                  # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+                  for n in 1 2 3; do   # substitute his real slot numbers
+                    d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+                    echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+                  done
+                  # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+                  # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+                  #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+                  #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+                  ```
 
-                      Evidence: paste the sanity-check output back into this plan's Progress Log once run.
+                  Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 
 - [x] 7d. ✅ [INFRA] P0. **AO central orchestrator VM (`i-0c9b283b31d6b5ca7`, `agent-orchestrator-vm-1`, 13.113.200.22)
       — actually provisioned this session**, not just documented: this laptop has standing SSH access (`~/.ssh/config`
@@ -500,15 +499,13 @@ here only for todo-count sanity, not for skipping per-repo verification.
       is now just another caller (chicken-and-egg case retired), and that `notify-slack.yml` deliberately did NOT move
       (local-only in every repo, never cross-repo). This is the plan's final documentation step — the SSOT now describes
       the finished state, not a mid-migration one. Evidence: `unified-trading-pm@55e4a6dba6`.
-- [x] ✅ 20. [INFRA] P3. _(stretch, optional)_ **Add a `.pre-commit-config.yaml` to `unified-trading-ci`** — it
-      currently only has the pre-push strict-quickmerge hook (installed at slot-provisioning time, todo 7b); it has no
-      `prek` pre-commit hook, so no commit-time gate (gitleaks, conventional-commit, trailing-whitespace) runs there the
-      way it does on every other fleet repo. Low risk given the repo's tiny, YAML-only surface, but worth closing for
+- [ ] 20. [INFRA] P3. _(stretch, optional)_ **Add a `.pre-commit-config.yaml` to `unified-trading-ci`** — it currently
+      only has the pre-push strict-quickmerge hook (installed at slot-provisioning time, todo 7b); it has no `prek`
+      pre-commit hook, so no commit-time gate (gitleaks, conventional-commit, trailing-whitespace) runs there the way it
+      does on every other fleet repo. Low risk given the repo's tiny, YAML-only surface, but worth closing for
       consistency. **EXTRACTED 2026-08-09 (round11 infra-tranche RECLASSIFY+satellite-extraction sweep)** →
       `infra_satellite_ao_dispatch_batch14_2026_08_09.md` (`status: draft`, awaiting operator review) + its gated
-      finalize twin, which will flip this checkbox once shipped. Do not duplicate-dispatch. **DONE 2026-08-10** —
-      `unified-trading-ci@ce50bc9` (batch14) added `.pre-commit-config.yaml` + `.gitleaks.toml` (11 hooks pass clean on
-      `--all-files`; gitleaks catches a staged secret; conventional-commit validates the message).
+      finalize twin, which will flip this checkbox once shipped. Do not duplicate-dispatch.
 - [x] 21. ✅ [BUG] P2. **`instruments-service` + `system-integration-tests` — RESOLVED, was host-load flakiness, not a
       real bug.**
       `tests/unit/scripts/test_build_instrument_catalogue.py::test_ftp_rollup_skips_junk_name_row_instead_of_crashing_whole_run`
@@ -720,8 +717,3 @@ here only for todo-count sanity, not for skipping per-repo verification.
   question rather than by any automated check. Wave 3 (todo 13) and Wave 4 (todo 14) both flipped done, with the
   incomplete items called out explicitly rather than glossed over. Next: Phase 5 (todos 16-17, 19-20 — migrate PM itself
   last), plus resolving todos 21-22 when their respective root causes are fixed.
-- **2026-08-10 (batch14 finalize)** — Todo 20 reconciled: shipped as `infra_satellite_ao_dispatch_batch14_2026_08_09.md`
-  → `unified-trading-ci@ce50bc9`, flipped `[x]` here. **Archival premise note**: todo 3 was already closed as MOOT on
-  2026-08-10 (plan_reconciler) — so this doc has now reached 0 open todos and is being archived per the
-  archival-discipline HARD RULE (the finalize twin's "Do NOT archive — its todo 3 stays open" premise was falsified;
-  verified before concluding).
