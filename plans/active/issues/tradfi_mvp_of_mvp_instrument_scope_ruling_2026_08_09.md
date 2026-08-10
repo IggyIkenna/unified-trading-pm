@@ -235,11 +235,6 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Progress Log
 
-- **2026-08-10**: operator ruling — VIX FUTURE (CBOE) moved from "gated until November" to in-scope, same window as
-  ES (full 2020-01-01-to-now history). Moved the line from "Out of scope" to "In scope" above. The launcher-level
-  code gap (VIX/VX venue routing existed as an unreachable stub; no Databento parent-symbol mapping) was already
-  fixed same-day (`deployment-service@5c95ac48`) — tracked launch sequence:
-  `/plans/active/issues/tradfi_vix_full_history_backfill_2026_08_10.md`.
 - 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope in
   progress — see this doc's `related` list and the per-doc scope notes added to each.
 - **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:6648d0c11c478b7d]: **KEEP-NA,
