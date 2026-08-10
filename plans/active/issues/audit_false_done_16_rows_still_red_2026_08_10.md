@@ -134,54 +134,10 @@ dispatched `sports_travel_calculator-001` 38 times). These 16 must be reopened/t
       exits 0: `false_done: 0, honest: 918, UNAUDITABLE: 11, unresolved: 1529`. Evidence:
       `scripts/orchestrator/audit_false_done.py --db <live state.db> --pm ../unified-trading-pm --ref origin/live-defi-rollout`
       exit 0.
-- [x] ✅ [BACKEND] P1. **Re-characterised the 1,529 `unresolved` rows** (up from 1,528) — agent-orchestrator (no code
-      commit, investigation-only). **100% expected**: every single plan_ref filename exists in `plans/archive/` — zero
-      broken/missing references. 546 unique archived plans; 864 rows via `archive/issues/`, 424 via `archive/2026_08/`,
-      241 via `archive/2026_07/`. Growth +516 from 1,013→1,529 is normal fleet archival activity between 2026-08-08 and
-      2026-08-10. Verdict: no NEW non-archived referents dropped — the audit's unresolved count is a trailing indicator
-      of plan archival, not a correctness defect. See Progress Log for full breakdown.
+- [ ] [BACKEND] P1. **Re-characterise the 1,528 `unresolved` rows** (up from 1,013) — confirm the growth is still
+      expected (rows whose plan_ref points at since-archived plans) and no NEW non-archived referents are being dropped.
+      **Done when**: a fresh unresolved-count breakdown by category is recorded.
 - [ ] [BACKEND] P2. **Root-cause why 2 triaged rows recurred** (`defi_cefi_venue_chain_axis_contamination-011`,
       `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025`) — the parent FLIP/verify didn't hold;
       if a reopen+re-done path re-creates a false-done, that's a mechanism bug worth its own fix, not a per-row
       accident. **Done when**: mechanism identified + fix filed (or shown to be per-row mishandling).
-
----
-
-## Progress Log
-
-### 2026-08-10 ~16:40Z — P1 unresolved characterisation (slot 10, task `audit_false_done_16_rows_still_red-29e848430531`)
-
-Re-ran the audit against the live `state.db` (306MB, root clone at
-`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`) reading plans at
-`origin/live-defi-rollout` @ `f21d582f28`. **Audit exits 0** (false_done: 0 — the P0 reopen held).
-
-**Unresolved count: 1,529** (up from 1,528 in the body report at ~16:20Z; 1 more row tipped into unresolved in the
-interim — normal: the DB is live and the fleet keeps dispatching/archiving).
-
-**Categorisation methodology**: for each of the 1,529 unresolved rows, extracted the filename from `plan_ref`, then
-looked it up against a full `git ls-tree -r origin/live-defi-rollout plans/archive/` index. Every single filename
-resolved — zero broken references.
-
-**Results**:
-
-| Category                 | Rows      | Unique plans |
-| ------------------------ | --------- | ------------ |
-| `plans/archive/issues/`  | 864       | 287          |
-| `plans/archive/2026_08/` | 424       | 185          |
-| `plans/archive/2026_07/` | 241       | 74           |
-| **Total**                | **1,529** | **546**      |
-
-**Plan type breakdown** (unique plans): issue docs 331, satellite dispatch batches 111, other plans 54, finalize plans
-31, closeout plans 11, consolidated plans 8. Top plan by row count: `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (29
-rows, archived to `plans/archive/2026_08/`).
-
-**Growth analysis** (+516 from 1,013 → 1,529 between 2026-08-08 and 2026-08-10): entirely explained by normal fleet
-archival activity. Plans that were still in `plans/active/` during the parent doc's audit have since been completed and
-archived — each archived plan's done rows become "unresolved" because `_plan_ref_candidates()` only searches
-`plans/active/` variants, not `plans/archive/` subdirectories. This is expected behaviour: the audit's purpose is
-finding actively LYING rows (checkbox still `- [ ]` but status=done), not rows pointing to completed/archived work.
-
-**Verdict**: the unresolved count is a trailing indicator of plan archival velocity, not a correctness defect. No NEW
-non-archived referents are being dropped. The `_plan_ref_candidates` function could be extended to also search
-`plans/archive/` (so genuinely-archived rows become "honest" rather than "unresolved"), but that's a cosmetic
-improvement — it wouldn't change the audit's core signal (false_done count).

@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, defi, execution]
 related:
   [
-    /codex/09-strategy/architecture-v2/families/market-making.md,
+    market-making.md,
     /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
     /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
     ../archetypes/vol-trading-options.md,
@@ -204,66 +204,6 @@ entry/exit logic and risk gates.
 - **Sharpe**: wide range; well-executed vol strategies 1.5-3.0
 - **Kill switches**: vol spike > N × regime, position greeks breach, IV > configured ceiling (indicates regime
   disruption)
-
-## Latency Requirements
-
-**Category: `Medium`** — seconds-scale decision cycle, live mode only (batch mode has no latency requirements; it
-replays historical data at compute speed). Baseline: the archived
-[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
-table — SUPERSEDED as a doc, but its **Volatility Arb** row (Tick-to-Signal <10 s / Signal-to-Order <5 s / Total E2E <15
-s, Category **Medium**) is the operative baseline and is **confirmed, not corrected**, here. **Derivation reasoning**
-(per the 2026-08-10 audit rubric at
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
-the operator's ms-realm ruling did NOT name vol-trading, so the family inherits the archived doc's closest analog —
-Volatility Arb at Medium. The family's own content does not contradict that at the decision level: the dominant
-archetypes (IV-vs-RV, skew, term-structure, surface-residual dislocations) fire off surface-fitter + RV-computer outputs
-that update on a seconds-scale cadence, not a tick-to-signal race. The doc DOES indicate intra-family variance at the
-_execution_ level — `VOL_MARKET_MAKING` (two-sided options quoting) and `VOL_0DTE_GAMMA_SCALPING` (frequent intraday
-delta-hedge) sit closer to the market-making Low profile — but that is the inter-leg execution gap, not the decision
-budget (see below).
-
-| Segment         | Budget     | Notes                                                                                                                                                               |
-| --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tick-to-Signal  | < 10 s     | IV surface fit + realized-vol compute + dislocation detector → signal. Surface updates on quote/tick flow but the dislocation-threshold decision tolerates seconds. |
-| Signal-to-Order | < 5 s      | StrategyInstruction → routing → algo → venue submit (option order construction + optional underlying hedge instruction).                                            |
-| Order-to-Fill   | Venue-dep. | Deribit 15–40 ms order submission / 10–25 ms fill; CBOE FIX 2–8 ms (archived venue-baselines table). Not a budget we control.                                       |
-| **Total E2E**   | **< 15 s** | Baseline: archived Volatility Arb row.                                                                                                                              |
-
-**Deployment implication:** `Medium` ⇒ the `distributed` deployment profile per the `/configs/runtime-topology.yaml`
-`deployment_profiles` category mapping, referencing
-[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
-§ 6. The current `topology_requirements` row for `VOL_TRADING` (execution `isolated`, strategy `shared OK`, co-location
-`no`, min SLA `standard`) is **consistent** with a distributed profile — unlike the `Low` families, this is not a
-discrepancy the derivation todo needs to resolve. It SHOULD, however, note the intra-family fast subset
-(`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`): those two behave like market-making and may warrant a
-co-located/`premium` carve-out when instantiated, which the
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
-deployment-derivation todo 8 should call out.
-
-### Decision latency vs. inter-leg execution gap
-
-The <15 s Medium figures are the **decision budget**. The separate binding constraint for the delta-hedged archetypes is
-the **inter-leg execution gap** (2026-08-10 operator ruling: "we are executing two legs of a trade... how are we
-ensuring the lag leg followed by the lead leg is ms timing"):
-
-- **Delta-hedged option positions** (the family baseline): the option leg is the lead leg; the underlying delta-hedge
-  (spot/perp/future) is the lag leg. The hedge must follow the option fill at ms timing — an unhedged delta left for
-  seconds during a vol spike is exactly the gamma/pin risk the `VOL_0DTE_*` kill switches are built to contain. This
-  makes the _inter-leg_ requirement for the delta-hedged majority ms-realm even though the _decision_ budget is
-  seconds-scale — same structure as carry-and-yield (slow decision, fast legs), the difference being vol-trading's
-  decision cadence is faster than carry's rates-driven cycle.
-- **`VOL_MARKET_MAKING`**: two-sided options quoting + inventory delta-hedge — effectively market-making with a vol
-  edge; inherits the MM family's <100 ms decision and ms-realm hedge timing
-  ([`/codex/09-strategy/architecture-v2/families/market-making.md`](/codex/09-strategy/architecture-v2/families/market-making.md)).
-- **`VOL_0DTE_GAMMA_SCALPING`**: captures realised gamma by frequent intraday delta-hedging — the hedge cadence IS the
-  strategy; its inter-leg timing is the tightest in the family (sub-second re-hedge target, ms-realm gap).
-- **`VOL_CROSS_ASSET_SPREAD` / `VOL_DISPERSION`**: multi-leg expressions (two correlated underliers / index-vs-
-  components) — the legs are paired for correlation capture; inter-leg timing matters when rebalancing, though less
-  tightly than a hedge-follows-fill.
-
-So "Medium" for this family means a seconds-scale **decision** budget with an **ms-realm inter-leg execution** target
-for the delta-hedged and MM-like archetypes — the derivation todo should keep the family at `distributed` while flagging
-the fast subset for a potential `co_located_vm` carve-out.
 
 ## UI dashboard
 

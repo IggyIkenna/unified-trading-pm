@@ -612,28 +612,3 @@ transcript available in that session's Progress Log entry on
   (VM `NOT_FOUND` + report row-count growth across two time points), and only once terminal, fold the final report's
   `contamination_codes`-positive rows (expected: the 0 already observed, plus whatever the un-scanned
   2023-05-06→2026-08-16 range surfaces) into the count and flip todo 3.
-
-- **2026-08-10T16:35Z (slot 13, data_engineering, dispatched on todo 1 — "enumerate instruments-store-sports-prd
-  scope")**: repeated the established check (VM `describe` + report row-count growth, bounded single-object reads only —
-  no corpus walk).
-
-  **Census still genuinely running, healthy, ~12-20h out**:
-  `gcloud compute instances describe sports-schema-census-instruments-store-20260809-224053` → still `RUNNING`.
-  Downloaded + analyzed the current checkpoint report (10.5MB, **909,500 rows**, up from 882,500 at slot-17's 16:05Z
-  check — monotonic growth, not a stall): covers `day` `2019-01-01`→`2023-06-05` (1097 distinct days) across 21 entity
-  values incl. `fixtures` (27,495 objects). **`contamination_codes` non-empty on 0 of 909,500 rows** in the entire
-  scanned range. `schema_failure_codes` (760,443 rows) decomposes to the documented all-NaN-column round-trip artifact
-  (`wrong_dtype` / `missing_column` variants — 83.6% of rows, same proportion as every prior check) plus the ONE known
-  `404 GET …` READ_ERROR phantom already root-caused by slot-17 (`day=2022-06-26/entity=standings`, list-vs-read race /
-  relocated path, not contamination). **0 rows at `day>=2026-04-14`** — the known-contaminated partition is still ~2.9
-  years ahead of the frontier. Rate: ~18h elapsed (launch `2026-08-09T22:41:01Z`) for 1097 days ⇒ ~60 distinct days/hr ⇒
-  order-of-magnitude ~19h more to reach present, consistent with slot-17's 12-20h estimate.
-
-  **Todo 1 (instruments-store half) stays OPEN — genuinely gated**: the done-when ("a report exists listing every
-  schema-mismatched object…walk must reach `NOT_FOUND` on `describe`") cannot be evaluated until the walk reaches
-  terminal self-delete and its FINAL report is folded into the per-entity/day/pipeline_mode count. Nothing new to
-  remediate: `contamination_codes` is empty on every row so far. Not busy-waiting on a ~multi-hour background walk —
-  skipping back to the queue (`reason_code=GATED`, `estimated_unblock_minutes=180`). **Next dispatch**: repeat this
-  exact check (VM `NOT_FOUND` + report growth across two time points); once terminal, fold the final report's
-  `contamination_codes`-positive rows (expected: the 0 already observed, plus whatever the un-scanned
-  2023-06-05→2026-08-16 range surfaces) into the per-entity/day/pipeline_mode count and flip the todo-1 checkbox.

@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [strategy, event-driven, tradfi, cefi, ml, execution]
 related:
   [
-    /codex/09-strategy/architecture-v2/families/ml-directional.md,
+    ml-directional.md,
     /codex/09-strategy/architecture-v2/families/rules-directional.md,
     ../archetypes/event-driven.md,
     ../cross-cutting/execution-policies.md,
@@ -161,54 +161,6 @@ Cross-asset instances (trade multiple markets on one event) are common.
 - **Sharpe**: event-specific; can be high on a per-event basis but events are infrequent
 - **Kill switches**: event release delay > N minutes, realized vol post-event > pre-event × 5, unexpected simultaneous
   event
-
-## Latency Requirements
-
-**Category: `Medium`** — seconds-scale decision cycle, live mode only (batch mode has no latency requirements; it
-replays historical data at compute speed). Baseline: the archived
-[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
-table — SUPERSEDED as a doc, but its **Momentum** row (Tick-to-Signal <5 s / Signal-to-Order <2 s / Order-to-Fill
-venue-dep. / Total E2E <7 s, Category **Medium**) is the closest analog and is used as the baseline here. **Derivation
-reasoning** (per the 2026-08-10 audit rubric at
-[`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)):
-the operator's ms-realm ruling did NOT name event-driven, and the archived doc has no direct Event-Driven row, so the
-category is derived from the closest analog. Momentum at Medium is that analog: a directional, time-bounded reaction
-strategy whose edge is capturing a move after a signal, not racing ticks. The doc's own content independently confirms
-Medium rather than Low: the strategy **pre-positions in the entry window before the event** (so tick-to-signal on the
-entry is not a sub-second race — the position is already on when the release ticks), and the reaction is **time-bounded
-to minutes** (30-60 min macro window; longer for earnings). The surprise→direction→adjust path inside the window is the
-seconds-scale decision: release tick → surprise computer → direction model → adjusted order, all comfortably inside the
-minutes-scale window the market's reaction occupies. It is not High either: the doc's Required subscriptions call for
-`fast-urgency + market-order preference during event window`, so the execution leg is faster than a batch-cadence High
-family — but that fast-urgency is an execution-policy trait, not a deployment-driving sub-second decision race.
-
-| Segment         | Budget     | Notes                                                                                                                                                                                                                                                            |
-| --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tick-to-Signal  | < 5 s      | Release tick → realized value → surprise computer → direction model → signal. Entry is already pre-positioned; this segment is the in-window adjust/flip decision. The 5 s budget covers the surprise computation + direction-model inference on a single event. |
-| Signal-to-Order | < 2 s      | StrategyInstruction → routing → venue submit with `fast-urgency + market-order preference` (doc's Required subscriptions). Order placement inside the event window must beat the market's reaction, which is seconds-scale.                                      |
-| Order-to-Fill   | Venue-dep. | CeFi CEX 20–50 ms order submission / 10–30 ms fill notification; CME FIX 1–5 ms; LMAX 1–3 ms (archived venue-baselines table). Not a budget we control.                                                                                                          |
-| **Total E2E**   | **< 7 s**  | Baseline: archived Momentum row. Well inside the minutes-scale reaction window; the market move on a macro release takes tens of seconds to minutes, so a 7 s decision-and-order path captures the trade without chasing.                                        |
-
-**Deployment implication:** `Medium` ⇒ the `distributed` deployment profile per the `/configs/runtime-topology.yaml`
-`deployment_profiles` category mapping, referencing
-[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
-§ 6. There is currently **no `EVENT_DRIVEN` row in the § 6 `topology_requirements` table** — the paired
-deployment-profile derivation todo
-([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
-todo 8) should add one consistent with `distributed`: execution `isolated`, strategy `shared OK`, co-location `no`, min
-SLA `standard` (matching the other Medium/Low-but-not-co-located rows such as `ARBITRAGE_STRUCTURAL`). Nothing in this
-family needs co-located execution+strategy on the same VM.
-
-### Decision latency vs. inter-leg execution gap
-
-Event-driven can express multi-leg positions (Position structure: "long BTC + short equity index on dovish FOMC — paired
-for expected correlation"), but the legs are **pre-positioned in the entry window on a seconds-to-minutes cadence**, not
-ms-timed lead/lag execution. The inter-leg gap for this family is therefore **NOT** ms-realm in the 2026-08-10 operator
-ruling's sense (that ruling targets families whose edge is captured in the gap between two legs of a trade — arbitrage,
-basis, MM hedge, directional-with-hedge). Here the edge is the surprise-reaction move itself, and both legs are on
-before the event; a paired position is re-balanced on the event reaction at the same seconds-scale decision cadence. The
-binding constraint is **event-release freshness** (how fast the realized value reaches the surprise computer) plus
-**fast-urgency order placement during the window** — not a sub-second inter-leg gap.
 
 ## UI dashboard
 

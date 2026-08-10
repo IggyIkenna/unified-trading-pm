@@ -102,47 +102,30 @@ to quantify and quarantine ONE account, not to feed the main calibration.
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
-      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
+      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
       `overage_status`, `account_status` on a cadence at least twice per 5-hour window, keyed
       `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
       when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
-      sampler survives an orchestrator restart. — agent-orchestrator@ce3389f (account_usage_history table + snapshot on
-      every UsagePoller tick) on origin. **Verified live 2026-08-10 (slot 19)**: `account_usage_history` exists on the
-      live state.db with all 9 required columns; 6 distinct `sampled_at` per account across all 8 accounts (sampled
-      14:16→16:01 UTC, ~20-min cadence, ≥2x/5h-window floor met with margin); 36 rows with both `weekly_pct` +
-      `five_hour_pct` non-null (e.g. sub-a weekly_pct=100, five_hour_pct=76). Poller started in `server.py` startup
-      (env-gated by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`, default 30min → ~10x/5h-window) → survives orchestrator
-      restart. See Progress Log.
-- [x] ✅ [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves
-      to the account that owned its slot at that timestamp.** Current attribution has no correct path:
+      sampler survives an orchestrator restart.
+- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
+      the account that owned its slot at that timestamp.** Current attribution has no correct path:
       `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
       earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
       ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
-      and the resolver returns the same account for two sessions of one agent split by a compaction. —
-      agent-orchestrator@5516a0a (server/slot_account_attribution.py: build_account_intervals + resolve_turn_account +
-      resolve_transcript_account; wired into deepseek_usage.scan_account_transcripts via build_account_intervals).
-      **Verified 2026-08-10 (slot 19)**: 21/21 tests pass incl. `test_post_compaction_same_account_from_db`
-      (pre-compaction turn resolves to correct account despite claude_session_id now pointing at post-compaction
-      session; both pre+post turns agree) and `test_two_intervals_same_agent_different_sessions` (same account across a
-      compaction split). See Progress Log.
-- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+      and the resolver returns the same account for two sessions of one agent split by a compaction.
+- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
       second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count. — agent-orchestrator@ff2f1c5 (server/deepseek_usage.py: `scan_usage_across_transcripts` — global
-      `message.id` dedup across files, first-occurrence-wins; wired into `scan_account_transcripts` which clips to the
-      account window). **Verified 2026-08-10 (slot 19)**:
-      `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` (same message.id in two files → one counted
-      turn) and `test_scan_account_transcripts_dedups_and_clips_to_the_window` both pass; 2/2 dedup tests green. See
-      Progress Log.
+      count.
 - [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
       session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
       per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
@@ -704,59 +687,3 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
-
-### 2026-08-10 — Todo 1 (meter-history sampler) complete + verified live (slot 19)
-
-Todo 1's code was already shipped (agent-orchestrator@ce3389f, "account_usage_history table and snapshot on every
-UsagePoller tick") but the checkbox was never flipped. Verified live against `data/state/state.db` on the orchestrator
-VM (read-only, `mode=ro`):
-
-- **Table exists**: `account_usage_history` present with all 9 required columns — `account_id`, `sampled_at` (composite
-  PK), `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
-  `overage_status`, `account_status`.
-- **≥2 distinct sampled_at per active account**: 6 distinct timestamps per account across all 8 accounts (sampled
-  14:16:22→16:01:21 UTC, ~20-min cadence — the poller's fast-reprobe loop; comfortably above the ≥2x-per-5h-window
-  floor, and the 30-min default interval is ~10x per window).
-- **Real meter values**: 36 rows with both `weekly_pct` and `five_hour_pct` non-null — e.g. sub-a-ikenna
-  `weekly_pct=100, five_hour_pct=76, representative_claim=five_hour, overage_status=rejected, account_status=disabled`.
-- **Survives restart**: `UsagePoller.start()` is wired in `server.py` startup (env-gated by
-  `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`), so the snapshot loop comes back on every orchestrator restart.
-- DeepSeek accounts (`deepseek-v4-pro`/`flash`) are snapshotted too (6 rows each), so the history table is provider-
-  agnostic.
-
-Done-when fully met: table on live VM ✓, ≥2 distinct sampled_at per account ✓, restart-survival wiring ✓.
-
-### 2026-08-10 — Todo 2 (slot-to-account-over-time attribution map) complete + verified (slot 19)
-
-Todo 2's code was already shipped (agent-orchestrator@5516a0a, `server/slot_account_attribution.py`) but the checkbox
-was never flipped. Verified:
-
-- **Module**: `build_account_intervals(session)` derives `(account_id, session_name, registered_at, finished_at)`
-  intervals from every `AgentRow` with a known `account_id` + ≥1 session name (both `tmux_session` and
-  `last_tmux_session` — the latter survives archival so reaped-stale agents still attribute).
-  `resolve_turn_account(ts, session_name, intervals)` assigns a turn by its own timestamp; `resolve_transcript_account`
-  is the caller wrapper (probes the earliest turn). `deepseek_usage.scan_account_transcripts` consumes
-  `build_account_intervals` for the account-window walker.
-- **Done-when both met**: `test_post_compaction_same_account_from_db` proves a pre-compaction turn (whose
-  `claude_session_id` is no longer on the AgentRow) still attributes to the correct account AND both pre/post-compaction
-  turns resolve to the same account; `test_two_intervals_same_agent_different_sessions` proves the same account across a
-  compaction split. 21/21 tests in `test_slot_account_attribution.py` + `test_deepseek_account_scoped_attribution.py`
-  pass.
-- Consumers wired: `scan_account_transcripts` uses the interval map (todo 1 of this plan), so the calibration walker now
-  resolves post-compaction turns correctly.
-
-### 2026-08-10 — Todo 3 (global message.id-deduped transcript walker) complete + verified (slot 19)
-
-Todo 3's code was already shipped (agent-orchestrator@ff2f1c5,
-`server/deepseek_usage.py::scan_usage_across_transcripts`) but the checkbox was never flipped. Verified:
-
-- **Walker**: `scan_usage_across_transcripts(paths)` walks MULTIPLE transcript files with GLOBAL `message.id` dedup —
-  first occurrence wins (deterministic: paths in input order, then line order). This is the account-level counterpart to
-  `scan_session_usage`'s within-file dedup, and it survives resume/replay copies (the CLI's local line `uuid` is
-  regenerated on replay; `message.id` is the stable per-API-call key). Wired into `scan_account_transcripts`, which
-  clips the deduped result to the account window.
-- **Done-when both met**: `test_scan_usage_across_transcripts_counts_a_duplicate_turn_once` proves the same `message.id`
-  in two files yields ONE counted turn; `test_scan_account_transcripts_dedups_and_clips_to_the_window` proves the walker
-  dedups AND clips to a known window. Both pass (2/2 dedup tests green).
-- The ~47% duplicate-turn problem this solves (588,821 dups vs 649,255 real) is the exact magnitude
-  `measure-claude-usage-value.py`'s docstring recorded — now handled at the walker level for the calibration path.

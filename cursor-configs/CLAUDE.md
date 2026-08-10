@@ -177,8 +177,7 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
     are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
     `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
-  plans, memory). **Escalating a question**: ≥2 OPTIONS, your pick marked `[WORKER REC]`, never open-ended; ≤1 min
-  read-only investigation first. **Deps**: `uv pip install`, never `pip`; never re-lock.
+  plans, memory).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
   status/supersedes. Context economy: scope reads + Bash output (`grep -c`/`tail -5`, not full dumps), terse replies.
@@ -405,18 +404,19 @@ architecture (L0–L4)".
 ## System map + workspace configs
 
 Repo map: events→UTL · schemas→UAC · cloud→unified-cloud-interface · market data→MTDS · execution→execution-service ·
-reference data→instruments-service (URDI is live-internal; no NEW URDI refs in docs) · UI→`unified-trading-system-ui`
-(incl. DART) + `deployment-ui` (devops + launch consoles; `user-management-ui` ARCHIVED) ·
-orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single deploy/launch+subscriptions backend for
-both UIs. **Architecture**: **`planning` is the ONLY VM** (EIP 13.113.200.22) with N slot workers, role-based dispatch.
-Workspace configs canonical in `unified-trading-pm/cursor-configs/` (setup
-`scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright). Claude Code settings inherited by
-symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` → `cursor-configs/settings.json` (don't commit
-personal `model`/`theme` drift in it) → `/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab
-context-checkpoint automation** (tmux `send-keys`-forced `/pre-compact` then `/compact`, mirrors
-`agent-orchestrator/server/context_lifecycle.py` at personal scale; requires a terminal-hosted `claude` CLI session —
-the Cursor/VS Code extension chat panel isn't tmux-reachable, its built-in terminal tab is) →
-`/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
+reference data→instruments-service (URDI is a live internal module — "phantom" label retired 2026-07-12; no NEW URDI
+refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui` (devops + launch consoles;
+`user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
+deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
+13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
+**`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
+`unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
+Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
+`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
+`/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
+`send-keys`-forced `/pre-compact` then `/compact`, mirrors `agent-orchestrator/server/context_lifecycle.py` at personal
+scale; requires a terminal-hosted `claude` CLI session — the Cursor/VS Code extension chat panel isn't tmux-reachable,
+its built-in terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (`regen_backlog_from_plan.py`, never

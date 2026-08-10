@@ -298,20 +298,6 @@ the VM-scale run:
   gracefully; all handler code already uses `getattr(args, "asset_group", <fallback>)`. Updated test
   `test_adds_required_args` to expect `None`. Shipped at ml-service@23006b4.
 
-- 2026-08-10 (slot-20): **5th trainer-VM attempt launched — post-P3-CatBoost-NaN-fix.** The P3 NaN-handling fix
-  (`ml-service@9b68494b76`, dropped per-outcome NaN CLV target rows before the CatBoost fit) is on
-  `origin/live-defi-rollout`, so the perf-delta run is unblocked. Refreshed the ml-training code tarball
-  (`create-code-tarballs.sh --ml-training`; `ml-service-code.manifest.json` now pins ml-service@17ae3c8, the merge
-  carrying 9b68494). Launched all 5 via `launch-sports-ensemble-train-vm.sh` at 16:34Z:
-  `ml-train-sports-model-2{a,b,c,d,e}-20260810-1634xx` (model_2a/2b/2c/2d/2e, `--mode batch --asset-group SPORTS`,
-  n2-highmem-16, asia-northeast1-c, `VM_SHUTDOWN_ON_COMPLETION=true`). All 5 confirmed PAST BOOTSTRAP (verified
-  directly, not assumed): local `run.log` shows `ServiceRuntime: op=sports-ensemble-train mode=batch env=prod data=real`
-  - `DEPLOYMENT_STARTED` for model_2a (SSH-verified local `/tmp/vm-exec-*.log`; GCS run.log lags ~60-90s behind the
-    uploader). Watchdog armed (6.5h cap, AO-heartbeat piggyback) to detect terminal state; the
-    rmse/mae/r2-per-outcome-per-horizon performance delta will be reported into this doc's todo 2 +
-    `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` +
-    `sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md` once the runs land.
-
 ## Deferred work after 2026-08-10
 
 | Item                                                                                             | State / why deferred                                                                                                | Blocked on                                                                                                        |

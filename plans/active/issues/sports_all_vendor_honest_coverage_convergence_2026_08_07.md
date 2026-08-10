@@ -851,10 +851,3 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   DP-VM-003) — landed ~09:29Z by another actor; no action needed this dispatch. Silent-hang occ. count: 12 (hang-doc
   Timeline). Frontier ≈2020-08-30, NOT past the 2021-06-07 milestone → gap census NOT re-run (300/2257 unchanged per
   todo guidance). No code/VM changes this dispatch.
-- **2026-08-10T~16:33Z (slot 9, `sports_all_vendor_honest_coverage_convergence-9e96b5aa58cd`)**: Odds babysit dispatch —
-  fleet: single live instance `mtds-backfill-odds-smallchunk14-20260809` RUNNING (created 09:29Z, ~7h uptime — now the
-  longest-lived instance in the campaign, exceeding smallchunk5's ~5h27m). Verified genuine (not just RUNNING): run.log
-  updated 16:33:07Z (currently processing chunk 50/2171 league=MLS date=2020-10-17, skip-fasting through covered dates),
-  PROGRESS.json last_completed=2020-10-16 monotonic (frontier advanced from 2020-08-30 at the prior dispatch), heartbeat
-  blob 16:33:35Z. Silent-hang occ. count: 12 (unchanged, no 13th; hang-doc Timeline). Frontier ≈2020-10-17, NOT past the
-  2021-06-07 milestone → gap census NOT re-run (300/2257 unchanged per todo guidance). No code/VM changes this dispatch.

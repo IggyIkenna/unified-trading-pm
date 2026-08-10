@@ -579,12 +579,3 @@ spelling variant survives, which is the entire point of the panel". It does not.
   rather than trusting the doc alone (repo git log for the deletion commit, GCS `ls` for the 4 historical objects, grep
   for the CLI operation registration and the retired MDPS adapter's absence). No new code needed; this is the umbrella
   checkbox's closure now that every sub-unit is genuinely done. See the todo line above for the full verification trail.
-
-- **2026-08-10 (slot 20)** — ML § T-2h/T-6h MODEL-horizons todo: 5th trainer-VM attempt launched for the retrain half.
-  The P3 CatBoost-NaN fix (`ml-service@9b68494b76`) is on origin, unblocking the measured-perf-delta half. Tarball
-  refreshed to ml-service@17ae3c8 (carries the fix); 5 VMs launched 16:34Z
-  (`ml-train-sports-model-2{a,b,c,d,e}-20260810-1634xx`), all past bootstrap into the real `sports-ensemble-train` op.
-  Coverage delta already measured (0.0% → 5.7%/17.2%/15.6% non-null CLV targets); performance delta
-  (rmse/mae/r2-per-outcome-per-horizon) pending the runs' terminal state — will be reported here + the two issue docs.
-  Checkbox stays unflipped until that lands. Full chain tracking:
-  `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md` todo 2.

@@ -1930,29 +1930,8 @@ if [ -f "scripts/quality-gates.sh" ]; then
       sleep "$_QM_BACKOFF"
       _qm_stage_0_4_not_behind_gate
       echo "[$REPO_NAME] re-gating (regenerating the Pass-1 sentinel for the current tree)..."
-      # Capture the re-gate's OWN output instead of inferring from its exit code. Discarding it
-      # is how this branch came to assert "a REAL failure" for a run whose only ❌ was the
-      # wall-clock budget: measured 2026-08-10, 602s billable against a 600s cap under 11
-      # concurrent quickmerges, with every content check green. Telling an agent to go fix
-      # content that was never broken costs a full extra gate and worsens the contention that
-      # caused it. Same shape as the ff-only branch that blamed "working-tree overlap" for
-      # unmerged index entries -- a confident verdict its evidence did not support.
-      _qm_regate_log="${TMPDIR:-/tmp}/qm-regate-$$-${_QM_SENTINEL_ATTEMPT}.log"
-      _qm_regate_rc=0
-      { bash scripts/quality-gates.sh --no-fix $SKIP_CODEX 2>&1 | tee "$_qm_regate_log"; _qm_regate_rc=${PIPESTATUS[0]}; } || _qm_regate_rc=$?
-      if [ "$_qm_regate_rc" -ne 0 ]; then
-        # ❌ lines that are NOT the duration budget. Zero of them => no CONTENT check failed, so
-        # this is a load verdict and must not be reported as a content one.
-        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null | grep '❌' | grep -vc 'must complete in <' || true)
-        if [ "${_qm_other_fail:-1}" -eq 0 ]; then
-          echo "[$REPO_NAME] ⏳ Re-gate hit ONLY the duration budget — every content check passed."
-          echo "[$REPO_NAME]    This is HOST CONTENTION, not your change. Do NOT go looking for a content bug."
-          echo "[$REPO_NAME]    Re-run when the host is quieter, or with IGNORE_TIMEOUT=true if the content"
-          echo "[$REPO_NAME]    already gated green (codex/06-coding-standards/quality-gates.md)."
-          exit 1
-        fi
+      if ! bash scripts/quality-gates.sh --no-fix $SKIP_CODEX; then
         echo "[$REPO_NAME] ❌ Re-gate FAILED against the current tree — this is a REAL failure, not a lost race."
-        sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null | grep '❌' | grep -v 'must complete in <' | head -5 | sed 's/^/[re-gate] /'
         exit 1
       fi
     done
