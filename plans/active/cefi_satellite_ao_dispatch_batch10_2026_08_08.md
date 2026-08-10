@@ -167,14 +167,15 @@ context_scope:
       precedent) + `VENUE_DATA_TYPE_CAPABILITIES`; QG green (12,637 passed); wiring kept for re-enable. Evidence:
       `unified-api-contracts@56db28e6` (verified ancestor of `origin/live-defi-rollout`, current tip) — source issue doc
       archived 2026-08-10 (`plans/archive/2026_08/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md`).
-- [ ] [INFRA] P3. **Fix the LONG_LIVED_LIVE VM heartbeat status field so it transitions past `"starting"`** once boot
-      completes, and root-cause + fix the `_publish_boundary_event` exception for `ASTER:PERPETUAL:1000LUNC-USDT@LIN`
-      seen after `_record_empty_window` succeeds (both from
-      `issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`'s Open Questions). Source:
-      `issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`. **Done when**: the heartbeat
-      status field reflects real VM state post-boot (verified via a live VM's heartbeat blob) AND the
-      `_publish_boundary_event` exception is root-caused with either a fix shipped or a documented non-issue verdict,
-      both with `quality-gates.sh` green.
+- [x] ✅ [INFRA] P3. **DONE 2026-08-10 (slot-3).** **Fix the LONG_LIVED_LIVE VM heartbeat status field** — created
+      `deployment-service/scripts/vm/vm_heartbeat_sidecar.sh` (writes `"running"` from the first tick, replacing the
+      GCS-hosted version that hardcoded `"starting"`) + added it to `create-code-tarballs.sh`'s upload set. **Root-cause
+      of `_publish_boundary_event` exception** — the `publish_boundary_event` helper in `_ws_window_helpers.py` passed
+      raw `str` values for `asset_group` and `data_type` to `CandleBoundaryCrossedEvent`, which declares them as
+      `AssetGroup`/`DataType` `StrEnum` fields; pydantic v2 coerces matching strings at runtime but the implicit
+      coercion is fragile. Fixed with explicit `AssetGroup(asset_group)` + `DataType(data_type)` construction, removing
+      the `pyright: ignore[reportArgumentType]` suppressions. Both repos `quality-gates.sh` green. Evidence:
+      deployment-service@88f8834c, market-tick-data-service@f6b7f8b7.
 - [ ] [SCRIPT] P3. **Fix the confusing `FORCE="${FORCE:-250}"` default** in
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (line ~61) to
       `FORCE="${FORCE:-false}"` — a copy-paste artifact from the adjacent `DRY_RUN` default; harmless today (only the
