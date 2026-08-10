@@ -43,43 +43,251 @@ this run. Grace docs are still read by hunters as context; findings touching the
 
 ## Flips verified
 
-_(pending STEP 5)_
+- `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` todo 5 (archival ritual) — `[ ]` → `[x]`, verified: file
+  confirmed at `plans/archive/2026_08/`, corpus-wide referrer grep found 0 live dangling referrers (2 hits both inside
+  already-archived historical docs), `check_finalize_plan_coverage.py` run live (0 violations, pair not named). This
+  made the doc itself fully-done+unlocked+non-grace, so it was auto-archived same turn (6-step ritual) —
+  `unified-trading-pm@80b01dea70`+`@eab8099636` (the frontmatter/banner half of the archival was dropped by a
+  prek-patch-restore race on the first commit attempt — see `## Progress Log` for the catch-and-fix).
 
 ## Contradictions
 
-_(pending STEP 4)_
+**[P0] Confirmed, GRACE (routed — `BLK-54c460e6`, recommendation A)**:
+`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md` todo 4 + Progress Log claim
+(past tense, specific verification claims) that the full 6-step archival ritual already completed for
+`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`. Independently verified FALSE by 2 hunters + this
+agent directly against `origin/live-defi-rollout`: source doc still `plans/active/issues/`, `status: open`, no ARCHIVED
+banner, `resolved_by:` empty; the cited commit (`17c17a1f2a`) touched only the finalize doc (23/-2, no file move) and
+its own message says "archival ritual next commit." Both docs grace-protected this run.
+
+**[P0] Confirmed, GRACE (routed — `BLK-f8212d83`, recommendation A)**: systemic `status: draft`/body-still-says-draft
+template drift across 8 `ao_satellite_ao_dispatch_batchN` docs (batch9 `[X]`/`[X]`, batch10, batch11 `[X]`, batch12,
+batch13, batch14, batch15, batch16 — batch17/18 don't have it). Confirmed 2 instances (`[X]` above) had real operational
+confusion: batch9's finalize doc's own Progress Log records the batch's sole todo already done despite the body still
+claiming draft; batch11's finalize doc independently found via a live `GET /api/backlog` check that batch11 genuinely
+was draft (0 backlog rows) at check-time, yet frontmatter now reads `active` with no Progress Log record of the actual
+approval. Likely root cause: the per-batch template's boilerplate blockquote never gets deleted when the operator
+manually approves (flips frontmatter draft→active) — a copy-paste residue, not a live authority dispute. All 8 docs
+grace-protected this run.
+
+**[P1] Confirmed, GRACE**: `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md:172-175` treats ANY edit to
+`server/prompts.py` as inherently local-only/human-gated (citing a 2026-07-31 operator directive, repeated across 6+
+na-eligibility-audit passes through 08-10) vs `ao_satellite_ao_dispatch_batch9_2026_08_08.md:178-183` — an AO-dispatched
+(`assigned_vm: planning`) worker directly edited `_ONE_SHOT_ESCALATION_ROLES` in that exact file via normal AO dispatch,
+no extra gating, `agent-orchestrator@5353b6b`. Either the 07-31 directive's real scope is narrower than `ao_boot_stub`'s
+framing (over-broadly excluding it from AO dispatch across many audit rounds), or batch9's edit was out-of-process.
+Needs reading `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` (outside this run's read
+batches) to fully resolve. Filed as a durable todo (not asked live — investigation, not an authority choice).
+
+**[P1] Confirmed, GRACE**: `plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md:22-23` `assigned_vm: NA` paired
+with `execution_scope: orchestrator-agent` — self-contradictory (NA should pair with `local-only`). Exact same
+anti-pattern independently caught+fixed in a sibling doc in the same batch:
+`worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md:34-37` ("execution_scope: local-only #
+corrected 2026-08-02 ... was orchestrator-agent, contradicting assigned_vm: NA"). Six separate na-eligibility-audit
+passes on `orchestrator_vm_e2e_hardening` (07-30→08-10) all re-verified its open todos but none caught this frontmatter
+self-contradiction despite the corrected precedent existing right next to it. Authoritative side: `assigned_vm: NA`
+(doc's own body treats it as NA throughout). Grace-protected — filed as a mechanical fix for the next non-grace pass
+(not asked live — the correct value is unambiguous from the sibling precedent).
+
+**[P1] Confirmed, GRACE**: `deepseek_flash_ab_routing_test_2026_08_05.md`'s Deferred table (rows for todos 2/4/17b) says
+"Not done — real work — pick up directly" while the very next paragraph says the same items are already done elsewhere
+(shipped via `ao_satellite_ao_dispatch_batch12_2026_08_09.md`, checkboxes deliberately left `[ ]` pending that batch's
+finalize reconciling). Todo 25's own row (correctly updated) proves the other 3 rows are simply un-updated, not a
+deliberate distinction — same class as the batch7 Deferred-bullet fix applied directly this run (see Hygiene fixes), but
+this doc is grace-protected. Filed for the next non-grace pass.
+
+**[P2] Confirmed, GRACE**: `ao_orphan_audit_followup_triage_2026_07_30.md:49-56` claims batch2 "already carries real,
+ready fixes for 6 docs... nothing else needed" incl. `ao_recovery_audit_layer1_deleted_2026_07_15` — re-verified false
+via a fresh grep of batch2 (zero hits naming that doc/subject). Already flagged unfixed by context-scout on
+2026-08-03/05/07 ("flagged for `/plan-reconcile`") — confirming this is a recurring miss, not a new finding. Filed again
+with this run's citation.
+
+**[P2] Confirmed, WRITABLE, already resolved this run**: `ao_open_issues_consolidated_close_out_2026_07_17.md`'s
+"Cross-tranche-claimed" table row for `blank_assigned_vm_dispatch_classification_gap_2026_07_26` — real owner confirmed
+(`ao_satellite_ao_dispatch_batch2_2026_07_30.md:302`, same ao tranche, not actually cross-tranche; already archived) —
+see Hygiene fixes.
+
+**[P2/P3] Confirmed, GRACE, low-severity — filed without a separate live alert**: batch2/batch2_finalize 8-vs-9 todo
+count mismatch (cosmetic); `ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md` title still says
+"unreachable" though body explicitly supersedes that (self-acknowledged in-doc);
+`ag_closeout_audit_ao_parked_2026_08_10.md` finding 5 has no matching `- [ ]` todo unlike findings 2/3/4 (item already
+tracked at its home doc, lower stakes); `ao_satellite_ao_dispatch_batch10_2026_08_09.md:239` extracted a P0 source item
+as P2 with no stated downgrade rationale (3 other spot-checked extractions all preserve source priority).
+
+**AO-dispatch-readiness gaps** (task_template.md §3 rules) — 2 asked live (`BLK-4fc6f1b0`, `BLK-062e0886`), rest fixed
+directly or filed:
+
+- `content_derived_backlog_task_ids_2026_08_08.md` (~L578) — unresolved (a)-vs-(b) design fork embedded verbatim as an
+  AO-dispatched todo (backlog.yaml race-condition mitigation) — **routed live**, recommendation (a).
+- `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md` (INFRA P3, gate `-002` behind `-001`) — no
+  Done-when + 2 unresolved approaches — **routed live**, recommendation: `prereqs.completed_tasks` tuning entry. Same
+  doc also had 2 lower-severity findings (ordering not machine-enforced — confirmed empirically via a live
+  `GET /api/backlog` check by the original filer, now moot since `-001` shipped; a soft positional todo-reference) —
+  filed, not separately asked.
+- `ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md` (L124) — sole open todo has no Done-when + an
+  unevaluated scoping precondition ("scope only if todo 1 confirms the pattern generalizes") — filed (genuine small
+  investigation, not an authority choice).
+- `ao_satellite_ao_dispatch_batch12_2026_08_09.md:184-186` [GRACE] — todo's literal first line is 100% tag-history
+  meta-commentary (real instruction starts line 3); body says "Tagged [OPERATOR]-adjacent" but the actual routing tag is
+  plain `[BACKEND]`. Filed.
+- `ao_model_main_agent_as_first_class_slot_2026_08_10.md:151,155` [GRACE] — 2 open `[BACKEND] P2` todos both target
+  `server/context_lifecycle.py` (todo 2's target function is inside todo 1's), no `sequential:`/`gate_on_depends` — real
+  same-priority-concurrent-dispatch collision risk per CLAUDE.md's "concurrent todos MUST touch different files" rule.
+  Filed.
+- `ao_scheduled_job_reserve_and_staggering_2026_08_04.md:322,364` [GRACE] — open todo explicitly gated on another open
+  todo in prose only, no `sequential:`/`gate_on_depends`. Filed.
+- `ao_satellite_ao_dispatch_batch10_2026_08_09.md:125-134` [GRACE] — delete-adjacent todo (wip-preserve ref) has no
+  `[OPERATOR]` tag and no explicit delete-safety justification beyond a sha-citation check. Filed.
 
 ## Doc-drift
 
-_(pending STEP 4)_
+- Codex `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (6-step ritual, current/correct) vs
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` (said "5-step ritual" in 3 places, plan-side stale) — **fixed
+  directly** (see Hygiene fixes; this is a plan-doc fix, not a codex edit, so it's in-scope for normal Phase 5, not the
+  STEP 5.f2 carve-out).
+- Codex `/codex/04-architecture/agent-orchestrator-worker-liveness.md` self-contradicted itself: "50 kills" (Anti-thrash
+  gates table + docstring) vs "20 kills" (config-var table + Anti-patterns rule, 2 places) — codex-side stale, **fixed
+  via the STEP 5.f2 mechanical carve-out** (see Codex corrections below).
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:62-63` says finalize twins ship
+  `status: draft` — actual established practice since the 2026-07-30 finding (identical across batch5-9): twins ship
+  `active` immediately, only the BATCH stays draft. Codex `created`/`last_reviewed` both predate the 07-30 finding.
+  **Not auto-fixed** — the STEP 5.f2 carve-out requires the fix to not require a fresh judgment call, and confirming
+  "current practice is truly uniform across ALL finalize docs" would need a corpus-wide re-check I didn't run this turn;
+  filed as a doc-drift candidate for a future mechanical-correction pass.
+- `ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md:126-127` [GRACE] claimed a completed codex-alignment fix on
+  the SAME worker-liveness codex doc (the 20→50 cap) — the claim was only PARTIALLY true (2 of 3 mentions were still
+  stale) until this run's own STEP 5.f2 fix completed it. No further action needed — now genuinely aligned.
 
 ## Codex corrections applied (mechanical, evidence-cited)
 
-_(pending STEP 5.f2)_
+- `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — `ORCHESTRATOR_WATCHDOG_DAILY_CAP` config-table value
+  `20`→`50` (L378) + "Do NOT bypass the per-VM 20-kills-per-day cap"→"50" (L429) — `unified-trading-pm@5b4b45a4c8`.
+  Evidence: the SAME doc's own Anti-thrash-gates table already said "50 kills total" (no edit needed there); live code
+  read confirmed `agent-orchestrator/server/config.py:1263` `watchdog_daily_cap: int = Field(default=50, ...)`;
+  `worker_liveness_watchdog.py:37-42`'s own docstring explicitly says "live default is config.py's watchdog_daily_cap=50
+  — this docstring said 20 for a long time after the config default was raised." Meets all 4 STEP-5.f2 criteria: HARD
+  evidence (self-contradiction + live code read), single unambiguous substitution (no judgment call — doc's own text
+  already establishes 50 elsewhere), not a HARD-STOP governance area, no new measurement needed (cited only pre-existing
+  evidence).
 
 ## Hygiene fixes
 
-_(pending STEP 5)_
+- `ao_open_issues_consolidated_close_out_2026_07_17.md` — fixed 5 instances of prettier `_`→`*` emphasis-mangling
+  (`task*id`→`task_id`, `\*\*`→`**` ×2, `ORCHESTRATOR*\*`→`ORCHESTRATOR_*`, `dispatch*id`→`dispatch_id`); fixed 3
+  instances of stale "5-step ritual"→"6-step ritual" (1 also needed the missing "update every referrer's path
+  corpus-wide" step re-inserted into its own inline enumeration); resolved 1 confirmed hedge-pointer table row (see
+  Contradictions). — `unified-trading-pm@75e9b0c9c5`/`@da75f355bb`. Note: the corpus-wide `run_hygiene_sweep.sh`'s "No
+  prettier emphasis-mangling" check reported PASS despite these 5 live instances existing — a checker blind spot worth a
+  follow-up, filed below.
+- Repointed 2 stale referrers (`ao_satellite_ao_dispatch_batch5_2026_08_03.md`, `..._batch5_finalize_2026_08_03.md`)
+  from the now-archived `batch4_finalize` active-path citation to its real archive path —
+  `unified-trading-pm@80b01dea70`. One further referrer (`plans/epics/orchestrator_master.md`, 2 hits) intentionally
+  left unfixed — the epic doc was itself <12h old at read-time (heavy same-wave edit activity), treated as effectively
+  grace-protected given the higher blast radius of hand-editing an epic doc; filed below.
+- Reflowed `ao_satellite_ao_dispatch_batch5_2026_08_03.md` todo 6's hard constraint ("do NOT resolve or pre-empt the
+  still-open `[OPERATOR] P1` decision") onto the todo's actual first physical line — was split across the markdown
+  bold-span line-wrap, invisible to a quick skim, matching task_template.md's documented anti-pattern exactly (same
+  class as a prior confirmed incident: a "DO NOT EXECUTE" warning split the same way).
+- Repointed 1 corpus-wide dangling reference: `data_completion_cefi_2026_07_15.md:333` cited
+  `plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (archived to
+  `plans/archive/2026_07/issues/` on a date this doc's citation never picked up) — `unified-trading-pm@b03147a82b`.
+  Cross-tranche referrer (this doc is `asset_group: cefi`) fixed here since the target-doc investigation and evidence
+  were already in hand from this run's ao-tranche archival tracking.
+- Annotated `ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md` todo 1 with a pointer note: 2 of the 8
+  re-verification items (na-eligibility-timer, wip-preserve-ref) were extracted to batch10 and never completed inside
+  batch2 itself — a future executor following todo 1's literal instructions would otherwise look for evidence that
+  doesn't exist in batch2.
+- Resolved `ao_satellite_ao_dispatch_batch7_2026_08_06.md`'s stale "Conflict-gated" Deferred bullet — both named gates
+  (a same-file conflict + an `RB-04f4f852` blocker) were confirmed cleared by the batch's own finalize doc (work
+  independently landed + archived 2026-08-07), but the bullet itself was never updated to say so.
+- Added an explicit "Done-when" clause to `content_derived_backlog_task_ids_2026_08_08.md`'s `[OPERATOR] P1` live-apply
+  todo (L267) — mechanical, restated the doc's own already-stated verification method (Phase-2 assertions) into the
+  doc's own established Done-when convention (its sibling todos both have one). —
+  `unified-trading-pm@58e6541b79`/`@87850ec328` for the last 3 items above.
 
 ## Filed
 
-_(pending STEP 6)_
+Durable todos appended to this doc (below, `## Follow-up todos`) for every routed/grace-blocked finding above that isn't
+already covered by an existing tracked item elsewhere. 4 items additionally alerted live via `/blocked`: `BLK-54c460e6`
+(false archival claim), `BLK-f8212d83` (status:draft/active template drift), `BLK-4fc6f1b0` (backlog.yaml race design
+fork), `BLK-062e0886` (blocked_questions INFRA gate design fork).
 
 ## Archive candidates (operator review)
 
-_(pending STEP 5g)_
+- `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` — VERIFIED-DONE (all 5 todos HARD-evidence-flipped this run),
+  UNLOCKED, non-grace → auto-archived same turn. `archived: true`, `locked: false`.
 
 ## Refuted (dropped by verify)
 
-_(pending STEP 4)_
+None — every candidate this agent independently re-verified (the P0/P1 items above, all writable-doc fixes) held up
+under its own direct evidence check (git/grep/live-code reads). No hunter-reported candidate was found to be a false
+positive on independent verification (the batch1 hunter's own internal false-positive check on `batch15_2026_08_09.md`'s
+similar-looking `\*\*` pattern was already correctly self-excluded before reaching this agent).
 
 ## Coverage (hunters / batches / docs)
 
-_(pending STEP 7)_
+7 hunter sub-agents (batches 1-7, all `sonnet`), full corpus coverage: 102/102 ao-tranche docs read in full by exactly
+one hunter (18+15+14+12+17+16+10 files, ~2.2MB / ~26,500 total lines). Zero docs left partially read (2 large docs
+needed 2 paginated Read calls each, both fully completed). Supplementary reads beyond the assigned batches: 8+ codex
+SSOTs (worker-liveness, per-tab-worktrees, plan-completion-and-archival-discipline, ao-dispatch-batch-naming,
+agent-orchestrator-single-vm-architecture, agent-orchestrator-alerting, agent-orchestrator-scheduled-jobs,
+agent-orchestrator-api-host, recovery-defence-in-depth-layers, ui-testing-layers), several sibling-batch cross-checks,
+live `git`/`grep`/code reads for verification. This agent (orchestrator) independently re-verified and directly applied
+fixes for every WRITABLE-doc finding (10 files edited across 6 checkpoint commits) plus the codex correction, and
+independently spot-verified the highest-stakes GRACE findings (batch11, batch9, safe_doc_push_prek) against live
+git/origin state before routing them.
+
+**Phase 5.9 ledger**: routed (confirmed findings needing operator/GRACE-blocked) = 13 (2 P0 + 4 P1 + 3 P2/P3 + 7
+AO-dispatch-readiness gaps, some overlapping categories counted once) → parked/filed count below = 13 (4 live
+`/blocked` + 9 durable-todo-only). Balanced.
 
 ## Plans not reached
 
-_(pending STEP 7, if applicable)_
+None — all 102 ao-tranche docs were read in full by the STEP-3 hunter fan-out; nothing was skipped for lack of context
+budget.
+
+## Follow-up todos (captured as canonical, never left as prose)
+
+- [ ] [REVIEW] P1. Once `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md` exits
+      the 12h grace window, either complete the real 6-step archival ritual on its source doc and correct the
+      false-completion timeline in todo 4's Progress Log, or revert todo 4 to `[ ]` with a correction note — per
+      operator ruling on `BLK-54c460e6`. Source: this run's Contradictions section.
+- [ ] [DOCS] P2. Fix the per-batch AO-dispatch authoring template so an operator's draft→active approval also
+      strips/updates the stale "status: draft — pending operator approval" body blockquote; clean up the 8 existing
+      stale instances (batch9-16) once each exits its grace window — per operator ruling on `BLK-f8212d83`. Source: this
+      run's Contradictions section.
+- [ ] [BACKEND] P2. Read `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md` and resolve
+      whether the 2026-07-31 "server/prompts.py edits are local-only" directive's real scope is narrower than
+      `ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`'s framing, given batch9's confirmed counter-example
+      (an AO-dispatched worker edited that exact file via normal dispatch, `agent-orchestrator@5353b6b`). Source: this
+      run's Contradictions section.
+- [ ] [DOCS] P3. Once `orchestrator_vm_e2e_hardening_2026_07_24.md` exits grace: fix its self-contradictory frontmatter
+      (`assigned_vm: NA` + `execution_scope: orchestrator-agent` → should be `local-only`, matching the
+      already-corrected sibling-doc precedent in
+      `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`). Source: this run's Contradictions
+      section.
+- [ ] [DOCS] P3. Once `deepseek_flash_ab_routing_test_2026_08_05.md` exits grace: update its stale Deferred table rows
+      for todos 2/4/17b (say "not done, pick up directly" while the next paragraph says they're already shipped via
+      batch12) — same fix class already applied directly to batch7's Deferred bullet this run. Source: this run's
+      Contradictions section.
+- [ ] [DOCS] P3. Once `plans/epics/orchestrator_master.md` exits its own heavy-edit window: repoint its 2 stale
+      referrers (L53, L467) from `../active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` to
+      `../archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`. Source: this run's Hygiene fixes.
+- [ ] [DOCS] P3. Once `ao_satellite_ao_dispatch_batch12_2026_08_09.md` exits grace: fix todo at L184-186 — move the
+      tag-history meta-commentary off the literal first physical line, and reconcile the `[BACKEND]` routing tag against
+      the todo's own claim of `[OPERATOR]`-adjacency (`--apply` mutates live production rows via SSM). Source: this
+      run's Contradictions section.
+- [ ] [BACKEND] P3. Once `ao_model_main_agent_as_first_class_slot_2026_08_10.md` exits grace: add
+      `sequential: true`-equivalent ordering (or merge) between its 2 open `[BACKEND] P2` todos — both target
+      `server/context_lifecycle.py` with no file-disjointness, a same-priority-concurrent-dispatch collision risk.
+      Source: this run's Contradictions section.
+- [ ] [DOCS] P3. Once `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` exits grace: add
+      `sequential:`/`gate_on_depends` between its L322 (enabler) and L364 (dependent) open todos — currently only
+      prose-gated. Source: this run's Contradictions section.
+- [ ] [SCRIPT] P3. Investigate why `run_hygiene_sweep.sh`'s "No prettier emphasis-mangling" check reported PASS despite
+      5 confirmed live `_`→`*` mangling instances in `ao_open_issues_consolidated_close_out_2026_07_17.md` (fixed this
+      run, `unified-trading-pm@75e9b0c9c5`) — possible checker blind spot for this specific corruption shape/location.
+      Source: this run's Hygiene fixes.
 
 ## Progress Log
 
