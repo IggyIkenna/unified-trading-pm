@@ -83,15 +83,14 @@ source: >-
       trace. The most likely trigger for claude's exit is account-level rate-limiting (4 sessions sharing one account,
       mid-task limit hit). A `tmux_session_lost` rate canary is recommended for future detection. Repo:
       agent-orchestrator.
-- [x] ✅ [BACKEND] P2. **Add a `tmux_session_lost` rate canary alert** — agent-orchestrator@cc3b5b4 (recommended in this
-      doc's Progress Log — converting the prose monitoring recommendation into a tracked todo per the todos-not-prose
-      rule). Fire when ≥N sessions are lost within a rolling window (e.g. ≥3 in 10 min); exclude `one_shot`/`scheduled`
-      lifecycle agents and `idle`-status slots so standing churn doesn't page. Detects the account-cluster session-loss
-      failure mode regardless of root cause. Repo: agent-orchestrator. — RECOVERY NOTE (main 2026-08-10): the canary is
-      ALREADY implemented as orphan commit `2d2a436` (slot-5, `agent-orchestrator`, "feat(canary): add
-      TmuxSessionLossRateCanary — page when tmux sessions die in clusters") — 1 ahead of origin and unshipped. Recover
-      it (`git -C <tabs>/5/agent-orchestrator show 2d2a436`), verify against this done-when, ship via quickmerge — do
-      NOT re-author it. (NOTE: this same cluster death fired 2026-08-10 09:35/09:45 — see review tick.)
+- [x] ✅ [BACKEND] P2. **Add a `tmux_session_lost` rate canary alert** — agent-orchestrator@`cc3b5b4` (ahead=0).
+      Recovered orphan `2d2a436` (slot-5) via quickmerge. Implementation: `TmuxSessionLossRateCanary` (217-line daemon,
+      `server/tmux_session_loss_rate_canary.py`), registered in `server.py`, 3 tunables in `config.py`
+      (`tmux_session_loss_rate_interval_seconds=120`, `_min_count=3`, `_window_seconds=600`), dedup via `dedup_state.py`
+      breach-path latch, Slack notifiers in `notifications/slack.py`, unit tests in
+      `tests/test_tmux_session_loss_rate_canary.py`. Fires when ≥3 sessions lost in 10 min; excludes
+      `one_shot`/`scheduled` lifecycle agents and `idle`-status slots. (NOTE: this same cluster death fired 2026-08-10
+      09:35/09:45 — see review tick.)
 
 ## Progress Log
 
