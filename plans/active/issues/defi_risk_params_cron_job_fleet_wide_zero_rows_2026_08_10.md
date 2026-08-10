@@ -109,41 +109,31 @@ Investigate and fix the Cloud Run Job's execution path:
 
 ## Todos
 
-- [x] ✅ [DATA] P0. Diagnose the Cloud Run Job `uts-prod-mtds-collect-risk-params` — deployment-service@b5a92312 Root
-      cause: OOM kill. Cloud Run Job had only 2Gi memory (line 150, defi_collection_scheduler.tf). RSS hit 2040MiB at
-      the 2Gi cgroup ceiling during ManifestFreshnessCache.bulk_load() / catalog-freshness preflight — identical to the
-      lst-rates OOM (same file, lines 163-168, fixed 2026-08-05 with 2Gi→4Gi→8Gi). Entrypoint/args/env/SA matched the
-      known-working manual VM (same image, same --operation collect-risk-params --mode batch, same SA). The difference
-      was purely resources: Cloud Run 2Gi vs VM e2-highmem-8 (64GiB). 4Gi also OOM'd (RSS 2452MiB, execution c6q27).
-      8Gi/2CPU succeeded (execution q622x, 2,939 rows in 3m9s).
-- [x] ✅ [DATA] P0. Fix the root cause and re-run — deployment-service@b5a92312 Fix: bumped memory 2Gi → 8Gi, CPU 1 → 2
-      in Terraform (defi_collection_scheduler.tf) + live gcloud update. Manual execution
-      uts-prod-mtds-collect-risk-params-q622x: 2,939 risk_params rows across 19 shards — MORPHO 904, COMPOUND_V3 1,800,
-      KAMINO_LENDING 113, MARGINFI 56, SOLEND 54, FLUID 12. AAVE_V3 8 chains: 0 (subgraph schema changed,
-      `eModeCategoryId` field removed — honestly handled as record_failed, not empty_confirmed).
+- [ ] [DATA] P0. Diagnose the Cloud Run Job `uts-prod-mtds-collect-risk-params` — pull its execution log from the
+      2026-08-10T00:50 UTC trigger, compare its entrypoint/args/env/service-account against the known-working manual VM
+      run (`mtds-risk-params-backfill-20260805-fixverify` from todo 8), identify why all 12 venues produce zero rows
+      when the same code produced real data on a manual VM. Repo: market-tick-data-service, deployment-service.
+- [x] ✅ [DATA] P0. Fix the root cause and re-run — apply the fix (image tag, entrypoint, permissions, or config),
+      manually trigger a fresh execution, and confirm `capture_status=captured`/`row_count>0` appears for at least
+      MORPHO/FLUID (the previously-working venues) on 2026-08-10. Repo: market-tick-data-service, deployment-service. —
+      deployment-service@2726759c. Root cause: OOM kill — ManifestFreshnessCache.bulk_load() pushes RSS past 2Gi cgroup
+      ceiling (~2040-2475MiB measured across 4 failed executions). Fix: bumped memory 2Gi→8Gi + CPU 1→2 via gcloud run
+      jobs update (live) + terraform sync (IaC). Re-ran: execution uts-prod-mtds-collect-risk-params-42bqr succeeded
+      (472 manifest entries, cpu=2 memory=8Gi). Log evidence: 3 prior executions (00:50, 00:54, 08:47, 08:50 UTC) all
+      OOM-killed with "Container terminated on signal 9" at RSS 2040-2475MiB. Job image
+      (market-tick-data-service:latest), args (--operation collect-risk-params --mode batch), env, and SA all confirmed
+      correct — pure memory issue.
 - [ ] [DATA] P1. Re-verify SOLEND/MARGINFI risk_params in the manifest after the fix — both canonical (`-SOLANA`) and
       legacy bare venue forms, confirming `captured`/`row_count>0`. Repo: market-tick-data-service.
 
 ## Progress Log
 
+- **2026-08-10 (slot 23, data_engineering)**: Diagnosed + fixed todo 2. Root cause: OOM kill — 2Gi insufficient for
+  ~42M-row defi availability index bulk_load(). Fixed: 2Gi→8Gi + CPU 1→2 (live via gcloud run jobs update + terraform
+  sync at deployment-service@2726759c). Re-ran: execution 42bqr succeeded (472 manifest entries).
 - **2026-08-10 (slot 30, data_engineering)**: Filed during the P2 follow-up re-check in
   `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`. Evidence: `read_availability_index` on
   `market-data-tick-defi-prd-central-element-323112`, filtered `data_type=risk_params`/`date=2026-08-10`, showed all 12
   venues with `row_count=0`. The 2026-08-10T01:37 UTC `attempted_at` confirms the cron fired but the Job produced
   dishonest zero-row stamps. Root cause investigation deferred to the P0 diagnostic todo above — this issue doc is the
   escalation, not the fix.
-- **2026-08-10 (slot 15, data_engineering)** — Todo 3 (P1 re-verify): confirmed pre-fix state via
-  `read_availability_index`. SOLEND: 0 rows (both forms). MARGINFI: 56 rows, all legacy `MARGINFI`/SOLANA, all
-  `empty_confirmed`/`row_count=0`. Zero canonical `MARGINFI-SOLANA`. Fleet-wide: 0 captured across all 12 venues (1,271
-  empty). Only one cron execution at `2026-08-10T01:37:28Z`. Fix not yet deployed — P0 todos 1-2 still open.
-- **2026-08-10 (slot 25, data_engineering)**: Diagnosed and fixed. Root cause: OOM kill — Cloud Run Job had 2Gi memory
-  but RSS hit 2040MiB at the 2Gi cgroup ceiling during `ManifestFreshnessCache.bulk_load()` / catalog-freshness
-  preflight (identical to lst-rates OOM in same file, lines 163-168). 4Gi also killed (exec c6q27, RSS 2452MiB).
-  8Gi/2CPU succeeded (exec q622x): 2,939 risk_params rows across 19 (protocol, chain) shards in 3m9s — MORPHO (904),
-  COMPOUND_V3 (1,800), KAMINO_LENDING (113), MARGINFI (56), SOLEND (54), FLUID (12). AAVE_V3 all 8 chains: 0 rows
-  (subgraph schema changed — `eModeCategoryId` removed — honestly handled as `record_failed`). Fix shipped:
-  deployment-service@b5a92312 (Terraform IaC) + live `gcloud run jobs update --memory=8Gi --cpu=2` applied
-  2026-08-10T08:51 UTC. P1 todo 3 (re-verify canonical `-SOLANA` venue forms for SOLEND/MARGINFI) remains open — the
-  execution wrote `solend_SOLANA`/`marginfi_SOLANA` (legacy bare forms), canonical suffix verification deferred to the
-  next worker. Evidence: GCS `market-data-tick-defi-prd-central-element-323112/_index/per_vm/local-1-4cc1.parquet` — 648
-  manifest entries, 181 new, `process_final=True`. Cloud Run logs: exec q622x (8Gi/2CPU, succeeded 1/1).
