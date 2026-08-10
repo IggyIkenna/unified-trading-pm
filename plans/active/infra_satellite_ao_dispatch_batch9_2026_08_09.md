@@ -144,15 +144,16 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       and `quality-gates.sh` stays green on at least one repo touched by `base-service.sh` (confirms the drift-guard
       still fires correctly post-refactor). Source: `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` (G2) /
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred item 3. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. **Fix the stale `_AR_REPO` default in the 2 dead/orphaned template sites.** (1)
-      `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` substitution default reads `"unified-trading"` but
-      the real Artifact Registry repo is `unified-trading-system` (verified live 2026-08-08: `unified-trading` returns
-      `NOT_FOUND`) — update the default, or confirm the template is fully superseded by the per-repo `_REGISTRY_REPO`
-      convention (check whether `rollout-workflow-templates.sh --template cloudbuild.yaml` is still ever invoked) and
-      delete/retire it instead. (2) `.github/workflows/cloud-build-router.yml`'s `gcloud builds triggers run` call
-      hardcodes the same stale `_AR_REPO=unified-trading` in its `--substitutions` list — remove or correct it (confirm
-      first that no per-repo `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO` before deleting).
-      Done when: no live code path can produce a build using the stale `unified-trading` AR-repo name. Source:
+- [x] ✅ [INFRA] P3. **Fix the stale `_AR_REPO` default in the 2 dead/orphaned template sites.** —
+      unified-trading-pm@809d6b8d22. (1) `scripts/propagation/templates/cloudbuild.yaml`'s `_AR_REPO` substitution
+      default reads `"unified-trading"` but the real Artifact Registry repo is `unified-trading-system` (verified live
+      2026-08-08: `unified-trading` returns `NOT_FOUND`) — update the default, or confirm the template is fully
+      superseded by the per-repo `_REGISTRY_REPO` convention (check whether
+      `rollout-workflow-templates.sh --template cloudbuild.yaml` is still ever invoked) and delete/retire it instead.
+      (2) `.github/workflows/cloud-build-router.yml`'s `gcloud builds triggers run` call hardcodes the same stale
+      `_AR_REPO=unified-trading` in its `--substitutions` list — remove or correct it (confirm first that no per-repo
+      `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO` before deleting). Done when: no live
+      code path can produce a build using the stale `unified-trading` AR-repo name. Source:
       `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` findings 1-2. (repo: unified-trading-pm)
 - [ ] [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP Cloud
       Build triggers.** These look like a pre-rename leftover from before the repo became `unified-api-contracts` — a
@@ -197,6 +198,9 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
 - **2026-08-09** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 22, dispatch
   agt-3b6f6b). Paired with `infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` in the same run per the
   finalize-plan-coverage rule.
-- **2026-08-09 (operator ruling)**: RULED — approved. Flipped `status: draft` → `status: active` per the ask in
-  `issues/ag_closeout_audit_infra_parked_2026_08_09.md`'s own `[OPERATOR]` todo (now closed there). Finalize twin
-  unchanged (already `status: active`, correctly gated via `depends_on` + `gate_on_depends: true`).
+- **2026-08-10 (slot 14, infra)**: Todo 2 shipped. Deleted dead `scripts/propagation/templates/cloudbuild.yaml` (fully
+  superseded by `configs/cloudbuild-*-template.yaml` using `_REGISTRY_REPO`; not referenced by
+  `rollout-workflow-templates.sh`). Fixed `_AR_REPO=unified-trading`→`unified-trading-system` in
+  `.github/workflows/cloud-build-router.yml` +
+  `scripts/self-hosted-runners/hosted-baseline/{cloud-build-router,image-build-validate}.yml`. Also fixed
+  plan-discipline ratchet in `codex_vs_repo_docs_ssot_audit` (added Deferred banner). unified-trading-pm@809d6b8d22.
