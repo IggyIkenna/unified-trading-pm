@@ -148,9 +148,23 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
       image bakes `ENV SETUPTOOLS_SCM_PRETEND_VERSION`, and every repo that `FROM`s it inherits that value live in each
       `RUN`. Measured 2026-08-10: `strategy-service` and `greeks-service` declare
       `ARG SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0.dev0` but their `cloudbuild.yaml` never passes `--build-arg`, so their
-      images are stamped `0.0.0.dev0`; `execution-service` declares no override at all and inherits the base image's UTL
-      version. Version METADATA only — NOT build-breaking as in MTDS's case, because those repos don't resolve a floor
-      against a sibling — but it makes image provenance lie. Repos: strategy-service, greeks-service, execution-service.
+      images are stamped `0.0.0.dev0` while the image around them is TAGGED with the real `$VERSION` — provenance
+      disagrees with itself. Both already compute `$VERSION` in `extract-version` and use it for the image tag; the
+      one-line fix is to pass it as `--build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION`. Version METADATA only — NOT
+      build-breaking as in MTDS's case, because those repos don't resolve a floor against a sibling. **CORRECTION
+      (2026-08-10): `execution-service` is NOT affected** and was wrongly named in the first version of this todo. It
+      uses `uv sync --frozen --no-dev --no-install-project`, so its own package is never installed into the image and
+      therefore never stamped. The original claim came from grepping its Dockerfile for `SETUPTOOLS_SCM`, finding
+      nothing, and inferring inheritance — without reading how it actually installs. Repos: strategy-service,
+      greeks-service. **BLOCKED — neither could be landed 2026-08-10, both for reasons unrelated to the change itself:**
+      `strategy-service`'s own quality gate is RED at its committed LDR tip, so quickmerge refuses ANY commit into the
+      repo (tracked in
+      /plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md).
+      `greeks-service` has a peer's uncommitted pre-migration `.github/workflows/semver-agent.yml` in its working tree;
+      HEAD is post-migration (it now calls the shared reusable workflow), so quickmerge's autostash/pop conflicts on
+      that file EVERY run, leaving `UU` conflict markers that then fail the workflow-YAML gate. Observed and reverted to
+      status quo ante 2026-08-10 — do NOT retry there until that stale WIP is cleared, or you will re-corrupt a peer's
+      working tree for a cosmetic version stamp.
 - [ ] [OPERATOR] P3. **Confirm MTDS having no `-prod` Cloud Build trigger is intentional** (pre-cutover), not an
       accidental deletion like the UTL one that
       `utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md` tracks. If intentional, note it in the
