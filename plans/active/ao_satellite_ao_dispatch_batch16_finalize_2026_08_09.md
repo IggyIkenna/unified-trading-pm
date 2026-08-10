@@ -77,12 +77,15 @@ source: >-
       is what the shipped code reads (line 65/426) — no name mismatch between test and implementation. Repro harness
       left at `token-expiry-repro/repro.sh` in this reviewer's scratchpad (not committed — throwaway verification
       tooling, not project code).
-- [ ] [REVIEW] P0. **Reconcile verified evidence into the source doc's own checkbox** —
+- [x] ✅ [REVIEW] P0. **Reconcile verified evidence into the source doc's own checkbox** —
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`'s `[INFRA] P2` "Stop the 30-day treadmill" item,
       replacing the redirect-pointer with real completion evidence (commit sha, test name, live-fire confirmation if
-      practical). **Done when**: the source checkbox carries real evidence, not a bare pointer.
-- [ ] [REVIEW] P1. **Do NOT archive the source doc.** Confirm it still has 1 open item after this extraction (the P3
-      ghost-host-rows prune/tombstone design call) and leave it `status: open`.
+      practical). **Done when**: the source checkbox carries real evidence, not a bare pointer. **Evidence**: flipped to
+      `[x]` with commit sha `unified-trading-pm@b427499b33`, the shipped `test_slot_git_status_token_expiry.bats` name,
+      and the independent 13/13 repro-harness detail from this finalize plan's own todo 1.
+- [x] ✅ [REVIEW] P1. **Do NOT archive the source doc.** Confirm it still has 1 open item after this extraction (the P3
+      ghost-host-rows prune/tombstone design call) and leave it `status: open`. **Evidence**: source doc still carries
+      exactly 1 open `- [ ]` (the `[INFRA] P3` ghost-host-rows item); `status: open` left unchanged.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch16_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -105,3 +108,8 @@ source: >-
   incl. 2 boundary cases outside the shipped suite). No discrepancy found — the claim holds. See the checkbox evidence
   above for the full detail. Todo 2 (reconcile evidence into the source doc's own checkbox) is next in this
   `sequential: true` chain.
+- **2026-08-10 (review, slot-13)** — Todos 2-3 done: flipped the source doc's `[INFRA] P2` checkbox from the extraction
+  redirect-pointer to real completion evidence (commit sha, test name, independent-repro detail); confirmed the source
+  doc retains exactly 1 open item (`grep -cE '^[[:space:]]*- \[ \]'` = 1, the P3 ghost-host-rows design call) and left
+  it `status: open`, not archived. Todo 4 (archive the batch16 plan itself + regenerate inventory) is `[INFRA]`-tagged
+  and next in the `sequential: true` chain — outside this review task's scope.
