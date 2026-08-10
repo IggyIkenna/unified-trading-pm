@@ -322,11 +322,30 @@ alerts being evaluated ONLY inside the WorkerLivenessKicker's live-worker "worki
 for 2 days with zero pages (slot 0 = the main workspace is `paused` → never scanned). Operator directive 2026-07-14
 restores the page with the standing-condition dedup this doc mandates:
 
-- **Coverage is snapshot-driven, not worker-driven**: `_git_surfaces_pass()` in `_tick_once` evaluates EVERY slot with a
-  reporter snapshot (`git_status_json`), including paused slot 0 and slots with no live tmux worker. The worker-directed
-  commit NUDGE stays gated on a live worker (no one to nudge otherwise).
-- **30-min sustain**: a repo pages only when red (dirty via `dirty_oldest_mtime`; ahead / diverged / clean-but-behind
-  via `not_clean_since`) for ≥30 min — transient ahead-between-commit-and-push never pages.
+- **Coverage is snapshot-driven, not worker-driven**: `_git_surfaces_pass()` in `_tick_once` evaluates EVERY
+  `(host, slot_id)` with a reporter snapshot — including paused slot 0 and slots with no live tmux worker. The
+  worker-directed commit NUDGE stays gated on a live worker (no one to nudge otherwise), and is the one consumer that
+  stays intentionally local-host-only (below).
+- **Host-qualified, every reporting host — not just the AO server's own machine** (2026-08-10, SlotGitStatusRow
+  single-source-of-truth migration): coverage used to silently stop at the server's own host. `set_slot_git_status`
+  always wrote the real per-`(host, slot_id)` `SlotGitStatusRow`, but ALSO mirrored onto a legacy `SlotRow.git_status_*`
+  column set that `_git_alerts.py` actually read — and that mirror only ever populated when the reporting host matched
+  the AO server's own machine. A laptop's (or any other non-server host's) dirty worktree was therefore structurally
+  invisible to this pager no matter how long it sat dirty — confirmed live 2026-08-10: a root PM clone on a laptop sat
+  139 commits behind, dirty, for 2+ hours, completely unpaged, discovered only by chance. `maybe_alert_git_staleness`
+  and `maybe_alert_unpushed_plans` now read `SlotGitStatusRow` directly (keyed by `(host, slot_id)` — two different
+  hosts' identically-numbered slots are independent episodes, own throttle entries, own Slack episode). The Slack
+  message itself now names the actual reporting `host` (previously it always showed the AO server's own fixed
+  `_HOST_LABEL`, which never varied regardless of which machine was actually dirty). `maybe_nudge_on_red_repos` and
+  `routes/state.py`'s `/api/state` dashboard view stay scoped to `state_store.this_process_hostname()` by design — a
+  nudge pokes a local tmux worker's inbox that no remote host has, and `/api/state`'s `SlotRow` view is inherently
+  per-AO-worker-slot (AO workers only run on the server's own host). `failover.py`'s dormant `_slots_for_host` (offline
+  → slot lookup) was migrated the same way — it also read the now-removed legacy mirror by `slot_id` alone, so a
+  genuinely offline REMOTE host's slots could never resolve even once multi-VM failover is re-enabled.
+- **90-min sustain** (raised from 30 → 50 → 90 min across 2026-07-24 and 2026-07-26 — see `GIT_RED_SUSTAIN_S`'s own
+  comment history for the two measured false-positive bursts that drove each raise): a repo pages only when red (dirty
+  via `dirty_oldest_mtime`; ahead / diverged / clean-but-behind via `not_clean_since`) for ≥90 min — transient
+  ahead-between-commit-and-push never pages.
 - **4h re-remind**: one page per RED episode, re-fired every 4h while still red (`GIT_RED_REALERT_S`); throttle is
   disk-persisted so a server restart never re-fires a still-red page.
 - **Reporter-cron silence ≥15 min is itself red** (`REPORTER_STALE_S` = 3 missed 5-min ticks — the old 5-min gate sat ON
@@ -347,7 +366,11 @@ restores the page with the standing-condition dedup this doc mandates:
 
 Code: `agent-orchestrator/server/worker_liveness/_git_alerts.py` (`GIT_RED_SUSTAIN_S` / `GIT_RED_REALERT_S` /
 `REPORTER_STALE_S` / `GIT_CLEAN_CONFIRM_S`), `server/worker_liveness/__init__.py` (`_git_surfaces_pass`,
-`_staleness_clean_since`), `server/notifications/slack.py`.
+`_staleness_clean_since`), `server/notifications/slack.py`, `server/state_store/slots.py` (`SlotGitStatusRow` CRUD +
+`this_process_hostname`), `server/routes/git_health.py` (the `/api/slots/{id}/git-status` POST/GET),
+`server/routes/state.py` (`/api/state`'s per-slot dashboard view), `server/failover.py` (`_slots_for_host`, dormant).
+The ORM source of truth is `SlotGitStatusRow` in `server/orm.py` — see its docstring for the `(host, slot_id)`
+composite-key rationale.
 
 ## Repeat-page hardening (2026-07-14) — dedup race + escalation over-creation
 

@@ -32,8 +32,8 @@ related:
     /plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_03.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

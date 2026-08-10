@@ -22,15 +22,16 @@ scope: [engineer, admin]
 tags: [infra, uv, ci-cd, uv-lockfile-determinism, drift]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
-    /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
 parent_epic: infrastructure_master
 priority: P3
 assigned_vm: planning
 author: slot-11 (infra)
-source: ["plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md"]
+source: ["plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md"]
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

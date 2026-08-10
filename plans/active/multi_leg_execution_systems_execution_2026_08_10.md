@@ -94,15 +94,30 @@ source: >-
       (TRANSFER/BRIDGE/CANCEL/CONVERT_DUST) are skipped in hedge loop (not failures). Updated
       `test_atomic_missing_leg_state_raises`→`test_atomic_missing_leg_state_models_hedge_failure` to assert
       leader+unwind fills instead of KeyError. QG green (5849 passed, 248 skipped, 3 xfailed).
-- [ ] [SCRIPT] P1. **Regression test: unhedged-position risk is now VISIBLE in paper/batch results** — construct a test
-      scenario where the follower/hedge leg would fail after the leader/lead leg fills (a real, not hypothetical, market
-      condition) and confirm paper mode now surfaces the resulting unhedged-position alert/unwind behavior, where
+- [x] ✅ [SCRIPT] P1. **Regression test: unhedged-position risk is now VISIBLE in paper/batch results** — construct a
+      test scenario where the follower/hedge leg would fail after the leader/lead leg fills (a real, not hypothetical,
+      market condition) and confirm paper mode now surfaces the resulting unhedged-position alert/unwind behavior, where
       previously the flat-loop settlement would have silently filled both legs independently with no risk signal at all.
-      This is the core proof that the parity gap is actually closed, not just that code compiles.
-- [ ] [SCRIPT] P1. **Regression test: paper(W)==batch-rerun(W) determinism still holds** after the fix — the ε=0 proof
-      this workspace requires elsewhere for batch=live symmetry, now validated against the REAL sequencing logic rather
-      than the old shared shortcut. Cite/reuse the existing `citadel_paper_batch_live_reconciliation_2026_06_19.md`
-      plan's proof methodology if it has one, rather than inventing a new verification approach.
+      This is the core proof that the parity gap is actually closed, not just that code compiles. —
+      strategy-service@11e23c5fb7 + evidence: `test_paper_settle_surfaces_unhedged_risk_when_hedge_fails` — LEADER_HEDGE
+      carry-basis spot/perp driven through `BenchmarkFillEngine.settle()` (the exact paper/batch path
+      `GroupBRunner._process_tick` calls) where the perp hedge has NO `MarketStateSnapshot` (real price-feed absence):
+      leader fills, hedge fill ABSENT, `CLOSE_LEADER_IF_HEDGE_FAILS` unwinds at the 50 bps penalty, determinism across
+      two runs identical; `test_paper_settle_hold_leg_alert_exposes_naked_position` — `HOLD_LEG_AND_ALERT`: no unwind,
+      naked position exposed by the missing hedge fill. Previously the flat per-leg loop filled both legs independently
+      (or raised `KeyError`) — no risk signal. QG green, sentinel = shipping SHA, landed on LDR.
+- [x] ✅ [SCRIPT] P1. **Regression test: paper(W)==batch-rerun(W) determinism still holds** after the fix — the ε=0
+      proof this workspace requires elsewhere for batch=live symmetry, now validated against the REAL sequencing logic
+      rather than the old shared shortcut. Cite/reuse the existing
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` plan's proof methodology if it has one, rather than
+      inventing a new verification approach. — strategy-service@5a8a014eed + evidence:
+      `test_paper_batch_rerun_epsilon0_on_real_sequencing` reuses the citadel determinism-spine methodology (keyed
+      trade-by-trade ε=0 — `ReconResult`-equivalent `paper_count==batch_count==matched` with zero deviations) against
+      the REAL leader/hedge sequencing in `BenchmarkFillEngine.settle()` (the shared paper/batch path
+      `GroupBRunner._process_tick` calls). The same instruction sequence — a LEADER_HEDGE that succeeds, a LEADER_HEDGE
+      whose hedge fails (leader + 50 bps-penalty unwind), and a plain trade — driven through fresh paper and batch
+      engines reproduces byte-identical keyed fills with zero deviations, proving the todo-3 fix did NOT break the ε=0
+      spine. QG green, sentinel = shipping SHA, landed on LDR.
 - [ ] [DATA] P1. **Re-run (or newly run) a real paper-trading session for a basis/arb strategy** covering enough history
       to hit at least one genuine hedge-leg-failure scenario if the market data supports it, and compare the resulting
       P&L/fill-rate figures against whatever was previously reported (if any prior paper runs exist) to characterize how
@@ -129,3 +144,27 @@ source: >-
   `ArbitragePriceDispersionEngine` now actually reaches `AtomicLegExecutor` in live/paper dispatch. Unit tests both
   sides prove the publish→InMemory→route round-trip settles COMPLETE. `quality-gates.sh` green both repos (exit 0,
   sentinel = shipping HEAD). Remaining gated work unchanged (todo 3 settles `BenchmarkFillEngine` on the SAME executor).
+- 2026-08-10 (todo 4, slot 19): **Regression test proves unhedged-position risk is now VISIBLE in paper/batch.** Added
+  `test_paper_settle_surfaces_unhedged_risk_when_hedge_fails` +
+  `test_paper_settle_hold_leg_alert_exposes_naked_position` to `tests/unit/engine/backtest/test_benchmark_fills.py`
+  (strategy-service). The primary test drives a LEADER_HEDGE carry-basis spot/perp trade through the exact paper/batch
+  settlement path (`BenchmarkFillEngine.settle()`, what `GroupBRunner._process_tick` calls) where the perp hedge leg has
+  no usable market price (missing `MarketStateSnapshot` — the deterministic model of a real price-feed absence /
+  no-quote venue at fill time). Asserts the risk is surfaced in the fill history: leader fills, hedge fill absent,
+  default `CLOSE_LEADER_IF_HEDGE_FAILS` unwinds the now-naked leader at the 50 bps penalty, and a second engine over
+  identical inputs yields byte-identical fills (determinism). The `HOLD_LEG_AND_ALERT` variant asserts the naked
+  position is still exposed (leader fill present, hedge absent, no unwind). Before the todo-3 fix the flat per-leg loop
+  filled both legs independently or raised `KeyError` on the missing state — no risk signal at all. Shipped
+  `strategy-service@11e23c5fb7`, QG green, landed on LDR.
+- 2026-08-10 (todo 5, slot 19): **ε=0 determinism STILL HOLDS against the real multi-leg sequencing.** Added
+  `test_paper_batch_rerun_epsilon0_on_real_sequencing` to `tests/unit/engine/backtest/test_benchmark_fills.py`
+  (strategy-service), reusing the citadel determinism-spine proof methodology
+  (`citadel_paper_batch_live_reconciliation_2026_06_19.md`: keyed trade-by-trade ε=0 — match on the deterministic fill
+  key, compare the economic fields, verdict `paper_count==batch_count==matched` with zero deviations) rather than
+  inventing a new approach. The same instruction sequence — a LEADER_HEDGE carry-basis spot/perp that SUCCEEDS (both
+  legs fill), a LEADER_HEDGE whose hedge leg has no market state (leader + 50 bps-penalty unwind), and a plain
+  single-leg trade — is driven through fresh `BenchmarkFillEngine` instances as the paper pass and the batch-rerun pass,
+  and the test asserts byte-identical fill tapes (`batch.fills == paper.fills`) plus a keyed field-by-field ε=0
+  comparison with zero deviations. This validates determinism against the REAL leader/hedge/unwind sequencing the todo-3
+  fix wired into the shared settlement path, not the old flat per-leg loop. Shipped `strategy-service@5a8a014eed`, QG
+  green, landed on LDR.

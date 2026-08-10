@@ -143,11 +143,14 @@ Investigate and fix the Cloud Run Job's execution path:
       ALL `empty_confirmed`(966) or `expected_unattempted`(466). OOM was necessary but NOT sufficient — the zero-row
       root cause is distinct from the memory crash. Todo 1 (deeper diagnosis: compare Cloud Run Job vs manual VM
       execution path) is now the critical blocker.
-- [ ] [DATA] P0. Fix AAVE_V3 subgraph query — remove `eModeCategoryId` from `_AAVE_V3_RISK_PARAMS_QUERY` or make the
-      field optional (the 8 AAVE_V3 Messari subgraphs no longer expose this field on the `Reserve` type, causing
-      `SubgraphSchemaError` on ALL chains). Also handle AAVE_V3-OPTIMISM and SPARK where the top-level `reserves` query
-      field has been removed entirely (subgraph schema migration — may need a different query version or subgraph ID).
-      Repo: market-tick-data-service. See Progress Log 2026-08-10 slot 27 for full subgraph IDs and error details.
+- [x] ✅ [DATA] P0. Fix AAVE_V3 subgraph query — remove `eModeCategoryId` from `_AAVE_V3_RISK_PARAMS_QUERY`. **DONE
+      (slot 31, data_engineering) — market-tick-data-service@7d7cefe3.** `eModeCategoryId` removed from the GraphQL
+      query → fixes AAVE_V3 on 7 chains (ETHEREUM, ARBITRUM, POLYGON, AVALANCHE, BASE, LINEA, BSC). OPTIMISM and SPARK
+      (`Type 'Query' has no field 'reserves'` — top-level field removed entirely) remain UNRESOLVED: the existing
+      subgraph IDs (`3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi` for OPTIMISM,
+      `GbKdmBe4ycCYCQLQSjqGg6UHYoYfbyJyq5WrG35pv1si` for SPARK) no longer expose the `reserves` query field — these need
+      new subgraph IDs or a different data-source strategy (OPTIMISM already has a documented RPC-fallback policy per
+      UAC `_defi.py`).
 - [ ] [DATA] P0. Re-run the Cloud Run Job after the AAVE_V3/SPARK query fix and verify `captured`/`row_count>0` appears
       for MORPHO, COMPOUND_V3, AAVE_V3 (fixed), SPARK (fixed), and all other venues on 2026-08-10. Compare against the
       execution 42bqr baseline (2939 rows from unfixed venues — the fix should add AAVE_V3 and SPARK rows). Repo:
@@ -223,3 +226,9 @@ Investigate and fix the Cloud Run Job's execution path:
 
   The manual VM `mtds-risk-params-backfill-20260805-fixverify` used the SAME tarball image, same args, same SA. The
   failure is NOT a config/deployment difference — it's an external data-source schema change between Aug 3-5 and Aug 10.
+
+- **2026-08-10 ~17:20Z (slot 31, data_engineering)**: Shipped AAVE_V3 query fix — market-tick-data-service@7d7cefe3
+  (removed `eModeCategoryId` from `_AAVE_V3_RISK_PARAMS_QUERY` in `risk_params_handler.py`). Fixes 7 of 8 AAVE_V3
+  chains. OPTIMISM + SPARK (`reserves` field gone entirely) remain unresolved — need new subgraph IDs. QG green,
+  quickmerge landed on LDR. Cloud Build `7a2bcc8b` triggered to rebuild `:latest` Docker image. Will re-run Cloud Run
+  Job + verify once build completes.

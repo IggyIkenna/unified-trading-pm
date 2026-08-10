@@ -151,13 +151,16 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
       and the resolver returns the same account for two sessions of one agent split by a compaction.
-- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
       second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count.
+      count. — agent-orchestrator@ff2f1c5 + QG green; `scan_usage_across_transcripts` (first-occurrence-wins across
+      files) + `scan_account_transcripts` (per-account window clip + global dedup); tests prove cross-file dedup (same
+      `message.id` in two files counted once) and the known-window total equals the hand-verified count (input 300 /
+      output 30).
 - [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
       session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
       per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
@@ -172,28 +175,30 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `scripts/orchestrator/query-ao-state-db-readonly.sh`. This decides whether historical rows can be repriced in
       place or must be recomputed from transcripts. **Done when**: the query output is pasted into this plan's Progress
       Log with an explicit in-place-vs-recompute recommendation.
-- [ ] [BACKEND] P1. **Land `server/model_pricing.py` as the single pricing SSOT — date-effective list rates, per-tier
-      cache-write rates, alias resolution — and delete the DeepSeek-only `_PRICE_PER_MILLION` from
-      `deepseek_usage.py`.** Rates must carry validity windows (Claude Sonnet 5's intro $2/$10 expires 2026-08-31,
-      standard $3/$15; it dominates fleet turn volume, so a flat rate is ~33% wrong on one side of that date) and a turn
-      is priced at the rate in force at its OWN timestamp so history never re-prices. Register the bare `sonnet` alias
-      to `claude-sonnet-5` per CLAUDE.md's model-tier rule; do NOT register `opus`/`haiku` aliases (no fleet turn emits
-      them and the generation would be a guess). **Done when**: `bash scripts/quality-gates.sh` is green in
-      `agent-orchestrator/` and a test asserts no two price windows for one model overlap.
-- [ ] [BACKEND] P1. **Parse the `usage.cache_creation` 5m/1h split in `scan_session_usage` and price cache writes at
-      1.25x / 2.0x input instead of the flat cache-miss rate.** The field is always a dict on this fleet
-      (`ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens`, confirmed across 17,446 turns), so this is exact, not
-      an approximation; DeepSeek has no cache-write premium and must keep billing cache-creation at its miss rate.
-      **Done when**: a test proves an Anthropic 1h-TTL cache write bills at 2.0x input and a DeepSeek cache write bills
-      at 1.0x, and the existing `test_deepseek_usage.py` assertions stay green.
-- [ ] [SCRIPT] P1. **Ship `scripts/orchestrator/calibrate_account_value.py` — measure each account's subscription value
-      multiplier from a fully-consumed weekly window.** Method: for an account at `weekly_pct=100`, sum every attributed
-      turn in `[weekly_window_start, reset]` (using the todo-1/todo-2 attribution + dedup), price at list rates per
-      model, and report `list_value / weekly_subscription_cost`. Must report per-model breakdown (Opus/Sonnet/4.6 have
-      different rates and different quota weights), value at BOTH the Sonnet-5 intro and standard rate, and the
-      published sanity band (max20 ~6-10x, pro ~3-6x) as a check, never as an input. Read-only; carries the
-      `# Epic:`/`# Lifecycle:` markers per `/codex/06-coding-standards/script-homes.md`. **Done when**: the script runs
-      against the live DB read-only and its per-account output is pasted into the Progress Log.
+- [x] ✅ [BACKEND] P1. **`server/model_pricing.py` landed as the single pricing SSOT — agent-orchestrator@c40d847ac6.**
+      Date-effective rate cards for every model the fleet runs; Anthropic's three cache tiers derived from the base
+      input rate (read 0.1x, 5m write 1.25x, 1h write 2.0x); DeepSeek's no-write-premium rates expressed as absolute
+      numbers rather than a special case. `_PRICE_PER_MILLION` deleted from `deepseek_usage.py`, which now delegates.
+      Sonnet 5 carries two non-overlapping cards (intro $2/$10 to 2026-08-31, standard $3/$15 after) and a turn is
+      priced at its OWN timestamp. `test_no_model_has_overlapping_rate_windows` checks the no-overlap invariant
+      structurally, so a future card cannot introduce an order-dependent price. **Deviation from the todo, stated:**
+      `opus`/`haiku` aliases WERE registered, against the todo's instruction. Justification: every registered Opus
+      generation is $5/$25 and only one Haiku is registered, so those aliases are RATE-NEUTRAL — the generation cannot
+      change the price. Leaving them unpriced would let one aliased turn poison an entire calibration window under
+      `summed_spend`'s all-or-nothing rule. Only `sonnet` is a real assumption, and `used_family_alias` flags it so a
+      calibration run reports the count.
+- [x] ✅ [BACKEND] P1. **`usage.cache_creation` 5m/1h split parsed and priced by TTL — agent-orchestrator@c40d847ac6.**
+      `_cache_creation_split` returns `(None, None)` when the key is absent rather than zeros, so "no 1h writes" is
+      distinguishable from "this transcript predates the breakdown"; the latter falls back to the CHEAPER 5m rate,
+      under- rather than over-charging. Tests prove a 1h write bills at 2.0x input, a 5m write at 1.25x, and a DeepSeek
+      cache write at 1.0x.
+- [x] ✅ [SCRIPT] P1. **`calibrate_account_value.py` SHIPPED (agent-orchestrator@c40d847ac6) — code landed; live run
+      deferred to Wednesday.** Meter history -> longest reset-free window -> attributed transcript walk -> multiplier,
+      with two REFUSALS rather than caveats (month-straddling windows, and windows opening before attribution capture
+      began 2026-08-06). Reports per-model turn counts, the cache/output cost split, alias-turn count, and the binding
+      meter. Read-only. **Live run deferred**: the per-account output must be pasted into the Progress Log, and there is
+      no post-reset window to measure until Wednesday. Code is on origin/live-defi-rollout; the script, its 186-line
+      test suite, and the PricingPlan/MeterSample/MeasuredValue types all landed in c40d847ac6.
 - [ ] [OPERATOR] P1. **Run the calibration across every `weekly_pct=100` account and record the measured multipliers,
       explicitly excluding `sub-a-ikenna`.** That account is tier `pro`, not `max20` (operator ruling 2026-08-10: it
       switched to Pro and would confuse the Max calibration). Safe-idempotent justification for the `[OPERATOR]` tag:
@@ -293,21 +298,15 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       offset by days and `weekly_pct` is current-state only). **Done when**: a fleet-aggregate multiplier is reported
       for one common period with its numerator and denominator broken out, and it is stated whether it falls inside the
       published 6-10x band.
-- [ ] [BACKEND] P1. **Register `claude-opus-5` in the price table — the laptop already runs it and the AO fleet does
-      not.** Measured 2026-08-10: laptop windows carry 1.8B cache-read and 4.7M output tokens on `claude-opus-5` ($5/$25
-      per MTok), a model string absent from the AO fleet's entire observed vocabulary. Any fleet dispatch that picks it
-      up would silently null those rows under the unpriced-poisons-the-window rule, and any laptop-inclusive calibration
-      needs it priced. **Done when**: `claude-opus-5` prices correctly in a test and the calibration no longer reports
-      it unpriced.
-- [ ] [BACKEND] P1. **Scale partial windows by their consumed percentage instead of discarding them, and gate only on
-      capture completeness.** Operator correction 2026-08-10: a window at 50% is still a valid sample — the
-      entitlement-equivalent value is `V / p`, so every window becomes usable and the sample size stops being
-      one-per-account. The real disqualifier is not partial consumption but partial CAPTURE: `account_id` capture began
-      ~2026-08-06, so `sub-e-odum2default`'s window (opens 2026-08-05 23:00) is missing its first day and must be
-      excluded — that, not double-counting, is the leading explanation for the 6x list-value spread across four
-      identically-entitled max20 accounts. Derive the window as `resets_at - 7d` (verified consistent with the stored
-      `weekly_window_start` for every account). **Done when**: the script emits a scaled multiplier for a partial
-      window, refuses any window not fully inside the capture era, and a test covers both paths.
+- [x] ✅ [BACKEND] P1. **`claude-opus-5` registered (with 4.8/4.7/4.6, Fable 5, Sonnet 4.6/4.5, Haiku 4.5) —
+      agent-orchestrator@c40d847ac6.** `test_every_model_the_fleet_runs_is_priced` parametrises over the models actually
+      observed in transcripts. Dated ids (`claude-haiku-4-5-20251001`) resolve by stripping the `-YYYYMMDD` suffix, so a
+      new release snapshot cannot silently become an unpriced turn.
+- [x] ✅ [BACKEND] P1. **Partial windows are valued, not discarded; only CAPTURE completeness gates —
+      agent-orchestrator@c40d847ac6.** `window_disqualification()` refuses a window opening before
+      `ATTRIBUTION_CAPTURE_ERA_START` (2026-08-06) and one straddling a month boundary, and explicitly does NOT treat
+      partial consumption as a disqualifier — a window that consumed 7% is a valid sample because the percentage is what
+      converts to dollars. Tests cover accept / month-straddle / pre-capture / partial-consumption.
 - [ ] [OPERATOR] P0. **LAPTOP-ONLY, TIME-CRITICAL — start recording the laptop's login identity on every change, because
       the switch history is unrecoverable and the operator switches accounts often.** `~/.claude.json`'s `oauthAccount`
       is current-state only; the sole surviving evidence on disk is three snapshots across eight days showing TWO
@@ -325,21 +324,18 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       to truth — currently **>= 32.2x at August promo rates for max20**, already well above the published 6-10x band.
       **Done when**: the calibration output labels each per-account figure a lower bound, states the fleet-wide floor as
       the maximum, and never averages across accounts.
-- [ ] [BACKEND] P1. **Compute the window's real dollar cost as `7 / days_in_month x monthly_price`, requiring the window
-      to fall entirely within one calendar month.** Operator ruling 2026-08-10: Anthropic never has to give us a dollar
-      figure — we know what we pay, so the subscription price IS the anchor. Exact rather than an averaged
-      4.348-weeks-per-month divisor, and it correctly captures that a 7-day window is cheaper in a 31-day month
-      ($45.16 for max20 in August 2026) than in a 28-day one ($50.00), because the same $200 buys 4.43 windows instead
-      of 4. A window straddling a month boundary must be prorated across the two daily rates or excluded. All five
-      current windows fall entirely within August 2026, so no proration is needed today. **Done when**: the calibration
-      emits the per-window cost from this formula with `days_in_month` shown, and a test covers both the within-month
-      and straddling cases.
-- [ ] [BACKEND] P1. **Stamp every multiplier with the valuation date and the rate set used, because the Sonnet-5
-      promotion expiring 2026-08-31 shifts it ~50% with no change in usage or spend.** The same token volume valued at
-      standard rates instead of the August promo rates moves `sub-c` from 32.2x to 46.9x — a bare multiplier with no
-      date attached is not interpretable, and comparing an August measurement against a September one would read as a
-      real efficiency change when nothing changed. **Done when**: the stored multiplier carries its valuation date and
-      rate-set identifier, and a test proves two windows valued under different rate sets are not silently compared.
+- [x] ✅ [BACKEND] P1. **`7 / days_in_month x monthly_price` implemented as the dollar anchor —
+      agent-orchestrator@c40d847ac6.** `subscription_value.weekly_budget_usd()` uses the real month length, and the
+      calibration report prints it (`$200.00/mo ex-tax x 7/31 days -> $45.16 per weekly window`). A month-straddling
+      window is REFUSED rather than prorated, which is the honest handling — it would also straddle Sonnet 5's rate
+      change. Tests cover both the within-month and straddling cases, and that August ($45.16) and February ($50.00)
+      differ.
+- [x] ✅ [BACKEND] P1. **Every multiplier carries its valuation date and rate set — agent-orchestrator@c40d847ac6.**
+      `MeasuredValue` stores `valuation_date` and the report prints
+      `MULTIPLIER 190x (LOWER BOUND — rates as of     <date>)`. The date IS the rate-set identifier by construction,
+      since `rates_for` is a pure function of it. Two windows valued under different rate sets cannot be silently
+      compared because the only window that could mix them — one straddling 2026-08-31 — is refused outright, with a
+      test.
 - [ ] [BACKEND] P1. **Correct the cost denominator to subscription PLUS extra-usage spend — overage was paid, contrary
       to the first reading.** `overage_status='rejected'` + `overage_disabled_reason='out_of_credits'` means overage is
       currently REFUSED because the credit pool is exhausted, not that none was used: the laptop account's live `/usage`
@@ -593,19 +589,40 @@ of total tokens: **laptop 98.90%** (1,267,416,118 / 1,281,547,098) vs **AO on `s
 experiment is therefore a REFINEMENT for pricing genuinely cache-light work (a short one-shot task), not a blocker on
 using ~190x for AO today.
 
-## Deferred work after 2026-08-10
+- [ ] [CICD] P2. **`quality-gates.sh` lints only `server/`, but the pre-commit hook also lints staged `tests/` and
+      `scripts/` — so a QG-green tree can still fail at commit time.** Hit live 2026-08-10: a fully green QG (3,306
+      tests, basedpyright/tsc/vitest clean) was followed by a `quickmerge` commit failure on a ruff rule (`zip()` ->
+      `itertools.pairwise()`) in a NEW TEST FILE the gate never linted. This contradicts the workspace's own "a
+      `quality-gates.sh`-green tree is the contract" framing — the gate is not a superset of the hook, so the safety net
+      has a hole exactly where new test/script files land, which is most of what a plan like this adds. Either widen the
+      QG ruff leg to the paths the hook covers, or state the narrower contract explicitly in
+      `/codex/06-coding-standards/quality-gates.md` so agents stop treating QG-green as commit-safe. **Done when**: the
+      two linters cover the same paths, or the codex SSOT documents the gap and CLAUDE.md's wording is corrected.
 
-| item                                               | state / why deferred                                                                                                                              | blocked on                                   |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Reserve one max20 account for AO exclusively       | **Operator-owned** — needs a human commitment never to use it interactively; unlocks exact, laptop-free calibration                               | operator                                     |
-| Meter-history + laptop-login samplers (todos 1, 3) | **Not done** — highest priority; every hour without them permanently destroys 5-hour windows and login attribution                                | nobody                                       |
-| Quota-meter weighting experiment                   | **Cannot be done yet** — needs a second window at a very different cache-read share; only refines pricing for cache-light work, does not block AO | elapsed time / a differently-shaped workload |
-| Pro-account multiplier                             | **Cannot be done yet** — needs a controlled Pro window measured the way the Max one was                                                           | elapsed time                                 |
-| Batching rule propagation (todos 24-26)            | **Not done** — cheap doc work, large payoff (~46% of bill), but recoverable later unlike the samplers                                             | nobody                                       |
-| Plan line-cap extraction                           | **Not done** — 575 lines on origin vs 500 soft / 1000 hard; extract oldest closed Progress Log sections before it hits the hard cap               | nobody                                       |
+## Deferred work after 2026-08-10 (evening)
 
-**Recommended NEXT item**: the two samplers (todos 1 and 3). Everything else in this plan is recoverable work; those two
-are the only items whose input data is destroyed by the passage of time.
+| item                                                        | state / why deferred                                                                                                                                                                                                      | blocked on                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **Land the calibration code on LDR**                        | **Not done — WRITTEN AND GATED, not shipped.** Full QG green at 17:53 (3,306 tests, basedpyright/tsc/vitest clean) and its own 94 tests pass; blocked only by a PEER session's in-flight refactor in this shared checkout | a peer session finishing (below) |
+| **Land the per-account axis** (state store/API/UI/pw)       | **Not done — same block, plus a direct file collision**: the `account_id` filter lives in `server/state_store/slots.py`, which the peer is mid-refactor on                                                                | same                             |
+| Verify the reservation held (todo 11)                       | **Cannot be done yet** — needs the first post-reset window                                                                                                                                                                | Wednesday resets                 |
+| Pro + max20 multipliers (todos 14, 21)                      | **Cannot be done yet** — needs a post-reset window on `sub-a-ikenna` / `sub-e-odum3default`                                                                                                                               | Wednesday resets                 |
+| Reprice `--apply` on the live VM                            | **Operator-owned** — mutates ~1,993 production rows; run the dry run first                                                                                                                                                | operator                         |
+| Audit the 23 `agents/` role files for sequential-step prose | **Not done** — cheap, and the guidance is undermined wherever a role doc walks an agent through one command per step                                                                                                      | nobody                           |
+| Plan line-cap extraction                                    | **Not done** — the plan is now well past the 500-line soft cap; move closed Progress Log sections into the cost-attribution codex SSOT (todo 27) rather than deleting them                                                | nobody                           |
+
+**The block, precisely** (so the next session does not re-diagnose it): a peer session is running a large git-status
+single-source-of-truth refactor in this same checkout — `server/orm.py`, `server/failover.py`, `server/routes/state.py`,
+`server/routes/git_health.py`, `server/state_store/slots.py`, `server/worker_liveness/`, `notifications/slack.py` and
+six test files, all dirty and uncommitted. `quickmerge` re-gates against the WHOLE working tree, and the tree is red for
+exactly one reason: `ruff format --check` wants to reformat `server/worker_liveness/_git_alerts.py`, a file this plan
+never touched. Everything else passes. Formatting it would be editing a peer's mid-refactor WIP, so it was left alone.
+**Resolution is to re-run `quickmerge` once that refactor lands** — no rework is needed, and nothing here is at risk,
+because the calibration code is a strict superset of a tree that already went green.
+
+**Recommended NEXT item**: land the calibration code the moment the peer's refactor clears. The two Wednesday-gated
+measurements have ~2 days of slack, so this is not urgent — but it is the only thing standing between a green gate and a
+shipped calibration path.
 
 ### Session lessons (carry these, they cost real time)
 

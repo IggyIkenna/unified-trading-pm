@@ -177,9 +177,16 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       (zero queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches →
       no fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed
       (vs flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
-- **[CODE] P2.5. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: strategy_master). See that doc for the live checkbox + evidence.** (Taker = VWAP-walk the live
-  depth, replacing the flat-slip fill-sim in `_ledgers.py`. Repo: e2e-testing.)
+- [x] ✅ [CODE] P2.5. **DONE via `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1** (2026-08-09) — Taker fill
+      in `_ledgers.py` now VWAP-walks recorded live order-book depth (mirrors `paper_engine.py`'s $250k/$1M notional
+      precedent), replacing the flat-slip fill-sim. `e2e-testing@06c709e` (verified ancestor of
+      `origin/live-defi-rollout` 2026-08-10): added `_book_depth_levels` / `_vwap_walk`; taker branch in
+      `simulate_fills` VWAP-walks depth, falling back to flat open+slip only on fetch/walk failure; `_fillrow` skips
+      flat `TAKER_SLIP_BP` when price already reflects a real walk (avoids double-counting slippage). Unit test
+      `tests/unit/test_ledgers_taker_vwap.py` (5 cases: single-level, multi-level partial-fill, thin-book, empty-book).
+      `quality-gates.sh` green (174 passed, sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`). **Remaining open items
+      in this doc (2026-08-10): 20 — all operator-gated `BLOCKED-OPERATOR-DECISION` research/strategy/book-sizing
+      decisions under §C.**
 - [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
       the unfilled remainder (single-shot, no requote) is the risk-adjusted winner for cs (Sharpe 0.24 vs 0.22, maxDD
       −$1.06M vs −$1.79M ≈ halved, 5.3 vs 4.0 bps), because under-filling the largest rebalances acts as a free

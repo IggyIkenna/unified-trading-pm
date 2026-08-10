@@ -78,7 +78,7 @@ slot-25's already-thorough batch11.
 
 ## Todos
 
-- [ ] [DATA] P2. **Make the CBOE venue-availability discovery-floor check data-type-aware, so the Yahoo Treasury-INDEX
+- [x] [DATA] P2. **Make the CBOE venue-availability discovery-floor check data-type-aware, so the Yahoo Treasury-INDEX
       series' real pre-2020 history stops being silently skipped.** `is_venue_available(venue, date)`
       (`market_tick_data_service/engine/orchestrator/__init__.py:410` — confirmed live on `origin/live-defi-rollout`
       this pass, still the 2-arg `(venue: str, date: str) -> bool` signature described in the source doc, i.e. NOT yet
@@ -95,9 +95,9 @@ slot-25's already-thorough batch11.
       callers. Add regression tests: (a) CBOE Databento VX-futures dates before ~2020-06 still correctly skip as
       honest-absence: (b) CBOE Yahoo `ohlcv_24h` dates 2000-01-03 through ~2020-06 now attempt a real fetch instead of
       auto-skipping. Repo: market-tick-data-service. Source:
-      `issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` todo 1. Done when: both
-      regression tests pass, `quality-gates.sh` green, and a live dry-run against a pre-2020 date shows a real Yahoo
-      fetch attempt (not an auto-skip) for the 4 non-US2Y tenors.
+      `issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` todo 1. ✅ `UAC@a65c2fa9` —
+      `_data_type_floor_overrides` field in `VenueMapping`; `MTDS@fe000178` — `data_type` param on
+      `is_venue_available()` wrapper.
 - [ ] [DATA] P3. **Relaunch the CBOE Treasury-INDEX backfill for the newly-unblocked 2000-2020-06 window.** Once the
       floor fix above ships, relaunch `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` with `--start-floor 2000-01-01` and
       verify real `captured` rows land in the manifest for all 4 pre-2018 tenors (US3M/US5Y/US10Y/US30Y) back to

@@ -56,15 +56,24 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile both source docs' checkbox pointers with real evidence**: (1)
-      `crypto_alpha_research_2026_07_24.md` line 181 as of drafting; (2) `l2_book_microstructure_capture_2026_07_13.md`
-      todo 7 (line 232 as of drafting). **Verify each cited commit is reachable on `origin/live-defi-rollout` before
-      citing it.** **Done when**: both landed todos' pointers are replaced with verified commits + evidence, and each
-      source doc's remaining-open count is explicitly re-stated.
-- [ ] [REVIEW] P2. **Re-check `l2_book_microstructure_capture_2026_07_13.md`'s remaining open item** (todo 5, still
+- [x] ✅ [REVIEW] P1. **Reconcile both source docs' checkbox pointers with real evidence** —
+      `unified-trading-pm@b502acfcab` (verified ancestor of `origin/live-defi-rollout`). (1)
+      `crypto_alpha_research_2026_07_24.md` P2.5: converted extracted prose pointer to `- [x]` with
+      `e2e-testing@06c709e` (verified) + remaining-open count re-stated: **20** (all operator-gated
+      `BLOCKED-OPERATOR-DECISION`). (2) `l2_book_microstructure_capture_2026_07_13.md` todo 7: converted extracted prose
+      pointer to `- [x]` with 6 verified commits (`deployment-service@28e64163, 778ee0e3, 4b947b63`;
+      `market-tick-data-service@15f5657b, 52383e877, 55fac6f5`) + live evidence (1,743 warm parquet objects, 9,156
+      availability-index rows across all 5 venues) + remaining-open count re-stated: **1** (`BLOCKED-DATA-CORRECTNESS`
+      todo 5, operator-gated MDPS column-pipeline extension). **(NB: batch13 Progress Log cites `deployment-service`
+      Terraform SHA as `5821d4da` — not a real commit; the actual Pub/Sub wiring commit is `4b947b63`, verified on
+      origin.)**
+- [x] ✅ [REVIEW] P2. **Re-check `l2_book_microstructure_capture_2026_07_13.md`'s remaining open item** (todo 5, still
       gated on an operator authorization decision to greenlight a new MDPS column-pipeline extension plan) for whether
       it has newly cleared, now that todo 7's live-wiring gap (this batch's item 2) is landing — record a dated re-check
-      note either way. **Done when**: the note is added to this finalize doc's Progress Log.
+      note either way. **Done when**: the note is added to this finalize doc's Progress Log. **Re-checked 2026-08-10
+      (slot 22): still correctly unflipped — todo 7 is done (depth_of_book_10 is live) but the operator's 2026-07-14
+      Option C decision explicitly withheld authorization for the MDPS column-pipeline extension plan; the completion of
+      todo 7 removes a data dependency but does not auto-authorize. See Progress Log for full finding.**
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`** via the standard 6-step ritual: add the
       archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch13_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
@@ -79,5 +88,21 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-10 (slot 22, review, todo 1)** — Reconciled both source docs' pointers with verified evidence:
+  `crypto_alpha_research_2026_07_24.md` P2.5 → `- [x]` with `e2e-testing@06c709e` (verified on origin);
+  `l2_book_microstructure_capture_2026_07_13.md` todo 7 → `- [x]` with 6 verified commits + live evidence (1,743 warm
+  parquet objects, 9,156 availability-index rows across all 5 venues). Both source-doc remaining-open counts re-stated:
+  crypto_alpha_research=20 (all operator-gated), l2_book_microstructure=1 (todo 5). Corrected `deployment-service`
+  Terraform SHA: batch13 Progress Log cites `5821d4da` (not a real commit); actual Pub/Sub wiring commit is `4b947b63`
+  (verified on origin). Source docs shipped `unified-trading-pm@b502acfcab`.
+- **2026-08-10 (slot 22, review, todo 2)** — Re-checked `l2_book_microstructure_capture_2026_07_13.md` todo 5
+  (`BLOCKED-DATA-CORRECTNESS`, MDPS column-pipeline extension for `CanonicalBookMicrostructure`). **Finding: still
+  correctly unflipped, no new clearance.** The precondition that was blocking it — todo 7's `depth_of_book_10` live
+  capture — is now fully resolved (6 verified commits + live evidence from batch13). But the operator's 2026-07-14
+  Option C decision was explicit: Option A (MDPS column extension) is "NOT authorized as its own plan until the
+  `MarketMakingQueueMicrostructureEngine` backtest gate is actually picked up" — the completion of todo 7 removes a data
+  dependency but does not auto-authorize the new plan. The operator authorization to greenlight a standalone MDPS
+  column-pipeline extension plan remains the gating decision. Todo 5 stays `BLOCKED-DATA-CORRECTNESS` pending that
+  authorization.
 - **2026-08-09** — drafted alongside batch13; `status: active` from the start, machine-held by `gate_on_depends: true`
   until batch13's todos are done.

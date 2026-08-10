@@ -158,3 +158,10 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   range). Todo 2 remains gated: not actionable until the VM reaches a terminal state (completed or preempted), which per
   this doc's own estimate is still month-scale (or an unpredictable SPOT preemption). Releasing back to the queue with
   `reason_code: GATED` per worker.md § 4c — not busy-waiting on an indeterminate external condition.
+- **data_engineering (slot 18) 2026-08-10T17:20Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING), run.log
+  actively progressing at `2026-08-10T17:19:09Z` (this check's own timestamp, ~4h after slot 9's check). Now at
+  `Date: 2024-01-28` (up from `2023-08-11` at slot 24's check ~42h ago — ~170 days processed, ~15 min/day, consistent
+  with the documented ~12 min/day rate). ~704 days remaining to `2026-01-01` ≈ ~141 hours of continuous uptime. Todo 2
+  remains gated — releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a
+  month-scale external condition.

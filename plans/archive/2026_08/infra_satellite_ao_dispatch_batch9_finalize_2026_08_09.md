@@ -10,7 +10,7 @@ summary: >-
   NOT — todo 5 stays open, `assigned_vm: NA`). `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred item 3
   (G2) is prose-only documentation, not a live checkbox — no reconciliation needed there beyond a citation note. Then
   runs the standard ritual on the batch pair itself.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-9, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -43,7 +43,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -55,6 +55,12 @@ source: >-
 ---
 
 # Infra satellite AO batch 9 — finalize
+
+> **🟢 ARCHIVED 2026-08-10** — all 3 todos done: reconciled
+> `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`'s todos 1-4 (todo 5 `[OPERATOR]` stays open,
+> source doc correctly NOT archived), noted G2's resolution against `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+> Deferred item 3, then archived `infra_satellite_ao_dispatch_batch9_2026_08_09.md` + this finalize plan via the
+> standard 6-step ritual. Both docs now at `/plans/archive/2026_08/`.
 
 Machine-held via `depends_on` + `gate_on_depends: true` until all 4 of
 `infra_satellite_ao_dispatch_batch9_2026_08_09.md`'s todos are done — this plan can never dispatch early, regardless of
@@ -78,12 +84,11 @@ skill's no-double-gate mechanism).
       `infra_satellite_ao_dispatch_batch1_finalize` territory, and the doc's Deferred disposition already records this);
       the citation note went to the archived doc's Deferred entry, which is where item 3 physically lives. (repo:
       unified-trading-pm)
-- [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch9_2026_08_09.md`** once both todos above are done and both
-      reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix
-      every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both
-      stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip + `git mv` in
-      one commit — 2026-07-30 incident, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo:
-      unified-trading-pm)
+- [x] ✅ [DOC] P3. **Archived `infra_satellite_ao_dispatch_batch9_2026_08_09.md`** to `plans/archive/2026_08/` via the
+      standard 6-step archival ritual: `git mv` + archived banner + `status: complete` on both the batch and this
+      finalize doc, every corpus referrer path repointed to the archive home, INDEX.md regenerated.
+      `check_ag_closeout_linkage.py` (0 orphans, baseline 0) and `regenerate_active_plan_inventory.py` both verified
+      clean. (repo: unified-trading-pm)
 
 ## Codex SSOTs
 
@@ -102,3 +107,8 @@ skill's no-double-gate mechanism).
   item 3 pointing at batch9 todo 1's landing commit (unified-trading-pm@e5697ac5c) as the resolution. Shipped as
   unified-trading-pm@5afa5cd466. Also repointed 4 pre-existing dangling reference paths in that archived doc to their
   archived homes (the pre-commit reference-path gate blocks re-staging it otherwise).
+- **2026-08-10 (slot-17, infra) — todo 3**: Archived `infra_satellite_ao_dispatch_batch9_2026_08_09.md` to
+  `plans/archive/2026_08/` via the standard 6-step ritual, then archived this finalize plan alongside it (all 3 todos
+  now done, unlocked). Both `git mv`'d + banner + `status: complete`; every corpus referrer repointed to the archive
+  home; INDEX.md regenerated. `check_ag_closeout_linkage.py` 0 orphans (baseline 0) +
+  `regenerate_active_plan_inventory.py` clean.
