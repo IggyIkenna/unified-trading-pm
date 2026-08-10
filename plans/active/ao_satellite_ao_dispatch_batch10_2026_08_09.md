@@ -105,17 +105,23 @@ and the parent extraction session's own report for the full per-doc disposition.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since 2026-07-28
-      reached `agent_kind=na_eligibility_auditor` lifecycle-complete.** Query the live orchestrator's `agents` table
-      (read-only — `/check-agent-orchestrator` skill or
-      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`; a worker dispatched on the orchestrator VM
-      itself can query `data/state/state.db` directly, no SSM needed). The 2026-07-28 07:00 UTC fire is already known to
-      have hit `Active: failed` on a curl TIMEOUT past `--max-time 2400`/`TimeoutStartSec=2450`; record whether a LATER
-      fire (pre- or post- any timeout fix since) actually completed end-to-end. Do NOT touch the timeout value itself.
-      **Done when**: this todo's own evidence records the fire-completion verdict (dispatch id, timestamps, terminal
-      state) for the most recent fire(s). Source: `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md:199` (its
-      `[SCRIPT] P3` item, itself sourced from `na_eligibility_auditor_timer_not_yet_installed_2026_07_27.md`, archived).
-      Repo: agent-orchestrator (read-only).
+- [x] ✅ [SCRIPT] P3. **Verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since 2026-07-28
+      reached `agent_kind=na_eligibility_auditor` lifecycle-complete.** — agent-orchestrator (read-only query, no
+      commit). **Verdict: YES, later fires do complete end-to-end** — the specific 2026-07-28 07:00 UTC
+      `TimeoutStartSec=2450` curl-TIMEOUT failure mode is superseded: `TimeoutStartSec` was raised 2450→21600s on
+      2026-08-04 (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, agent-orchestrator@17939c3), and live
+      `agents` table rows postdating that fix (queried directly from `data/state/state.db` on the orchestrator VM, no
+      SSM needed — DB only retains rows from 2026-08-08 onward, so the exact 2026-07-28 row itself is no longer present)
+      confirm actual completions: 10 `agent_kind=na_eligibility_auditor` rows reached `exit_reason=lifecycle-complete`
+      across 3 fires (2026-08-08 02:33-03:02 UTC: `agt-e640f6`/`agt-763d00`; 2026-08-09 02:10-03:26 UTC:
+      `agt-913589`/`agt-aedcde`/ `agt-eee16e`; 2026-08-09 05:17-08:31 UTC — the most recent fully-terminal fire —
+      `agt-f74e23` (49.1min), `agt-3df41f` (146.2min), `agt-b831d5` (127.8min), vs. 2 siblings in that same fire
+      `reaped-stale` at 181.3min/ 145.8min). The most recent fire (2026-08-10 ~01:47 UTC, still in-progress as of this
+      check at 02:07 UTC) has 4 still `active` and 4 already `reaped-stale` (0 `lifecycle-complete` yet) — too early to
+      verdict, and in any case `reaped-stale` is a DIFFERENT, already-tracked failure mode (per-agent staleness reap,
+      not the systemd-service-level curl timeout this todo was scoped to) — see the climbing-reaped-stale-rate open
+      todos already tracked in `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` (no new issue doc filed here to
+      avoid duplicating that tracking). Timeout value left untouched per instruction. — unified-trading-pm@(this commit)
 - [ ] [DATA] P2. **Check + recover-or-dispose `strategy-service`'s stranded wip-preserve ref
       (`refs/wip-preserve/cascade-strategy-service-a77eb6d170ca`, 2026-07-28, a `staging-lock-check.yml`
       self-hosted-runner-migration commit).** Check whether it was independently superseded by a later rollout in
@@ -177,58 +183,58 @@ and the parent extraction session's own report for the full per-doc disposition.
       context_scope pointer):
 
       **(a) — a full run completed end-to-end**, not just once but as standing behavior since 2026-08-06 (the current
-          per-tranche-sharded form of the timer, `plan-reconciler.timer` firing `00:01:05` UTC daily, not the doc's
-          stale "01:00 UTC" description). Cited instance: `dispatch_id=agt-a398c9` — `plan_health_dispatch_initiated`
-          activity row id `396415` @ `2026-08-09 03:02:46 UTC` (`mode=reconcile`) → `plan_health_result` @
-          `2026-08-09 04:43:25 UTC` (`contradictions=5, doc_drift=5, fixes_applied=12, filed=4,
-          commit_sha=40ad77233, pr_url=https://github.com/IggyIkenna/unified-trading-pm/pull/2653`) → branch
-          `refs/heads/plan_reconciler/agt-a398c9` confirmed present on `origin` via `git ls-remote --heads origin
-          'plan_reconciler/*'` (tip `63c087dd6bb85feeb4a8c4d59a986a82db6d6281`, committed `2026-08-09 04:58:35 UTC`).
-          Not cherry-picked: cross-referencing every `mode=reconcile` dispatch_id against `plan_health_result` rows
-          across full DB history found **20 completed reconcile runs since `agt-4fdce1` (2026-08-06 00:00) through
-          `agt-a398c9` (2026-08-09)**, each with a matching pushed `plan_reconciler/<dispatch_id>` branch on origin — the
-          reconciler has been completing to its own contract on a standing, repeated basis, not as a one-off fluke.
+              per-tranche-sharded form of the timer, `plan-reconciler.timer` firing `00:01:05` UTC daily, not the doc's
+              stale "01:00 UTC" description). Cited instance: `dispatch_id=agt-a398c9` — `plan_health_dispatch_initiated`
+              activity row id `396415` @ `2026-08-09 03:02:46 UTC` (`mode=reconcile`) → `plan_health_result` @
+              `2026-08-09 04:43:25 UTC` (`contradictions=5, doc_drift=5, fixes_applied=12, filed=4,
+              commit_sha=40ad77233, pr_url=https://github.com/IggyIkenna/unified-trading-pm/pull/2653`) → branch
+              `refs/heads/plan_reconciler/agt-a398c9` confirmed present on `origin` via `git ls-remote --heads origin
+              'plan_reconciler/*'` (tip `63c087dd6bb85feeb4a8c4d59a986a82db6d6281`, committed `2026-08-09 04:58:35 UTC`).
+              Not cherry-picked: cross-referencing every `mode=reconcile` dispatch_id against `plan_health_result` rows
+              across full DB history found **20 completed reconcile runs since `agt-4fdce1` (2026-08-06 00:00) through
+              `agt-a398c9` (2026-08-09)**, each with a matching pushed `plan_reconciler/<dispatch_id>` branch on origin — the
+              reconciler has been completing to its own contract on a standing, repeated basis, not as a one-off fluke.
 
-          **(b) R1 — the exact code path pinned**: `WorkerLivenessWatchdog._reclaim_exited_slot()`
-          (`agent-orchestrator/server/worker_liveness_watchdog.py:1311-1359`), called from `_tick_once`'s active-slots
-          loop when `has_session(tmux_session)` returns `False` for a slot in `{working, dispatched, stale}`. A typed
-          agent (plan_reconciler et al.) never populates `slot.current_task` (it's tracked via the `agents` table, not a
-          `TaskRow` dispatch), so the function's `if task_id is not None:` branch is skipped and it falls straight to
-          `reset_slot_worker_state(db, slot_id, new_status="idle")` (line ~1359) — the literal `working`→`idle` write.
-          **This is strictly GATED on `has_session()` already being `False`** — i.e. it is a downstream CONSEQUENCE of the
-          tmux session already being dead, never the cause of death. Confirmed still firing live in production (7×
-          since 2026-08-01 per `journalctl`, incl. 3× in the hour preceding this evidence alone, e.g. `"slot 0: worker
-          session gone post-spawn → reclaimed to idle (clean exit)"`). Separately, the code's own inline comment at
-          `worker_liveness_watchdog.py:1421-1426` (dated 2026-07-21, `ao_uniform_agent_liveness_contract` C1) documents
-          that the OLD `_reclaim_idle_lingering_sessions`' "typed-agent carve-out is GONE: a one-off is now `working`
-          throughout... this idle/stale-scanning reclaimer never sees a working one-off" — i.e. that function
-          (the one the doc's stale `worker_liveness_watchdog.py:1172` pointer was aimed at) is now STRUCTURALLY
-          incapable of flipping a live typed agent's slot at all (it only scans slots already `idle`/`stale`); only
-          `_reclaim_exited_slot`, gated on confirmed session-death, can do it.
+              **(b) R1 — the exact code path pinned**: `WorkerLivenessWatchdog._reclaim_exited_slot()`
+              (`agent-orchestrator/server/worker_liveness_watchdog.py:1311-1359`), called from `_tick_once`'s active-slots
+              loop when `has_session(tmux_session)` returns `False` for a slot in `{working, dispatched, stale}`. A typed
+              agent (plan_reconciler et al.) never populates `slot.current_task` (it's tracked via the `agents` table, not a
+              `TaskRow` dispatch), so the function's `if task_id is not None:` branch is skipped and it falls straight to
+              `reset_slot_worker_state(db, slot_id, new_status="idle")` (line ~1359) — the literal `working`→`idle` write.
+              **This is strictly GATED on `has_session()` already being `False`** — i.e. it is a downstream CONSEQUENCE of the
+              tmux session already being dead, never the cause of death. Confirmed still firing live in production (7×
+              since 2026-08-01 per `journalctl`, incl. 3× in the hour preceding this evidence alone, e.g. `"slot 0: worker
+              session gone post-spawn → reclaimed to idle (clean exit)"`). Separately, the code's own inline comment at
+              `worker_liveness_watchdog.py:1421-1426` (dated 2026-07-21, `ao_uniform_agent_liveness_contract` C1) documents
+              that the OLD `_reclaim_idle_lingering_sessions`' "typed-agent carve-out is GONE: a one-off is now `working`
+              throughout... this idle/stale-scanning reclaimer never sees a working one-off" — i.e. that function
+              (the one the doc's stale `worker_liveness_watchdog.py:1172` pointer was aimed at) is now STRUCTURALLY
+              incapable of flipping a live typed agent's slot at all (it only scans slots already `idle`/`stale`); only
+              `_reclaim_exited_slot`, gated on confirmed session-death, can do it.
 
-          **(c) R2 — confirmed live, in real time, during this exact investigation**: 2 of today's 4 successfully-spawned
-          reconciler tranches were STILL RUNNING while this evidence was gathered — cross-cutting (`agt-33a6ec`,
-          `orch-slot-28`, spawned `00:09:32`) and sports (`agt-8005f6`, `orch-slot-19`, spawned `00:10:51`), both
-          `agents.lifecycle="scheduled"`. At the moment of measurement, `orch-slot-19`'s `last_ping` was `3134s` (~52 min)
-          stale — well past the **900s** (15 min) persistent-worker `watchdog_heartbeat_timeout` default
-          (`server/config.py:489`) — yet `slots.status` remained `"working"`, not reaped, because
-          `WorkerLivenessWatchdog._heartbeat_timeout_for()` (`worker_liveness_watchdog.py:715-727`) grants any slot in
-          `_terminal_lifecycle_slot_ids()` (`agent.lifecycle in {"one_shot","scheduled"}`, line ~214-233 — the current-code
-          equivalent of the doc's stale `typed_agent_sessions` pointer) the extended `watchdog_scheduled_heartbeat_timeout`
-          budget (**3600s**/60min, `config.py:499`) instead. Both agents' `tmux_session` fields correctly map back to
-          `orch-slot-19`/`orch-slot-28`. **AgentRow guard is NOT being defeated** — no reap occurred despite silence
-          well past the ordinary-worker threshold, observed live rather than inferred from a log line (the current code
-          grants the exemption via an extended timeout comparison, not a printed "EXEMPTION" log — there is no such
-          string in the current source, only the numeric effect, which is what was measured here).
+              **(c) R2 — confirmed live, in real time, during this exact investigation**: 2 of today's 4 successfully-spawned
+              reconciler tranches were STILL RUNNING while this evidence was gathered — cross-cutting (`agt-33a6ec`,
+              `orch-slot-28`, spawned `00:09:32`) and sports (`agt-8005f6`, `orch-slot-19`, spawned `00:10:51`), both
+              `agents.lifecycle="scheduled"`. At the moment of measurement, `orch-slot-19`'s `last_ping` was `3134s` (~52 min)
+              stale — well past the **900s** (15 min) persistent-worker `watchdog_heartbeat_timeout` default
+              (`server/config.py:489`) — yet `slots.status` remained `"working"`, not reaped, because
+              `WorkerLivenessWatchdog._heartbeat_timeout_for()` (`worker_liveness_watchdog.py:715-727`) grants any slot in
+              `_terminal_lifecycle_slot_ids()` (`agent.lifecycle in {"one_shot","scheduled"}`, line ~214-233 — the current-code
+              equivalent of the doc's stale `typed_agent_sessions` pointer) the extended `watchdog_scheduled_heartbeat_timeout`
+              budget (**3600s**/60min, `config.py:499`) instead. Both agents' `tmux_session` fields correctly map back to
+              `orch-slot-19`/`orch-slot-28`. **AgentRow guard is NOT being defeated** — no reap occurred despite silence
+              well past the ordinary-worker threshold, observed live rather than inferred from a log line (the current code
+              grants the exemption via an extended timeout comparison, not a printed "EXEMPTION" log — there is no such
+              string in the current source, only the numeric effect, which is what was measured here).
 
-          **Residual, newly-discovered — filed separately, NOT part of this todo's gate**: 2 of today's 4 dispatched
-          tranches (`ao`=`agt-128e4d`/slot-10, `ci`=`agt-f2fae2`/slot-12) DID die today — but via `tmux_pruner`'s
-          independent `has_session()==False` sweep (`tmux_session_lost`, `new_status="killed"`, NOT `"idle"`), a
-          different code path than either R1 or R2 above, and one the `f641968`-era exemption guard was never built to
-          cover. No watchdog kill-trigger log fired for either slot; root cause of the tmux-session loss itself is
-          undetermined (checked: not the 00:15 service restart per `KillMode=process` + ~25 sibling sessions spawned in
-          the same window surviving it; not an OOM-kill per `journalctl -k`). Tracked as a new issue:
-          `/plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
+              **Residual, newly-discovered — filed separately, NOT part of this todo's gate**: 2 of today's 4 dispatched
+              tranches (`ao`=`agt-128e4d`/slot-10, `ci`=`agt-f2fae2`/slot-12) DID die today — but via `tmux_pruner`'s
+              independent `has_session()==False` sweep (`tmux_session_lost`, `new_status="killed"`, NOT `"idle"`), a
+              different code path than either R1 or R2 above, and one the `f641968`-era exemption guard was never built to
+              cover. No watchdog kill-trigger log fired for either slot; root cause of the tmux-session loss itself is
+              undetermined (checked: not the 00:15 service restart per `KillMode=process` + ~25 sibling sessions spawned in
+              the same window surviving it; not an OOM-kill per `journalctl -k`). Tracked as a new issue:
+              `/plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
 
 - [ ] [BACKEND] P2. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
       reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot` in their
