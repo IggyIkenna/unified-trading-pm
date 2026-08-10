@@ -32,7 +32,7 @@ repos:
     tid251: 1
   deployment-api:
     dtz: 10
-    tid251: 19
+    tid251: 21
   deployment-service:
     dtz: 7
     tid251: 13
