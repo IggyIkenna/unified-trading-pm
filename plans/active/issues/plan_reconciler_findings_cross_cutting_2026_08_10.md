@@ -68,7 +68,13 @@ with zero committed content is not, by itself, an actionable finding for this ru
 
 ## Filed
 
-(none yet)
+1. **`plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`** — live unauthenticated prod Cloud Run
+   endpoint (`uts-shared-deployment-api`), open 4+ days with 2 prior re-flags (na-eligibility-audit 2026-08-07,
+   ag-closeout-audit 2026-08-08 ×2), still unresolved. Escalated immediately rather than batching at end-of-pass given
+   severity: `BLK-46b42d75` (options A/B/C, recommendation A, evidence-backed via a fresh consumer-count grep). Progress
+   Log entry appended to the target doc itself (already carries the tracked `- [ ]` todos — no new todo needed, this is
+   a re-verify + escalate, not a new finding). Not counted as a hunter candidate (found via direct read while
+   cross-referencing grace-window `ag_closeout_audit_cross_cutting_parked_*` docs for the Phase-0 pileup check).
 
 ## Archive candidates (operator review)
 

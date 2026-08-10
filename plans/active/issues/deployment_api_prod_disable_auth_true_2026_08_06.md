@@ -165,3 +165,18 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
   service (`uts-shared-deployment-api`) reachable with ZERO authentication right now (`DISABLE_AUTH=true` defeats the
   guard via an `ENVIRONMENT`/`DEPLOYMENT_ENV` name mismatch) — re-flagged here since no Progress Log entry since
   2026-08-06 shows this was fixed or operator-acknowledged.
+- **plan_reconciler 2026-08-10 (cross-cutting tranche, dispatch `agt-33a6ec`)**: re-verified live — all 4 `[BACKEND] P1`
+  todos still open, 4+ days since creation with no fix/ack in between (2026-08-08's `ag-closeout-audit` parked-findings
+  runs re-flagged this same gap twice more, still unresolved). Given the severity (live unauthenticated prod endpoint)
+  and staleness, escalated NOW rather than waiting for this run's end-of-pass routing: filed `BLK-46b42d75` asking the
+  operator to pick fix shape (a) vs (b) vs (c) (see this doc's own "Recommended fix shape" section above for a/b).
+  Before recommending, grepped the whole workspace for other consumers of `UnifiedCloudConfig.environment` (7 total,
+  across `deployment-api`/`strategy-service`/`alerting-service`/`unified-trading-api`) — confirmed neither fix shape (a)
+  nor (b) touches any of the other 6, since both are self-contained to `deployment-api`'s own guard/env (fix (a) adds a
+  second string check inside `auth.py` without changing what `UnifiedCloudConfig.environment` resolves to anywhere else;
+  fix (b) only sets an env var on `deployment-api`'s own Cloud Run revision). Recommended (A) on that basis — it fixes
+  the actual root-cause name mismatch rather than papering over it with a value that happens to satisfy the current
+  check. Did not attempt the live-traffic caller audit (todo 3) or the actual fix (out of scope for a
+  plan-reconciliation pass — this is application code + live infra, not a plan doc). Not flipping any of the 4 todos;
+  this remains genuinely operator-gated per the 2026-08-07 verdict above, now with a narrower, evidence-backed choice in
+  front of the operator instead of an open-ended one.
