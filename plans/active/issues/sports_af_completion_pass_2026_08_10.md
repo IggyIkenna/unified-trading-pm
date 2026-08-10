@@ -227,17 +227,34 @@ depends_on: []
           watchdog to follow.
         - **No code shipped** — pure operations (VM stop + re-launch).
 
-## Deferred work after 2026-08-10 ~16:11Z
+      - **2026-08-10 (slot 28, data_engineering, ~16:22Z–16:29Z)** — All-entity mode REPRODUCIBLY broken; pivoting to
+        per-entity:
+        - **Second VM `af-backfill-20260810-160958` also stalled** after first-date writes (16:19:27Z). Same pattern:
+          completed 2020-06-06 (TEAMS→STANDINGS→FIXTURE_STATS→FIXTURE_LINEUPS→PLAYER_STATS → manifest), emitted 2
+          heartbeats (16:19:54Z, 16:20:54Z), then complete GCS silence. Watchdog confirmed stall at 16:22:27Z.
+        - **Root cause**: reproducible bug in all-entity mode's chunk loop — succeeds on first date, hangs after
+          manifest write. INJURIES single-entity mode worked fine (334 objects, full range). The 5-entity aggregation
+          triggers a deadlock/hang in the iterator or API client pool.
+        - **Strategy pivot**: per-entity serial launches (the working single-entity pattern). Order: STANDINGS (271) →
+          TEAMS (96) → FIXTURE_STATS (136) → FIXTURE_LINEUPS (136) → PLAYER_STATS (3).
+        - **Launched `af-backfill-20260810-162910`** (`--entity STANDINGS`, on-demand, `e2-standard-8`, 2020-06-06 →
+          2026-08-10). API quota healthy: 113,622 remaining. STANDINGS is season-scoped (1 API call per league per
+          season), should be faster than per-date entities like INJURIES.
+        - **No code shipped** — pure operations (VM stop + strategy pivot).
 
-| Item                                                                    | State / why deferred                                | Blocked on                       |
-| ----------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------- |
-| **All-entity backfill** (`af-backfill-20260810-160958`)                 | Just launched, RUNNING, `e2-standard-8`             | VM completion (real infra)       |
-| **Re-census to confirm ~0**                                             | Gated on all backfills converging                   | All-entity VM exit_code=0        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**              | Gated on re-census ~0                               | Re-census confirms ~0 needed     |
-| **VM rightsizing check** (`af-backfill-20260810-103218` — completed)    | VM ~5.5h `e2-standard-8` on-demand, completed       | GCP monitoring data (historical) |
-| **VM rightsizing check** (`af-backfill-20260810-154220` — stalled/stop) | Stalled ~14 min, `e2-standard-8` on-demand, stopped | After VM terminates              |
-| **VM rightsizing check** (`af-backfill-20260810-160958` — running)      | Just launched, `e2-standard-8` on-demand            | After VM >30min or terminates    |
-| **Stall root cause** (`af-backfill-20260810-154220`)                    | Complete GCS silence 14+ min; root cause unknown    | Post-hoc diagnosis (if needed)   |
+## Deferred work after 2026-08-10 ~16:29Z
 
-**Recommended NEXT item**: Monitor `af-backfill-20260810-160958` for first `[[VM_PROGRESS]]` marker (~16:13-16:15Z
-expected). If this VM also stalls, escalate to per-entity batch strategy (launch one `--entity` per entity, serialized).
+| Item                                                             | State / why deferred                                 | Blocked on                         |
+| ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | Just launched, RUNNING, `e2-standard-8`              | VM completion (real infra)         |
+| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
+| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
+| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
+| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)       | FIXTURE_LINEUPS VM exit_code=0     |
+| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging       | All per-entity VMs exit_code=0     |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                | Re-census confirms ~0 needed       |
+| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                  | After each VM >30min or terminates |
+
+**Recommended NEXT item**: Wait for STANDINGS VM `af-backfill-20260810-162910` boot + first progress. When complete:
+launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
