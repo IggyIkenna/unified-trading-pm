@@ -994,6 +994,15 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   ≈2020-12-19 still before first real gap (~2021-06-07), census ~550/2257 unchanged. Not terminal — skip `GATED` (est
   180).**
 
+- **2026-08-10T23:07Z (slot 24, data_engineering, P1 backfill dispatch, task `-3b44a0a4ec31`): live VM re-check only —
+  still not terminal, not launching, not flipping.** `smallchunk14-20260809` RUNNING (no relaunch since slot 4's 22:58Z
+  check); run.log fresh 23:07:26Z, chunk 115/2171 league=MLS/J1_LEAGUE date=2020-12-21, `MEM_PRECHECK
+  mem_available_mb=30325/30272` (~30GB free), **0 `CHUNK_FAILED`/OOM since relaunch**; PROGRESS.json
+  `last_completed_date=2020-12-20` monotonic (updated 23:03:54Z) — healthy progression from chunk 113/2171. Frontier
+  ≈2020-12-21, still before first real gap (~2021-06-07); census unchanged ~550/2257 (declining to re-run). Silent-hang
+  count stays 12. Full live tracker: `plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
+  Skip `GATED` (est 180); next dispatch: re-check `smallchunk14` (or successor) for terminal before flipping.
+
 ## Codex SSOTs
 
 `/codex/02-data/sports-2020-06-data-floor.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
