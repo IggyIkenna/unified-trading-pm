@@ -189,6 +189,20 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
       `[OPERATOR]` tag) doesn't resolve inside its named target codex doc (`orchestrator-cloud-identity-self-service.md`
       has no lettered-finding scheme) — the cited RULE is real and correct, only the locator is dangling. Fix the
       citation to point at the actual section name.
+- [ ] [INFRA] P2. **`unified-trading-ci` slot-6 clone has a foreign unpushed commit + a branch-tracking
+      misconfiguration** (found incidentally during a 2026-08-10 pre-compact re-audit, outside this doc's PM-corpus
+      scope — noted here rather than lost). `git log origin/main..HEAD` in the slot-6 `unified-trading-ci` checkout
+      shows 1 unpushed commit, sha `369a96d6a3`, authored `ikennaigboaka [slot-4·planning]` at 2026-08-10T05:36:11Z
+      ("fix(lint): resolve shellcheck findings in major-bump-issue-handler.yml") — **not this session's commit** (slot
+      6, not 4); left untouched per the multi-agent-safety rule against acting on another slot's unpushed work without
+      confirming liveness/intent. Separately, `git status --branch` on that checkout reports
+      `main...origin/live-defi-rollout` as the tracking ref — wrong (should track `origin/main`); plausibly because
+      `unified-trading-ci` is a brand-new repo (extracted 2026-08-06 per
+      `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md`) whose per-slot worktree setup may not have run
+      `setup-tab-worktrees.sh`'s normal tracking-branch step consistently across slots yet. Needs: (1) confirm slot-4
+      liveness and either let them push it or recover it if the slot is dead, (2) audit whether OTHER slots'
+      `unified-trading-ci` clones have the same tracking misconfig, (3) fix at the root (worktree setup script) if
+      systemic. Whoever owns `unified-trading-ci`/worktree infra, not this tranche.
 
 ## Archive candidates (operator review)
 
@@ -327,3 +341,15 @@ referrer docs' commit ages first and complete the 6-step ritual if clear.
   last open todo MUST immediately decide archive-now vs. `archive_exempt`, or the commit simply fails. Grace-locked
   referrers (this run's actual blocker for 4 docs) make `archive_exempt` the common case whenever the corpus is under
   heavy same-day churn, which the infra tranche specifically was today (46% grace coverage).
+- **2026-08-10 ~07:15 UTC** — Second `/pre-compact` invocation (re-audit; no substantive work happened between the prior
+  verdict and this one). Re-swept all slot-6 repos: unchanged clean/`ahead=0/behind=0`, except `unified-trading-ci`
+  showing 1 unpushed commit — investigated and confirmed it's **slot-4's**, not this session's (see new Filed item
+  above); left untouched, filed rather than acted on. Re-checked `/tmp` for stray litter: the naive
+  `/tmp/*.log /tmp/*.txt` glob matches hundreds of files, but the overwhelming majority (e.g. ~400+ `vm-exec-*.log`,
+  `backfill-chunk*.log`, `mtds_qg_*.log`) belong to OTHER slots' concurrent work on this shared host, not this session —
+  correctly left alone this time rather than over-matching; the specific files already identified as mine were already
+  cleaned in the prior pass. **Lesson**: a bare `/tmp/*.log` glob on a heavily shared host is not a safe way to find "my
+  own" litter — it will always return mostly other slots' files; only files with names traceable to this session's
+  specific actions (and ideally a timestamp check) should ever be considered for cleanup. Scratchpad unchanged (same 3
+  files, still regenerable/already-summarized). No new secrets, no new dangling references. Verdict unchanged: safe to
+  compact.
