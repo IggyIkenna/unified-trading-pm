@@ -154,3 +154,9 @@ Fix the writers + registry FIRST, then run the delete pass:
 - **2026-08-10 (slot 23, data_engineering)**: Shipped todo 1 — replaced raw build_league_id(country, name) slug with
   registry-first get_league_by_api_football_id(fixture.league.api_football_id) at instruments-service@12cafa1b. Falls
   back non-lossy to build_league_id() when api_football_id is None.
+- **2026-08-10 (slot 25)**: Cross-reference — the plan-level P2 checkbox in
+  `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task `sports_closeout_track_x_hygiene-006`)
+  tracks the SAME migration completion as this issue's todo 4 (the gated delete pass, `-81828e9c8a94`, currently queued
+  behind the 3 P1 fix todos — all dispatched). **When todo 4's delete pass completes and a fresh census = 0 for the 3
+  mappings, ALSO flip that plan-level P2 checkbox** (`- [x]` + evidence). The `sports_closeout_track_x_hygiene-006`
+  backlog entry is parked/skipped GATED pending that completion — no separate worker needs to run the delete twice.

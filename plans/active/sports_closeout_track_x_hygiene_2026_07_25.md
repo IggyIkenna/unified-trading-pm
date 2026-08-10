@@ -197,3 +197,19 @@ review-blocking.
   and the SEGUNDA_DIVISION/LA_LIGA_2 registry duplicate. Delete pass = no-migrate-first (Part 3 fails). Filed
   `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass todo) + shipped
   the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first, then the delete.
+- **2026-08-10 (slot 25, data_engineering, `sports_closeout_track_x_hygiene-006`)**: Dispatched to complete the
+  plan-level P2 migration checkbox. Verified the live state before re-running anything: the migration apply (delete
+  pass) is NOT autonomously executable and the done-when is not yet met. Per slot-22's same-day finding
+  (`issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`), a live writer still emits
+  `league=SEGUNDA_DIVISION` (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches
+  `available_at=2026-08-07`), so delete-safety protocol Part 3 (no live writer) FAILS → `no-migrate-first`: nobody
+  deletes until the writers are fixed. Confirmed via `GET /api/backlog` that all 3 P1 writer/registry fixes from that
+  issue are ALREADY DISPATCHED to other workers (`sports_legacy_league_vocab_recontamination-17dec7f3e0dc`
+  api_football_reference.py:165 registry-first league key, `-338f70aad0c0` SEGUNDA_DIVISION/LA_LIGA_2 registry dedup,
+  `-3bdf6c8c6afb` FOOTYSTATS_HISTORICAL_SEASON_IDS fix), and the gated delete pass is QUEUED
+  (`sports_legacy_league_vocab_recontamination-81828e9c8a94`) behind them. The delete-pass todo IS this checkbox's work,
+  tracked to completion there — no duplicate dispatch needed. **Flip trigger**: when the gated delete pass
+  (81828e9c8a94) completes and a fresh census of `instruments-store-sports-prd` returns 0 objects for the 3 mappings
+  (SEGUNDA_DIVISION→LA_LIGA_2 / BRAZIL_SERIE_A→BRASILEIRAO / ENGLAND_PREMIER_LEAGUE→EPL; the 928 differing-twin
+  quarantine excluded per the todo's own done-when), flip THIS plan-level P2 checkbox. Skipping this dispatch
+  (`reason_code: GATED`) — no code/check re-run performed; this Progress Log entry is the only change this turn.
