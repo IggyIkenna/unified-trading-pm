@@ -142,13 +142,15 @@ continuously across all 10 tranches.
       what a same-content run of this code produces, and does NOT match what a pre-fix run of this code produces either
       — a pre-existing single-line-only marker-stripping limitation, out of this todo's scope, that already applied
       identically to na-eligibility-audit's own multi-line verdict markers before this change).
-- [ ] [DOCS] P3. **Cross-reference this issue in `SKILL.md`'s Phase 0 "Interim mitigation for date-fallback
+- [x] ✅ [DOCS] P3. **Cross-reference this issue in `SKILL.md`'s Phase 0 "Interim mitigation for date-fallback
       false-positives" section.** In `cursor-configs/skills/na-eligibility-audit/SKILL.md` (~line 116): add a one-line
       pointer naming the context-scout-specific sub-case explicitly, so the next tranche run that hits it can cite this
       finding instead of independently re-deriving the same by-hand `git diff` verification across a dozen docs. Done
       when: the cross-reference line exists and names both the mechanism (context-scout's body-level marker) and the fix
       doc. Source: `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` todo 2. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@4120fc45aa. Added a sentence naming the context-scout body-level marker
+      mechanism and citing `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`
+      immediately after the "unnecessary once the content-hash SCRIPT is live" line.
 
 ## Operator approval gate
 
@@ -168,3 +170,5 @@ finalize twin is already `status: active` per the no-double-gate ruling and will
 - **2026-08-09** — Drafted by `/ag-closeout-audit infra` (autonomous mode, second dispatch of the day, slot 9, dispatch
   agt-c74a01). Paired with `infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md` in the same run per the
   finalize-plan-coverage rule.
+- **2026-08-10 (slot-15, infra)**: shipped todo 2 — `unified-trading-pm@4120fc45aa`. Both todos now `[x]`; plan has 0
+  open items (archival is the paired finalize plan's job, not this todo).
