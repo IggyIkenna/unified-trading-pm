@@ -101,11 +101,16 @@ drift_direction: advance-code
       on `daily_positioning_dump.sh`. **Repo: deployment-service.** Source:
       `carry_strategy_ensemble_productionization_2026_07_24.md` (line 187-190). **Done when**: the daily trigger is live
       and a real scheduled run is verified end-to-end (not fire-and-forget).
-- [ ] [INFRA] P3. **Clean up pre-existing ruff errors in `deployment-service/scripts/vm/vm_zombie_watchdog.py`** (lines
-      62/78/1143/1334 — not introduced by prior watchdog-registration work; surfaced by the funding-ensemble dry-run
-      lint). **Repo: deployment-service.** Source: `carry_strategy_ensemble_productionization_2026_07_24.md` (line
-      191-194). **Done when**: `deployment-service`'s `quality-gates.sh` lint stage is green on this file, no new
-      ratchet regressions.
+- [x] ✅ [INFRA] P3. **Clean up pre-existing ruff errors in `deployment-service/scripts/vm/vm_zombie_watchdog.py`**
+      (lines 62/78/1143/1334 — not introduced by prior watchdog-registration work; surfaced by the funding-ensemble
+      dry-run lint). **Repo: deployment-service.** Source: `carry_strategy_ensemble_productionization_2026_07_24.md`
+      (line 191-194). **Done when**: `deployment-service`'s `quality-gates.sh` lint stage is green on this file, no new
+      ratchet regressions. — **deployment-service@391e214c** (2026-08-10): `quality-gates.sh` green (exit 0, 310s),
+      `ruff check` passes `All checks passed!`, no ratchet regressions. The specific ruff errors cited at lines
+      62/78/1143/1334 were fixed by prior commits (`98ec8ddb`, `3d545372`, `58af2ab1`, `0e94ceee`, `89b18e99`). One
+      harmless RUF100 informational warning remains on the `# noqa: qg-deep-import` marker at line 115 — that marker is
+      REQUIRED by the custom `check-import-patterns.py` checker (not a ruff rule), so ruff's "invalid directive" warning
+      is a false positive from ruff not knowing about project-custom noqa codes; suppresses zero actual rules, exits 0.
 - [x] ✅ [STRATEGY] P2. **Add an asset-class filter for the live broad universe.** The top-volume perp universe now
       surfaces tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) alongside crypto; add an
       optional crypto-only gate (or a UAC asset-class tag) so the carry book can exclude non-crypto underlyings when
