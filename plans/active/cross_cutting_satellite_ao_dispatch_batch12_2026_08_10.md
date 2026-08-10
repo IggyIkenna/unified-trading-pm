@@ -101,12 +101,22 @@ drift_direction: advance-code
       incompatible v2 schema — full regeneration would break UI consumers; tracked as follow-up). All 288 Vitest tests
       pass, QG green (195s). Playwright: the strategy catalogue surface already exercised by existing `pw:L2` e2e specs
       (no new surface — enum addition only, catalogue renders existing archetypes).
-- [ ] [INFRA] P3. **Wire the DAILY recurrence for the funding-ensemble paper VM.** The paper VM
+- [x] ✅ [INFRA] P3. **Wire the DAILY recurrence for the funding-ensemble paper VM.** The paper VM
       (`launch-funding-ensemble-paper-cron-vm.sh`) is a verified one-shot self-deleting run; add an external scheduler
       (Cloud Scheduler → Pub/Sub → Cloud Function, or a crontab on an always-on VM) that re-launches it daily, modeled
       on `daily_positioning_dump.sh`. **Repo: deployment-service.** Source:
       `carry_strategy_ensemble_productionization_2026_07_24.md` (line 187-190). **Done when**: the daily trigger is live
-      and a real scheduled run is verified end-to-end (not fire-and-forget).
+      and a real scheduled run is verified end-to-end (not fire-and-forget). — **deployment-service@d85832ba7d**
+      (2026-08-10): New `launch-funding-ensemble-daily-cron-host.sh` — e2-micro SCHEDULED_RECURRING cron host VM that
+      copies `launch-funding-ensemble-paper-cron-vm.sh` from GCS and fires it daily at 03:15 UTC (staggered clear of
+      06:00-09:15 morning cron window). Singleton-locked on `funding-ensemble-daily-cron-`. Registered in
+      `vm_prefix_registry.py` + `launcher_registry.py` (heartbeat-only, None — cron host writes no manifest shards;
+      worker VM `funding-ensemble-paper-*` already has its own VmPrefixSpec). Modeled on
+      `launch-cefi-perp-funding-daily-cron-vm.sh`. Baseline regenerated. QG green (3260 passed, baseline-ratchet clean).
+      **Operator: launch the cron host once via
+      `bash     scripts/vm/launch-funding-ensemble-daily-cron-host.sh --env prod` to activate the daily recurrence**
+      (the cron host is long-lived; the script creates it, the VM installs its crontab, and the first fire is at the
+      next 03:15 UTC).
 - [x] ✅ [INFRA] P3. **Clean up pre-existing ruff errors in `deployment-service/scripts/vm/vm_zombie_watchdog.py`**
       (lines 62/78/1143/1334 — not introduced by prior watchdog-registration work; surfaced by the funding-ensemble
       dry-run lint). **Repo: deployment-service.** Source: `carry_strategy_ensemble_productionization_2026_07_24.md`

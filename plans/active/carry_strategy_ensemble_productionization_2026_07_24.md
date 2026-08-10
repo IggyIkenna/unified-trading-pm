@@ -185,10 +185,12 @@ is the validated foundation + a runnable paper path TODAY.
       (3) self-delete fallback `|| log` → `|| echo … || true` (the self-delete races its own process + `log` isn't in
       the `bash -c` subshell → was a FALSE DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches
       (wrong VM_TASK → install bug → venv path → green).
-- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
+- [x] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
       is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
       Scheduler → Pub/Sub → Cloud Function running the launcher, or a crontab on an always-on VM invoking
-      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.**
+      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.** —
+      **deployment-service@d85832ba7d** (2026-08-10): `launch-funding-ensemble-daily-cron-host.sh` ships the cron host
+      (e2-micro SCHEDULED_RECURRING, fires worker launcher daily at 03:15 UTC). Operator: launch once to activate.
 - [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
       `deployment-service/scripts/vm/vm_zombie_watchdog.py` (lines 62/78/1143/1334 — NOT introduced by the P2 watchdog
       registration; surfaced by the funding-ensemble dry-run lint) — clean them so the deployment-service QG is green.
