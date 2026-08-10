@@ -125,7 +125,8 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       updated: safe-doc-push option-1 now carries an isolation caveat — documents that isolated-worktree mode previously
       dropped deletions silently (pre-`18ae9a4312`), the fix now propagates them, pre-fix checkouts need
       `SDP_ISOLATED=0` for archival commits with a rename. Cites this issue doc.
-- [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — the assertion existed but was structurally blind; coverage widened.**
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — `unified-trading-pm@689e10d281`** (QG green, post-push ancestry verified) —
+      the assertion existed but was structurally blind; coverage widened.
       `scripts/plan-hygiene/check_create_only_archive_commits.py` (added `43e88b720d`, already wired into
       `run_hygiene_sweep.sh` as a HARD check) did assert the both-sides shape — but only for `plans/archive/issues/`
       against `plans/active/issues/`, via a path substitution. **Real archivals land in DATED directories**
@@ -135,7 +136,8 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       `ALLOWED_DUPLICATE_STEMS` (a shrinking ratchet of pre-existing pairs, each carrying a recorded verdict — a pair
       NOT listed fails immediately, so no new duplicate can hide behind a shrinking count) and `_is_redirect_stub()` (an
       INTENDED pair). Verified: flags exactly the 2 genuinely-stale pairs, exempts the other 8, `ruff check` +
-      `ruff format --check` clean.
+      `ruff format --check` clean. Confirmed green against origin after the push:
+      `no create-only archive/active     duplicate pairs at HEAD`.
 - [x] ✅ [REVIEW] P2. **DONE 2026-08-10 — full sweep run; 10 pairs found, each given a verdict** (table below). 2
       reconciled here by deleting the strictly-stale active copy (16 referrer repoints across 10 docs); 1 is an
       intentional redirect stub; the remaining 7 are carried on the ratchet with per-pair verdicts and the 3 follow-up
@@ -185,6 +187,20 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   pairs; see the sweep table. **A caution for whoever picks up the 3 remaining todos**: the guard is now the corpus's
   only mechanical duplicate detector, and its `ALLOWED_DUPLICATE_STEMS` ratchet is the ONLY record that those 7 pairs
   are known-and-triaged rather than unnoticed. Removing a stem without actually reconciling the pair re-hides it.
+- **slot-1 2026-08-10 (ship log — two blockers hit, both worth knowing before the next attempt)**. The guard landed as
+  `unified-trading-pm@689e10d281` only on the THIRD quickmerge attempt, and neither earlier failure was in the change:
+  (a) **timing** — `❌ Quality gates must complete in <600s (took 724s work + 814s governor queue-wait = 1538s wall)`;
+  the gate counts the governor's own admission queue-wait, so a throttled run fails for having been throttled (filed as
+  a todo on `/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`). It passed once bats parallelization
+  (`974dfc2de9`, 663s→115s) landed from another session and brought the work side under budget. (b) **conflict-markers**
+  — quickmerge's own internal `pull --rebase --autostash` popped a stale autostash over two files a concurrent
+  safe-doc-push of mine had just landed, leaving git conflict markers in the tree that failed its post-gate check
+  (writing that marker literally here, even fenced in backticks, trips `check_conflict_markers.sh` — it matches the raw
+  string on purpose, so describe it, never quote it). **Do not run a safe-doc-push touching other files while a
+  quickmerge is mid-flight in the same checkout** — they share one working tree and one stash stack. Also measured, and
+  NOT this change's fault: PM's bats suite has ~37-60 failing tests on macOS (`sed -i` BSD-vs-GNU and similar) that pass
+  on the Linux AO VM where they were authored; they are non-blocking for the gate but make "is my change green?"
+  genuinely hard to read from the log.
 
 ## Full sweep — 10 duplicate pairs on origin, with a verdict each (closes todo 5)
 
