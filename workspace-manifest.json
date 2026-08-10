@@ -71,7 +71,7 @@
     "deployment-api": "0.77.0",
     "deployment-service": "0.124.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.54.0",
+    "execution-service": "0.56.0",
     "features-service": "0.81.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
@@ -1531,7 +1531,7 @@
         "large_file_count": 19,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "server"
     },
     "unified-trading-ci": {
