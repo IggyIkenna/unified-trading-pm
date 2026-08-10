@@ -10,7 +10,7 @@ summary: >-
   `_finalize` pair; 29 items stayed Deferred there (D6-1 through D6-29). Also carries 4 Phase-0-only informational
   findings (dual-tag mistags, corpus-wide linkage-gate cross-check) — none require action from this tranche, matching
   yesterday's interim assessment. Supersedes the 2026-08-07 interim doc, which never reached a final report.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -42,6 +42,7 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_07
+superseded_by: ag_closeout_audit_ci_parked_2026_08_09
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -251,3 +252,7 @@ complete the supersession (set `superseded_by:` + archive) if that reading is co
 ## Progress Log
 
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **2026-08-10 (ag_closeout_auditor, ci tranche, slot 27, agt-d6ed2a)**: completing the supersession this doc's own
+  2026-08-09 na-eligibility-audit marker flagged as open — `superseded_by: ag_closeout_audit_ci_parked_2026_08_09` set,
+  `status` → `resolved`, archived to `plans/archive/2026_08/issues/` per the established 2026-08-07-predecessor
+  precedent (archive once superseded, same terminal-status convention, no separate banner needed for this doc type).

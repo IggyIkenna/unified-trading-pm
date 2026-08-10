@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 295 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 303 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -125,7 +125,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (37)
+### defi (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -240,6 +240,10 @@ by hand._
 - [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) — Forked verbatim
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
+- [`family2_position_registry_unwind_consumption_2026_08_09`](./family2_position_registry_unwind_consumption_2026_08_09.md)
+  — Add unwind/close consumption to Family2PositionRegistry.enumerate_open_positions() once strategy-service ships a
+  real Family-2 close/unwind emission path. Gated on strategy_service_family2_close_unwind_emission_2026_08_09.md —
+  split out…
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
@@ -253,6 +257,9 @@ by hand._
 - [`solana_dex_pool_swaps_indexer_2026_08_08_finalize`](./solana_dex_pool_swaps_indexer_2026_08_08_finalize.md) — Gated
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
+- [`strategy_service_family2_close_unwind_emission_2026_08_09`](./strategy_service_family2_close_unwind_emission_2026_08_09.md)
+  — Ship a real close/unwind AtomicInstruction emission path in recursive_staked.py's Family-2 tick handler. Today it
+  only ever opens a position once and never emits a close. Prerequisite for…
 
 ### tradfi (25)
 
@@ -790,7 +797,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (40)
+### ao (44)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
@@ -847,6 +854,12 @@ by hand._
   satellite extraction from `git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`. That doc's own P2…
 - [`ao_satellite_ao_dispatch_batch16_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch16_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends` until its sole todo is done. Reconciles verified evidence back into…
+- [`ao_satellite_ao_dispatch_batch17_2026_08_10`](./ao_satellite_ao_dispatch_batch17_2026_08_10.md) — SEVENTEENTH
+  AO-dispatch batch for the `ao` topic tranche — a full-tranche `ao` RECLASSIFY + satellite-extraction sweep (group 1 of
+  3, 2026-08-10) single-item extraction from `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`. That doc's…
+- [`ao_satellite_ao_dispatch_batch17_finalize_2026_08_10`](./ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch17_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends` until its sole todo is done. Reconciles verified evidence back into…
 - [`ao_satellite_ao_dispatch_batch2_2026_07_30`](./ao_satellite_ao_dispatch_batch2_2026_07_30.md) — SECOND AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-30, autonomous mode, real
@@ -917,6 +930,13 @@ by hand._
 - [`deepseek_flash_ab_routing_test_2026_08_05`](./deepseek_flash_ab_routing_test_2026_08_05.md) — DeepSeek's own backend
   already silently substitutes deepseek-v4-flash for a small, uncontrolled fraction of deepseek-v4-pro-declared requests
   (confirmed live 2026-08-05, ~8 of 364 task_usage rows) — a confounded sample that can't answer…
+- [`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10`](./e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md)
+  — Gated closeout for issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md — machine-held via depends_on +
+  gate_on_depends: true until its sole remaining item (re-run `admin-strategy-assignments.spec.ts`, record `pw:L2 ✓`
+  evidence or…
+- [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](./ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
+  — Gated closeout for issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md — machine-held via depends_on +
+  gate_on_depends: true until its 3 audit todos (glue-runner governor-ledger participation, host-undersizing verdict,…
 - [`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08`](./multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md)
   — Gated closeout for `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` — machine-held
   via `depends_on` + `gate_on_depends: true` until all 4 of that doc's remaining todos (rename-corruption fix, the…
@@ -933,7 +953,7 @@ by hand._
   does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
   narrow,…
 
-### ci (12)
+### ci (14)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -942,6 +962,13 @@ by hand._
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
   should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
+- [`ci_satellite_ao_dispatch_batch12_2026_08_10`](./ci_satellite_ao_dispatch_batch12_2026_08_10.md) **[draft]** —
+  Round-12 satellite-extraction, `ci` tranche, from the scheduled `/ag-closeout-audit ci` run (2026-08-10, dispatch
+  agt-d6ed2a). All 11 prior `ci` batches are archived and no batch currently covers the tranche — Phase 0 found zero
+  active…
+- [`ci_satellite_ao_dispatch_batch12_finalize_2026_08_10`](./ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md) —
+  Gated closeout for `ci_satellite_ao_dispatch_batch12_2026_08_10.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until that plan's todos are done. Reconciles both source docs' checkboxes…
 - [`ci_vm_exposure_remediation_2026_08_06`](./ci_vm_exposure_remediation_2026_08_06.md) —
   ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's own fixes (IOPS bump, resource-cap removal)
   worked, but it left 3 exposure items unaddressed on the dedicated CI runner VM (i-042a6332509482556): no swap safety

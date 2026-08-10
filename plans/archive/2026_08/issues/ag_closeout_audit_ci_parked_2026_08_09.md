@@ -13,7 +13,7 @@ summary: >-
   work (new), ~36 orphaned carried forward unchanged/reconciled, 3 new orphaned (all non-AO-eligible). Phase 3: zero new
   conflict-clear AO-eligible work found — no batch9 drafted. Linkage-gate re-run: 0 ci-tagged orphans (corpus-wide 20 vs
   baseline 49, improved from yesterday's 64).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [ag-closeout-audit, parked, ci, orphan, mistag, no-new-batch, final-report]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
@@ -46,12 +46,13 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_08
+superseded_by: ag_closeout_audit_ci_parked_2026_08_10
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
   ]
 ---
 
@@ -345,3 +346,10 @@ valid — confirmed independently: 0 open `- [ ]` todos, current (not-yet-supers
     `ci_consolidated_closeout_2026_07_25.md`, left 2 genuinely ambiguous ones flagged for human/dedicated-pass
     resolution rather than guessed. Tally re-confirmed unchanged: 0 archivable_now, 5 archivable_after_planned_work, 37
     orphaned. No new batch drafted — same stopping condition, still met.
+- **2026-08-10 (ag_closeout_auditor, ci tranche, slot 27, agt-d6ed2a)**: superseded by
+  `ag_closeout_audit_ci_parked_2026_08_10.md` (`superseded_by` set, `status` → `resolved`); archived to
+  `plans/archive/2026_08/issues/`, same treatment applied to this doc's own still-unarchived predecessor
+  (`ag_closeout_audit_ci_parked_2026_08_08.md`, flagged as an open gap by the 2026-08-09 na-eligibility-audit marker
+  above — completed now, both archived in the same session). Also: this round's delta-check found the stopping condition
+  no longer holds — 2 genuinely-new conflict-clear AO-eligible items surfaced (filed 2026-08-09, after this report),
+  extracted into `ci_satellite_ao_dispatch_batch12_2026_08_10.md` (`status: draft`). Full detail in the new report.
