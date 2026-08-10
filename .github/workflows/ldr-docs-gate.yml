@@ -99,6 +99,19 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
+          # `set +e` is REQUIRED, not redundant with the `set -uo pipefail` above: GitHub Actions'
+          # default shell is `bash --noprofile --norc -e -o pipefail`, and `set -uo pipefail` does
+          # NOT clear that inherited `-e`. Without this, a RED gate aborts the step at the capture
+          # below — before `RC=$?`, before `echo "$OUT"`, and before the `$GITHUB_OUTPUT` block —
+          # so `verdict` is never written. Every downstream job here keys on
+          # `needs.frontmatter-gate.outputs.verdict == 'red'` (notify-broken-docs,
+          # escalate-plan-health, the RESOLVED bookend), so ALL of them silently skip and a red
+          # docs gate pages NOBODY. The `if: always()` note below covers later STEPS being skipped;
+          # it does not cover the abort happening INSIDE this step. Measured 2026-08-10: 10+
+          # consecutive hourly failures from 2026-08-09T22:07Z, every one emitting zero stdout and
+          # zero Slack — the gate was red for 10h and looked quiet. SSOT:
+          # plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md
+          set +e
           OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
           RC=$?
           echo "$OUT"

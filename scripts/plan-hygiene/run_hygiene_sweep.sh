@@ -277,8 +277,31 @@ RESULTS=()
 # `cron_hygiene_sweep_entrypoint.sh`'s shallow single-branch clone never fetches
 # origin/main, so this guard is what keeps that periodic path on baseline mode instead of
 # silently hard-failing on the corpus's entire pre-existing debt.
+# PROMOTION PRs GET NO DIFF BASE AT ALL (2026-08-10). A promote PR's diff IS the entire
+# LDR→main accumulation, so `--diff-base origin/main` there measures the whole unpromoted
+# backlog rather than the change under test — and the further behind main falls, the more
+# it measures, so the gate blocks the promote, main falls further behind, and the reported
+# violation count GROWS. Measured on the NA-corpus check the same day: 51→53→55 new docs
+# and 116→151→181 new todos across three runs on distinct HEADs while main went 1180→1440
+# commits behind. A count that climbs across distinct HEADs is definitionally not a fixable
+# regression, and no amount of retrying converges it.
+#
+# 4c964f8447 established this rule and the promote/ detection, scoped to the NA-corpus
+# check. It is set HERE instead so the SAME rule covers every DIFF_BASE_REF consumer —
+# reference-paths, archive-candidates and effort-ratchet carry the identical latent bug and
+# were already tripping it (`check_reference_paths (--diff-base origin/main): 2 NEW
+# violation(s)` hard-failed the 11:25Z promote-path run). Setting it once also avoids four
+# copies of one rule, which is precisely the shape that rotted the tranche lists (see
+# scripts/scheduled_job_already_ran.py's header). Falling back to baseline+buffer on the
+# promote path is safe: every commit in that batch already passed these same checks
+# diff-scoped on its way onto LDR, so re-gating the aggregate is double jeopardy.
+#
+# NOT a blanket disable — a normal PR or a push to LDR still gets full diff-scoping, which
+# is where these checks actually catch new violations.
 DIFF_BASE_REF=""
-if [ -n "$CI_MODE" ] && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
+if [ -n "$CI_MODE" ] \
+  && [[ ! "${GITHUB_HEAD_REF-}" =~ ^promote/ ]] \
+  && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
   DIFF_BASE_REF="origin/main"
 fi
 
