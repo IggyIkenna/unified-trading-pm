@@ -52,8 +52,8 @@ related_plans:
   - ../active/cross_cutting_consolidated_closeout_2026_07_25.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md
+  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md
   - ../active/cross_cutting_strategy_execution_determinism_2026_07_26.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md
@@ -664,13 +664,13 @@ feature for CeFi instruments — strategy-side volume caps
 
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor)
 
-### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09`](../active/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md)
+### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md)
 
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
+**status**: complete · **estimate**: 0.4 cal AI-days (class: infra)
 
-### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md)
+### [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md)
 
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 6 —
+**status**: complete · **estimate**: 0.24 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 6 —
 finalize (reconcile source docs + archive)
 
 ### [`cross_cutting_strategy_execution_determinism_2026_07_26`](../active/cross_cutting_strategy_execution_determinism_2026_07_26.md)

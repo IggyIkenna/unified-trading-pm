@@ -14,7 +14,7 @@ summary: >-
   pre-existing bounded engineering items each source doc's own history left un-actioned pending a whole-doc RECLASSIFY
   bar that a genuinely operator-gated sibling item (immediate machine-type-bump decision; the promote-PR
   non-supersession investigation) kept from clearing.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta, data]
@@ -37,10 +37,10 @@ related:
     /plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md,
     /plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -72,8 +72,11 @@ drift_direction: advance-code
 
 # Cross-cutting satellite AO batch 6 (infrastructure_master) — bounded-item extraction
 
-> **Status: active.** All 3 todos below are same-priority-independent and touch distinct files — no
-> `sequential`/`gate_on_depends` needed.
+> **ARCHIVED 2026-08-10** — All 3 todos shipped and verified (todo 1 reconciliation by slot 7, review): todo 1
+> `deployment-service@b44166be`, todo 2 `deployment-service@10df4a3c7`, todo 3 `unified-trading-pm@92ab939583`
+> (corrected from the batch's own mis-cited `8a7b1860a0` in the finalize todo 1, verified on origin). Closed out by
+> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md`. Both source docs'
+> checkboxes reconciled there; neither source doc reached 0 open todos, so neither was archived here. No Deferred items.
 
 ## Todos
 

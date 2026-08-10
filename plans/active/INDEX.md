@@ -734,14 +734,6 @@ by hand._
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 22 todos are done. Reconciles each of the 6 distinct `instruments_master` source
   docs'…
-- [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md)
-  — Sixth AO-dispatch batch for the cross-cutting tranche, produced by the round9 2026-08-09 RECLASSIFY +
-  satellite-extraction sweep (a follow-up to yesterday's 4-batch pass, run because 5 Slack alerting webhooks + a
-  DeepSeek GSM secret landed…
-- [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch6_2026_08_09_finalize.md)
-  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 3 todos are done. Reconciles the 2 source docs' checkboxes, then archives the batch
-  doc via…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry 23 Tracks (strategy/execution/capability-registry, not
