@@ -67,7 +67,7 @@ Gated behind `kaiko_provider_removal_2026_08_10.md`. Do not start until all 4 of
       cited here and confirmed ancestors of `origin/live-defi-rollout`.
 - [ ] [DOCS] P2. **Rescope `/plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md` to Glassnode only.**
       Close the Kaiko half citing the 2026-08-10 operator ruling and this removal plan; keep the Glassnode half OPEN as
-      a live `BLOCKED-CREDENTIALS` ask (`glassnode-api-key` still unprovisioned — that provider is not banned and the
+      a live credential-blocked ask (`glassnode-api-key` still unprovisioned — that provider is not banned and the
       external-data-always-available rule means the ask stands until the operator provisions or declines it). Update the
       doc's `title`, `summary` and `tags` so it no longer presents as a joint ask. **Done when**: the doc reads as a
       Glassnode-only credential ask with the Kaiko history preserved as a closed record, and

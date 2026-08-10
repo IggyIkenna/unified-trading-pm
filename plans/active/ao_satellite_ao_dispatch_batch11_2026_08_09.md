@@ -90,7 +90,7 @@ batch performs.
       `if len(result) > 200: result =     result[:197] + "..."` — a raw character-count cutoff with no
       word/sentence-boundary awareness, which produces a genuinely unusable, mid-word-cut `summary:` whenever a doc's
       auto-backfilled first paragraph exceeds 200 chars (confirmed root cause of 12-of-14 exactly-200-char truncations
-      found live in `docs_reconcile_operator_decisions_2026_08_02.md` BLOCKED-OPERATOR-DECISION 3). Recommended fix
+      found live in `docs_reconcile_operator_decisions_2026_08_02.md` operator-decision item 3). Recommended fix
       (already stated by the source doc, not new design work here): truncate at the last sentence or word boundary
       before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
       review before it ships, rather than silently landing a partial sentence. **Done when**: a regression test proves
