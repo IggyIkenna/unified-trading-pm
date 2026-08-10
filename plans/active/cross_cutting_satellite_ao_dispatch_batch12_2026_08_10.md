@@ -557,3 +557,36 @@ VM:
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -20`.
 04-27 deadline ~16:01:55 → 04-28 spawns at ~16:02 → 04-28 deadline ~16:32. ETA for full VM completion still ~17:30 UTC.
+
+---
+
+### Session continuation (post-compact, ~15:53 UTC)
+
+Compaction kill #10 — pipeline + heartbeat + monitors dead. Re-armed:
+
+- Pipeline: PID 643155 (PROD bucket, all 3 steps verified)
+- Heartbeat: PID 646297 (30-min watchdog)
+- Monitor `bdl4lvkuu`: 60s VM log polls (📊/📦/TIMEOUT/spawn)
+- Monitor `baqcczago`: 60s VM status polls (still alive from prior arm)
+
+**04-27 status** (child spawned 15:31:55, deadline 16:01:55):
+
+- derivative_ticker: ✅ COMPLETE (378/378, 70s)
+- futures_chain: ✅ COMPLETE (instant)
+- liquidations: ✅ COMPLETE (instant)
+- book_snapshot_5: 250/357 (70%) at 15:53:48, elapsed 1221s, ETA 523s → projected finish 1744s (56s BEFORE deadline)
+- trades: ⏳ queued behind book_snapshot_5, 378 files at ~6/s = ~63s → projected finish ~1807s (7s PAST deadline)
+
+**Projection**: book_snapshot_5 should complete for 04-27 (first date to do so). trades will likely time out by a few
+seconds and cascade to 04-28 along with 04-26's residual ~139 book_snapshot_5. 1h candles secured (derivative_ticker
+✅).
+
+**Monitor pattern trap**: 📊 progress lines don't include the data_type name — first monitor `bqdcp92u1` used
+`📊.*book_snapshot_5` which matched nothing. Correct pattern: grep ALL 📊 + rely on 📦 transitions for data_type
+context.
+
+**Where to resume**: `ps aux | grep post_mdps_pipeline`. If pipeline PID 643155 dead → re-arm from
+`.tabs/14/post_mdps_pipeline.sh`. Check VM:
+`gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
+Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
+Next key milestone: 04-27 deadline 16:01:55 → 04-28 spawn ~16:02.
