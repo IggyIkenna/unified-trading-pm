@@ -127,14 +127,17 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       market-tick-data-service. Source: `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`
       (todo 1 + dependent todo 4). Done when: fresh dry-run + soft-delete-retention value cited, `--apply` executes (or
       is explicitly re-gated if the retention check fails), before/after `DP_RUN_MOSTLY_EMPTY` ratio recorded.
-- [ ] [DATA] P3. **Backfill the 20,254 blank-`instrument_id` `venue=CME`/`instrument_type=FUTURE` manifest rows** now
-      that `parse_tradfi_path()` (`market-tick-data-service@bd6233b4`) no longer mis-classifies this shape as a bundle.
-      Download + classify each legacy bundled-by-underlying object's rows to derive a real per-row `instrument_id` via
-      `derive_tradfi_row_instrument_id`/`build_instrument_id` against the parquet's own `symbol`+`expiry_date` columns;
-      write corrected rows; re-verify via a live manifest recount. Repo: market-tick-data-service. Source:
-      `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` (todo, line 141). Done when: a live manifest
-      recount shows 0 remaining blank-instrument_id rows in this population, or each remaining row is explicitly
-      justified non-resolvable in this doc's Progress Log.
+- [ ] [DATA] P3. **[SCOPE INVALIDATED — needs operator re-triage]** Fix the root-cause `continuous_future` → `FUTURE`
+      conflation in `canonicalize_manifest_instrument_type()` — the original "backfill 20,254 per-contract
+      instrument_ids" scope is WRONG. 2026-08-10 census: **473,374 rows** (23× original), NOT per-contract singles but
+      bundle-grain `continuous_future` rows mis-mapped to `FUTURE` by
+      `unified_trading_library/canonical/_manifest_instrument_type_canon.py:54`. Fix: remove
+      `"continuous_future": InstrumentType.FUTURE` from `_MANIFEST_ITYPE_CANONICAL`, add `"combo"` and
+      `"continuous_future"` to `_BUNDLE_GRAIN_EXCLUDED`, update tests, re-run `rebuild_tradfi_manifest.py`. Reverses a
+      prior operator ruling — needs sign-off. Repos: unified-trading-library, market-tick-data-service. Source:
+      `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` (todo, line 141; census in Progress Log
+      slot-21). Done when: operator re-rules, canonical-lib fix ships + QG green, rebuild re-run, live manifest recount
+      shows 0 `instrument_type=FUTURE` rows with populated `underlying` + null `instrument_id`.
 - [x] [DATA] P3. ✅ **Confirm the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate is genuinely dead**
       — `unified-trading-pm@<sha>`. **CONFIRMED DEAD + PURGED.** Evidence: (1) Live manifest read (2026-08-10): 14,618
       `.KS-USD` rows across 3 symbols (005930/005380/000660), all with `recent=0` (last `written_at=2026-07-22`, NOT
