@@ -242,17 +242,43 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   logically identical membership test, no per-row Series construction. `quality-gates.sh` launched (task `b4vaiwbjd`,
   backgrounded); not yet green, not yet committed/shipped/re-attempted as of this note — see Deferred table.
 
+- **2026-08-10 (slot-29, todo 1 — first fix shipped + verified insufficient; real root cause found; second fix
+  shipped)**: `quality-gates.sh` (task `b4vaiwbjd`) went green; shipped the `.apply(axis=1)`→`.isin()` fix as
+  `market-tick-data-service@d4902a314` (post-push ancestry verified, ancestor of `origin/live-defi-rollout`). Re-ran
+  `--population 2025 --apply-prod --confirm-prod-write`: got further (the GCS-existence scan completed, correctly
+  re-confirming 88/4,437 missing) but **died again**, exit 143, immediately after. **Correction to the prior entry's
+  "fixed 10240MB (10GB) RSS cap, independent of host-wide load" claim — that claim was itself wrong.** The new death's
+  syslog line reads `KILL #48: pid=3025541 slot=29 (rss:11952632kB > 4194304kB)` — a **4096MB (4GB)** cap this time, not
+  10240MB. The `resource-watchdog` cap is **dynamic** (almost certainly a function of current host memory pressure /
+  available headroom divided across slots), not the fixed per-process constant previously claimed — do not carry the
+  "fixed 10GB, host load is irrelevant" framing forward; only "a per-process RSS cap exists and can be as low as ~4GB
+  under load" is safe to assume. This means the real fix must cut peak RSS by a wide margin, not just below one observed
+  threshold. Re-read `apply()` in full and found the actual dominant cost was never fully addressed by the first fix:
+  (1) `_relabel()` did `df = df.copy()` on the entire 17,090,683-row live index before mutating it — a full duplicate of
+  the largest object in the process, ~2x peak RSS, immediately before the risky window; (2) even the vectorized first
+  fix still built a Python `list(zip(...))` of 17M 2-tuples plus two new full-length string columns purely to re-derive
+  `(date, league_id)` keys that were already available for free — `candidates = df[mask]` and
+  `confirmed = _filter_to_actually_missing(candidates, ...)` are both label-preserving subsets of `df`, so
+  `confirmed.index` already names the exact `df` rows to relabel; no full-index key rebuild or scan was ever necessary.
+  **Second fix applied**: `_relabel()` now mutates `df` in place (no `.copy()` — safe because `apply()` already writes +
+  verifies a pre-mutation snapshot to GCS before calling it, so the in-memory copy bought no additional recovery
+  safety); `precise_mask` is now `df.index.isin(confirmed.index)`, O(len(confirmed)) instead of O(17M).
+  `quality-gates.sh` launched (task `bm8lyhs3i`, backgrounded); not yet green, not yet committed/shipped/re-attempted as
+  of this note.
+
 ## Deferred work after 2026-08-10
 
-| Item                                                           | State / why deferred                                                                                                                                                             | Blocked on                                                                                                           |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Ship the `df.apply(axis=1)` → vectorized `.isin()` memory fix  | In progress. Patch made (uncommitted); `quality-gates.sh` running in the background as of this note (task `b4vaiwbjd`), not yet confirmed green.                                 | Nothing but elapsed QG time — pick this up first in the next session/tick if it wasn't finished before this compact. |
-| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | Not done. Dry-run fully validated (88/4,437 confirmed missing) under the OLD code; needs a fresh apply-prod attempt once the memory fix above is shipped.                        | The memory fix above landing + QG passing.                                                                           |
-| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | Not done. Dry-run itself never completed under the OLD code (3× identical SIGTERM/143, zero output each time) — confirmed-missing count for this population is still unmeasured. | The memory fix above landing + QG passing.                                                                           |
+| Item                                                               | State / why deferred                                                                                                                                                                   | Blocked on                                                                                                           |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Ship the `_relabel().copy()` + full-index-rescan removal (2nd fix) | In progress. Patch made (uncommitted); `quality-gates.sh` running in the background as of this note (task `bm8lyhs3i`), not yet confirmed green.                                       | Nothing but elapsed QG time — pick this up first in the next session/tick if it wasn't finished before this compact. |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)             | Not done. Dry-run + the GCS-existence-scan portion of apply both fully validated (88/4,437 confirmed missing) twice now; needs a fresh apply-prod attempt once the 2nd fix is shipped. | The 2nd memory fix above landing + QG passing.                                                                       |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows)     | Not done. Dry-run itself has never completed for this population under any code version — confirmed-missing count is still unmeasured.                                                 | The 2nd memory fix above landing + QG passing; run as a plain dry-run first to finally get the count.                |
 
-**Recommended next action**: confirm `quality-gates.sh` (task `b4vaiwbjd`) finished green, ship via
+**Recommended next action**: confirm `quality-gates.sh` (task `bm8lyhs3i`) finished green, ship via
 `quickmerge.sh --agent --files 'scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py'`, then re-run
-`--population 2025 --apply-prod --confirm-prod-write` (small, quick to confirm the fix actually holds RSS under 10GB),
-then `--population 2018_2020` as a plain dry-run first (get its confirmed-missing count), then its own apply-prod. The
-prior "wait for a quiet host" advice is **superseded and wrong** — do not wait for low swap usage, the cap is
-per-process and fixed regardless of host load.
+`--population 2025 --apply-prod --confirm-prod-write`. If it STILL dies with a `resource-watchdog` kill (check
+`/var/log/syslog` for a new `KILL #` line naming the PID), the cap has proven dynamic-and-low enough that even a
+single-copy 17M-row load is unsafe on this host under current conditions — at that point stop patching this script's
+internals and instead read the manifest with column projection (`pd.read_parquet(..., columns=[...])`) for the
+mask-building step, or move the run to a VM with headroom, rather than attempting a 3rd in-process memory shave. Two
+genuinely identical failures at the same fix-version would be the stop-and-escalate signal, not a 3rd blind retry.
