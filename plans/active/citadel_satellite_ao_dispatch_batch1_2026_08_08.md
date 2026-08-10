@@ -208,8 +208,10 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       above, no local re-run needed since no code changed there); `unified-trading-pm` `quality-gates.sh` green on this
       commit. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
 
-- [ ] [DATA] P2. **features-service: recompute the corpus for the intraday BTC mean-reversion cs-ML feature (bounded
-      scope — corpus recompute + drift-check only, NOT the cs retrain)** (was Phase 11 P2.11.18 in the source doc,
+- [x] ✅ [DATA] P2. **features-service: recompute the corpus for the intraday BTC mean-reversion cs-ML feature (bounded
+      scope — corpus recompute + drift-check only, NOT the cs retrain)** — DONE 2026-08-10: corpus recompute verified
+      (slot-7 backfill of `returns`+`statistical_anomaly` for cefi/BTC paper window; `reversion_zscore_60m`/`240m`
+      non-null in GCS, independently probed) + drift-check QG-enforced green (was Phase 11 P2.11.18 in the source doc,
       SCOPE-TRIMMED — see note below) — the feature specs already shipped (`features-service@1110ee1d`,
       `reversion_zscore_60m`/`reversion_zscore_240m` in the `anomaly` calculator + `registry_specs.yaml`, GREEN QG, on
       origin LDR). This todo covers the two BOUNDED remaining pieces: (a) backfill the `returns` + `anomaly` feature
@@ -391,3 +393,19 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
   additionally lists 4 stale bullets already migrated-and-open in `crypto_alpha_research_2026_07_24.md` (corrected in
   the source doc, not extracted here). Net: 7 of the operator's named 8 items extracted into this batch; 1 (P2.11.15)
   held back on conflict, unchanged in the source doc.
+- 2026-08-10 (slot-22, citadel_satellite_ao_dispatch_batch1, P2.11.18 "recompute the corpus for the intraday BTC
+  mean-reversion cs-ML feature"): **DONE — verified, not re-executed.** The corpus recompute was already executed by
+  slot-7 (2026-08-10, via the sibling blocker `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`'s P2
+  re-run todo, which covers this same scope): backfilled `returns` + `statistical_anomaly` feature groups for cefi/BTC
+  over the paper window (`day=2026-04-22`, `2026-05-01..03`) — `reversion_zscore_60m` 99.6%/100%/100% and
+  `reversion_zscore_240m` 98.1%/100%/100% non-null on 2026-05-01/02/03; 2026-04-22 emission-suppressed via `strict_fail`
+  (229 candles < 500 minimum — honest-absence, not a bug; the fix chain works). Independently verified from LIVE GCS
+  this session: the `statistical_anomaly` parquets exist for 2026-05-01/02/03 (written 2026-08-10T22:45Z) and carry
+  `reversion_zscore_60m`/`reversion_zscore_240m` (+ 3 lag variants each) — schema-probed, non-null. Drift-check: the
+  todo asks for `features-status --check-drift` — confirmed this is the formula-drift gate, QG-enforced at
+  `features-service/scripts/quality-gates.sh:309`
+  (`python -m features_service.delta_one.app.features.status_report --check-drift`), and features-service
+  `quality-gates-v2` CI is GREEN on live-defi-rollout (latest success 2026-08-10T22:13:37Z) → no formula drift.
+  (Slot-7's "command not found" was because the AO slot's features-service venv isn't provisioned; the console script +
+  module exist in source.) Todo flipped. The reversion-zscore features now land in the canonical delta_one feature
+  corpus for the paper window.
