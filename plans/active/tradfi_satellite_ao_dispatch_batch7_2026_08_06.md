@@ -30,8 +30,8 @@ tags: [tradfi, ao-dispatch, close-out, batch-7, satellite-docs, conflict-checked
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
     /plans/active/issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md,
     /plans/active/issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md,

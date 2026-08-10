@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [tradfi, vm, backfill, premature-deletion, databento, vm-task-routing, data-pipeline]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]

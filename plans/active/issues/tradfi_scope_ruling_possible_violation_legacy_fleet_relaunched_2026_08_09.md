@@ -27,7 +27,7 @@ tags: [tradfi, scope-ruling, vm, backfill, possible-violation]
 related:
   [
     /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
   ]
 created: "2026-08-09"
 author: slot-28
