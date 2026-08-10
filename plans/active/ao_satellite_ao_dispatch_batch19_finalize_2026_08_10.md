@@ -59,9 +59,21 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify the batch19 done-claims against reality** — for todo 1, confirm the unpark actually
-      happened and re-check the task's post-unpark dispatch outcome independently (don't just re-read the claim); for
-      todo 2, confirm the workload-characteristic comparison cites real, checkable data for both named tasks.
+- [x] ✅ [REVIEW] P1. **VERIFIED 2026-08-10 (slot 29, review) — both batch19 done-claims hold against independent
+      verification.** Claim A (unpark): `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` is
+      **absent from the live backlog** (`/api/backlog`, queried 08-10) — its source todo
+      (`plan_hygiene..._2026_08_08.md` `[INFRA] P1` "implemented", line ~120) is flipped `[x]`; the alternate-path
+      implementation `unified-trading-pm@d765b4cfb1` is on `origin/live-defi-rollout` (commit "fix(plan-hygiene): add
+      bounded link-repoint carve-out to check_line_caps.sh"); task gone → no re-dispatch → no blocked-nudge re-trigger.
+      Source doc `ao_dispatch_ignores...` keeps `[BACKEND] P2` + `[REVIEW] P3` open (matches batch19's own note). **New
+      observation for the reconcile todo**: the sibling "complete the deferred archival" `[INFRA] P1` in
+      `plan_hygiene..._2026_08_08.md` (line ~144) is live-queued as
+      `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-9d123dff13e8` at **priority 999** (deliberately deferred)
+      — separate from the cleaned-up `-0d5981dddb99`, no contradiction. Claim B (workload comparison): citadel-004
+      `[BACKEND] P1` flip (`unified-trading-pm@d875b73ed3`, on origin) + its Progress Log entry carry concrete measured
+      data for BOTH tasks across all four dimensions (prompt-size table incl. 393/132 plan lines + 103/14 progress-log
+      lines; tool-call patterns; `du -sm` repo-size table; worktree ~12GB identical) plus a cross-cutting
+      dispatch-ordering amplification finding + measured temporal-overlap table. Both claims hold.
 - [ ] [DOC] P0. **Reconcile verified evidence into both source docs' own checkboxes** —
       `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` (todos 1's standing-followup note + todo 3)
       and `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` (todo 1).
@@ -86,3 +98,19 @@ source: >-
 
 - **2026-08-10** — Authored in the same turn as batch19, per the mandatory finalize-twin rule. `sequential: true` since
   the 4 todos are a genuine reconcile→archive chain.
+- **2026-08-10 (slot 29, review, task `ao_satellite_ao_dispatch_batch19_finalize-cadb153d1819`)** — executed finalize
+  todo 1: re-verified both batch19 done-claims against live reality, not re-read claims. **Claim A (unpark)**: queried
+  `GET /api/backlog` (08-10) — `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` is GONE (absent),
+  consistent with the batch19 claim that PlanRegenLoop cleaned it up after its source-doc `[INFRA] P1` flip; the
+  alternate-path implementation `unified-trading-pm@d765b4cfb1` verified on `origin/live-defi-rollout`; no task → no
+  dispatch → no re-wedge, so the "report either outcome" clause is satisfied by the 404/not-auto-parked outcome
+  recorded. **Claim B (workload comparison)**: read
+  `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` in full — `[BACKEND] P1` flipped `[x]`
+  (`unified-trading-pm@d875b73ed3` on origin) with a Progress Log carrying concrete measured data for both
+  `citadel_satellite_ao_dispatch_batch1-004` and `solana_dex_pool_swaps_indexer-002` across all four named dimensions
+  (prompt size / boot context: measured tables; tool-call pattern: brief+log-derived; repo state: `du -sm` measurements;
+  worktree size: ~12GB measured) plus a 5th cross-cutting dispatch-ordering finding and a measured temporal-overlap
+  table. Both claims hold. **Observation carried for the reconcile todo (2)**: the sibling "complete the deferred
+  archival" `[INFRA] P1` in `plan_hygiene..._2026_08_08.md` (line ~144) is live-queued as
+  `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-9d123dff13e8` at priority 999 (deliberately deferred) — not
+  mentioned by batch19, worth a note when todo 2 reconciles into source docs.
