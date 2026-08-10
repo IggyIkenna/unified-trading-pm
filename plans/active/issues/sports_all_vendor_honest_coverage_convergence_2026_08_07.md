@@ -582,3 +582,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   non-issue: PLAYER_STATS shows `needed=3` (was 0) — its `expected` denominator grew by exactly 3 as "today" advances
   and new fixture-days enter scope; not a regression, those 3 shards are brand-new and simply not yet captured.
   STANDINGS/TEAMS unchanged. No intervention needed.
+- **00:57Z — Both fleets healthy, INJURIES holding accelerated pace.** `af-backfill-20260809-222924`: `[[VM_PROGRESS]]`
+  monotonic advance 2023-09-04→2024-04-04. `smallchunk15`: chunk 17/452, zero OOMs across the entire run so far, fresh
+  (~11s heartbeat lag) — 1 chunk from chunk 18, watching closely next tick. Census: INJURIES needed **35,732 → 29,480**
+  (-6,252 in ~31min, ~12,101/hr — steady, consistent with the recent accelerated pace; ETA ~2.4h). Not yet near the
+  convergence floor (~1000-2000 range) — no "campaign done" planning needed yet. No intervention needed.
