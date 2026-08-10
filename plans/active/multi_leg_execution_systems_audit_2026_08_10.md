@@ -124,8 +124,8 @@ might come in handy."
       `BenchmarkFillEngine`. Full evidence + tradeoffs in the Progress Log below.
 - [x] ✅ [DOC] P1. **Write the decision artifact**: added
       `## Audit verdicts — multi-leg execution system disposition (2026-08-10)` section to
-      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — unified-trading-pm@<SHA> — with the
-      three systems' verdicts (DELETE MultiLegOrchestrator, DELETE instruction_adapter HEDGE_BASIS path, WIRE-IN
+      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — unified-trading-pm@ea0418421 — with
+      the three systems' verdicts (DELETE MultiLegOrchestrator, DELETE instruction_adapter HEDGE_BASIS path, WIRE-IN
       AtomicLegExecutor + routing seam), the exact 6-engine call-site map + 3-runtime wiring points, the
       BenchmarkFillEngine option-(a) recommendation with IBKR MEL precedent, and a summary table. Kept in the issue doc
       rather than a dedicated decisions doc because the issue is the finding that spawned the audit and the paired
