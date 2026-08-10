@@ -187,16 +187,26 @@ depends_on: []
           written (VM booting).
         - **No code shipped** — pure operations. All-entity VM left running.
 
-## Deferred work after 2026-08-10 ~15:45Z
+      - **2026-08-10 (slot 28, data_engineering, ~15:46Z–15:50Z)** — All-entity VM boot complete + first progress:
+        - VM `af-backfill-20260810-154220` completed startup at 15:46:21Z. Chunk loop running (PID 4997), heartbeat
+          daemon active (60s interval). First chunk: 2020-06-06→2020-09-03. First progress:
+          `last_completed_date=2020-06-06` at ~15:47Z. All-entity mode fetches
+          TEAMS/STANDINGS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS per date.
+        - VM healthy — `instruments_chunk_loop.sh` + `heartbeat_daemon.py` + `vm-exec-with-gcs-tee.sh` all running. GCS
+          run.log being populated. 30-min stall watchdog armed (`b8udhrys4`).
+        - **Pace TBD** — too early for ETA (only 1 date, first chunk includes metadata pre-fetch). Will estimate after
+          more dates accumulate (~15:52Z+).
+        - **No code shipped** — pure monitoring.
 
-| Item                                                                     | State / why deferred                     | Blocked on                       |
-| ------------------------------------------------------------------------ | ---------------------------------------- | -------------------------------- |
-| **All-entity backfill** (`af-backfill-20260810-154220`)                  | RUNNING, `e2-standard-8`, booting        | VM completion (real infra)       |
-| **Re-census to confirm ~0**                                              | Gated on all backfills converging        | All-entity VM exit_code=0        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**               | Gated on re-census ~0                    | Re-census confirms ~0 needed     |
-| **VM rightsizing check** (`af-backfill-20260810-103218` — completed)     | VM ~5.5h `e2-standard-8` on-demand       | GCP monitoring data (historical) |
-| **VM rightsizing check** (`af-backfill-20260810-154220` — just launched) | Just launched, `e2-standard-8` on-demand | After VM >30min or terminates    |
+## Deferred work after 2026-08-10 ~15:50Z
 
-**Recommended NEXT item**: Monitor `af-backfill-20260810-154220` for first `[[VM_PROGRESS]]` markers → estimate ETA. The
-all-entity mode processes ALL 5 remaining entities per date — same 2257-day range, more API calls per date than the
-INJURIES single-entity pass, so expect a longer wall-clock time.
+| Item                                                                     | State / why deferred                          | Blocked on                       |
+| ------------------------------------------------------------------------ | --------------------------------------------- | -------------------------------- |
+| **All-entity backfill** (`af-backfill-20260810-154220`)                  | RUNNING, `2020-06-06`, `e2-standard-8`        | VM completion (real infra)       |
+| **Re-census to confirm ~0**                                              | Gated on all backfills converging             | All-entity VM exit_code=0        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**               | Gated on re-census ~0                         | Re-census confirms ~0 needed     |
+| **VM rightsizing check** (`af-backfill-20260810-103218` — completed)     | VM ~5.5h `e2-standard-8` on-demand, completed | GCP monitoring data (historical) |
+| **VM rightsizing check** (`af-backfill-20260810-154220` — just launched) | Just launched, `e2-standard-8` on-demand      | After VM >30min or terminates    |
+
+**Recommended NEXT item**: Monitor `af-backfill-20260810-154220` — at ~15:52Z the first few sparse dates should be
+complete, giving an early per-date pace estimate for the all-entity mode.
