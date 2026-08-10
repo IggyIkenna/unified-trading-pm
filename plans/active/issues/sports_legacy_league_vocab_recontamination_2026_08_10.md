@@ -140,9 +140,12 @@ Fix the writers + registry FIRST, then run the delete pass:
       direction SEGUNDA_DIVISION→LA_LIGA_2. Migrated all 15 FOOTYSTATS provider-id mappings + season structure +
       transfer windows + honest-coverage clusters + polymarket mappings + api-football team aliases + footystats drift
       script + bookmaker coverage JSON to LA_LIGA_2. Updated tests. QG 12636 passed.
-- [ ] [DATA] P1. Fix `FOOTYSTATS_HISTORICAL_SEASON_IDS` so the Spanish-2nd-division competition ids map to the canonical
-      key, and confirm the 15 ids mapped to `SEGUNDA_DIVISION` genuinely belong to one league (repo:
-      unified-api-contracts).
+- [x] ✅ [DATA] P1. Fix `FOOTYSTATS_HISTORICAL_SEASON_IDS` so the Spanish-2nd-division competition ids map to the
+      canonical key, and confirm the 15 ids mapped to `SEGUNDA_DIVISION` genuinely belong to one league (repo:
+      unified-api-contracts). — unified-api-contracts@e8df4dc37 (drift-script reverse-alias bridging); core
+      FOOTYSTATS_HISTORICAL_SEASON_IDS value changes absorbed into unified-api-contracts@3cca83603 (todo 2). Confirmed
+      all 16 season IDs (39,40,41,42,43,172,1670,2415,4167,4245,4249,6120,7592,9675,12467,15066) map to footystats
+      competition UID f5e5596b0efdef8e (URL slug: la-liga-2) — all belong to Spanish 2nd division.
 - [ ] [DATA] P2. After the writer/registry fixes land: run the gated delete pass
       (`market-tick-data-service/scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`)
       for the 12,988 verified-twin objects + fresh census = 0 for the 3 mappings; 928 differing-twin objects stay
