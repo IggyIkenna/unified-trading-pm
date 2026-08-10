@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                                                                      (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                                                                      #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                                                                      walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                                                                      pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                                                                      content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                                                                      then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                                                                      re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                                                                      273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                                                                      build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                                                                      verification.
+                                                                          (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                                                                          #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                                                                          walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                                                                          pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                                                                          content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                                                                          then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                                                                          re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                                                                          273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                                                                          build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                                                                          verification.
 
 - [x] ✅ [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -988,10 +988,12 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   cells, keep+flag subset-divergent). 4b-iii flips only after this many-hour run completes (EXIT_STATUS + auto-shutdown
   → read run.log, verify 0-loss + post-delete counts).
 
-- **2026-08-10T20:40Z (slot 25, data_engineering, 4b-iii continuation)**: **deploy-service QG red on a FOREIGN
-  FLEET-BLOCKING regression — launcher ship gated** (issue:
-  `/plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`). The SAME 11
-  `test_dp_recovery_actuators.py` tests fail full-suite 2× (real exit 1; earlier "exit 0" masked by `| tail`), pass
-  standalone 59/59, full-QG green at `6e6f509f` → post-`6e6f509f` peer recovery-actuator commits introduced the ordering
-  contamination. NOT my bash-only `e25dcfb3` (3 VM launches used it). Quickmerge gated on the foreign fix; VM 201105
-  continues regardless.
+- **2026-08-10T21:25Z (slot 25, data_engineering, 4b-iii continuation)**: **launcher unblocked → quickmerge IN-FLIGHT
+  (host-saturation-bound).** The foreign fleet-blocking regression (20:40Z entry + issue
+  `/plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`) was FIXED by
+  a peer (`c472a818` force disk-path budget in dp_recovery actuator tests). Rebasing my launcher (`e25dcfb3`→`a74bd66b`)
+  onto the fix, deployment-service QG #3 went **GREEN (exit 0, pytest `3262 passed 0 failed`)** — resolving all 11
+  actuator failures. Quickmerge of `a74bd66b` (launcher `prediction-shape4-merge`) is now in-flight but QUEUE-BOUND: the
+  host has ~17 concurrent quality-gates processes across 8+ slots for the ≤6 governor running cap (per-repo
+  deployment-service sub-cap + host-wide), so the re-gate QG has waited 18+ min. It will land when capacity frees. VM
+  201105 (migration) continues regardless at [~130/397] days, correct 0-loss behavior, ~2h remaining.
