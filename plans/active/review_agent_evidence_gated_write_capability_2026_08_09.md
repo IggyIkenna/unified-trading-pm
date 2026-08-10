@@ -136,18 +136,27 @@ local sandbox first:
       orchestrator-side code needed. — read `agent-orchestrator/server/routes/backlog.py:369-433`.
 - [x] 2. ✅ [DOC] P1. Author this plan doc capturing scope + guardrails + testing plan (local/human track per operator
       direction this session). — unified-trading-pm (this file).
-- [ ] 3. [DOC] P1. Write the concrete review.md additions for Capability 1 (revert false-done) and Capability 2 (patch
-      small fix) — bash/curl snippets in the same style as the rest of the file, guardrails inline. Done-when: section
-      reads as directly actionable as the existing "Evidence-backed completion" section it extends.
-- [ ] 4. [SCRIPT] P1. Build the synthetic false-done fixture (sandboxed, outside `plans/active/`) and walk the new
-      procedure against it by hand — confirm detection fires, confirm the checkbox-revert edit + local (unpushed) commit
-      work correctly. Done-when: fixture shows `[ ]` after the walkthrough, with a local commit proving the mechanics,
-      and the fixture/commit are cleaned up afterward (never pushed).
-- [ ] 5. [SCRIPT] P1. Dry-run capability 2's fix-patching path against a trivial synthetic gap (not a real task) to
-      confirm the QG + quickmerge-shape mechanics are correctly described, without shipping anything real. Done-when:
-      walkthrough documented in Progress Log; no live commit created for this step.
-- [ ] 6. [DOC] P1. Ship the real review.md update via `scripts/dev/safe-doc-push.sh` (docs-only path, same as
-      `684dd4f8d0`). Done-when: pushed to `live-defi-rollout`, sha cited in Progress Log.
+- [x] 3. ✅ [DOC] P1. Write the concrete review.md additions for Capability 1 (revert false-done) and Capability 2
+      (patch small fix) — bash/curl snippets in the same style as the rest of the file, guardrails inline, plus
+      frontmatter (`does`/`does_not`) and the two other "never commits code" mentions updated for consistency. —
+      unified-trading-pm/agents/review.md (shipped in todo 6).
+- [x] 4. ✅ [SCRIPT] P1. Built the synthetic false-done fixture in an isolated scratch git repo (outside the real
+      unified-trading-pm tree, never pushed) — a fake plan todo citing a fabricated cloudbuild evidence id. Ran the REAL
+      verification command against it (`gcloud builds describe`, same region/project review's evidence-backed-
+      completion duty already uses) — returned `NOT_FOUND`, confirming the over-claim. Reverted the checkbox `[x]`→`[ ]`
+      with an annotation, committed locally as `review-revert: ...` (sha `962dbed`, scratch repo, not pushed). Mechanics
+      confirmed working end-to-end.
+- [x] 5. ✅ [SCRIPT] P1. Dry-ran capability 2 against a trivial but REAL gap in the same scratch repo:
+      `classify_outage(408)` returned `"unknown"` when done_definition required `"timeout"` — verified failing first
+      (`python3` direct call), applied the 2-line fix, re-verified it now passes, then bundled the fix + checkbox
+      evidence update into one `review-fix: ...` commit (sha `f31844a`, scratch repo, not pushed) — same
+      Half-1+Half-2-same-turn shape a worker follows. The live `POST /api/backlog/{id}/reopen` call itself was verified
+      against source (`agent-orchestrator/server/routes/backlog.py:369-433`: 409s cleanly if `dispatched`, else resets
+      to `queued` + clears done_* fields) rather than fired against a real task — there's no safe way to synthesize a
+      genuine `done` row to reopen without mutating live production state for no benefit.
+- [x] 6. ✅ [DOC] P1. Ship the real review.md update via `scripts/dev/safe-doc-push.sh` (docs-only path, same as
+      `684dd4f8d0`) — unified-trading-pm@bc03ef55d3 (main change), + follow-up unified-trading-pm@4fec7b5b5c (one stale
+      "review agents don't commit" mention in the STEP 0 boot-read paragraph missed on the first pass).
 - [ ] 7. [DOC] P2. Run the standard plan-completion check on this doc once 3-6 are done — no archival needed yet (leave
       `active` for a burn-in period so real review-agent usage can be observed before calling this settled).
 
@@ -157,7 +166,34 @@ local sandbox first:
   to todo 3 (review.md instructions) then the local sandbox test (todos 4-5) before shipping (todo 6).
 - **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. Not a RECLASSIFY
   candidate despite items 3-7 looking individually bounded: the doc's own summary and Testing-plan section explicitly
-  state this is "operator direction 2026-08-09, local/human track, not AO-dispatched" and describe the work as
-  "new, security-relevant behavior on a role that ~30 live agents boot from continuously," requiring local-sandbox
-  validation before shipping to the live `review.md`. Explicit operator scoping overrides the individual items'
-  apparent boundedness.
+  state this is "operator direction 2026-08-09, local/human track, not AO-dispatched" and describe the work as "new,
+  security-relevant behavior on a role that ~30 live agents boot from continuously," requiring local-sandbox validation
+  before shipping to the live `review.md`. Explicit operator scoping overrides the individual items' apparent
+  boundedness.
+- **2026-08-09 (interactive session, slot 3) — shipped**: All 6 todos done. Sandbox test results: (1) revert path —
+  fabricated `Evidence: cloudbuild=fake-build-id-does-not-exist-00000` correctly resolved `NOT_FOUND` via the real
+  `gcloud builds describe` command review already uses, checkbox correctly reverted `[x]`→`[ ]` with an annotation,
+  committed `review-revert:`-prefixed (scratch sha `962dbed`, never pushed anywhere real); (2) patch path — a
+  genuinely-failing `classify_outage(408) == "unknown"` vs. a stated `done_definition` of `"timeout"` was verified
+  failing, fixed with a 2-line change, re-verified passing, then bundled fix + evidence update into one
+  `review-fix:`-prefixed commit (scratch sha `f31844a`, never pushed). The `/reopen` API call itself was verified
+  against source rather than fired live — no safe way to synthesize a real `done` row to reopen without mutating
+  production state for no benefit. Shipped review.md: unified-trading-pm@bc03ef55d3 + follow-up @4fec7b5b5c (missed
+  stale mention). Leaving this plan `active` for a burn-in period (todo 7) rather than archiving immediately — want to
+  see a real review agent exercise this live before calling the design settled.
+- **2026-08-09 (interactive session, slot 3) — this todo-3-6 flip took several attempts to actually land**: hit the live
+  prek stash-restore silent-revert class twice (this exact edit reverted back to unchanged HEAD while the push script
+  reported clean success both times — caught only by independently diffing `git show origin/live-defi- rollout:<path>`,
+  never by trusting the script's exit code or `git status`). Root cause + fix already tracked and since fully resolved
+  by its actual owner: `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md` (archived 2026-08-09, all 4
+  todos done, including the scratchpad-backup SSOT rule this session independently reached for on its own before knowing
+  that rule existed). A related-but-distinct facet of the same bug class (safe-doc-push.sh's own retry loop failing to
+  restore an intermediate prek patch) was filed separately and remains open, owned by its own author
+  (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) — not pursued further from this session. On
+  top of that: a REAL 3-way git-stash conflict (not just the silent-revert class) landed literal open/close/base/
+  divider conflict-marker lines into this very file mid-session, against a concurrent `na-eligibility-audit` entry from
+  another session — caught by `scripts/plan-hygiene/check_conflict_markers.sh` (which scans the WHOLE `plans/active/`
+  corpus on disk when run with no explicit file args, so a conflict-marker failure is not necessarily about the file
+  you're committing) and hand-resolved, preserving both sides. Content preserved via a session-scratchpad backup between
+  attempts per exactly the scratchpad-backup rule referenced above. Final landing succeeded once branch contention
+  settled.
