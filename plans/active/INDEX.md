@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 314 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -299,7 +299,7 @@ by hand._
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
 
-### tradfi (29)
+### tradfi (31)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -332,6 +332,14 @@ by hand._
 - [`tradfi_consolidated_closeout_2026_07_18`](./tradfi_consolidated_closeout_2026_07_18.md) — Coordination index
   (umbrella) that AGGREGATES (references, does not duplicate) every open tradfi + tradfi-touching IS/MTDS plan/issue
   into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md. **2026-07-24 line-cap…
+- [`tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10`](./tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md)
+  — Operator confirmed today the Databento billing suspension is paid/resolved and asked to (1) unblock every TradFi
+  Databento backfill todo that cited it, (2) add VIX futures to the MVP-of-MVP in-scope list (forgotten in the
+  2026-08-09…
+- [`tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize`](./tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10_finalize.md)
+  — Gated closeout for `tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md` — machine-held via
+  `depends_on` + `gate_on_depends` until all 7 of that plan's todos are done. Re-verifies each done-claim against
+  reality (not just the…
 - [`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30`](./tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md)
   **[draft]** — Neither FRED nor any existing adapter captures economic-calendar consensus/forecast data or release
   timing — confirmed 2026-07-30 that FRED's own API has no such concept at all, it's a pure historical-statistics
@@ -406,7 +414,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (37)
+### sports (38)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -448,6 +456,9 @@ by hand._
 - [`sports_consolidated_native_ao_extract_2026_07_25_finalize`](./sports_consolidated_native_ao_extract_2026_07_25_finalize.md)
   — Gated closeout for sports_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 26 of that plan's todos are done. Reconciles each completed todo's evidence back into…
+- [`sports_fixture_grain_catalogue_build_2026_08_10`](./sports_fixture_grain_catalogue_build_2026_08_10.md) — Dispatch
+  the fixture-grain catalogue build the operator ruled for on 2026-08-08. Converts the 4 open NA-only todos from
+  sports_catalog_league_grain_only_scope_2026_07_08.md into an AO-dispatched execution surface — design the per-fixture…
 - [`sports_fixtures_browser_single_catalogue_source_2026_07_24`](./sports_fixtures_browser_single_catalogue_source_2026_07_24.md)
   — Forked from data_status_page_ux_and_canonicalisation_2026_07_16.md's P10-B. The full-history fixtures rollup
   (105,509 fixtures across 2019-01-01→2026-07-17, kickoff/status/team names 100%) is shipped in prod. This plan
@@ -535,7 +546,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (29)
+### prediction (27)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -580,13 +591,6 @@ by hand._
 - [`prediction_phase_e_football_arb_live_2026_07_24`](./prediction_phase_e_football_arb_live_2026_07_24.md) — Phase E of
   the prediction consolidated close-out, split out verbatim (line-cap remediation, 2026-07-24) — the af_fixture_id
   identity chain (Polymarket + Kalshi soccer, ~0%→~100% team-name matching) and the 3-venue Kalshi/Polymarket/Betfair…
-- [`prediction_satellite_ao_dispatch_batch10_2026_08_09`](./prediction_satellite_ao_dispatch_batch10_2026_08_09.md) —
-  Eighth-generation satellite-batch extraction (batch4/6/7/8/9 precede it) produced by the scheduled
-  `/ag-closeout-audit prediction` run 2026-08-09 (Phase 1: 37-doc Workflow fan-out, 0 errors — 22
-  `exclude_cross_cutting`, 4…
-- [`prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize`](./prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
-  — Gated closeout for prediction_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on +
-  gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each of the 4 source docs' own checkboxes…
 - [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](./prediction_satellite_ao_dispatch_batch4_2026_07_26.md) —
   Fourth AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run 2026-07-26
   (ag_closeout_auditor, slot 7). Phase 1 re-classified all 26 prediction AG-primary candidate docs via a Workflow
@@ -640,7 +644,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (64)
+### cross-cutting (66)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -838,6 +842,13 @@ by hand._
   — Split 3 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the venue-onboarding + operational-hardening workstreams that accumulated inline in the
   parent…
+- [`multi_leg_execution_systems_audit_2026_08_10`](./multi_leg_execution_systems_audit_2026_08_10.md) — Extends
+  `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`'s finding into an actionable decision. Three
+  systems exist: `MultiLegOrchestrator` (CeFi/TradFi leader-follower/liquidity-aware, ZERO production callers —…
+- [`multi_leg_execution_systems_execution_2026_08_10`](./multi_leg_execution_systems_execution_2026_08_10.md) —
+  Implements the decision artifact produced by `multi_leg_execution_systems_audit_2026_08_10.md` (`depends_on` +
+  `gate_on_depends: true`). Closes the real gap this session found: multi-leg (basis/arb) trades have no wired execution
+  consumer…
 - [`mvp_scope_catalogue_tagging_2026_06_08`](./mvp_scope_catalogue_tagging_2026_06_08.md) — Build a rules-derived MVP
   subset of the instrument catalogue (instruments + features + strategies + models) and wire a toggle into data-status
   so missing-data counts only MVP in-scope cells.
@@ -851,11 +862,26 @@ by hand._
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
   UTL's…
+- [`strategy_archetype_latency_deployment_profile_audit_2026_08_10`](./strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
+  — `runtime-topology.yaml` v7 (unified-trading-pm/configs/) already has a mature deployment-profile/SLA-tier/isolation
+  framework, and `isolation_policies.strategy-service` explicitly says per-archetype latency requirements live in…
+- [`strategy_archetype_latency_deployment_profile_execution_2026_08_10`](./strategy_archetype_latency_deployment_profile_execution_2026_08_10.md)
+  — Implements the decision artifact produced by `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`
+  (`depends_on` + `gate_on_depends: true` — this plan's todos are NOT offered to the dispatcher until that audit's
+  decision…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (48)
+### ao (50)
 
+- [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
+  — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
+  because `deepseek_usage._PRICE_PER_MILLION` only ever held DeepSeek entries, and one unpriced turn nulls a whole
+  window by…
+- [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_finalize_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_finalize_2026_08_10.md)
+  — Gated closeout for anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md — machine-held via
+  depends_on + gate_on_depends: true until that plan's pricing, attribution, calibration, per-account-breakdown and
+  repricing todos…
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
   `depends_on` + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP

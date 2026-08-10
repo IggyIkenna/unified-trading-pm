@@ -29,8 +29,8 @@ tags: [prediction, ag-closeout-audit, orphan-audit, plan-hygiene]
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_08.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
