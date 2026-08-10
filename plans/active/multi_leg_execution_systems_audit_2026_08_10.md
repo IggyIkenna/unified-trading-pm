@@ -95,7 +95,7 @@ might come in handy."
       fresh grep (2026-08-10), zero `HEDGE_BASIS` emission sites in strategy-service, and no strategy-family doc
       requests spot+perp basis decomposition via the `StrategyInstruction`→`ExecutionPlan` intent-engine path. Full
       cited evidence in the Progress Log below.
-- [ ] [DATA] P1. **Map every actual production call site that SHOULD dispatch to `AtomicLegExecutor`** — trace from
+- [x] ✅ [DATA] P1. **Map every actual production call site that SHOULD dispatch to `AtomicLegExecutor`** — trace from
       `CarryStakedBasisEngine.on_tick()` and whichever prediction-arb engine also emits `AtomicInstruction` (identify it
       by name — the parity-gap doc says "prediction-arb engines" plural, confirm which) through to where live execution
       dispatch actually happens today (`colocated_engine.py`, `client_worker.py`, `live_execution_handler.py` — the
@@ -235,4 +235,92 @@ might come in handy."
     Betfair-credential items are separate and stay NA. Note: even the PAPER mode bypasses the seam today
     (`GroupBRunner`→`BenchmarkFillEngine.settle()` flat loop), so wiring must cover the paper/colocated
     (`InMemoryTransport`) topology too — that is todo 5's `BenchmarkFillEngine.settle()` recommendation, not just the
-    live Pub/Sub leg.
+=======
+  - 2026-08-10 (todo 3, slot 31): **AtomicLegExecutor call-site map — complete**, with cited evidence:
+
+    **Six engines emit LEADER_HEDGE `AtomicInstruction`** (fresh grep 2026-08-10, strategy-service production code only,
+    excluding tests):
+
+    1. **`CarryStakedBasisEngine`** — `carry_and_yield/staked_basis.py:784-793` — 5-leg ATOMIC
+       (SWAP+STAKE_CONSUME+STAKE+TRANSFER+TRADE), `leader_leg=0`, `compensation_policy=CLOSE_LEADER_IF_HEDGE_FAILS`
+
+    2. **`CarryBasisDatedEngine`** — `carry_and_yield/basis_dated.py:138,189,249` — 3 sites: open-leg entry, rescale
+       directive, dated-contract roll
+
+    3. **`ArbitrageCrossDomainEventEngine`** — `arbitrage_structural/cme_polymarket.py:201` — CME ↔ Polymarket
+       cross-domain event arb (single LEADER_HEDGE site)
+
+    4. **`ArbitragePriceDispersionEngine`** — `arbitrage_structural/price_dispersion.py:255,348,713` — 3 LEADER_HEDGE
+       sites: `_on_tick_cross_venue_prediction` (consumes `prediction_venue_dispersion.py` helper),
+       `_on_tick_cross_exchange` (consumes `funding_rate_dispersion.py` helper), `_on_tick_dex_dispersion`
+
+    5. **`ArbitragePriceDispersionHierarchicalEngine`** — `arbitrage_structural/price_dispersion_hierarchical.py:176` —
+       single LEADER_HEDGE site
+
+    6. **`StatArbPairsFixedEngine`** — `stat_arb_pairs/pairs_fixed.py:179,232` — 2 LEADER_HEDGE sites (open + rescale)
+
+    **"Prediction-arb engines" (plural)**: confirmed — engines 3, 4, 5 above are all arbitrage_structural-family engines
+    emitting LEADER_HEDGE. `prediction_venue_dispersion.py` and `funding_rate_dispersion.py` are helper modules consumed
+    by `ArbitragePriceDispersionEngine`'s `_on_tick_*` methods, not standalone engines. `sports_arb_dutching.py` uses
+    `ATOMIC` (not LEADER_HEDGE) mode. `liquidation_capture.py` uses `ATOMIC_ON_CHAIN` (not LEADER_HEDGE).
+
+    **The routing seam** (built 2026-07-30, `execution-service@db75d51d`):
+
+    - **Publish side**: `live_routing.py::publish_atomic_instruction()` — ZERO production callers outside its own
+      defining module. The docstring explicitly documents the intended caller ("the paper/colocated tick runtime calls
+      `publish_atomic_instruction` per emitted `AtomicInstruction`") — but nothing actually calls it.
+    - **Subscribe side**: `atomic_instruction_router.py::route_atomic_instructions()` — ZERO production callers outside
+      its own defining module. Reads from UTL EventTransport, calls `AtomicLegExecutor.execute()`.
+    - Both use UTL `EventTransport` facade (`InMemoryTransport` for paper/colocated, Pub/Sub for live).
+
+    **Current instruction→fill flow** (what ACTUALLY runs):
+
+    ```
+    V2EngineOrchestrator.on_tick()  [orchestrator.py:169-199]
+      → engine.on_tick()            [returns list[StrategyInstructionEnvelope]]
+      → GroupBRunner._process_tick() [runner.py:234-250]
+        → BenchmarkFillEngine.settle()  [benchmark_fills.py:488-502]
+          → _compute_atomic_fill()  [benchmark_fills.py:372-437]
+            → for leg in instruction.legs:  ← FLAT per-leg loop, no leader/follower ordering,
+              no hedge_deadline_ms, no partial-fill/unwind modeling
+    ```
+
+    **Runtime entry points — confirmed zero AtomicInstruction references** (fresh grep 2026-08-10):
+
+    - `strategy-service/strategy_service/colocated_engine.py` — `StrategySupervisor` class, manages per-client
+      subprocess lifecycle. Zero references to `V2EngineOrchestrator`, `on_tick`, `AtomicInstruction`,
+      `publish_atomic_instruction`, `GroupBRunner`, or `BenchmarkFillEngine`. Not a tick driver at all — it spawns
+      `client_worker.py` subprocesses.
+    - `strategy-service/strategy_service/client_worker.py` — Zero references to `V2EngineOrchestrator`, `on_tick`,
+      `AtomicInstruction`, or any of the above.
+    - `execution-service/execution_service/cli/handlers/live_execution_handler.py` — `LiveExecutionHandler` operates on
+      the OLD single-order `Instruction` model (TWAP/VWAP algos, `_route_instruction()` → `Instruction`). Zero
+      references to `V2EngineOrchestrator`, `AtomicInstruction`, `AtomicLegExecutor`, or `route_atomic_instructions`.
+
+    **EXACT wiring points — where each runtime needs a new call/branch:**
+
+    1. **Paper mode** (`GroupBRunner._process_tick()`, `runner.py:234-250`): after `V2EngineOrchestrator.on_tick()`
+       returns and before `BenchmarkFillEngine.settle()`, filter for LEADER_HEDGE `AtomicInstruction`s and call
+       `publish_atomic_instruction()` for each. In paper mode with `InMemoryTransport`, the publish→subscribe round-trip
+       is synchronous, so the subscriber (`route_atomic_instructions` → `AtomicLegExecutor.execute()`) produces the
+       leader/hedge/unwind-aware fill in the same tick. Then `BenchmarkFillEngine.settle()` should be REPLACED (not
+       supplemented) for LEADER_HEDGE instructions — keeping both paths would double-count fills. Alternatively,
+       `AtomicLegExecutor`'s report output could be converted into `BenchmarkFillRecord`s to maintain the existing
+       ledger-emit contract downstream.
+
+    2. **Live/colocated mode**: a new tick driver is needed that calls `V2EngineOrchestrator.on_tick()`. The existing
+       `StrategySupervisor` (colocated_engine.py) spawns per-client `client_worker.py` subprocesses but neither
+       currently runs any tick loop. The wiring requires either (a) adding a tick loop to `client_worker.py` that drives
+       `V2EngineOrchestrator.on_tick()` → `publish_atomic_instruction()` per emitted LEADER_HEDGE instruction, or (b)
+       adding the same to `colocated_engine.py`'s main supervisor loop. `live_execution_handler.py` in execution-service
+       would then need to invoke `route_atomic_instructions()` (the subscribe side) as part of its live execution loop,
+       alongside its existing single-order `Instruction` handling.
+
+    3. **Batch/grid-search mode**: identical to paper — `GroupBRunner._process_tick()` is the shared code path. Same
+       wiring point, same InMemoryTransport pattern.
+
+    **Prediction-arb engines specifically**: the parity-gap doc says "prediction-arb engines" plural — confirmed:
+    `ArbitragePriceDispersionEngine` (3 LEADER_HEDGE sites including `_on_tick_cross_venue_prediction`),
+    `ArbitragePriceDispersionHierarchicalEngine` (1 site), and `ArbitrageCrossDomainEventEngine` (CME↔Polymarket, 1
+    (dated futures basis) in `carry_and_yield/`, and `StatArbPairsFixedEngine` in `stat_arb_pairs/`.
+>>>>>>> 86e965852f (docs(plans): flip todo 3 — AtomicLegExecutor call-site map complete (slot 31))
