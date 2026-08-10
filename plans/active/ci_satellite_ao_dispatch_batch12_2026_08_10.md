@@ -103,7 +103,7 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
     `plan_reconciler_findings_*` process journals listing it as a hygiene-check name). Grepped every active plan for
     this doc's own basename — zero hits. No active plan already claims this exact ground.
 
-- [ ] [DOC] P2. **Record the live-verified resolution of the Tier-A `ci_status` promotion deadlock; leave the
+- [x] ✅ [DOC] P2. **Record the live-verified resolution of the Tier-A `ci_status` promotion deadlock; leave the
       structural-fix ask open.** Full context: `issues/tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`. The
       doc's own "Suggested resolution paths" #1 (merge `instruments-service#1136` to force a fresh main-branch GREEN)
       already happened — **merged 2026-08-09T12:31:02Z**, `quality-gates-v2` + `sit-gate/fleet-green` both SUCCESS on
