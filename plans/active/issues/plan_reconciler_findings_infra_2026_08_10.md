@@ -148,44 +148,47 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 
 ## Filed
 
-1. `quality_gates_quickmerge_timing_baseline_2026_07_31.md`'s stale Deferred-work table (Contradictions #5) +
-   `..._finalize_2026_08_08.md`'s stale "5 remaining" summary text (live: 1 remaining) — both meta-tagged/adjacent,
-   genuinely fixable but not completed this run under time budget; noted here so a future pass (any tranche, or the
-   weekly `all` run) picks it up rather than re-discovering it.
-2. `defi_compute_gcp_migration_2026_08_08.md` + its finalize's off-by-one todo-number citations (Doc-drift #1) — needs a
-   careful fresh recount, not done this run to avoid introducing a second error under time pressure.
-3. `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "beaten by 10-50x" vs. 7.5min-pre-PR-floor self-contradiction
-   (Contradictions #7) — needs a judgment call (add a new todo for the cron-cadence bottleneck, or explicitly scope it
-   out) — not this run's call to make unilaterally.
-4. `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s stale `model_tier: opus-required` (Contradictions #1
-   cross-batch note) — outside this tranche's corpus (not infra-tagged), flagging for whichever tranche owns it or a
-   corpus-wide model-tier-drift sweep.
-5. `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s market-data-processing-service + instruments-service items — same
-   `[x]`-but-DELETE-half-unverified pattern as the 3 fixed items (Flips verified #2), but neither hunter batch 1 nor
-   this run independently re-verified their specific DELETE-class file lists live — flagging as "suspected same pattern,
-   unconfirmed" rather than acting on unverified claims.
-6. `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count off-by-ones (Doc-drift #2)
-   and `defi_compute_gcp_migration_2026_08_08.md`'s missing finalize back-reference (Doc-drift #3) — low-value cosmetic
-   fixes, deferred under time budget.
-7. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` — both docs already
-   self-flag a live contradiction (does MDPS's `DEPLOYMENT_GUIDE.md`/`TESTING.md` need filling, per s5_7, or DELETING,
-   per the SSOT audit's DELETE classification?) — genuinely undecided, both sides evidenced, not this run's call.
-   **ESCALATED**: `POST /api/slots/6/blocked` → `BLK-2b076fa9` (options A/B/C, recommendation A).
-8. Coverage gap (batch 2 special task): `self_hosted_runner_public_repo_revert_2026_08_05.md` +
-   `shared_ci_workflow_repo_extraction_2026_08_06.md` (both substantial, shipped, dual-tagged `[ci, infrastructure]` P1
-   plans) have no consolidated-closeout coordinator doc tracking them — `ci_consolidated_closeout_2026_07_25.md` has
-   been archived/dormant since before either plan existed. Structural gap, not a doc defect in either file — flagging
-   for operator awareness (revive the ci closeout, or explicitly fold CI-tagged infra work into
-   `infra_consolidated_closeout`'s own Tracks). **ESCALATED**: `POST /api/slots/6/blocked` → `BLK-9a03622c` (options
-   A/B/C, recommendation A).
-9. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced freshness-gap race from
-   `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for "full gotchas
-   - measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a substitution) — needs
-     an editorial decision on scope/placement, routed rather than auto-applied.
-10. `prod_terraform_drift_backlog_reconcile_2026_07_24.md`'s "finding W" citation (downgrading an `[OPERATOR]` tag)
-    doesn't resolve inside its named target codex doc (`orchestrator-cloud-identity-self-service.md` has no lettered-
-    finding scheme) — the underlying RULE cited is real and correct, only the locator is dangling. Low priority (P2),
-    not fixed this run.
+- [ ] [DOCS] P2. Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md`'s stale "Deferred work after 2026-07-31"
+      table (Contradictions #5 — Phase 2 row says "needs the operator" while the Todos section shows all 3 Phase-2 items
+      `[x]` done 2026-08-09) + `..._finalize_2026_08_08.md`'s stale "5 remaining" summary text (live: 1 remaining). Both
+      `asset_group: [meta]`, adjacent/out-of-tranche — not fixed this run under time budget.
+- [ ] [DOCS] P3. Re-count and correct `defi_compute_gcp_migration_2026_08_08.md` + its finalize's off-by-one todo-number
+      citations (Doc-drift #1 — e.g. "todo 14" cited for what a positional recount shows is todo 15). Needs a careful
+      fresh recount done in one sitting to avoid introducing a second error.
+- [ ] [DOCS] P3. `ci_pipeline_speed_and_cost_redesign_2026_08_05.md`'s "beaten by 10-50x" headline directly contradicted
+      by its own next sentence (~7.5min average pre-PR latency from promotion-cron cadence, not captured by the
+      "open→merge" metric) — Contradictions #6. Needs a judgment call: add a new todo tracking the cron-cadence
+      bottleneck, or explicitly scope it out of the plan's "done" bar. Not this run's call to make unilaterally.
+- [ ] [DOCS] P3. `deployment_registry_firestore_p3_cutover_2026_07_14.md:31` still declares `model_tier: opus-required`
+      (Contradictions #1 cross-batch note) — outside this tranche's corpus (not infra-tagged). Flag for whichever
+      tranche owns it, or scope a corpus-wide `model_tier: opus-required` currency sweep (this run only found 2 stale
+      instances by accident, not via a systematic search).
+- [ ] [DOCS] P3. Independently re-verify (live `find`/`ls`) whether `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s
+      market-data-processing-service + instruments-service `[x]` items have the same DELETE-half-unshipped pattern as
+      the 3 already-fixed items (Flips verified #2) — neither hunter batch 1 nor this run independently checked their
+      specific DELETE-class file lists; do not act on the unverified suspicion alone.
+- [ ] [DOCS] P3. Fix `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`'s todo 5/6 repo-count
+      off-by-ones (states "23"/"22 of 23", enumerated lists count 24 — Doc-drift #2) and
+      `defi_compute_gcp_migration_2026_08_08.md`'s missing `related:` back-reference to its own finalize twin (Doc-drift
+      #3). Low-value cosmetic, deferred under time budget.
+- [x] [REVIEW] P2. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` MDPS
+      `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE-vs-FILL contradiction (both docs already self-flag it, neither resolves
+      it) — **ESCALATED 2026-08-10**: `POST /api/slots/6/blocked` → `BLK-2b076fa9` (options A/B/C, recommendation A:
+      DELETE wins per the ground-truthed SSOT audit registry). Marked done as FILED (the escalation is the completed
+      action for this run; applying the eventual answer is separate future work once it resolves).
+- [x] [OPERATOR] P2. Coverage gap: `self_hosted_runner_public_repo_revert_2026_08_05.md` +
+      `shared_ci_workflow_repo_extraction_2026_08_06.md` (dual-tagged `[ci, infrastructure]` P1 plans) have no
+      consolidated-closeout coordinator — `ci_consolidated_closeout_2026_07_25.md` archived/dormant since before either
+      plan existed. **ESCALATED 2026-08-10**: `POST /api/slots/6/blocked` → `BLK-9a03622c` (options A/B/C,
+      recommendation A: revive `ci_consolidated_closeout`). Marked done as FILED, same rationale as above.
+- [ ] [DOCS] P3. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced freshness-gap
+      race from `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for
+      "full gotchas + measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a
+      substitution) — needs an editorial decision on scope/placement before applying.
+- [ ] [DOCS] P3. `prod_terraform_drift_backlog_reconcile_2026_07_24.md:177`'s "finding W" citation (downgrading an
+      `[OPERATOR]` tag) doesn't resolve inside its named target codex doc (`orchestrator-cloud-identity-self-service.md`
+      has no lettered-finding scheme) — the cited RULE is real and correct, only the locator is dangling. Fix the
+      citation to point at the actual section name.
 
 ## Archive candidates (operator review)
 
@@ -232,6 +235,23 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 None — full pass completed within budget; the 3 items listed under "Filed" that describe not-yet-executed FIXES (as
 opposed to genuinely-routed judgment calls) are a scoping choice under time budget, not an incomplete sweep — every one
 of the 42 writable docs was read and assessed by a hunter this run.
+
+## Deferred work after 2026-08-10
+
+| Item                                                                                                      | State / why deferred                                                                                       | Blocked on                                                  |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md` + its finalize's todo 3                        | **Cannot be done yet** — all 3 todos done, ready, but 3 of 5 referrers are inside today's 12h grace window | Time — referrer docs clearing grace (~12-24h from this run) |
+| Archive `na_eligibility_hash_blind_...2026_08_09.md`, `ag_closeout_audit_infra_parked_2026_08_{01,07}.md` | **Cannot be done yet** — same grace-locked-referrer blocker; `archive_exempt: true` bridge already applied | Time — referrer docs clearing grace                         |
+| Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md` stale Deferred-work table + finalize summary | **Not done** — genuinely fixable, no blocker, just not this run's scope (meta-tagged, adjacent)            | Nobody — pick it up any time                                |
+| Re-count `defi_compute_gcp_migration_2026_08_08.md` off-by-one todo citations                             | **Not done** — real work, deliberately deferred to avoid a rushed second error                             | Nobody — pick it up any time                                |
+| Re-verify MDPS/instruments-service DELETE-half on `codex_vs_repo_docs_ssot_audit_2026_06_01.md`           | **Not done** — suspected pattern, unconfirmed, needs a live `find`/`ls` check                              | Nobody — pick it up any time                                |
+| `vm-launcher-runbook.md` missing freshness-gap incident                                                   | **Not done** — needs an editorial scope/placement decision, exceeds the mechanical carve-out               | Whoever owns that runbook's editorial scope                 |
+| MDPS DELETE-vs-FILL ruling (`s5_7` vs SSOT audit)                                                         | **Operator-owned** — escalated `BLK-2b076fa9`, options + recommendation given                              | **Operator** — dashboard answer                             |
+| CI-tagged infra closeout coverage gap                                                                     | **Operator-owned** — escalated `BLK-9a03622c`, options + recommendation given                              | **Operator** — dashboard answer                             |
+
+**Recommended next item**: the 4 archive candidates (first two rows) — no judgment needed, purely a matter of the
+referrer docs aging out of grace; whoever next runs the infra tranche (or the weekly `all` pass) should check those 3-4
+referrer docs' commit ages first and complete the 6-step ritual if clear.
 
 ## Progress Log
 
@@ -290,3 +310,20 @@ of the 42 writable docs was read and assessed by a hunter this run.
   genuine authority/preference calls per SKILL.md's calibration test — not escalated, left as tracked follow-ups only.
   **Phase 5.9(a) ledger**: routed-to-operator = 2, parked-in-issue-doc = 2 (both also recorded in the Filed section
   above with their `BLK-*` ids) — balanced.
+- **2026-08-10 07:00 UTC (approx)** — Pre-compact pass (`/pre-compact`, autonomous mode — no chat to relay into, so
+  every finding below is a write, not a message): Step 1 audit found nothing at risk — PM `ahead=0/behind=0`, no other
+  slot-6 repo dirty/unpushed, no secrets in any scratchpad/tmp file, no committed doc references a scratchpad/tmp path.
+  Cleaned up ~268K of my own commit-retry-log litter from the SHARED host `/tmp` (used bare `/tmp/*.log` instead of the
+  designated scratchpad this session — a process deviation worth naming so a future session doesn't repeat it; next time
+  use the scratchpad path from the start). Converted the "Filed" section from prose numbering to real `- [ ]` checkboxes
+  (2 marked done-as-filed for the escalated items, 8 left open) — a prose list isn't a tracked todo per this workspace's
+  HARD RULE, and this doc's own population (asset_group:infrastructure, status:open) makes these genuinely visible to a
+  future `/plan-reconcile` or `/na-eligibility-audit` pass now, not just narrative color. Added the
+  `## Deferred work after 2026-08-10` table (corpus convention per CLAUDE.md's commit-push-flip-rule "Half 3"). **One
+  more process lesson worth recording explicitly** (not previously called out as a standalone lesson): the
+  `check_archive_candidates.sh` pre-commit hook HARD-BLOCKS any commit that leaves a staged plan/issue doc at 0 open
+  todos without either (a) a `git mv` to `plans/archive/` in the same change, or (b) `archive_exempt: true` in
+  frontmatter with a Progress Log reason. This is not obvious from the role file — a reconciler run that flips a doc's
+  last open todo MUST immediately decide archive-now vs. `archive_exempt`, or the commit simply fails. Grace-locked
+  referrers (this run's actual blocker for 4 docs) make `archive_exempt` the common case whenever the corpus is under
+  heavy same-day churn, which the infra tranche specifically was today (46% grace coverage).
