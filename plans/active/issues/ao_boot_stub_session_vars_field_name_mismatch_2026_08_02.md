@@ -39,7 +39,7 @@ related:
   [
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
@@ -74,7 +74,7 @@ context_scope:
     agent-orchestrator/server/models/worker_api.py,
     agent-orchestrator/server/plan_health.py,
     unified-trading-pm/agents/worker.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
   ]
 ---
 
@@ -203,5 +203,5 @@ Two independent, complementary fixes — either alone helps, both together close
   (22).
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-affirmed on citation alone.
   The 2026-07-31 operator directive routing this exact live-dispatch-boot-critical-path class to local-only still
-  stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same
-  fleet-wide worker-boot files.
+  stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same fleet-wide worker-boot
+  files.

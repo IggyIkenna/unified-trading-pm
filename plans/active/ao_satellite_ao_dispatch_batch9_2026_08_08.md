@@ -29,7 +29,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
     /plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -52,7 +52,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
+    /plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /plans/active/issues/boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md,
     agent-orchestrator/server/prompts.py,
     agent-orchestrator/server/routes/slots_worker.py,
@@ -148,9 +148,9 @@ re-running the classification from scratch. That re-check (2026-08-08) found:
       file; the text-audit table (role file → covered-by-guard? → worker.md-in-STEP-0?) is recorded in the source doc's
       Progress Log; the 14:30-16:30Z recurrence timing question is answered; full `agent-orchestrator`
       `quality-gates.sh` green. Source:
-      `/plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` (both its remaining `[DOCS] P1`
-      and `[BACKEND] P2` items, combined — tightly coupled per this todo's own reasoning). Repo: unified-trading-pm,
-      agent-orchestrator.
+      `/plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md` (both its remaining
+      `[DOCS] P1` and `[BACKEND] P2` items, combined — tightly coupled per this todo's own reasoning). Repo:
+      unified-trading-pm, agent-orchestrator.
 
 ## Deferred
 
@@ -186,5 +186,6 @@ Log for the full disposition of the other 47 items re-checked (none needed extra
   day) — not a live regression, no P0 filed. Regression test:
   `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py`, full `quality-gates.sh` green (3060 tests + 262
   dashboard tests). Full audit table + evidence recorded in
-  `/plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own todos/Progress Log per this
-  plan's "Rules for every worker" (checkboxes there deliberately left unflipped for the finalize plan to reconcile).
+  `/plans/archive/2026_08/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own todos/Progress Log
+  per this plan's "Rules for every worker" (checkboxes there deliberately left unflipped for the finalize plan to
+  reconcile).

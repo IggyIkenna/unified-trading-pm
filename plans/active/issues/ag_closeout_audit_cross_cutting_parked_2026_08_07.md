@@ -41,7 +41,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
