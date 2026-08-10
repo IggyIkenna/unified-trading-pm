@@ -910,3 +910,48 @@ VM:
 `gcloud compute instances describe mdps-backfill-cefi-20260810-115835 --zone=asia-northeast1-c --format="value(status)"`.
 Check progress: SSH to VM, `grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`.
 04-30 deadline 17:31:57 — if trades also completes, 04-30 will be COMPLETE for 1h candles.
+
+### Session continuation (post-compact #17, ~17:12 UTC)
+
+**Compaction kill #18**: Pipeline PID 1051842 + heartbeat PID 1054685 both killed by this compaction. Re-armed as
+pipeline PID 1508141 + heartbeat PID 1576074.
+
+**04-29 final outcome**: TIMED OUT at 17:01:57 after 1800s. book_snapshot_5 375/375 all STALE_DATA, liquidations 329/329
+all schema-failed, options_chain ✅, trades 219/391 TO, derivative_ticker never reached. **0 candles for 04-29.**
+
+**04-30 progress** (spawned 17:01:57, deadline 17:31:57):
+
+| #   | data_type         | Result                                                 | Time               |
+| --- | ----------------- | ------------------------------------------------------ | ------------------ |
+| 1   | derivative_ticker | 395/395 (100%) ✅395 ❌0, 9,480 candles, 5.7/s         | 69s (to 17:03:25)  |
+| 2   | liquidations      | 237/237 (100%) ✅0 ❌237, 0 candles, all schema-failed | 11s                |
+| 3   | options_chain     | ✅ fast                                                | 1s                 |
+| 4   | book_snapshot_5   | 🔄 all STALE_DATA, D* tickers at 17:11                 | ~1,382s ETA ~17:26 |
+| 5   | trades            | ⏳ pending                                             |                    |
+| 6   | futures_chain     | ⏳ pending                                             |                    |
+
+- derivative_ticker is the FIRST candle source — **9,480 candles already captured for 04-30**
+- book_snapshot_5 all-STALE_DATA scanning at ~3.5s/instrument, ETA ~17:26
+- trades (at ~5/s for 395 instruments = ~79s) should complete by ~17:28 if book_snapshot_5 finishes on time
+- **04-30 1h candle outlook: GOOD** — derivative_ticker already done; trades + futures_chain can complete within
+  deadline if book_snapshot_5 finishes by ~17:28
+
+**1h candles after 04-30** (projected):
+
+| Date  | Status          |
+| ----- | --------------- |
+| 04-20 | COMPLETE        |
+| 04-21 | PARTIAL         |
+| 04-22 | NONE            |
+| 04-23 | PARTIAL         |
+| 04-24 | PARTIAL         |
+| 04-25 | PARTIAL         |
+| 04-26 | COMPLETE        |
+| 04-27 | PARTIAL         |
+| 04-28 | PARTIAL         |
+| 04-29 | PARTIAL         |
+| 04-30 | LIKELY COMPLETE |
+
+**Where to resume**: `ps aux | grep post_mdps_pipeline` → if dead, re-arm. Check VM status. SSH:
+`grep -E '(📊|📦|TIMED OUT|subprocess-per-date: spawn)' /tmp/vm-exec-5178.log | tail -10`. 04-30 deadline 17:31:57. Next
+check ~17:25 when book_snapshot_5 should be near completion.
