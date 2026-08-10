@@ -115,10 +115,15 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
       job for `.github/workflows/ci.yml`'s `e2e` job, so `/api/v1/*` admin routes resolve instead of 500ing on missing
       Admin SDK credentials. Verify by re-running `tests/e2e/user-management.spec.ts` in CI and confirming the
       `/api/v1/users` 500 is gone. (repo: unified-trading-system-ui)
-- [ ] [INFRA] P2. Diagnose why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway through a
+- [x] ✅ [INFRA] P2. Diagnose why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway through a
       sustained ~20-test sequential Playwright run against it (reproduced both self-started and Playwright-`webServer`-
       managed) — capture the dev server's own stdout/stderr across a full run to find the crash cause, then fix it.
-      (repo: unified-trading-system-ui)
+      (repo: unified-trading-system-ui) — unified-trading-system-ui@1c59c624 (via
+      `infra_satellite_ao_dispatch_batch13_2026_08_09.md`). Root cause: shared-host `resource-watchdog.service` SIGTERMs
+      `next-server` once RSS crosses its ceiling (`next`/`node` not allowlisted); `next dev --webpack` bundling
+      `firebase-admin`'s grpc/google-gax tree per `/api/v1/*` compile drove the spike. Fixed via
+      `serverExternalPackages` + a `NODE_OPTIONS` heap cap on `dev:mock`. Verified: full
+      `tests/e2e/user-management.spec.ts` (21 tests) completes with zero dev-server-death failures.
 - [ ] [TEST] P3. Once both above are resolved, re-run `tests/e2e/user-management.spec.ts`,
       `tests/e2e/admin-strategy-assignments.spec.ts`, and `tests/e2e/permission-catalogue.spec.ts` end-to-end and
       confirm all exit 0; record `pw:L2 ✓` evidence on
@@ -135,3 +140,8 @@ just the ones in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
 - **2026-08-09 (slot-28)**: Filed while working `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s login-helper-repair
   todo. The login helper itself is fixed and verified (see that plan's Progress Log); these two gaps are separate,
   pre-existing, and orthogonal to the login fix.
+- **2026-08-10 (slot-8, reconcile per `infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md`)**: Flipped todo 2 —
+  verified `unified-trading-system-ui@1c59c624` (batch13) directly against the live commit (content-diff matches the
+  claim: `next.config.mjs` `serverExternalPackages` + `dev:mock` `NODE_OPTIONS` heap cap). Todos 1 (Firebase Admin
+  credential/emulator decision) and 3 (re-run gated on both) remain genuinely open — this doc stays `status: open`, NOT
+  an archival candidate.

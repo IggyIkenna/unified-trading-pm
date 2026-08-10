@@ -62,12 +62,14 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile
+- [x] ✅ [REVIEW] P2. **Reconcile
       `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s todo 2.**
       Once batch13's todo ships, flip that source doc's matching `- [ ]` checkbox to `[x]`, citing the batch13 commit
       SHA. **Do NOT archive the source doc** — confirm its todo 1 (Firebase Admin credential/emulator decision) and todo
       3 (re-run gated on both 1 and 2) are still genuinely open before concluding anything about archival eligibility;
-      the source doc stays active with 2 open items regardless of batch13's outcome. (repo: unified-trading-pm)
+      the source doc stays active with 2 open items regardless of batch13's outcome. (repo: unified-trading-pm) — done.
+      Verified `unified-trading-system-ui@1c59c624` against the live commit, flipped the source doc's todo 2, confirmed
+      todos 1 and 3 remain genuinely open (source doc stays active, not archived).
 - [ ] [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch13_2026_08_09.md` and
       `infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md`** once the reconciliation above is verified — run the
       standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
@@ -86,3 +88,7 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 - **2026-08-09** — Drafted alongside `infra_satellite_ao_dispatch_batch13_2026_08_09.md` during the round-9
   infra-tranche combined RECLASSIFY+satellite-extraction sweep. Set `status: active` per the no-double-gate ruling (its
   own `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early dispatch).
+- **2026-08-10 (slot-8)** — Todo 1 (reconcile) done: batch13's todo shipped (`unified-trading-system-ui@1c59c624`),
+  verified against the live commit content, and the source issue doc's todo 2 flipped citing that SHA; confirmed the
+  source doc's todos 1 and 3 remain genuinely open, so it stays active (not archived). Todo 2 (archive the batch pair)
+  not yet done — separate commit per the no-combine-flip-and-git-mv rule.
