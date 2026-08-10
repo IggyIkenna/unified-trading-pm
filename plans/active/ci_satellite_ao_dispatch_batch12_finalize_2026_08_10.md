@@ -63,13 +63,13 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`'s
-      checkboxes against batch 12 todo 1's actual outcome.** Once batch 12 todo 1 lands, verify the cited commit(s) are
-      real ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`) before citing — do not trust batch
-      12's own Progress Log claim blind (per the batch9-finalize precedent, which caught a mis-cited SHA this exact
-      way). If both of the source doc's todos are genuinely closed with verified evidence, flip them `[x]`. If batch 12
-      todo 1 instead reports a clean blocked/partial outcome, do NOT flip — append the finding to the source doc so the
-      next picker-up doesn't repeat the investigation, leave the todo(s) open.
+- [x] ✅ [REVIEW] P2. **Reconcile `archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`'s
+      checkboxes against batch 12 todo 1's actual outcome — unified-trading-pm@4f901b9916.** Verified all 3 cited SHAs
+      are real ancestors of `origin/live-defi-rollout`: `a4b2248b6f` (batch12 todo1 flip), `79171795f2` (codex narrowing
+      to mode-2), `a231c2a80` (source doc todo2, archive_exempt bridge). Codex narrowing confirmed present and
+      substantive at `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` L109-158 — single-repo
+      same-commit flip+archival now sanctioned, cross-repo two-commit split retained with `archive_exempt: true` bridge.
+      Source doc's both todos genuinely `[x]` with verified citations. Disposition: done-with-evidence.
   - Source: `archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`.
   - **Done when**: the source doc's disposition (done-with-evidence or blocked-with-findings) is recorded with a
     verified citation, and PM's `quality-gates.sh` is green.
@@ -104,3 +104,10 @@ context_scope:
 - **2026-08-10** — Drafted alongside `ci_satellite_ao_dispatch_batch12_2026_08_10.md`. Authored `status: active` per the
   established no-double-gate precedent; batch 12 itself is `status: draft` per this run's explicit autonomous-mode
   instructions (unlike batch7-11, which had real-time operator authorization to author directly `active`).
+- **2026-08-10 (slot 12, review worker)** — Flipped todo 1. Verified all 3 cited SHAs are real ancestors of
+  `origin/live-defi-rollout`: `a4b2248b6f` (batch12 todo1 flip), `79171795f2` (codex narrowing to mode-2 only),
+  `a231c2a80` (source-doc todo2, archive_exempt bridge). Codex narrowing confirmed present + substantive at
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` L109-158 — single-repo same-commit flip+archival
+  now sanctioned, cross-repo two-commit split retained. Source doc's both todos genuinely `[x]` with verified citations;
+  disposition: done-with-evidence. The source doc remains `archive_exempt: true` — its archival is gated on this
+  finalize plan's own todo 3 (batch12 + finalize archival), which drops the exemption key as part of the 6-step ritual.
