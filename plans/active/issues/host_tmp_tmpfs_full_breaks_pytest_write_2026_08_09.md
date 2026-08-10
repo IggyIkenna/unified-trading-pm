@@ -46,6 +46,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: slot 22, deployment-service QG run during cross_cutting_satellite_ao_dispatch_batch5-77d480c19d08, 2026-08-09
+archive_exempt: true # 0-open-todos 2026-08-10 (both todos folded + DONE via infra_satellite_ao_dispatch_batch15_2026_08_10.md todo 1); archival blocked by that active parent plan still referencing this doc — bridge until it reaches a terminal status
 ---
 
 # Shared-host /tmp tmpfs full — breaks pytest fleet-wide
@@ -79,7 +80,7 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
 
 ## Todo
 
-- [ ] [INFRA] P1. **Determine whether `/tmp` tmpfs sizing is fixed-too-small or the real problem is scratch files not
+- [x] ✅ [INFRA] P1. **Determine whether `/tmp` tmpfs sizing is fixed-too-small or the real problem is scratch files not
       being cleaned up post-run**, and fix at the root (raise tmpfs size and/or route large one-off parquet scratch
       writes to a non-tmpfs path). Repo: unified-trading-pm (host/VM config) or wherever the tmpfs mount is provisioned.
       **Relevant prior history (added 2026-08-10, plan_reconciler infra shard, agt-716973)**:
@@ -88,6 +89,21 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
       reading of an **8.0G total tmpfs**. The tmpfs was already resized ~4x between those dates and still saturates —
       suggestive evidence toward "cleanup problem, not sizing problem." That doc also documents a workaround (point
       `TMPDIR`/`TF_DATA_DIR` at a short path under `/home/ubuntu/` instead of `/tmp`) worth checking before this todo's
-      own investigation starts from scratch.
-- [ ] [INFRA] P2. **Audit the specific large `/tmp/enum-univ-*` files for genuine ownership** (is the writing process
-      still alive?) before any cleanup — do not blind-delete another slot's WIP.
+      own investigation starts from scratch. — **DONE 2026-08-10 (slot-20,
+      infra_satellite_ao_dispatch_batch15-fc54cb24200b).** Verified the "cleanup problem, not sizing problem" read live:
+      tmpfs already resized 2G→8G (4x) and still saturates; `free -h` ~3.3G genuinely free → resize is a poor trade and
+      prior operator rulings (07-08/07-26) kept the mount resize out of scope. Fixed at the root by ROUTING the
+      recurring writers off the tmpfs (instruments-service@bc36e4a5: enum-univ-_/enum-shard-_/cefi-corrector-* parquets
+      now stage under `$HOME/.cache/instruments-scratch` on the root disk, `_scratch_dir()` helper + `--scratch-dir`/
+      `$INSTRUMENTS_SCRATCH_DIR` override) + a liveness-gated TTL reaper
+      (`unified-trading-pm/scripts/dev/cleanup-stale-tmp-parquet-scratch.sh` + cron installer, PM@f6af641115) + codex
+      SSOT `/codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`. `df -h /tmp` 8.0G 3.1G used — no plausible path
+      to 100% under normal fleet load with the recurring offenders routed off the tmpfs.
+- [x] ✅ [INFRA] P2. **Audit the specific large `/tmp/enum-univ-*` files for genuine ownership** (is the writing process
+      still alive?) before any cleanup — do not blind-delete another slot's WIP. — **DONE 2026-08-10 (slot-20,
+      infra_satellite_ao_dispatch_batch15-fc54cb24200b).** Ownership audit folded into the fix per the plan: (1)
+      verified live via `lsof` that the 2026-08-09 enum-univ-defi 2.8G pair + today's largest consumers (`repro-venv`
+      808M, `cefi_availability_index.parquet`, `avail_idx.parquet`) have ZERO open handles — orphaned (writing process
+      dead), but nothing was blindly deleted; (2) the shipped reaper is liveness-gated (never touches a file with an
+      open handle — `fuser`) so it can only reclaim genuinely-dead scratch, satisfying the ownership-audit caution as a
+      standing mechanism rather than a one-time check.
