@@ -287,6 +287,39 @@ jobs:
           echo "Library wheel CodeBuild triggered: $BUILD_ID"
           echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
 
+      - name: Update manifest on AWS build success
+        if: |
+          steps.route.outputs.repo_type != 'library' &&
+          steps.codebuild.outputs.build_exit_code == '0' &&
+          steps.codebuild.outputs.build_triggered == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          BUILD_ID="${{ steps.codebuild.outputs.build_id }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg env "${ENV}" \
+             --arg repo "${REPO}" \
+             --arg version "${VERSION}" \
+             --arg ts "${DEPLOYED_AT}" \
+             --arg build_id "${BUILD_ID}" \
+             --arg cloud "aws" \
+             '(.deployed_versions_aws[$env] //= {}) | .deployed_versions_aws[$env][$repo] = {version: $version, deployed_at: $ts, build_id: $build_id, cloud: $cloud}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json \
+            && echo "deployed_versions_aws[${ENV}][${REPO}] = ${VERSION}" \
+            || echo "WARNING: failed to update deployed_versions_aws (non-fatal)"
+          if ! git diff --quiet workspace-manifest.json; then
+            git add workspace-manifest.json
+            git commit -m "chore: update deployed_versions_aws[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
+            git push origin main || true
+          fi
+
       - name: Log routing decision
         if: always()
         run: |

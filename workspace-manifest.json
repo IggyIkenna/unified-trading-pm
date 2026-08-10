@@ -2185,6 +2185,12 @@
       }
     ]
   },
+  "deployed_versions": {
+    "_note": "Current deployed image tag per repo per environment. Updated by Cloud Build post-deploy.",
+    "dev": {},
+    "staging": {},
+    "prod": {}
+  },
   "workspace_infrastructure": {
     "setup_repos": [
       "unified-trading-pm"

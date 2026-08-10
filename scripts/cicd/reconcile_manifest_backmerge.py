@@ -68,6 +68,7 @@ _TOPLEVEL_CI_FIELDS: frozenset[str] = frozenset(
         "staging_commits",
         "main_commits",
         "staging_versions",
+        "deployed_versions",
         "lastUpdated",
     }
 )

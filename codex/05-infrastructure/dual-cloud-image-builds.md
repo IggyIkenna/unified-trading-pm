@@ -84,10 +84,7 @@ staging→main promote PR
   full `<repo>-<env>` matrix. No separate `-wheel-<env>` naming exists for library repos (CORRECTED 2026-08-08 — see
   below).
 - Freeze-check via `change-freeze-check.yml` reusable; defers on freeze instead of running.
-- ~~On success: updates `deployed_versions[<repo>]` in `workspace-manifest.json`.~~ **REMOVED 2026-08-10** — the
-  provenance write was dead code (write step never fired; `permissions: contents: read` blocked the push; manifest field
-  never populated). Retired per `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 4. Read Firestore `ci_status`
-  for live deploy state.
+- On success: updates `deployed_versions[<repo>]` in `workspace-manifest.json`.
 - `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` repo variable gates `notify-build-not-configured` alerts (avoids pre-cutover
   noise).
 
@@ -159,9 +156,7 @@ the GCP router.
   names are bare `<repo>` with no `-<env>` suffix (unverified this pass, see "Build trigger naming" above).
 - Polls build status via `aws codebuild batch-get-builds` (60×30s = 30 min max).
 - `ResourceNotFoundException` → detected as "not configured" → soft notification (same gating as GCP side).
-- ~~On success: updates `deployed_versions_aws[<repo>]` in `workspace-manifest.json`.~~ **REMOVED 2026-08-10** — same
-  dead-code retirement as the GCP side (see the GCP bullet above; `infra_satellite_ao_dispatch_batch9_2026_08_09.md`
-  todo 4).
+- On success: updates `deployed_versions_aws[<repo>]` in `workspace-manifest.json`.
 
 ### Registry
 
@@ -284,20 +279,18 @@ Run via deployment-service `quality-gates.sh`. A missing buildspec for a registe
 
 ---
 
-## Provenance (RETIRED 2026-08-10 — was: "manifest state is the build-provenance audit trail"; CORRECTED 2026-08-08 to "not functioning")
+## Provenance (CORRECTED 2026-08-08 — was: "manifest state is the build-provenance audit trail")
 
-- ~~GCP: `cloud-build-router.yml` updates `deployed_versions[<repo>]` in `workspace-manifest.json` on success.~~
-  **REMOVED 2026-08-10**: the write step was dead code — it never fired (`build_triggered` gate), and even when it would
-  fire the workflow's `permissions: contents: read` blocked the `git push origin main` (silently swallowed by
-  `|| true`); the manifest field was never populated in 5 months. The step is deleted and the `deployed_versions`
-  manifest field is removed.
-- ~~AWS: `cloud-build-router-aws.yml` updates `deployed_versions_aws[<repo>]`.~~ **REMOVED 2026-08-10**: same dead-code
-  retirement, step + field removed.
-- `reconcile_manifest_backmerge.py`'s `_TOPLEVEL_CI_FIELDS` no longer lists `deployed_versions`.
+- GCP: `cloud-build-router.yml` is designed to update `deployed_versions[<repo>]` in `workspace-manifest.json` on
+  success. **Live reality (verified 2026-08-08)**: `deployed_versions` is present but **empty** —
+  `{"dev": {}, "staging": {}, "prod": {}}` — no repo has ever had an entry written.
+- AWS: `cloud-build-router-aws.yml` is designed to update `deployed_versions_aws[<repo>]`. **Live reality**: the
+  `deployed_versions_aws` key is **entirely absent** from `workspace-manifest.json`.
 
-**The manifest is NOT a build-provenance audit trail** (field removed). Do not rely on `workspace-manifest.json` to
-answer "what's deployed" — read Firestore (`ci_status`) for live CI status instead, per the workspace's
-`ci_status`-is-SSOT rule. Retirement tracked: `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 4.
+**The manifest is NOT currently functioning as a build-provenance audit trail** — both fields are dead/unused despite
+the router code intending to populate them (worth a follow-up: either fix the write path or retire the claim/code). Do
+not rely on `workspace-manifest.json` to answer "what's deployed" — read Firestore (`ci_status`) for live CI status
+instead, per the workspace's `ci_status`-is-SSOT rule.
 
 ---
 
