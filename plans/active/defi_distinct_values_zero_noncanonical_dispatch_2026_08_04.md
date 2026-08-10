@@ -221,17 +221,13 @@ _(formalized 2026-08-10 from prose in the "REVISED completion sequencing" and Pr
 full evidence/citations. Everything else in the Deferred-work table and Progress Log below already has its own
 delegated tracking doc with real checkboxes — not duplicated here.)_
 
-- [ ] [DATA] P2. **Retire POOL (uppercase `instrument_type`) / `rate_indices` / `dex_pool_fees` legacy manifest rows.**
-      Per the 2026-08-10 "REVISED completion sequencing" steps 3-5 (Progress Log below): once
-      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 rebuild VM reaches a genuinely stable terminal
-      state (not another resource-exhaustion kill — see that doc's own R3 item for the current relaunch decision, gate
-      on it rather than duplicating its tracking), re-measure all three counts live (must be STABLE across two queries
-      a few minutes apart before trusting them), pause the manifest consolidator cron
-      (`uts-prod-manifest-consolidator-market-data-defi-cron`, `asia-northeast1`), retire each via the proven
-      reversible `capture_status: captured→attempted_failed` pattern (mirror
-      `retire_dex_pools_legacy_captured_rows_2026_08_05.py` / `retire_dex_swaps_legacy_captured_rows_2026_08_09.py`),
-      resume the consolidator, then trigger a fresh `measure_honest_coverage.py` rollup and re-check the Distinct
-      Values panel. Repo: market-tick-data-service.
+- **[DATA] P2. CANCELLED — SUPERSEDED 2026-08-10, EXTRACTED → `defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`
+  (`assigned_vm: planning`, `status: draft` — flips `active` once the rebuild VM reaches genuine terminal SUCCESS).**
+  Retire POOL/`rate_indices`/`dex_pool_fees` legacy manifest rows, resume the consolidator, trigger a fresh rollup,
+  re-check the panel — the judgment calls this depended on are resolved (rebuild VM OOM root-caused + fixed, see
+  `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`), so the remaining work
+  is AO-dispatch-eligible. Finalize companion:
+  `defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md`.
 - [ ] [DATA] P3. **Cross-check `instrument_type=spot_pair` (9,802 rows) against `defi-canonical-naming-ssot.md`'s
       locked instrument_type list** — flagged 2026-08-07 ("not yet cross-checked... needs a quick check before
       assuming drift vs. legitimate") but never followed up.
@@ -606,25 +602,13 @@ delegated tracking doc with real checkboxes — not duplicated here.)_
   - **`ASTER`/`GMX`/`HYPERLIQUID`/`EXTENDED`/`LIGHTER` venues + `HYPERLIQUID` chain + `AAVEV3` bare-alias historical
     rows** — status unchanged from earlier this epic: genuinely new/unresolved work (venue registration decisions,
     `[OPERATOR]`-gated historical purge respectively), not touched this pass.
-  - **REVISED completion sequencing (supersedes earlier same-day framing)** — do NOT attempt POOL/rate_indices/
-    dex_pool_fees retirements before the rebuild VM reaches terminal state; the corpus is actively moving and a
-    retirement now risks acting on a stale/incomplete snapshot:
-    1. ✅ `measure_honest_coverage.py` fix shipped (this entry).
-    2. ⏳ Rebuild VM (`canonical-migration-defi-rebuild-20260809-163511`) reaches terminal — monitor via its `run.log`
-       `Rebuild complete:` line; a `CronCreate` one-shot check is already scheduled ~06:43 local 2026-08-10
-       (session-only, dies with the scheduling session — if it fires, whichever session picks it up should re-read this
-       entry for full context first).
-    3. Once terminal: re-measure POOL/rate_indices/dex_pool_fees live counts (must be STABLE across two queries a few
-       minutes apart before trusting them); pause the manifest consolidator cron
-       (`uts-prod-manifest-consolidator-market-data-defi-cron`, `asia-northeast1`); retire each via the proven
-       reversible `capture_status: captured→attempted_failed` pattern (mirror
-       `retire_dex_pools_legacy_captured_rows_2026_08_05.py`/`retire_dex_swaps_legacy_captured_rows_2026_08_09.py`);
-       resume the consolidator.
-    4. Trigger a fresh `measure_honest_coverage.py` rollup run.
-    5. Re-check the Distinct Values panel — expect venues down to the genuinely-unresolved set (ASTER/GMX/
-       HYPERLIQUID/EXTENDED/LIGHTER + the 24 composite venues, which are CORRECTLY non-canonical-but-accepted, not a
-       bug), data_types clean (dex_pools/dex_swaps/rate_indices/dex_pool_fees all retired), instrument_types clean
-       modulo the small genuine `<blank>` gap.
+  - **REVISED completion sequencing — SUPERSEDED 2026-08-10, moved to a dedicated plan.** `measure_honest_coverage.py`
+    fix shipped (this entry). The rebuild VM OOM'd twice since (`-163511` then `-093118`), root-caused + fixed
+    (`market-tick-data-service@483eb895`), and relaunched (`-101545`) — see
+    `/plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md`. The remaining
+    retire/rollup/recheck steps now live in
+    `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` (this doc's Todos section, above)
+    rather than as prose here — do not trust either copy without a live status check.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (0 already
   resolved, so nothing cited-as-resolved-inline); added a `## Todos` section for the POOL/rate_indices/dex_pool_fees
   retirement sequencing (gated on `defi_track01`'s R3 rebuild VM, not duplicating that doc's own tracking), the
