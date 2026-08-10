@@ -292,6 +292,13 @@ staged batch before commit).
   resolved, cited inline — Filed item 6, `ui_consolidated_closeout` Todo 6 confirmed `[x]`); Filed items 7-9 (orphaned
   Firestore-migration successor scoping, undefined soak-window duration, batch1/batch3-finalize same-file conflict-check
   gap) formalized into `## Todos` above with fresh re-verification of each.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — 2 of the 3 open todos are
+  explicitly `[OPERATOR]`-tagged genuine human judgment/definition calls, not worker-determinable: todo 1 needs a
+  human decision on whether/when each of 3 named orphaned successor items becomes its own plan; todo 2 needs a human
+  to supply a soak-window duration nowhere stated in the source doc (and that doc's own phase is separately HALTED on
+  an earlier precondition regardless). Todo 3 (the batch1/batch3-finalize same-file conflict-check note) is
+  individually small and plausibly bounded, but the whole-doc RECLASSIFY bar requires every open todo to clear, and
+  todos 1-2 do not.
 - **2026-08-10** — plan_reconciler dispatch `agt-ec1688` started. Confirmed 23-doc `ui` tranche membership via
   multi-line-aware frontmatter scan (the plain single-line grep undercounts — `asset_group:` often wraps its `[ui]`
   value to the next line). Grace set: 2 docs (`data_status_tab_and_downloads_remediation_2026_06_16.md`, 5h;

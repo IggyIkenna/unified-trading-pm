@@ -151,3 +151,6 @@ archival — no live Databento dependency).
   formalized as a `- [ ]` checkbox despite `status: blocked`/`priority: P0` and being escalated in prose elsewhere
   (`tradfi_satellite_ao_dispatch_batch11_2026_08_10.md`'s Deferred section) — added an `[OPERATOR] P0` todo under a new
   `## Todos` section.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — the sole open todo is paying an
+  outstanding vendor bill, an explicit `[OPERATOR]`-tagged business/spend decision with no data-derivable answer
+  (`status: blocked`, `BLOCKED-OPERATOR-DECISION` per the doc's own text). Doc stays NA.

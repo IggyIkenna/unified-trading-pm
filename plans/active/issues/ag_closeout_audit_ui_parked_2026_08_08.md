@@ -31,9 +31,9 @@ related:
   ]
 created: 2026-08-08
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
+assigned_vm: planning
 priority: P3
-last_updated: 2026-08-08
+last_updated: "2026-08-10"
 source: >-
   ag_closeout_auditor scheduled run 2026-08-08 (tranche=ui, slot 11, DISPATCH_ID=agt-a0f1b7)
 resolved_by:
@@ -41,6 +41,8 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+sequential: true # todos 1 and 3 both edit cursor-configs/skills/ag-closeout-audit/SKILL.md (different sections) —
+# same-file overlap, serialise to avoid a concurrent-dispatch collision (na-eligibility-audit 2026-08-10 reclassify).
 context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -233,3 +235,16 @@ are named explicitly in that todo's text) — no duplicate todo needed here.
   7 wording, SKILL.md taxonomy addition) were all still-open on re-verification and are now real `- [ ]` checkboxes;
   Finding 2 was already fixed by the 2026-08-08 na-eligibility-audit pass (cited); Finding 5 is already tracked in
   `ui_consolidated_closeout_2026_07_30.md`'s own retag todo (cited, not duplicated).
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: RECLASSIFY, `assigned_vm: NA -> planning`. All 3
+  open todos (formalized by the same-day prose-findings sweep above) are bounded, mechanical, fully-specified doc
+  edits with no judgment call: todo 1 and todo 3 each add one already-written line to a named section of
+  `cursor-configs/skills/ag-closeout-audit/SKILL.md`; todo 2 fixes one named stale sentence
+  (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s Deferred item 8) to a wording already given verbatim in the
+  todo. Conflict-check: grepped the full corpus for the todos' own key phrases ("coverage-bar clarification",
+  "stale Phase 7 wording", "Once ruled, it becomes a normal batch candidate") — only self-citations and one
+  incidental quote in `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (not a claim to do the work); read
+  `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s still-open todo 4 in full — it archives batch1 and
+  trims unrelated `ui_consolidated_closeout` prose, no overlap; all 3 `ui_satellite_ao_dispatch_batch*` pairs are
+  `status: active` (no `status: draft` satellite in flight to collide with); `ui_consolidated_closeout_2026_07_30.md`
+  cites SKILL.md only in `context_scope`/`related`, claims no overlapping edit. Added `sequential: true` (todos 1
+  and 3 both touch `SKILL.md`, different sections — same-file overlap per the plan-authoring same-file rule).

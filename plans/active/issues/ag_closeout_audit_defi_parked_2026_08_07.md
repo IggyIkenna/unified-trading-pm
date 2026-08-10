@@ -217,3 +217,10 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   ui_consolidated_closeout, but its `architecture_v2_drift_leg_specs_and_manifest_residue` half was genuinely untracked
   anywhere — now a real todo; finding 3's item 2 (timeout investigation) confirmed still open and NOT covered by
   batch11 — now a real todo.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — neither open todo is bounded.
+  Todo 1 (retag `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`) names two candidate target tags
+  ("to `[ui]` or `[cross-cutting]`") rather than committing to one — the finding's own text is genuinely split between
+  a repos-scope reading (`[ui]`) and a content-shape reading (`[cross-cutting]`), so picking the correct tag is a
+  judgment call, not a deterministic outcome. Todo 2 ("investigate raising ... per-date subprocess timeout") is
+  explicit investigation/design work by its own verb, exactly the class this audit's own instructions flag as
+  correctly staying NA even when freshly formalized. Doc stays NA.

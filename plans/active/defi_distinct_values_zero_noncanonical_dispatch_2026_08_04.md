@@ -632,3 +632,11 @@ delegated tracking doc with real checkboxes — not duplicated here.)_
   Every other prose item in this doc's Deferred-work table and Progress Log already has its own delegated issue doc
   carrying real `- [ ]` checkboxes (verified via direct grep of each cited doc) and was left untouched to avoid
   duplication.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — not all 3 open todos are bounded.
+  Todo 1 (POOL/rate_indices/dex_pool_fees retirement) explicitly gates on `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s
+  R3 rebuild VM reaching a stable terminal state — live-reverified this pass: R3 is still `[~]` (not terminal), the
+  named successor VM `canonical-migration-defi-rebuild-20260809-163511` is confirmed GONE
+  (`gcloud compute instances list --filter="name~canonical-migration-defi-rebuild"` returns empty per that doc's own
+  2026-08-10 Progress Log), flagged there for root-cause triage, unresolved. A depends-on-a-still-open-prerequisite
+  citation is KEEP-NA per this audit's own rule — since not every todo is bounded, the whole doc stays NA (todos 2/3
+  are individually small and plausibly bounded, but the whole-doc bar requires all three).

@@ -239,3 +239,7 @@ ui` run (dispatch `agt-ec1688`) — verified present at that doc's line ~135. No
   consecutive flag, still no `[unlock-plan]`); Finding 3's ACTIVE_INDEX.md item was confirmed already converted to a
   checkbox by the same-day plan_reconciler run; Finding 5's mistag candidates confirmed already tracked in
   ui_consolidated_closeout. Findings 1/2/4/7 are process/informational, no todo warranted.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — the sole open todo is a
+  human-only `[unlock-plan]` action (run it, then complete the standard archival ritual) on
+  `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — unlocking is explicitly human-only per the
+  archival-discipline HARD RULE, never autonomous, exactly as this doc's own Finding 6 text states. Doc stays NA.

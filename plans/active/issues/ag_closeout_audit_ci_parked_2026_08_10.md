@@ -27,7 +27,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
-    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-08-10
@@ -359,6 +359,12 @@ run re-confirmed rather than newly escalated it).
   linkage, the `ui_build_warm_cache` lock flag) checked and found unchanged-or-improved. No new batch drafted — batch12
   remains the correct, sole pending artifact for this tranche, still awaiting operator approval. See "Second dispatch
   delta" section above for full detail.
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: KEEP-NA, valid — todo 2 (resolve the ambiguous
+  `[ci, cross-cutting]` dual-tag on `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`) is
+  explicitly `[OPERATOR]`-tagged: content sits ambiguously between `ci`/`infra`/`meta`/`cross-cutting`, re-confirmed
+  unresolved across 2+ prior runs, needs a human classification call, not a mechanical fix. Todo 1 (the 4-doc
+  `ci`↔`infrastructure` retag pass) reads as bounded/mechanical on its own, but the whole-doc RECLASSIFY bar requires
+  every open todo to clear, and todo 2 does not — doc stays NA.
 
 ## na-eligibility-audit verdict
 
