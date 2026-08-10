@@ -238,7 +238,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md) +
       the source doc's Progress Log for the full run evidence. **2026-08-09: that doc's own todos are now both done
       (staleness guard fixed) but re-verification surfaced a DISTINCT, deeper partition_mismatch root cause — see
-      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
       Checkbox stays unflipped pending THAT fix.**
 - [ ] [DATA] P3. Root-cause the 216 residual poll-key-duplicate canonical sports MDT odds objects (1,266 duplicate-key
       groups where both home AND away team-id legs vary simultaneously, left untouched by the

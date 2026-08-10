@@ -15,7 +15,7 @@ summary: >-
   `_build_candle_output_path`'s fallback derives ONE venue from row 0 of that combined frame, which is wrong for every
   OTHER bookmaker's rows whenever a match (the overwhelmingly common case for SPORTS odds aggregation) has odds from
   more than one bookmaker.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -35,7 +35,6 @@ source: >-
   mdps-backfill-sports-pipelinecheck-20260809-222203-d0c755 (force leg).
 resolved_by:
 locked_by:
-archive_exempt: true
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -51,6 +50,13 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/live_workers_chain.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both todos done:
+> `market-data-processing-service@53344df` (+ sibling streaming-path fix `@e4fc0fd`) fixed the multi-venue
+> partition_mismatch bug; the from-scratch VM re-verification confirmed 0 rejects, and Finding 5's linked todo in
+> `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` was flipped with this evidence. A follow-up
+> for an unrelated finding surfaced by the same re-verification run (checker measured-root template mismatch) is tracked
+> separately: `/plans/active/issues/mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md`.
 
 # SPORTS chain-bundle candle writes: one venue derived from row 0 of a genuinely multi-bookmaker batch
 

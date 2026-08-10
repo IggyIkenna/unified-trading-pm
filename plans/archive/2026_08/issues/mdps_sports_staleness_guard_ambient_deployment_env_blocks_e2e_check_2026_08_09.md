@@ -54,7 +54,7 @@ context_scope:
 > (`market-data-processing-service@d653a42`, slot-29): staleness guard now pins `deployment_env="prod"` explicitly —
 > confirmed live, 0 hits. Todo 2 (slot-31): re-ran the prescribed verification — staleness guard fix confirmed, but
 > surfaced a DISTINCT, deeper `[partition_mismatch]` root cause, filed as
-> [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+> [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
 > Archived by `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496` (slot-31).
 
 ## What I found
@@ -152,7 +152,7 @@ this touches shared dependency-checker code used by every SPORTS derived-candle 
       two matches to reject instead — confirms slot-29's heads-up: `551ca82` does NOT resolve partition_mismatch
       broadly. Finding 5's checkbox in the sibling doc is correctly left UNCHECKED (its own done-when still unmet) —
       filed the new root cause + fix recommendation as
-      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md),
+      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md),
       whose own `[DATA] P2` todo supersedes the re-verify step this todo describes. This todo's OWN job — run the
       verification and act on the result — is complete.
 

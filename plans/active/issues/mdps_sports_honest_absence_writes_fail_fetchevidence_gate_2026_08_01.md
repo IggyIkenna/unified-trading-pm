@@ -566,7 +566,7 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   CASUMO/BETSSON, MATCHBOOK/BETONLINEAG, PINNACLE/MATCHBOOK, BETONLINEAG/PINNACLE, VIRGINBET/CASUMO) on the SAME two
   matches now reject instead. Filed as its own issue with root-cause + fix-option recommendation + a follow-up re-verify
   todo (which supersedes this todo's own re-verify step):
-  [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+  [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
   Left this todo's checkbox UNCHECKED — its done-when is still not met, and won't be until the linked issue's deeper fix
   lands.
 

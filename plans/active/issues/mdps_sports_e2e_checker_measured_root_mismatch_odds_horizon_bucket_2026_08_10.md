@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [sports, pipeline-e2e-check, checker-template, candle-write, odds-horizon-bucket]
 related:
   [
-    /plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md,
+    /plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md,
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
   ]
 created: "2026-08-10"
