@@ -54,7 +54,7 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 
 1. `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` todos 1+2 — both HARD-verified
    shipped (`_BOOKKEEPING_MARKER_SKILL_NAMES` + regression test live in `generate_na_doc_tranche_inventory.py`;
-   SKILL.md's `/context-scout`-only sub-case text live) — `unified-trading-pm@84a1712334`.
+   SKILL.md's `/context-scout`-only sub-case text live) — `unified-trading-pm@aa890666aa`.
 2. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` deployment-service / unified-api-contracts / execution-service — the
    INVERSE of a missed flip: all 3 were checked `[x]` while the doc's own text said "DELETE half NOT shipped." Live
    disk-verified all files for all 3 still exist; un-checked per CLAUDE.md's half-done convention —
@@ -144,7 +144,7 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
    verbatim-carried-forward and still live-tracked in the current `..._2026_08_09.md` doc, per this doc series' own
    established closure precedent ("superseded — findings now live in the newer parked register"). Both docs are now
    0-open-todos; `archive_exempt: true` set (physical archival DEFERRED — see Archive candidates below) —
-   `unified-trading-pm@84a1712334`.
+   `unified-trading-pm@aa890666aa`.
 
 ## Filed
 
@@ -266,7 +266,7 @@ of the 42 writable docs was read and assessed by a hunter this run.
   both times. Treating as a stale harness artifact, not acted on; will re-check before STEP 8's wait-loop and flag as a
   genuine finding only if it recurs with actual content.
 - **2026-08-10 06:10 UTC (approx)** — STEP 3 complete: 6 hunters fanned out, all returned. STEP 4/5: inline-verified and
-  applied fixes across 6 commits (`12fb7d698f`, `84a1712334`, `4b26fcbf72`, `55f51818d3`, + this findings-doc update, +
+  applied fixes across 6 commits (`12fb7d698f`, `aa890666aa`, `4b26fcbf72`, `55f51818d3`, + this findings-doc update, +
   the codex mechanical correction) — see the sections above for the full itemized list. Notable process finding: this
   branch is EXTREMELY high-churn today (measured: fell 1 commit behind between a `git add` and the immediately-following
   `git commit`, more than once; one push was rejected mid-flight by a ref-lock race even after a successful local
