@@ -77,7 +77,7 @@
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.101.3",
     "market-tick-data-service": "0.125.0",
-    "system-integration-tests": "0.15.0",
+    "system-integration-tests": "0.15.1",
     "unified-api-contracts": "0.111.4",
     "unified-trading-library": "0.78.3",
     "unified-trading-pm": "1.2.741",
