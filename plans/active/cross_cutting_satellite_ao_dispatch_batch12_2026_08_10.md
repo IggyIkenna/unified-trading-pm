@@ -699,3 +699,34 @@ noted occurrences. All report age <15s against threshold=86400s — comparison d
 **Where to resume**: Pipeline PID 1871585, heartbeat PID 1872640, monitors `bjekxi8zh` + `bd7qglize`. VM RUNNING. 04-28
 book_snapshot_5 at 100/352. Next: 04-28 deadline 16:31:56 → 04-29 spawn → 04-30 spawn. Full completion ETA ~17:30 UTC.
 On VM stop: pipeline auto-triggers manifest merge → verify candle counts → flip Todo 5.
+
+---
+
+### Session continuation (post-compact #13, ~16:18 UTC)
+
+Compaction kill #13 — pipeline (1871585) + heartbeat (1872640) both dead at session start. Monitors `bjekxi8zh` +
+`bd7qglize` timed out. Re-armed: pipeline PID 2612622, heartbeat (background), monitor `bi2imn9d2` (60s VM status),
+monitor `bp3cla76i` (90s log polls). Safety wakeup at 16:29 UTC.
+
+**04-28 current state** (child spawned 16:01:56, deadline 16:31:56):
+
+- derivative_ticker: ✅ 394/394 (91s, 4.3/s)
+- book_snapshot_5: 250/352 (71%, 247✅ 3❌, 875s elapsed, 0.3/s, ETA 357s → ~16:24:30)
+- trades: ⏳ queued behind book_snapshot_5 — 102 book items left at 0.3/s ≈ 340s, leaving ~7 min margin before 16:31:56
+  deadline
+
+**First write failures this run**: 3 errors at 250-marker — all stale-manifest (age=3-7s vs 86400s threshold). Same
+inverted-comparison bug as earlier dates, now also on 04-28. Issue doc already tracks this.
+
+**1h candles**: derivative_ticker ✅ = secured for 04-28.
+
+Infrastructure armed:
+
+- Pipeline: PID 2612622 (PROD bucket, all 3 steps)
+- Heartbeat: background, 120s interval
+- Monitors: `bi2imn9d2` (60s VM status), `bp3cla76i` (90s log polls)
+- Safety wakeup: 16:29 UTC
+
+**Where to resume**: Pipeline PID 2612622, heartbeat + monitors all re-armed. VM RUNNING. 04-28 book_snapshot_5 at
+250/352 (71%, ETA ~16:24). Deadline 16:31:56 → 04-29 spawn ~16:32. Full completion ETA ~17:30 UTC. On VM stop: pipeline
+auto-triggers manifest merge → verify candle counts → flip Todo 5.
