@@ -37,7 +37,6 @@ context_scope:
   [
     /plans/archive/issues/mtds_blanket_pyright_suppressions_ssot_contradiction_2026_07_30.md,
     market-tick-data-service/scripts/quality-gates.sh,
-    market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md,
     scripts/quickmerge.sh,
   ]
 ---

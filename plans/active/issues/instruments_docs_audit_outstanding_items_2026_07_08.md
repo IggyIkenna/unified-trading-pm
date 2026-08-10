@@ -40,13 +40,6 @@ tags:
   ]
 related:
   [
-    instruments-service/docs/ADAPTER_ARCHITECTURE.md,
-    instruments-service/docs/CEFI_INSTRUMENTS.md,
-    instruments-service/docs/DEFI_INSTRUMENTS.md,
-    instruments-service/docs/PREDICTION_INSTRUMENTS.md,
-    instruments-service/docs/SETUP_GUIDE.md,
-    instruments-service/docs/SPORTS_INSTRUMENTS.md,
-    instruments-service/docs/TRADFI_INSTRUMENTS.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,

@@ -24,7 +24,6 @@ tags:
   [sports, catalog, reference-data, coverage, manifest, league-grain, fixture-grain, honest-coverage, data-completeness]
 related:
   [
-    instruments-service/docs/SPORTS_INSTRUMENTS.md,
     plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,

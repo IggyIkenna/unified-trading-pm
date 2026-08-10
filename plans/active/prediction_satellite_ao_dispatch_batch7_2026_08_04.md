@@ -29,7 +29,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"

@@ -32,7 +32,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_08.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md,
@@ -101,7 +101,7 @@ re-verified this run via the Orthogonality HARD CHECK, see below):
 
 `orphaned_never_touched` (4 — nothing covers the remaining work at all):
 
-5. [`issues/ag_closeout_audit_prediction_parked_2026_07_31.md`](/plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md)
+5. [`issues/ag_closeout_audit_prediction_parked_2026_07_31.md`](/plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md)
    Finding 1 — an (A) delete vs (B) keep-and-document judgment call on 2 _other_ adapter dead-code docs (distinct from
    the 2 extracted below), still explicitly unadjudicated. Correctly non-batchable (operator-gated).
 6. [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)

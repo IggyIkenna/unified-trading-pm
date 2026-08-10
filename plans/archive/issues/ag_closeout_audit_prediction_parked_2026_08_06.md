@@ -32,7 +32,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_04.md,
-    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md,
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,

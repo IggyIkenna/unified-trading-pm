@@ -576,47 +576,6 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
     _qm_iso_venv="${QM_ISO_VENV_CACHE:-$HOME/.cache/qm-iso-venv}/$_qm_repo_name"
     mkdir -p "$(dirname "$_qm_iso_venv")" 2>/dev/null
     ln -sfn "$_qm_iso_venv" "$_qm_iso_wt/.venv" 2>/dev/null
-    # PROVISION it, don't just point at it (2026-08-10). The symlink above was created but the
-    # cache directory never was, so `.venv` DANGLED — and a dangling link is not a loud failure:
-    # quality-gates.sh gates its PATH export on `[ -d .venv/bin ]`, which is false for one, so it
-    # silently ran `python -m pytest` against the SYSTEM interpreter. That produced "6 failed,
-    # 3168 passed" on a tree whose tests all pass (verified: same worktree, working interpreter →
-    # 4 passed), and pip-audit skipped itself for the same missing python while the test step just
-    # ran on the wrong one. Creating the directory is what makes base-service.sh's
-    # `UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen` populate a REAL venv here instead.
-    # POPULATE it too — an empty directory is still an unusable venv. Repos whose
-    # quality-gates.sh sources base-service.sh get `uv sync` for free; ones that deliberately do
-    # not (agent-orchestrator says so in its header) have nothing that would ever create this,
-    # which is why the cache stayed absent. Sync once per repo; later runs reuse it.
-    if [ ! -x "$_qm_iso_venv/bin/python" ] && command -v uv >/dev/null 2>&1; then
-      echo "  isolation: provisioning private venv for $_qm_repo_name (first run — one-time cost)"
-      ( cd "$_qm_iso_wt" && UV_PROJECT_ENVIRONMENT="$_qm_iso_venv" uv sync --frozen ) >/dev/null 2>&1 ||
-        ( cd "$_qm_iso_wt" && UV_PROJECT_ENVIRONMENT="$_qm_iso_venv" uv sync ) >/dev/null 2>&1 ||
-        echo "  isolation: uv sync failed — the re-gate will abort on it (by design, not silently)" >&2
-    fi
-    # Node deps: same problem, same shape, and the reason a UI change could pass an isolated
-    # quickmerge without tsc/vitest/Playwright ever running. Cached per repo and symlinked in —
-    # NEVER a link to the caller's node_modules, for exactly the reason the venv above is private:
-    # a tool that prunes (npm ci) would strip the operator's real tree, which is precisely what
-    # `uv sync` did to a shared .venv on 2026-08-10. Only linked when the cache is already
-    # populated; quality-gates.sh now FAILS CLOSED on absent node_modules, so an unprovisioned
-    # cache surfaces as a loud, actionable error rather than a silent skip.
-    _qm_iso_nm="${QM_ISO_NODE_CACHE:-$HOME/.cache/qm-iso-node-modules}/$_qm_repo_name"
-    if [ -d "$_qm_iso_wt/dashboard" ] && [ -f "$_qm_iso_wt/dashboard/package.json" ]; then
-      if [ -d "$_qm_iso_nm/node_modules" ]; then
-        ln -sfn "$_qm_iso_nm/node_modules" "$_qm_iso_wt/dashboard/node_modules" 2>/dev/null
-      elif [ -d "$_qm_caller_repo/dashboard/node_modules" ]; then
-        # First run for this repo: seed the cache from the caller by COPY (not link), so the
-        # isolated gate has real node deps and the operator's tree can never be mutated by it.
-        mkdir -p "$_qm_iso_nm" 2>/dev/null
-        if cp -R "$_qm_caller_repo/dashboard/node_modules" "$_qm_iso_nm/node_modules" 2>/dev/null; then
-          ln -sfn "$_qm_iso_nm/node_modules" "$_qm_iso_wt/dashboard/node_modules" 2>/dev/null
-        else
-          echo "  isolation: could not seed dashboard node_modules cache — the re-gate will FAIL" >&2
-          echo "  closed on it (by design). Use --no-isolated, or 'npm --prefix dashboard install'." >&2
-        fi
-      fi
-    fi
 
     _qm_copy_ok=true
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
@@ -1517,10 +1476,6 @@ for dep in deps:
     # the backmerge so the NEXT attempt self-heals, and print a remedy that matches the
     # actual checkout.
     _PM_BRANCH=$(cd "$PM_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-    # A detached HEAD reports the literal "HEAD", and `git pull origin HEAD` is not the pull we
-    # want. Reachable since 2026-08-10: isolated mode now stays detached (see
-    # _qm_checkout_ship_branch), so shipping PM itself lands here. Use the ship branch instead.
-    [ "$_PM_BRANCH" = "HEAD" ] && _PM_BRANCH="$BRANCH"
     echo "[$REPO_NAME] auto-pulling PM manifest (PM checkout: ${_PM_BRANCH:-unknown}) to pick up promoted versions..."
     if [ "$_PM_BRANCH" = "main" ]; then
       (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null) || \
@@ -2025,29 +1980,10 @@ fi
 
 git fetch origin main --quiet
 
-# Check out the ship branch -- EXCEPT in isolation, where doing so is fatal (2026-08-10).
-#
-# The isolated worktree is created `--detach` at the caller's HEAD on purpose, but this stage
-# then ran `git checkout "$BRANCH"` inside it, and git REFUSES to check out a branch another
-# worktree already holds:
-#     fatal: 'live-defi-rollout' is already used by worktree at '<main clone>'
-# Since every agent ships to that one branch, isolated mode could never complete a ship at all
-# -- callers were silently pushed back onto `--no-isolated`, which is precisely the mode whose
-# shared checkout lets a peer's pull/rebase cycle revert your working tree mid-ship (measured
-# 3 reverts in ~20 min on 2026-08-10).
-#
-# safe-doc-push.sh has always been immune because it never checks the branch out: it detaches
-# and pushes an explicit refspec (`git push origin "HEAD:${BRANCH}"`). Do the same here rather
-# than invent a second mechanism. Staying at the existing detached HEAD -- rather than
-# re-detaching onto origin/$BRANCH -- is deliberate: the caller's named files have ALREADY been
-# copied into this worktree as uncommitted modifications, and moving HEAD underneath them risks
-# a checkout conflict against files we are about to commit. Being behind origin is handled
-# downstream anyway, by the existing push-retry rebase.
-_qm_checkout_ship_branch() {
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
-    echo "[$REPO_NAME] isolation: staying on detached HEAD (the shared clone holds $BRANCH); will push HEAD:$BRANCH"
-    return 0
-  fi
+# Create branch
+if [ -n "$DEP_BRANCH" ]; then
+  BRANCH="$DEP_BRANCH"
+  echo "[$REPO_NAME] Using specified branch: $BRANCH"
   if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
     git checkout "$BRANCH" --quiet
   elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
@@ -2055,13 +1991,6 @@ _qm_checkout_ship_branch() {
   else
     git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
   fi
-}
-
-# Create branch
-if [ -n "$DEP_BRANCH" ]; then
-  BRANCH="$DEP_BRANCH"
-  echo "[$REPO_NAME] Using specified branch: $BRANCH"
-  _qm_checkout_ship_branch
 else
   # Read active_feature_branch from PM manifest (SSOT for feature branch name)
   MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
@@ -2076,7 +2005,13 @@ else
     BRANCH="auto/$(TZ=UTC date +%Y%m%d-%H%M%S)-$$"
     echo "[$REPO_NAME] Creating auto-generated branch: $BRANCH"
   fi
-  _qm_checkout_ship_branch
+  if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
+    git checkout "$BRANCH" --quiet
+  elif git show-ref --verify --quiet "refs/remotes/origin/$BRANCH" 2>/dev/null; then
+    git checkout -B "$BRANCH" "origin/$BRANCH" --quiet
+  else
+    git checkout -b "$BRANCH" origin/main --quiet 2>/dev/null || git checkout "$BRANCH" --quiet
+  fi
 fi
 echo ""
 
@@ -2581,15 +2516,7 @@ while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
         reconcile_sha_citations "$BRANCH" $FILES_ARG || true
     fi
   fi
-  # In isolation we are on a detached HEAD by design (see _qm_checkout_ship_branch), so there is
-  # no local branch for `-u` to bind and `git push -u origin $BRANCH` would push the SHARED
-  # clone's stale refs/heads/$BRANCH instead of the commit we just made. Push the explicit
-  # refspec, exactly as safe-doc-push.sh does.
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
-    _qm_push_err=$(git push origin "HEAD:refs/heads/$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
-  else
-    _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
-  fi
+  _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
   echo "[$REPO_NAME] ⚠️  push rejected (attempt $_qm_push_attempt/$_QM_PUSH_RETRIES) — rebasing onto the new remote tip and retrying (no QG re-run needed, content unchanged)..." >&2
   if ! git pull --rebase --autostash origin "$BRANCH" --quiet 2>/dev/null; then
     echo "[$REPO_NAME] ❌ rebase during push-retry hit a real conflict — resolve manually (git status)." >&2
