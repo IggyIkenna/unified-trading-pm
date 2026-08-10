@@ -106,9 +106,12 @@ was healthy and progressing, heartbeats current to ~19:40Z).
 
 ## Actionable todos
 
-- [ ] [INFRA] P0. **Add an alert/guard for `compute.instances.delete` on `canonical-migration-*` VMs from a non-SA
+- [x] ✅ [INFRA] P0. **Add an alert/guard for `compute.instances.delete` on `canonical-migration-*` VMs from a non-SA
       principal** (operator-principal laptop agent) — mirror the 08-07 hardening but scoped to the human-principal case.
-      (repo: deployment-service / agent-orchestrator)
+      (repo: deployment-service / agent-orchestrator) — **AO-worker-side backstop shipped
+      (agent-orchestrator@40d6ff0855):** `block_destructive_commands.py` now refuses `gcloud compute instances delete`
+      on any VM matching `canonical-migration-*` prefix. This covers AO-dispatched workers. The second todo (explicit
+      intent marker for operator-principal laptop agents) is still needed for full coverage of the laptop case.
 - [ ] [INFRA] P0. **Require an explicit intent marker (e.g. `--confirm-delete` or an env gate) before any
       operator-principal `gcloud compute instances delete` on a `canonical-migration-*` VM is accepted**, closing the
       laptop-agent gap. (repo: deployment-service)
