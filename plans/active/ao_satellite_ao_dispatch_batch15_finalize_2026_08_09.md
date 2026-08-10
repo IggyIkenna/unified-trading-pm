@@ -92,10 +92,13 @@ source: >-
       `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`'s `[DEVOPS] P2` format-fix item;
       (3) same doc's `[DOC] P3` corpus-grep item. Both source docs' own Progress Logs also got a dated entry recording
       the reconciliation.
-- [ ] [REVIEW] P1. **Do NOT archive either source doc.** Confirm each still has open items after this extraction
-      (`operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`: 3 remaining;
-      `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`: 1 remaining) and leave both
-      `status: open`/`active`.
+- [x] ✅ [REVIEW] P1. **Do NOT archive either source doc.** Confirmed each still has open items after this extraction
+      (`operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`: 3 remaining — `[DOCS] P2` TestingStage
+      update (downstream of `[OPERATOR]` placeholder), `[OPERATOR] P3` owner/date assignment (human-only),
+      `[BACKEND] P3` `aave_live.py` design decision;
+      `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`: 1 remaining — `[DEVOPS] P2`
+      Finding-J cross-file correlation fix (self-flagged "needs design judgment")). All 4 remaining items are genuinely
+      gated/NA. Both docs correctly keep `status: open`/`active` — neither archived.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch15_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -112,6 +115,12 @@ source: >-
 - **2026-08-09** — Authored in the same turn as batch15, per the mandatory finalize-twin rule (task_template.md §4).
   `sequential: true` since the 4 todos are a genuine chain. Ships `status: active` (not `draft`) — `gate_on_depends`
   already machine-holds every task until batch15's own todos are done, matching the batch7-14 finalize precedent.
+- **2026-08-10 — todo 3 done**: independently verified both source docs' open-item counts against their live state.
+  `operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`: 3 open items (DOCS P2/OPERATOR P3/BACKEND P3),
+  all genuinely gated — `[OPERATOR]` human-only, downstream-of-operator, explicit design-decision.
+  `todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md`: 1 open item (DEVOPS P2 Finding-J
+  cross-file fix), self-flagged as needing design judgment. Neither doc should be archived — both correctly stay
+  `status: open`/`active`. Todo 4 (archival ritual on batch15 itself) is the remaining item.
 - **2026-08-10 — todo 2 done**: reconciled real completion evidence into both source docs' checkboxes (3 items total),
   replacing each bare `➡️ EXTRACTED` redirect pointer with the actual SHA + verification detail from batch15's own todos
   1/2/3, plus a note citing this finalize plan's own todo 1 independent re-verification. Both source docs got a dated
