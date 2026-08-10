@@ -324,11 +324,17 @@ depends_on: []
           2021 season-start dates. Pace continues at ~1-2 season-start-dates/min. Run now ~4.2h old.
         - No code shipped — pure monitoring.
 
-## Deferred work after 2026-08-10 ~20:45Z
+      - **2026-08-10 (slot 28, data_engineering, ~20:50Z)** — Pre-compact check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-06-01` (~20:45Z) → `2021-06-07` (GCS tee, ~20:50Z). Monotonic, forward progress. No `exit_code=` yet.
+          Heartbeat alive. Queue unchanged.
+        - No code shipped — pre-compact ritual.
+
+## Deferred work after 2026-08-10 ~20:50Z
 
 | Item                                                             | State / why deferred                                  | Blocked on                         |
 | ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-06-01`, pace ~1-2 dates/min non-linear | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-06-07`, pace ~1-2 dates/min non-linear | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
