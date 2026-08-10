@@ -42,7 +42,18 @@ import sys
 THRESH = 14  # must stay in sync with INDENT_THRESHOLD in check_prosewrap_padding.sh
 
 
-def fix_file(path: str) -> int:
+def fix_file(path: str, only_lines: set[int] | None = None) -> int:
+    """Repair prosewrap padding in ``path``.
+
+    ``only_lines`` (1-indexed) restricts the repair to exactly those lines — the ones
+    ``check_prosewrap_padding.sh --only --emit-lines`` identified as NEW in this commit. Without
+    it the whole file is repaired, which is right for the supervised corpus-wide remediation but
+    wrong at commit time: measured 2026-08-10, whole-file mode rewrites 10 of 25 sampled active
+    plans (one by 51 lines). Those edits are genuine repairs — the corpus check sits at BASELINE,
+    not zero — but attaching dozens of unrelated line changes to every plan commit widens the
+    merge-conflict surface on the busiest file class in a repo already fighting push contention.
+    Scoping is therefore the precondition for auto-wiring this into the pre-commit path.
+    """
     with open(path, encoding="utf-8") as f:
         lines = f.read().split("\n")
     out = list(lines)
@@ -53,6 +64,10 @@ def fix_file(path: str) -> int:
             fence = not fence
             continue
         if fence:
+            continue
+        # Fence state must still be tracked for EVERY line above, so the scope filter applies
+        # only after it — an early `continue` here would desynchronise `fence`.
+        if only_lines is not None and (i + 1) not in only_lines:
             continue
         is_table = bool(re.match(r"^\s*\|", ln))
         if not is_table and ln.strip():
@@ -89,10 +104,45 @@ def fix_file(path: str) -> int:
     return changed
 
 
+def _read_scope_from_stdin() -> dict[str, set[int]]:
+    """Parse ``<file>:<lineno>`` pairs (the output of ``--only --emit-lines``) into a per-file
+    line scope. Malformed lines are skipped rather than fatal: this runs inside a pre-commit
+    hook, where turning a parse hiccup into a blocked commit would be worse than repairing
+    nothing."""
+    scope: dict[str, set[int]] = {}
+    for raw in sys.stdin:
+        entry = raw.strip()
+        if not entry or ":" not in entry:
+            continue
+        path, _, lineno = entry.rpartition(":")
+        if not path or not lineno.isdigit():
+            continue
+        scope.setdefault(path, set()).add(int(lineno))
+    return scope
+
+
 def main() -> int:
-    files = sys.argv[1:]
+    args = sys.argv[1:]
+    if args and args[0] == "--scoped":
+        scope = _read_scope_from_stdin()
+        if not scope:
+            return 0
+        total = 0
+        for path, line_nos in sorted(scope.items()):
+            count = fix_file(path, only_lines=line_nos)
+            total += count
+            print(f"{count:5d}  {path}  (scoped to {len(line_nos)} flagged line(s))")
+        print(f"TOTAL lines changed: {total}")
+        return 0
+
+    files = args
     if not files:
-        print("usage: fix_prosewrap_padding.py <file> [<file> ...]", file=sys.stderr)
+        print(
+            "usage: fix_prosewrap_padding.py <file> [<file> ...]\n"
+            "       check_prosewrap_padding.sh --only --emit-lines <file>... "
+            "| fix_prosewrap_padding.py --scoped",
+            file=sys.stderr,
+        )
         return 2
     total = 0
     for path in files:

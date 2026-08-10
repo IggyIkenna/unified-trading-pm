@@ -2629,6 +2629,16 @@ echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is 
 # check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
 # silent on the authoring machine, where the orphaned object still resolves.
 echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
+# ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
+# resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
+# a second edit pass afterwards.
+if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+  if declare -F resolve_pending_citations >/dev/null 2>&1; then
+    resolve_pending_citations "$REPO_NAME" "$_QM_PUSHED_SHA" "$WORKSPACE_ROOT/unified-trading-pm" || true
+  fi
+fi
 push_gov_release_push
 
 # Extract issue references from commit message for PR body

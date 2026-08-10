@@ -136,10 +136,17 @@ _all_content_previews() {
 if [ "${1:-}" = "--only" ]; then
   shift
   QUIET=0
+  EMIT_LINES=0
   ONLY_FILES=()
   for a in "$@"; do
     case "$a" in
       --quiet) QUIET=1 ;;
+      # --emit-lines: print `<file>:<lineno>` for each NEW violation instead of a verdict, so
+      # fix_prosewrap_padding.py can repair EXACTLY the lines this commit introduced and leave the
+      # file's pre-existing debt alone. The signature comparison below is what makes that
+      # distinction; nothing else in the repo can make it, which is why the line list has to come
+      # from here rather than being re-derived by the fixer.
+      --emit-lines) EMIT_LINES=1; QUIET=1 ;;
       *) ONLY_FILES+=("$a") ;;
     esac
   done
@@ -178,6 +185,28 @@ if [ "${1:-}" = "--only" ]; then
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
     new_sigs="$(printf '%s\n%s\n' "$new_backtick" "$new_overindent" | grep -v '^$' || true)"
+
+    if [ "$EMIT_LINES" -eq 1 ]; then
+      # Map each NEW signature back to the line(s) carrying it in the CURRENT file. The two
+      # detectors have different signature shapes (detector 1 keeps its `backtick-padding:`
+      # prefix, detector 2 is reduced to a bare content preview), so they are matched separately
+      # — a single shared strip would silently match nothing for one of them.
+      if [ -n "$new_backtick" ]; then
+        _detect_hits "$f" | grep ':backtick-padding:' | while IFS= read -r hit; do
+          ln="${hit%%:*}"
+          sig="${hit#*:}"
+          printf '%s\n' "$new_backtick" | grep -qxF -- "$sig" && echo "${f}:${ln}"
+        done
+      fi
+      if [ -n "$new_overindent" ]; then
+        _detect_hits "$f" | grep ':over-indent(' | while IFS= read -r hit; do
+          ln="${hit%%:*}"
+          sig="$(printf '%s' "$hit" | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://')"
+          printf '%s\n' "$new_overindent" | grep -qxF -- "$sig" && echo "${f}:${ln}"
+        done
+      fi
+      continue
+    fi
 
     if [ -n "$new_sigs" ]; then
       FLAGGED_FILES=$(( FLAGGED_FILES + 1 ))

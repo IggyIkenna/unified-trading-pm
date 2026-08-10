@@ -226,6 +226,50 @@ _rsc_pass_orphan() {
   return "$rewrote"
 }
 
+# Resolve `<repo>@PENDING` placeholders in the PM plan corpus to the sha this push just landed.
+#
+# WHY: the Commit+Push+Flip rule makes an agent write the plan checkbox while the work is fresh
+# — before the sha exists. Today that costs a round trip per flip: write the todo, ship, read the
+# landed sha, EDIT THE DOC AGAIN, ship the doc. Paid twice in one session on 2026-08-10. Worse,
+# the natural shortcut is to write the sha you see at `git commit` time, which the rebase then
+# invalidates — the exact defect the two passes above exist to clean up after.
+#
+# So: write `market-tick-data-service@PENDING` once, and the push that creates the commit fills
+# it in. The placeholder is deliberately shaped like the citation it becomes, and a staged plan
+# still carrying one is blocked at commit time by run_hygiene_sweep's --precommit guard, so an
+# unresolved placeholder cannot reach the corpus.
+#
+# Scope is `plans/active` + `plans/epics` only: archive is the historical record, and a
+# placeholder there would be somebody else's business.
+resolve_pending_citations() {
+  local repo="$1" sha="$2" pm_root="$3"
+  [ "${SHA_CITATION_RECONCILE:-1}" = "0" ] && return 0
+  [ -n "$repo" ] && [ -n "$sha" ] && [ -d "$pm_root" ] || return 0
+
+  local hits f
+  hits="$(grep -rl --include='*.md' -F "${repo}@PENDING" \
+    "$pm_root/plans/active" "$pm_root/plans/epics" 2>/dev/null || true)"
+  [ -n "$hits" ] || return 0
+
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    python3 - "$f" "$repo" "${sha:0:10}" <<'PY'
+import sys, pathlib
+path, repo, sha = sys.argv[1], sys.argv[2], sys.argv[3]
+p = pathlib.Path(path)
+text = p.read_text()
+token = f"{repo}@PENDING"
+if token not in text:
+    raise SystemExit(1)
+p.write_text(text.replace(token, f"{repo}@{sha}"))
+print(f"  ✓ {path}: {token} → {repo}@{sha}")
+raise SystemExit(0)
+PY
+  done <<<"$hits"
+  echo "  resolved @PENDING evidence placeholder(s) to the sha that actually landed"
+  return 0
+}
+
 reconcile_sha_citations() {
   [ "${SHA_CITATION_RECONCILE:-1}" = "0" ] && return 0
   local branch="$1"; shift
