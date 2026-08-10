@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-                                      **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-                                      1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-                                      2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-                                      3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-                                      4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-                                      5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-                                      6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-                                      7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-                                      8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-                                      9. `UTL service_runtime.py:207` — runtime env value
+                                  **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                                  1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                                  2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                                  3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                                  4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                                  5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                                  6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                                  7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                                  8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                                  9. `UTL service_runtime.py:207` — runtime env value
 
-                                      **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                                  **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-                                      **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                                  **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -146,24 +146,11 @@ cause an outage).
       distinct callers over a recent window and reconcile against the inventory. — **Caller inventory + per-caller
       verdicts** (evidence: repo scan across all 26 slot repos + Cloud Run request logs for `uts-shared-deployment-api`,
       recent window; see "## Caller inventory (todo 3)" below).
-- [x] ✅ [BACKEND] P0. **Flip enforcement and prove the hole is closed.** Ship the step-1 guard/env change to prod so
+- [ ] [BACKEND] P0. **Flip enforcement and prove the hole is closed.** Ship the step-1 guard/env change to prod so
       `DISABLE_AUTH=true` is genuinely rejected there, confirm the service still boots with the real key wired in, and
       confirm a request carrying no credential now receives 401. Watch for 401s from legitimate callers for a full
       deploy cycle afterward and roll back if any appear. **Done when**: a credential-less request returns 401, an
       authenticated request succeeds, and one real end-to-end deploy has completed through the listener post-flip.
-
-      **Done-when verified LIVE 2026-08-10 (slot 10, rev `00514-9tq` serving 100%, enforcement ON since slot 22's
-          `DISABLE_AUTH=false` flip)**: (1) credential-less `GET /api/services` → **401**; (2) `X-API-Key` from GSM
-          `deployment-api-api-key` (`210a43c9…`) → **200**, bad key → **401**, `/health` → 200; (3) two real end-to-end
-          listener deploys post-flip returned **200**: `POST /api/deployments/alerting-service/deploy` @18:41Z + @19:07Z
-          (Cloud Run logs; with enforcement ON a 200 on the `_authenticated_router` deploy route = the listener's
-          `X-API-Key` was accepted — done-when condition 3 met). Step-1 guard/env change is LIVE in the running image
-          `deployment-api:3feb77f`: `auth.py` module-level `_deployment_env` executes at boot (main.py:34 imports `auth`)
-          and the service boots — so the running UTL base HAS `deployment_env` (republished 18:03-18:17Z, digest refreshed),
-          and `DISABLE_AUTH=true` is genuinely rejected in prod. Post-flip 401 scan clean — only deliberate no-key probes
-          (orchestrator VM), the known root-gated resource-watchdog kill-events (fire-and-forget; [INFRA] P1 follow-up), and
-          the accepted deployment-ui console 401 (operator Option B, awaiting Google OAuth follow-up). No 5xx since 17:00Z.
-
 - [ ] [BACKEND] P1. **Re-evaluate `ingress: all` + the `allUsers` invoker binding once app-layer auth is enforced.**
       With a real key required, public ingress may still be intentional (external CI callers) or may be removable
       defence-in-depth. **Done when**: an explicit keep-or-restrict verdict is recorded with the reasoning, and if
@@ -340,23 +327,3 @@ are unaffected.
      verification is pending a natural deploy. Skipping GATED; the follow-ups (Google OAuth console provisioning, UTL
      base rebuild + deployment-api digest refresh for the guard, watchdog installed-copy update) are the durable
      close-out.
-- **2026-08-10T20:30Z (slot 10, backend_engineer, task `-56498deea390`, step-4 re-dispatch — TODO 4 COMPLETE)**.
-  Re-verified everything live on the CURRENT revision `00514-9tq` (newer than slot 22's `00510`; image
-  `deployment-api:3feb77f`, deployed 18:41Z): credential-less `GET /api/services` → **401**, bad key → **401**, real
-  `X-API-Key` (GSM `deployment-api-api-key`, `210a43c9…`) → **200**, `/health` → 200. Enforcement still ON
-  (`DISABLE_AUTH=false`), API key wired, `REAP_SCHEDULER_INVOKER_SA` set (reap-tick fix holds — no reap 503 since
-  17:00Z). **Done-when condition 3 now met**: two real end-to-end listener deploys post-flip returned 200 —
-  `POST /api/deployments/alerting-service/deploy` @18:41Z (20.102.102.67) + @19:07Z (20.55.13.161), GitHub-Actions
-  runner IPs consistent with `service-deployed-listener.yml` → `_deploy_one`; a 200 on the authenticated deploy route
-  with enforcement ON means the listener's key was accepted. **Guard-code ship (step 1) is LIVE**: the UTL base WITH
-  `deployment_env` was republished (artifact digests 18:03-18:17Z) and deployment-api's `BASE_IMAGE_DIGEST` pin
-  refreshed (`chore(deps)` commits d85af02 / 4e9b705 / e05f6b5); the running image contains the guard
-  (`git show 3feb77f:deployment_api/auth.py` has the `deployment_env` guard) and the service boots — auth.py's
-  module-level `_auth_cfg.deployment_env` runs at boot via main.py:34, so the running UTL base has the field and
-  `DISABLE_AUTH=true` is genuinely rejected in prod. This resolves the slot-22 blocking dependency; the follow-up P1's
-  remaining done-when (an actual `DISABLE_AUTH=true` boot-rejection deploy test) is left for that tracked follow-up.
-  Post-flip 401 scan clean: only deliberate no-key probes (orchestrator VM 13.113.200.22), the known root-gated
-  resource-watchdog kill-events ([INFRA] P1 follow-up, fire-and-forget), and the accepted deployment-ui console 401s
-  (2607:f8b0 Google IPv6, operator Option B). No unexpected legitimate-caller 401s and no 5xx since 17:00Z → no rollback
-  warranted. **Disposition**: checkbox flipped (all three done-when conditions verified); durable follow-ups (Google
-  OAuth console provisioning, `DISABLE_AUTH=true` boot-rejection test, watchdog installed-copy update) remain tracked.

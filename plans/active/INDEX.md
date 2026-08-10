@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 294 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 303 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (35)
+### cefi (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -588,9 +588,9 @@ by hand._
   Sixth AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run 2026-07-29
   (ag_closeout_auditor, slot 14). Phase 1 classified 22 prediction-primary/dual-legit AG candidate docs (of 61…
 - [`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`](./prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md)
-  — Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — `gate_on_depends: true` machine-holds
-  this finalize's tasks until that plan's todos are done (authored `status: active` per the 2026-07-30 no-double-gate
-  ruling;…
+  — Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — machine-held via depends_on +
+  gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
+  of the 9…
 - [`prediction_satellite_ao_dispatch_batch7_2026_08_04`](./prediction_satellite_ao_dispatch_batch7_2026_08_04.md) —
   Seventh AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run 2026-08-04
   (ag_closeout_auditor, slot 11). Live re-run of `generate_ag_closeout_audit_candidates.py --tranche prediction --json`
@@ -630,7 +630,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (67)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -667,6 +667,10 @@ by hand._
   — Exploratory analysis harness + journal for the CeFi funding leg of carry_staked_basis: scans ~30 perp coins across
   venues, ranks each day by net carry (annualised short-perp funding + staking APY where the short venue accepts the LST
   as…
+- [`carry_strategy_ensemble_productionization_2026_07_24`](../archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md)
+  — Forked 2026-07-24 (line-cap remediation) from carry_staked_basis_funding_scan_experiment_2026_06_16.md: the
+  4-strategy ensemble orchestrator engine (funding-dispersion / funding-rate arb / pure-basis / staked-basis) built on
+  top of the…
 - [`ci_consolidated_closeout_2026_07_25`](./ci_consolidated_closeout_2026_07_25.md) — New "topic tranche" umbrella
   (sibling to the 5 asset groups + cross-cutting + ao) for CI/CD-pipeline-internal work: quickmerge mechanics, Cloud
   Build/GitHub Actions workflows, the SIT/promotion gate, version-graduation/release-tag…
@@ -698,6 +702,14 @@ by hand._
 - [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 11 todos are done. Reconciles the source doc's checkboxes (incl. the flagged…
+- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md)
+  — Twelfth AO-dispatch batch for the cross-cutting tranche, produced by the 2026-08-10 daily /ag-closeout-audit run's
+  Phase 1 Workflow (36 agents classifying every uncited orphan candidate). Of 21 genuinely-orphaned docs found, exactly
+  2…
+- [`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md)
+  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until all 7 todos are done (this also naturally holds while the batch itself sits
+  `status: draft`,…
 - [`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize`](./cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md)
   — Gated closeout for cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md AND its sibling
   cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md — machine-held via depends_on + gate_on_depends: true until
@@ -820,6 +832,13 @@ by hand._
   — Split 3 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the venue-onboarding + operational-hardening workstreams that accumulated inline in the
   parent…
+- [`multi_leg_execution_systems_audit_2026_08_10`](./multi_leg_execution_systems_audit_2026_08_10.md) — Extends
+  `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`'s finding into an actionable decision. Three
+  systems exist: `MultiLegOrchestrator` (CeFi/TradFi leader-follower/liquidity-aware, ZERO production callers —…
+- [`multi_leg_execution_systems_execution_2026_08_10`](./multi_leg_execution_systems_execution_2026_08_10.md) —
+  Implements the decision artifact produced by `multi_leg_execution_systems_audit_2026_08_10.md` (`depends_on` +
+  `gate_on_depends: true`). Closes the real gap this session found: multi-leg (basis/arb) trades have no wired execution
+  consumer…
 - [`mvp_scope_catalogue_tagging_2026_06_08`](./mvp_scope_catalogue_tagging_2026_06_08.md) — Build a rules-derived MVP
   subset of the instrument catalogue (instruments + features + strategies + models) and wire a toggle into data-status
   so missing-data counts only MVP in-scope cells.

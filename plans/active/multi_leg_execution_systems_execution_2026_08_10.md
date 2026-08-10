@@ -12,7 +12,7 @@ summary: >-
   `AtomicLegExecutor`/`AtomicInstruction`/`LEADER_HEDGE` mechanism into live dispatch, brings paper/batch simulation
   onto the SAME sequencing/timing logic (not a parallel simulated model), and retires whichever of
   `MultiLegOrchestrator`/`instruction_adapter.py`'s dead HEDGE_BASIS path the audit verdicted DELETE.
-status: archived
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -21,8 +21,8 @@ scope: [engineer]
 tags: [multi-leg, basis, arbitrage, leader-follower, determinism, batch-live-parity, atomic-instruction, execution]
 related:
   [
-    /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
-    /plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
+    /plans/active/multi_leg_execution_systems_audit_2026_08_10.md,
+    /plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-08-10
@@ -44,7 +44,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
+    /plans/active/multi_leg_execution_systems_audit_2026_08_10.md,
     execution-service/execution_service/v2/atomic_leg_executor.py,
     execution-service/execution_service/v2/atomic_instruction_router.py,
     strategy-service/strategy_service/engine/strategies/v2/live_routing.py,
@@ -57,11 +57,6 @@ source: >-
   Operator direction 2026-08-10, following the audit plan's decision. AO-dispatchable; every todo gated on the audit's
   decision artifact so scope is fixed before implementation starts.
 ---
-
-> **ARCHIVED 2026-08-10** — all 8 todos done and live-verified (SHAs on origin, QG green, regression tests present). The
-> parity gap this plan closed is codified as a named checkable invariant in
-> `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.1. Issue
-> `multi_leg_paper_batch_live_parity_gap_2026_08_10.md` closed with `resolved_by` evidence + archived.
 
 # Execution — wire the real multi-leg execution path, fix paper/batch parity
 
@@ -141,13 +136,8 @@ source: >-
       `test_paper_settle_surfaces_unhedged_risk_when_hedge_fails`,
       `test_paper_settle_hold_leg_alert_exposes_naked_position`, `test_paper_batch_rerun_epsilon0_on_real_sequencing`)
       as the checkable verification; added the plan to the doc's `referenced_by`.
-- [x] ✅ [DOC] P3. **Close out `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`** with
+- [ ] [DOC] P3. **Close out `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`** with
       `resolved_by` evidence once all of the above is live-verified — archive per the workspace's completion discipline.
-      — evidence: todos 1-7 all live-verified (SHAs on origin: execution-service@0a2f6018 / @27a4bd59,
-      strategy-service@4ca4385c / @aae2ae064d / @11e23c5fb7 / @5a8a014eed, unified-trading-pm@a10c4ca341; dead code
-      gone, wiring + tests + codex §4.2.1 present). Issue closed with `resolved_by` evidence + ARCHIVED banner +
-      `status: resolved` + its 3 own todos flipped (2 resolved, 1 [DIAG] migrated to
-      `cross_cutting_strategy_execution_determinism_2026_07_26.md`), `git mv`'d to `plans/archive/issues/`.
 
 ## Progress Log
 
@@ -214,12 +204,3 @@ source: >-
   `_NO_FILL_ACTIONS` skip), and the four regression tests as the checkable verification (unhedged-risk visibility +
   ε=0-on-real-sequencing). Also added the execution plan to the codex doc's `referenced_by`. Doc push via
   `safe-doc-push.sh` (pure-docs path).
-- 2026-08-10 (todo 8, slot 19): **Issue closed out + this plan archived.** All of todos 1-7 verified live before
-  closeout: every cited SHA is an ancestor of `origin/live-defi-rollout` (execution-service@0a2f6018 / @27a4bd59,
-  strategy-service@4ca4385c / @aae2ae064d / @11e23c5fb7 / @5a8a014eed, unified-trading-pm@a10c4ca341), the retired
-  modules are absent, the wiring/tests/§4.2.1 artifacts are present. Closed
-  `multi_leg_paper_batch_live_parity_gap_2026_08_10.md` with `resolved_by` evidence + ARCHIVED banner +
-  `status: resolved`, flipped its 3 own todos (OPERATOR + SCRIPT resolved with evidence; DIAG P2 still open → migrated
-  to a tracked `- [ ]` todo in `cross_cutting_strategy_execution_determinism_2026_07_26.md` so it doesn't evaporate),
-  and `git mv`'d it to `plans/archive/issues/`. Archived this plan (all 8 done, unlocked) + the paired audit plan per
-  the 6-step ritual (banner + `status: archived` + referrer sweep + INDEX regen). Doc push via `safe-doc-push.sh`.

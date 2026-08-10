@@ -4302,24 +4302,8 @@ DUR_CPU=$(awk 'NR==2 { t=0; for (i=1;i<=NF;i++) { split($i,p,"m"); sub(/s$/,"",p
 rm -f "$_qg_cpu_file"
 # Fall back to wall if CPU accounting is unavailable: a silent 0 would disable the cap entirely,
 # which is worse than the contention false-positive it replaces.
-# CORRECTED SAME DAY (2026-08-10): bill min(CPU, wall-net), never CPU outright.
-#   CPU < wall-net ⇒ the gate sat DESCHEDULED (peer load, I/O, lock waits). Bill CPU — the
-#                    contention-invariant figure this whole block exists to provide.
-#   CPU > wall-net ⇒ genuine PARALLELISM. `bats -j N` accrues up to N CPU-seconds per wall
-#                    second, so billing CPU charges the gate N× for being parallelised and
-#                    punishes the single biggest speedup in the suite. Measured on PM: bats is
-#                    ~617s CPU but ~115-200s wall at -j 5..8 (the comment at the BATS block
-#                    records serial 663s vs -j 8 115s). Pure-CPU billing therefore made a 600s
-#                    cap UNPASSABLE on a quiet host — the first version of this block shipped
-#                    that regression, and its own author's next gate run is what surfaced it.
-# min() is the combinator that satisfies both: it can only ever LOWER the billed figure below
-# wall, so it never manufactures a failure that wall-clock billing would not also have produced.
 if [ -n "${DUR_CPU:-}" ] && [ "${DUR_CPU:-0}" -gt 0 ] 2>/dev/null; then
-    if [ "$DUR_CPU" -lt "$DUR_BILLABLE" ]; then
-        DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU (below wall — descheduled)"
-    else
-        _qg_dur_basis="wall-net (${DUR_CPU}s CPU across parallel workers)"
-    fi
+    DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU"
 else
     _qg_dur_basis="wall(CPU unavailable)"
 fi

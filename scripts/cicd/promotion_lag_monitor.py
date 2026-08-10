@@ -497,37 +497,13 @@ def _open_promote_pr(repo: str) -> dict[str, object] | None:
 
     Shared lookup for `_provenance_blocked` and `_promote_pr_cause` — one PR-list fetch serves
     both cause checks for the same lagging LDR→main pair instead of two independent calls.
-
-    HYDRATED via a single-PR GET (2026-08-10). GitHub's PR *list* endpoint does NOT return
-    `mergeable` / `mergeable_state` — only `GET /pulls/{number}` does, because mergeability is
-    computed on demand. `_promote_pr_cause`'s `blocked_conflicting` branch keys on
-    `mergeable_state`, so fed a list-derived dict that branch was DEAD CODE: every genuinely
-    BLOCKED promote PR fell through to "cause unknown — investigate directly" instead of the
-    actionable "🚧 BLOCKED/CONFLICTING — resolve the failing required check". Measured live on
-    market-tick-data-service PR #939 (248m lag, 14 commits): list → `mergeable_state` ABSENT,
-    single GET → `"blocked"`. That is the recurring "PROMOTION LAG cause unknown" alert class.
-    Its unit tests missed it because they hand-build the PR dict WITH `mergeable_state` set, a
-    shape the production path never produces — see the hydration test in
-    `test_promotion_lag_monitor_promote_pr_cause.py`.
-
-    Costs one extra API call per LAGGING repo per run: this is only reached for a pair that is
-    already going to page, so a healthy fleet still pays nothing. Falls back to the list entry if
-    the GET fails, so a hydration failure can never regress behaviour below today's. Note GitHub
-    computes mergeability asynchronously — a cold PR can answer `mergeable_state: "unknown"`,
-    which correctly matches no branch and leaves the existing SIT/unknown dispatch intact.
     """
     prs = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&base=main&per_page=20")
     if not isinstance(prs, list):
         return None
     for pr in prs:
         if isinstance(pr, dict) and str(cast("dict[str, object]", pr).get("title") or "").startswith("chore(promote)"):
-            listed = cast("dict[str, object]", pr)
-            num = listed.get("number")
-            if isinstance(num, int):
-                full = _gh_json(f"repos/{OWNER}/{repo}/pulls/{num}")
-                if isinstance(full, dict):
-                    return cast("dict[str, object]", full)
-            return listed
+            return cast("dict[str, object]", pr)
     return None
 
 

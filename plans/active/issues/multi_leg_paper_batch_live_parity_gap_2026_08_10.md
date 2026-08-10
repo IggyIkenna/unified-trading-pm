@@ -23,7 +23,7 @@ summary: >-
   about is real, it just also silently affects "live" (or rather: live has no evident execution consumer for
   AtomicInstruction composites at all right now, since `live_execution_handler.py` never references
   `V2EngineOrchestrator`/`on_tick`/`AtomicInstruction`).
-status: resolved
+status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -70,15 +70,7 @@ drift_direction: advance-code
 parent_epic: batch_live_symmetry_master
 depends_on: []
 locked_by:
-resolved_by: >-
-  Closed 2026-08-10 by `multi_leg_execution_systems_execution_2026_08_10.md` (all 8 todos live-verified): the dead
-  `MultiLegOrchestrator`/`instruction_adapter.py` were retired (execution-service@0a2f6018, fresh-grep-confirmed zero
-  importers), the `publish_atomic_instruction`/`route_atomic_instructions` seam was wired into live dispatch
-  (strategy-service@4ca4385c + execution-service@27a4bd59), and `BenchmarkFillEngine.settle()` was fixed to settle
-  LEADER_HEDGE through the real leader/hedge/unwind sequencing (strategy-service@aae2ae064d), with regression tests
-  proving unhedged-position risk is now visible in paper/batch (strategy-service@11e23c5fb7) and ε=0 determinism still
-  holds (strategy-service@5a8a014eed). The checkable invariant is codified in
-  `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.1 (unified-trading-pm@a10c4ca341).
+resolved_by:
 context_scope:
   [
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
@@ -93,10 +85,6 @@ context_scope:
     strategy-service/strategy_service/cli/handlers/paper_run_handler.py,
   ]
 ---
-
-<!-- ARCHIVED 2026-08-10: fully resolved by multi_leg_execution_systems_execution_2026_08_10.md — dead multi-leg code
-retired, LEADER_HEDGE routing wired into live dispatch, BenchmarkFillEngine settles via real leader/hedge/unwind
-sequencing, invariant codified in paper-batch-live-reconciliation.md §4.2.1. -->
 
 # Multi-leg execution: paper==batch parity holds, but only because BOTH bypass the real leader-follower/unhedged-position risk engines — which have no live consumer either
 
@@ -428,28 +416,18 @@ reuse-one-code-path pattern.
 
 ## Todos
 
-- [x] ✅ [OPERATOR] P1. Decide whether to prioritize wiring the live multi-leg execution path (item 2 above) ahead of
-      any live promotion of a basis/arb (CARRY_STAKED_BASIS, CARRY_BASIS_PERP, cross-venue arb) strategy — as things
-      stand, such a strategy cannot execute live at all, independent of the fill-fidelity gap. — RESOLVED 2026-08-10:
-      operator directed the wiring ahead of any live promotion (source of
-      `multi_leg_execution_systems_execution_2026_08_10.md`: "Operator direction 2026-08-10, following the audit plan's
-      decision"), and the execution plan's todo 2 wired `publish_atomic_instruction`/`route_atomic_instructions` into
-      live dispatch (strategy-service@4ca4385c + execution-service@27a4bd59).
-- [x] ✅ [SCRIPT] P1. Scope a plan (or fold into `citadel_paper_batch_live_reconciliation_2026_06_19.md` /
+- [ ] [OPERATOR] P1. Decide whether to prioritize wiring the live multi-leg execution path (item 2 above) ahead of any
+      live promotion of a basis/arb (CARRY_STAKED_BASIS, CARRY_BASIS_PERP, cross-venue arb) strategy — as things stand,
+      such a strategy cannot execute live at all, independent of the fill-fidelity gap.
+- [ ] [SCRIPT] P1. Scope a plan (or fold into `citadel_paper_batch_live_reconciliation_2026_06_19.md` /
       `cross_cutting_strategy_execution_determinism_2026_07_26.md`) covering: retire
       `MultiLegOrchestrator`/`instruction_adapter.py` (dead code, HEDGE_BASIS nothing emits), wire the
       `publish_atomic_instruction`/`route_atomic_instructions` seam into the real live/paper runtime, and extend G1
       (single-leg fill-model unification) to explicitly require `AtomicLegExecutor` semantics for multi-leg paper
-      settlement instead of `BenchmarkFillEngine`'s flat per-leg loop. — DONE via
-      `multi_leg_execution_systems_execution_2026_08_10.md` (retired dead code execution-service@0a2f6018, wired seam
-      strategy-service@4ca4385c + execution-service@27a4bd59, fixed `BenchmarkFillEngine.settle()`
-      strategy-service@aae2ae064d, G1 extension codified in
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.1 @unified-trading-pm@a10c4ca341).
-- [x] ✅ [DIAG] P2. Confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or slippage figures
+      settlement instead of `BenchmarkFillEngine`'s flat per-leg loop.
+- [ ] [DIAG] P2. Confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or slippage figures
       were cited in an actual promotion/sizing decision (vs. only the directional P&L signal) — if so, flag that
-      decision for a re-check once the real leader-follower fill model is wired. — MIGRATED 2026-08-10: still genuinely
-      open, tracked as a `- [ ]` todo in `cross_cutting_strategy_execution_determinism_2026_07_26.md` (the active
-      determinism/G1 coordination plan) so it does not evaporate with this archived issue.
+      decision for a re-check once the real leader-follower fill model is wired.
 
 ## Progress Log
 
@@ -460,8 +438,3 @@ reuse-one-code-path pattern.
   `BenchmarkFillEngine.settle()` shortcut (flat per-leg loop, no leader-follower risk), so paper==batch determinism
   holds but doesn't validate multi-leg execution fidelity. Filed as this issue per the findings-triage HARD RULE (big
   finding: batch≠live / cross-repo / SSOT-adjacent to the paper-batch-live-reconciliation determinism spine).
-- **2026-08-10 (closeout, slot 19)**: All three audit verdicts implemented + live-verified by
-  `multi_leg_execution_systems_execution_2026_08_10.md` (todos 1-7 all shipped, SHAs confirmed on origin): dead
-  `MultiLegOrchestrator`/`instruction_adapter.py` retired; LEADER_HEDGE seam wired into live dispatch; paper/batch now
-  settle via real leader/hedge/unwind sequencing with unhedged-risk visibility + ε=0 determinism preserved; invariant
-  codified in the reconciliation SSOT §4.2.1. This issue closed with `resolved_by` evidence + archived.

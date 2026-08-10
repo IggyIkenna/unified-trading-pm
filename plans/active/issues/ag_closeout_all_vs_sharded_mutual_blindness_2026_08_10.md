@@ -9,7 +9,7 @@ summary: >-
   scoping paths are mutually blind — if both an `all`-mode and a sharded dispatch run for the same `job_name` on the
   same day, neither sees the other as blocking. Found during investigation of the 2026-08-10 tradfi triple-dispatch
   (todo 12 of `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`).
-status: resolved
+status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -26,7 +26,7 @@ created: "2026-08-10"
 author: ikennaigboaka [slot-11·planning-vm]
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
-resolved_by: agent-orchestrator@8c2052cdcf
+resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 priority: P2
@@ -38,9 +38,6 @@ source:
 drift_direction: advance-code
 depends_on: []
 ---
-
-> **ARCHIVED**: resolved by agent-orchestrator@8c2052cdcf (slot 20, 2026-08-10). Successor: none (self-contained fix; no
-> follow-up work).
 
 ## What I found
 
@@ -66,6 +63,10 @@ structural — it would also affect any future job that legitimately runs both m
 
 ## Recommended fix
 
-- [x] ✅ [BACKEND] P2. **Make `--list-done-tranches` also see `tranche=null` rows as blocking ALL tranches.** —
-      agent-orchestrator@8c2052cdcf + QG-green (3346 passed), 2 new tests **Done when** verified: `tranche=null`
-      blocking row triggers all-tranches output; `agent-orchestrator` QG-green tree confirms no regressions.
+- [ ] [BACKEND] P2. **Make `--list-done-tranches` also see `tranche=null` rows as blocking ALL tranches.** In
+      `scheduled_job_already_ran.py`, when `--list-done-tranches` is active, also scan for `tranche=null` rows for the
+      same `job_name` on the same day with a blocking status. A completed `all`-mode run covers every tranche, so
+      finding one should produce the FULL tranche list as "done" (blocking every per-tranche dispatch). **Done when**: a
+      `tranche=null` row with `status=dispatched, agent_exit_reason=lifecycle-complete` causes `--list-done-tranches` to
+      output all tranches (not just the truthy-tranche set), and an `agent-orchestrator` QG-green tree confirms no
+      regressions.

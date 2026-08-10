@@ -99,13 +99,6 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
       plan-destination question (dispatch batch = `planning` or `NA`?) is answered by the standing "Plan destination —
       ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly overrides. No live operator input
       required to apply the default.
-- [ ] [DIAG] P2. **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
-      `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`, which was closed + archived once its
-      execution plan shipped)** — confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or
-      slippage figures were cited in an actual promotion/sizing decision (vs. only the directional P&L signal); if so,
-      flag that decision for a re-check, since the pre-2026-08-10 flat-loop fill model overstated hedge fill-rate by
-      ~9pp (characterized by the execution plan's paper analysis) and paper/batch now settle LEADER_HEDGE via real
-      leader/hedge/unwind sequencing. Repo: unified-trading-pm.
 
 ## Progress Log
 
