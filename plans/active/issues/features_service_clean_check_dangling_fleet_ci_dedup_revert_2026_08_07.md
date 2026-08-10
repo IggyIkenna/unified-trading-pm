@@ -97,3 +97,26 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
   structurally undispatchable (backlog regen is checkbox-driven). Converted the prose "Resolution path" into a real
   tracked todo above per the HARD RULE (every follow-up is a `- [ ]` todo, never prose). Did not investigate the stash
   myself — out of scope for a plan-reconciliation pass.
+- **slot-15 2026-08-10 (infra craft, investigated)**: `features-service-clean-check` is a linked worktree of slot 8's
+  own `features-service` clone (same `.git` object store — stashes are repo-wide, not per-worktree); slot 8 confirmed
+  dead (`status: killed`, `worker_alive: false`) before touching it, so no live-session race. Positional drift: the
+  target stash is no longer `stash@{0}` (37 stashes deep now) — re-identified it by its exact message text, currently
+  `stash@{8}`. **Disposition: (a) abandoned experiment — recommend DROP.** Evidence: (1)
+  `git stash show stash@{8} --stat` confirms it reverts exactly the 5 named workflows from thin-caller-stub form back to
+  full inline (1450 ins/69 del, matches this doc's own numbers); (2) `git log -1 -- <each file>` shows all 5 last
+  touched by `b0c15f11` ("ci: fleet workflows -> thin caller stubs... fleet dedup"), 2026-08-07 — the EXACT commit this
+  doc's own "What was found" section cites as the worktree's HEAD when the stash was taken, and HEAD has not moved past
+  it since (no newer commit superseded it — ruling out disposition (c), not "superseded", just never-landed); (3)
+  current HEAD content is still the thin-stub form (29-58 lines per file, not 200-450+) — the dedup plan
+  (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`) is still `status: active` and lists
+  `features-service` among its rolled-out repos, i.e. the thin-stub form is still the currently-desired state, not
+  something later reverted-and-then-redone; (4) `gh run list --repo IggyIkenna/features-service` shows 5/5 recent
+  `quality-gates-v2` runs green under the current thin-stub CI — no evidence the dedup broke anything for this repo that
+  would motivate a genuine rollback. No commit message, branch note, or plan Progress Log entry anywhere corroborates a
+  deliberate rollback rationale (disposition (b)) — the balance of evidence is an abandoned local experiment. **Could
+  not execute the drop**: `git stash drop stash@{8}` is hard-blocked by
+  `agent-orchestrator/scripts/hooks/block_destructive_commands.py` for every autonomous worker, unconditionally (no
+  reversibility carve-out, unlike the GCS/S3 delete path) — per `RULES.md` § 1's own guidance ("an unwanted stash gets
+  inspected or escalated via a blocked-question... rather than attempting the blocked form"), filing `BLK` recommending
+  a human/operator perform the drop directly rather than attempting to circumvent the hook. Todo stays open (stash still
+  present, unresolved) pending that action.
