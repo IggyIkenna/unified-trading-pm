@@ -10,7 +10,7 @@ summary: >-
   source doc only if the spec genuinely passed clean (not if it hit the documented Firebase-Admin-creds/dev-server
   blocker, which is a separate doc's scope to fix). Authored 2026-08-10 as part of the `ao` full-tranche RECLASSIFY +
   satellite-extraction sweep, group 3.
-status: active
+status: archived
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -58,6 +58,13 @@ source: >-
 
 # e2e_login_persona_handoff_helper_stale_2026_07_22 — finalize
 
+> **ARCHIVED 2026-08-10** — all 3 todos done. The archival gate resolved to **NOT eligible**: the
+> `admin-strategy-assignments.spec.ts` did NOT pass clean (blocked on the documented Firebase-Admin-creds/dev-server
+> instability class across 5 independent re-runs, NO `pw:L2 ✓`), so the source doc
+> `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md` stays `status: open`. The fix owner is
+> `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.
+> Archived by the batch-finalize review worker after recording the decision.
+
 > **Machine-gated on `/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until its sole todo is `done`.
 
@@ -92,12 +99,21 @@ source: >-
       `pw:L2 ✓` is recordable** — three independent re-runs (slots 20/6/4) + this finalize's slot-31 re-verification all
       confirm the documented Firebase-Admin-creds/dev-server-instability class; fix owner remains
       `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.
-- [ ] [REVIEW] P1. **Archive only if the spec genuinely passed clean.** If it hit the documented
+- [x] ✅ [REVIEW] P1. **Archive only if the spec genuinely passed clean.** If it hit the documented
       Firebase-Admin-creds/dev-server blocker instead, leave the source doc `status: open` with the finding recorded —
       do NOT archive on a blocked outcome, and do NOT attempt the Firebase-creds fix here (that is
       `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s scope). If genuinely
       clean, run the standard 6-step archival ritual (banner, move to `plans/archive/2026_08/issues/`, fix every corpus
-      referrer including this finalize plan's own `related:`, re-run the active-plan inventory generator).
+      referrer including this finalize plan's own `related:`, re-run the active-plan inventory generator). — **DONE
+      2026-08-10 (slot-23, review): NOT eligible — source doc NOT archived.** The spec did not pass clean: todos 1-2's
+      independent re-verifications (slots 31/22) + the source doc's own recorded re-runs (slots 20/6/4) all confirm the
+      documented Firebase-Admin-creds/dev-server-instability class — 2 failed / 1 passed, NO `pw:L2 ✓` recordable
+      anywhere. Source doc `e2e_login_persona_handoff_helper_stale_2026_07_22.md` stays `status: open` with the blocker
+      finding recorded inline (todo 4 is `[x]` with the
+      `BLOCKED-ON:     ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability` annotation). The
+      Firebase-creds / dev-server fix remains
+      `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s
+      scope. No archival ritual run (correctly skipped on the blocked outcome).
 
 ## Codex SSOTs
 

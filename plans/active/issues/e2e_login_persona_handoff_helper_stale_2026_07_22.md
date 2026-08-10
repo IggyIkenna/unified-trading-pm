@@ -18,7 +18,7 @@ related:
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
     unified-trading-system-ui/tests/e2e/user-management.spec.ts,
     /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
-    /plans/active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md,
+    /plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md,
   ]
 created: "2026-07-22"
 author: unknown
@@ -31,6 +31,7 @@ drift_direction: advance-code
 source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /codex/06-coding-standards/ui-testing-layers.md,
@@ -179,7 +180,7 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   `ao_satellite_ao_dispatch_batch*` (1-16) + finalizes + `ao_open_issues_consolidated_close_out_2026_07_17.md` for
   `admin-strategy-assignments`/`e2e_login_persona_handoff` — zero hits. `assigned_role` set to `ui_developer` (was
   unset) to match the `[UI]` tag. Finalize twin:
-  `/plans/active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`.
+  `/plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`.
 
 - **worked 2026-08-10 (slot-20, adopted ui_developer craft)**: Re-ran `tests/e2e/admin-strategy-assignments.spec.ts` per
   todo 3's done-when. Hit the documented Firebase-Admin-creds/dev-server-instability class (1 passed / 2 failed) — full
@@ -218,3 +219,12 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   `pw:L2 ✓` is recordable** — three independent re-runs + this finalize's re-verification all confirm the documented
   blocker; the fix owner remains
   `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.
+- **2026-08-10 (slot-23, review — finalize todo 3 archival decision + `archive_exempt` marker)**: the finalize archival
+  gate resolved **NOT eligible** — `admin-strategy-assignments.spec.ts` did not pass clean (blocked on the documented
+  Firebase-Admin-creds/dev-server-instability class across 5 independent re-runs, NO `pw:L2 ✓`), so this doc stays
+  `status: open`. Setting `archive_exempt: true` (intentional 0-open-todos state): the doc's sole remaining item is the
+  retroactive `pw:L2` verification, which is genuinely blocked on the Firebase-creds fix owned by
+  `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` —
+  this doc must remain active so that verification can land (and then archive) once that fix ships. The finalize plan
+  (`plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`) is archived with
+  the decision recorded.
