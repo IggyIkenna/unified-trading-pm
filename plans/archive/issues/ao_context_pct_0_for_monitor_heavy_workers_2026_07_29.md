@@ -39,7 +39,7 @@ summary: >-
   schema). `cicd1-shot`/escalation workers and scheduled auditors are exactly the agent kinds most likely to lean on
   `Monitor` for long CI/build waits, so they're disproportionately exposed to this gap versus a persistent
   conversational worker whose pane more often shows the normal tool-call spinner.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -63,7 +63,7 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: agent-orchestrator@3662edf, unified-trading-pm@bde0cc4a
 locked_by:
 locked_since:
 context_scope:
@@ -77,6 +77,15 @@ context_scope:
 ---
 
 # AO context-% shows 0% for Monitor-heavy one-shot/scheduled workers — a sampling gap, not idleness
+
+> **ARCHIVED** — 2026-08-10. All todos done. Re-root-caused from an operator screenshot ("a lot of 0% contexts — is main
+> doing anything?") into a family of bugs sharing ONE cause: `context_used_pct` could not distinguish "never sampled"
+> from "measured empty". Fixed at every worker ingress (`int | None` + `_effective_context_pct`), which closed the
+> fabricated compactions on main AND fleet-wide on worker boot, and caught a would-be silent dispatch-gate bypass. Also
+> shipped: the slot→agent context mirror, the Fleet role-badge tooltip (pw:L2 ✓), the e2e liveness allowlist that made
+> live-worker Fleet states testable at all, and quickmerge index scoping after this session's own commit was absorbed
+> into a peer's. Known residual, tracked nowhere yet: a reconcile can still silently revert YOUR edits (CLAUDE.md's
+> `Exit 10` class) — hit twice here.
 
 > **🔴 RE-ROOT-CAUSED 2026-08-10 — the mechanism below is SUPERSEDED.** The pane-scraping fallback this issue blamed
 > (`worker_liveness._AUTO_COMPACT_RE` / `_TOKEN_USAGE_RE`) was REPLACED wholesale by the transcript-based
@@ -167,7 +176,7 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `_sync_main_slot_row`, which READS that row to WRITE that slot. — agent-orchestrator@809c405 (code, same
       shared-index provenance caveat) + agent-orchestrator@55c87c9 (tests) + 3 tests in
       `tests/test_reap_orphan_agents.py`.
-- [ ] [BACKEND] P1. Close the shared-index commit-contamination window this session hit for real (see the Progress Log
+- [x] [BACKEND] P1. Close the shared-index commit-contamination window this session hit for real (see the Progress Log
       provenance note): `quickmerge.sh --files` stages its named paths with `git add` and only then runs a BARE
       `git commit`, so any peer session in the same slot checkout that commits inside that window absorbs the staged
       files into ITS commit. Measured 2026-08-10: agent-orchestrator@809c405, a `docs(context)` commit about DeepSeek's
@@ -183,7 +192,18 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       VERIFYING it actually engages: confirm `auto` resolves ON for a laptop slot clone, and that a scoped commit can no
       longer be absorbed by a peer. Keep the cheaper belt-and-braces fix in scope either way — swapping the `git add` +
       bare `git commit` for an explicit `git commit -- <files>` pathspec, which ignores the rest of the index and
-      protects the non-isolated path (incl. the AO VM, where isolation is auto-OFF).
+      protects the non-isolated path (incl. the AO VM, where isolation is auto-OFF). — RESOLVED
+      unified-trading-pm@bde0cc4a, but NOT via the pathspec proposed here, which would have been a BUG:
+      `git commit -- <files>` takes the WORKING TREE state for those paths, so a path staged as `git rm --cached` while
+      still present on disk (the untrack-in-the-same-commit shape STAGE 5's staging loop handles deliberately) would be
+      silently re-added. Shipped instead as `_qm_unstage_foreign_paths()`, which DROPS anything the run did not stage,
+      immediately before every commit attempt (retries + amend included — it sits at the `_qm_locked_git_commit` choke
+      point), preserving every index semantic the staging loop established. Allowed set = `--files` ∪ the two script
+      paths quickmerge chmods itself; unscoped runs untouched. 4 bats tests that EXTRACT the real function from
+      quickmerge.sh rather than replicating it (the sibling bats files replicate, and can drift); one pins the deletion
+      case above. NOTE for whoever revisits: `auto` isolation now resolves OFF on BOTH hosts — briefly default-ON for
+      laptops, reverted same-day because quality-gates.sh cannot resolve deps inside a fresh worktree
+      (`ModuleNotFoundError: unified_api_contracts`). So this guard, not isolation, protects a shared laptop checkout.
 - [x] [BACKEND] P1. Isolated-worktree mode is UNUSABLE from a slot clone — it deadlocks against the
       `fix-commit-identity` pre-commit hook. Measured 2026-08-10, 3/3 attempts: `safe-doc-push.sh` (isolation always-on
       per CLAUDE.md) builds its worktree under `$TMPDIR/sdp-iso-$$`, whose path yields the identity
@@ -210,7 +230,7 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `_qm_checkout_ship_branch`, which returns early under `QM_IN_ISOLATION` and pushes an explicit `HEAD:$BRANCH`
       refspec — the same mechanism safe-doc-push always used. Recording the mis-diagnosis deliberately: the todo would
       have sent the next reader to a line that was already correct.
-- [ ] [BACKEND] P0. The NON-isolated `quickmerge --files` path can drop the caller's staged files AND commit an
+- [x] [BACKEND] P0. The NON-isolated `quickmerge --files` path can drop the caller's staged files AND commit an
       unrelated untracked file under the caller's message. Measured 2026-08-10, agent-orchestrator@62649fb: invoked with
       `--files "server/state_store/agents.py tests/test_reap_orphan_agents.py"`, the resulting pushed commit carried
       NEITHER — it contained only a peer's untracked `tests/test_tmux_spawn_deepseek_context_window.py` (+59), while
@@ -219,7 +239,14 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       commit, plus quickmerge's "Commit-hook chain left file(s) OUTSIDE this commit's scope newly dirty — reverting
       them". Net effect is a commit whose content has no relationship to its `--files` argument or its message. This is
       worse than the absorption failure in the sibling todo above, because it is SILENT: quickmerge reported success and
-      verified push ancestry. The scoped-pathspec commit proposed in that todo would also fix this.
+      verified push ancestry. — RESOLVED by the same `_qm_unstage_foreign_paths()` guard, unified-trading-pm@bde0cc4a.
+      Dogfooded hard: the very run that landed the guard had SEVEN foreign paths to unstage by hand first (a peer's
+      `setup_workspace.bash`, four bats files, and two staged DELETIONS of `test_sync_{pull,push}.bats` — absent from
+      disk, present in HEAD). The contamination the guard prevents was live in the index at the moment of committing it.
+      RESIDUAL GAP, deliberately not claimed fixed: the guard stops FOREIGN work being committed under your message; it
+      does NOT stop YOUR edits being reverted by a reconcile. Measured same session — a comment fix to
+      `qg-host-governor.sh` was silently dropped by quickmerge's autostash/re-stage cycle and had to be re-applied and
+      shipped separately (@7a6f9a47). That is CLAUDE.md's `Exit 10 = edits reverted` class; it needs its own fix.
 - [x] [BACKEND] P0. Defect (B) has a WORKER twin that is still live and is the bigger of the two — the fix shipped in
       @809c405 only guarded main. Every worker boot posts a literal zero that is then read as a compaction:
       `server/prompts.py:219` (STEP 0 liveness) curls
@@ -298,10 +325,15 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       of the Fleet table, so that row could never appear there no matter how alive it was. Re-seeded at slot 5
       (`kind: worker`). Moving the fixture off `one_shot` (to escape the short `terminal_stale_grace`) was necessary but
       NOT sufficient for (2).
-- [ ] [UI] P3. Dashboard: render "—" rather than "0%" for the residual never-sampled case the DATA todo above defines,
+- [x] [UI] P3. Dashboard: render "—" rather than "0%" for the residual never-sampled case the DATA todo above defines,
       with a `pw:L2` regression spec covering both "genuinely fresh, real 0%" and "never sampled" so they don't get
-      conflated. Downgraded P2→P3 on 2026-08-10: the two BACKEND fixes above remove the misleading 0% for every
-      slot-bound agent kind, which was the reported symptom.
+      conflated. — RESOLVED agent-orchestrator@3662edf, **pw:L2 ✓** (3 passed in `fleet-typed-agent-work.spec.ts`, incl.
+      a case asserting the row never renders "0%"), plus 3 vitest cases. NARROWED, and the narrowing IS the point: this
+      todo asked to distinguish "genuinely fresh, real 0%" from "never sampled", which is impossible at this layer —
+      with no persisted sentinel they are the same value. Inventing a heuristic would re-conflate them differently, so
+      `agentContextIsReported()` declines to assert a measurement that does not exist: 0 renders "—" with a "not
+      reported" tooltip. Cost: a just-booted session shows "—" for the seconds before its first reading, which
+      understates rather than misleads. The DATA sentinel remains the real fix if the two ever need separating.
 - [x] [BACKEND] P3. ~~Consider widening the pane-scrape to recognize the "N monitors still running" spinner variant~~ —
       **MOOT, not done.** The pane-scrape is no longer the context mechanism: agent-orchestrator@c6e6d98 (2026-08-08)
       replaced it with the transcript-based `context_probe.py`, which reads `message.usage` off every assistant turn and
