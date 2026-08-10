@@ -168,11 +168,28 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       tagged `[OPERATOR]` only because interpreting whether a measured multiplier is credible is a judgment call, not
       because the action is risky. **Done when**: a measured multiplier per max20 account is recorded here with its
       window, and any account whose two attribution methods still disagree by >20% is named as unresolved.
-- [ ] [BACKEND] P1. **Store the measured per-account multiplier as data (not a hardcoded constant) and derive effective
-      spend as `list_value / multiplier`.** A multiplier must record which window measured it and when, so a stale one
-      is visible rather than silently authoritative; an account with no measurement yet must fall back to a
-      clearly-labelled default rather than silently pricing at list. **Done when**: a test proves an account with no
-      recorded multiplier is flagged rather than priced as if the multiplier were 1.0.
+- [ ] [BACKEND] P1. **Attribute cost by PROPORTIONAL ALLOCATION of the real subscription cost, not by dividing list
+      value by a stored multiplier constant.** Formula:
+      `task_cost = window_subscription_cost x (task_list_value / total_list_value_in_window)`. This always sums to
+      exactly what we paid, needs no constant to maintain, and self-corrects when Anthropic changes rates (numerator and
+      denominator move together) — whereas a hardcoded multiplier is workload-dependent and rots. Operator ruling
+      2026-08-10 asked whether Max could simply be `list_value / 200`; measurement says ~190x promo / ~212x standard,
+      but that ratio is a property of THIS cache-heavy workload (99% of window tokens were cache reads, which are cheap
+      at list yet barely move the quota meter), not of the tier — a cache-light workload would measure very differently.
+      The denominator MUST include all consumption on that account in the window (AO + laptop), else AO tasks absorb the
+      whole subscription and are overstated. **Done when**: per-task costs for one window sum to that window's
+      subscription cost within rounding, and a test proves the sum invariant holds when list rates change.
+- [ ] [BACKEND] P2. **Ship per-task cost RANKING before the absolute-dollar question is settled, since the multiplier
+      cancels out of any comparison.** Ordering tasks by cost needs only list value; the multiplier affects the absolute
+      label alone. This unblocks the operator's original ask (a usable per-task cost breakdown) without waiting on
+      calibration convergence. **Done when**: the dashboard ranks tasks by cost with the basis labelled, and the
+      absolute figure is either shown from todo 9's allocation or clearly marked provisional.
+- [ ] [DATA] P2. **Do NOT assign the Pro account a multiplier by extrapolating from the published band — measure it or
+      leave it labelled unmeasured.** The tempting shortcut (`Pro = Max / 2`, i.e. ~100x) rests on the published Pro
+      3-6x vs Max20 6-10x ratio, and that source has already been shown wrong by ~20x for Max, so the ratio carries no
+      weight. Pro is only 128 of 1,005 Anthropic rows, so the cost of waiting is small. **Done when**: either a
+      controlled Pro window is measured the same way the 2026-08-10 Max window was, or Pro rows render with an explicit
+      unmeasured-basis label.
 - [ ] [BACKEND] P2. **Add an `account_id` filter axis to `window_task_usage_totals` and
       `GET /api/backlog/usage/windows`, composing AND-wise with the existing provider/model/role_group filters.**
       Per-account totals must sum to the provider total exactly as DeepSeek Pro+Flash already sum to DeepSeek. **Done
