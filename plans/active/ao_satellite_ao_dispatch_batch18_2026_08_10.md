@@ -90,10 +90,10 @@ here (5 items already extracted this way).
 
 ## Todos
 
-- [ ] [REVIEW] P1. **DeepSeek flash-vs-pro post-window analysis + writeup (4-part sequential chain, all writing into the
-      same source doc).** Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` todos 9, 10, 11, 13. (a)
-      **Pull the post-window comparison** (todo 9): real `$/task`, `$/plan`, avg turn count, avg total tokens/task for
-      pro vs flash over the full monitoring window (now closed, target was `2026-08-06 20:41 UTC`, individually and
+- [x] ✅ [REVIEW] P1. **DeepSeek flash-vs-pro post-window analysis + writeup (4-part sequential chain, all writing into
+      the same source doc).** Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` todos 9, 10, 11, 13.
+      (a) **Pull the post-window comparison** (todo 9): real `$/task`, `$/plan`, avg turn count, avg total tokens/task
+      for pro vs flash over the full monitoring window (now closed, target was `2026-08-06 20:41 UTC`, individually and
       aggregated — compute whether flash's per-token discount beats pro once turn-count is priced in, not just headline
       `$/task`. Expect unequal sample sizes between pools (documented ratio-skew finding in the doc's own Progress Log)
       — report as-is, don't force balance. (b) **Completion-quality audit** (todo 10): Layer 1 (cheap) — for every task
@@ -110,7 +110,12 @@ here (5 items already extracted this way).
       2/4/12a/17b/25's extractions in batch12 are still open before archiving). **Done when**: all 4 sub-items' evidence
       is recorded in the source doc's own Progress Log with real numbers/verdicts cited (not placeholders), and the
       source doc is archived if genuinely at zero open todos. Repo: unified-trading-pm (analysis + doc-writeup only,
-      read-only queries against the live orchestrator VM's `state.db`).
+      read-only queries against the live orchestrator VM's `state.db`). — `unified-trading-pm@79e653a7a0`: all 4
+      sub-items written into the source doc's Progress Log with real numbers (flash ~13.7% cheaper/task, ~7.4%
+      cheaper/plan despite ~68% more turns, because its blended $/M-tokens is ~2.6x cheaper; Layer-1 reopen-rate pro
+      1.6% vs flash 6.4%; Layer-2 51-item matched-plan diff sample 0 defects either pool; review-agent real coverage
+      ~1.6% of fleet completions with one concrete miss found). Verdict: KEEP FLASH. **NOT archived** — todo 25's
+      batch12 extraction is still open, per this todo's own gating condition.
 
 ## Codex SSOTs (read before starting)
 
