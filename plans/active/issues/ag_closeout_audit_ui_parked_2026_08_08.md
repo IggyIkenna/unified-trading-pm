@@ -40,6 +40,7 @@ resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
+archive_exempt: true # 0-open-todos 2026-08-10: all 3 mechanical doc-edit todos completed (Findings 1/4 already done, Finding 3 stale wording fixed); doc serves as parked-findings record
 depends_on: []
 sequential: true # todos 1 and 3 both edit cursor-configs/skills/ag-closeout-audit/SKILL.md (different sections) —
 # same-file overlap, serialise to avoid a concurrent-dispatch collision (na-eligibility-audit 2026-08-10 reclassify).
@@ -181,30 +182,34 @@ only, no action needed until the infra-tranche migration progresses further.
 
 ## Todos
 
-- [ ] [DOC] P3. **Fold Finding 1's coverage-bar clarification into `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s
-      Phase 1 instructions** — state explicitly that only a covering doc's own dispatched `## Todos` section counts as
-      coverage; a `## Deferred`/analysis-only mention does not. Verified 2026-08-10: not yet present in SKILL.md.
-      Bundle with the next unrelated SKILL.md edit per the finding's own "not urgent enough to justify a standalone
-      edit" framing.
-- [ ] [DOC] P3. **Fix `ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s stale Phase 7 wording** (Finding 3) — its
+- [x] ✅ [DOC] P3. **Fold Finding 1's coverage-bar clarification into
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Phase 1 instructions** — state explicitly that only a
+      covering doc's own dispatched `## Todos` section counts as coverage; a `## Deferred`/analysis-only mention does
+      not. **ALREADY DONE** (2026-08-10): SKILL.md lines 431-436 now carry the exact coverage-bar clarification with
+      "(added 2026-08-10, from the `ui` tranche's 2026-08-08 Finding 1)" provenance — another session folded it in. No
+      further action needed. Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. **Fix `ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s stale Phase 7 wording** (Finding 3) — its
       Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as "STILL OPEN," but
-      Phase 7 closed 2026-08-07 (verified 2026-08-10: batch1 doc still reads "STILL OPEN — prod is silent..." at line
-      202). Update when batch1 is next touched (approval or its finalize plan's re-check) so the framing reads "9 known
-      + Finding 2's newly-found item," not a clean drop.
-- [ ] [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
+      Phase 7 closed 2026-08-07 (operator ruling — see this doc's Finding 3 at
+      /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_08.md). **FIXED** (2026-08-10, slot 6): updated "STILL
+      OPEN — prod is silent..." → "RESOLVED 2026-08-07 (live verification, see same ruling above)" with the known-item
+      count updated to "9 known + 1 newly-found ≈ still ~10." Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. **Add a one-line addition to SKILL.md's non-batchable taxonomy** (Finding 4) — the "operator-gated"
       category's current wording ("Once ruled, it becomes a normal batch candidate") should note a ruled item still
       needs the ordinary bounded-outcome/worker-determinable check before drafting; "operator-ruled" and
-      "worker-determinable" are two separate tests, not one. Verified 2026-08-10: not yet present in SKILL.md (line
-      198 still reads the un-clarified version).
+      "worker-determinable" are two separate tests, not one. **ALREADY DONE** (2026-08-10): SKILL.md lines 198-200 now
+      carry the exact "two separate tests" clarification — another session folded it in. No further action needed. Repo:
+      unified-trading-pm.
 
 **Already resolved (Finding 2)**: `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open"
-vulnerability-scan sentence was already converted to a real `- [ ]` checkbox by the 2026-08-08 na-eligibility-audit
-pass (see this doc's own Progress Log entry below) — no further action.
+vulnerability-scan sentence was already converted to a real `- [ ]` checkbox by the 2026-08-08 na-eligibility-audit pass
+(see this doc's own Progress Log entry below) — no further action.
 
 **Already tracked elsewhere (Finding 5)**: the 2 mistag candidates are correctly folded into
 `ui_consolidated_closeout_2026_07_30.md`'s standing `[REVIEW] P2` retag-audit todo (verified 2026-08-10: both
-`deployment_api_prod_disable_auth_true_2026_08_06.md` and `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`
-are named explicitly in that todo's text) — no duplicate todo needed here.
+`deployment_api_prod_disable_auth_true_2026_08_06.md` and
+`deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` are named explicitly in that todo's text) — no
+duplicate todo needed here.
 
 ## Progress Log
 
@@ -231,20 +236,20 @@ are named explicitly in that todo's text) — no duplicate todo needed here.
   are process notes / already correctly deferred / no new information — no further action needed from this skill.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
 - **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (2 already
-  resolved/tracked-elsewhere, cited inline); Findings 1/3/4 (SKILL.md coverage-bar clarification, batch1's stale Phase
-  7 wording, SKILL.md taxonomy addition) were all still-open on re-verification and are now real `- [ ]` checkboxes;
+  resolved/tracked-elsewhere, cited inline); Findings 1/3/4 (SKILL.md coverage-bar clarification, batch1's stale Phase 7
+  wording, SKILL.md taxonomy addition) were all still-open on re-verification and are now real `- [ ]` checkboxes;
   Finding 2 was already fixed by the 2026-08-08 na-eligibility-audit pass (cited); Finding 5 is already tracked in
   `ui_consolidated_closeout_2026_07_30.md`'s own retag todo (cited, not duplicated).
-- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: RECLASSIFY, `assigned_vm: NA -> planning`. All 3
-  open todos (formalized by the same-day prose-findings sweep above) are bounded, mechanical, fully-specified doc
-  edits with no judgment call: todo 1 and todo 3 each add one already-written line to a named section of
+- **na-eligibility-audit 2026-08-10 (formalized-docs follow-up)**: RECLASSIFY, `assigned_vm: NA -> planning`. All 3 open
+  todos (formalized by the same-day prose-findings sweep above) are bounded, mechanical, fully-specified doc edits with
+  no judgment call: todo 1 and todo 3 each add one already-written line to a named section of
   `cursor-configs/skills/ag-closeout-audit/SKILL.md`; todo 2 fixes one named stale sentence
-  (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s Deferred item 8) to a wording already given verbatim in the
-  todo. Conflict-check: grepped the full corpus for the todos' own key phrases ("coverage-bar clarification",
-  "stale Phase 7 wording", "Once ruled, it becomes a normal batch candidate") — only self-citations and one
-  incidental quote in `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (not a claim to do the work); read
-  `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s still-open todo 4 in full — it archives batch1 and
-  trims unrelated `ui_consolidated_closeout` prose, no overlap; all 3 `ui_satellite_ao_dispatch_batch*` pairs are
+  (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s Deferred item 8) to a wording already given verbatim in the todo.
+  Conflict-check: grepped the full corpus for the todos' own key phrases ("coverage-bar clarification", "stale Phase 7
+  wording", "Once ruled, it becomes a normal batch candidate") — only self-citations and one incidental quote in
+  `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (not a claim to do the work); read
+  `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s still-open todo 4 in full — it archives batch1 and trims
+  unrelated `ui_consolidated_closeout` prose, no overlap; all 3 `ui_satellite_ao_dispatch_batch*` pairs are
   `status: active` (no `status: draft` satellite in flight to collide with); `ui_consolidated_closeout_2026_07_30.md`
-  cites SKILL.md only in `context_scope`/`related`, claims no overlapping edit. Added `sequential: true` (todos 1
-  and 3 both touch `SKILL.md`, different sections — same-file overlap per the plan-authoring same-file rule).
+  cites SKILL.md only in `context_scope`/`related`, claims no overlapping edit. Added `sequential: true` (todos 1 and 3
+  both touch `SKILL.md`, different sections — same-file overlap per the plan-authoring same-file rule).
