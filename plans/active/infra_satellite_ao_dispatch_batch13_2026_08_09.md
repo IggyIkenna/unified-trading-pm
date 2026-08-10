@@ -83,17 +83,24 @@ judgment call embedded in it (capture server logs, find the crash cause, fix it)
 
 ## Todos
 
-- [ ] [INFRA] P2. **Diagnose + fix why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway
-      through a sustained ~20-test sequential Playwright run.** Reproduced both self-started
-      (`next dev --webpack -p     <port>`) and Playwright-`webServer`-managed (which detects the server is down and
-      respawns it, but subsequent tests still fail near-instantly, suggesting the respawn itself doesn't recover
-      cleanly). Capture the dev server's OWN stdout/stderr across a full `tests/e2e/user-management.spec.ts` run
-      (redirect `next dev`'s output directly, not just Playwright's summary) to find the crash cause (candidates not yet
-      ruled in/out: memory growth under `next.config.mjs`'s webpack dev config, an unhandled rejection in
-      `lib/api/mock-handler.ts`'s request interception under load, a file-watcher/HMR leak) — then fix it. Done when:
-      `npx playwright test     --project=chromium tests/e2e/user-management.spec.ts` (or the subset of it that does not
-      depend on Firebase Admin credentials — see the source doc's separate, non-extracted item 1) runs the full
-      sequential suite without a dev-server connection failure, with the root cause documented. Source:
+- [x] ✅ [INFRA] P2. **Diagnose + fix why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway
+      through a sustained ~20-test sequential Playwright run.** — unified-trading-system-ui@1c59c624. Root cause: NOT an
+      app bug — this shared host's `resource-watchdog.service` (systemd, `journalctl -u resource-watchdog.service`)
+      SIGTERMs any process not on its substring allowlist
+      (`orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc` —
+      `next`/`node`/`next-server` isn't listed) once its RSS crosses 4GB (under `pressure=high`, common on this
+      multi-agent host) / 10GB (normal). `next dev --webpack`'s dev compiler bundles `firebase-admin`'s full
+      `@grpc/grpc-js`/`google-gax` dependency tree the first time any Node-runtime `app/api/v1/*` route compiles,
+      spiking `next-server` RSS past the ceiling mid-suite — confirmed live via `journalctl`: `KILL #49/#51`,
+      `pid=<next-server>` `slot=24`, `reason=rss:...>4194304kB`. Fix (both in unified-trading-system-ui, no
+      infra/other-repo changes needed): (1) `next.config.mjs` —
+      `serverExternalPackages: ["firebase-admin", "google-gax", "@grpc/grpc-js"]` so webpack no longer bundles/
+      transforms that tree; (2) `package.json`'s `dev:mock` — `NODE_OPTIONS=--max-old-space-size=3072` so V8 GCs before
+      RSS approaches the ceiling. Verified: full `tests/e2e/user-management.spec.ts` (21 tests, ~7.6min) completes with
+      zero `ERR_CONNECTION_REFUSED` / dev-server-death failures and no further `resource-watchdog` kill for this repo.
+      Remaining 14 test failures are the separate, already-tracked Firebase Admin credentials gap (this plan's source
+      doc's non-extracted item 1 — `/api/v1/*` 500s without real creds/emulator) plus unrelated UI-overlay
+      (onboarding-tour) click-interception flakiness — out of this todo's scope. Source:
       `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` todo 2. Repo:
       unified-trading-system-ui.
 
@@ -112,3 +119,10 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
 
 - **2026-08-09** — Drafted during the round-9 infra-tranche combined RECLASSIFY+satellite-extraction sweep. Paired with
   `infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md` per the finalize-plan-coverage rule.
+- **2026-08-10 (slot-24)** — Todo 1 done, unified-trading-system-ui@1c59c624. Root cause was this shared host's
+  `resource-watchdog.service` SIGTERMing `next-server` once RSS crossed its 4-10GB ceiling (`next`/`node` not in its
+  allowlist) — `next dev --webpack` bundling `firebase-admin`'s grpc/google-gax tree per `/api/v1/*` compile drove the
+  spike. Fixed via `serverExternalPackages` + a `NODE_OPTIONS` heap cap on `dev:mock`, both in-repo. Verified with a
+  full `tests/e2e/user-management.spec.ts` run: zero dev-server-death failures. Plan's only todo is done; leaving
+  `status: active` for the next archival sweep (not touching archival in this commit per the checkbox-flip-then-git-mv
+  separate-commits rule).
