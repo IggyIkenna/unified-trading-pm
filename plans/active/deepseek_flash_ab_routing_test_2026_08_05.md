@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_08/omniroute_multi_provider_routing_evaluation_2026_08_03.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
     /plans/archive/2026_08/ao_fleet_cache_tokens_and_task_count_2026_08_05.md,
+    /plans/active/ao_satellite_ao_dispatch_batch18_2026_08_10.md,
   ]
 created: "2026-08-05"
 last_updated: 2026-08-06
@@ -142,7 +143,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
 - [ ] 9. [REVIEW] P1. Pull the post-window comparison: real `$/task`, `$/plan`, avg turn count, and avg total
       tokens/task for pro vs flash over the monitoring window, individually and aggregated — the exact breakdown the
       operator asked for. Compute whether flash's per-token discount actually beats pro once turn-count is priced in,
-      not just compare headline `$/task`.
+      not just compare headline `$/task`. **➡️ EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md`
+      todo 1 (combined with todos 10/11/13 as one sequential chain) — do NOT action here.**
 - [ ] 10. [REVIEW] P1. **Completion-quality audit — the part that makes the cost comparison meaningful.**
       `agents/review.md`'s persistent review agent DOES watch every `slot_done`/PR and check the diff against the plan's
       `done_definition` — but confirmed 2026-08-05 (grep across `server/`) it is (a) ONE persistent agent for the WHOLE
@@ -157,11 +159,13 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       sample of ~15-20 completed todos from EACH pool, matched by plan/`estimate_class` so difficulty is comparable, and
       run an independent review pass (fresh agent or operator, no stake in the outcome) against the actual diff — did
       this todo genuinely get done correctly, not just "did it commit and pass QG." Done-when: a written verdict per
-      sampled item (correct / needs-rework / broken) exists for both pools, not just an aggregate percentage.
+      sampled item (correct / needs-rework / broken) exists for both pools, not just an aggregate percentage. **➡️
+      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
 - [ ] 11. [REVIEW] P2. **Verify the review agent's real coverage** — pull its own activity/chat history for the
       monitoring window and count how many of the window's completed todos it actually touched (spot-checked) vs. the
       total completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary
-      weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it.
+      weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it. **➡️
+      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
 - [x] ✅ 12. [OPERATOR] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 2 —
       /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Yes, build it." Decide whether the
       review agent's findings should become a structured, queryable event (e.g. a `review_finding` activity-log entry
@@ -180,7 +184,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator. **➡️ EXTRACTED 2026-08-09
       to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 — do NOT action here.**
 - [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
-      plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
+      plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual. **➡️
+      EXTRACTED 2026-08-10 to `ao_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1 — do NOT action here.**
 - [x] 14. ✅ [BACKEND] [UI] P1. **Per-turn/per-task efficiency metrics** — operator ask (2026-08-05): avg turns/task,
       context/task, and cache-read/cache-write/output/non-cache-input tokens per turn, with real
       $ values, on both usage
@@ -778,9 +783,9 @@ appetite for it.
   `[OPERATOR]` to `[BACKEND]` with a concrete extension spec (add an `AgentRow`-keyed candidate source for the affected
   window) so it's now a build+run todo, not an open decision. Neither todo is fully closed-out yet (12a is new work; 25
   needs the extension built before the actual backfill runs) — both are now unblocked and worker-determinable.
-- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid, already touched by a same-day satellite pass —
-  5 of the 10 remaining open items (2, 4, 12a, 17b, 25) were `EXTRACTED 2026-08-09` to
-  `ao_satellite_ao_dispatch_batch12_2026_08_09.md` by a concurrent session. The other 5 (8, 9, 10, 11, 13) stay
-  KEEP-NA: a 24h real-fleet monitoring window, a post-window cost comparison, a completion-quality audit, review-
-  coverage verification, and a final write-up — all operator-review/time-gated, none touched by today's credential/
-  webhook facts. Whole-doc RECLASSIFY not applicable (already partially extracted, remainder genuinely gated).
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid, already touched by a same-day satellite pass — 5 of the
+  10 remaining open items (2, 4, 12a, 17b, 25) were `EXTRACTED 2026-08-09` to
+  `ao_satellite_ao_dispatch_batch12_2026_08_09.md` by a concurrent session. The other 5 (8, 9, 10, 11, 13) stay KEEP-NA:
+  a 24h real-fleet monitoring window, a post-window cost comparison, a completion-quality audit, review- coverage
+  verification, and a final write-up — all operator-review/time-gated, none touched by today's credential/ webhook
+  facts. Whole-doc RECLASSIFY not applicable (already partially extracted, remainder genuinely gated).
