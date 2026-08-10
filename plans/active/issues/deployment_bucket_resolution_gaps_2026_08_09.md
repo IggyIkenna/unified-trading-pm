@@ -118,7 +118,7 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
 
 ## Todos
 
-- [ ] [INFRA] P3. Migrate the VM tarball deployment path's hardcoded `deployment-scripts-central-element-323112`
+- [x] ✅ [INFRA] P3. Migrate the VM tarball deployment path's hardcoded `deployment-scripts-central-element-323112`
       bucket-name default to resolve via the B-011 canonical bash form (`deployment-scripts-${PROJECT}` /
       `-${PROJECT_ID}`, per /codex/05-infrastructure/vm-tarball-deployment.md — the bash-side equivalent of the
       storage-code `resolve_bucket_name(...)` rule; `resolve_bucket_name()` is Python-only and the yaml SSOT has no
@@ -126,7 +126,7 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
       23 files found by the re-run grep (2026-08-09 measured 21; re-measured 2026-08-10 at fix time = 23, the set
       shifted: `vm_heartbeat_sidecar.sh` + `vm_instruments_reference.sh` were not in the original 21-file list),
       starting with `setup-data-pipeline-vm.sh:47` and `create-code-tarballs.sh:46`. Repo: deployment-service. —
-      deployment-service@f979b809
+      deployment-service@f8d3312d
 - [ ] [INFRA] P3. Extend the deployment-bucket resolution migration to the remaining NON-`.sh` / cross-repo hardcoded
       `deployment-scripts-central-element-323112` occurrences surfaced by the 2026-08-10 cross-repo scan:
       deployment-service `.github/workflows/sync-vm-scripts-to-gcs.yml:46` (`BUCKET:` env) +
@@ -162,3 +162,10 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
   (`dp_recovery_actuator_tests_regression_2026_08_10.md`). Cross-repo scan surfaced related hardcoded literals in
   e2e-testing (8 .sh copies), market-tick-data-service (4 .py), and deployment-service's non-.sh surfaces (workflow
   env + runbook/README) — filed as follow-up todo 2 above.
+- **2026-08-10** — Todo 1 SHIPPED: `deployment-service@f8d3312d` (rebased SHA; originally `f979b809`). The pre-existing
+  QG red (11 `test_dp_recovery_actuators.py` failures) was fixed by the fleet via escalation `agt-acb0ed` +
+  `c472a818 fix(dp-monitors): force disk-path budget in dp_recovery actuator tests` (a test-environment/budget-path fix,
+  not a logic regression). Rebased onto the fixed LDR head, Pass-1 QG re-ran GREEN (sentinel == HEAD), shipped via
+  quickmerge agent mode (strict-quickmerge hook passed, `f8d3312d` on origin). Verified on origin; literal count in
+  `scripts --include="*.sh"` = 0, `bash -n` clean on all 156 derived-form launchers. Follow-up todo 2 (non-.sh /
+  cross-repo occurrences) remains open.
