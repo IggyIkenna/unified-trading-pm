@@ -236,9 +236,24 @@ jobs:
                 _V2_INFLIGHT=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
                   --json headSha,status --jq "[.[]|select(.headSha==\"$_INFLIGHT_SHA\" and .status!=\"completed\")]|length" 2>/dev/null || echo "0")
                 if [ "${_V2_INFLIGHT:-0}" != "0" ]; then
-                  echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick, letting it finish"
-                  { echo "action=inflight_wait"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
-                  exit 0
+                  # Doomed-run detection (2026-08-10): a run whose checks/tests slice has ALREADY
+                  # concluded `failure` cannot pass — inflight_wait on it only wedges the drain
+                  # behind a slow remaining leg (PM tests take 70-135 min) for a known-failure
+                  # outcome. Supersede it immediately. Measured live: a stale promote PR
+                  # (head=promote/unified-trading-pm/12bb896a446c) sat un-superseded for 80+ min
+                  # while its checks slice had already failed and only the tests leg kept the run
+                  # non-terminal; LDR grew 1627 commits ahead of main behind it.
+                  # Fail-open: a query error → _V2_DOOMED=0 → fall through to the original
+                  # inflight_wait behaviour below (never supersede on a broken check).
+                  _V2_DOOMED=$(gh api "repos/$OWNER/$REPO/commits/$_INFLIGHT_SHA/check-runs" \
+                    --jq '[.check_runs[] | select(.name | contains("QG slice")) | select(.conclusion == "failure")] | length' 2>/dev/null || echo "0")
+                  if [ "${_V2_DOOMED:-0}" != "0" ]; then
+                    echo "⏭ existing promote PR (head=$_INFLIGHT_HEAD) has a FAILED QG slice (doomed run) — superseding this tick instead of waiting it out"
+                  else
+                    echo "⏳ existing promote PR (head=$_INFLIGHT_HEAD) has quality-gates-v2 still running — not superseding this tick, letting it finish"
+                    { echo "action=inflight_wait"; echo "pr="; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
+                    exit 0
+                  fi
                 fi
               fi
             fi
