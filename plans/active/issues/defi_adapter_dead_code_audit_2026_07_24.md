@@ -51,7 +51,7 @@ related:
   ]
 created: "2026-07-24"
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-10"
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -399,7 +399,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
 
 ## 6. Follow-up todos (not made in this pass — each is a real, scoped decision)
 
-- [ ] [SERVICE] P1. **RULED 2026-08-07 (operator) — register Jupiter as a live DeFi venue, full-stack.** Jupiter is a
+- [x] ✅ [SERVICE] P1. **RULED 2026-08-07 (operator) — register Jupiter as a live DeFi venue, full-stack.** Jupiter is a
       major Solana DEX aggregator; scope is NOT just `factory.py::_ADAPTERS["jupiter"]` — it needs: (a) UAC venue
       registration (`VENUE_TO_ADAPTER_KEY` + manifest schema so captured rows get a canonical path), (b)
       instruments-service catalogue/reference-data entry (wire `JupiterReferenceDataAdapter` into `_ADAPTERS`, the
@@ -411,7 +411,13 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this (todos
       1-4 + close-out todo 6, which flips this checkbox) — that plan's investigation also found (c) is automatic (no
       separate list) and (e) already exists unwired (`JupiterConnector`), narrowing the real remaining scope; see its
-      "Scope corrections vs the operator's framing" section. Leave this checkbox open until that plan's todo 6 lands.
+      "Scope corrections vs the operator's framing" section. ✅ **DONE 2026-08-10 — that plan's todos 1-5 all shipped**:
+      unified-api-contracts@ad003d03 (UAC venue registration — `DEFI_VENUE_PHASE["JUPITER-SOLANA"]="live"` +
+      `VENUE_TO_ADAPTER_KEY["JUPITER-SOLANA"]="jupiter"`), instruments-service@06c6f2dd (`JupiterReferenceDataAdapter`
+      wired into `_ADAPTERS` + `_SOLANA_DEFI_VENUES`), market-tick-data-service@9e9c9817 (JUPITER-SOLANA live
+      `WSFeedConnector`, `data_type=dex_pool_swaps`), execution-service@507093de (`JupiterConnector` wired into
+      `DeFiAdapter`), + market-tick-data-service@73abd655 (Aave-liquidation connector, that plan's todo 5). This
+      checkbox flipped by that plan's todo 6 (close-out).
 - [ ] [SERVICE] P1. market-tick-data-service: re-verify the governance-parameters-refresh feature end-to-end
       (features-service `aave_risk_calculator.py` asof reads, strategy-service sizing) against the measured fact that
       `GovernanceParamsEventPoller` never runs in production; either wire the poller into a real entrypoint (a
@@ -434,7 +440,10 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       concurrent session, `market-tick-data-service@505959b0`) and once by a false-positive "confirmed live" claim from
       a transient clean working-tree read (corrected below) — actually shipped `market-tick-data-service@4e5d8b475`,
       verified via `git show origin/live-defi-rollout:market_tick_data_service/market_interface/__init__.py` (0 refs)
-      and `git cat-file -e` on the deleted file (confirmed absent), not `git status` on a shared clone.
+      and `git cat-file -e` on the deleted file (confirmed absent), not `git status` on a shared clone. Wire-in leg of
+      this item (that plan's todo 5) shipped `market-tick-data-service@73abd655` — the `OnChainEventPoller` Aave-
+      liquidation path is now registered as `live/connectors/aave_liquidations_ethereum_ws.py` under `AAVE_V3-ETHEREUM`,
+      `data_type="liquidations"`.
 - **[SERVICE] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
   (operator): consolidate onto `HeliusSolanaAdapter`, delete `native_staking_handler.py`'s hand-rolled implementation.**
   market-tick-data-service. **2026-08-07 note (unchanged)**: the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE —
@@ -581,3 +590,12 @@ files.
   rounds all landed KEEP-NA valid, re-confirmed today. 2 open checkboxes: a deliberate citation-tracker held open until
   `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6 lands (verified active/planning, real
   citation), plus one other gated item. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (slot-18, `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6)**: closed out
+  this doc's §6. Jupiter checkbox (item 1) flipped ✅ citing the plan's shipped SHAs (unified-api-contracts@ad003d03,
+  instruments-service@06c6f2dd, market-tick-data-service@9e9c9817, execution-service@507093de,
+  market-tick-data-service@73abd655). The wire-in item (item 3) was already flipped by the 2026-08-08 alchemy/thegraph
+  DELETE session; appended the todo-5 wire-in SHA (`market-tick-data-service@73abd655`, AAVE_V3- ETHEREUM liquidations
+  connector). Wire-in scope was narrowed to `onchain_event_poller.py` only — `alchemy_adapter.py`/
+  `thegraph_ws_adapter.py` had no determinable single-venue target and the operator ruled DELETE (see that plan's "Scope
+  corrections" + "Open questions"). Also refreshed `/codex/04-architecture/solana-defi-coverage.md` (JUPITER MTDS line +
+  `spot_trades` → `dex_pool_swaps`).

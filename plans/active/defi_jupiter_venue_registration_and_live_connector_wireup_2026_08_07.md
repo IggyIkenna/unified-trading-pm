@@ -22,7 +22,7 @@ related:
     defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -216,7 +216,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `topics=[_AAVE_LIQUIDATION_TOPIC]`; registered under `AAVE_V3-ETHEREUM` (`overwrite=True`); 20 unit tests green;
       QG green.
 
-- [ ] [DOC] P3. **Close out the audit doc + refresh the Solana-DeFi codex SSOT.** In
+- [x] ✅ [DOC] P3. **Close out the audit doc + refresh the Solana-DeFi codex SSOT.** In
       `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` §6, flip the two now-superseded checkboxes
       (Jupiter venue registration; the `onchain_event_poller.py` + `defi_live/{alchemy_adapter,thegraph_ws_adapter}`
       wire-in item) to `- [x]`, each citing this plan's slug
@@ -227,7 +227,10 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `/codex/04-architecture/solana-defi-coverage.md`, update the "MTDS role (NOT yet wired)" JUPITER line to reflect
       the now-shipped connector (mirror how METEORA/PHOENIX/DRIFT are documented as shipped in that same table), and
       correct the informal "spot_trades" label to the real UAC data_type used (`dex_pool_swaps`, per todo 3). Done-when:
-      both docs reflect the true post-ship state, citing real commit SHAs.
+      both docs reflect the true post-ship state, citing real commit SHAs. — DONE 2026-08-10: audit-doc §6 Jupiter
+      checkbox flipped + Progress Log entry added; codex `solana-defi-coverage.md` JUPITER line + `spot_trades` →
+      `dex_pool_swaps` updated, citing unified-api-contracts@ad003d03, instruments-service@06c6f2dd,
+      market-tick-data-service@9e9c9817, execution-service@507093de, market-tick-data-service@73abd655.
 
 - [ ] [TEST] P2. **Capture the two missing WS frame cassettes that are currently held open by `pytest.xfail`.**
       `unified-api-contracts/tests/test_ws_cassette_coexistence.py` xfails BOTH `jupiter_solana_ws` (2026-08-07) and
