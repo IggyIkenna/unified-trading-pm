@@ -317,12 +317,10 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       condition-cleared rows read `auto:condition_cleared`; C1's in-record_result closer + bookend REMOVED, replaced by
       this exit; 4 new tests incl. synthetic-row retire-through + reconcile end-to-end + still-
       reported-does-not-retire).
-- [x] ✅ [BACKEND] P2. **Stamp and surface `last_reconfirmed_at`** on every surviving detector-derived row on each
-      detector run, and render it on the card as "still detected as of `<ts>`". This is what makes an open row mean
-      "currently true" rather than "was true at some point". — agent-orchestrator@dff3e40480 (QG green; added
-      `last_reconfirmed_at` column + migration + stamp-at-creation + re-stamp surviving rows each `plan_health` run +
-      `BlockedView`/`_blocked_to_view` wiring; 3199 tests passed, 2 pre-existing env flakes unrelated). Repo:
-      agent-orchestrator.
+- [ ] [BACKEND] P2. **Stamp and surface `last_reconfirmed_at`** on every surviving detector-derived row on each detector
+      run, and render it on the card as "still detected as of `<ts>`". This is what makes an open row mean "currently
+      true" rather than "was true at some point". **Done when**: the column updates on each `plan_health` run that
+      re-reports the key, the value reaches `BlockedView`, and the card renders it. Repo: agent-orchestrator.
 - [ ] [BACKEND] P2. **Audit every `add_blocked` call site for the same blind spot** — enumerate each class of blocked
       row (worker `/blocked`, `BLK-op-*` operator-gated, `doc_drift`, and any other) and record which retirement exits
       can actually fire for it. **Done when**: a table lands in this plan's Progress Log naming every call site and its
@@ -418,14 +416,6 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   synthetic condition-derived row retires via `classify_retirement`, end-to-end through `reconcile_once` with
   `answered_by=auto:condition_cleared` + slot freed, still-reported-key does not retire, record_result reports resolved
   count without closing).
-- **2026-08-10 (C3, slot-6 worker)**: Added `last_reconfirmed_at` DateTime column to `BlockedRow` + no-backfill
-  `_migrate_blocked_queue_last_reconfirmed_at()` migration. `add_blocked()` accepts optional `last_reconfirmed_at` param
-  — stamped at creation for doc_drift rows so "still detected as of <ts>" works immediately. On every `plan_health` run,
-  surviving keys (in both the old seen-set AND the current findings) now have their open `BlockedRow` rows'
-  `last_reconfirmed_at` re-stamped; the JSON `context` field's `last_reconfirmed_at` is also updated for consistency.
-  Wired through `BlockedView` + `_blocked_to_view` for dashboard render. — agent-orchestrator@dff3e40480 (QG green, 3199
-  passed; 2 pre-existing flaky env-dependent tests in `test_tmux_spawn_deepseek_context_window.py` — host has
-  `CLAUDE_CODE_MAX_CONTEXT_TOKENS=1000000` set globally, tests expect it unset; unrelated to this change).
 - **2026-08-10 (slot-16 worker, pre-compact journal)**: Session shipped A4/B1/C1/C2 — all flipped with evidence above,
   both worktrees clean, `ahead=0` on `agent-orchestrator` and `unified-trading-pm` — safe to compact. **Deferred (all
   already tracked `- [ ]`, not at risk):** C3 `last_reconfirmed_at` stamping · C4 `add_blocked` call-site audit · C5

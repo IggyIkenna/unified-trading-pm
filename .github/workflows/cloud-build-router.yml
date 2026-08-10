@@ -636,44 +636,7 @@ jobs:
               # was `source.revision must be specified` (the --branch gap fixed above). Surface the
               # RAW error text so a future genuinely-different failure isn't mis-diagnosed the same
               # way (single line, capped — this becomes a Slack message body).
-              # STRIP gcloud's credential preamble BEFORE setting the output (2026-08-10). gcloud
-              # appends "This command is authenticated as <SA-email> using the credentials in
-              # /home/runner/.../gha-creds-<id>.json" to every error. The SA email is a registered
-              # secret, so Actions MASKS it — and a masked value makes Actions refuse the output
-              # entirely: `##[warning]Skip output 'build_error_detail' since it may contain secret`.
-              # The output then arrives EMPTY, which is exactly what the 2026-07-27 fix above was
-              # added to prevent. Observed live 2026-08-10 13:09Z (run 31391433509): the real error
-              # was a clean `NOT_FOUND`, but the CRITICAL Slack alert rendered "Actual error: ``"
-              # and its own triage instructions ("If that says NOT_FOUND ... any OTHER error ...")
-              # were unusable, so the alert could not distinguish a deleted trigger from a broken
-              # invocation — the precise ambiguity it exists to resolve.
-              # Keep only the gcloud diagnostic itself: drop the preamble, and prefer the bare
-              # status code when one is present so the message stays short and secret-free.
-              # SECURITY — defence in depth, in this order:
-              #   1. Actions' own masking still runs AFTER everything below. This code cannot
-              #      "unmask" anything: if a secret survives the scrub, Actions still refuses the
-              #      output and the fallback fires. Stripping only decides whether the NON-secret
-              #      part reaches Slack; it can never widen what a secret-bearing string exposes.
-              #   2. The preamble strip is a DENYLIST keyed on gcloud's current wording, so a
-              #      future gcloud release that re-words or re-orders that sentence would slip
-              #      through it. The scrub below therefore redacts the two things that are
-              #      sensitive REGARDLESS of surrounding wording — the service-account identity and
-              #      the on-disk credential path — so a wording change degrades to a redacted
-              #      message rather than a leaked one.
-              # This message is posted to a Slack channel, so "fails closed to redacted" is the
-              # only acceptable failure mode.
-              ERR_RAW="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null || echo "")"
-              ERR_DETAIL="$(printf '%s' "$ERR_RAW" \
-                | sed -E 's/[[:space:]]*This command is authenticated as.*$//' \
-                | sed -E 's#[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}#<redacted-account>#g' \
-                | sed -E 's#(/[^[:space:],]*(gha-creds|credentials)[^[:space:],]*)#<redacted-credential-path>#g' \
-                | sed -E 's#/[^[:space:],]*\.json#<redacted-path>#g' \
-                | cut -c1-300)"
-              # Fall back to the status code alone if stripping left nothing usable.
-              if [ -z "${ERR_DETAIL// /}" ]; then
-                ERR_DETAIL="$(printf '%s' "$ERR_RAW" | grep -oE '(NOT_FOUND|INVALID_ARGUMENT|PERMISSION_DENIED|FAILED_PRECONDITION|RESOURCE_EXHAUSTED|UNAVAILABLE)' | head -1)"
-                [ -z "$ERR_DETAIL" ] && ERR_DETAIL="(gcloud error text was fully redacted — see the route-build step log)"
-              fi
+              ERR_DETAIL="$(tr '\n' ' ' < /tmp/build_trigger_err.txt 2>/dev/null | cut -c1-300 || echo "")"
               echo "build_error_detail=${ERR_DETAIL}" >> "$GITHUB_OUTPUT"
             fi
             exit 0

@@ -48,20 +48,6 @@ source:
   ]
 ---
 
-> **🔴 2026-08-10 OPERATOR RULING — the KAIKO half of this ask is CLOSED. Do NOT provision `kaiko-api-key`.** Kaiko is a
-> removed provider workspace-wide, not just in DeFi execution. This ask was written in good faith: CLAUDE.md's
-> removed-providers list sits under its "Working on DeFi EXECUTION?" conditional bullet, so it did not obviously bind an
-> MTDS on-chain-**analytics** adapter. The operator ruled on 2026-08-10 that the ban is fleet-wide. The scaffolded
-> `kaiko.py` adapter, its test, its `PLANNED_VENUES` entry and its UAC `SourceCapability` are all being deleted under
-> `/plans/active/kaiko_provider_removal_2026_08_10.md` (no shim — CLAUDE.md's delete-deprecated-code rule), and the
-> CLAUDE.md wording is being fixed there so the ambiguity cannot recur.
->
-> **The GLASSNODE half of this ask remains OPEN and live** — Glassnode is not a removed provider, `glassnode-api-key` is
-> still unprovisioned in Secret Manager, and per `/codex/02-data/external-data-always-available-rule.md` exhausting the
-> free path is a credential ask, not a descope. This doc is formally rescoped to Glassnode-only by
-> `/plans/active/kaiko_provider_removal_2026_08_10_finalize.md` todo 3; until that lands, read every Kaiko statement
-> below as historical record, not as an open request.
-
 # Glassnode + Kaiko on-chain analytics credential ask
 
 ## What I found

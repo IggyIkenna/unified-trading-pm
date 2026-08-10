@@ -111,14 +111,14 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
       when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
       sampler survives an orchestrator restart.
-- [x] ✅ [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves
-      to the account that owned its slot at that timestamp.** — agent-orchestrator@5516a0a. Current attribution has no
-      correct path: `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and
-      orphans every earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723
-      resolvable turns, ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow`
-      (`account_id`, `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own
-      timestamp. **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the
-      correct account, and the resolver returns the same account for two sessions of one agent split by a compaction.
+- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
+      the account that owned its slot at that timestamp.** Current attribution has no correct path:
+      `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
+      earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
+      ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
+      `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
+      **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
+      and the resolver returns the same account for two sessions of one agent split by a compaction.
 - [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
