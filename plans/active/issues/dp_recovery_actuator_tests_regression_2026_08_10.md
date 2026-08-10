@@ -99,21 +99,13 @@ contract, per the incident referenced by the tests).
 
 ## Todos
 
-- [x] ✅ [BACKEND] P1. Fix deployment-service QG red: 11 `test_dp_recovery_actuators.py` failures (PAGE vs SUCCEEDED on
+- [ ] [BACKEND] P1. Fix deployment-service QG red: 11 `test_dp_recovery_actuators.py` failures (PAGE vs SUCCEEDED on
       preemption-relaunch pin resolution), pre-existing since peer dp-monitors commits `49cb5de6`/`2f077c97` landed
       after green sentinel `8a033d44`. Bisect `8a033d44..1717d294`, restore QG green (fix the actuator code or the test
-      expectations, whichever is the regression). Repo: deployment-service. — deployment-service@c472a818 (already on
-      LDR)
+      expectations, whichever is the regression). Repo: deployment-service.
 
 ## Progress Log
 
 - **2026-08-10** — Filed (slot-17 worker, deployment_bucket_resolution_gaps todo 1). Discovered during Pass-1 QG while
   shipping the .sh bucket migration; verified pre-existing via structural proof (actuator never reads .sh content; tests
   mock run_launcher; test file predates green sentinel; peer dp-monitors commits landed in the red window).
-- **2026-08-10 (slot-31, closed)** — Already fixed on LDR. Root cause: `49cb5de6` added GCS-backed budget store
-  (`_probe_gcs_budget_client`) to `relaunch_backfill_vm.py`; tests needed the `_force_disk_budget_path` fixture to force
-  the disk fallback path. Fix `c472a818` ("force disk-path budget in dp_recovery actuator tests") is already on LDR
-  HEAD. All 59 tests pass (verified), full QG green (exit 0). No code changes needed from this dispatch.
-
-- [ ] [INFRA] P3. **Archive this resolved issue doc** — all work already on LDR, doc is terminal (repo:
-      unified-trading-pm)
