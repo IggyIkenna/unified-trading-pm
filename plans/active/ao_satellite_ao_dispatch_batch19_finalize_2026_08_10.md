@@ -83,12 +83,19 @@ source: >-
       independent finalize re-verification (flip `unified-trading-pm@d875b73ed3` on origin; four-dimension measured data
       confirmed). Note: `[BACKEND] P2` (ao_dispatch doc) + `[OPERATOR] P2`/`[REVIEW] P3` (citadel doc) intentionally
       left open (design question / operator decision / live-task status respectively).
-- [ ] [REVIEW] P1. **Archive either source doc ONLY if it is genuinely at zero open todos** —
-      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` still has todo 2 (the authoring-convention
-      design question) open by design, so it will NOT reach zero here;
-      `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` still has todos 2/3 (operator unpark
-      decision + post-unpark verify) open by design — neither should archive from this finalize alone unless something
-      else independently closed their other todos in the interim (check first).
+- [x] ✅ [REVIEW] P1. **VERIFIED 2026-08-10 (slot 22, review) — neither source doc archives; both still carry
+      open-by-design todos.** Checked both live (`rg -c "^- \[ \]"` on each active doc): (1)
+      `ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` has **1 open todo** — `[BACKEND] P2`
+      (authoring-convention design question re `task_template.md`, line 81), intentionally open per the doc's own
+      RULED/CLOSED annotations; (2) `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` has **2
+      open todos** — `[OPERATOR]     P2` (unpark decision, line 100) + `[REVIEW] P3` (post-unpark independent verify,
+      line 113). Both docs `status:     open`, unlocked. **Verdict**: neither is at zero open todos → **no archival from
+      this finalize**; each stays open for its operator-gated / design-question work to resolve independently. (Archive
+      remains possible later once those resolve; nothing else has independently closed them in the interim.) —
+      `ao_dispatch_...` still has todo 2 (the authoring-convention design question) open by design, so it will NOT reach
+      zero here; `citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` still has todos 2/3
+      (operator unpark decision + post-unpark verify) open by design — neither should archive from this finalize alone
+      unless something else independently closed their other todos in the interim (check first).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch19_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
@@ -126,3 +133,9 @@ source: >-
   (placeholder `@<sha>` replaced with `@d875b73ed3`). Left open by design: `[BACKEND] P2` (ao_dispatch, template
   convention design question), `[OPERATOR] P2` + `[REVIEW] P3` (citadel, operator decision + live-task verify — the
   `citadel_satellite_ao_dispatch_batch1-004` task itself is currently dispatched to slot 30).
+- **2026-08-10 (slot 22, review, task `ao_satellite_ao_dispatch_batch19_finalize-3311ef75ca46`)** — executed finalize
+  todo 3: archive-checked both source docs live (`rg -c "^- \[ \]"` on each). **Neither archives** — both still carry
+  open-by-design todos: ao_dispatch doc has 1 open (`[BACKEND] P2` template-convention design question), citadel doc has
+  2 open (`[OPERATOR] P2` unpark decision + `[REVIEW] P3` post-unpark verify). Both `status: open`, unlocked. No
+  independent interim closure. Verdict recorded on the checkbox; both docs remain open for their operator-gated /
+  design-question work.
