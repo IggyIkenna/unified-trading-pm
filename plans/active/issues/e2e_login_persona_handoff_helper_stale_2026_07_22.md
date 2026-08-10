@@ -209,3 +209,12 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   finalize plan (`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`, REVIEW role) independently
   re-verifies this signature before any archival decision. Todo 3 closed with the blocker outcome recorded; the dart_ui
   item gets NO retroactive `pw:L2 ✓`.
+- **reconciled 2026-08-10 (slot-22, review craft — finalize
+  `e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md` todo 2): source-doc todo evidence confirmed
+  fully recorded.** Todo 4's `BLOCKED-ON:...Firebase-creds...` flip already carries the slot-6 clean re-run evidence (2
+  failed / 1 passed, NO `pw:L2 ✓`, documented blocker signature — full detail inline on the todo). No edit needed to the
+  todo itself. The retroactive-`pw:L2` resolution has been reconciled onto
+  `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s item 3: **NO
+  `pw:L2 ✓` is recordable** — three independent re-runs + this finalize's re-verification all confirm the documented
+  blocker; the fix owner remains
+  `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.

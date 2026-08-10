@@ -82,9 +82,16 @@ source: >-
       `FIREBASE_ADMIN_CREDENTIAL`/emulator; the `?persona=` fast-path fix (`15e4b4bc`) is landed. Matches the documented
       class confirmed across slots 20/6/4. No `pw:L2 ✓` recorded;
       `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` remains the fix owner.
-- [ ] [DOC] P1. **Reconcile evidence into both targets** — the source doc's own todo (if not already fully evidenced),
-      and `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s item this
-      todo was always meant to retroactively close (per the source doc's own todo text).
+- [x] ✅ [DOC] P1. **Reconcile evidence into both targets** — the source doc's own todo (if not already fully
+      evidenced), and `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s
+      item this todo was always meant to retroactively close (per the source doc's own todo text). — **Reconciled
+      2026-08-10 (slot-22, review craft).** Target 1: the source doc's own todo (item 4,
+      `BLOCKED-ON:...Firebase-creds...`) is already fully evidenced — the slot-6 clean re-run (2 failed / 1 passed, NO
+      `pw:L2 ✓`, blocker signature) is recorded inline; verified, no edit needed. Target 2: appended the
+      retroactive-`pw:L2` resolution onto the dart archive doc's item 3 (`unified-trading-system-ui@bf38c435`): **NO
+      `pw:L2 ✓` is recordable** — three independent re-runs (slots 20/6/4) + this finalize's slot-31 re-verification all
+      confirm the documented Firebase-Admin-creds/dev-server-instability class; fix owner remains
+      `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.
 - [ ] [REVIEW] P1. **Archive only if the spec genuinely passed clean.** If it hit the documented
       Firebase-Admin-creds/dev-server blocker instead, leave the source doc `status: open` with the finding recorded —
       do NOT archive on a blocked outcome, and do NOT attempt the Firebase-creds fix here (that is
@@ -110,3 +117,10 @@ source: >-
   evidence. **Archival decision (todo 3): NOT eligible — do NOT archive the source doc.** The spec did not pass clean;
   the documented blocker is confirmed. Source doc stays `status: open`; the Firebase-creds fix remains
   `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s scope, not this plan's.
+- **2026-08-10 (slot-22, review craft) — Todo 2 DONE: evidence reconciled into both targets.** Target 1 (the source
+  doc's own todo, item 4) confirmed already fully evidenced (slot-6 clean re-run recorded inline; no edit needed).
+  Target 2 (the dart archive doc's item 3) got the retroactive-`pw:L2` resolution appended: **NO `pw:L2 ✓` is
+  recordable** — three independent re-runs (slots 20/6/4) + slot-31's re-verification all confirm the documented
+  Firebase-Admin-creds/dev-server-instability class; fix owner remains
+  `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`. Todo
+  3 (archival decision) remains open as its own sequential task.

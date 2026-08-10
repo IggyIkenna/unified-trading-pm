@@ -200,6 +200,15 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
   branch, repair the shared login helper, then retroactively re-run this spec) rather than block this ticket on an
   unrelated, pre-existing E2E-infra break outside its scope. `pw:L2` evidence is deferred to that issue doc's item 3.
 
+  **Retroactive-`pw:L2` reconciliation (2026-08-10,
+  `e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md` todo 2): NO `pw:L2 ✓` is recordable for
+  this item.** The source doc's deferred re-run (its item 3) was resolved 2026-08-10 with the blocker outcome, not a
+  clean pass — three independent re-runs (slots 20/6/4, documented on the source doc's todo) + the finalize plan's own
+  slot-31 re-verification all hit the documented Firebase-Admin-creds/dev-server-instability class (2 failed / 1 passed:
+  `waitForURL("**/dashboard**")` first-navigation compile-latency timeout + `/api/v1/*` Firebase-Admin-creds 500 on the
+  LOCKED status-update). This item stands without `pw:L2 ✓`; the fix owner is
+  `/plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`.
+
 - [x] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
       2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
       conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See
