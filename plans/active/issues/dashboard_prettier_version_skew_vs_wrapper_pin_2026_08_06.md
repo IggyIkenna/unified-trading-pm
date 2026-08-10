@@ -115,3 +115,9 @@ and the gate passed, so nothing was blocked.
   design/policy call ("a gap or a deliberate choice... currently neither documented nor obvious"), so the whole-doc bar
   for RECLASSIFY is not met.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of both open
+  items. Item 1 (bump agent-orchestrator dashboard's prettier pin) is already extracted to
+  `ao_satellite_ao_dispatch_batch10_2026_08_09.md` (todo 6). Item 2 ('decide whether the dashboard should gate on
+  formatting at all') is a genuine, undecided design/policy call per the doc's own text and the round7/08-08 marker's
+  reasoning — agrees, no new facts found.

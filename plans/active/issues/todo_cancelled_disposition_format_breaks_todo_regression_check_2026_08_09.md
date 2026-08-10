@@ -149,3 +149,9 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   hygiene sweep item," zero judgment). The 3rd item (Finding-J archival-extraction trigger) stays KEEP-NA, valid — this
   doc's own text self-flags it as needing "design judgment on the cross-file correlation logic, not a mechanical
   one-liner." Whole-doc RECLASSIFY bar not cleared.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read. Of 3 original
+  items, 2 are already extracted to `ao_satellite_ao_dispatch_batch15_2026_08_09.md` (todos 2, 3). The 1 remaining item
+  (Finding-J archival-extraction cross-file conservation fix for `check_todo_regression.sh`) is self-flagged in its own
+  text as needing 'design judgment on the cross-file correlation logic, not a mechanical one-liner' — genuinely not
+  bounded. Agrees with round9's assessment.

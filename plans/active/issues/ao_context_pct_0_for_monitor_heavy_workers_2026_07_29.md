@@ -149,3 +149,9 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
   splitting into a gated pair would still leave an undetermined-outcome todo in Plan A. Stays whole-doc NA. Other
   round7-10 precedents (credentials, delete-safety, IAM) do not apply. Corroborated same-day: `/ag-closeout-audit ao`
   batch12 lists this doc operator-gated (22), "also human/upstream-CLI-gated."
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of all 3 open
+  items. `[UI] P2` depends on `[DATA] P3`'s unresolved 'prefer (b) if it proves reliable enough' open reliability
+  question (not a resolved preference); `[BACKEND] P3` stays blocked on an upstream Claude Code CLI change. round11
+  (2026-08-09) already specifically considered and rejected the gated-pair-split pattern for this doc since the DATA
+  prerequisite isn't itself resolved. No new facts found this pass.
