@@ -233,3 +233,12 @@ Fixed both sites (`manifest_finalize.py`, `sentinels.py`), added 2 regression un
 2026-08-02 sample is deferred to todo 2 (already scoped for exactly this, and requires the fix to reach the deployed
 MTDS image + a fresh capture/consolidation cycle before any NEW rows reflect it — old rows keep their pre-fix
 `underlying=fixture_id` values).
+
+**2026-08-10 (slot 31, data_engineering)** — Picked up todo 2 (P2, re-run reachable_coverage for 07-27..08-06 gap). Fix
+cf855ff0 confirmed on LDR. Found MTDS Cloud Build predated the fix (b5c79987 at 19:56 UTC vs commit at 22:45 UTC) —
+triggered new build 20f30012 (SUCCESS). Fixed a blocking cloudbuild.yaml defect (`_PKG_NAME` unused substitution,
+introduced by 841cf94f) — shipped market-tick-data-service@21346114 via quickmerge. The launch script auto-detected the
+stale MTDS tarball and republished it at SHA 213461147eb7 (includes both cf855ff0 fix AND the cloudbuild fix). Launched
+targeted backfill VM `mtds-backfill-odds-gap-20260727-20260806` (SPOT, asia-northeast1-c, 07-27..08-06, 5-day chunks)
+with the fixed MTDS code. Armed persistent Monitor on run.log. Awaiting backfill completion before computing corrected
+coverage table.
