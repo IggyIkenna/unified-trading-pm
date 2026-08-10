@@ -169,9 +169,18 @@ collapsing them into one number the way the archived doc did.
       row (co-location `no` / min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves. Same
       commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md` → leading-slash
       path) flagged by plan-hygiene.
-- [ ] [DOC] P3. **Populate `vol-trading.md`, `event-driven.md`, `portfolio.md`** with the same section — derive category
-      from the archived doc's closest analog per the rubric table above; state the derivation reasoning inline in each
-      doc so a future reader can see it wasn't a guess.
+- [x] ✅ [DOC] P3. **Populate `vol-trading.md`, `event-driven.md`, `portfolio.md`** with the same section — derive
+      category from the archived doc's closest analog per the rubric table above; state the derivation reasoning inline
+      in each doc so a future reader can see it wasn't a guess. **Done**: `unified-trading-pm@1fced39e8f` — formal
+      `## Latency Requirements` sections added to all three family docs. vol-trading → `Medium` (archived Volatility Arb
+      row confirmed as baseline: <10 s / <5 s / venue-dep. / <15 s E2E; intra-family fast subset `VOL_MARKET_MAKING` +
+      `VOL_0DTE_GAMMA_SCALPING` flagged as the delta-hedge/inter-leg ms-realm edge for the derivation todo).
+      event-driven → `Medium` (Momentum closest analog; pre-positioned + time-bounded content confirms seconds-scale
+      decision, fast-urgency execution). portfolio → `High` (doc's own `latency_budget_ms` = 60 000 / 10 000 content
+      decisive; archived Yield Optimization analog). All three carry the segment-budget table, the
+      Medium/High→`distributed` deployment implication, and the `### Decision latency vs. inter-leg execution gap`
+      subsection. Same commit fixed 2 pre-existing bare-filename `related:` frontmatter refs (`market-making.md` /
+      `ml-directional.md` → leading-slash paths) flagged by plan-hygiene.
 - [ ] [DATA] P2. **Derive each archetype's required `deployment_profile`** (`co_located_vm` vs `distributed`) from the
       now-populated latency categories per the Low→co_located_vm / Medium+High→distributed rubric above. Record this as
       a table in a new section of `runtime-topology.yaml`'s SSOT decisions doc
@@ -256,3 +265,16 @@ collapsing them into one number the way the archived doc did.
   `STAT_ARB_PAIRS` § 6 topology_requirements row (`no` co-location / min SLA `standard`) as a discrepancy the
   deployment-profile derivation todo resolves. Same commit fixed a pre-existing bare-filename `related:` frontmatter
   reference (`ml-directional.md` → leading-slash path) flagged by plan-hygiene.
+- **quant_dev (slot 11) 2026-08-10T17:05Z**: Todo 7 done. Populated the final three family docs
+  (`unified-trading-pm@1fced39e8f`): vol-trading / event-driven → `Medium`, portfolio → `High`, each with the derived
+  category reasoning stated inline (not a guess) per the audit rubric, the segment-budget table, the
+  Medium/High→`distributed` deployment implication, and the `### Decision latency vs. inter-leg execution gap`
+  subsection. vol-trading: archived Volatility Arb row (<10 s / <5 s / venue-dep. / <15 s E2E) confirmed as baseline;
+  intra-family fast subset (`VOL_MARKET_MAKING`, `VOL_0DTE_GAMMA_SCALPING`) + the delta-hedge inter-leg gap flagged as
+  the ms-realm edge for the derivation todo. event-driven: Momentum closest analog; pre-positioned entry + time-bounded
+  minutes window confirms seconds-scale decision, fast-urgency execution policy during the window. portfolio: the doc's
+  own `latency_budget_ms` = 60 000 / 10 000 (Alpha thesis) is decisive → `High`, archived Yield Optimization analog
+  confirms. Deployment implications note current § 6 `topology_requirements` state: `VOL_TRADING` row already consistent
+  with `distributed` (no discrepancy, unlike the Low families); no `EVENT_DRIVEN` / `PORTFOLIO` row exists yet —
+  derivation todo should add them at `distributed`-consistent settings. Same commit fixed 2 pre-existing bare-filename
+  `related:` frontmatter refs (`market-making.md` / `ml-directional.md` → leading-slash paths) flagged by plan-hygiene.
