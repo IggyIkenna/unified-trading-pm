@@ -179,7 +179,13 @@ parent issue doc's Progress Log for the exact VM names / evidence.
   gone) via `gcloud compute instances describe <name> --zone=asia-northeast1-c` (gone = terminal) +
   `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` result line
   (`SportsEnsembleTrainingRunner(<model_id>) complete: train=N val=N test=N rows, K features, test_metrics=...` /
-  `no data available, run aborted`) before assuming a re-launch is needed.
+  `no data available, run aborted`) before assuming a re-launch is needed. **Load-phase progress signal (measurement
+  trap)**: the runner's per-date `Sports GCS: <date> — loaded N fixtures` INFO lines are emitted only in a POST-collect
+  merge pass (`sports_feature_loader.py:535`, after the whole season's `_collect_sports_frames_by_date` scan) — so ZERO
+  `Sports GCS:` lines in run.log is NOT a stall. Live progress proxy = the repeating `sports_feature_loader.py:204`
+  pandas `FutureWarning` concat blocks (~1 per league-split date×group; most dates are silent single-frame reads);
+  liveness = PIPELINE_HEARTBEAT freshness + growing log line-count. At 10:23Z all 5 VMs were ~55min in, mid-train-season
+  scan.
 
 ## Deferred work after 2026-08-10
 
