@@ -38,6 +38,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true # bridge field, flip-only commit ahead of the immediately-following git mv (RULED 2026-08-09, see plan-completion-and-archival-discipline.md); dropped in the mv commit
 context_scope:
   [
     /plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md,
@@ -217,10 +218,23 @@ evidence. Summary of what each site currently uses:
       2026-07-25 resolution, and the final residual (`ml-service@10e219f`, 2026-07-26) closed a narrow 4-file gap the
       orphaned doc's own resolved commits never touched (mock-data/target-generator/test fixtures, not the live consumer
       path). No live pipeline is known to have hit the old 4-way mismatch. Nothing left to cross-reference.
-- [ ] [REVIEW] P3. Archive this doc once `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (the
-      extracted FSS↔ml-service↔strategy-service naming-parity test) lands — full 6-step archival ritual (status flip,
-      banner, `git mv`, referrer sweep), not before (per the 2026-08-09 round-9 sweep's own note: the extraction is
-      still in flight, archiving now would be premature).
+- [x] ✅ [REVIEW] P3. Archive this doc once `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2
+      (the extracted FSS↔ml-service↔strategy-service naming-parity test) lands — full 6-step archival ritual (status
+      flip, banner, `git mv`, referrer sweep), not before (per the 2026-08-09 round-9 sweep's own note: the extraction
+      is still in flight, archiving now would be premature). **DONE (na-eligibility-audit 2026-08-10)**: verified
+      `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 is `[x]` ✅ "ALREADY SHIPPED (round-11 sweep,
+      2026-08-09)" — the parity test landed even earlier via `features-service@36fb7b88` (2026-08-04), re-run fresh
+      2026-08-09 with 10/10 tests passing. Gate cleared. Ran the 6-step ritual: (1) the one deferred-prose item (Codex
+      SSOTs section below, "add a short SSOT note... once todo 1's decision lands") migrated to a real artifact —
+      `/codex/02-data/sports-odds-feature-naming-ssot.md`; (2) archived banner + `status: resolved` added above; (3)
+      codex-alignment check — the new SSOT doc above is the only contract this plan's completion establishes; (4) no
+      CLAUDE.md change warranted (narrow single-repo-family convention, not a cross-cutting HARD RULE); (5) every
+      active-corpus referrer's path fixed to the archive location (`plans/epics/sports_master.md`'s `related_plans:` +
+      per-plan detail block, `sports_consolidated_closeout_2026_07_19.md`,
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
+      `sports_satellite_ao_dispatch_batch{6,9,10,11}`-family docs, `prediction_consolidated_closeout_2026_07_18.md`;
+      `plans/active/INDEX.md` left untouched, auto-generated, self-corrects on next regen); (6) `git mv` to
+      `plans/archive/2026_08/` as a separate follow-up commit per the checkbox-flip/git-mv split rule. No `locked_by`.
 
 ## Codex SSOTs
 
