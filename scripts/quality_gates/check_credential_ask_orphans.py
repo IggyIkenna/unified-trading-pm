@@ -15,6 +15,15 @@ This check walks `plans/active/*.md`, finds every `BLOCKED-CREDENTIALS` line,
 and reports any without a recognisable ping-reference token in ±5 lines of
 context.
 
+Taxonomy (SSOT: /codex/02-data/external-data-always-available-rule.md):
+  BLOCKED-CREDENTIALS  — vendor API key/secret needed; MUST cite operator ask evidence
+  BLOCKED-PERMISSIONS  — GCP IAM role/permission gap (self-describing: names exact missing
+                          role + exact remedy command, no secret needed; self-service per
+                          RULES.md §5). NOT subject to this orphan check — these are
+                          self-describing and don't need credential-ask citations.
+  BLOCKED-OPERATOR-DECISION — design call needed; waits on operator pick
+  BLOCKED-UPSTREAM-OUTAGE — third-party degraded; auto-resumes on health check
+
 Baseline-ratchet semantics (matching codex_doc_freshness + plan_discipline):
   --baseline-write writes current orphan count to
     `scripts/quality_gates/credential_ask_orphans_baseline.yaml`.
