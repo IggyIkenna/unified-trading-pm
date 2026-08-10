@@ -154,3 +154,55 @@ on this audit plan's completion). The execution plan's todos wire these derivati
 `isolation_policies.strategy-service` per-archetype section + `client-isolation-sla-and-runtime-profiles.md` §6 +
 strategy-service's archetype registry. No further architectural judgment should be required — the execution plan
 implements against this table, not re-derives it.
+
+## 2026-08-10 — SLA-tier latency budget vs Low-archetype requirements check (audit todo 8)
+
+**Check**: does `isolation_policies.strategy-service`'s existing SLA-tier framework already account for `Low`-category
+archetypes needing more than the `premium` tier's 40ms `latency_budget_ms` provides? **Verdict: NO — the premium tier's
+40ms does not cover any `Low` family's real requirement, and the framework has no mechanism that would detect or enforce
+the mismatch.** This is the real SLA-tier-vs-archetype-requirement gap the audit asked to surface.
+
+Per-family comparison (requirement from the populated `families/*.md` `## Latency Requirements` sections vs premium
+`latency_budget_ms: 40`):
+
+| Family                | Category | Real requirement (E2E)                                                                    | vs premium 40ms                                                                                            |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| market-making         | `Low`    | <100ms (tick<50ms + signal<50ms + venue-dep. fill)                                        | **EXCEEDS 40ms** — even the audit brief's own "MM <100ms fits inside 40ms" example does not fit (100 > 40) |
+| arbitrage-structural  | `Low`    | <200ms (stat-arb) / <300ms (cross-exchange) / <2s (sports)                                | **EXCEEDS 40ms**                                                                                           |
+| carry-and-yield basis | `Low`    | inter-leg execution gap ms-realm (<500ms operating, <100ms achievable); decision E2E <40s | **EXCEEDS 40ms** (binding constraint is the inter-leg gap, not a total-E2E number)                         |
+| ml-directional        | `Low`    | <200ms / <200ms / <1s                                                                     | **EXCEEDS 40ms**                                                                                           |
+| rules-directional     | `Low`    | <200ms / <200ms / <1s                                                                     | **EXCEEDS 40ms**                                                                                           |
+| stat-arb-pairs        | `Low`    | <200ms / <300ms                                                                           | **EXCEEDS 40ms**                                                                                           |
+| vol-trading           | Medium   | <15s                                                                                      | within (requirement looser than premium)                                                                   |
+| event-driven          | Medium   | <7s                                                                                       | within                                                                                                     |
+| portfolio             | High     | <60s                                                                                      | within                                                                                                     |
+
+Three consequences make this a genuine framework gap, not just a number mismatch:
+
+1. **The 40ms total-E2E promise is physically unachievable for live venue trades.** The family docs themselves mark
+   order-to-fill as venue-dependent and NOT controllable, with CeFi matching-engine floors of 20–70ms (Binance 20–50ms
+   order submit / 10–30ms fill; Deribit 15–40ms / 10–25ms; Hyperliquid 20–60ms). Total E2E = tick-to-signal +
+   signal-to-order + order-to-fill; with order-to-fill alone at 20–50ms+, premium's 40ms budget is breached before the
+   decision segments are counted, on every venue trade.
+
+2. **The 40ms metric does not address the binding constraint for the multi-leg Low families — the inter-leg execution
+   gap.** The budget is defined as "end-to-end order latency target (for routing decisions)"; the ms-realm lead-leg→
+   hedge-leg gap that drives basis/ML/rules/stat-arb toward `co_located_vm` is bounded by co-location (in-memory
+   transport between exec+strategy), which no `sla_tiers.*.latency_budget_ms` number expresses.
+
+3. **Runtime enforcement does not cross-check the budget.** `strategy-service/strategy_service/topology_enforcement.py`
+   `enforce_topology_requirements()` verifies isolation, co-location, and `min_sla_tier` rank against the archetype
+   doc's `topology_requirements` frontmatter — but the archetype's declared `latency_budget_ms` is parsed and logged
+   only, never compared to the active SLA tier's `latency_budget_ms`. A premium client running a Low archetype whose
+   requirement exceeds 40ms would never be flagged.
+
+Related finding for the execution plan (audit todo 10 / the paired execution plan): the runtime-enforced archetype
+frontmatter (`archetypes/*.md` `topology_requirements`) is STALE vs the newly-populated family docs for exactly the
+operator-corrected Low families — `CARRY_BASIS_PERP` (150ms / `standard`, no co-location),
+`RULES_DIRECTIONAL_CONTINUOUS` (500ms / `basic`), `ML_DIRECTIONAL_CONTINUOUS` (150ms / `standard`),
+`STAT_ARB_PAIRS_FIXED` (150ms / `standard`), `ARBITRAGE_PRICE_DISPERSION` (150ms / `standard`) — so the runtime gate
+currently PERMITS these on the wrong (looser) tier without co-location, directly contradicting the
+Low→`co_located_vm`→premium derivation. Only the MM family's archetype docs (10/20/30/40ms, `premium`, co-located) match
+the derivation. Additionally, 5 archetype docs declare `min_sla_tier` values outside the UAC `SLATier` enum (`high` ×4
+arbitrage-mev-*, `ultra-premium` ×1 market-making-queue-microstructure) — `load_topology_requirements()` casts
+`SLATier(str(...))`, which raises for these, so any of those archetypes would fail to boot under enforcement.
