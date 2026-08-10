@@ -10,7 +10,12 @@ summary: >-
   gap scoping query) — pool too thin to justify a new batch13 doc (precedent: 08-07/08-08's Option A for equally-thin
   pools), flagged as a batch13 candidate for a future round. 2 docs flagged as likely mistagged into defi from an
   unrelated AO-dispatch-mechanism incident (other tranche's write remit, informational only). 2 carried-forward
-  informational findings (other-tranche remit) re-verified still open. 7 findings total.
+  informational findings (other-tranche remit) re-verified still open. 7 findings total. **Third run same day (slot 20,
+  agt-af667b, iterative-drain follow-up ~4h later)**: 93 members (was 91), 1 genuinely new candidate classified (Finding
+  8, exclude_cross_cutting) + 1 material live-state update (Finding 9: the R3 rebuild VM tracked by Finding
+  5/defi_track01 failed a 2nd time, resource-exhaustion pattern, no 3rd relaunch attempted; consolidator lock separately
+  confirmed self-healed, not a second stuck-lock problem). Batch13 decision unchanged (still 1-item pool). 9 findings
+  total across all 3 runs today.
 status: open
 nature: issue
 asset_group: [defi]
@@ -32,6 +37,7 @@ related:
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
+    /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
   ]
 created: 2026-08-10
 parent_epic: defi_master
@@ -39,7 +45,8 @@ assigned_vm: NA
 priority: P3
 last_updated: 2026-08-10
 source: >-
-  ag_closeout_auditor scheduled run 2026-08-10 (tranche=defi, slot 14, DISPATCH_ID=agt-f508ad)
+  ag_closeout_auditor scheduled run 2026-08-10 (tranche=defi, slot 14, DISPATCH_ID=agt-f508ad); iterative-drain
+  follow-up same day (tranche=defi, slot 20, DISPATCH_ID=agt-af667b)
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
@@ -246,3 +253,58 @@ to this doc. ✓
   `check_ag_closeout_linkage.py` baseline ratcheted 49→0 corpus-wide by that run (this doc's own 2 defi orphans included
   in that count at the time, both resolved by the same mechanism this doc already independently confirmed —
   operator-gated, not a coverage gap).
+
+## Third run, same day — iterative-drain follow-up (slot 20, DISPATCH_ID=agt-af667b)
+
+Re-ran Phase 0's candidate script fresh (~4h after the slot-14 run): 93 members (was 91), 17 never-cited (was 15).
+Diffed the two never-cited lists by name — 15 of 17 are the SAME docs already classified above (8 named
+orphaned/resolved + 7 unlabeled `exclude_cross_cutting`); the +2 delta is this doc's own filename (self-referential,
+expected, not a new orphan) and exactly ONE genuinely new candidate:
+
+## Finding 8 — `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` (exclude_cross_cutting)
+
+New today (created after the slot-14/26 runs). `asset_group: [cross-cutting, tradfi, sports, prediction, defi]`,
+`parent_epic: infrastructure_master` — genuinely spans 5 asset groups (a DP-LIVE-003 false-positive-burst root-cause doc
+covering VM-prefix-registry findings across multiple AGs' live producers), matching the legitimate
+multi-AG-plus-cross-cutting pattern, not the "one AG + cross-cutting" mistag shape. Per the primary-owner rule
+(`parent_epic: infrastructure_master`), its owning tranche is `infra`, not `defi` — defi classifies and reports only. 4
+open todos (2 `[OPERATOR]` cross-AG decisions, 2 `[SCRIPT]` infra/prediction-scoped verification steps); none is a
+bounded defi-only extractable item — the one defi-relevant line item (`defi-recursive-` VM absence) is bundled inside a
+shared multi-AG operator todo, not separable without duplicating/fragmenting that decision. `ao_eligible=false` for
+defi's purposes.
+
+## Finding 9 (informational) — R3 rebuild VM 2nd terminal failure + consolidator self-heal, documented at source
+
+Live re-check of Finding 1 item 2 / Finding 5's time-gates (iterative-drain step 1) surfaced a material update: the
+`canonical-migration-defi-rebuild-20260809-163511` successor VM (Finding 5's subject) has ALSO now reached a terminal
+state (2026-08-10T03:57:22Z) — a resource-exhaustion-pattern kill (`rc=137`, GCS connection-pool exhaustion symptoms,
+self-delete via `VM_SHUTDOWN_ON_COMPLETION`), NOT a SPOT preemption. Progress advanced to
+`last_completed_date= 2025-06-02` (from `2024-09-05`) but is still far short of the `2026-12-31` target. This is the
+prefix's 2nd terminal-non-completion in a row, matching the sibling `defi-per-instrument` prefix's 2026-08-06 OOM-pair
+failure signature that triggered `RB-INFRA-RELAUNCH`'s "same shape twice → stop, fix root cause" clause. Per that clause
+and this doc's own operator/main-escalation gate on relaunching R3, **no 3rd relaunch was attempted**. Separately
+confirmed the manifest consolidator's lock self-healed correctly (new legitimate cycle acquired the lock at `05:12:56Z`,
+not a second stuck-lock problem) — likely to clear Finding 1 item 2 / Finding 2 item 2's "consolidator catches up" gate
+within the hour, independent of the R3 relaunch question. **Full evidence + citations recorded at the owning doc**
+(`/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 item + Progress Log,
+`unified-trading-pm@353ecdac88` + `@503017d9bd`) per the primary-owner rule — not duplicated here in full. Findings 4
+and 6's items were NOT independently re-verified this pass (re-checked 4h ago in the slot-14 run; low-value to re-check
+twice in one day) — carried forward as-is, still presumed accurate.
+
+## Batch13 decision (reconfirmed)
+
+**Still no `defi_satellite_ao_dispatch_batch13` drafted.** Finding 8 added zero AO-eligible-and-defi-owned items to the
+pool (still 1 — Finding 1's HYPERLIQUID scoping query). No change to the prior decision.
+
+**Parked count reconciliation (this run)**: 2 findings (Finding 8 + Finding 9) = 2 entries written to this doc. ✓
+Cumulative doc total: 9 findings across 3 runs today.
+
+## Progress Log
+
+- **ag_closeout_auditor 2026-08-10** (tranche=defi, slot 20, DISPATCH_ID=agt-af667b): iterative-drain follow-up run, ~4h
+  after slot-14's primary run. Phase 0 re-run (candidate script + linkage-gate re-check, both clean/consistent) +
+  targeted re-verification of the prior report's time-gated items (not a full fresh 14-agent Phase-1 pass, since 15 of
+  17 candidates were unchanged from 4h ago — re-classifying identical content would have been pure waste). Classified
+  the 1 genuinely new candidate directly (Finding 8). Surfaced 1 material live-state update (Finding 9: R3 rebuild VM's
+  2nd terminal failure + consolidator self-heal), documented at the owning doc per the primary-owner rule rather than
+  duplicated here. Batch13 decision reconfirmed unchanged. 2 findings parked this run, ledger reconciled.
