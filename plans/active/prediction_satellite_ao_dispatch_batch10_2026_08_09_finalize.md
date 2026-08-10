@@ -60,9 +60,9 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `prediction_live_clob_depth_capture_2026_07_24.md`**: confirm its "DEFERRED-CROSS-DEP"
-      checkbox (`book_snapshot_5` batch row-proof) is flipped `[x]` with batch10 todo 1's commit/evidence citation.
-      Repo: unified-trading-pm. Done when: the checkbox is closed-by-citation, no orphaned "still looks open" gap.
+- [x] ✅ [REVIEW] P1. **Reconcile `prediction_live_clob_depth_capture_2026_07_24.md`**: confirmed "DEFERRED-CROSS-DEP"
+      checkbox flipped `[x]` — batch10 todo 1 SHIPPED (slot 22, 2026-08-10), live manifest rows >0 (4 dates, 648K rows),
+      mtds@82ba5399/0a6ad2de, batch VM launched, live=batch architecture. Repo: unified-trading-pm.
 - [ ] [REVIEW] P1. **Reconcile `prediction_capture_incident_remediation_2026_07_06.md`**: confirm Phase 6's second
       checkbox (historical Kalshi `OTHER`-bucket reclassify) is flipped `[x]` with batch10 todo 2's backup location +
       post-patch distribution-check evidence. Repo: unified-trading-pm. Done when: the checkbox is closed-by-citation
@@ -89,6 +89,11 @@ drift_direction: advance-code
 - 2026-08-09 (ag_closeout_auditor, slot 14, dispatch agt-465129): drafted alongside batch10, `status: active`, gated via
   `depends_on` + `gate_on_depends: true`. No work started — waiting on the operator to approve + flip batch10 to
   `active`, then on its dispatch + completion.
+
+- 2026-08-10 (slot 8, review, todo 1): Reconciled `prediction_live_clob_depth_capture_2026_07_24.md`'s
+  DEFERRED-CROSS-DEP checkbox — confirmed `[x] ✅` flipped (line 247) with batch10 todo 1's full evidence chain: live
+  manifest rows >0 (4 dates, 648K rows), shipped code fixes (mtds@82ba5399/0a6ad2de), batch VM launched, live=batch
+  architecture. Verdict: reconciled, no orphaned gap. Todo 1 flipped.
 
 ## Deferred work — migrated to:
 
