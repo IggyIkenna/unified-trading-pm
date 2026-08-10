@@ -703,16 +703,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
       no `[OPERATOR]` gate needed per that carve-out. Repo: market-tick-data-service.
 
       **STATUS 2026-08-10 (slot 2) — TOOLING GAP, not started.** The 4b-i merge script
-                                  (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
-                                  #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
-                                  walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
-                                  pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
-                                  content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
-                                  then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
-                                  re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
-                                  273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
-                                  build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
-                                  verification.
+                                      (`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`) is **explicitly shape
+                                      #3/#3b-only** ("shape #4 ... OUT OF SCOPE here" per its own docstring; it needs the sanctioned Tier-2 SPOT-VM single
+                                      walk). **A shape-#4 merge script must be built first** (mirror the 4b-i read-transform-write-per-cell + additive-only
+                                      pattern, consume `enumerate_shape4_prediction_trades_2026_08_04.py`'s corpus extent, add `--delete-legacy` after
+                                      content-verify Part 1/2 + a FRESH `gcs_bucket_soft_delete_retention_seconds()` ≥604800s gate per delete-safety §3a),
+                                      then run the merge+delete as a VM-scale operation (1,126,358 objects / 348 days — never the shared host). Also
+                                      re-verify 4b-i's own delete-pass state (the 2026-08-06 slot-4 entry recorded "delete pass has effectively never run —
+                                      273 legacy-present days remaining" for 4b-i's shapes) so the two delete passes don't double-cover. Next dispatch:
+                                      build the shape-#4 merge script (QG + quickmerge), launch the migration VM, verify 0-loss content check + post-delete
+                                      verification.
 
 - [ ] [DATA] P2. **Characterize the shape-#4 subset-divergent cells (canonical ⊂ shape #4)** — discovered 2026-08-10
       (slot 25, 4b-iii dry-run): ~10% of cells (9/85 on day 2025-03-14, e.g. `0x58b3...`, `market_type=range_bracket`)
@@ -938,3 +938,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   suite-ordering contamination — all 59 pass standalone; my e25dcfb3 touches only the bash launcher). **Resume**:
   confirm 201105 passes the retention check (IAM grant) + progresses (Monitor `b68cwqm0m`), then wait for many-hour
   completion; quickmerge deployment-service when its QG re-run is green.
+
+- **2026-08-10T20:22Z (slot 25, data_engineering, 4b-iii continuation)**: **MIGRATION CONFIRMED RUNNING — retention gate
+  PASSED (IAM fix verified).** 201105 (on-demand) local log `/tmp/vm-exec-5000.log`:
+  `20:19:40 INFO fresh soft-delete retention check: bucket=market-data-tick-pred-prd-central-element-323112 retention_seconds=604800`
+  (≥604800 ✓ — the `storage.buckets.get` grant to uts-prd-sa works), deployment `8db91324-bbcd-46ba-9b46-e3a1b8f93de0`
+  registered (PREDICTION, full) + DEPLOYMENT_STARTED, heartbeat daemon + 60s uploader loop live, ManifestReader
+  proceeding (consolidated blob >120s → per-VM shards fallback + consolidator-lock bounded wait, both by-design).
+  Migration now processes 2025-03-14..2026-04-14 in full mode (enrich + delete only content-verified cells, keep+flag
+  subset-divergent). **Next**: quickmerge deployment-service e25dcfb3 when its QG re-run is green (still queued); 4b-iii
+  flips only after this many-hour run completes (EXIT_STATUS + auto-shutdown → read run.log report, verify 0-loss +
+  post-delete counts).
