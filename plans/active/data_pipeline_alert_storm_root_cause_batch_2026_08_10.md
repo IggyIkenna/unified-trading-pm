@@ -99,6 +99,16 @@ last_updated: 2026-06-27
 > `scripts/recovery/ _durable_state.py` (998→895); awaiting a re-gate + a real sha. A checkbox goes `[x]` only when the
 > sha RESOLVES — see this session's own correction of a false `305d897a` claim in
 > `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`.
+>
+> **⚠️ CORRECTION (2026-08-10, data-pipeline-alerts reconciler slot-20): the "code complete" claim above is now FALSE —
+> the code is LOST, not awaiting a re-gate.** Verified 2026-08-10T23:44Z: `scripts/recovery/_durable_state.py` (and the
+> sibling extractions `_captured_reader.py`/`_classify.py`) exist on NO branch, NO stash, NO reflog entry in
+> `deployment-service`; `git log --all -- scripts/recovery/_durable_state.py` is empty and the working tree is clean.
+> The authored fix lived only in an uncommitted worktree that was lost (never committed before the session ended). The
+> live `tempfile.gettempdir()` budget bug is STILL PRESENT at `scripts/recovery/relaunch_backfill_vm.py:399-400` —
+> `_MAX_RELAUNCHES_PER_DAY=2` is still a no-op in production, and the `DP_VM_PREEMPTED_NO_RELAUNCH` storm this todo was
+> built to stop is STILL FIRING (724 messages in the 24h to 2026-08-10T23:34Z). This todo must be RE-AUTHORED from
+> scratch, not "picked up where the code left off".
 
 - [ ] [SCRIPT] P1. Durable, race-free relaunch state — replaced the `tempfile.gettempdir()` budget with
       one-object-per-fact GCS state in `deployment-scripts-<project>`; `DP_VM_PREEMPTED_NO_RELAUNCH` now pages at most
