@@ -181,15 +181,14 @@ stale-redelivery problem this doc is primarily about.
       redeploy happens; triggering that redeploy specifically to self-test one small feature is a
       fleet-wide-blast-radius action out of scope for a single P2 todo, so I did NOT do it. New follow-up todo below
       covers the live-HTTP leg once the normal deploy cycle has picked this up.
-- [ ] [INFRA] P3. Once `agent-orchestrator@af129dd` (the `slot_messages` ack primitive above) has reached the LIVE
-      deployed orchestrator via the normal promote/redeploy cycle (verify via `GET /api/slots/<test-slot>/messages` or
-      similar — a 404/422 on `POST /api/slots/<slot>/messages/<id>/ack` means it hasn't landed yet), do the live-HTTP
-      round-trip the original todo's done-when asked for: send a real message via `POST /api/slots/<N>/message`, confirm
-      it appears in a `message_ids`-carrying `/heartbeat` or `/progress` response, `POST .../ack` it, then confirm a
-      SUBSEQUENT fresh-session delivery (a real respawn, or a read-only query against `data/state/state.db` confirming
-      `answered_at` is set + would be excluded by `take_pending_messages`' filter) does not redeliver it. Repo:
-      agent-orchestrator (verification only, no code change expected unless something doesn't match the unit tests'
-      proof).
+- [x] ✅ [INFRA] P3. Once `agent-orchestrator@af129dd` (the `slot_messages` ack primitive above) has reached the LIVE
+      deployed orchestrator via the normal promote/redeploy cycle — VERIFIED 2026-08-10 (slot-13, infra craft).
+      `af129dd` confirmed live: `POST /api/slots/13/messages/99999/ack` returned HTTP 200 (not 404/422). Live-HTTP
+      round-trip: (a) `POST /api/slots/13/message` → `{"ok":true}`, (b) `/heartbeat` returned `message_ids: [6835]`
+      positionally aligned with `messages`, (c) `POST /api/slots/13/messages/6835/ack` → `{"acked":true}`, (d) post-ack
+      heartbeat: `messages: [], message_ids: []` — message gone, (e) read-only DB query: `answered_at IS NOT NULL` = 1
+      for id 6835, proving `take_pending_messages`' filter excludes it for all future sessions. No code changes needed
+      (verification-only task). Repo: agent-orchestrator.
 - [ ] [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
       against a slot that's mid-task when the message arrives (this doc's own first filing attempt was lost this way) —
       confirm whether the message is genuinely dropped in that case, or whether it should have queued and simply hasn't
