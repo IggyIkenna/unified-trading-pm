@@ -36,6 +36,8 @@ parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P3
+drift_direction: advance-code
+depends_on: []
 ---
 
 # SFI progressive-stats occasional JSON truncation
