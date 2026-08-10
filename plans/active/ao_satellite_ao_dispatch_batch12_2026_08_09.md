@@ -112,12 +112,23 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       finding warned a strict-alternation-only test would miss). Full `quality-gates.sh` green (3065 pytest + 262
       vitest + tsc + basedpyright + ruff, run twice — once pre-commit, once re-verified on the exact committed SHA per
       the sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`.
-- [ ] [UI] P2. **Write the missing Playwright regression spec (`pw:L2`, per
+- [x] ✅ [UI] P2. **Write the missing Playwright regression spec (`pw:L2`, per
       `/codex/06-coding-standards/ui-testing-layers.md`) for the already-shipped per-model pro/flash filter toggle in
       `agent-orchestrator/dashboard/src/TaskUsageWindows.tsx`** (the `_FILTER_OPTIONS` UI change from
       `agent-orchestrator@7d73ded`). **Done when**: the spec asserts the pro/flash filter actually narrows the rendered
       rows, is tagged `pw:L2`, and passes in CI. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:97`
-      (todo 4). Repo: agent-orchestrator.
+      (todo 4). Repo: agent-orchestrator. — `agent-orchestrator@26f8a49`. New
+      `dashboard/tests/e2e/task-usage-provider-filter.spec.ts` (5 tests) reuses the shared e2e fixture (every seeded
+      `TaskUsageRow` is `model=deepseek-v4-pro`) rather than mutating it — asserts "All providers" / "DeepSeek (all)" /
+      "DeepSeek · Pro" all sum the same 3 rows (17.0K lifetime input, 3 tasks), while "DeepSeek · Flash" and "Anthropic"
+      genuinely NARROW the rendered windows down to the known-zero row (never the panel's empty state, per
+      `window_task_usage_totals`'s always-5-windows contract — same pattern task-usage-role-group-filter.spec.ts's
+      "Conflict resolver" case already established), plus a switch-back-restores-the-sum test. `pw:L2 ✓`
+      (`npx playwright test --project=chromium tests/e2e/task-usage-provider-filter.spec.ts`, 5/5 passed; sibling
+      `task-usage-role-group-filter.spec.ts` re-run to confirm no regression, 5/5 passed). Full
+      `bash scripts/quality-gates.sh` green (3069 pytest + 262 vitest + tsc + basedpyright + ruff, run twice — once
+      pre-commit, once re-verified on the exact committed SHA per the sentinel-ordering rule), ancestry-verified on
+      `origin/live-defi-rollout`. regression: `dashboard/tests/e2e/task-usage-provider-filter.spec.ts`.
 - [x] ✅ [BACKEND] P2. **Build a structured `review_finding` activity-log event** (`task_id`, `severity`,
       `finding_text`, `agent_id`, `created_at`) emitted from the review role's existing finding-post path in
       agent-orchestrator, plus a query/report endpoint or script and a regression test proving emission + retrieval.
