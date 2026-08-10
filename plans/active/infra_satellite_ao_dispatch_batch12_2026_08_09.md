@@ -75,14 +75,50 @@ clearing the collision. Live re-measurement (2026-08-09): `142/177` `launch-*.sh
 
 ## Todos
 
-- [ ] [INFRA] P3. **Standardize the `managed-by=deployment-service` GCE label across all
+- [x] ✅ [INFRA] P3. **Standardize the `managed-by=deployment-service` GCE label across all
       `deployment-service/scripts/vm/launch-*.sh` launchers.** Live-measured 2026-08-09: 35 of 177 launchers omit the
       label (`grep -L 'managed-by=' scripts/vm/launch-*.sh` lists the exact set). Add the label to each missing
       launcher's `--labels=` gcloud invocation, following the existing `purpose=...,...,managed-by=deployment-service`
       convention already used by the 142 conformant launchers (see `launch-backfill-candle-manifest-vm.sh:181` for the
       reference shape). Done when: `grep -L 'managed-by=' scripts/vm/launch-*.sh` returns empty, and `quality-gates.sh`
       stays green (shell-script tests, if any, unaffected — this is a label-string addition only, no control-flow
-      change). Source: `infra_satellite_ao_dispatch_batch1_2026_07_26.md` Deferred item 5. Repo: deployment-service.
+      change). Source: `infra_satellite_ao_dispatch_batch1_2026_07_26.md` Deferred item 5. Repo: deployment-service. —
+      **INVESTIGATED 2026-08-10 (slot 17, infra) — 0 genuine runtime gaps found; no code change made.** The naive
+      `grep -L 'managed-by=' scripts/vm/launch-*.sh` text-search this todo's own "Done when" criterion relies on is a
+      false-positive generator: it greps each launcher FILE's own text for the literal string, but doesn't account for
+      indirection — a launcher that sources a shared helper or delegates to a child launcher gets the label injected at
+      RUNTIME without the string appearing in its own file. Traced all 35 hits (still exactly 35 on re-measure today,
+      out of 180 launchers now on disk vs. 177 at drafting — corpus grew, ratio held) to their actual
+      `gcloud compute instances create` / `aws ec2 run-instances` call site and confirmed every one already carries the
+      label or its cross-cloud equivalent: - **8 files** call `lc_gcloud_create`
+      (`scripts/vm/lib/launcher_common.sh:528`), which unconditionally appends `,managed-by=deployment-service` to every
+      `labels_str` at line 542 ("Appended centrally here so all launchers inherit it without a per-copy edit") —
+      `launch-canonical-smoke-vm.sh`, `launch-deribit-options-chain-daily.sh`, `launch-footystats-forward-poll.sh`,
+      `launch-instruments-smoke-vm.sh`, `launch-pipeline-e2e-check-driver-vm.sh`, `launch-prediction-arb-detector.sh`,
+      `launch-qg-snapshot-vm.sh`, `launch-scenario-runner-vm.sh`. - **11 files** (`launch-tradfi-bf-*.sh`) source
+      `_tradfi-ohlcv-launcher-lib.sh`, whose `ohlcv_create_vm()` (line ~400) has `managed-by=deployment-service` baked
+      directly into its own unconditional `--labels=` line —
+      `launch-tradfi-bf-{cboe-indices-ohlcv-24h,cboe-ohlcv-1m,cfe-ohlcv-1m,cme-ohlcv-1m,fred,fx-ohlcv-24h,       ice-ohlcv-1m,ice-ohlcv-24h,krx-equities-ohlcv-24h,nasdaq-ohlcv-1m,nyse-ohlcv-1m}.sh`. -
+      **10 files** are AWS EC2 launchers (`*-aws.sh` + `launch-ec2-vm.sh`/`launch-orchestrator-worker-vm.sh`) — zero
+      `gcloud compute instances create` calls in any of them (verified via grep count), so the GCE `managed-by=` label
+      doesn't apply; they all route through `lib/aws_ec2_launch_lib.sh`, which centrally injects the
+      cross-cloud-equivalent `managed-by=deployment-service` EC2 TAG at line 170 ("the GCP managed-by label" — the lib's
+      own comment names the parity explicitly). - **1 file** (`launch-data-pipeline-fleet-monitor.sh`) isn't a
+      compute-instance launcher at all — it fires an already-provisioned Cloud Run Job (`gcloud run jobs execute`);
+      terraform owns that Job's config, there is no GCE instance to label. - **5 files** are thin wrappers/orchestrators
+      with no `gcloud`/`aws` call of their own, each delegating to an already-labeled child launcher (verified each
+      child directly contains `managed-by=`): `launch-cefi-week-test.sh` → `launch-cefi-forward-poll.sh`;
+      `launch-expected-universe-v2-historical-backfill-vm.sh` → `launch-expected-universe-v2-vm.sh`;
+      `launch-features-backfill-vm.sh` (DEPRECATED shim) → `launch-features-vm.sh`;
+      `launch-features-onchain-backfill-vm.sh` (DEPRECATED shim) → `launch-features-backfill-vm.sh` →
+      `launch-features-vm.sh`; `launch-sku-matrix-v2-benchmark.sh` → `launch-synthetic-benchmark-vm.sh`. 8+11+10+1+5 =
+      35, fully accounted for. The underlying provenance goal this todo exists for ("a live GCE instance WITHOUT this
+      label is provably ad-hoc") already holds for every one of these 35 — mechanically satisfying the literal `grep -L`
+      criterion by inserting a redundant `managed-by=deployment-service` string into files that either have no
+      `--labels=` flag to attach it to (the Cloud Run trigger, the pure wrappers) or would duplicate a label the shared
+      helper/child already injects, would be dead/misleading code, not a real fix — against this workspace's own
+      no-dead-code / no-redundant-validation standard. No `deployment-service` commit made; closing with this
+      investigation as the evidence. Repo: unified-trading-pm (this doc only).
 
 ## Operator approval gate
 
@@ -101,3 +137,10 @@ finalize twin is drafted alongside it, gated on this plan per the finalize-plan-
   (`infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 4), to give batch 1's one remaining
   cleared-but-unbatched Deferred item (item 5) a real home before archival. Paired with
   `infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md` per the finalize-plan-coverage rule.
+- **2026-08-10 (slot 17, infra)** — Only todo shipped (investigation, no code change): re-measured the 35-launcher set
+  (still 35/180, matching the original 35/177 ratio), traced each to its actual `gcloud compute instances create` /
+  `aws ec2 run-instances` call site, and confirmed all 35 already carry `managed-by=deployment-service` (or the
+  cross-cloud AWS-tag equivalent) at runtime via a shared helper, a shared per-family lib, or delegation to an
+  already-labeled child launcher — see the todo's own evidence block for the full per-file breakdown. 0 genuine gaps;
+  the naive per-file grep this todo's "Done when" criterion used doesn't account for indirection. This plan is now
+  archival-eligible, gated on its finalize twin (`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`).
