@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_08/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-10
 parent_epic: batch_live_symmetry_master

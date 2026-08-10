@@ -67,7 +67,7 @@ related:
     /plans/active/issues/fill_completed_event_schema_break_live_defi_2026_08_08.md,
     /plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
   ]
 created: "2026-08-10"
 author:
