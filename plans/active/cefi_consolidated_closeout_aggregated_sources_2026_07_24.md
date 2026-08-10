@@ -821,8 +821,10 @@ here is NOT dispatch, per this doc's own standing convention.
 `check_ag_closeout_linkage.py` flagged these cefi-tagged docs as having no graph/mention path to the cefi closeout
 family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27, dispatch agt-dab448).
 
-- [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_10.md) —
-  parked findings from the 2026-08-10 audit run; 0 parked findings, 1 orphaned doc extracted into batch18.
+- [`ag_closeout_audit_cefi_parked_2026_08_10_r2.md`](/plans/archive/2026_08/issues/ag_closeout_audit_cefi_parked_2026_08_10_r2.md)
+  — parked findings from the 2026-08-10 audit run (Round 2, slot 27); 0 parked findings, 1 orphaned doc extracted into
+  batch18. Resolved + archived. Round 1 at
+  [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/archive/2026_08/issues/ag_closeout_audit_cefi_parked_2026_08_10.md).
 - [`cefi_satellite_ao_dispatch_batch18_2026_08_10.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch18_2026_08_10.md)
   — batch18 draft, completed + archived — root cause diagnosed (NOT inverted comparison; transient GCS/parse error), fix
   shipped at `unified-trading-library@26294ddf71`.

@@ -240,18 +240,18 @@ pair (2026-07-03 `0G`):
 
 - [x] ✅ [DATA] P2. **Decide + implement the resolution for the LIGHTER-ZKSYNC dense-window canonical-schema-OLDER
       residual (11,151 wire-superset collisions: canonical objects lack `ts_event`/`next_funding_timestamp` the newer
-      wires carry)** — market-tick-data-service@13ac6245 (slot 20, 2026-08-10). **DECISION: (a) content-upgrade** — the
-      WIRE is a verified strict column-superset of the schema-OLDER canonical (carries REAL `ts_event`, 0/12885 null,
-      per the slot-27 sample-diff), so option (a) is the unique data-LOSSLESS resolution: it upgrades the canonical to
-      the richer wire capture instead of dropping `ts_event` (option b loses real data — forbidden by the
-      data-correctness hard rule) or leaving both wire-form objects non-canonical forever (option c permanently blocks
-      the Range-2 apply). Worker-determinable from the data — no operator provenance call needed; the canonical is a
-      strict subset. Shipped the implementation: `_broad_compare_equal`/`_confirm_would_patch_duplicate` now return a
-      three-way verdict (`identical`/`wire_superset`/`collision`); `wire_superset` → `RenamePlan(upgrade=True)` →
-      `do_rename` copy-over (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column
-      compare tolerates the `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended.
-      **Range-2 apply stays a follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run +
-      apply sequence.**
+      wires carry)** — sha unresolvable (no commit 13ac6245 in any repo), decision+implementation attested in prose
+      below (slot 20, 2026-08-10). **DECISION: (a) content-upgrade** — the WIRE is a verified strict column-superset of
+      the schema-OLDER canonical (carries REAL `ts_event`, 0/12885 null, per the slot-27 sample-diff), so option (a) is
+      the unique data-LOSSLESS resolution: it upgrades the canonical to the richer wire capture instead of dropping
+      `ts_event` (option b loses real data — forbidden by the data-correctness hard rule) or leaving both wire-form
+      objects non-canonical forever (option c permanently blocks the Range-2 apply). Worker-determinable from the data —
+      no operator provenance call needed; the canonical is a strict subset. Shipped the implementation:
+      `_broad_compare_equal`/`_confirm_would_patch_duplicate` now return a three-way verdict
+      (`identical`/`wire_superset`/`collision`); `wire_superset` → `RenamePlan(upgrade=True)` → `do_rename` copy-over
+      (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column compare tolerates the
+      `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended. **Range-2 apply stays a
+      follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run + apply sequence.**
 
 ## Progress Log
 
