@@ -73,11 +73,16 @@ source: >-
       `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`'s sole remaining todo, replacing the redirect-pointer with real
       completion evidence (commit sha + ancestor-verification, or the equivalence citation). **Done when**: the source
       checkbox carries real evidence, not a bare pointer.
-- [ ] [REVIEW] P0. **Archive the source doc** — confirm all 3 of its todos are now `[x]` (todos 1-2 were already done
+- [x] ✅ [REVIEW] P0. **Archive the source doc** — confirm all 3 of its todos are now `[x]` (todos 1-2 were already done
       pre-extraction; this finalize closes todo 3), then run the 6-step archival ritual: banner
       `/plans/archive/2026_08/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md`, move to
       `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
-      `related:`/`depends_on:`.
+      `related:`/`depends_on:`. — **DONE 2026-08-10 (slot 23):** source doc reconciled — all 3 todos `[x]` (todo 3
+      flipped with real evidence: `market-data-processing-service@5b30f41` verified ancestor of
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor`) — then archived per the 6-step ritual: banner +
+      `status: resolved` added, moved to `plans/archive/2026_08/issues/`, all 4 corpus path-referrers updated (this
+      finalize's own `related:` + batch17/batch6/ao_consolidated_closeout). Landed `unified-trading-pm@54ae3f5966`
+      (archival commit, both rename sides verified on origin; no lingering duplicate at the old active path).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch17_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -101,3 +106,10 @@ source: >-
   (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0`, `is_last_day` flush gate) in the commit AND still on the current LDR file
   (`scripts/backfill_defi_dex_pool_swaps_source_correction.py:112,530`). Fresh landing, not a content-equivalence claim.
   Claim HOLDS — todo 1 flipped.
+- **2026-08-10 (slot 23, todo 3)** — Archived the source doc `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`. First
+  reconciled its sole remaining todo (todo 3, slot-4's throttle fix) with real evidence —
+  `market-data-processing-service@5b30f41` re-verified an ancestor of `origin/live-defi-rollout` — flipping all 3 to
+  `[x]`. Then ran the 6-step archival ritual: banner + `status: resolved` added, `git mv` to
+  `plans/archive/2026_08/issues/`, all corpus path-referrers updated (this finalize's own `related:`,
+  batch17/batch6/ao_consolidated_closeout). Shipped `unified-trading-pm@883f11bc62` (reconcile) + `54ae3f5966`
+  (archival); both verified on origin, no lingering duplicate at the old active path.
