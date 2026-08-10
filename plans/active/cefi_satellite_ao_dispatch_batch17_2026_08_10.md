@@ -19,7 +19,7 @@ tags: [cefi, ao-dispatch, close-out, batch-17, satellite-docs, tardis, zombie-wa
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -49,7 +49,7 @@ source: >-
   AO-eligible, cefi-exclusive orphans despite one carrying a `cross-cutting` co-tag.
 context_scope:
   [
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/active/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
@@ -85,13 +85,13 @@ context_scope:
       `unified-trading-cicd-events`; `uts-prd-sa` lacked `storage.objectCreator`) and `_vm_age_minutes` had no 404
       tolerance. Fixed in `deployment-service@3d545372` (except→`Exception`, skip+log on per-VM eval failure) + IAM
       grant to `uts-prd-sa`; QG green; verified the relaunched watchdog's first sweep runs pass 1→2→3 cleanly.
-- [ ] [SCRIPT] P3. **Add a focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap`** in
+- [x] ✅ [SCRIPT] P3. **Add a focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap`** in
       `deployment-service/tests/unit/test_vm_zombie_watchdog.py`, using the fixtures already present in that file
       (`_FakeComputeClient`/`_FakeComputeInstance`), covering: (a) name-pattern match, (b) metadata-stamp match, (c)
       neither (correctly not counted), (d) a 3-VM-over-cap-1 scenario asserting the 2 newest are killed and the oldest
       is kept. Repo: deployment-service. Source: `issues/tardis_concurrency_gate_hardening_2026_08_09.md` todo 2 (line
-      184). **Done when**: all 4 scenarios pass, `quality-gates.sh --no-fix` is green for deployment-service, and the
-      source doc's todo 2 checkbox is flipped citing the commit.
+      184). — **DONE 2026-08-10 (`deployment-service@0c14f54050`)**: 21 new tests (13 `_is_tardis_consumer` + 8
+      `_enforce_tardis_cap`), QG green (3282 passed), quickmerge landed.
 - [ ] [DATA] P3. **ASTER/book_snapshot_5 stale-tarball recurrence check.** Query the cefi manifest
       (`read_availability_index_safe`, bucket `market-data-tick-cefi-prd-central-element-323112`,
       `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed, error_reason=UpstreamTimestampBiasError]`)
@@ -125,6 +125,12 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-10 (slot 24, data_engineering, todo 2)**: Added 21 focused unit tests for `_is_tardis_consumer` (13 tests:
+  name-pattern match 4, metadata-stamp 3, neither/not-counted 3, edge cases 3) and `_enforce_tardis_cap` (8 tests:
+  empty/at-cap/over-cap 3-VM-cap-1 oldest-kept-newest-killed/dry-run/persist-per-kill/kill-failure). Uses existing
+  `_FakeComputeClient`/`_FakeComputeInstance` pattern plus a new `_FakeTardisMetadataItem` helper. QG green (3282
+  passed), quickmerge landed `deployment-service@0c14f54050`. Source issue doc
+  (`tardis_concurrency_gate_hardening_2026_08_09.md`) archived — both todos now resolved.
 - **2026-08-10 (slot 18, data_engineering, todo 1)**: Relaunched the watchdog per todo 1. First launch
   (`vm-zombie-watchdog-20260810-120624`) stayed RUNNING but every sweep crashed before pass 3 — the Tardis self-check
   never ran. Root-caused TWO pre-existing watchdog defects (both in

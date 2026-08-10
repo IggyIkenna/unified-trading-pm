@@ -31,7 +31,7 @@ summary: >-
   plan/issue found scheduling a second concurrent Tardis launch; one coordination note added to
   `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (unrelated open TOCTOU-fix todo touching the same file I
   edited, `launch-cefi-forward-poll.sh`) so the next worker rebases against current `HEAD` instead of a stale diff.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, cross-cutting]
 stage: [meta]
@@ -59,11 +59,12 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 drift_direction: fix
 depends_on: []
-resolved_by:
+resolved_by: /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archived: "2026-08-10"
 source:
   [
     deployment-service/scripts/vm/tardis-concurrency-guard.sh,
@@ -79,6 +80,10 @@ source:
     asia-northeast1-c), run 2026-08-09",
   ]
 ---
+
+> **ARCHIVED 2026-08-10** — both todos resolved: (1) watchdog VM relaunched with Tardis-cap self-check live
+> (`deployment-service@3d545372`), (2) focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap` shipped
+> (`deployment-service@0c14f54050`). Superseded by `/plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md`.
 
 # Tardis concurrent-VM cap hardening — 2026-08-09
 
@@ -187,11 +192,11 @@ diff, per the "fits another plan → annotate it, don't fix" triage rule.
       `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` Progress Log): `_persist_zombie_alert`'s except missed
       `GoogleAPIError` (IAM-denied alert write) and `_vm_age_minutes` lacked 404 tolerance — plus granted `uts-prd-sa`
       `roles/storage.objectCreator` on `unified-trading-cicd-events`.
-- [ ] [SCRIPT] P3. Add a focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap` in
+- [x] ✅ [SCRIPT] P3. Add a focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap` in
       `tests/unit/test_vm_zombie_watchdog.py` (fake compute client fixture already exists in that file —
       `_FakeComputeClient`/`_FakeComputeInstance`) covering: name-pattern match, metadata-stamp match, neither (not
       counted), and a 3-VM-over-cap-1 scenario asserting the 2 newest are killed and the oldest is kept. Repo:
-      deployment-service.
+      deployment-service. — **DONE 2026-08-10 (`deployment-service@0c14f54050`)**
 
 ## Progress Log
 
