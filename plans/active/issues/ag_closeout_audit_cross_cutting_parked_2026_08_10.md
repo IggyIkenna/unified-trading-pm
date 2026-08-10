@@ -59,11 +59,21 @@ related:
     /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md,
+    /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
+    /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
+    /plans/active/issues/fill_completed_event_schema_break_live_defi_2026_08_08.md,
+    /plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
   ]
 created: "2026-08-10"
 author:
   "slot-26 (ag_closeout_auditor, all-tranche mode) -- Round 1; slot-30 (ag_closeout_auditor, dispatch agt-9f1dca,
-  dedicated cross-cutting tranche) -- Round 2"
+  dedicated cross-cutting tranche) -- Round 2; slot-17 (ag_closeout_auditor, dispatch agt-45909f, dedicated
+  cross-cutting tranche, iterative-drain follow-up) -- Round 3"
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -361,3 +371,105 @@ destination — ASK BEFORE CREATING" HARD RULE.
   features_service_e2e_pipeline_test — is itself partially actioned, 2 of 3 items into batch12) = 21. **Balanced.** 10
   mistags retagged (4 correcting Round 1, 6 net-new) + 1 Round-1 finding reclassified without a retag (rate-limit-probe)
   = 5 corrections to Round 1's original 6-finding set, 1 finding (glassnode/kaiko) independently reconfirmed unchanged.
+
+## Round 3 (slot 17, dispatch `agt-45909f`, dedicated cross-cutting tranche, iterative-drain follow-up) — 2026-08-10
+
+Dispatched ~4h after Round 2 (Round 2 landed `ca9dd1cdac` at 01:34 UTC; this run started ~05:40 UTC). Per SKILL.md's
+iterative-drain methodology ("before fresh Phase-1 triage, re-check the PRIOR batch's own Deferred section first"):
+confirmed via `git log ca9dd1cdac..HEAD -- plans/` that nothing cross-cutting-specific had changed in the intervening
+window, so this round ran the lightweight delta check (re-verify parked findings + triage the 4 docs Round 2 flagged
+"not yet triaged" + a fresh candidate-generator diff) rather than re-running the full 36-agent Phase 1 pass from scratch
+— mirroring the same-day pattern sibling tranches used today (`ci`: "1 new conflict-gated candidate, no new batch";
+`defi`: "3rd run same day... batch13 still not warranted").
+
+### Actioned directly (3 items — doc-only reconciliation, evidence-cited, findings-triage "in your file" tier)
+
+1. `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` items 1.3b + 1.7e flipped `[x]` — both confirmed DONE
+   via the now-archived `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` ("Item 2/3"/"Item 3/3",
+   `features-service@3162d627`/`@43a2b56b`), matching Round 2's own parked finding #2 evidence exactly. Doc now has 1
+   open item left (1.5b) — re-verified still correctly gated: `features_service_e2e_pipeline_test_2026_05_26.md` still
+   carries 3 real open Track items (same 3 Round 2 found: MDPS BITGET-FUTURES retry + Phase-B top-up, both now in
+   batch12; `usdc_idle_yield_apy_bps` wiring, still time-gated).
+2. `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` todo 3 (confirm `prediction-live-kalshi-book-snapshot-5-*`
+   status) flipped `[x]` — live `gcloud compute instances list --filter="name~'prediction-live-kalshi-book-snapshot-5'"`
+   re-confirms zero instances, `central-element-323112`, matching the doc's own finding-2 evidence.
+3. `glassnode_kaiko_credential_ask_2026_08_09.md` — reconfirmed unchanged: live `gcloud secrets list` still shows
+   neither `glassnode-api-key` nor `kaiko-api-key` exist. No action; stays parked.
+
+### Fixed a real Phase-0.2 linkage/discovery gap (not just documented — closed)
+
+`citadel_paper_batch_live_reconciliation_2026_06_19.md` surfaced as a fresh "never cited in any covering doc" candidate
+via `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` (was NOT among Round 2's 36 either — a genuine
+pre-existing miss, not a retag artifact). Root cause: `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` (+finalize)
+already actively extracts this doc's agent-shippable items (14/5 basename citations respectively, `status: active`,
+`assigned_vm: planning`) but was invisible to BOTH Phase 0.2 discovery paths simultaneously — its filename doesn't match
+the `cross_cutting_*` prefix (path a), AND `cross_cutting_consolidated_closeout_2026_07_25.md`'s own
+`depends_on:`/`related:` never linked it (path b) — a content-named-fork trap SKILL.md itself documents (the same class
+as the cefi/tradfi Track-split precedents cited there). Fixed by adding
+`citadel_satellite_ao_dispatch_batch1_2026_08_08` to the closeout's `depends_on:` — confirmed via
+`generate_ag_closeout_audit_candidates.py`'s own `_covering_paths()` docstring that `depends_on:` (not `related:`) is
+the field it actually resolves; a `related:`-only edit tried first did NOT move the script's output, `depends_on:` did.
+Re-verified: `citadel_paper_batch_live_reconciliation` drops off the never-cited list (13 covering docs now, was 12; 120
+members, was 121); `check_ag_closeout_linkage.py` stays 0 orphans (baseline intact, 767 docs scanned).
+
+### AO-eligibility triage completed on the 4 docs Round 2 flagged "not yet triaged" (verdict: all 4 NOT AO-eligible)
+
+- `ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md` — doc's own "Resolution options" is an
+  explicit 2-way operator fork (scope+build a fleet-wide ratchet-breach detector vs. accept the gap as a bounded,
+  self-limiting cost) with no evidence-based tiebreaker. `operator_gated_other`.
+- `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` — todos 1-2 are explicit `[OPERATOR]` relaunch/scope
+  decisions ("Do not relaunch blind"); todo 3 confirmed+flipped above; todo 4 is transitively gated on todos 1-2
+  actually happening. `operator_gated_other` (residual, unchanged in substance).
+- `fill_completed_event_schema_break_live_defi_2026_08_08.md` — already reaffirmed KEEP-NA by na-eligibility-audit
+  2026-08-08: sole open todo is a real-money live-trading data-correctness confirmation, not a bounded mechanical fix.
+  `operator_gated_other`, unchanged.
+- `manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` — already reaffirmed KEEP-NA 5× (2026-07-30
+  through 2026-08-09): shared-infra concurrency-critical performance-design investigation needing an explicit
+  durability-vs-throughput tradeoff call, not pre-committed implementation. Design-judgment, unchanged.
+
+### New candidates beyond Round 2's pool (5 found via fresh candidate-generator diff; 1 resolved, 4 classified)
+
+- `citadel_paper_batch_live_reconciliation_2026_06_19.md` — resolved via the linkage fix above; not an orphan.
+- `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` — brand-new corpus-wide issue filed today by a
+  concurrent plan_reconciler ui-tranche dispatch (`agt-ec1688`): `locked_by: live-defi-rollout` is a hardcoded
+  placeholder (the branch name, not a real actor claim) stamped on 96 docs corpus-wide, blocking archival on at least 1
+  confirmed fully-done doc. Todo 1 is an explicit `[OPERATOR] P1` 3-way-fork ruling request; todos 2-3 sequentially
+  gated on it. `operator_gated_other`, not AO-eligible until ruled — already correctly filed as its own "big finding"
+  issue doc (corpus-wide, cross-tranche blast radius per CLAUDE.md's findings-triage HARD RULE); no further action
+  needed from this tranche's audit beyond classifying it here.
+- `tardis_concurrency_gate_hardening_2026_08_09.md` — dual-tagged `[cefi, cross-cutting]`, borderline
+  Orthogonality-HARD-CHECK shape but genuinely mixed content on a real read (cefi-specific launcher fixes already
+  SHIPPED `deployment-service@58af2ab1`, plus fixes to genuinely shared/fleet-wide infra —
+  `tardis-concurrency-guard.sh`, `vm_zombie_watchdog.py`'s new `_enforce_tardis_cap` pass used by every Tardis-consuming
+  launcher across asset groups, not cefi-exclusive) — did NOT unilaterally retag given the real content ambiguity and
+  the risk of a wrong single-session call (SKILL.md's own caution: a bad retag can newly orphan a doc within its real
+  tranche if the linkage isn't fixed in the same pass). 2 remaining todos are small and bounded (relaunch
+  `vm-zombie-watchdog` VM to pick up the code change; add a unit test for `_enforce_tardis_cap`/`_is_tardis_consumer`) —
+  genuinely AO-eligible in isolation, but a 1-doc/2-item pool does not on its own warrant a new batch, matching today's
+  established cross-tranche norm. Held for a future batch (cefi's or cross-cutting's, whichever picks it up first)
+  alongside other accumulating small items.
+- `plan_reconciler_findings_cross_cutting_2026_08_09.md` — empty findings-record shell (0 open checkboxes; every section
+  reads "(none yet)"/"(in progress)"). Not independently AO-eligible — matches the established classification for this
+  doc class (same as `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`, per Round 2).
+  `plan_reconciler_findings_cross_cutting_2026_08_10.md` — a LIVE, actively-being-written findings doc from a concurrent
+  same-day plan_reconciler dispatch (multiple `<pending final push>`/`<pending>` SHA placeholders — clearly mid-flight,
+  not yet finalized). Left untouched per the multi-agent concurrent-worker safety rule (another session owns this file
+  right now); not classified as a stable orphan target this round.
+
+### Batch12 — unchanged, still awaiting operator approval
+
+`cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` (+finalize) confirmed still `status: draft`, untouched since
+Round 2 drafted it — **not flipped by this round** (autonomous mode never auto-approves a drafted batch, per CLAUDE.md's
+"Plan destination" HARD RULE). **No batch13 drafted this round** — the only fresh AO-eligible material found (tardis's 2
+small items) is a single-doc pool, below the threshold every sibling tranche applied today.
+
+### Ledger
+
+3 items actioned directly (2 checkbox flips + 1 confirmation-flip, all evidence-cited) + 1 linkage-discovery gap fixed
+(closes a real orphan via a `depends_on:` addition, re-verified via both the candidate generator and the linkage
+checker) + 4 docs AO-eligibility-triaged (0 newly AO-eligible — all 4 correctly stay parked, 2 of them already
+independently reaffirmed by repeated na-eligibility-audit history) + 5 new-since-Round-2 candidates found and classified
+(1 resolved via the linkage fix, 4 parked/deferred with reasoning above, 1 of those 4 explicitly left untouched as
+another session's live in-flight file). Zero new `- [ ]` entries required in this doc's own Todos section — every
+genuinely-open item found this round is either directly resolved above, already tracked with an `[OPERATOR]` tag in its
+own source doc, or explicitly deferred with reasoning in the candidates section above. **Balanced.**

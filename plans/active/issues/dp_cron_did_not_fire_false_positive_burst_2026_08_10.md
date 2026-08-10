@@ -199,9 +199,12 @@ is exactly the kind of judgment call this doc should surface, not resolve.
       currently expected to be always-on (real regression, needs relaunch) vs. not-yet-rolled-out-to-prod (registry got
       ahead of the actual deployment, DP-LIVE-003 correctly catching a real gap but not an urgent one). Do not relaunch
       blind — each producer's current config/entrypoint needs a fresh look before restart. Repo: deployment-service.
-- [ ] [SCRIPT] P2. Also confirm `prediction-live-kalshi-book-snapshot-5-*` (the 4th documented
-      `launch-prediction-live.sh` shard, not currently running) — noted in finding 2's evidence, outside this doc's
-      original 10-prefix scope but the same investigation surfaced it. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **CONFIRMED (ag-closeout-audit cross-cutting 2026-08-10, iterative-drain round)** — live
+      `gcloud compute instances list --filter="name~'prediction-live-kalshi-book-snapshot-5'"` returns zero instances,
+      GCP project `central-element-323112`: `prediction-live-kalshi-book-snapshot-5-*` (the 4th documented
+      `launch-prediction-live.sh` shard) is confirmed not running, matching finding 2's evidence. This confirmation-only
+      todo is satisfied; whether to relaunch it folds into the same open [OPERATOR] scope-decision as the doc's other
+      genuinely-absent producers (todos 1-2 above) — not a separate action.
 - [ ] [SCRIPT] P3. Live-verify DP-LIVE-003 correctly RESOLVES (posts a `✅ RESOLVED` bookend via
       `meta_watchers.reconcile_resolved`) for whichever of findings 3-10 get relaunched, confirming the RESOLVED path
       works for this new check type as well as the paging path already confirmed here. Repo: deployment-service.

@@ -77,6 +77,8 @@ related:
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
     /plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-09"
@@ -102,11 +104,20 @@ context_scope:
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/honest-coverage-model.md,
   ]
-depends_on: [cross_cutting_closeout_observability_and_monitoring_2026_08_09]
+depends_on:
+  [cross_cutting_closeout_observability_and_monitoring_2026_08_09, citadel_satellite_ao_dispatch_batch1_2026_08_08]
 gate_on_depends:
-  false # tracking-only fork (task_template.md finding I) — none of this parent's remaining Tracks
-  # depend on the child's open work landing first; the history companion carries 0 open todos so it is not listed
-  # here (mirrors how tradfi's history companion is related:-only, not depends_on).
+  false # tracking-only linkage (task_template.md finding I) — none of this parent's remaining Tracks
+  # depend on either listed doc's open work landing first. First entry is a line-cap fork (0 open todos in its own
+  # history companion, not listed separately). Second entry (added ag-closeout-audit cross-cutting 2026-08-10,
+  # iterative-drain round) is a content-named satellite batch (citadel_*, not cross_cutting_*-prefixed) that
+  # generate_ag_closeout_audit_candidates.py's filename-pattern discovery structurally cannot see — listing it here
+  # is the documented mechanism (see that script's _covering_paths() docstring) for its depends_on:-resolution path
+  # to pick it up, closing a real discoverability gap: citadel_satellite_ao_dispatch_batch1_2026_08_08.md (+its
+  # finalize) already actively extracts citadel_paper_batch_live_reconciliation_2026_06_19.md's agent-shippable
+  # items (14 citations in the batch body, 5 in the finalize) but was invisible to every prior audit round as a
+  # covering doc for it. The history companion carries 0 open todos so it is not listed here (mirrors how tradfi's
+  # history companion is related:-only, not depends_on).
 source: >-
   5-agent parallel triage of the epic-filtered cross-cutting candidate corpus (unified-trading-pm, 2026-07-25) at
   operator request ("build the cross-cutting-AG layer in canonical form, same as the 5 existing AGs, so
