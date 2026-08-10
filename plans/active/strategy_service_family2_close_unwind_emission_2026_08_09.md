@@ -53,16 +53,17 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DESIGN][BACKEND] P2. Ship a real Family-2 (`CARRY_BASIS_PERP_INV`) close/unwind instruction emission path in
-      strategy-service's `recursive_staked.py`. Today `_on_tick_family2_basis_perp_inv()` only ever opens the position
-      once (`if self.current_position_units != 0: return []` guards every subsequent tick — confirmed via direct
-      2026-08-09 read; no close/unwind emission exists anywhere in the file) and every observed Family-2 open is,
-      correctly for now, treated as permanently open downstream in `Family2PositionRegistry.enumerate_open_positions()`.
-      This is the load-bearing prerequisite for `family2_position_registry_unwind_consumption_2026_08_09.md`'s
-      registry-consumption todo, which cannot be correctly implemented without a real event schema to consume. Repo:
-      strategy-service. Design scope (resolve as part of this todo, not pre-decided here): the actual close/unwind
-      TRIGGER condition (an operator/ strategy-owner exit signal, an on-chain liquidation-risk threshold read via the
-      same Aave data `PerpHedgeSizer` already reads, a fixed unwind schedule, or something else) — read
+- [x] ✅ [DESIGN][BACKEND] P2. Ship a real Family-2 (`CARRY_BASIS_PERP_INV`) close/unwind instruction emission path in —
+      strategy-service@e72cf66c strategy-service's `recursive_staked.py`. Today `_on_tick_family2_basis_perp_inv()` only
+      ever opens the position once (`if self.current_position_units != 0: return []` guards every subsequent tick —
+      confirmed via direct 2026-08-09 read; no close/unwind emission exists anywhere in the file) and every observed
+      Family-2 open is, correctly for now, treated as permanently open downstream in
+      `Family2PositionRegistry.enumerate_open_positions()`. This is the load-bearing prerequisite for
+      `family2_position_registry_unwind_consumption_2026_08_09.md`'s registry-consumption todo, which cannot be
+      correctly implemented without a real event schema to consume. Repo: strategy-service. Design scope (resolve as
+      part of this todo, not pre-decided here): the actual close/unwind TRIGGER condition (an operator/ strategy-owner
+      exit signal, an on-chain liquidation-risk threshold read via the same Aave data `PerpHedgeSizer` already reads, a
+      fixed unwind schedule, or something else) — read
       `/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` before deciding; if the archetype doc
       already specifies an intended exit condition, use it, don't invent a new one. Done-when: (1) a real close/unwind
       condition + emission path exists in `_on_tick_family2_basis_perp_inv()` (or a sibling method it calls); (2) the
@@ -82,4 +83,10 @@ drift_direction: advance-code
 
 - **2026-08-09 (slot 33, backend_engineer)**: Authored per BLK-0fb75f8f (main ruling, option A) — split out of
   `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`'s unwind-consumption todo, which was gated on this
+  not-yet-existing emission path. No `depends_on` — this is the prerequisite plan itself, ungated.
+- **2026-08-10 (slot 20, backend_engineer)**: Verified all done-when criteria already met at strategy-service@e72cf66c.
+  Close/unwind path (`_maybe_close_family2_position` + `_build_family2_close_instruction`) shipped with health-factor
+  breach trigger from the archetype doc. Tests (`test_carry_basis_perp_inv_family2_on_tick.py`) cover close-fires
+  (`health_factor=1.1`), no-close-above-threshold (`health_factor=2.0`), and no-close-on-absent-feature paths.
+  `correlation_id` links back to `open_state.instruction_id`. Flipping checkbox; archival follows in separate commit.
   not-yet-existing emission path. No `depends_on` — this is the prerequisite plan itself, ungated.
