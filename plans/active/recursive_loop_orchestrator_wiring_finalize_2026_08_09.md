@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                              new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                              Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                              (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                              perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                              (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                              rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                              service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                              code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                              opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                              docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                              would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                              requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                                                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                                                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                                                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                                                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                                                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                                                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                                                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                                                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                                                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                                                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                                                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                                                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -253,11 +253,27 @@ context_scope:
       `origin/live-defi-rollout`. Codex SSOTs: `/codex/04-architecture/tier-and-import-architecture.md`,
       `/codex/04-architecture/defi-execution-overview.md`.
 
-- [ ] [BACKEND] P2. Wire `HyperliquidConnector` + credential reloader into production at `app.py` startup/shutdown.
+- [x] ✅ [BACKEND] P2. Wire `HyperliquidConnector` + credential reloader into production at `app.py` startup/shutdown.
       Instantiate `HyperliquidConnector` (mode from config: testnet/early-mainnet), call `start_hl_key_reloader` (GSM
       secret `hyperliquid-api-credentials`), `connect()` on startup, `close()` on shutdown. Bind to the orchestrator's
       rebalance path (todo 11's consumer). Repo: execution-service. Done-when: wiring test asserts connector connected
-      at startup + reloader pushes credentials + connector bound to orchestrator rebalance; `quality-gates.sh` green.
+      at startup + reloader pushes credentials + connector bound to orchestrator rebalance; `quality-gates.sh` green. —
+      execution-service@5599b32ac. New `defi_execution/wiring/hyperliquid_wiring.py`: `build_hyperliquid_wiring`
+      resolves the HL wallet credentials from Secret Manager (secret `config.hyperliquid_trade_key_secret_name` —
+      `hyperliquid-trade-key` per the UAC `DATA_SOURCE_TO_SECRET` registry; the todo's `hyperliquid-api-credentials`
+      name is stale, matching `config_reloaders.py`'s module docstring — the UAC registry + `live_execution_handler.py`
+      are authoritative), builds the live-mode connector routing testnet/early-mainnet via `config.testnet_mode`, and
+      wraps it in `HyperliquidWiring` (`connect()` → connector.connect + `start_hl_key_reloader`, `disconnect()` →
+      `stop_hl_key_reloader` + connector.disconnect). `app.py`: `_wire_hyperliquid_connector` startup handler +
+      `_stop_hyperliquid_connector` shutdown handler; `_start_perp_hedge_monitors` now binds the wired connector into
+      `RecursiveLoopOrchestrator(hyperliquid_connector=...)` so rebalance/topup intents route through
+      `HyperliquidConnector.place_order()` (todo 11's consumer — no second instruction sink). `config_reloaders`
+      `_make_hl_key_callback` now accepts both `private_key` and `wallet_private_key` blob keys (matches
+      `live_execution_handler.py`'s production reader). Missing/invalid credentials leave the orchestrator
+      connector-less (honest NOT-WIRED, never a fabricated execution). Tests: 18 wiring tests (connector construction +
+      testnet mode, credential-resolution None cases, connect starts reloader / disconnect stops it, reloader callback
+      pushes both key conventions, rebalance routes to `place_order` / NOT-WIRED without connector, app startup binds +
+      tears down); full `quality-gates.sh` green (286s) on the committed HEAD.
 
 - [ ] [BACKEND] P2. Wire production fetch readers into `PerpHedgeFetchProvider` — `fetch_aave_data` → AAVEConnector
       `getUserAccountData` (keys `total_collateral_eth`/`total_debt_eth`), `fetch_exchange_rate` → LST protocol
@@ -422,3 +438,18 @@ context_scope:
     `PerpHedgeFetchProvider` (todo 13), USDC bridge topup path (todo 14), Bybit scoped follow-up (todo 15). Mirrors the
     established BLK-1255d5cf split pattern — execution is a separately-dispatching todo, not folded into this design
     todo. Flipped todo 10 `[x]`.
+- **2026-08-10 (slot 19, backend_engineer)**: Todo 12 shipped — `HyperliquidConnector` + credential reloader wired into
+  production at `app.py` startup/shutdown, `execution-service@5599b32ac`. Added
+  `execution_service/defi_execution/wiring/hyperliquid_wiring.py`: `build_hyperliquid_wiring` reads the HL wallet blob
+  from Secret Manager via `config.hyperliquid_trade_key_secret_name` (resolved to `hyperliquid-trade-key` — the UAC
+  `DATA_SOURCE_TO_SECRET` registry + `live_execution_handler.py` are authoritative; the `config_reloaders.py` module
+  docstring's `hyperliquid-api-credentials` name is stale), builds the live-mode connector routing testnet/early-mainnet
+  via `config.testnet_mode`, and wraps it in `HyperliquidWiring` (connect → connector.connect + `start_hl_key_reloader`;
+  disconnect → `stop_hl_key_reloader` + connector.disconnect). `app.py` gained `_wire_hyperliquid_connector` (startup) +
+  `_stop_hyperliquid_connector` (shutdown); `_start_perp_hedge_monitors` now binds the connector into
+  `RecursiveLoopOrchestrator(hyperliquid_connector=...)` so rebalance/topup route through
+  `HyperliquidConnector.place_order()` (todo 11's consumer, no second sink). `config_reloaders._make_hl_key_callback`
+  accepts both `private_key` and `wallet_private_key` blob keys. Missing/invalid credentials return `None` →
+  orchestrator stays connector-less (honest NOT-WIRED, never fabricated execution). 18 wiring tests green (incl. app
+  startup binds + tears down); full `quality-gates.sh` green (286s) on the committed HEAD. `close()` in the todo text
+  maps to the connector's `disconnect()` (the BaseConnector abstract lifecycle method).
