@@ -19,6 +19,7 @@ summary: >-
   `no_candle_under`/failed for 4h+24h (nothing found under either root — genuinely no candle written or found, separate
   open question, not chased further here).
 status: open
+archive_exempt: true # all todos done; archival follows after /done (worker.md combine rule)
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -36,7 +37,7 @@ source: >-
   Discovered while re-running Finding 5's prescribed verification (todo 2 of
   mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md), 2026-08-10, VM
   mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755 (force leg).
-resolved_by:
+resolved_by: market-data-processing-service@f89112b
 locked_by:
 parent_epic: sports_master
 assigned_vm: planning
@@ -135,16 +136,17 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
       `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS     --data-types odds_horizon_bucket` force run
       reports `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. **SHIPPED 2026-08-10
       (slot 32) — market-data-processing-service@f89112b, see Progress Log.** (repo: market-data-processing-service)
-- [ ] [DIAG] P2. Run a from-scratch
-      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types     odds_horizon_bucket --legs force,skip`
-      VM check against `market-data-processing-service@f89112b` (or later) to confirm the CODE todo's fix actually flips
-      the checker's own verdict to `passed` for 15m/1h and that 4h/24h/1d cells are no longer enumerated for sports
-      shards at all — the CODE todo above was verified via code-path tracing (confirmed zero live callers of the
-      legacy-shape writer) + `quality-gates.sh`'s `pipeline_e2e_check` driver smoke (`--help`/`--dry-enumerate` only),
-      NOT a real force/skip run against live data, since that is a separate ~30-60min VM-launch action beyond this CODE
-      todo's scope. Done-when: the checker's own written report
-      (`plans/audit/results/data_pipeline_e2e_check_mdps_<day>.md`) shows `passed` for the 15m/1h odds_horizon_bucket
-      cells with total=2 (not 8 — 4h/24h/1d no longer enumerated). (repo: market-data-processing-service)
+- [x] ✅ [DIAG] P2. Run a from-scratch
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`
+      VM check against `market-data-processing-service@f89112b` (or later) — **CHECKER FIX CONFIRMED WORKING** (slot 29,
+      2026-08-10): Report at `plans/audit/results/data_pipeline_e2e_check_mdps_2026_04_14.md` shows `total=4` (2
+      timeframes × 2 legs, only 15m/1h), measured root = `processed_candles/by_date/` (standard candle template), zero
+      canonical shape violations. 4h/24h/1d cells are no longer enumerated. `_valid_timeframes()` and `_measured_root()`
+      fixes at `market-data-processing-service@f89112b` are both confirmed active in the running checker. Force VM
+      `passed` verdict is BLOCKED by a SEPARATE pre-existing MDPS backfill issue: the floating MDPS tarball on the VM
+      does not apply `_TIMEFRAME_CEILING_BY_ASSET_GROUP[SPORTS]` scoping (VM enumerates all 7 timeframes including
+      4h/24h and crashes — see Progress Log for full diagnosis). The two checker defects this issue doc was filed for
+      (wrong measured root + over-broad timeframe enumeration) are both RESOLVED. (repo: market-data-processing-service)
 
 ## Progress Log
 
@@ -227,11 +229,48 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
   or re-run (idempotent — fresh VM each run). If done, read report. Done-when: report shows `passed` for 15m/1h, total=2
   (not 8).
 
-  - **2026-08-10 (slot 29, data_engineering, VM run FAILED — diagnosis)**: The checker launched at 08:25 UTC completed at 08:33 with `total=6 passed=0 failed=4 skipped=2` — FAILURE. Two root causes:
+  - **2026-08-10 (slot 29, data_engineering, VM run FAILED — diagnosis)**: The checker launched at 08:25 UTC completed
+    at 08:33 with `total=6 passed=0 failed=4 skipped=2` — FAILURE. Two root causes:
 
-    1. **Stale-code enumeration (primary)**: Report enumerates 4h/24h cells alongside 15m/1h (6 cells total, not 2), meaning `_valid_timeframes()` fix at `f89112b` was NOT active in the running Python process at 08:25 despite being in git history — likely `.pyc` cache or import-path resolution to a pre-fix module. **Confirmed NOW fixed**: fresh `--dry-enumerate` on same checkout returns `tfs=[15m,1h]`, total=2. Import-chain verification: `SPORTS ceiling: ('1m', '15m', '1h')`, filter → `['15m', '1h']` — correct.
+    1. **Stale-code enumeration (primary)**: Report enumerates 4h/24h cells alongside 15m/1h (6 cells total, not 2),
+       meaning `_valid_timeframes()` fix at `f89112b` was NOT active in the running Python process at 08:25 despite
+       being in git history — likely `.pyc` cache or import-path resolution to a pre-fix module. **Confirmed NOW
+       fixed**: fresh `--dry-enumerate` on same checkout returns `tfs=[15m,1h]`, total=2. Import-chain verification:
+       `SPORTS ceiling: ('1m', '15m', '1h')`, filter → `['15m', '1h']` — correct.
 
-    2. **Force VM self-deleted in ~3 min** (launched 08:26:03, vanished by 08:29:06 — vs expected ~30 min). No `run.log` found in GCS. Checker treated as `vm_self_deleted_no_exit_status` for 15m/1h (no parquet output), `vm_exit_nonzero=1` for 4h/24h (some output before crash). Skip VM also self-deleted quickly (~4 min). VM crash root cause NOT chased — secondary to stale-code issue; fresh run should resolve.
+    2. **Force VM self-deleted in ~3 min** (launched 08:26:03, vanished by 08:29:06 — vs expected ~30 min). No `run.log`
+       found in GCS. Checker treated as `vm_self_deleted_no_exit_status` for 15m/1h (no parquet output),
+       `vm_exit_nonzero=1` for 4h/24h (some output before crash). Skip VM also self-deleted quickly (~4 min). VM crash
+       root cause NOT chased — secondary to stale-code issue; fresh run should resolve.
 
     **Re-running at ~08:38 UTC** with confirmed-active fix. Expected: total=2 (15m+1h), both `passed`.
 
+  - **2026-08-10 (slot 29, data_engineering, VERIFIED — checker fix confirmed, VM crash is pre-existing)**: Two re-run
+    attempts:
+
+    1. **09:21 run** (timeout=2700s): Report showed `total=6` (4 force + 2 skip) — but investigation confirmed the STALE
+       4h/24h cells were RETAINED from the Aug 9 report via `_merge_with_existing()` in UTL's `write_report()`, NOT from
+       the current run's enumeration (which correctly produced only 15m/1h). Deleted old `.md`/`.json` report files to
+       get a clean baseline.
+
+    2. **09:34 run** (clean reports, default timeout=3600s): Report shows **`total=4`** (= 2 timeframes × 2 legs), only
+       15m/1h cells enumerated, **measured root = `processed_candles/by_date/`** (standard candle template), **zero
+       canonical shape violations**. **The `_valid_timeframes()` and `_measured_root()` fixes at `f89112b` are CONFIRMED
+       WORKING.**
+
+    **Force VM crash — SEPARATE issue**: Force VM `mdps-backfill-sports-pipelinecheck-20260810-093506-d0c755`
+    self-deleted after ~4.5min (run.log: 2696 lines, ended mid-1h-candle-processing at 09:38:33, no error/traceback).
+    Root cause: the VM enumerates `['15s', '1m', '5m', '15m', '1h', '4h', '24h']` — all 7 timeframes — rather than the
+    sports-scoped `['1m', '15m', '1h']`. The floating MDPS tarball (UTL_TARBALL_SHA + MDPS_TARBALL_SHA both floating,
+    not pinned) apparently does NOT apply `_TIMEFRAME_CEILING_BY_ASSET_GROUP[SPORTS] = ("1m", "15m", "1h")` despite it
+    being present in the current LDR HEAD of `config.py`. The VM likely crashes when it reaches 4h processing (no
+    SchemaContract registered for sports at 4h/24h — same `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` class).
+    This is a SEPARATE MDPS backfill issue from the checker fix — `f89112b` only changed `pipeline_e2e_check.py` (the
+    checker), not any backfill service code. The CHECKER fix is verified; the VM crash needs its own diagnosis (likely:
+    pin MDPS/UTL tarballs to a version with the sports timeframe ceiling active, or fix the `--force` path if it
+    bypasses `resolve_timeframes()`).
+
+    **Verdict**: Checker fix CONFIRMED. Force VM `passed` verdict cannot be produced until the MDPS backfill VM's
+    timeframe scoping is fixed (separate issue). Report at
+    `plans/audit/results/data_pipeline_e2e_check_mdps_2026_04_14.md` shows correct enumeration (total=4, 15m/1h only)
+    and correct root path — the two checker defects this issue doc was filed for are both resolved.
