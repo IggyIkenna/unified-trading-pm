@@ -264,7 +264,12 @@ context_scope:
         now cleared with the P0 ship `instruments-service@3617261f`, yet the re-enum+backfill itself has NOT been
         dispatched/run). The corresponding batch4 depth-history verify (this doc's own `[x]` item above) returned
         VERDICT: FAIL — this row-proof backfill does not change that verdict. Re-open in a future batch as a ready
-        `[DATA]` candidate now that its P0 dependency has landed.
+        `[DATA]` candidate now that its P0 dependency has landed. **na-eligibility-audit 2026-08-10: citation
+        repointed** — the live current owner is
+        [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
+        todo 1 (`status: active`, `assigned_vm: planning`, verbatim `Source:` cites this exact checkbox), not batch4 —
+        batch10 independently re-extracted the same item and is the current dispatch surface; batch4's older, staler
+        Deferred-section copy of this item is superseded by batch10's, not a second live claim.
 - [x] ✅ [SCRIPT] P1. **Prediction BATCH recent-window (05-23→06-22) zero-capture — TWO-LAYER root cause, BOTH FIXED
       (2026-06-23 batch-column-close session)**: (1) **Pre-flight layer (already fixed pre-session, mtds@84504e6 on
       LDR)** — the 28,448 Polymarket-trades manifest rows for 05-23→06-22 are `empty_confirmed[SOURCE_RETURNED_ZERO]`
@@ -875,17 +880,15 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
   against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
   plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
-  agent-executable after a fresh check, Option B retirement [PM-reconciler/semver-agent scope, confirmed unrelated],
-  GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none bound this doc's sole open item. **Citation
-  correction**: the item is no longer parked in batch4's Deferred section awaiting a future batch — it has SINCE
-  been promoted and extracted verbatim into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted
-  2026-08-09, `status: draft`, `assigned_vm: planning`, todo citing this doc's own "DEFERRED-CROSS-DEP" checkbox by
-  name), which explicitly grepped batch4/6/7/8/9 + finalizes + all 4 Phase A-E children for this item before drafting
-  and confirmed no other claim. This doc's own citation (pointing at batch4) is now stale by 2 days — flagging for
-  whoever next touches this doc to repoint it at batch10 once that batch lands (not re-pointed here to avoid a
-  same-session dual-edit race on a doc neither this sweep nor batch10 owns exclusively). Stays NA — batch10 is the
-  correct, already-vetted owner.
-  Doc stays NA.
+  agent-executable after a fresh check, Option B retirement [PM-reconciler/semver-agent scope, confirmed unrelated], GSM
+  secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none bound this doc's sole open item. **Citation correction**:
+  the item is no longer parked in batch4's Deferred section awaiting a future batch — it has SINCE been promoted and
+  extracted verbatim into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted 2026-08-09, `status: draft`,
+  `assigned_vm: planning`, todo citing this doc's own "DEFERRED-CROSS-DEP" checkbox by name), which explicitly grepped
+  batch4/6/7/8/9 + finalizes + all 4 Phase A-E children for this item before drafting and confirmed no other claim. This
+  doc's own citation (pointing at batch4) is now stale by 2 days — flagging for whoever next touches this doc to repoint
+  it at batch10 once that batch lands (not re-pointed here to avoid a same-session dual-edit race on a doc neither this
+  sweep nor batch10 owns exclusively). Stays NA — batch10 is the correct, already-vetted owner. Doc stays NA.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged — both remaining open items
   (batch4-tracked DEFERRED-CROSS-DEP row-proof; the now-closed depth-retention design question) still map to the same
   set.
