@@ -75,8 +75,8 @@
     "features-service": "0.81.0",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
-    "instruments-service": "0.100.0",
-    "market-tick-data-service": "0.119.0",
+    "instruments-service": "0.101.0",
+    "market-tick-data-service": "0.120.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.108.0",
     "unified-trading-library": "0.77.0",
@@ -763,7 +763,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 8,
         "qg_red_reason": null,
@@ -2225,8 +2225,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.77.1.dev1+ge94be2210",
-      "published_at": "2026-08-09T17:16:58Z",
+      "version": "0.77.1.dev2+gf2544c6a1",
+      "published_at": "2026-08-09T23:21:09Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2235,8 +2235,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.100.1.dev3+gd3d52fbad",
-      "published_at": "2026-08-09T22:34:18Z",
+      "version": "0.101.0",
+      "published_at": "2026-08-10T00:04:11Z",
       "registry": "artifact-registry"
     }
   }
