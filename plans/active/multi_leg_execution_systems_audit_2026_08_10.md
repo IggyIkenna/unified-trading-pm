@@ -89,9 +89,12 @@ might come in handy."
       KEEP-AS-REFERENCE verdict with cited evidence. **VERDICT: DELETE** — zero production callers re-confirmed by fresh
       grep (2026-08-10), and no strategy-family doc states any intent to use order-book-liquidity-aware CeFi leg
       routing. Full cited evidence in the Progress Log below.
-- [ ] [DATA] P1. **Confirm `instruction_adapter.py`'s `_decompose_hedge_basis`/`HEDGE_BASIS` path disposition** — same
-      treatment. Note this is a DIFFERENT dead system from `MultiLegOrchestrator` even though both are dead — don't
-      conflate their verdicts if the evidence differs.
+- [x] ✅ [DATA] P1. **Confirm `instruction_adapter.py`'s `_decompose_hedge_basis`/`HEDGE_BASIS` path disposition** —
+      same treatment. Note this is a DIFFERENT dead system from `MultiLegOrchestrator` even though both are dead — don't
+      conflate their verdicts if the evidence differs. **VERDICT: DELETE** — zero production callers re-confirmed by
+      fresh grep (2026-08-10), zero `HEDGE_BASIS` emission sites in strategy-service, and no strategy-family doc
+      requests spot+perp basis decomposition via the `StrategyInstruction`→`ExecutionPlan` intent-engine path. Full
+      cited evidence in the Progress Log below.
 - [ ] [DATA] P1. **Map every actual production call site that SHOULD dispatch to `AtomicLegExecutor`** — trace from
       `CarryStakedBasisEngine.on_tick()` and whichever prediction-arb engine also emits `AtomicInstruction` (identify it
       by name — the parity-gap doc says "prediction-arb engines" plural, confirm which) through to where live execution
@@ -151,3 +154,35 @@ might come in handy."
     code removal is tracked by the gated execution plan `multi_leg_execution_systems_execution_2026_08_10.md` ("Retire
     whichever system(s) the audit verdicted DELETE"). `instruction_adapter.py`'s HEDGE_BASIS path is a SEPARATE
     disposition (todo 2).
+- 2026-08-10 (todo 2, slot 30): **`instruction_adapter.py`'s `_decompose_hedge_basis`/`HEDGE_BASIS` path disposition =
+  DELETE**, with cited evidence (all fresh greps 2026-08-10, not cached from the parity-gap issue doc):
+  - **Zero production callers:** `_decompose_hedge_basis` is referenced ONLY inside
+    `execution-service/execution_service/engine/instruction_adapter.py` itself (dispatch at line 98, def at line 360).
+    The module's entry points (`adapt_strategy_instruction`, `group_instructions_to_multi_leg`,
+    `adapt_to_engine_instruction`) have zero callers in ANY repo's non-test code (grepped execution-service,
+    strategy-service, e2e-testing, unified-api-contracts, unified-trading-library, trading-agent-service,
+    batch-live-reconciliation-service, agent-orchestrator). The `instruction_adapter` module is imported nowhere outside
+    its own file + tests, and `execution_service/engine/__init__.py` (package public surface) does not export it or
+    anything from it.
+  - **`StrategyInstructionType.HEDGE_BASIS` has zero emission sites:** the only production `StrategyInstruction(`
+    constructors are `strategy-service/strategy_service/engine/core/components/risk_monitor.py:362` and
+    `.../exit_playbook_executor.py` (all `MARKET_ORDER`); no strategy engine emits `HEDGE_BASIS`. All
+    basis/arb/MM/prediction v2 engines construct `AtomicInstruction` instead (the real mechanism).
+  - **No strategy-family doc requests spot+perp HEDGE_BASIS decomposition:** the single grep hit in
+    `/codex/09-strategy/architecture-v2/families/vol-trading.md` is a "Delta-hedge engine" (dynamic re-hedging for vol
+    strategies) — unrelated to the `HEDGE_BASIS` spot+perp basis decomposition. The only codex doc referencing
+    `instruction_adapter` is the SUPERSEDED pre-v2
+    `/codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md` (`status: superseded`).
+  - **Capability-gap note (why not KEEP-AS-REFERENCE):** `_decompose_hedge_basis` produces a spot+perp `ExecutionStep`
+    pair (line 394-399, `depends_on=[spot_step.step_id]`) via the pre-v2 `StrategyInstruction`→`ExecutionPlan`
+    intent-engine path. The real basis engine `CarryStakedBasisEngine.on_tick()` already emits the same spot+perp pair
+    as `AtomicInstruction` with `execution_mode=LEADER_HEDGE` (staked_basis.py:784-793), which
+    `AtomicLegExecutor.execute()` (atomic_leg_executor.py:362, leader-first then `hedge_deadline_ms` then
+    unwind-on-hedge-failure at :424) covers with real sequencing/timing risk. No named currently-planned strategy family
+    needs the dead `HEDGE_BASIS` path. DELETE per the workspace delete-deprecated-code HARD RULE (no shims).
+  - **Distinctness from `MultiLegOrchestrator` (per plan todo):** independent verdict evidence, even though both
+    verdicts land on DELETE. `MultiLegOrchestrator` is dead by zero instantiation + no liquidity-aware-routing family
+    intent; `instruction_adapter`'s `HEDGE_BASIS` path is dead by zero emission of the instruction type it decomposes +
+    zero callers of the whole module + the capability being fully superseded by `AtomicLegExecutor` LEADER_HEDGE. Actual
+    code removal of BOTH is tracked by the gated execution plan `multi_leg_execution_systems_execution_2026_08_10.md`
+    ("Retire whichever system(s) the audit verdicted DELETE").
