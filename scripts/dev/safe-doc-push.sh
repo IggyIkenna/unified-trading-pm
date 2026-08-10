@@ -59,7 +59,11 @@
 # exhausted AND the caller's named files no longer match what they handed this script -- their
 # edits were reverted mid-run (measured twice on 2026-08-10). Distinct from 5 precisely because
 # the remedy is opposite: 5 means "re-run, your content is intact"; 10 means "RECOVER FIRST, a
-# re-run would push whatever is on disk now". See _sdp_warn_if_content_vanished.
+# re-run would push whatever is on disk now". See _sdp_warn_if_content_vanished. SECOND trigger
+# (2026-08-10, safe_doc_push_isolation_drops_rename_deletions_2026_08_10 second symptom): the
+# "nothing to stage" fallback now verifies the caller's content against origin/$BRANCH (not HEAD)
+# -- if it is NOT on the remote AND the on-disk copy was swept into a stash during the run, the
+# script exits 10 with the recovery refs instead of reporting a false "already landed" success.
 #
 # EXIT CODES: 0 success -- verified end-to-end (incl. "nothing to commit" -- another slot
 # already landed the identical content; every success path, including that fallback, only
@@ -656,6 +660,48 @@ files_exist_in_head() {
   return 0
 }
 
+# content_matches_origin -- true only if EVERY named file's ENTRY content (the on-disk state
+# the caller handed this script, captured in _SDP_ENTRY_FINGERPRINT BEFORE any reconcile) is
+# genuinely present at origin/$BRANCH. This is the ONE legitimate reading of "nothing to stage
+# -- a concurrent session landed identical content": the caller's content itself must be on the
+# REMOTE ref, not merely match HEAD.
+#
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (second symptom): the old fallback
+# compared the working tree against HEAD (`git diff --quiet -- files` + `files_exist_in_head`).
+# When a quarantine swept the caller's edits into a stash BEFORE staging, the tree reverted to
+# HEAD == origin, so every HEAD-based check passed while origin carried zero of the caller's
+# content -- a false success, reported exit 0. Comparing the ENTRY content (NOT the current
+# working tree, which may already have been reverted by that quarantine) against origin/$BRANCH
+# is what tells the two cases apart: entry content on the remote = genuinely landed (success is
+# legitimate); entry content absent/different = the caller's edits are NOT on the remote and
+# must never be reported as such.
+# Returns 0 = every named file's entry content matches origin/$BRANCH; 1 otherwise.
+content_matches_origin() {
+  local _entry="$1" _line _hash _path _origin_hash
+  while IFS= read -r _line; do
+    [[ -n "$_line" ]] || continue
+    _hash="${_line%%  *}"
+    _path="${_line#*  }"
+    if [[ "$_hash" == "ABSENT" ]]; then
+      # Caller's entry state was a deletion -- "genuinely on the remote" means origin lacks it too.
+      if git cat-file -e "origin/${BRANCH}:$_path" 2>/dev/null; then
+        echo "  ⚠ entry content NOT on origin/${BRANCH}: $_path is absent here but still present there" >&2
+        return 1
+      fi
+      continue
+    fi
+    _origin_hash="$(git rev-parse -q --verify "origin/${BRANCH}:$_path" 2>/dev/null)" || {
+      echo "  ⚠ entry content NOT on origin/${BRANCH}: $_path is present here but absent there" >&2
+      return 1
+    }
+    if [[ "$_hash" != "$_origin_hash" ]]; then
+      echo "  ⚠ entry content NOT on origin/${BRANCH}: $_path differs from what this run was handed" >&2
+      return 1
+    fi
+  done <<<"$_entry"
+  return 0
+}
+
 # verify_committed -- ground truth for "is this file genuinely committed", independent of any
 # git command's exit code. safe_doc_push_reports_success_having_committed_nothing_2026_08_09
 # (todo 2): a `git commit`/fallback path can report success (a 0 exit, or a "nothing to commit"
@@ -1116,17 +1162,27 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if the content genuinely landed on origin/${BRANCH}"
+      if content_matches_origin "$_SDP_ENTRY_FINGERPRINT"; then
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files' content genuinely already matches origin/${BRANCH} (a concurrent session landed identical content) -- treating as success."
           final_ok=true
           break
         fi
-        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+        echo "  content matches origin/${BRANCH} but end-to-end verification failed -- not trusting the fallback; retrying"
+      elif ! _sdp_warn_if_content_vanished; then
+        # safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (second symptom): nothing
+        # was staged, the caller's content is NOT on the remote, AND the on-disk copy no longer
+        # matches what the run was handed -- the exact signature of the run's own reconcile
+        # having swept the edits into a stash before staging. This is NOT a benign no-op push;
+        # _sdp_warn_if_content_vanished has already printed the recovery refs above. Exit 10
+        # ("recover first, then re-run"), never a reported success.
+        echo "❌ NOT A SUCCESS: nothing was staged, the named content is NOT on origin/${BRANCH}, and your edits" >&2
+        echo "   were swept into a stash during this run (recovery refs above). RECOVER FIRST, then re-run." >&2
+        exit 10
       else
-        echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
+        echo "  named content is not on origin/${BRANCH} and is still intact on disk -- staging genuinely failed; retrying"
       fi
     fi
 
