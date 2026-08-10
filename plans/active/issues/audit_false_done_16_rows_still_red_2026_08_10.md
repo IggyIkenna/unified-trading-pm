@@ -140,12 +140,23 @@ dispatched `sports_travel_calculator-001` 38 times). These 16 must be reopened/t
       241 via `archive/2026_07/`. Growth +516 from 1,013→1,529 is normal fleet archival activity between 2026-08-08 and
       2026-08-10. Verdict: no NEW non-archived referents dropped — the audit's unresolved count is a trailing indicator
       of plan archival, not a correctness defect. See Progress Log for full breakdown.
-- [ ] [BACKEND] P2. **Root-cause why 2 triaged rows recurred** (`defi_cefi_venue_chain_axis_contamination-011`,
+- [x] ✅ [BACKEND] P2. **Root-cause why 2 triaged rows recurred** (`defi_cefi_venue_chain_axis_contamination-011`,
       `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025`) — the parent FLIP/verify didn't hold;
       if a reopen+re-done path re-creates a false-done, that's a mechanism bug worth its own fix, not a per-row
-      accident. **Done when**: mechanism identified + fix filed (or shown to be per-row mishandling).
+      accident. **Done when**: mechanism identified + fix filed (or shown to be per-row mishandling). — **Mechanism
+      identified + fix filed** (see Progress Log 2026-08-10 slot 19): `-025` is a genuine mechanism bug (audit
+      `_still_unchecked` matches repeated `- [ ]` lines with byte-identical first lines, so a recurring "launch next
+      round" gate perpetually re-flags the same stem — fix = dedupe matched unchecked lines by identity /
+      first-occurrence); `-011` is per-row mishandling (worker marked done with `no-code:gate-still-unmet-verified`
+      without flipping the checkbox). Fix tracked as a `- [ ]` follow-up below.
 
----
+- [ ] [BACKEND] P2. **Fix `audit_false_done.py::_still_unchecked` to not re-flag a repeated `- [ ]` line whose first
+      line is byte-identical to an already-`[x]`-flipped todo in the same plan.** The recurring "Round-8 ACTUAL LAUNCH"
+      gate in `cefi_content_migration_..._2026_07_31.md` recurs because the audit matches by first-line hash alone
+      (`_UNCHECKED_RE` + `_brief_hash`), so every "launch the next round" instance with the same first line re-derives
+      the same task stem and re-flags false_done. Match the full todo line (or dedupe so only the FIRST unchecked
+      occurrence of a given brief counts), so a genuinely-flipped-and-replaced recurrence is not re-flagged. (repo:
+      agent-orchestrator; scripts/orchestrator/audit_false_done.py)
 
 ## Progress Log
 
@@ -185,3 +196,35 @@ finding actively LYING rows (checkbox still `- [ ]` but status=done), not rows p
 non-archived referents are being dropped. The `_plan_ref_candidates` function could be extended to also search
 `plans/archive/` (so genuinely-archived rows become "honest" rather than "unresolved"), but that's a cosmetic
 improvement — it wouldn't change the audit's core signal (false_done count).
+
+### 2026-08-10 — Todo 3 (root-cause the 2 recurring rows) — mechanism identified + fix filed (slot 19)
+
+Root-caused both recurring rows. Two DISTINCT mechanisms — one genuine audit blind spot, one per-row mishandling:
+
+**1. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` — MECHANISM BUG (audit blind spot).**
+The todo it derives from is `cefi_content_migration_..._2026_07_31.md` line 888:
+`- [ ] [DATA] P1. Round-8 ACTUAL LAUNCH — all 8 shards (16,17,18,19,21,23,41,42). **Gated on prereq ...` (a recurring
+"launch the next round" gate). Commit `0e9185d2ce` (the original `-025` completion) did BOTH in one commit: flipped line
+888 to `[x]` AND immediately added a NEW `- [ ]` line with a BYTE-IDENTICAL first line
+(`- [ ] [DATA] P1. Round-8 ACTUAL LAUNCH — all 8 shards (16,17,18,19,21,23,41,42). **Gated on prereq`). The audit's
+`_still_unchecked` hashes only the FIRST LINE of each `- [ ]` line (`_UNCHECKED_RE` captures one line, `_brief_hash`
+hashes `m.group(1).strip()`), so the newly-added unchecked line hashes to the SAME `brief_hash` as the old task stem →
+the same `-025` stem perpetually re-derives and re-flags false_done on every round. Verified: `-025` queued row's
+`brief_hash=0354d900...` == sha256 of the full first line
+`[DATA] P1. Round-8 ACTUAL LAUNCH — all 8 shards (16,17,18,19,21,23,41,42). **Gated on prereq`. This is the exact
+"reopen+re-done re-creates a false-done" mechanism the todo suspected — it is NOT per-row accident.
+
+**2. `defi_cefi_venue_chain_axis_contamination-011` — PER-ROW MISHANDLING.** Its plan line
+(`defi_cefi_..._2026_07_28.md` line 300,
+`[DATA] P1. NEW 2026-08-04. Once <cefi_tardis_derivative_ticker_historical_gap backfill> completes: re-run run_cefi_perp_funding_corpus.py...`)
+is gated on an upstream backfill that has NOT completed. A worker marked the task done with
+`done_sha=no-code:gate-still-unmet-verified` — a `no-code:` decline that verifies the gate is unmet and records
+completion WITHOUT flipping the checkbox. Because the checkbox stays `- [ ]`, the audit re-flags it every run until the
+backfill actually completes and the line is genuinely flipped. The parent doc's "FLIP" verdict was this `no-code:`
+decline, not a checkbox flip — hence "the FLIP didn't hold".
+
+**Fix filed** (tracked below): the audit's `_still_unchecked` must NOT match a `- [ ]` line whose brief is a REPEATED
+instance of an already-`[x]`-flipped todo (dedupe by full-todo identity / line number, or require the matched `- [ ]`
+line to be the FIRST unchecked occurrence of that brief, not a recurrence). This is a
+`scripts/orchestrator/audit_false_done.py` change (server-side audit fix), tracked as a `- [ ]` follow-up in this doc's
+Todos below.
