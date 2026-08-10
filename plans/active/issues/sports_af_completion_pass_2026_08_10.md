@@ -77,21 +77,21 @@ depends_on: []
         (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) in one pass rather than 5 sequential launches.
       - **Session compacted 2026-08-10 ~13:30Z** — VM still mid-flight: (see deferred work table below for latest)
 
-      - **Session compacted 2026-08-10 ~11:45Z** — VM still RUNNING:
-        - Progress: `last_completed_date=2022-04-09` (local SSH, 11:45Z), `2022-03-20` (GCS tee, normal lag). ~658/2257
-          days done (~29%). Pace steady at ~9-10 dates/min. ETA to completion: ~2.7h → finish ~14:30Z.
+      - **Session compacted 2026-08-10 ~11:45Z** — VM still mid-flight: (see deferred work table below for latest)
+
+      - **Session compacted 2026-08-10 ~11:48Z** — VM still RUNNING:
+        - Progress: `last_completed_date=2022-05-01` (local SSH, 11:48Z), `2022-04-23` (GCS tee, normal lag). ~695/2257
+          days done (~31%). Pace steady at ~7-10 dates/min. ETA to completion: ~2.6-3.7h → finish ~14:30-15:30Z.
         - VM healthy: `instruments_chunk_loop.sh` + `heartbeat_daemon.py` both running, PIPELINE_HEARTBEAT emitting.
-        - 313 INJURIES fetched for `date=2022-04-09` — COVID-era sparse calendar now behind us, per-date payload density
-          increasing in later seasons.
 
-## Deferred work after 2026-08-10 ~11:45Z
+## Deferred work after 2026-08-10 ~11:48Z
 
-| Item                                                                                                                | State / why deferred                                         | Blocked on                                                                                           |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `last_completed_date=2022-04-09` (local), ~2.7h ETA | VM completion (real infra)                                                                           |
-| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM                  | INJURIES VM exit_code                                                                                |
-| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                            | All entity backfills complete                                                                        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                        | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+| Item                                                                                                                | State / why deferred                                       | Blocked on                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `last_completed_date=2022-05-01` (local), ~3h ETA | VM completion (real infra)                                                                           |
+| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM                | INJURIES VM exit_code                                                                                |
+| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                          | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                      | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
 
 **Recommended NEXT item**: Check `af-backfill-20260810-103218` status:
 
