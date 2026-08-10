@@ -212,7 +212,7 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       them". Net effect is a commit whose content has no relationship to its `--files` argument or its message. This is
       worse than the absorption failure in the sibling todo above, because it is SILENT: quickmerge reported success and
       verified push ancestry. The scoped-pathspec commit proposed in that todo would also fix this.
-- [ ] [BACKEND] P0. Defect (B) has a WORKER twin that is still live and is the bigger of the two — the fix shipped in
+- [x] [BACKEND] P0. Defect (B) has a WORKER twin that is still live and is the bigger of the two — the fix shipped in
       @809c405 only guarded main. Every worker boot posts a literal zero that is then read as a compaction:
       `server/prompts.py:219` (STEP 0 liveness) curls
       `/api/slots/{id}/heartbeat -d '{"context_used_pct": 0, "message": "boot-started (reading role files)"}'`, and
@@ -225,7 +225,18 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       reached 6), which drives `derive_context_pressure` to "thrashing" and fires premature `context_recycle_requested`
       fleet-wide; 132 `slot_compacted` events fleet-wide that day. Candidate fix: make STEP 0 omit `context_used_pct` (a
       boot heartbeat is a liveness ping, not a measurement) and/or apply the same "0 is not a reading" guard inside
-      `update_slot_ping` so no caller can manufacture a compaction with it.
+      `update_slot_ping` so no caller can manufacture a compaction with it. — SHIPPED agent-orchestrator@d990e18, via
+      the first option: `HeartbeatRequest.context_used_pct` is now `int | None = None` (None = "alive, NOT reporting",
+      which the schema previously could not express), the heartbeat route carries the STORED reading through when it is
+      None so `last_ping` stays fresh without inventing a drop, and STEP 0 no longer sends the field at all. 4 tests in
+      `tests/test_heartbeat_no_phantom_compaction.py`, incl. one asserting the COMPOSED boot prompt carries no context
+      figure (so a re-wording of STEP 0 cannot silently reintroduce it) and one documenting the harm directly (a 0 ping
+      over a real 48% does record a phantom 48->0). **The gate caught a second-order bug in this very change**: the
+      dispatch gate at `slots_worker.py:911` compared `req.context_used_pct >= compact_gate_pct` and now TypeError'd on
+      None. Fixed to read `slot.context_used_pct` (already resolved by the ping above). Worth recording WHY that
+      mattered: a defensive `(req.context_used_pct or 0) >= gate` would have "worked" while letting a saturated worker
+      collect a fresh task simply by OMITTING the field — turning a crash into a silent bypass of the gate that exists
+      to stop a 90%-context worker being handed more work.
 - [ ] [BACKEND] P2. Make main actually self-report `context_used_pct`, closing defect (A) at source for the one role the
       slot-mirror cannot cover (main is not on an `orch-slot-N` session). `agents/main.md:293` already instructs
       `"context_used_pct": <0-100, your /usage estimate>` on every `/poll`, yet the live row read 0 with a fresh ping —
@@ -236,6 +247,27 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `context_used_pct == 0`) as a heuristic without a schema change. Prefer (b) if it proves reliable enough —
       smaller, safer, no migration risk. NOTE 2026-08-10: materially less urgent now the slot-mirror fills the common
       case; the residual is a genuinely slot-less agent (cloud `review`) that has never reported.
+- [ ] [UI] P1. Fleet Task cell surfaces a typed agent's real work — CODE SHIPPED agent-orchestrator@dd4b18f, but this
+      stays UNTICKED: the `pw:L2` gate is NOT satisfied and the workspace rule is explicit that no UI item ticks without
+      it. Operator ask 2026-08-10: a slot running a cicd escalation showed only a bare "cicd" badge while the Agents
+      panel showed `unified-trading-pm#2709 — sit_failure` for the same session. Shipped: `agentWorkBySlot()` joins
+      agents to slots on the `orch-slot-N` session name (client-side — `AgentView` already carries `current_task`/
+      `source`, so no backend change), threaded into `SlotTable` as `workBySlot` mirroring the existing `doneBySlot`
+      prop; `RoleBadge` keeps the ROLE as its label (what distinguishes an escalation worker from a planning worker at a
+      glance) and puts the task in its tooltip, replacing text that asserted "no backlog task" — true of the SLOT, false
+      of the AGENT in it. Covered at L1 (4 vitest cases for the mapper, tsc clean, 59 passing in layout.test.ts). TO
+      CLOSE: land the L2 spec once the harness todo below is fixed.
+- [ ] [UI] P1. Unblock `pw:L2` for any Fleet-row state that depends on a LIVE worker — currently impossible, which is
+      why the todo above cannot tick. Measured 2026-08-10 while writing
+      `dashboard/tests/e2e/fleet-typed-agent-work.spec.ts` (committed as `describe.skip` with the diagnosis inline, NOT
+      deleted — its assertions are correct and become valid the moment this is fixed): the e2e backend's AgentKeeper
+      reconciles seeded fixture rows away within seconds of boot. The failing run's own artifacts show
+      `tmux_session_lost` for the fixture slot in the activity feed and "No agents connected" in the Agents panel,
+      because `reap_orphan_agents` archives any agent whose tmux session is not GENUINELY live — which a seeded row can
+      never be. The slot then trips `slotRowIsDead` (idle/killed with no `tmux_alive`/`worker_alive`), and the Task cell
+      is gated on `!dead`, so the badge never renders. Options: a fixture-only liveness override honoured by
+      `reap_orphan_agents`/`slotRowIsDead`, or an e2e path that drives a real spawned worker. Until one exists, every
+      `!dead`-gated Fleet cell is structurally untestable at L2 and any [UI] todo touching one cannot legitimately tick.
 - [ ] [UI] P3. Dashboard: render "—" rather than "0%" for the residual never-sampled case the DATA todo above defines,
       with a `pw:L2` regression spec covering both "genuinely fresh, real 0%" and "never sampled" so they don't get
       conflated. Downgraded P2→P3 on 2026-08-10: the two BACKEND fixes above remove the misleading 0% for every
@@ -295,6 +327,15 @@ healthy main, and it parks a 0 in the row `_read_pct` consults, which cannot cro
   Corrected the "purely a display gap" triage framing — (B) writes state and drives premature recycles. NOTE: this doc
   is no longer whole-doc NA — the two remaining BACKEND/DATA todos are bounded, but the `[UI] P3` still carries the
   pw:L2 gate, so the prior non-parallelizable finding stands for the UI item alone.
+
+- **ROOT-CAUSE PATTERN 2026-08-10 — "0" meaning two different things has now produced THREE bugs in this doc.** It is
+  worth stating as the family, because each was found separately and fixed separately: (1) main's SlotRow clobbered to 0
+  by an unreported self-report, fabricating compactions; (2) every WORKER's boot ping sending a literal 0, fabricating
+  compactions fleet-wide; (3) while fixing (2), the dispatch gate turning a missing measurement into a comparison
+  against 0 — which, had it been written defensively rather than crashing, would have let a saturated worker bypass the
+  gate by omitting the field. The schema's inability to distinguish "never sampled" from "measured empty"
+  (`context_used_pct: nullable=False, default=0`) is the shared cause, which promotes the `[DATA]` sentinel todo from
+  cleanup to the actual structural fix. `HeartbeatRequest` is now the first surface to model it honestly (`int | None`).
 
 - **FOLLOW-UP 2026-08-10 — the mirror's first cut had a staleness bug, caught by the operator within the hour.** It only
   filled a ZERO, so the AgentRow froze at the first value written while the slot kept moving: the cicd agent on
