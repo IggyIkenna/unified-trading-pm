@@ -596,19 +596,30 @@ of total tokens: **laptop 98.90%** (1,267,416,118 / 1,281,547,098) vs **AO on `s
 experiment is therefore a REFINEMENT for pricing genuinely cache-light work (a short one-shot task), not a blocker on
 using ~190x for AO today.
 
-## Deferred work after 2026-08-10
+## Deferred work after 2026-08-10 (evening)
 
-| item                                               | state / why deferred                                                                                                                              | blocked on                                   |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Reserve one max20 account for AO exclusively       | **Operator-owned** — needs a human commitment never to use it interactively; unlocks exact, laptop-free calibration                               | operator                                     |
-| Meter-history + laptop-login samplers (todos 1, 3) | **Not done** — highest priority; every hour without them permanently destroys 5-hour windows and login attribution                                | nobody                                       |
-| Quota-meter weighting experiment                   | **Cannot be done yet** — needs a second window at a very different cache-read share; only refines pricing for cache-light work, does not block AO | elapsed time / a differently-shaped workload |
-| Pro-account multiplier                             | **Cannot be done yet** — needs a controlled Pro window measured the way the Max one was                                                           | elapsed time                                 |
-| Batching rule propagation (todos 24-26)            | **Not done** — cheap doc work, large payoff (~46% of bill), but recoverable later unlike the samplers                                             | nobody                                       |
-| Plan line-cap extraction                           | **Not done** — 575 lines on origin vs 500 soft / 1000 hard; extract oldest closed Progress Log sections before it hits the hard cap               | nobody                                       |
+| item                                                        | state / why deferred                                                                                                                                                                                                      | blocked on                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **Land the calibration code on LDR**                        | **Not done — WRITTEN AND GATED, not shipped.** Full QG green at 17:53 (3,306 tests, basedpyright/tsc/vitest clean) and its own 94 tests pass; blocked only by a PEER session's in-flight refactor in this shared checkout | a peer session finishing (below) |
+| **Land the per-account axis** (state store/API/UI/pw)       | **Not done — same block, plus a direct file collision**: the `account_id` filter lives in `server/state_store/slots.py`, which the peer is mid-refactor on                                                                | same                             |
+| Verify the reservation held (todo 11)                       | **Cannot be done yet** — needs the first post-reset window                                                                                                                                                                | Wednesday resets                 |
+| Pro + max20 multipliers (todos 14, 21)                      | **Cannot be done yet** — needs a post-reset window on `sub-a-ikenna` / `sub-e-odum3default`                                                                                                                               | Wednesday resets                 |
+| Reprice `--apply` on the live VM                            | **Operator-owned** — mutates ~1,993 production rows; run the dry run first                                                                                                                                                | operator                         |
+| Audit the 23 `agents/` role files for sequential-step prose | **Not done** — cheap, and the guidance is undermined wherever a role doc walks an agent through one command per step                                                                                                      | nobody                           |
+| Plan line-cap extraction                                    | **Not done** — the plan is now well past the 500-line soft cap; move closed Progress Log sections into the cost-attribution codex SSOT (todo 27) rather than deleting them                                                | nobody                           |
 
-**Recommended NEXT item**: the two samplers (todos 1 and 3). Everything else in this plan is recoverable work; those two
-are the only items whose input data is destroyed by the passage of time.
+**The block, precisely** (so the next session does not re-diagnose it): a peer session is running a large git-status
+single-source-of-truth refactor in this same checkout — `server/orm.py`, `server/failover.py`, `server/routes/state.py`,
+`server/routes/git_health.py`, `server/state_store/slots.py`, `server/worker_liveness/`, `notifications/slack.py` and
+six test files, all dirty and uncommitted. `quickmerge` re-gates against the WHOLE working tree, and the tree is red for
+exactly one reason: `ruff format --check` wants to reformat `server/worker_liveness/_git_alerts.py`, a file this plan
+never touched. Everything else passes. Formatting it would be editing a peer's mid-refactor WIP, so it was left alone.
+**Resolution is to re-run `quickmerge` once that refactor lands** — no rework is needed, and nothing here is at risk,
+because the calibration code is a strict superset of a tree that already went green.
+
+**Recommended NEXT item**: land the calibration code the moment the peer's refactor clears. The two Wednesday-gated
+measurements have ~2 days of slack, so this is not urgent — but it is the only thing standing between a green gate and a
+shipped calibration path.
 
 ### Session lessons (carry these, they cost real time)
 
