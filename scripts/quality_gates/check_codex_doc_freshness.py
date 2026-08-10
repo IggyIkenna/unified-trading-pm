@@ -62,23 +62,6 @@ from typing import cast
 
 import yaml
 
-
-def _pm_root_or_legacy(workspace_root):
-    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
-
-    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
-    named checkout; fixes resolution when running from a git worktree."""
-    import pathlib as _pathlib
-    import sys as _sys
-
-    _d = str(_pathlib.Path(__file__).resolve().parent)
-    if _d not in _sys.path:
-        _sys.path.insert(0, _d)
-    from _pm_root import pm_root_or_legacy as _impl
-
-    return _impl(workspace_root)
-
-
 CUTOVER_CRITICAL_DIRS = (
     "codex/02-data",
     "codex/04-architecture",
@@ -107,7 +90,7 @@ def _iter_codex_md(workspace_root: Path) -> list[Path]:
     """Walk cutover-critical codex surfaces for *.md files."""
     candidates: list[Path] = []
     for d in CUTOVER_CRITICAL_DIRS:
-        root = (_pm_root_or_legacy(workspace_root)) / d
+        root = workspace_root / "unified-trading-pm" / d
         if not root.is_dir():
             continue
         for p in root.rglob("*.md"):

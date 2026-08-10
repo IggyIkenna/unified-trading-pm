@@ -78,27 +78,7 @@ _push_gov_dir() { echo "${PUSH_GOV_DIR:-$(_push_gov_shared_root)/.benchmarks/pus
 
 # ── validation-phase token bucket (K=8 default) ──────────────────────────────────────────
 _PUSH_GOV_VALIDATE_FD_BASE=400
-# K default is CORE-DERIVED, not a constant (2026-08-10,
-# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md). It was a fixed 8 on the
-# reasoning that "8 seems reasonable" — but 8 is a property of the HOST, not of the workload,
-# and on the operator's laptop it is roughly 4x too many. Measured 2026-08-10: the precommit
-# hygiene sweep on ONE staged plan file costs 18.6s of real work in an idle worktree, yet the
-# same sweep measured 118s in the loaded shared checkout — a ~6x inflation. 8 concurrent 19s
-# hook chains on a 10-core box reproduces exactly that ~2min wall time, which is in turn what
-# makes the pre-commit drift gate unpassable (PM commit inter-arrival is 60-80s), i.e. the
-# livelock. Mirror qg-host-governor.sh's long-standing derivation rather than inventing a
-# second policy: max(2, floor(physical_cores / 4)) — 10-core Mac -> 2, 24-core box -> 6.
-# The floor of 2 keeps two agents able to validate concurrently; PUSH_GOV_VALIDATE_CONCURRENCY
-# still overrides explicitly.
-_push_gov_validate_default_k() {
-    local cores
-    cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
-    [[ "${cores:-0}" -ge 1 ]] || cores="$(sysctl -n hw.physicalcpu 2>/dev/null || nproc 2>/dev/null || echo 4)"
-    local k=$(( cores / 4 ))
-    (( k >= 2 )) || k=2
-    echo "$k"
-}
-_push_gov_validate_k() { echo "${PUSH_GOV_VALIDATE_CONCURRENCY:-$(_push_gov_validate_default_k)}"; }
+_push_gov_validate_k() { echo "${PUSH_GOV_VALIDATE_CONCURRENCY:-8}"; }
 
 push_gov_acquire_validate() {
     [[ "${PUSH_GOV_DISABLE:-}" == "true" ]] && return 0

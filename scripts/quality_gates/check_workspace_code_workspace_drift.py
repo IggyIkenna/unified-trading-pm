@@ -47,23 +47,6 @@ import sys
 from pathlib import Path
 from typing import cast
 
-
-def _pm_root_or_legacy(workspace_root):
-    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
-
-    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
-    named checkout; fixes resolution when running from a git worktree."""
-    import pathlib as _pathlib
-    import sys as _sys
-
-    _d = str(_pathlib.Path(__file__).resolve().parent)
-    if _d not in _sys.path:
-        _sys.path.insert(0, _d)
-    from _pm_root import pm_root_or_legacy as _impl
-
-    return _impl(workspace_root)
-
-
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 ACTIVE_STATUSES = frozenset({"active", "scaffolded"})
@@ -124,7 +107,7 @@ def _partition_repos(manifest: dict[str, object]) -> tuple[set[str], set[str]]:
 
 
 def check(workspace_root: Path) -> int:
-    pm_root = _pm_root_or_legacy(workspace_root)
+    pm_root = workspace_root / "unified-trading-pm"
     canonical = pm_root / "cursor-configs" / "unified-trading-system-repos.code-workspace"
     manifest_path = pm_root / "workspace-manifest.json"
 

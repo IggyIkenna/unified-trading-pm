@@ -10,7 +10,7 @@ summary: >-
   batch/consolidated-closeout doc claims this deployment-ui-specific spot-check, and the work is a small, bounded,
   deterministic grep-and-conditional-removal with a stated done-when, so it clears the AO dispatch-scope bar even though
   the source issue doc itself currently self-declares `assigned_vm: NA`.
-status: active
+status: draft
 nature: process
 asset_group: [cefi]
 stage: [meta]

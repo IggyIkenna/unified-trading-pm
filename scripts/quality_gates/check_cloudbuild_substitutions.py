@@ -53,23 +53,6 @@ from typing import Final, cast
 
 import yaml
 
-
-def _pm_root_or_legacy(workspace_root):
-    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
-
-    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
-    named checkout; fixes resolution when running from a git worktree."""
-    import pathlib as _pathlib
-    import sys as _sys
-
-    _d = str(_pathlib.Path(__file__).resolve().parent)
-    if _d not in _sys.path:
-        _sys.path.insert(0, _d)
-    from _pm_root import pm_root_or_legacy as _impl
-
-    return _impl(workspace_root)
-
-
 SCRIPT_DIR: Final[Path] = Path(__file__).resolve().parent
 PM_ROOT: Final[Path] = SCRIPT_DIR.parent.parent
 DEFAULT_WORKSPACE_ROOT: Final[Path] = PM_ROOT.parent
@@ -197,7 +180,7 @@ def scan_cloudbuild(path: Path) -> list[Violation]:
 
 
 def _manifest_repos(workspace_root: Path) -> list[str]:
-    manifest_path = (_pm_root_or_legacy(workspace_root)) / "workspace-manifest.json"
+    manifest_path = workspace_root / "unified-trading-pm" / "workspace-manifest.json"
     if not manifest_path.exists():
         manifest_path = PM_ROOT / "workspace-manifest.json"
     with manifest_path.open(encoding="utf-8") as f:

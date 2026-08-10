@@ -382,21 +382,21 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-                              SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-                              2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-                              below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-                              pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-                              rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-                              survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-                              both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-                              original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-                              per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-                              08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-                              also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-                              week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-                              rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-                              above for a causal read. New follow-up filed directly below given the climbing raw rate.
-                              (repo: agent-orchestrator)
+                          SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                          2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                          below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                          pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                          rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                          survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                          both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                          original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                          per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                          08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                          also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                          week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                          rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                          above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                          (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
       08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
@@ -506,19 +506,15 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `scripts/scheduled_job_already_ran.py` to /usr/local/bin, so a PARTIAL re-install is fine (the file is identical
       from whichever installer writes it last) but a ZERO re-install leaves every fix inert. `[OPERATOR]` because it
       needs sudo on the VM. (repo: agent-orchestrator)
-- [x] ✅ [DATA] P2. **VERIFIED 2026-08-10 (slot-18, data_engineering) — MIXED.** (1) **Local QG**: ✅ GREEN pre-commit
-      (2584 python, tsc clean, 225 vitest — the todo's own text, re-confirmed). (2) **LDR Deploy Dashboard**: ❌
-      CANCELLED (run 31121770442 — still the same outcome as 2026-08-06; no later run completed for this sha). (3)
-      **Promote PR `quality-gates-v2`**: ⚠️ **UNABLE TO VERIFY — token lacks `statusCheckRollup` scope** (same
-      limitation as slot-3's 2026-08-06 check). GH API returned `Resource not accessible by personal access token` on PR
-      #816 (`chore(promote): LDR → main (Option-B direct)`, head `eb6a7635`, created 2026-08-07T04:03:59Z, closed
-      2026-08-07T07:30:38Z without merging). All promote PRs #806-816 are cycling CLOSED (none merged); `4a77bfe` is NOT
-      on `origin/main` (confirmed via `git merge-base --is-ancestor` — promotion never completed). Main received direct
-      CI-migration merges #817-820 (2026-08-07..08-09) instead. The fleet promotion for agent-orchestrator appears
-      STUCK, not green — but the block is at the promote-PR level (not a code defect in `4a77bfe` itself). `4a77bfe` IS
-      on LDR (ancestor of current tip `425a779`), so it passed the local QG gate. The promote-PR `quality-gates-v2`
-      status remains unverifiable without a token with broader scope. (repo: agent-orchestrator,
-      unified-trading-pm@da7553117e)
+- [ ] [DATA] P2. Verify agent-orchestrator@4a77bfe actually went green. As of 2026-08-06 17:09 its LDR
+      `Deploy Dashboard (Firebase Hosting)` run (31121770442) had been **queued 8+ minutes with no runner**, and the
+      three preceding LDR runs of that same workflow all ended `cancelled` at 10-23min — consistent with
+      concurrency-group supersession on a busy branch, but nobody has confirmed that workflow ever COMPLETES on LDR.
+      Separately confirm `quality-gates-v2` green on the LDR→main promote PR carrying this sha (that is the actual
+      required check; LDR never runs server QG). Local gate was green pre-commit — 2584 python, `tsc --noEmit` clean,
+      225 vitest — so this is CI-surface verification, not a suspected code defect. NOTE: the slot-3 dev token could not
+      read `statusCheckRollup` (`Resource not accessible by personal access token`), so the promote PR's checks could
+      not be inspected from this checkout. (repo: agent-orchestrator)
 
 <!-- Operator rulings 2026-08-06 (slot-3 session): shard plan-reconciler, ui as the 10th tranche, Saturday `all` run,
      guard on lifecycle-complete. PM half SHIPPED unified-trading-pm@d11d0a765; the AO half below was NOT started in
@@ -917,10 +913,3 @@ gates promotion to `main`, not the fix's correctness.
   (quality-gates-v2 on a promote PR) cannot be confirmed until the promote resumes; a future worker should re-check the
   promote state (`gh pr list --search "chore(promote)"` / promote-lag monitor), not re-derive this history. No code
   shipped.
-  - **2026-08-10 (slot 18, data_engineering, ~11:20Z) — FLIPPED.** Slot-25's 2026-08-10 entry above covers the same
-    surface and correctly diagnosed the promote-PR vacuum. Re-verified independently: local QG green; Deploy Dashboard
-    cancelled for 4a77bfe specifically but workflow functional on LDR; promote stuck (no merged promote PR since #783 on
-    08-05; all #806-816 cycling CLOSED; 4a77bfe NOT on main) — this is a fleet-promotion infrastructure gap, not a
-    4a77bfe code failure. Flipped to [x] — the verification is complete within the limits of what the dev token can
-    verify. Keeping the checkbox open just re-dispatches workers to re-derive the same conclusion.
-    (unified-trading-pm@da7553117e)

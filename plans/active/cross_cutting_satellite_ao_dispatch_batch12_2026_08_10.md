@@ -12,7 +12,7 @@ summary: >-
   `features_service_e2e_pipeline_test_2026_05_26.md` (an MDPS BITGET-FUTURES backfill retry now that its blocking
   VM-launch bug is fixed, and a Phase-B CeFi MDPS top-up + delta_one funding_oi/realized_vol verification). Conflict-
   checked against all 4 currently-active cross-cutting batches (batch1b/2/6/11) — zero file/title overlap.
-status: active
+status: draft
 nature: process
 asset_group: [cross-cutting]
 stage: [data, meta]

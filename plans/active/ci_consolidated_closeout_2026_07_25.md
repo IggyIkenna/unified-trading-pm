@@ -105,8 +105,8 @@ isolation fixed on self-hosted runners.
 (AWS CodeBuild cosmetic failure-status noise on promote PRs) ·
 [issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
 (digest-drift-sweep GHA workflow never dispatches → fleet Cloud Builds red) ·
-[issues/aws_codebuild_terraform_import_pending_2026_07_22.md](/plans/archive/2026_08/issues/aws_codebuild_terraform_import_pending_2026_07_22.md)
-(terraform import owed for AWS CodeBuild projects/webhooks — RESOLVED 2026-08-10, all 7 todos shipped, archived) ·
+[issues/aws_codebuild_terraform_import_pending_2026_07_22.md](/plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md)
+(terraform import owed for AWS CodeBuild projects/webhooks) ·
 [issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md](/plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md)
 (`rollout-cloudbuild.py` template drift would regress fleet Cloud Build fixes) ·
 [archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md](/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md)

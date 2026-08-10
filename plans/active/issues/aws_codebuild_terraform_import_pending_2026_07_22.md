@@ -9,7 +9,7 @@ summary:
   the deployment-api project (live on unified-trading-codebuild-role's codebuild-permissions inline policy — note the
   live policy name differs from the TF's unified-trading-codebuild-policy), and (b) a comment marking deployment-ui as a
   dispatch-only entry (no standalone image; its SPA is bundled into deployment-api's image instead)."
-status: resolved
+status: open
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -29,12 +29,12 @@ source:
     (0 open todos) — this todo remained genuinely unstarted, not folded into any other work this session",
   ]
 assigned_vm: planning
-resolved_by: slot-33 (review craft, 2026-08-10)
+resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-09
 context_scope:
   [
     deployment-service/terraform/cloud-build/aws/main.tf,
@@ -43,12 +43,6 @@ context_scope:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 ---
-
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 7 todos shipped. Provider pin `~> 5.82` + multi-platform
-> `.terraform.lock.hcl` already committed in deployment-service@a16ec557 (2026-07-30); D1-D4 operator rulings reconciled
-> in deployment-service@fb1a6a34 (2026-08-09). The `terraform import` of 23 resources into live S3 state remains the
-> NEXT mechanical step gated behind these rulings — now unblocked but scoped as a separate follow-up task, not part of
-> this issue's closure.
 
 > **🟡 STATE 2026-07-30 — backend LIVE, import DELIBERATELY NOT DONE.** The S3 state backend is stood up and
 > `terraform init`-verified, but the state is **empty on purpose**: a full dry-run import measured
@@ -233,11 +227,14 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       2026-08-09 D1-D4 rulings and accurate empty-state note. `terraform import` of 23 resources into live S3 state is
       the NEXT step — still owed, NOT done here. Do NOT import before D1-D4 (now ruled, see above) — an imported state
       plus unreconciled diffs is an armed destructive apply.
-- [x] ✅ [INFRA] P3. **Pin the AWS provider deliberately** — deployment-service@a16ec557 (already shipped 2026-07-30;
-      verified 2026-08-10: `~> 5.82` pin present in `main.tf:47`, multi-platform `.terraform.lock.hcl` with 4 `h1:`
-      hashes committed in the same SHA, `terraform init -backend=false` succeeds against the locked v5.100.0). Both
-      parts of this todo were already done in the "apply verified terraform plan" commit — this was a stale unchecked
-      checkbox. Archival ritual run in this same commit.
+- [ ] [INFRA] P3. **Pin the AWS provider deliberately** (recommended: v5-align, `~> 5.82`, for consistency with every
+      sibling module, avoiding the v6 `data.aws_region.name` deprecation this module alone would carry — not yet an
+      operator ruling, just the standing recommendation; deviate only with a stated reason), then commit a
+      multi-platform `.terraform.lock.hcl` (the repo commits 10 others; this session's local lock was deleted rather
+      than committing darwin-only hashes that would break a linux `init`). **Done-when also includes**: once this todo
+      and the one above are both `[x]`, run the standard 6-step archival ritual on this issue doc (no separate finalize
+      plan — see the 2026-08-09 banner's reasoning) — folded in here since this is genuinely the last unit of work, not
+      a separate followup.
 
 ## na-eligibility-audit verdict
 
@@ -283,14 +280,8 @@ explicitly declined to rule on D1-D4 ("weren't in scope of this governance pass"
 valid — re-verified all 3 open items unchanged since the 2026-08-07 marker (only context-scout touches since). D1-D4
 operator-rulings table still unruled, blocks the other 2 mechanically. No `assigned_vm` change.
 
-- **2026-08-10 (slot 33, review craft)**: Flipped the last remaining todo (provider pin) — verified both parts were
-  already shipped in deployment-service@a16ec557 (`~> 5.82` pin + multi-platform `.terraform.lock.hcl`). All 7 todos now
-  done. Archiving per the standard 6-step ritual. Referrers updated in `ci_consolidated_closeout_2026_07_25.md` and
-  `plan_reconciler_findings_ci_2026_08_10.md` (the other 2 active referrers,
-  `governance_sweep_deferred_followups_2026_08_06.md` and
-  `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`, reference only the slug, not the active
-  path, and both are themselves due for archival). No codex contract changes needed — this was a mechanical provider-pin
-  step. "Operator decision required" + the 2026-08-09 banner above): D1 keep live's IAM wildcard; D2 delete the 18
+- **2026-08-09 (operator ruling batch, this session)**: Operator ruled all 4 rows of the D1-D4 table (recorded in §
+  "Operator decision required" + the 2026-08-09 banner above): D1 keep live's IAM wildcard; D2 delete the 18
   `aws_codebuild_webhook` TF resources; D3 adopt live's config into TF; D4 fix both live-side drifts. Retagged the
   blocking `[OPERATOR]` todo → `[DOC]` and flipped it `[x]` in the same edit. Reclassified `assigned_vm: NA` →
   `planning` (residual work is now bounded/mechanical, no longer a live judgment call) and `execution_scope: local-only`

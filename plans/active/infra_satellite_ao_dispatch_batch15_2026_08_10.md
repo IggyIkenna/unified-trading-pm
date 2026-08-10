@@ -12,7 +12,7 @@ summary: >-
   `DEPLOYMENT_GUIDE.md`/`TESTING.md` against the S5.1 filename set via thin redirect stubs, mirroring the
   already-executed instruments-service precedent, per `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s dated DELETE
   classification for both files.
-status: active
+status: draft
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

@@ -13,7 +13,7 @@ summary: >-
   live-verified resolution of the Tier-A `ci_status` promotion deadlock (filed 2026-08-09 as a P1 incident; PR #1136
   merged 2026-08-09T12:31Z, live-reverified this run — instruments-service + system-integration-tests both green on
   `main` since, deadlock self-cleared exactly per the doc's own "Immediate unblock" path).
-status: active
+status: draft
 nature: process
 asset_group: [ci]
 stage: [meta]

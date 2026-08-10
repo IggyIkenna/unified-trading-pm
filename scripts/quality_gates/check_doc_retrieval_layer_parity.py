@@ -41,23 +41,6 @@ import sys
 import types
 from pathlib import Path
 
-
-def _pm_root_or_legacy(workspace_root):
-    """PM checkout root resolved by CONTENT, not by directory NAME (F7, 2026-08-10).
-
-    See scripts/quality_gates/_pm_root.py for why. Behaviour-preserving in a canonically
-    named checkout; fixes resolution when running from a git worktree."""
-    import pathlib as _pathlib
-    import sys as _sys
-
-    _d = str(_pathlib.Path(__file__).resolve().parent)
-    if _d not in _sys.path:
-        _sys.path.insert(0, _d)
-    from _pm_root import pm_root_or_legacy as _impl
-
-    return _impl(workspace_root)
-
-
 # doc_type values that deliberately have no L0-facet entry (cursor-rule is Cursor-governed;
 # its `description` field serves as `summary` per doc-frontmatter-schema.md §9/§3 note, and it
 # carries no per-type facets worth surfacing).
@@ -149,7 +132,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     ns = _parse_args()
     workspace_root: Path = ns.workspace_root.resolve()
-    pm_root = _pm_root_or_legacy(workspace_root)
+    pm_root = workspace_root / "unified-trading-pm"
     if not pm_root.is_dir():
         # Also allow running with --workspace-root pointed AT the PM repo directly (as this
         # script's own directory implies when parents[2] already IS the PM root).

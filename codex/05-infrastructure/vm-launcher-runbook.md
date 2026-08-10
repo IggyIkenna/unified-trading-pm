@@ -29,7 +29,6 @@ authoritative_for:
     VM launcher per-script usage runbook,
     heavy-compute-on-shared-host ad-hoc-script rule,
     "heavy-compute-on-shared-host rule scope (production code, not just ad-hoc scripts)",
-    "before a --force whole-corpus refetch, check for an existing surgical column-filler rule",
   ]
 referenced_by:
   [
@@ -39,7 +38,7 @@ referenced_by:
     /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 owner:
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-01
 code_refs:
 type: infrastructure
 execution:
@@ -86,19 +85,6 @@ reuse/extend it, don't hand-roll; (2) if a genuinely new prefix is needed,
 (shipped via quickmerge) before using that prefix — never launch first and register later. Full incident write-up:
 `plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` Progress Log, 2026-07-09 "real gap found in
 the VM launch itself" entry.
-
-**HARD RULE — before launching a `--force` whole-corpus refetch to fix ONE column, check whether a surgical
-column-filler script already exists** (codified 2026-08-10; precedent: § N of
-`/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`). A full
-`--force --entity <X>` backfill re-fetches and re-writes the ENTIRE corpus to fix one missing/blank field, at per-DATE
-call volume. Measured precedent (populating `round` on api-football FIXTURES): the `--force --entity FIXTURES` backfill
-over 2019-01-01..2026-07-17 runs **~527 calls/date x 2,390 dates ~= 1,260,000 api-football calls**, while the surgical
-`backfill_sports_fixture_round_2026_07_17.py` (round-only, single-walk, idempotent, snapshots each parquet to
-`*.pre_round_backfill.bak`) completes in **~600-700 TOTAL calls** (one bulk `GET /fixtures?league&season`, cached) — a
-**~1,800x call-volume reduction to populate ONE field**. At the 450,000/day key quota the full re-fetch needs ~2.8 days
-of pure quota (~76h paced); no rate tuning or extra VMs raise that ceiling. `--force` also forfeits presence-skip resume
-(a preempted `--force` run is not replayable from progress). **Before launching any `--force` whole-corpus refetch, grep
-for an existing surgical column-filler first** (e.g. `rg -l "backfill_.*(round|column|fill)" <repo>/scripts/`).
 
 **HARD RULE — heavy I/O NEVER runs from the operator's local machine; it runs on a VM in-region, always, not just when
 the operator happens to mention bandwidth.** "Heavy" = any full/near-full corpus GCS discovery walk, a manifest-index

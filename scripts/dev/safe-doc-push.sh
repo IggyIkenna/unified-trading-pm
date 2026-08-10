@@ -116,9 +116,6 @@ set -uo pipefail
 # tell "created during this run" apart from a pre-existing orphan from some earlier, unrelated
 # session -- this script only warns about patches IT could plausibly be responsible for.
 _SDP_RUN_START_EPOCH="$(date +%s)"
-# Absolute path of THIS script, resolved before any `cd`, so isolated mode can re-exec
-# exactly the code the caller invoked rather than the worktree checkout's copy.
-_SDP_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 
 MSG=""
 BRANCH="live-defi-rollout"
@@ -212,21 +209,6 @@ _sdp_cleanup_isolation() {
   git worktree prune 2>/dev/null || true
 }
 
-# Depth guard (defense in depth, 2026-08-10). The env-var handshake below is the PRIMARY
-# recursion stop; this is the backstop for when that handshake breaks. It broke once already:
-# a comment placed between a trailing `\` and the `bash` call silently detached the env
-# assignments, so the child re-entered isolation forever -- 116 nested invocations and 721
-# stray worktrees from a single 6-worker test run before it was killed by hand. A counter that
-# survives any env-propagation bug is the only thing that bounds that blast radius.
-_SDP_ISO_DEPTH="${SDP_ISO_DEPTH:-0}"
-if [[ "$_SDP_ISO_DEPTH" -ge 1 ]]; then
-  if [[ -z "${SDP_IN_ISOLATION:-}" ]]; then
-    echo "❌ isolation recursion detected (depth=$_SDP_ISO_DEPTH) — the SDP_IN_ISOLATION handshake is broken." >&2
-    echo "   Refusing to nest further. This is a defect in this script, not in your invocation." >&2
-    exit 11
-  fi
-fi
-
 if [[ "${SDP_ISOLATED:-1}" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
   _sdp_iso_parent="${TMPDIR:-/tmp}/sdp-iso-$$"
   _sdp_iso_wt="$_sdp_iso_parent/unified-trading-pm"
@@ -249,20 +231,8 @@ if [[ "${SDP_ISOLATED:-1}" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
       echo "   (your working tree is NOT touched by this script — see F6 in"
       echo "    plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md)"
       cd "$_sdp_iso_wt" || exit 2
-      # Re-exec THIS script (the one the caller actually invoked), NOT the worktree's copy.
-      # The worktree is checked out at origin/<branch>, so running its copy would silently
-      # substitute origin's version of this script for the caller's -- a local fix would be
-      # ignored, and a caller whose branch predates a fix would run the OLD code with no
-      # indication. Measured 2026-08-10: with the worktree's copy, 6/6 concurrency workers
-      # failed rc=2 because origin's copy still had the pre-fix `[[ ! -d .git ]]` guard.
-      # Only the working DIRECTORY changes here.
-      #
-      # The env assignments MUST sit on the same logical line as `bash` (no comment between a
-      # trailing `\` and the command): a `\` continuing onto a COMMENT binds the assignments
-      # to an empty command, `bash` then runs WITHOUT them, the child does not see
-      # SDP_IN_ISOLATION, and it re-enters isolation forever. Measured 2026-08-10: 116 nested
-      # invocations and 721 stray worktrees from one 6-worker run.
-      SDP_IN_ISOLATION=1 SDP_ISO_DEPTH=$((_SDP_ISO_DEPTH + 1)) SDP_CALLER_REPO="$_sdp_origin_repo" bash "$_SDP_SELF" "$MSG" --files "${FILES[*]}" "$BRANCH"
+      SDP_IN_ISOLATION=1 SDP_CALLER_REPO="$_sdp_origin_repo" \
+        bash "$_sdp_iso_wt/scripts/dev/safe-doc-push.sh" "$MSG" --files "${FILES[*]}" "$BRANCH"
       _sdp_rc=$?
       cd "$_sdp_origin_repo" || true
       exit "$_sdp_rc"
