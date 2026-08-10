@@ -28,6 +28,8 @@ execution_scope: local-only
 priority: P3
 resolved_by: ""
 locked_by: ""
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Audit summary

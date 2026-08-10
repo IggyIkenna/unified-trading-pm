@@ -22,6 +22,9 @@ resolved_by:
 locked_by:
 created: 2026-08-10
 priority: P3
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Evidence
