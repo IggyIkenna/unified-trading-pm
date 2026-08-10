@@ -19,7 +19,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import check_finalize_plan_coverage as _checker  # type: ignore[import-not-found]
 from check_finalize_plan_coverage import main  # type: ignore[import-not-found]
+
+
+# 2026-08-10 (55a43797a4): content-based PM-root resolution (_pm_root.py) ignores the explicit
+# --workspace-root, so main() would scan the REAL corpus instead of the fixture. Redirect
+# _pm_root_or_legacy to the fixture PM root so these tests exercise the coverage logic against
+# their synthetic tmp_path corpus. SSOT:
+# plans/active/issues/pm_root_content_resolution_breaks_checker_unit_test_fixtures_2026_08_10.md
+def _fixture_pm_root(root: Path) -> Path:
+    return root / "unified-trading-pm"
+
+
+_checker._pm_root_or_legacy = _fixture_pm_root  # type: ignore[attr-defined]
 
 
 def _write_plan(path: Path, *, assigned_vm: str = "planning", todos: int = 3, extra_frontmatter: str = "") -> Path:
