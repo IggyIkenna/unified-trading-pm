@@ -13,7 +13,7 @@ summary: >-
   DeepSeek-vs-Claude asymmetry is measured and recorded below: DeepSeek's usage is ~99.4% cache_read_input_tokens and
   its pane renders a real CLI percentage almost every turn, so it calibrates constantly, where sonnet-5 almost never
   does.
-status: resolved
+status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -55,13 +55,6 @@ context_scope:
 ---
 
 # DeepSeek's real context window is unknown and its learned value re-poisons itself
-
-> **🟢 ARCHIVED 2026-08-10** — `status: resolved`, all 5 todos `[x]`, unlocked; archived per
-> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
-> All five todos shipped to agent-orchestrator@LDR: impossible-window guard (`4af78dc99`), measured DeepSeek priors
-> (`29526a4`), DeepSeek pane-pct calibration exclusion (`6be3454`), `token_total()` resident-context verification, and
-> the standing calibrated-window move-invariant (`c730f46`). Moved by the 2026-08-10 checkbox-flip + archive pass (slot
-> 14).
 
 ## Measured evidence (orchestrator VM, 2026-08-10, read-only)
 
@@ -147,36 +140,11 @@ over-compaction for under-compaction, and neither is correct until the real numb
       counter would inflate every DeepSeek reading without bound). **DONE 2026-08-10 (slot-28)** — finding recorded in
       Progress Log below. token_total() is resident context, not cumulative.
 
-- [x] ✅ [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves
-      by more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed —
-      that oscillation is itself the signal a denominator is wrong. — agent-orchestrator@c730f46: `observe()` now
-      compares each model's `calibrated_window` against the value seen at the previous poll and logs a
-      `calibrated_window_abrupt_move` activity event when the movement exceeds `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION`
-      (0.4) — below the smallest measured DeepSeek oscillation (1.42x) and above the 0.15 revalidation tolerance. The
-      `last_seen_calibrated_window` baseline is tracked in the learned sidecar so it survives restart. Tests:
-      `test_abrupt_calibrated_window_move_emits_an_activity_event` (acceptance),
-      `test_the_measured_deepseek_oscillation_would_alert` (exact live 82,715→180,191 shape),
-      `test_small_calibrated_window_move_does_not_alert`, `test_first_calibration_establishes_a_baseline_without_alert`.
-      Verified QG-green on the merged LDR tree (slot-14).
+- [ ] [BACKEND] P2. Add a standing invariant check to the registry: alert when any model's `calibrated_window` moves by
+      more than a set fraction between polls. Both DeepSeek entries moved ~2x within minutes and nothing noticed — that
+      oscillation is itself the signal a denominator is wrong.
 
 ## Progress Log
-
-- **slot-14 2026-08-10 (`archive_exempt: true` bridge)**: this doc's own LAST open todo (item 5) made it
-  archive-eligible, so the flip commit carries `archive_exempt: true` per the `check_archive_candidates --only`
-  sanctioned flip-then-mv bridge — combining the checkbox flip with the `git mv` in one commit would defeat the AO
-  `/done` M3 cross-repo flip verification, and flipping alone trips this check. The immediately-following commit
-  `git mv`'s this doc to `plans/archive/issues/`, drops the field, flips `status: resolved` + adds the archive banner.
-- **slot-14 2026-08-10 (todo 5 — standing `calibrated_window` move invariant)**: implemented in
-  `server/context_probe.py` (agent-orchestrator@c730f46). New `_CALIBRATED_WINDOW_MOVE_ALERT_FRACTION = 0.4` +
-  `_check_calibrated_window_move()`, wired into `observe()` after every calibration write. It compares the model's final
-  `calibrated_window` against `last_seen_calibrated_window` recorded at the previous poll (persisted in the learned
-  sidecar, so the baseline survives restart) and logs a `calibrated_window_abrupt_move` activity event + warning when
-  the movement exceeds 40%. Threshold choice: below the smallest measured DeepSeek oscillation (flash 1.42x, pro 2.18x)
-  and above the 0.15 revalidation tolerance, so an honest within-tolerance correction stays quiet. The check is
-  direction-agnostic (max/min ratio) — it catches under-reporting AND over-reporting oscillations. Regression tests
-  cover the acceptance event, the exact live deepseek-v4-pro 82,715→180,191 shape (simulated via a sidecar change
-  between polls, since DeepSeek no longer calibrates from pane pct), a quiet 1.1x re-calibration, and baseline-seeding
-  on first calibration. QG green (3128 passed / 2 skipped).
 
 - **slot-28 2026-08-10 (todo 4 — verify `token_total()` is resident, not cumulative, for DeepSeek)**: Cross-validated
   `token_total()` against the CLI's independent `compactMetadata.preTokens` across 3 compaction boundaries in session
