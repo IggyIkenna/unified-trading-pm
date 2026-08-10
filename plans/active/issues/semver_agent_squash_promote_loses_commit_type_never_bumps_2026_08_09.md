@@ -348,3 +348,15 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   same root cause (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent
   (hand off, don't chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available. This is
   the 11th consecutive identical re-check. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
+- **2026-08-10 (infra worker, slot 23, todo 2 re-check)**: Re-verified from scratch once more —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 1379 commits, up from slot 30's 1186). `unified-trading-library`'s
+  `origin/main` is now `v0.77.0-4-g765db606` (`git describe --tags origin/main`) but `git tag --contains 609299ad` is
+  still EMPTY — the fix remains unreleased. The auto-drain promote PR has rolled to #2711 (opened 2026-08-10T10:29:13Z,
+  superseding slot 30's #2710) — `QG slice (checks)` FAILED on the same hard-ratchet class, confirmed via the live job
+  log (run `31375748365`, job `93414551103`): `assigned_vm:NA corpus size (docs + open todos, ratchet)` among 4 hard
+  failures. Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available (no `workflow_dispatch` on
+  `Semver Agent`'s caller stub; classifier fetch still unpinned to PM's live default branch). This is the 12th
+  consecutive identical re-check. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
