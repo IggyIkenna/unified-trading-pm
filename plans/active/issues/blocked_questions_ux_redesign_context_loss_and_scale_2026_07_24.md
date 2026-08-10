@@ -16,7 +16,7 @@ status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
-repos: [agent-orchestrator, deployment-ui]
+repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, escalation, ux, dashboard, dead-agent-context]
 archive_exempt: true
@@ -168,15 +168,15 @@ exists" section together before scoping the workstream.
       agent-orchestrator@c6273b2, using the `claude_session_id` from the todo above and the already-working
       `server/transcript_log.py` retrieval primitive (the dashboard's existing "Show log" render, keyed by
       `claude_session_id` — reuse it, don't rebuild it). Add a "View asking session's transcript" link/button on each
-      open `BlockedRow` card in whichever dashboard component renders the blocked-questions queue (`deployment-ui`), so
-      the operator can jump straight to what the asking agent actually saw, even if that agent/slot is now dead or
-      respawned to a different session. Handle the case where the transcript file has itself rotated out
-      (`claude_session_id` present but no matching JSONL) with a clear "transcript no longer available" state, not a
-      silent failure. **Done when**: a live blocked question shows a working transcript-jump link, a
-      dead-agent/respawned-slot case is manually verified to still resolve to the ORIGINAL session's transcript (not the
-      current occupant's), `pw:L2` Playwright coverage per this workspace's UI gate, and `tsc`/`vitest` clean. Repo:
-      deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column populated first) — sequence via
-      `sequential: true` if these are ever pulled into their own dispatched plan.
+      open `BlockedRow` card in whichever dashboard component renders the blocked-questions queue
+      (agent-orchestrator/dashboard/src/layout.tsx — `BlockedCard`), so the operator can jump straight to what the
+      asking agent actually saw, even if that agent/slot is now dead or respawned to a different session. Handle the
+      case where the transcript file has itself rotated out (`claude_session_id` present but no matching JSONL) with a
+      clear "transcript no longer available" state, not a silent failure. **Done when**: a live blocked question shows a
+      working transcript-jump link, a dead-agent/respawned-slot case is manually verified to still resolve to the
+      ORIGINAL session's transcript (not the current occupant's), `pw:L2` Playwright coverage per this workspace's UI
+      gate, and `tsc`/`vitest` clean. Repo: agent-orchestrator. Depends on the `[BACKEND] P2` todo above (needs the
+      column populated first) — sequence via `sequential: true` if these are ever pulled into their own dispatched plan.
 - [x] ✅ [BACKEND] P3. **Cross-question dedup/similarity surfacing.** — agent-orchestrator@514df29c07. Add a lightweight
       similarity signal across open `BlockedRow` entries (per this doc's pain point 3: the same underlying question
       sometimes gets asked by multiple different agents, or multiple times by different sessions on the same respawned
@@ -185,7 +185,8 @@ exists" section together before scoping the workstream.
       (that's a much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup
       proves insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
       grouped/flagged in the dashboard queue API response, a regression test covers the grouping logic, and
-      `quality-gates.sh` is green. Repo: agent-orchestrator (+ `deployment-ui` render of the grouping signal, small).
+      `quality-gates.sh` is green. Repo: agent-orchestrator (+ `BlockedCard` render of the grouping signal in
+      agent-orchestrator/dashboard/src/layout.tsx, small).
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
@@ -266,3 +267,14 @@ exists" section together before scoping the workstream.
   `tests/test_tmux_spawn_deepseek_context_window.py` (its two "left alone" tests spuriously failed under a
   deepseek-worker session's ambient `CLAUDE_CODE_MAX_CONTEXT_TOKENS` — now unset inside the test scripts).
   `quality-gates.sh` green incl. dashboard tsc + vitest (270 tests).
+- **2026-08-10 (slot-8, backend_engineer, dispatched onto todo D of
+  `/plans/active/blocked_question_payload_quality_and_condition_retirement_2026_08_10.md`)**: applied the repo
+  correction that doc's todo D records. The `[UI] P2` transcript-jump todo named `Repo: deployment-ui` (and this doc's
+  `repos:` frontmatter listed `deployment-ui`), but the blocked-question queue is rendered ONLY by
+  `agent-orchestrator/dashboard/src/layout.tsx` (`BlockedCard`) — `deployment-ui` has zero blocked-question code
+  (verified 2026-08-10; its only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx`). Fixed the
+  `[UI] P2` todo's render parenthetical + `Repo:` line and the `repos:` frontmatter to `agent-orchestrator`, and the
+  `[BACKEND] P3` `-003` todo's render annotation (the grouping signal also renders in the same `BlockedCard`). Recording
+  the history this correction owes: two `ui_developer` workers were dispatched onto the `[UI] P2` todo (slot-11 and
+  slot-27, both 2026-08-08), each declined it as GATED on the backend dependency, and neither caught that the repo was
+  wrong.
