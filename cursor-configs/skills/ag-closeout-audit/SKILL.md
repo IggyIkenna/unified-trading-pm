@@ -570,6 +570,24 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
   dependency chain.
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
+- **Idempotency guard BEFORE writing the finalize plan (HARD, added 2026-08-11,
+  `/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md` todo 1).** Before writing
+  `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md`, run the creation-time guard to confirm the parent batch plan
+  is NOT already gated by another finalize plan — regardless of filename shape. The detector
+  (`check_finalize_plan_coverage.py::_gated_slugs`) already dedupes correctly, so a checker re-run won't re-flag a
+  covered parent. The gap is at WRITE TIME: two agents acting on the same flagged violation, at the same time, can each
+  write a finalize plan whose stated justification ("no companion gated finalize plan exists") was already false when
+  written. The guard re-derives `_gated_slugs()` over the live corpus and refuses if the batch slug is already present:
+
+  ```bash
+  .venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py \
+    --parent-already-gated "<batchN-slug>"
+  # exit 0 = STOP (already gated — don't create another)
+  # exit 1 = safe to proceed (not gated)
+  ```
+
+  If exit 0, do NOT write the finalize plan — instead append a note to the batch's `## Progress Log` recording the
+  collision (the existing finalize plan's path, found by grepping for the parent slug in other plans' `depends_on`).
 
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
 `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
