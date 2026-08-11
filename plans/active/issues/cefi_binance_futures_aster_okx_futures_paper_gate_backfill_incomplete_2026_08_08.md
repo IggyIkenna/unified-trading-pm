@@ -444,3 +444,24 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
   exact bug class (now 18 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
   25, 18, 6 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-11 (slot 4, data_pipeline_failure escalation `agt-a45914`, DP-FETCH-009 re-fire)**: `check_high_attempted_failed`
+  re-paged cefi/book_snapshot_5 (8,670 `attempted_failed` cells of 958,967 attempted in the trailing-14d window, abs>=500
+  trigger) with the alert body already annotated "STATIC BACKLOG — only 15 attempted_failed row(s) in the last 1d (below
+  the 500-row materiality floor)". Independently re-verified against the live cefi manifest (`read_availability_index_safe`,
+  bucket `market-data-tick-cefi-prd-central-element-323112`,
+  `filters=[data_type=book_snapshot_5, capture_status=attempted_failed]`, bounded row-group pushdown): trailing-14d = 8,167
+  rows, last-1d = 15 rows. The 14d-window composition maps entirely to already-tracked classes: 2,000 ASTER/
+  `UpstreamTimestampBiasError` (the resolved 2026-08-09 stale-tarball burst — **0 rows with `attempted_at` strictly newer
+  than the archived cutoff `2026-08-09T01:24:28.273974Z`**, so the archived P3 recurrence condition still holds),
+  ~1,900 Tardis `403 concurrent-IP-lock`/`500`/`503` (the known Tardis lockout class,
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md` + `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`
+  cause 2), OKX/BYBIT/BINANCE-FUTURES/DERIBIT `404 GET https` + `UNCLASSIFIED` (this doc's 3-venue coverage-gap
+  population), ~140 `schema contract violated` (the active `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`),
+  50 HYPERLIQUID unknown-ticker. Last-1d fresh rows are all `batch_tardis` transient errors (13 COINBASE-SPOT `403 POST
+  https`, 1 broken-pipe each COINBASE-SPOT/OKX-FUTURES) — a decaying trickle on the already-tracked Tardis lockout class,
+  well below the 500 materiality floor. **Conclusion: static backlog, not a fresh regression; no code fix shipped (current
+  code already correct — the ASTER book_snapshot_5 batch exclusion has been on HEAD since 2026-07-16).** The detector's
+  paging-on-static-backlog behavior is separately tracked as `[SCRIPT] P2` in
+  `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`; no new issue filed to avoid duplicating that + this doc's
+  existing coverage. No code/report changes; this Progress Log entry is the only change this turn.
