@@ -13,7 +13,7 @@ repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-status, tradfi, migration, canonicalisation, data-correctness, verification]
 related:
-  - verdict_cefi.md
+  - /plans/audit/results/r3_beta_renders_2026_06_11/verdict_cefi.md
   - ../r3_verdict_packs_2026_06_17/verdict_tradfi.md
 created: 2026-06-11
 audited_scope:

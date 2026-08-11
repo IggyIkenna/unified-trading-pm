@@ -13,7 +13,7 @@ repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-status, defi, migration, canonicalisation, data-correctness, pipeline-mode]
 related:
-  - verdict_cefi.md
+  - /plans/audit/results/r3_beta_renders_2026_06_11/verdict_cefi.md
   - ../r3_verdict_packs_2026_06_17/verdict_defi.md
 created: 2026-06-11
 audited_scope:

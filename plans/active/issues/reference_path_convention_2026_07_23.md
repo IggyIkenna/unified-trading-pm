@@ -100,14 +100,14 @@ estimate_calibrated_ai_days: 1.6
       physically sitting in `plans/active/` and apply the real 6-step ritual, including the referrer-update step this
       exact doc's own P3 items already partially track) — not filed as a new todo here since it's outside this specific
       item's scope and the existing dangling-reference P3 backlog below already covers the referrer-update half.
-- [ ] [DOC] P3. **62 format violations** (baseline 81 — CORRECTED 2026-08-10 by plan_reconciler infra shard, agt-716973:
-      live-ran `python3 scripts/plan-hygiene/check_reference_paths.py`, got `format: 62 (baseline 81)`, well under
-      baseline/PASS. Was stated as "109" here, ~20x stale — the number drifted down via unrelated corpus cleanup over 2+
-      weeks but this todo's text was never refreshed; see Progress Log) — bare `related:` filenames the migration could
-      not safely resolve: some are genuinely ambiguous (multiple files share the basename, e.g. `README.md` in ~35
-      places), some are genuinely dangling (target doesn't exist anywhere under `plans/` or `codex/`). Re-run the
-      checker for the live list; fix what's resolvable by hand, remove stale references, then `--update-baseline` to
-      ratchet the count down further. **Done when**: `format_count` in the baseline reaches 0.
+- [x] [DOC] P3. ✅ **DONE 2026-08-11 (slot-10, infra craft)** — `format_count` reached 0. Live-ran the checker before
+      touching anything: `format: 53 (baseline 81)` (drifted further down from the 62 this todo cited, via unrelated
+      concurrent corpus cleanup — same stale-number pattern the todo text already flagged). Resolved all 53 bare
+      `related:` filenames by hand: every one turned out to be a same-directory sibling (the citing doc's own directory
+      contains the real target — confirmed via `find` per unique basename before applying any fix, not assumed), none
+      were genuinely dangling. Verified each resolved path exists on disk before writing it. Re-ran the checker:
+      `format: 0 (baseline 81)`, then `--update-baseline` to ratchet `format_count` to 0. `existence_count` unchanged at
+      64 (< baseline 86, no regression — every fix targeted a real file). `pm@<commit-pending>`.
 - [ ] [DOC] P3. **61 existence violations** (baseline 86 — CORRECTED 2026-08-10, same live run as above: was stated as
       "1,286" here, ~21x stale, same drift-without-refresh cause) — pre-existing dangling `/plans/...`/`/codex/...`
       references this migration surfaced but did not cause: codex docs describing planned-but-never-shipped content
@@ -271,3 +271,14 @@ convention's scope).
   live numbers + closed the now-moot 2026-08-03 baseline-drift item. **Practical effect**: a future AO dispatch of this
   doc's existence-violation todo will now correctly size a single-session sweep instead of over-provisioning a large
   fan-out for a backlog that no longer exists at that size.
+
+- **2026-08-11 (slot-10, infra craft)**: closed the format-violations todo. Live count at pickup was 53 (baseline 81,
+  already down from the 62 the todo's own text cited — same drift-without-refresh pattern noted above, no action taken
+  on the number itself beyond re-measuring). For each of the 53 bare `related:` filenames, searched the corpus for every
+  candidate file sharing that basename (`find plans codex -iname <basename>`) and resolved to the same-directory sibling
+  in every case — none were genuinely ambiguous-with-no-clear-winner or genuinely dangling once actually checked.
+  Verified every resolved path exists on disk. Applied via a one-off script mirroring the checker's own
+  `extract_related_text`/`BARE_MD_RE` logic so the fix targets exactly what the checker flags. Re-ran the checker:
+  `format: 0 (baseline 81)`; ran `--update-baseline` → `format_count: 0`. `existence_count` unchanged (64, < baseline
+  86) — confirms none of the 53 fixes pointed at a nonexistent file. The remaining open todo (61 existence violations)
+  is untouched by this session — separate scope, separate todo.
