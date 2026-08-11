@@ -118,7 +118,7 @@ def write_baseline(format_count: int, existence_count: int, existing: Baseline) 
         "# number. LOWER a count (re-run --update-baseline) the moment violations are fixed.\n"
         "# NEVER hand-raise a count.\n"
         "#\n"
-        "# SSOT: codex/11-project-management/cross-reference-path-convention.md,\n"
+        "# SSOT: /codex/11-project-management/cross-reference-path-convention.md,\n"
         "# plans/active/issues/reference_path_convention_2026_07_23.md.\n"
         f"note: Seeded 2026-07-23 — corpus-wide migration via fix_reference_paths.py.\n"
         f"format_count: {new_format}\n"

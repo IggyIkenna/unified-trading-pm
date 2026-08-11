@@ -12,7 +12,11 @@ stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, features, pnl-attribution]
-related: [/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, pnl-attribution.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 created: 2026-04-03
 authoritative_for: [staking-reward lifecycle (accrue/claim/sell/attribute) + CLAIM_REWARD/SELL_REWARD operation types]
 referenced_by:

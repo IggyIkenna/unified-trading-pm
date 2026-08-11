@@ -100,14 +100,12 @@ estimate_calibrated_ai_days: 1.6
       physically sitting in `plans/active/` and apply the real 6-step ritual, including the referrer-update step this
       exact doc's own P3 items already partially track) — not filed as a new todo here since it's outside this specific
       item's scope and the existing dangling-reference P3 backlog below already covers the referrer-update half.
-- [ ] [DOC] P3. **62 format violations** (baseline 81 — CORRECTED 2026-08-10 by plan_reconciler infra shard, agt-716973:
-      live-ran `python3 scripts/plan-hygiene/check_reference_paths.py`, got `format: 62 (baseline 81)`, well under
-      baseline/PASS. Was stated as "109" here, ~20x stale — the number drifted down via unrelated corpus cleanup over 2+
-      weeks but this todo's text was never refreshed; see Progress Log) — bare `related:` filenames the migration could
-      not safely resolve: some are genuinely ambiguous (multiple files share the basename, e.g. `README.md` in ~35
-      places), some are genuinely dangling (target doesn't exist anywhere under `plans/` or `codex/`). Re-run the
-      checker for the live list; fix what's resolvable by hand, remove stale references, then `--update-baseline` to
-      ratchet the count down further. **Done when**: `format_count` in the baseline reaches 0.
+- [x] [DOC] P3. ✅ **DONE 2026-08-11 (slot-4)** — re-ran `check_reference_paths.py`; live format count was actually 53
+      (not 62 — further drift since the 2026-08-10 refresh), all 53 same-directory-resolvable (the corpus-wide
+      migration's basename index found them ambiguous — e.g. `README.md` in ~35 places — but the referencing doc's own
+      directory held an unambiguous sibling match in every case). Resolved each `related:` bare filename to its
+      same-directory full `/codex/...`/`/plans/...` path across 50 files, then `--update-baseline` — `format_count` now
+      **0**. `pm@<commit-pending>`.
 - [ ] [DOC] P3. **61 existence violations** (baseline 86 — CORRECTED 2026-08-10, same live run as above: was stated as
       "1,286" here, ~21x stale, same drift-without-refresh cause) — pre-existing dangling `/plans/...`/`/codex/...`
       references this migration surfaced but did not cause: codex docs describing planned-but-never-shipped content
@@ -271,3 +269,18 @@ convention's scope).
   live numbers + closed the now-moot 2026-08-03 baseline-drift item. **Practical effect**: a future AO dispatch of this
   doc's existence-violation todo will now correctly size a single-session sweep instead of over-provisioning a large
   fan-out for a backlog that no longer exists at that size.
+
+- **2026-08-11 (slot-4, task reference_path_convention-6062e9b0b28c)**: closed the format-violation P3 todo. Live
+  `check_reference_paths.py` showed `format: 53 (baseline 81)` at pickup (further drift down from the 2026-08-10 62).
+  All 53 were `related:` bare filenames resolvable against the referencing doc's OWN directory (same mechanism the
+  original corpus-wide migration script couldn't apply — it only had a global basename index, which is ambiguous for
+  common names like `README.md`/`verdict_cefi.md`, but per-directory context disambiguates every one of them
+  unambiguously). Fixed all 53 across 50 files, `--update-baseline` → `format_count: 0`. Two incidental fixes surfaced
+  by the precommit `--only` gate re-checking each staged file's WHOLE content, not just the fixed line: (1)
+  `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`'s BROKEN-REF table cited
+  `architecture-v2/archetypes/xyz-foo.md` as a documented false-positive template-placeholder example
+  — de-slashed it so it no longer parses as a real path reference, which also dropped the corpus's `existence_count` by
+  1 (62→61) as a side effect; (2) `check_reference_paths.py`'s own `write_baseline()` docstring emitted a bare
+  `codex/11-project-management/...` SSOT comment into every generated baseline YAML — fixed the generator (added the
+  leading slash) so future `--update-baseline` runs don't regenerate the violation. `existence_count` (the doc's other
+  open P3 todo) is otherwise untouched — out of this task's scope.

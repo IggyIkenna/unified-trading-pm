@@ -13,7 +13,7 @@ stage: [meta]
 repos: [trading-agent-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [audit, plan-hygiene, ssot-audit, verification, refactor]
-related: [README.md, /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md]
+related: [/plans/audit/results/README.md, /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md]
 created: 2026-05-22
 audited_scope:
   all codex docs (717) referenced across 44 active plans + 26 epics — broken codex refs, SUPERSEDED forward-link health,
@@ -59,7 +59,7 @@ epic: plan_hygiene_master
 | Missing Path                                                                            | Tag              | Source Plan                                                                                                                    | Notes                                                                                                                              |
 | --------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `codex/CLAUDE.md`                                                                       | FALSE-POSITIVE   | `code_freeze_migrate_backfill_sequencing_2026_05_10.md` line 413, `writegate_honest_coverage_endtoend_2026_05_06.md` line 3124 | These are inline text references ("codex/CLAUDE.md updates"), not file links. CLAUDE.md lives at workspace root. No action needed. |
-| `/codex/09-strategy/architecture-v2/archetypes/xyz-foo.md`                              | FALSE-POSITIVE   | `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`                                                             | Template placeholder in issues doc, not a real path. No action needed.                                                             |
+| `archetypes/xyz-foo.md` (template placeholder value, not a real codex path)             | FALSE-POSITIVE   | `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`                                                             | Template placeholder in issues doc, not a real path. No action needed.                                                             |
 | `/codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md`       | CODEX-MISSING P1 | `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`                                                             | Codex stub needed: allocator pipeline contract spec                                                                                |
 | `/codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md`   | CODEX-MISSING P1 | `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`                                                             | Codex stub needed: instrument type × leverage matrix                                                                               |
 | `/codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md`        | CODEX-MISSING P1 | `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`                                                             | Codex stub needed: strategy→execution runtime contract                                                                             |

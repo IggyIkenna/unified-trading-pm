@@ -7,8 +7,8 @@
 # number. LOWER a count (re-run --update-baseline) the moment violations are fixed.
 # NEVER hand-raise a count.
 #
-# SSOT: codex/11-project-management/cross-reference-path-convention.md,
+# SSOT: /codex/11-project-management/cross-reference-path-convention.md,
 # plans/active/issues/reference_path_convention_2026_07_23.md.
 note: Seeded 2026-07-23 — corpus-wide migration via fix_reference_paths.py.
-format_count: 81
-existence_count: 86
+format_count: 0
+existence_count: 61

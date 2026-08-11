@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [onboarding, runbook, client-config, strategy, deployment, execution]
 related:
   [
-    client-onboarding.md,
+    /codex/09-strategy/operational/client-onboarding.md,
     /codex/09-strategy/operational/client-strategy-config.md,
     ../architecture-v2/strategy-catalogue-3tier.md,
     ../architecture-v2/strategy-registry-v2.md,
