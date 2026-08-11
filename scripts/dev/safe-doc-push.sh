@@ -881,7 +881,12 @@ autostash_rebase_reconcile() {
     fi
     echo "  explicit pop succeeded -- edits restored to the working tree"
   fi
+  # P0 (2026-08-11): the caller now stages the payload BEFORE reconciling, so the
+  # quarantine can't eat it. But this restore clears everything from the index —
+  # including our deliberately-staged named files. Re-add them immediately, before
+  # the chain-breaker below has a chance to classify them as "stale pop" content.
   git restore --staged . 2>/dev/null || true
+  git add -- "${FILES[@]}" 2>/dev/null || true
   # autostash chain-breaker (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md):
   # if the pop restored stale content that reverts origin, quarantine it NOW so the next cycle does
   # NOT re-stash it. Only affects files NOT in this run's --files (the caller's explicit edits).
@@ -1062,31 +1067,13 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if [[ "$committed" == false ]]; then
-    ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
-
-    if [[ "$ahead" -eq 0 ]]; then
-      # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
-      # regardless of file overlap -- git refuses cleanly on a real conflict.
-      if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
-        if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
-          echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
-          if ! autostash_rebase_reconcile; then
-            exit 3
-          fi
-        else
-          echo "  pull failed:"; cat /tmp/_sdp_pull_err
-          backoff "$attempt"
-          continue
-        fi
-      fi
-    else
-      # Defensive: shouldn't normally happen pre-commit, but handle the same as the
-      # post-commit case if it does (e.g. a prior failed attempt left a local commit).
-      if ! autostash_rebase_reconcile; then
-        exit 3
-      fi
-    fi
-
+    # P0 (2026-08-11): STAGE THE PAYLOAD FIRST, then reconcile only what remains unstaged.
+    # The old order (reconcile→stage) let the autostash quarantine sweep the caller's own
+    # uncommitted edits into the stash, leaving nothing to stage, which then reported
+    # "already matches HEAD — treating as success" while origin had zero of the content.
+    # Staging first guarantees the named files travel through the rebase intact (autostash
+    # only ever touches UNSTAGED changes — git's own guarantee), so the quarantine can
+    # never eat the payload it's about to compare against.
     if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
       # own exit code was never checked, so an index.lock failure here (the exact incident
@@ -1113,20 +1100,53 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     unstage_foreign_paths
     reassert_renames
 
+    ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
+
+    if [[ "$ahead" -eq 0 ]]; then
+      # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
+      # regardless of file overlap -- git refuses cleanly on a real conflict.
+      # Since we already staged the payload above, the autostash (if triggered) only
+      # touches unstaged changes — our named files travel through the rebase intact.
+      if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
+        if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
+          echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
+          if ! autostash_rebase_reconcile; then
+            exit 3
+          fi
+        else
+          echo "  pull failed:"; cat /tmp/_sdp_pull_err
+          backoff "$attempt"
+          continue
+        fi
+      fi
+    else
+      # Defensive: shouldn't normally happen pre-commit, but handle the same as the
+      # post-commit case if it does (e.g. a prior failed attempt left a local commit).
+      if ! autostash_rebase_reconcile; then
+        exit 3
+      fi
+    fi
+
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+      # P0 (2026-08-11): verify against the REMOTE, not HEAD. When the caller's edits were
+      # reverted by a quarantine (autostash) before we could stage them, the working tree
+      # matches HEAD but origin does NOT have the change — "matches HEAD" is true for the
+      # wrong reason. Comparing against origin/<branch> tells the two cases apart: a
+      # genuine concurrent-land produces byte-identical content on the remote; a
+      # quarantine-induced revert produces a remote that still has the old content.
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches REMOTE (origin/${BRANCH}, not HEAD)"
+      if git diff --quiet "origin/${BRANCH}" -- "${FILES[@]}" 2>/dev/null; then
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files already match origin/${BRANCH} (a concurrent session landed identical content) -- treating as success."
           final_ok=true
           break
         fi
-        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+        echo "  content matches origin/${BRANCH} but end-to-end verification failed — not trusting the fallback; retrying"
       else
-        echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
+        echo "  at least one named file differs from origin/${BRANCH} — the content was NOT concurrently landed; staging genuinely failed, NOT already-landed; retrying"
       fi
     fi
 

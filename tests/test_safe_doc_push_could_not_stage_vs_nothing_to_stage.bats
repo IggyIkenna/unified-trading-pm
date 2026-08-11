@@ -90,7 +90,12 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: genuinely already-landed tracked file — without SDP_ALLOW_NOOP=1,
+  # the P0 fix now exits 12 ("NOTHING OF YOURS SHIPPED") because the file was byte-identical
+  # to HEAD at entry and the script cannot distinguish "concurrent land" from "reverted before
+  # we hashed it." The caller must set SDP_ALLOW_NOOP=1 to accept this as a deliberate
+  # idempotent re-run and get exit 0. Exit 2 (stage failure) vs exit 12 (no-op) are still
+  # distinct — the "tell them apart" contract is intact.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +104,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
