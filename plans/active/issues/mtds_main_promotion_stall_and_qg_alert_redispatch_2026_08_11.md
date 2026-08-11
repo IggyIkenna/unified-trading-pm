@@ -143,9 +143,21 @@ applies.
       (`Reauthentication failed. cannot prompt during     non-interactive execution`, reproduced 2026-08-11) — this
       affects only interactive/laptop sessions running the script as the operator's personal identity, not AO.
       `slack-read-channel.py` already has a documented fallback (`SLACK_ALERTS_READER_BOT_TOKEN` env var) for exactly
-      this case. A durable fix (SA impersonation or a dedicated key for local use) is a real security decision —
-      deliberately left to the operator rather than self-served, since the self-service HARD RULE covers AO's own two
-      cloud identities, not a human's personal laptop auth setup. **Correction note**: while live-testing the
-      `ubuntu`-user secret access above, the real Slack bot token was briefly exposed (truncated via `head -c 80`,
-      likely near-complete) into SSM command-invocation output and this session's transcript — flagged to the operator
-      directly; recommend rotating `SLACK_ALERTS_READER_BOT_TOKEN` in Slack + GSM as a precaution.
+      this case. A durable fix (SA impersonation or a dedicated key for local use) is a real security decision — flagged
+      to the operator rather than self-served outright, since the self-service HARD RULE covers AO's own two cloud
+      identities, not a human's personal laptop auth setup. **RESOLVED 2026-08-11, same session, operator go-ahead
+      obtained**: impersonation was tried first and confirmed insufficient (still requires the human's own base session
+      to mint the impersonated token — hits the identical reauth wall). Operator explicitly chose keying
+      `unified-trading-sa` directly over a new minimal-scope SA, after being shown the blast-radius tradeoff (this SA
+      holds project-admin roles). Key generated on the AO VM (as `unified-trading-sa`, after also granting it
+      `roles/iam.serviceAccountKeyAdmin` on itself — it had `serviceAccountAdmin` but not key-creation rights),
+      transported to the laptop via one-time hybrid RSA/AES encryption over the SSM channel (plaintext never left the VM
+      in the SSM log; VM-side plaintext auto-shredded via a `trap ... EXIT`), installed at
+      `~/.config/gcloud/keys/unified-trading-sa.json` (mode 600), activated as an additional (non-default) local gcloud
+      account. `scripts/dev/slack-read-channel.py` was hardened in the same session to explicitly pin
+      `--account=unified-trading-sa@...` first rather than trust ambient ADC — see
+      `/codex/05-infrastructure/agent-slack-read-access.md` for the full mechanics and rotation instructions.
+      **Correction note**: while live-testing the `ubuntu`-user secret access above, the real Slack bot token was
+      briefly exposed (truncated via `head -c 80`, likely near-complete) into SSM command-invocation output and this
+      session's transcript — flagged to the operator directly; recommend rotating `SLACK_ALERTS_READER_BOT_TOKEN` in
+      Slack + GSM as a precaution.
