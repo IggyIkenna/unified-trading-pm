@@ -105,16 +105,14 @@ over all pending draft batches) that independently spot-verified every todo belo
       A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped — all adapters use canonical
       `InstrumentType.X` enum constants (cited: `compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`,
       `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh` green.
-- [ ] [DOC] P3. **Document the shipped collateral down-sizing contract** (USDC-collateral margin-buffer down-size branch
-      in strategy-service's `staked_basis.py` + `margin_buffer_pct`) in `codex/04-architecture/` and the wizard
-      param-schema (`param_schema.py`'s `PARAM_SCHEMA_REGISTRY`) in
-      `/codex/09-strategy/architecture-v2/capability-wizard.md`, and add a `setup_events()` pytest fixture to
-      `strategy-service/tests/unit/engine/strategies/v2/test_batch_harness.py` so
-      `TestMultipleTicksCarryForward::test_position_state_survives_across_ticks` (currently fails standalone with "Event
-      logging not initialized") passes in isolation. Repo: strategy-service, unified-trading-pm. Source:
-      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`. Done when: both codex docs cite the
-      down-size/buffer contract and the param-schema location with file:line code_refs, and the named test passes both
-      standalone and inside the full QG suite.
+- [x] ✅ [DOC] P3. **Document the shipped collateral down-sizing contract** — unified-trading-pm@946bcead07 +
+      strategy-service@3ae05318. (1) `/codex/04-architecture/token-wrapping-and-collateral.md` § "USDC Margin Buffer"
+      documents the `_derive_structure()` three-outcome contract (`LST_AS_MARGIN` / `USDC_MARGIN_BUFFERED` / reject)
+      with `margin_buffer_pct` default `0.20`, citing `staked_basis.py:238,344` + `param_schema.py:144,198`. (2)
+      `/codex/09-strategy/architecture-v2/capability-wizard.md` § "Collateral down-sizing param" cites both
+      `PARAM_SCHEMA_REGISTRY` entries with exact line numbers. (3) `setup_events()` fixture was already shipped at
+      `strategy-service@3ae05318` (confirmed on origin/LDR, test passes standalone). Repo: strategy-service,
+      unified-trading-pm.
 - [x] ✅ [DIAG] P1. **Root-cause the VM-boot `gsutil` hang** that has stalled 15 launch attempts of the gas_fees
       legacy-venue manifest purge (12,425 orphaned rows; GCS objects already 100% deleted) — serial-console + gsutil
       credential-refresh investigation, replacing the `gsutil -q cp` marker-write with `gcloud storage cp` if no clean
