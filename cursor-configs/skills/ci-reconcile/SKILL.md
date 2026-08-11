@@ -28,7 +28,12 @@ description:
   five (2026-08-09): (f) a corpus-wide check that exists only in a repo's full gate, invisible to whatever fast path
   most commits take — migrate it to a staged-files-only `--only` mode as part of the fix, not just re-baseline it; (g)
   a whole-repo scalar ratchet tripped by a high-velocity promote-PR batching many commits at once, none of which
-  individually crossed it locally — check whether it's already fixed on current LDR before re-bumping. Under
+  individually crossed it locally — check whether it's already fixed on current LDR before re-bumping. Also
+  (2026-08-11): (h) a false alarm — a monitor that fired with no real underlying problem — gets a structural fix to the
+  monitor's own detection logic, not just a "false alarm, no action" dismissal, since an uncorrected false-positive mode
+  erodes trust exactly like a missed real one and will keep re-paging; and a "self-healed" verdict must be corroborated
+  against an actual RECOVERED/GREEN post in the alert channel, not just inferred from current-green CI state — a missing
+  recovery post is itself a small asymmetric-alerting finding. Under
   `/autonomous` this polls on an interval rather than doing one pass and stopping, since neither class has an
   automated detector elsewhere. Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
   Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
@@ -182,6 +187,23 @@ existing dated issue doc (`plans/active/issues/`, including `plans/archive/issue
 separately-tracked — confirm its CURRENT state briefly rather than assuming the doc's last status still holds, and
 report it in § 7 without a full from-scratch re-diagnosis unless it's now genuinely different from what the doc says.
 
+## 0d. Self-healing claims need Slack-corroborated evidence, not just inferred from current-green (2026-08-11)
+
+Declaring an item "self-healed" on the strength of "current CI state is green now" alone conflates two different claims:
+_this specific incident resolved_ vs. _something else fixed it later and we never saw how, or the underlying condition
+was never actually broken the way the alert said_. Before writing "self-healed" in § 7, pull the actual alert channel
+for the window (`python3 scripts/dev/slack-read-channel.py ci-failures <hours>`, or the specific monitor's own channel)
+and look for a matching RECOVERED/GREEN/INFO post for that repo + commit. Most of this skill's monitors
+(`ldr-ci-monitor`, `cloud-build-failure-watcher`, `sit-gate-stuck-detector`) post an explicit recovery message, not just
+a red one — cite that post (timestamp + message text) as the evidence in § 7, not just a `gh run list` success.
+
+If NO recovery post exists in the channel for something you're about to call self-healed: the self-heal claim can still
+stand (current CI state is real ground truth per § 0), but say so explicitly — cite CI state alone, don't imply Slack
+confirmed it. And treat the missing recovery post as its own small finding: a monitor that pages on RED but never pages
+the matching GREEN return is an asymmetric-alerting gap (the reader has no way to know from Slack alone whether a paged
+incident ever cleared) — worth a one-line mention in § 7 even when it isn't the main incident, since it's the same
+"silence isn't evidence" principle § 6 already applies to monitor health, now applied to individual incident resolution.
+
 ## 1. Classify each still-red item before touching it
 
 For every repo whose current `quality-gates-v2` conclusion is `failure`, pull the real log
@@ -244,6 +266,19 @@ For every repo whose current `quality-gates-v2` conclusion is `failure`, pull th
   at the diff base) stops it recurring, same philosophy as (f)'s `--only` mode applied to a scalar-count check. That
   conversion is careful surgery on a script every commit depends on — dispatch it as its own scoped task, don't rush it
   inline while firefighting the active block.
+- **(h) False alarm — the monitor fired but there genuinely wasn't a problem** (2026-08-11). Tell: after ground-truth
+  verification (§ 0), the underlying condition the monitor claims exists doesn't — e.g. `reconcile-release-tags` paged a
+  "27 unreleased commits, 16 days stale" stall on a repo whose unreleased commits were all non-source (docs/plans), so
+  `semver-agent` correctly minted nothing; there was no stall, just a monitor that doesn't distinguish "commits ahead"
+  from "commits that should actually trigger a release." **Don't just log "false alarm, no action" and move on** — an
+  uncorrected false-positive mode erodes trust in every future page from that monitor exactly as much as a monitor that
+  misses a real problem, and it will keep re-paging on the same non-issue. Diagnose WHY it fired: does its detection
+  logic conflate two different signals (commit count vs. release-worthy commit count; process uptime vs. job age — see §
+  0c's `unit_active_seconds` incident for the same conflation pattern in a different monitor), or is the threshold
+  simply miscalibrated for this repo's real cadence? Fix the detector at the root — same routing as (f)/(g): a per-repo
+  script fix ships via § 2, a shared template/workflow fix ships via § 3. Only skip the structural fix when the false
+  trigger was a genuinely one-off external cause that won't recur (e.g. a transient API outage) — state that reasoning
+  explicitly in § 7 rather than silently letting a recurring false-alarm pattern stand unaddressed.
 
 ## 2. Fix (b), (c), (d) directly in the target repo
 
