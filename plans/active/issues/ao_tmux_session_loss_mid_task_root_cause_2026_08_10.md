@@ -288,22 +288,41 @@ memory and that's what kills sessions" as-is.
       (`test_prune_once_catches_a_server_death_that_happens_mid_sweep`) simulates `tmux_server_running()` returning True
       then False within one tick and asserts the alert now fires. This closes the KNOWN gap but does not explain WHY the
       server dies — that mechanism is still open below. Repo: agent-orchestrator.
-- [ ] [INFRA] P1. **Root mechanism still open — cron ruled out, resource pressure and the per-slot check's own
-      reliability under load are the two live candidates.** Two competing explanations remain, not yet disambiguated:
-      (a) the tmux SERVER process genuinely dies/restarts under real resource pressure that scales with production load
-      (explains the 08-11 00:37 step-change coinciding with live trading starting, and is now confirmed real via the
-      shipped `tmux_server_running()` alert catching 3 genuine `tmux list-sessions`-fails-with-server-gone instances);
-      (b) some/most of the OTHER large `tmux_session_lost` bursts are an artifact of the per-slot `has_session()` sweep
-      itself becoming unreliable/slow under load (CPU/subprocess-spawn contention from a much busier fleet), reporting
-      false "session gone" for panes that are actually still alive, without the server itself ever going down — the
-      now-fixed detection gap above could not distinguish these until this fix ships and accumulates more paired
-      samples. The abandoned cron-alignment hypothesis at least correctly identified the RIGHT class of cause (something
-      tied to fleet-wide load), just not the right trigger. **Done when**: (a) with the detection-gap fix live, collect
-      a larger paired sample of `tmux_server_died` vs. large `tmux_session_lost` bursts to see if the gap between them
-      closes (supports mechanism (a) more cleanly) or stays open (points at (b)); (b) capture the tmux server's own
-      PID/FD/thread count and `has_session()` call latency DURING an active burst (not post-recovery) — still not done,
-      needs a live burst to sample against, paused per operator instruction pending resumed production dispatch. Repo:
-      agent-orchestrator.
+- [x] [INFRA] P0. ~~Root mechanism~~ — **MAJOR BREAKTHROUGH 2026-08-11, live-caught with a 1s-resolution capture.**
+      Operator resumed production dispatch; launched a 20-minute VM-side loop sampling the tmux server's PID/thread
+      count/FD count/`VmRSS`/cgroup plus a timed `tmux list-sessions` call, once per second
+      (`/tmp/tmux_server_live_capture.log` on the VM — not yet promoted into the repo, see follow-up todo). Caught a
+      real death at **2026-08-11 18:10:50** (`tmux_server_died`, 18 slots affected). The 55+ seconds immediately
+      preceding it are **completely flat and healthy**: steady 1 thread, steady 33 FDs, `VmRSS` climbing normally
+      (6.4MB->6.8MB, unremarkable), `tmux list-sessions` consistently fast at 9-12ms every single sample, load average
+      fluctuating 6.5-7.3 with no trend toward any ceiling. Then, within 1.4s of the last healthy sample, the process
+      (PID 3820711) is gone entirely — no degradation ramp, no slowdown warning, an instant vanish. This **rules out
+      mechanism (b)** from the prior framing (per-slot health check becoming unreliable/slow under load) as the
+      explanation for this instance — `tmux list-sessions` itself was fast and healthy right up to the edge, then
+      genuinely started failing (`rc=1`). **New, sharper lead**: `journalctl` for the same window shows **27
+      `utempter:     [ppid=3820711] pututline: Permission denied` messages, all landing within the SAME second
+      (18:10:49)** — each one a child process the tmux server spawns to register a new pty in utmp whenever it creates a
+      pane/session. That's a burst of ~27 near-simultaneous new-pane-creation calls hitting one tmux server process, one
+      second before it died (5 `slot_boot` events also landed in the preceding 10s, though that alone doesn't account
+      for all 27 — the rest likely came from a concurrent AutoSpawn/escalation dispatch wave catching up after the
+      operator's pause, per the same window's `journalctl` showing active escalation-retry churn). **Working hypothesis,
+      replacing the old resource-pressure-vs-flaky-check framing**: a burst of concurrent new-session/new-pane creation
+      requests against a single tmux server process can crash it outright — not gradual exhaustion, a sudden failure
+      correlated with a spawn spike. The `utempter` "Permission denied" itself is a separate, not-yet-investigated
+      oddity (uncertain if it's causal, incidental, or has always been silently present on this VM). **This is n=1** —
+      strong, clean, first-ever direct evidence, but one incident. **Done when**: (a) a second live catch with the same
+      signature (flat-then-instant-death + coincident utempter/spawn burst) to confirm this isn't a one-off; (b) figure
+      out whether `utempter`'s permission-denied failures are new/environmental (check if `/var/run/utmp` perms changed
+      recently, or if this has always silently occurred) and whether they're incidental noise or somehow contribute to
+      the crash; (c) if confirmed, the fix candidate is throttling/serializing concurrent new-pane creation against the
+      tmux server rather than firing them all at once. Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Promote `/tmp/tmux_server_live_capture.log`'s capture script into the repo.** Currently a
+      hand-authored one-shot shipped via SSM directly to the VM (`/tmp/tmux_live_capture.sh`), not committed anywhere —
+      it did its job for this catch but is NOT durable and doesn't survive a VM restart or an intentional cleanup pass.
+      Give it a real home (a `scripts/orchestrator/` diagnostic, following the same lifecycle-marker convention as
+      `watch_production_slot_death.sh`) so the NEXT death doesn't need this re-authored from scratch, and add a systemd
+      timer or an always-on lightweight variant if the operator wants continuous coverage rather than one-shot 20-minute
+      windows. Repo: agent-orchestrator.
 - [ ] [INFRA] P3. **Wire `resource-watchdog`'s existing tick log into future death correlation.** Discovered live
       2026-08-11 — a previously-undocumented-in-this-doc systemd service already logging periodic
       `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
