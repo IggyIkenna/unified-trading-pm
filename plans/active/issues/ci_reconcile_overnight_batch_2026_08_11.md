@@ -241,7 +241,7 @@ bad module boundary in tradfi-canonical-naming-sensitive code without owner revi
 call-site changes) and `migrate_tradfi_canonical_2026_07.py` 905L→562L (extracted the classification half into
 `scripts/migrate_tradfi_canonical_classify_2026_07.py`, 45 names re-exported). That same commit also fixed a
 reader-routing bug from `c31cfe7a`'s combo→combo_chain rename (3 stale tests) — full detail archived at
-`/plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`.
+`/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`.
 
 **A further follow-up session then found `b13e3a2b`'s own promote PR (#952) still red** on a NEW gate: both
 `migrate_tradfi_canonical_classify_2026_07.py` (new, from the split) and
@@ -426,8 +426,8 @@ not because anything needs follow-up.
       migrate_tradfi_canonical_2026_07.py 905L→562L) + `market-tick-data-service@ccb84c57c9` (follow-up fix for a
       net-new blanket-pyright-suppression-header regression the split's new files introduced on the promote PR). Full
       writeup of the reader-routing regression:
-      `/plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`; the blanket-suppression-header
-      fix is detailed in item 10 above. (repo: market-tick-data-service)
+      `/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`; the blanket-suppression-header fix
+      is detailed in item 10 above. (repo: market-tick-data-service)
 - [ ] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A): no escalation path exists
       from a `cloud-build-failure-watcher` CRITICAL alert to an AO-dispatched fix attempt today — every Cloud-Build-
       only failure (GH Actions can stay green) depends on a human reading Slack. Needs a new `wall_type` in
