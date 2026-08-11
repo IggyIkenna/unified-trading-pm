@@ -102,11 +102,32 @@ for what this session was doing; flagging for whoever picks this up).
 - [ ] [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the known
       `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
       AO-dispatched todo that shouldn't have targeted these roots, or another automation path. Repo: deployment-service.
-- [ ] [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data writes)
-      on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
-      sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill.
+- [x] ✅ [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data
+      writes) on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
+      sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill. — completed 2026-08-11 (slot-26):
+      all 7 VMs ALIVE+progressing; determination + kill/no-kill routed via BLK-3412aed6.
 
 ## Progress Log
 
 - **2026-08-11**: filed after discovering this live during an unrelated kill-execution attempt (see Observation above).
   Not investigated further this session.
+- **2026-08-11 ~09:00Z, slot-26 (dispatched P2 — 3-signal staleness check)**: Completed the 3-signal staleness check on
+  all 7 out-of-scope commodity VMs (cl-2020, gc-2020, gc-2021, hg-2021, ng-2021, pa-2020, pl-2020) at ~2026-08-11T08:57Z
+  (read-only via UTL `cloud_interface`; no VMs touched, nothing written). **Determination: ALL 7 GENUINELY ALIVE +
+  PROGRESSING — none qualify for a staleness-based kill.**
+  - **Signal 1 — GCS heartbeat blob** (`gs://deployment-scripts-central-element-323112/vm-heartbeat/<vm>.txt` mtime):
+    all 7 within 09–50s of check time (08:56:52Z–08:57:39Z) — inside the sibling doc's 60s alive threshold.
+  - **Signal 2 — run.log tail activity**: all 7 `vm-logs/<vm>/run.log` actively growing (last_modified 08:55:12Z–
+    08:57:13Z) with `PIPELINE_HEARTBEAT` (~60s cadence) + `RESOURCE_SAMPLE` (~30s, cpu≈100–190%) + `Pre-flight` /
+    `DatabentoAdapter` processing lines; `WATCHDOG_TRACE.log` also fresh.
+  - **Signal 3 — active data writes**: `StreamingParquetWriter` uploading to PROD
+    `market-data-tick-tradfi-prd-central-element-323112/raw_tick_data/by_date/day=…` (e.g. gc-2021 24,558 rows
+    day=2021-09-10 @08:56:30Z; pl-2020 multiple uploads day=2020-05-28 @08:55:43Z), `ManifestWriter` per-VM shard
+    updates (`_index/per_vm/<vm>-c45.parquet`), monotonic `PROGRESS.json` (cl 2020-11-03 / gc-2020 2020-11-03 / gc-2021
+    2021-09-09 / hg 2021-06-17 / ng 2021-03-04 / pa 2020-10-13 / pl 2020-06-02). Canonical
+    `pipeline_mode=batch_databento` paths; no duplicate-pair race (one VM per root+year).
+  - **Routing**: kill/no-kill filed to operator via `/blocked` (**BLK-3412aed6**) — same sunk-cost-vs-ongoing-violation
+    framing as the sibling doc. All-alive means no autonomous staleness-kill is warranted; the ruling doc's "killed, not
+    relaunched" commodity language vs. the sunk-cost + November-needed canonical data is the operator's judgment call.
+    No VMs touched. P1 (launch-source identification) remains open and is the critical follow-up — the source is still
+    unidentified (known cron confirmed PAUSED), so the wave could recur independently of this decision.
