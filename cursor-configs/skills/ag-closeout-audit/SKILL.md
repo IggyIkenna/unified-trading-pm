@@ -571,6 +571,19 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
+**Idempotency guard — run BEFORE authoring the finalize plan (2026-08-11, issue
+`duplicate_finalize_plans_created_for_one_parent` todo 1)**: before writing any new `<parent>_finalize*.md`, re-derive
+the gate set over the CURRENT corpus and refuse if the parent is already gated:
+
+`.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root> --assert-not-gated <parent-slug>`
+
+Exit 0 = safe to create. Exit 1 = the parent ALREADY has a gated finalize plan — do NOT create a competing one;
+reconcile into the existing plan (append/fold) or port-then-supersede it, never draft a second file. The guard is keyed
+on the `depends_on` relationship (the real gate contract) via `_gating_plans()`, NOT the filename — two colliding
+finalize plans can differ only by a redundant date suffix (`<parent>_finalize.md` vs `<parent>_finalize_<date>.md`),
+which is exactly how the 2026-07-31 duplicate pair slipped through. The same refusal fires in the plan-hygiene precommit
+`--only` gate on any staged finalize plan, so a missed pre-flight check is still caught at commit time.
+
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
 `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
 **`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with

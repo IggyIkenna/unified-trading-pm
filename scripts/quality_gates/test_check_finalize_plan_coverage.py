@@ -13,6 +13,12 @@ the whole corpus to resolve gating (which plans have finalize companions is
 inherently corpus-wide knowledge) but only reports/fails on violations among the
 given paths, so a pre-existing violation in an unrelated plan never blocks an
 unrelated commit.
+
+Also covers the --assert-not-gated + --only duplicate-gate modes (2026-08-11,
+duplicate_finalize_plans_created_for_one_parent todo 1): finalize-plan creation is
+idempotent at the point of creation — refuse a new <parent>_finalize*.md when the
+parent already has a gated finalize plan, keyed on the depends_on relationship
+(_gating_plans), never the filename shape.
 """
 
 from __future__ import annotations
@@ -108,6 +114,101 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
 
     rc = main(["--workspace-root", str(tmp_path), "--only", str(v1), str(v2)])
     assert rc == 1
+
+
+# ── --assert-not-gated (create-time idempotency guard, duplicate_finalize_plans_created_for_one_parent todo 1) ──
+
+
+def test_assert_not_gated_refuses_when_parent_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    _write_plan(
+        active / "source_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--assert-not-gated", "source_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_assert_not_gated_refuses_on_date_suffixed_duplicate_filename(tmp_path: Path) -> None:
+    """The two colliding finalize plans (2026-07-31 incident) differed only by a redundant
+    date suffix — the guard must key on the depends_on relationship, not the expected
+    filename shape."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_07_31.md")
+    _write_plan(
+        active / "parent_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--assert-not-gated", "parent_2026_07_31"])
+    assert rc == 1
+
+
+def test_assert_not_gated_passes_when_parent_not_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--assert-not-gated", "source_plan_2026_08_11"])
+    assert rc == 0
+
+
+# ── --only duplicate-gate refusal (prek precommit create-time guard) ─────────
+
+
+def test_only_refuses_staged_duplicate_finalize_for_an_already_gated_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    _write_plan(
+        active / "source_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+    # A SECOND finalize plan for the same parent (different filename shape) is staged — the exact
+    # two-agents race this guard exists to refuse.
+    second = _write_plan(
+        active / "source_plan_2026_08_11_finalize_2026_08_11.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc == 1
+
+
+def test_only_passes_a_single_finalize_for_an_un_gated_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    finalize = _write_plan(
+        active / "source_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(finalize)])
+    assert rc == 0
+
+
+def test_only_ignores_an_unrelated_duplicate_pair_outside_scope(tmp_path: Path) -> None:
+    """A pre-existing duplicate gate pair elsewhere in the corpus must NOT block a staged clean
+    finalize plan for a different parent (RULE-11 blast-radius safety) — the corpus-wide at-rest
+    detector is a separate check."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_a_2026_08_11.md")
+    _write_plan(
+        active / "source_a_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_a_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_a_2026_08_11_finalize_2026_08_11.md",
+        extra_frontmatter="depends_on: [source_a_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(active / "source_b_2026_08_11.md")
+    clean = _write_plan(
+        active / "source_b_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_b_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(clean)])
+    assert rc == 0
 
 
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
