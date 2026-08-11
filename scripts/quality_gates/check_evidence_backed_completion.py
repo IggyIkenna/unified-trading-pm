@@ -17,7 +17,7 @@ The `Evidence:` convention (SSOT: plans/PLAN_FORMAT.md § Evidence-backed comple
   Multiple build-ids and additional token kinds (e.g. `gha=<run-url>`) are allowed; this gate
   VERIFIES every `cloudbuild=<id>` resolves SUCCESS in the Cloud Build API.
 
-Two sub-rules:
+Three sub-rules:
   - **A (strict, baseline 0): cited build must be SUCCESS.** Every `cloudbuild=<id>` in a `- [x]`
     todo is resolved via `gcloud builds describe`. A build whose OVERALL status is a terminal
     NON-success (FAILURE / TIMEOUT / CANCELLED / INTERNAL_ERROR / EXPIRED) is a HARD violation —
@@ -28,8 +28,17 @@ Two sub-rules:
   - **B (ratchet, baselined): runtime-green claim without any Evidence ref.** A `- [x]` todo that
     makes a build/deploy/promote-green claim but cites NO `Evidence:` ref is flagged. Baselined
     so legacy plans ratchet down; new over-claims without evidence push the count up → regression.
+  - **C (ratchet, baselined): prod DATA-mutation claim without a valid artifact Evidence ref.**
+    A `- [x]` todo asserting a completed OPERATIONAL mutation of prod data with a measured
+    outcome — restamp/backfill row·shard·object counts, manifest backstamps, GCS object
+    renames/deletes, terraform/tofu state ops (SSOT: plans/PLAN_FORMAT.md § 8d) — must cite an
+    `Evidence:` ref carrying a recognized mutation-artifact token (`vm-logs=.../RESULT.json`,
+    `gs://...`, `gcs-op=`, `manifest-delta=`, `state-list=`, `log=`, ...). A `<repo>@<sha>` alone
+    proves the script was built, not that the mutation happened — the exact gap this closes. A
+    claim with no Evidence ref, or an Evidence ref carrying none of the recognized artifact
+    forms, is flagged and ratcheted against its own baseline.
 
-Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rule B); 1 = violation;
+Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rules B + C); 1 = violation;
 2 = arg/IO error.
 """
 
@@ -106,6 +115,46 @@ _GREEN_TOKEN_RE = re.compile(r"(?<!-)\b(?:green|SUCCESS|succeeded)\b(?!-)", re.I
 # `needs.route-build.outputs.repo`) — those periods are always followed immediately by another
 # non-whitespace character, not a space.
 _CLAUSE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z`])")
+
+# ── Sub-rule C: prod DATA-mutation claims must cite a valid artifact Evidence ref (2026-08-11) ──
+# A prod-mutation claim is a `- [x]` that asserts a completed OPERATIONAL mutation of prod data
+# with a measured outcome (SSOT: plans/PLAN_FORMAT.md § 8d). Mirrors sub-rule B's same-clause
+# structure: a MUTATION VERB and a MUTATION OBJECT must co-occur in ONE clause (not just anywhere
+# in a long multi-line block — same false-positive discipline as _RUNTIME_VERB_RE/_GREEN_TOKEN_RE).
+_MUTATION_VERB_RE = re.compile(
+    r"\b(?:restamp(?:ed|ing)?|backfill(?:ed|ing)?|renam(?:ed|ing)|delet(?:ed|ing)|"
+    r"backstamp(?:ed|ing)?|tofu[\s/_-]*state|terraform[\s/_-]*state)\b",
+    re.IGNORECASE,
+)
+# The measured DATA OBJECT a mutation acts on: a counted data noun (rows/shards/objects/records/
+# entries/blobs/candles/trades/items — deliberately NOT generic nouns like "paths"/"files"/"lines"
+# so deleting dead code isn't misread as a prod GCS mutation), a GCS path, or a state-op reference.
+_MUTATION_OBJECT_RE = re.compile(
+    r"(?:"
+    r"\b\d[\d,]+\s*[^.\n]{0,24}?\b(?:rows?|shards?|objects?|records?|entries?|blobs?|candles?|trades?|items)\b"
+    r"|\bgs://[\w./{}-]+"
+    r"|\bstate[\s/_-]*(?:list|rm|mv)\b"
+    r"|\b(?:before|after)[\s/_-]+state\b"
+    r")",
+    re.IGNORECASE,
+)
+# A mutation verb that is self-evidently a prod-mutation claim even with no measured object: a
+# manifest backstamp writes prod state by definition.
+_MUTATION_SELF_SUFFICIENT_RE = re.compile(r"\bmanifest[\s-]?backstamp(?:ed|ing)?\b", re.IGNORECASE)
+# Recognized prod-mutation evidence artifact token forms (§ 8d). An Evidence ref on a mutation
+# claim must carry at least one of these to be a structurally valid mutation-artifact citation —
+# `Evidence: cloudbuild=<id>` or a bare `<repo>@<sha>` proves the script was built, not the
+# mutation outcome, so neither satisfies sub-rule C.
+_MUT_EVIDENCE_TOKEN_RE = re.compile(
+    r"(?:"
+    r"\bvm-logs/[\w./-]+/RESULT\.json\b"
+    r"|\b(?:gcs-op|gcs-operation|manifest-delta|state-list|terraform-state|tofu-state|log)=[^\s,;:]+"
+    r"|\bgs://[\w./{}-]+"
+    r"|\bstate[\s/_-]*list\b"
+    r"|\b(?:before|after)[\s/_-]+state\b"
+    r")",
+    re.IGNORECASE,
+)
 
 # Terminal Cloud Build statuses that are NOT success → an over-claim if cited on a `- [x]` todo.
 _TERMINAL_NONSUCCESS = {"FAILURE", "TIMEOUT", "CANCELLED", "INTERNAL_ERROR", "EXPIRED"}
