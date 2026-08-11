@@ -136,7 +136,7 @@ A new `select_account_for_spawn(task_context)` function sits in front of the exi
     `data/config/accounts.json` registers BOTH halves — `deepseek-v4-pro` (`variant: "pro"`) and `deepseek-v4-flash`
     (`variant: "flash"`). The `config.py` comment claiming "no such account exists in any accounts.json today" was STALE
     and actively misleading (it reads as "this knob does nothing"); corrected in the same change with the numbers below
-    — agent-orchestrator@<pending>.
+    — agent-orchestrator@e2a3083624.
   - **Measured 24h to 2026-08-11 06:00Z**, from `activity_log` split by `account_id`:
 
     | signal                              | flash | pro | normalised                     |
