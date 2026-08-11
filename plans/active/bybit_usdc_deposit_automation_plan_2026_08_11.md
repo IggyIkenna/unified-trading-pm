@@ -155,7 +155,8 @@ context_scope:
       `"failed"`), `timestamp`. Repo: execution-service. Done-when: unit tests (deposits list filters by asset, empty
       list when no deposits, adapter not initialized raises clean); `quality-gates.sh` green.
 
-- [ ] [BACKEND] P2. Define `BybitDepositResult` TypedDict + `BybitDepositCallable` type alias.
+- [x] ✅ [BACKEND] P2. Define `BybitDepositResult` TypedDict + `BybitDepositCallable` type alias —
+      execution-service@22875249c0.
       `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None,     "confirmed_balance_delta": Decimal, "error": str | None}`.
       `BybitDepositCallable = Callable[     [Decimal], Awaitable[BybitDepositResult]]` — the pre-bound deposit callable
       the wiring layer produces. Lives alongside `BridgeDepositCallable` in `perp_hedge_consumer.py` (or a new
