@@ -128,3 +128,98 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-already-gated pre-create idempotency guard ─────────────────────────
+
+
+def test_check_already_gated_true_when_finalize_plan_exists(tmp_path: Path) -> None:
+    """A parent that already has a <parent>_finalize*.md gating on it returns exit 1."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_11.md")
+    _write_plan(
+        active / "parent_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_11]\ngate_on_depends: true",
+    )
+    rc = main(["--workspace-root", str(tmp_path), "--check-already-gated", "parent_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_check_already_gated_false_when_no_finalize_plan(tmp_path: Path) -> None:
+    """A parent with no finalize companion returns exit 0 (safe to create one)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "orphan_plan_2026_08_11.md")
+    rc = main(["--workspace-root", str(tmp_path), "--check-already-gated", "orphan_plan_2026_08_11"])
+    assert rc == 0
+
+
+# ── _find_duplicate_gates — refined (finalize-shaped companions only) ──────────
+
+
+def test_duplicate_gate_ignores_legitimate_fan_out(tmp_path: Path) -> None:
+    """Multiple downstream plans gating on the same prerequisite (but none of their
+    stems match <parent>_finalize*) is NOT a duplicate gate — it's legitimate fan-out.
+    All plans use assigned_vm:NA so the coverage check (which only flags planning) is silent."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "shared_prereq_2026_08_11.md", assigned_vm="NA")
+    _write_plan(
+        active / "phase_a_2026_08_11.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [shared_prereq_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "phase_b_2026_08_11.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [shared_prereq_2026_08_11]\ngate_on_depends: true",
+    )
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0
+
+
+def test_duplicate_gate_detects_two_finalize_companions(tmp_path: Path) -> None:
+    """Two plans whose stems BOTH start with <parent>_finalize is the exact pattern
+    from the 2026-07-31 incident — MUST be flagged.  assigned_vm:NA so only the
+    duplicate-gate check fires, not the coverage check."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md", assigned_vm="NA")
+    _write_plan(
+        active / "parent_2026_08_11_finalize.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [parent_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_11_finalize_2026_08_11.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [parent_2026_08_11]\ngate_on_depends: true",
+    )
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 1
+
+
+def test_duplicate_gate_ignores_one_finalize_plus_one_downstream(tmp_path: Path) -> None:
+    """One real finalize companion and one downstream dependent (whose stem does NOT
+    start with <parent>_finalize) is the healthy case — not a duplicate."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md", assigned_vm="NA")
+    _write_plan(
+        active / "parent_2026_08_11_finalize.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [parent_2026_08_11]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_11_phase_c.md",
+        assigned_vm="NA",
+        extra_frontmatter="depends_on: [parent_2026_08_11]\ngate_on_depends: true",
+    )
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0
+
+
+# ── --quiet flag ──────────────────────────────────────────────────────────────
+
+
+def test_quiet_flag_exits_zero_on_clean_no_baseline(tmp_path: Path) -> None:
+    """--quiet suppresses output and returns 0 on a clean corpus (no baseline file)."""
+    _active_dir(tmp_path)  # empty corpus, baseline file absent → all baselines default to 0
+    rc = main(["--workspace-root", str(tmp_path), "--quiet"])
+    assert rc == 0
