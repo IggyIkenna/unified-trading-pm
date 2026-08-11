@@ -180,4 +180,6 @@ unverified. The unpause is gated on the P0 below, not on elapsed time.
       `deployment-api:latest` image the monitor job runs. The fix is on the branch; the image build time was never
       checked, so the cap may still be reading an empty per-container tempdir in production.
 - [ ] [SCRIPT] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp — they are classified
-      neither live nor wedged and were left alone.
+      neither live nor wedged and were left alone. Tool: `deployment-service/scripts/vm/probe_vm_serial_liveness.sh`
+      (promoted from this incident's diagnostic session, read its header before trusting a fresh timestamp as more than
+      guest-alive).
