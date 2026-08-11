@@ -141,27 +141,34 @@ green one).
 
 - [x] [INFRA] P2. ✅ **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the
       `qg-host-governor` reservation ledger with interactive agent-orchestrator slots.** — unified-trading-pm@b867ae4
-      (doc-only, findings below). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a
-      DIFFERENT, disjoint ledger directory than interactive slots.**
+      (doc-only). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a DIFFERENT, disjoint
+      ledger directory than interactive slots.** Independently re-verified 2026-08-11 (slot-8): pre-fix
+      `_qg_shared_root()` at `f3534a90ea^` routes `.tabs/*` → `${ws%/.tabs/*}` vs `/opt/github-glue-runners*` →
+      `/opt/.qg-governor-glue-shared`; confirmed genuinely disjoint (different inodes `1624209` vs `524911` on same
+      filesystem device `66305`); both surfaces call identical `qg_governor_acquire()` at `qg-host-governor.sh:593-595`.
 - [x] [INFRA] P2. ✅ **Wire the glue-runner CI ledger and the interactive-slot ledger back into ONE shared reservation
-      namespace** (follow-up from the todo above) — unified-trading-pm@\<see Progress Log for SHA\>. Fixed
-      `_qg_shared_root()` in `scripts/quality-gates-base/qg-host-governor.sh` so the glue-runner branch
-      (`/opt/github-glue-runners*`) now resolves to the SAME directory the interactive-slot branch (`*/.tabs/*`) already
-      derives in production, live-verified via a real (non-dead-PID) cross-topology reservation test. **NOT** unified
-      onto `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for
-      why that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely;
-      unified onto a `/home`-based root instead). Full detail in the Progress Log entry below.
+      namespace** (follow-up from the todo above) — unified-trading-pm@f3534a90ea. Fixed `_qg_shared_root()` in
+      `scripts/quality-gates-base/qg-host-governor.sh` so the glue-runner branch (`/opt/github-glue-runners*`) now
+      resolves to the SAME directory the interactive-slot branch (`*/.tabs/*`) already derives in production,
+      live-verified via a real (non-dead-PID) cross-topology reservation test. **NOT** unified onto
+      `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for why
+      that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely; unified
+      onto a `/home`-based root instead). Full detail in the Progress Log entry below.
 - [x] [INFRA] P2. ✅ **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and
       the per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** —
       unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-9 entry for full measured numbers). **Verdict:
-      UNDERSIZED.** The physical envelope (8 physical cores / 16 vCPU, 30GiB RAM, `orchestrator.service` cgroup-capped
-      at ~26GiB) cannot safely absorb the fleet's own documented peak concurrent heavy-QG demand — the 2026-08-09
-      slot-29 incident (already in this doc's Progress Log) measured up to 19 concurrent `quality-gates.sh` processes
-      (vs. the CLAUDE.md-documented ≤2 rule) with load average climbing 40→69 and 14GB+ swap, and the RAM watchdog
-      killing even trivial near-zero- footprint background commands — evidence the host, not just the QG governor's
-      accounting, was at its real ceiling. A live re-check today (moderate period, no glue-runner CI active on this host
-      right now — see below) still showed load average 15.85 against 8 physical cores (~2x oversubscribed) with only 3-4
-      concurrent `quality-gates.sh` processes running. `qg_resource_baseline.json`'s wall-clock figures are all
+      UNDERSIZED.** Independently re-verified 2026-08-11 (slot-8): live host measurement — 8 physical cores / 16
+      logical, 30GiB RAM, `orchestrator.service` cgroup cap ~26GiB; load average 16.76/15.30/15.17 (~2× oversubscribed
+      even at moderate load with only 3-4 concurrent QG runs); `qg_resource_baseline.json` `deployment-service`
+      `wall_s=106.0` at `measured_concurrency:1` vs this doc's own measured 345s (3.25× baseline) purely from
+      contention. The physical envelope (8 physical cores / 16 vCPU, 30GiB RAM, `orchestrator.service` cgroup-capped at
+      ~26GiB) cannot safely absorb the fleet's own documented peak concurrent heavy-QG demand — the 2026-08-09 slot-29
+      incident (already in this doc's Progress Log) measured up to 19 concurrent `quality-gates.sh` processes (vs. the
+      CLAUDE.md-documented ≤2 rule) with load average climbing 40→69 and 14GB+ swap, and the RAM watchdog killing even
+      trivial near-zero- footprint background commands — evidence the host, not just the QG governor's accounting, was
+      at its real ceiling. A live re-check today (moderate period, no glue-runner CI active on this host right now — see
+      below) still showed load average 15.85 against 8 physical cores (~2x oversubscribed) with only 3-4 concurrent
+      `quality-gates.sh` processes running. `qg_resource_baseline.json`'s wall-clock figures are all
       `measured_concurrency: 1` (serial, uncontended) — e.g. `deployment-service` baseline `wall_s=106.0`, but this
       doc's own finding 1 shows the SAME test suite hit `345s` wall (3.25× baseline) purely from contention, tripping
       the `MAX_DURATION=300s` gate that was never calibrated for real fleet concurrency. Filed follow-up todo below
@@ -179,7 +186,12 @@ green one).
       protection (ruleset + classic settings, `gh api repos/IggyIkenna/deployment-service/branches/main/protection` or
       the ruleset equivalent) for whether `quality-gates-v2` is actually listed as required. Done-when: a stated YES/NO
       on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it. —
-      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.**
+      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.** Independently
+      re-verified 2026-08-11 (slot-8): `gh api repos/IggyIkenna/deployment-service/rulesets/13787653` —
+      enforcement=active, one `required_status_checks` rule listing exactly
+      `"Quality Gates (deployment-service) /     quality-gates-v2"` and `"sit-gate/fleet-green"`, bypass_actors=[],
+      default_branch=main; ruleset created 2026-03-11, last updated 2026-07-12 — both predate PR#678's 2026-08-03 merge,
+      so this config was already live at merge time.
 - [x] [INFRA] P3. ✅ Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
       the required `Quality Gates (deployment-service) / quality-gates-v2` check never reporting success on its head SHA
       (both runs against that SHA completed `failure`, and both completed AFTER `mergedAt`) — the required-status-check
@@ -575,3 +587,11 @@ and just burn more contended compute.
   surfaces under normal (uncontended) host conditions, re-open this investigation — that would indicate the race window
   is wider than the sub-second-to-few-seconds this analysis assumes, and would justify the explicit-delay fix. Until
   then, this is documented and closed.
+
+- **2026-08-11 (slot-15, review craft — finalize-plan reconciliation, todo 3)** — Reconciled the independently
+  re-verified evidence (from the finalize plan's todos 1-2: slot-8's re-verification of all 3 audit verdicts + slot-3's
+  follow-up closure confirmation) back into this doc's own 3 main audit checkboxes, replacing bare/placeholder claims
+  with the actual cited evidence inline (code path `f3534a90ea^`, host specs 8phys/30GiB/load ~2×, `gh api` ruleset
+  13787653). Fixed the `<see Progress Log for SHA>` placeholder in follow-up todo 1 → `unified-trading-pm@f3534a90ea`.
+  All 3 main audit todos and all 3 follow-up todos are now `[x]` with independently verified, concretely cited evidence;
+  no bare "done" claims remain. Finalize plan todo 3 is now complete — todo 4 (archive decision) is the next step.
