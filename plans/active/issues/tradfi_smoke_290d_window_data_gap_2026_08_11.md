@@ -37,6 +37,9 @@ source: honest_coverage_smoke_harness_4ag_verify-06809dbd31f9
 assigned_vm: NA
 resolved_by:
 locked_by:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Finding

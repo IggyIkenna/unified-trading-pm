@@ -1044,11 +1044,49 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# P0 (safe_doc_push_isolation_drops_rename_deletions_2026_08_10, second symptom): STAGE THE
+# PAYLOAD FIRST, then quarantine only what remains. `autostash_guard_bound_backlog` below
+# computes its dirty set from `git diff --name-only` -- UNSTAGED changes only -- so a named
+# file that is ALREADY staged is structurally invisible to the quarantine: it can never be
+# swept into the stash it is about to be compared against. This is the belt to the
+# protected-path suspenders (the `--files` argument to the guard): that argument already
+# rotted once at quickmerge's call site (test_autostash_guard_protects_caller_files.bats,
+# 2026-08-11 -- quickmerge passed the remote ref in the protected slot and a 42-entry stash
+# list reverted the caller's own --files mid-flight). Ordering alone made the difference
+# there. Measured 2026-08-10: the quarantine ran first, stashed the caller's edit, staging
+# then found "nothing to stage", and the "already matches HEAD" branch reported success for
+# content that was NOT on origin. Staging first closes that ordering at the source.
+#
+# This is safe before the fetch/pull below because staging does not modify the working tree;
+# the merge-pull/rebase reconcile in the loop still runs normally (a staged index does not
+# block `git pull` -- only a dirty WORKING TREE at a conflicting path does, and the reconcile
+# handles that regardless of index state). The in-loop `git add` is retained: a pre-commit
+# hook may have rewritten a named file between here and commit, and re-staging is what lets
+# `git diff --cached --quiet` see the autofixed content.
+# The payload must be staged BEFORE the quarantine runs; if staging is impossible right now
+# (transient index.lock from a peer write), the SAFE degradation is to SKIP the quarantine for
+# this run rather than run it against an unstaged payload -- the guard is advisory (an autostash
+# chain-breaker, returns 0, "never blocks the caller"), so skipping it never endangers the
+# push; an unstaged payload running into it does. The in-loop `git add` below then exercises the
+# existing lock-contention retry/escape-hatch machinery, which is where a persistent lock belongs
+# (safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 4).
+_sdp_staged_payload=false
+if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_prestage_err; then
+  echo "  ⚠ could not stage the payload before the quarantine -- SKIPPING the autostash-backlog" >&2
+  echo "    quarantine this run (an unstaged payload is exactly what it would sweep). The in-loop" >&2
+  echo "    staging will handle any lock contention with its own retry/escape-hatch." >&2
+  cat /tmp/_sdp_prestage_err >&2
+else
+  _sdp_staged_payload=true
+fi
+
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
 # --files are passed as protected so the extreme-pile self-arrest never quarantines the very
-# work this run is shipping (dogfooded live 2026-08-10 slot-9).
-if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
+# work this run is shipping (dogfooded live 2026-08-10 slot-9). With the payload staged above,
+# the guard's `git diff --name-only` no longer even sees the named files -- only what remains
+# (foreign dirty work) is eligible for quarantine.
+if [[ "$_sdp_staged_payload" == true ]] && declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
   autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
 fi
 
