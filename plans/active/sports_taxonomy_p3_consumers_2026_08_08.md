@@ -638,3 +638,25 @@ spelling variant survives, which is the entire point of the panel". It does not.
   re-dispatched despite slot-15's durable park — either the unpark condition was cleared or the park is not holding for
   this task. The slot-15 recommendation still stands: wire `depends_on` + `gate_on_depends` from THIS P3 todo onto P2's
   re-stamp todo so it stops re-dispatching until the rename lands.
+
+- **2026-08-11 (slot 30, backend_engineer)** — ML § PATH-PREFIX loader-migration todo: **FOURTH premature dispatch**
+  (slots 22, 15, 10 prior). Re-verified live, not re-read from the doc: P2
+  (`sports_taxonomy_p2_migration_2026_08_08.md`) is STILL 17 open / 0 done — the "Consumer enumeration" P0 gate and the
+  `odds_horizon_bucket`→`odds`+`horizon` re-stamp todo are both still `- [ ]`; MDPS
+  `bucket_assignment_adapter.py:687/696` STILL registers + writes `data_type = "odds_horizon_bucket"`; zero `horizon=`
+  GCS path segment anywhere in MDPS/features-service/UAC; ml-service `sports_feature_loader.py:35-37`
+  `_ODDS_BUCKETED_PREFIXES` is byte-identical to the todo's description. No new canonical shape exists to move onto —
+  the todo's own text ("must move in the same change as the rename") makes it a joint change with P2's re-stamp. Skipped
+  again (`reason_code: GATED`, `park_now: true`). **Root-cause finding on the repeated re-dispatch (NEW this dispatch —
+  neither prior note had it)**: the durable park is structurally NOT landing. The skip response returned
+  `auto_parked_condition: null`, and `GET /api/backlog/{id}/blockers` shows only the transient fleet cooldown — no
+  `auto_unpark__...` prereq — with the live backlog row at `priority: 20`.
+  `agent-orchestrator/data/config/backlog.yaml`'s entry for this task is regen-clean (`priority: 20`,
+  `priority_override: false`, `prereqs.prerequisites: []`) — the documented `backlog_regen_drops_handtuned_prereqs` gap
+  applies to this content-derived task even after the `@8dd5763` fix — while `auto_park.manual_park`'s idempotency guard
+  (`existing.parked_condition is not None`) makes every subsequent `park_now: true` skip a silent no-op against the
+  stale DB cooldown marker. Net: the park can never take, so the task re-dispatches to a fresh worker on every
+  regen/reload cycle. **Needs a server-side fix** (manual_park must rewrite the yaml park even when a stale
+  `parked_condition` exists, or regen must preserve the hand-tuned park) — out of scope for this worker task. Until
+  then, recommend: (a) an operator marks this task parked/done until P2's re-stamp lands, or (b) this todo moves INTO
+  the P2 plan alongside the re-stamp, which its own text already makes the correct home.
