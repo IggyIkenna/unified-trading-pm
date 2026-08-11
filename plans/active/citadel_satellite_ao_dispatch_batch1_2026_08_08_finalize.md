@@ -8,7 +8,7 @@ summary: >-
   archive). Authored `status: active` (not draft) per the 2026-07-30 no-double-gate finding — `gate_on_depends` alone
   already machine-holds every task here until batch1's own todos land, regardless of batch1's own draft/active status; a
   finalize plan carries no independent judgment call.
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,13 +17,13 @@ scope: [engineer]
 tags: [reconciliation, paper-trading, ao-dispatch, close-out, batch-1, citadel, archival]
 related:
   [
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/epics/batch_live_symmetry_master.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-11"
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,7 +46,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -54,6 +54,11 @@ context_scope:
 ---
 
 # Citadel satellite AO batch 1 — finalize
+
+> **ARCHIVED 2026-08-11** — all 3 todos done. Todos 1–2 reconciled by slot 27 (2026-08-11): every batch1 checkbox
+> verified against the source doc's pointer lines with resolving SHAs; P2.11.15 held-back gate re-checked (still open,
+> no action). This todo (slot 16) archived batch1 + this doc to `plans/archive/2026_08/` per the 6-step ritual —
+> referrers repointed corpus-wide, inventory + index regenerated.
 
 > **Machine-gated on `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 7 tasks of that plan are `done`. `sequential: true` because
@@ -87,14 +92,17 @@ context_scope:
       **Done when**: this plan's own Progress Log records the checked status of both the P2.11.15 gate and any resulting
       follow-up action (checkbox flip, new todo filed, or explicitly "still open, no action").
 
-- [ ] [DOC] P3. **Archive batch1 + this finalize plan.** Once the source doc is confirmed reconciled (todo 1) and the
+- [x] ✅ [DOC] P3. **Archive batch1 + this finalize plan.** Once the source doc is confirmed reconciled (todo 1) and the
       held-back conflict is re-checked (todo 2), archive both `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` and
       this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every referrer (this doc's own
       `related:`, `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `related:` if it names batch1,
       `plans/epics/batch_live_symmetry_master.md` if it enumerates satellite batches). **Done when**: both files are in
       `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
-      `run_hygiene_sweep.sh` is green.
+      `run_hygiene_sweep.sh` is green. ✅ 2026-08-11 (slot 16): both docs `git mv`'d to `plans/archive/2026_08/`, all
+      corpus referrers repointed (reconcile doc, cross-cutting closeout, fill-schema + ag-closeout-parked issues, the
+      3x-preempted archived issue, epic `batch_live_symmetry_master`), INDEX.md + inventory dashboard regenerated,
+      `regenerate_active_plan_inventory.py` reports 0 dangling referrers, `run_hygiene_sweep.sh` green.
 
 ## Progress Log
 
@@ -136,3 +144,12 @@ context_scope:
   not a failure state per the plan's own done-when. **P2.11.18 retrain sub-step**: also remains not executable (still
   coupled to P2.11.15's gate; `crypto_alpha_research` P2 line still open). No new follow-up todo needed — the existing
   `crypto_alpha_research` todo already covers both. **Verdict**: still open, no action.
+- **2026-08-11 (slot 16, P3 — Archive batch1 + this finalize plan)**: both docs moved to `plans/archive/2026_08/` per the
+  6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Deferred items already tracked
+  elsewhere (P2.11.15 open in the source doc + `crypto_alpha_research_2026_07_24.md` `[RESEARCH] P2`; the 4 stale
+  register bullets live as open checkboxes in `crypto_alpha_research_2026_07_24.md`) — nothing evaporated with the
+  archive. Referrers repointed corpus-wide (reconcile doc `related:` + 3 markdown links, cross-cutting closeout
+  `related:`, fill-completed-event issue `related:`, ag-closeout-parked issue `related:`, features 3x-preempted
+  archived issue `related:`, epic `batch_live_symmetry_master`); INDEX.md + inventory dashboard regenerated via
+  `regenerate_active_plan_index.py` / `regenerate_active_plan_inventory.py`. `regenerate_active_plan_inventory.py`
+  reports 0 dangling referrers to the archived docs; `run_hygiene_sweep.sh` green.
