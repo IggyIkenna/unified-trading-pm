@@ -219,9 +219,57 @@ Used in recursive staking strategies to cap the loop iteration count.
 
 ## Strategy-Specific Collateral Rules
 
-### Staked Basis (`STAKED_BASIS`)
+### Staked Basis (`CARRY_STAKED_BASIS`) — two collateral-posting modes
 
-This strategy has two separate collateral pools that must not be mixed:
+The staked-basis engine (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`) derives the
+collateral-posting structure at preflight from the UAC `VENUE_COLLATERAL_MATRIX` via `_derive_structure()`. Two modes,
+each with different margin requirements and sizing rules:
+
+#### `LST_AS_MARGIN` (capital-efficient, default when venue accepts the LST)
+
+The perp venue accepts the LST itself as cross-margin (e.g. BYBIT accepts stETH/wstETH, DERIBIT accepts stETH).
+`stake_fraction == 1.0` — the staked LST IS the margin, so no spare cash buffer is needed. This is the original
+single-collateral-pool path.
+
+#### `USDC_MARGIN_BUFFERED` (collateral down-size, shipped 2026-06-17 Phase A)
+
+When the perp venue does NOT accept the LST but DOES accept a stablecoin (USDC/USDT), the slot is still doable —
+**deposit the stable as perp margin and size the staked leg DOWN** by a margin-call buffer so the hedge can't be
+liquidated on an adverse move.
+
+| Component           | Value                                         | SSOT                                                                    |
+| ------------------- | --------------------------------------------- | ----------------------------------------------------------------------- |
+| Buffer default      | `0.20` (20%)                                  | `staked_basis.py:238` `_DEFAULT_MARGIN_BUFFER_PCT`                      |
+| Stake fraction      | `f = 1 - margin_buffer_pct`                   | `staked_basis.py:407` engine-derived                                    |
+| Stable preference   | USDC, then USDT                               | `staked_basis.py:243` `_PERP_MARGIN_STABLE_PREFERENCE`                  |
+| Margin token        | venue's first accepted stable                 | `staked_basis.py:367-370` `_derive_structure()`                         |
+| Perp haircut source | STABLE collateral row in UAC matrix           | `staked_basis.py:369` `get_collateral_haircut()`                        |
+| Per-venue override  | `margin_buffer_pct` engine param              | `staked_basis.py:391` `decimal_param(params, "margin_buffer_pct", ...)` |
+| Param schema        | `PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS"]` | `param_schema.py:144-152`                                               |
+
+Funds sit in TWO places (stable at the perp venue + LST on-chain), so the slot carries a **cross-exchange / dual-deposit
+capital cost** that `CarryStakedBasisRankAllocator` penalises at `archetypes_rank.py`
+`_DUAL_DEPOSIT_CROSS_EXCHANGE_COST_BPS = 150` (confirmed-standing value, operator ruling 2026-08-08).
+
+**Venues exercising this path**: Aster (USDC/USDT), Hyperliquid (USDC-only) — both USDC-only perp venues where the LST
+cannot be posted as margin.
+
+**Test coverage**: `tests/unit/engine/strategies/v2/test_carry_staked_basis_usdc_margin_buffered.py` +
+`tests/unit/portfolio_allocator/test_staked_basis_collateral_penalty.py`.
+
+**Plan**: `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` Phase A.
+
+#### Rejection (venue accepts neither LST nor stable)
+
+If the perp venue accepts neither the LST nor a stablecoin, `_derive_structure()` returns `None` — the slot is rejected
+at preflight. No silent placeholder; no SPLIT_STAKE fallback (deleted 2026-05-05 — no `f < 1` regime dominates the
+alternatives; see `staked_basis.py:205-222` for the proof).
+
+---
+
+### Legacy Staked Basis (`STAKED_BASIS` — pre-v2)
+
+The pre-v2 strategy had two separate collateral pools that must not be mixed:
 
 | Pool        | Token | Venue            | Purpose               |
 | ----------- | ----- | ---------------- | --------------------- |

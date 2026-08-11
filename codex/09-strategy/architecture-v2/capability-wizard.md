@@ -149,6 +149,35 @@ Open work: wizard stepper stage, registry backfills, Wave-2 enhancements (operat
 - **Read the outputs**:
   `unified-api-contracts/openapi/{capability-manifest.json, capability-orphan-report.txt, prospectus/<ARCHETYPE>.md, prospectus/prospectus-codex-audit.md}`.
 
+## Per-archetype param schema (SSOT location)
+
+The canonical param schema the wizard renders from lives at:
+
+```
+strategy-service/strategy_service/engine/strategies/v2/param_schema.py
+```
+
+- **`PARAM_SCHEMA_REGISTRY: dict[str, list[ParamSpec]]`** (`param_schema.py:124`) — 35 archetype keys (29 engines + 6
+  shared-engine aliases), **270 param rows**, each
+  `{name, type, default, required, units, enum_values, min, max, source}` keyed by `StrategyArchetype` enum value string
+  (e.g. `"CARRY_STAKED_BASIS"`, `"CARRY_STAKED_BASIS_DATED"`).
+- **`build_param_schema_registry()`** (`param_schema.py:781`) — probe surface for the capability-manifest exporter
+  (`generate_capability_manifest.py`), imported in strategy-service's own `.venv`.
+- **Defaults = ENGINE defaults** (Phase B finding F4 honoured — e.g. APD `dispersion_bps`/`cost_bps` = 30/10 from
+  `price_dispersion.py:200,201`, NOT the e2e-smoke 20/5; CSB `margin_buffer_pct` = 0.20 from `staked_basis.py:238`
+  `_DEFAULT_MARGIN_BUFFER_PCT`).
+- **Drift guard**: `tests/unit/engine/strategies/v2/test_param_schema.py` asserts declared defaults match the engine's
+  actual `*_param(params, "<name>", <default>)` reads — a default can never silently diverge from the engine.
+- **Manifest emission**: `unified-trading-pm/scripts/openapi/generate_capability_manifest.py`
+  `_capability_gaps.extract_param_schema` probes `build_param_schema_registry()` → UAC `capability-manifest.json`
+  `param_schema` block (35 × 270 rows).
+- **UI copy**: `unified-trading-system-ui/lib/registry/capability-manifest.json` byte-identical to UAC canonical.
+
+Adding/renaming/re-defaulting a param: update BOTH the engine read AND the `PARAM_SCHEMA_REGISTRY` row in the same
+change; the drift-guard test catches a miss.
+
+Plan: `plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` Phase C.
+
 ## Plan of record + trackers
 
 - Plan:
