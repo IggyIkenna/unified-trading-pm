@@ -110,6 +110,65 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
     assert rc == 1
 
 
+# ── duplicate-gate creation-time guard (--only ONLY, todo 1 of
+# duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) ─────────────
+
+
+def test_only_fails_when_staged_finalize_plan_duplicates_an_existing_gate(tmp_path: Path) -> None:
+    """A brand-new finalize plan staged for commit whose depends_on slug is ALREADY
+    gated by a different, pre-existing finalize plan must be refused — regardless of
+    filename shape (the real 2026-07-31 incident's two files differed only by a
+    redundant date suffix)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    new_duplicate = _write_plan(
+        active / "source_plan_finalize_2026_08_05.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_duplicate)])
+    assert rc == 1
+
+
+def test_only_passes_when_staged_finalize_plan_is_the_sole_gate(tmp_path: Path) -> None:
+    """A finalize plan gating a parent with no OTHER gating plan is fine — this is the
+    ordinary, non-duplicate case and must not be flagged."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    sole_finalize = _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(sole_finalize)])
+    assert rc == 0
+
+
+def test_only_ignores_a_preexisting_duplicate_pair_not_in_scope(tmp_path: Path) -> None:
+    """Two pre-existing finalize plans already duplicate-gate the same parent (a stale
+    corpus condition todo 2's sweep is meant to catch), but --only names a different,
+    unrelated, clean plan — this must pass, same RULE-11 blast-radius safety as the
+    other two checks in this module."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_finalize_2026_08_05.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    unrelated = _write_plan(active / "unrelated_plan_2026_08_05.md", assigned_vm="NA")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated)])
+    assert rc == 0
+
+
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
 
 
