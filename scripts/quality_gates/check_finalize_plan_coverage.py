@@ -130,6 +130,43 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _gating_plans_for(slug: str, all_plans: list[Coverage]) -> list[Path]:
+    """Every finalize plan (depends_on + gate_on_depends: true) that already gates on
+    `slug`, regardless of that finalize plan's own filename shape — the real contract
+    is the depends_on relationship, not a `<slug>_finalize*.md` naming convention (the
+    gap that let `..._finalize.md` and `..._finalize_2026_07_31.md` both get authored
+    for the same parent, `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`)."""
+    out: list[Path] = []
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        if any(isinstance(dep, str) and dep.strip() == slug for dep in cast(list[object], depends_on)):
+            out.append(cov.path)
+    return out
+
+
+def _check_parent_not_gated(active_dir: Path, slug: str, workspace_root: Path) -> int:
+    """Idempotency guard for finalize-plan creation, run at the point of authoring a
+    new `<slug>_finalize*.md`. Refuses (exit 1) if `slug` is already gated by an
+    existing finalize plan; safe to proceed (exit 0) otherwise."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gating = _gating_plans_for(slug, all_plans)
+    if gating:
+        print(f"❌ '{slug}' is already gated by {len(gating)} existing finalize plan(s) — refuse duplicate:")
+        for g in gating:
+            try:
+                rel = g.relative_to(workspace_root)
+            except ValueError:
+                rel = g
+            print(f"  - {rel}")
+        return 1
+    print(f"✅ '{slug}' has no existing gated finalize plan — safe to author one.")
+    return 0
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -219,6 +256,17 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--baseline-write", action="store_true")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument(
+        "--check-parent-not-gated",
+        default=None,
+        metavar="SLUG",
+        help=(
+            "Idempotency guard for finalize-plan creation: before authoring a new <slug>_finalize*.md, "
+            "check whether SLUG is already gated by an existing finalize plan (any filename). Exits 1 "
+            "(refuse) if already gated, 0 if safe to proceed. Short-circuits before --only/--baseline "
+            "logic; ignores those flags if also given."
+        ),
+    )
+    parser.add_argument(
         "--only",
         nargs="*",
         default=None,
@@ -233,6 +281,33 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Resolve plans/active/ across the normal sibling-checkout layout
+    (`<workspace_root>/unified-trading-pm/plans/active`, what every existing test
+    constructs), an isolated per-agent worktree (`git worktree add` under
+    `<pm-checkout>/.claude/worktrees/agent-*`, per
+    /codex/05-infrastructure/per-tab-worktrees.md — whose checkout dir is NOT named
+    `unified-trading-pm` and whose `run_hygiene_sweep.sh`-passed `--workspace-root` is
+    one hop too far), or self-location as a last resort (this script always physically
+    lives at `<pm-checkout>/scripts/quality_gates/<this file>`, so `parents[2]` is
+    always the real checkout root regardless of what `--workspace-root` was given or
+    what the checkout directory happens to be named). Found 2026-08-08: the old
+    single-candidate version hard-failed with a bare "ERROR: plans/active not found"
+    from exactly this worktree shape, unrelated to any real violation. Prints an error
+    and returns None if none of the three candidates exist."""
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    print(f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}", file=sys.stderr)
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     ns = _parse_args(argv)
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
@@ -241,36 +316,14 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    resolved_active_dir = _resolve_active_dir(workspace_root)
+    if resolved_active_dir is None:
+        return 2
+    active_dir = resolved_active_dir
+
+    check_parent: str | None = cast("str | None", ns.check_parent_not_gated)
+    if check_parent is not None:
+        return _check_parent_not_gated(active_dir, check_parent, workspace_root)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)

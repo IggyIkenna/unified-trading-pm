@@ -514,6 +514,13 @@ version.
   plan (no infinite regress) or a genuinely single-todo plan where archival is trivial enough to fold into that one
   todo's own done-when. Enforced (ratchet-mode, warn-only, wired into `quality-gates.sh`) by
   `scripts/quality_gates/check_finalize_plan_coverage.py`.
+- **Idempotency guard — run BEFORE authoring a new `<slug>_finalize*.md` (2026-08-11, closes
+  `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`).** Two finalize plans differing only by a redundant
+  date suffix were once authored for the SAME parent on the same day, each wrongly believing no companion existed.
+  `python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent-not-gated <slug>` re-derives gating over
+  the CURRENT corpus and exits 1 (refuse — a finalize plan already gates this parent, regardless of ITS filename shape)
+  or 0 (safe to author). Run it, don't just re-grep for `<slug>_finalize*.md` — the whole point is that filename
+  matching is what missed the original collision.
 - **Finalize-plan todos: give the "reconcile source docs" todo and the "archive this plan" todo DIFFERENT `[TAG] P<n>.`
   prefixes (found 2026-07-31, `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`).** Both
   `batch2_finalize`/`batch3_finalize` authored these as `[DOC] P1` for BOTH todos — harmless until the self-archival
