@@ -285,11 +285,17 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       script REPORTS how many changed rows still have a `claude_session_id`, which is the information needed to decide
       whether the exact path is worth building at all. **Still open because the done-when requires a live dry run**
       against the VM DB.
-- [ ] [OPERATOR] P2. **Run `reprice_task_usage.py --apply` against the live orchestrator VM via SSM after reviewing the
-      dry-run report.** Tagged `[OPERATOR]` because it mutates ~1,993 live production rows; mirrors the established
-      precedent of `deepseek_flash_ab_routing_test_2026_08_05.md` todo 16's `repair_unpriced_deepseek_spend.py --apply`.
-      Not a delete — it fills NULL columns only and is re-runnable. **Done when**: a post-run query showing the
-      remaining `spend_usd IS NULL` count (and the reason for any residual) is pasted into the Progress Log.
+- [ ] [SCRIPT] P2. **Run `reprice_task_usage.py --apply` against the live orchestrator VM via SSM after reviewing the
+      dry-run report.** Retagged `[OPERATOR]` -> `[SCRIPT]` on operator instruction 2026-08-11 — no human gate needed.
+      **Safe-idempotent justification** (required for any AO `--apply` todo per `plans/active/task_template.md` finding
+      O): this is NOT a delete and touches no GCS object. It recomputes `task_usage.spend_usd` from each row's OWN
+      already-stored token counts and `model` — a pure DB recompute, no transcript access — writing a column that is
+      currently NULL on ~1,993 of 2,622 rows. It is dry-run BY DEFAULT (`--apply` required to write), fully re-runnable
+      (a second run recomputes the same values and reports them unchanged), and `--only-unpriced` narrows it to just the
+      blank rows. A partial or interrupted run is safe to re-invoke. The values it writes are derived, not authored, so
+      a wrong result is corrected by re-running after fixing the rate table rather than by restoring data. **Done
+      when**: a post-run query showing the remaining `spend_usd IS NULL` count (and the reason for any residual) is
+      pasted into the Progress Log.
 - [ ] [REVIEW] P2. **Verify the operator's original symptom is gone: the DeepSeek + Planning filter must show a dollar
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
