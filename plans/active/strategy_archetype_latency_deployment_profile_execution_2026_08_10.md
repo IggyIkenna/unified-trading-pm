@@ -77,11 +77,12 @@ source: >-
       across 4 Medium/High families + single-sided yield. Rationale for new section (not retrofitting
       co_location_rules): co_location_rules enumerates service groups, deployment_profiles defines capabilities —
       neither models archetype→profile. Schema changelog documents v7_to_v8 migration. — unified-trading-pm@ab157b54a1
-- [ ] [SCRIPT] P2. **Build the "union of registered deployments = union of what active archetypes need" derivation** — a
-      function/script (likely in `deployment-service`, alongside `runtime_topology_validator.py`) that, given the
+- [x] ✅ [SCRIPT] P2. **Build the "union of registered deployments = union of what active archetypes need" derivation**
+      — a function/script (likely in `deployment-service`, alongside `runtime_topology_validator.py`) that, given the
       currently-active archetype set (from strategy-service's registry) and their declared `deployment_profile` needs,
       computes which deployment_profile instances should exist. Read-only/computing a plan, NOT auto-applying infra
-      changes from this todo — that's a separate, later step gated on this one working correctly and being reviewed.
+      changes from this todo — that's a separate, later step gated on this one working correctly and being reviewed. —
+      deployment-service@13223da3
 - [ ] [SCRIPT] P2. **Build live resource-sizing derivation** — given an active deployment_profile instance and the
       archetypes routed to it, derive required compute sizing from the archetypes' live configuration (client count,
       instrument count per client) rather than a static guess. Start with the SIMPLEST sound rule (e.g., linear in
@@ -114,6 +115,22 @@ source: >-
   `internal/__init__.py`. Populated from the audit plan's decision artifact
   (`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`): 41 Low-family archetypes → `co_located_vm`, 19
   Medium/High-family archetypes → `distributed`. Shipped via unified-api-contracts@f39e800992.
+
+- **backend_engineer (slot 18) 2026-08-11**: Todo 3 done (code landed earlier via `deployment-service@13223da3` +
+  follow-up basedpyright fixes `92535656`/`ecf711d8`; checkbox flip + Progress Log entry completed 2026-08-11 — the flip
+  was missed in the original shipping turn). Built `deployment_service/deployment_profile_derivation.py` — the "union of
+  registered deployments = union of what active archetypes need" derivation.
+  `derive_required_deployment_profiles(active_archetypes)` unions the declared `DeploymentProfile` needs (UAC
+  `ARCHETYPE_TO_DEPLOYMENT_PROFILE`) of the caller-supplied active archetype set into one instance per distinct profile
+  (archetypes sharing a profile co-locate; different profiles never collapse), returns an idempotent sorted plan, and
+  fails loud (`UnknownArchetypeError`) if an active archetype has no declared profile rather than silently
+  under-provisioning. Read-only — computes a plan, never applies infra (auto-apply is the separately-gated later step).
+  `validate_against_runtime_topology()` cross-checks the derived plan against runtime-topology.yaml's
+  `deployment_profiles` + `archetype_deployment_profile_mapping` reverse-index so the UAC enum and YAML halves cannot
+  silently diverge; a `--active-archetypes` CLI prints the plan. Unit tests in
+  `tests/unit/test_deployment_profile_derivation.py` cover co-location, no-collapse, idempotency, unknown-archetype
+  fail-loud, and topology drift detection. Verified 2026-08-11: full 60-archetype set derives
+  `[co_located_vm, distributed]` with zero drift vs runtime-topology.yaml (exit 0).
 
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. Implements the operator's "union of
   registered deployments from union of registered archetypes, resources derived live from configuration" design
