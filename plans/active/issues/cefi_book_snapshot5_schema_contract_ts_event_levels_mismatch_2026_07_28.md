@@ -937,3 +937,13 @@ against the reproduction script.
   duplicate dispatch of the exact same already-fully-investigated static-backlog condition, not a new regression.
   Session cost: doc read + git-ancestor batch check (7 commits) + this Progress Log append, no GCS read, no code change,
   no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-08-11 (data_pipeline_failure escalation worker, agt-a45914, slot 2) — SAME escalation_id as the two entries
+  directly above (slot 4, then slot 7, now slot 2) — a THIRD duplicate worker dispatch of one escalation event, the same
+  exact-duplicate-escalation_id shape now documented 7+ times.** Read this doc first per the pre-task plan/issue
+  conflict-check rule; the slot-4 and slot-7 entries directly above already fully investigated this exact
+  escalation_id/reading (8,670/958,967 = 0.9%, "STATIC BACKLOG — only 15 attempted_failed row(s) in the last 1d") and
+  re-verified all seven fix commits ancestor-of-origin minutes ago. Per the same precedent, did not repeat the
+  git-ancestor check or GCS read this session. **Conclusion: no code fix needed** — this is a duplicate dispatch of the
+  exact same already-fully-investigated static-backlog condition, not a new regression. Session cost: doc read + this
+  Progress Log append only, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with
+  this outcome.
