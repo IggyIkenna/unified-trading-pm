@@ -104,6 +104,16 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the push landed but at least one named path's intended state did NOT reach origin/$BRANCH
+# -- the per-file remote gate (verify_remote_per_file) found a named path missing from the
+# remote or still carrying the pre-run content there. This is the per-file half of the
+# partial-landing class (safe_doc_push_isolation_drops_rename_deletions_2026_08_10, [SCRIPT] P1;
+# measured 2026-08-10: a multi-file --files push landed ONE of two named paths and still exited
+# 0). Distinct from 13 (which checks HEAD's blob) because this also covers paths ABSENT at entry
+# -- a staged deletion or rename source -- which 13 deliberately skips, so a dropped deletion
+# was invisible to every prior check while `git log -1 -- <path>` stayed non-empty for the old
+# commit that ADDED it. The message names the specific paths that did not land; re-stage
+# (deletion/rename source) or re-apply (modify/create) each listed path, then re-run.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -575,12 +585,73 @@ _sdp_assert_entry_change_landed() {
   return 1
 }
 
+# verify_remote_per_file -- per-file ground truth against the REMOTE ref, not the local HEAD.
+# A `git push` exit code (and the commit-level verify_pushed) prove A commit reached the branch;
+# they do not prove EVERY named path's intended state reached it. A partial landing -- one named
+# file's change dropped from the commit while the rest ship -- is invisible to every existing
+# check when the dropped file is a deletion or rename source: _sdp_assert_entry_change_landed
+# deliberately skips paths absent at entry ("your change" is not expressible as a blob move
+# there), and `git log --oneline -1 -- <path>` stays non-empty for ANY old commit touching the
+# path. Measured 2026-08-10: a multi-file --files push landed one of two named paths and still
+# exited 0 (safe_doc_push_isolation_drops_rename_deletions_2026_08_10, [SCRIPT] P1).
+#
+# For each named path, compare what origin/$BRANCH actually carries against the state this run
+# was supposed to land (derived from the entry fingerprints):
+#   * a path present on disk at entry with a real diff, or a brand-new create: origin must now
+#     carry a blob DIFFERENT from the pre-run HEAD blob (for a create, any blob, since the
+#     pre-run HEAD blob is ABSENT);
+#   * a path absent at entry but tracked on origin (a deletion or rename source): origin must NO
+#     LONGER carry it.
+# Any mismatch means that path did not reach the remote -- print it and return 1, so a partial
+# landing fails naming exactly which paths did not land, instead of a commit-level "HEAD is on
+# origin" check that passes while one of N named files silently did not ship.
+verify_remote_per_file() {
+  local _f _disk _entry_head _remote_blob
+  local -a _not_landed=()
+  for _f in "${FILES[@]}"; do
+    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
+    _remote_blob="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
+    case "$_disk" in
+      ABSENT | MISSING | "")
+        # A deletion or rename source: "reached the remote" = the path is gone from origin.
+        # A path absent here AND absent from HEAD is a caller error, already refused upstream
+        # (isolated copy loop exits 2; the shared-index path refuses with exit 2).
+        if [[ "$_entry_head" != "ABSENT" && "$_remote_blob" != "ABSENT" ]]; then
+          _not_landed+=("$_f")
+        fi
+        continue
+        ;;
+    esac
+    [[ "$_disk" == "$_entry_head" ]] && continue # nothing of ours to land for this path
+    # A modify or create: origin must now carry a blob different from the pre-run HEAD blob.
+    if [[ "$_remote_blob" == "ABSENT" || "$_remote_blob" == "$_entry_head" ]]; then
+      _not_landed+=("$_f")
+    fi
+  done
+  [[ ${#_not_landed[@]} -eq 0 ]] && return 0
+  {
+    echo
+    echo "🛑 PARTIAL LANDING -- SOME NAMED FILES DID NOT REACH THE REMOTE."
+    echo "   origin/${BRANCH} does not carry the state this run was supposed to ship for:"
+    printf '     %s\n' "${_not_landed[@]}"
+    echo
+    echo "   A commit reached the branch, but not every named path's intended change is in it."
+    echo "   Each listed path was either dropped from the commit or reverted before it. For a"
+    echo "   deletion/rename source, re-stage it (git rm -- <path>, or git add -- <path> for a"
+    echo "   path still in the index); for a modify/create, re-apply the content and re-run."
+    echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md."
+  } >&2
+  return 1
+}
+
 # _sdp_certify_success -- the SINGLE gate every success path in this script passes through, so a
 # short-circuit added later cannot accidentally bypass either check. Echoes nothing on success;
-# returns the exit code the caller should exit with (12 or 13), or 0 to proceed.
+# returns the exit code the caller should exit with (12, 13 or 14), or 0 to proceed.
 _sdp_certify_success() {
   _sdp_guard_already_landed_claim || return 12
   _sdp_assert_entry_change_landed || return 13
+  verify_remote_per_file || return 14
   return 0
 }
 
