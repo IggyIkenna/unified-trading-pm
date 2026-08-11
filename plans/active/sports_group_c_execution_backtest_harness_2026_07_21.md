@@ -142,10 +142,18 @@ CLI wiring, same shape as the 3 domains that already have it.
       quote-burst + trade ticks, `InstructionDrivenV3Config.instruction_data` Any-typed (Nautilus msgspec rejects
       `object`), and a pre-existing multi-arg `log.debug` bug fix in `enter_position`. QG full green (sentinel 447fef0a
       → pushed 7680d3f0d).
-- [ ] [DESIGN] P3. Once the harness runs, decide whether it belongs in the routine backtest-groups verification surface
-      (`docs/BACKTESTS.md` — currently DEAD per the sibling investigation's finding that its documented sports
+- [x] ✅ [DESIGN] P3. Once the harness runs, decide whether it belongs in the routine backtest-groups verification
+      surface (`docs/BACKTESTS.md` — currently DEAD per the sibling investigation's finding that its documented sports
       invocation was deleted at `strategy-service@fe2e0c7a`) or stays a manually-invoked one-off given sports is
-      intentionally backtest-only / not on the live-mode critical path.
+      intentionally backtest-only / not on the live-mode critical path. — **Decision (2026-08-11, slot 33): stays a
+      manually-invoked one-off.** (1) The only `docs/BACKTESTS.md` is in strategy-service and documents Group-B strategy
+      backtests — the wrong surface for a Group-C execution-alpha harness (different concern, different service). (2)
+      There is no execution-service Group-C verification surface for the other 3 domain runners either — their
+      verification is via hermetic unit tests, which sports already has (`test_sports_backtest_exec_alpha.py`, shipped
+      as todo 4). Creating one just for sports would be asymmetric. (3) Sports is intentionally backtest-only, not on
+      the live-mode critical path — the harness is a research/analysis tool, not a deployment gate. Precedent confirmed
+      via grep: no execution-service `docs/BACKTESTS.md` exists; no other `run_<domain>_backtest` appears in any
+      routine-verification surface.
 
 ## Open questions for operator sign-off before implementation dispatches
 
@@ -242,3 +250,9 @@ CLI wiring, same shape as the 3 domains that already have it.
   PortfolioSummary, SettlementResult, SportsMatchingEngine — all had zero importers from this package; real consumers
   import the distinct UAC types of the same names). Operator ruling 2026-08-08 option (a): delete rather than wire.
   execution-service@70d18a44.
+- **2026-08-11 (slot 33, backend_engineer)**: Todo 5 resolved — DESIGN decision: `run_sports_backtest` stays a
+  manually-invoked one-off. Precedent investigation: (1) the only `docs/BACKTESTS.md` is in strategy-service and
+  documents Group-B strategy backtests — wrong surface for a Group-C execution-alpha harness; (2) no execution-service
+  Group-C verification surface exists for the other 3 domain runners either — their verification is via hermetic unit
+  tests, which sports already has (`test_sports_backtest_exec_alpha.py`); (3) sports is backtest-only, not on the live
+  critical path. All 5 todos now complete; plan ready for archival per finalize sibling.
