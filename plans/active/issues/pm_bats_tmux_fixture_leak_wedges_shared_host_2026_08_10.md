@@ -87,16 +87,33 @@ is killed — hence both the spin and the leak.
 
 ## Suggested fix (owner's call — do NOT just delete the tests)
 
-- [ ] [SCRIPT] P1. Bound every fixture tmux call with a `timeout` (a fixture that cannot get a tmux server in a few
-      seconds should FAIL the test loudly, never spin), and give the suite a `teardown_file` that kills its own
-      `bats-claim-hb-test-*` sessions unconditionally, including on abort.
-- [ ] [SCRIPT] P1. Use a DEDICATED tmux socket per suite run (`tmux -L bats-<runid>`) instead of the user's default
-      server, so a wedged/slow fixture server can never contend with the operator's real sessions and the whole socket
-      can be torn down in one call.
+- [x] ✅ [SCRIPT] P1. Bound every fixture tmux call with a `timeout` (a fixture that cannot get a tmux server in a few
+      seconds should FAIL the test loudly, never spin), and kill the suite's own `bats-claim-hb-test-*` sessions
+      unconditionally, including on abort — unified-trading-pm@3895be718f. `_tmux()` wraps every call
+      (`timeout`/`gtimeout` portable fallback, unbounded only if neither exists). The unconditional half is done in
+      `teardown()` rather than a `teardown_file`: bats runs `teardown` after EVERY test including a failed assertion,
+      which is exactly the path that leaked. Root cause found in the process: `teardown` only ever killed
+      `${TMUX_SESSION}`, while the `-longer-suffix` session was killed on the LAST LINE of its own test body — every one
+      of the 41 sessions leaked on the AO VM was a `*-longer-suffix`. Evidence: 5/5 tests pass, 0 sessions left on the
+      default socket, 0 leftover socket dirs.
+- [x] ✅ [SCRIPT] P1. Use a DEDICATED tmux socket per suite run instead of the user's default server, so a wedged/slow
+      fixture server can never contend with the operator's real sessions and the whole socket can be torn down in one
+      call — unified-trading-pm@3895be718f. Implemented via an exported per-test `TMUX_TMPDIR` rather than `tmux -L`:
+      the script under test is a subprocess of `_heartbeat` and inherits the env, so both sides resolve the same socket
+      with NO test-only flag in production code. `teardown` also `kill-server`s the whole socket. **Non-obvious
+      constraint worth keeping**: the socket dir must be SHORT and NOT nested under `BATS_TEST_TMPDIR` —
+      `sockaddr_un.sun_path` caps a unix socket path at ~104 B and macOS `BATS_TEST_TMPDIR` is already ~90, so the
+      obvious nesting fails every session with `error connecting to ... (File name too long)`.
 - [ ] [SCRIPT] P2. Make the claim/heartbeat behaviour under test injectable so the common cases can be covered WITHOUT a
       real tmux server at all, leaving only a small number of genuine integration cases behind a marker.
-- [ ] [OPERATOR] P2. Sweep the host for pre-existing leaked `bats-claim-hb-test-*` sessions (7 registered at the time of
-      writing, oldest 29 h) — they hold a tmux server alive for no reason.
+- [x] ✅ [OPERATOR] P2. Sweep the host for pre-existing leaked `bats-claim-hb-test-*` sessions — done 2026-08-10 on the
+      ORCHESTRATOR VM (the laptop is a separate sweep; see the AO-VM section above). **41 reaped, not 7** — the count
+      had grown 25 → 41 during the diagnosing session itself (~1 new leak / 4 min). Swept surgically: only names
+      matching `bats-claim-hb-test-*`, with the `orch-slot-*` count asserted before AND after (21 → 21, none touched).
+      Note the sweep alone did NOT restore the box — `/tmp` stayed 100% full afterwards, because the dominant consumer
+      was a separate one (a banned subprocess GCS listing streaming multi-GiB parquet through the tmpfs). Recurrence is
+      now handled by `tmpfs-disk-cleanup.timer` (30-min sweep, installed + verified running on the AO VM), so this todo
+      should not need a human again.
 - [ ] [SCRIPT] P2. Consider whether the QG host governor should account for load average / MemAvailable, not just its
       own reservations: at the time of measurement it reported `reserved: 0MB` and `running heavy phases: 0` while the
       box was at load 283, because the load came from processes it had never admitted.
