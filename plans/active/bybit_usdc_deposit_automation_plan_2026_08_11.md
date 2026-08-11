@@ -149,11 +149,11 @@ context_scope:
       with mocked CCXT exchange, cache hit returns cached address, network not supported returns clean error, adapter
       not initialized raises clean); `quality-gates.sh` green.
 
-- [ ] [BACKEND] P2. Add `fetch_deposit_records(asset)` to `BybitPerpHedgeConnector`. Wraps CCXT `fetch_deposits(code)`
-      (Bybit REST `/v5/asset/deposit/query-record`) to list recent deposit records for arrival confirmation. Returns
-      `list[dict]` with keys `tx_hash`, `amount`, `status` (`"pending"` / `"completed"` / `"failed"`), `timestamp`.
-      Repo: execution-service. Done-when: unit tests (deposits list filters by asset, empty list when no deposits,
-      adapter not initialized raises clean); `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. Add `fetch_deposit_records(asset)` to `BybitPerpHedgeConnector` — execution-service@f4725d73.
+      Wraps CCXT `fetch_deposits(code)` (Bybit REST `/v5/asset/deposit/query-record`) to list recent deposit records for
+      arrival confirmation. Returns `list[dict]` with keys `tx_hash`, `amount`, `status` (`"pending"` / `"completed"` /
+      `"failed"`), `timestamp`. Repo: execution-service. Done-when: unit tests (deposits list filters by asset, empty
+      list when no deposits, adapter not initialized raises clean); `quality-gates.sh` green.
 
 - [ ] [BACKEND] P2. Define `BybitDepositResult` TypedDict + `BybitDepositCallable` type alias.
       `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None,     "confirmed_balance_delta": Decimal, "error": str | None}`.
@@ -239,3 +239,13 @@ context_scope:
   re-resolve. Tests at `tests/unit/defi_execution/test_bybit_connector.py` cover mocked-exchange resolution, cache hit,
   invalidate, unsupported-network error, uninitialised-adapter error, and empty-address error. Code + tests were shipped
   without the checkbox flip — flipped in this turn.
+- **2026-08-11 (slot 26, backend_engineer)**: Todo 2 (`fetch_deposit_records`) — implemented + unit-tested in
+  `execution-service@f4725d73`. Method at `protocols/bybit.py` wraps
+  `BybitCCXTAdapter._get_exchange().fetch_deposits(code)`, normalises ccxt's raw `status` vocabulary (`ok`→`completed`,
+  `failed`/`canceled`→`failed`, else→`pending`) to the plan's 3-state model, and returns `list[DepositRecord]` (new
+  `TypedDict`: `tx_hash`, `amount` as `Decimal`, `status`, `timestamp`). Raises the new typed `BybitDepositRecordsError`
+  (mirrors `BybitDepositAddressError`) when the adapter cannot be initialised or the exchange call fails, per the todo's
+  done-when ("adapter not initialized raises clean"). Tests added to
+  `tests/unit/defi_execution/test_bybit_connector.py::TestFetchDepositRecords`: asset-code pass-through, 4-way status
+  normalisation, empty-list-on-no-deposits, uninitialised-adapter raises. `quality-gates.sh` green (167s, sentinel
+  `f4725d73aa040c39cc16de22ca85261a1521d025`).
