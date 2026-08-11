@@ -1025,3 +1025,9 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `reason_code: GATED` + `park_now: true`. **Unpark**: when `af-backfill-20260810-162910` terminates (running
   `af-backfill-*` count == 0), re-run both census scripts + confirm all 8 entities stable ~0 / honest-absence floors,
   then close this doc + notify operator. No code changes; Progress Log entry only.
+- **2026-08-11 (slot 27, same task/todo re-dispatch)**: done-when STILL unmet — `af-backfill-20260810-162910` preempted
+  at `2022-07-07` ~01:26Z (no EXIT_STATUS), relaunched as `af-backfill-20260811-012845` (RUNNING, PROGRESS.json
+  `2020-10-11` live `T03:07:57Z`, PIPELINE_HEARTBEAT `03:08:12Z`). Running 8-entity census with STANDINGS mid-backfill
+  captures a stale snapshot (residual 271), same rule-4a/slot-18/19/25 stale-baseline. Skipping `reason_code: GATED` +
+  `park_now: true`. **Unpark**: when `af-backfill-20260811-012845` terminates (`af-backfill-*` count == 0), re-run both
+  census scripts, confirm all 8 entities ~0 / honest-absence floors, close doc + notify operator.
