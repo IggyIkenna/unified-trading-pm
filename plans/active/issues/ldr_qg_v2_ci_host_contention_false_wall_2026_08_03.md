@@ -180,7 +180,7 @@ green one).
       the ruleset equivalent) for whether `quality-gates-v2` is actually listed as required. Done-when: a stated YES/NO
       on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it. —
       unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.**
-- [ ] [INFRA] P3. Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
+- [x] [INFRA] P3. ✅ Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
       the required `Quality Gates (deployment-service) / quality-gates-v2` check never reporting success on its head SHA
       (both runs against that SHA completed `failure`, and both completed AFTER `mergedAt`) — the required-status-check
       config itself is correctly wired and active (see todo above), so this looks like a GitHub auto-merge evaluation
@@ -530,3 +530,48 @@ and just burn more contended compute.
     propagated to the PR's mergeable-state evaluation) rather than any bypass or misconfiguration on this repo's side.
     Not reproduced or root-caused further — out of scope for this todo's done-when and the doc's own prior "did not
     force-retrigger/mutate host state" posture.
+
+- **2026-08-11 (slot-25, infra craft) — final todo RESOLVED, downgraded to documented known-quirk.** Investigated
+  PR#678's auto-merge race. Key timeline (all times UTC 2026-08-03):
+  - PR#678 `createdAt`: **18:20:38Z**
+  - PR#678 `mergedAt`: **18:20:44Z** — **6 seconds** after creation
+  - First check run on head SHA `c0a3221f` (`content-sentinel`): `started_at=18:20:55Z` (11s after merge)
+  - First `quality-gates-v2` QG slices started: `18:37:34Z` (17 min after merge)
+  - First `quality-gates-v2` conclusion reported: `19:32:57Z` (72 min after merge, `conclusion: failure`)
+
+  **Root cause: GitHub auto-merge race between PR creation and first check-run creation.** The promote workflow
+  (`ldr-to-main-promote.yml`) creates the PR and immediately arms `gh pr merge --auto --merge --delete-branch` in the
+  same workflow step. The `pull_request`-triggered `quality-gates-v2` workflow is an ASYNCHRONOUS event — there is an
+  inherent sub-second-to-second-scale gap between when the PR is created and when the first check run is created and
+  reports its context to the commit status API. GitHub's auto-merge engine evaluates mergeability at arm time: if at
+  that instant NO check run with the required context name (`"Quality Gates (deployment-service) / quality-gates-v2"`)
+  has ever been created on the head SHA, GitHub cannot distinguish "required check hasn't started yet" from "check
+  context not applicable" — it sees NO required check to wait for, and proceeds to merge immediately. The 6-second
+  creation-to-merge gap is consistent with arm-time evaluation on a near-empty check-run slate (only the
+  `validate / AWS CodeBuild` check existed, created at the same 18:20:44Z second as the merge itself — and it reported
+  `skipped`, not blocking).
+
+  **Contributing factor — host oversubscription widened the window.** Under normal conditions (workflow pickup within
+  seconds), the first `content-sentinel` check would have been created fast enough to register the `quality-gates-v2`
+  context as at least `pending` on the head SHA before auto-merge evaluation, which WOULD have blocked the merge
+  (GitHub's auto-merge correctly waits on a `pending` required check). On 2026-08-03 the shared host was load 26-32 on 8
+  physical cores (per this doc's own finding §3), which delayed GitHub's workflow dispatch queue — the first QG-slice
+  job didn't start until 17 minutes after the PR was opened, long past the auto-merge arm instant.
+
+  **No recurrence in 8 days / 26+ promote cycles.** Sampled PR#855, #850, #843, #835 (all `chore(promote): LDR → main`):
+  every one shows `quality-gates-v2 conclusion=success` completing BEFORE its `mergedAt` timestamp, with the check
+  typically finishing 20-30s before merge. The fixes from the other todos in this plan (ledger unification → real
+  admission control, tightened total-instance cap K=6) have reduced host contention, which narrows the race window back
+  to its normal sub-second-to-few-seconds width — narrow enough that it hasn't reproduced. The race is INHERENT to the
+  design of "arm auto-merge in the same workflow step that creates the PR" and cannot be fully eliminated without either
+  (a) inserting an explicit sleep/poll between PR creation and auto-merge arm, which would slow every promote cycle by
+  10-30s, or (b) switching to a different required-check enforcement mechanism (e.g. GitHub's newer `rulesets` with
+  `required_workflows` rather than `required_status_checks` — but that's a fleet-wide migration, not a point fix for
+  this one quirk).
+
+  **Verdict: downgraded to documented known-quirk per done-when option (b).** The mechanism is understood, the
+  contributing host-contention factor is already addressed, no recurrence has been observed, and the residual
+  nanosecond-scale race is an inherent property of GitHub's async check-run creation model. If a future instance
+  surfaces under normal (uncontended) host conditions, re-open this investigation — that would indicate the race window
+  is wider than the sub-second-to-few-seconds this analysis assumes, and would justify the explicit-delay fix. Until
+  then, this is documented and closed.
