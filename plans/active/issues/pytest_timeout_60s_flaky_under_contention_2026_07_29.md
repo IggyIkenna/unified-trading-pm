@@ -975,3 +975,18 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   scheduling contention. Remaining 40 runs all `conclusion=success`. Zero `Timeout (>150s)` recurrence anywhere. Window
   NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`,
   `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-18 2026-08-11 ~11:20Z (twenty-eighth pass, same task)**: surveyed latest 3 `quality-gates-v2` runs across all
+  10 tracked repos (runs spanning ~22:01Z 2026-08-10–11:17Z 2026-08-11, all post-dating slot-26's pass). 9 service
+  repos: 26/27 terminal runs `conclusion=success` (unified-api-contracts `31469116647`/`31467272130`/`31466785214`;
+  instruments-service `31472872203`/`31471331576`/`31471288150`; features-service `31472389977`/`31464656768` + 1
+  failure `31463593127` — job-level verified NOT the tracked flake: tests-slice died in the UV_VERSION setup step
+  (`curl resolve-canonical-versions.py` from `promote/features-service/197e9574757e`, grep no-match → pipefail exit 1 in
+  0.03s, no pytest ran at all; infra/setup, unrelated); market-data-processing-service
+  `31437402442`/`31436535717`/`31436500544`; unified-trading-api `31437425376`/`31436551988`/`31436514921`;
+  deployment-service `31481685449`/`31479551018`/`31479195482`; ml-service `31437408630`/`31436549274`/`31436503265`;
+  client-reporting-api `31437372273`/`31436574870`/`31436514656`; market-tick-data-service
+  `31477370264`/`31475243405`/`31475201945`). unified-trading-pm: 1 in-progress (`31485951241`, tests-slice already
+  green at survey) + 2 failures (`31483642673`/`31482537944`, both promote-PR) — job-level check of both confirms
+  `QG slice (tests): success` / `QG slice (checks): failure` — same known ratchet class, not the tracked flake. Zero
+  `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via
+  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.

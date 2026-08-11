@@ -115,15 +115,24 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
       Hyperliquid"), one day before this doc's own creation. There is no longer a tested strategy shape that models a
       Solana-DEX-spot basis, so the "wizard can't build what the backtest models" gap has nothing left to be a gap
       about. No fix needed; not re-opening the Orca/Raydium cell-registration question absent a live motivating case.
-- [ ] [SCRIPT][BLOCKED-CREDENTIALS] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/
-      `NotImplementedError`, BLOCKED-CREDENTIALS) — references cell
+- [ ] [SCRIPT][BLOCKED-CREDENTIALS] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub**
+      (`INFRA_GAP`/ `NotImplementedError`, BLOCKED-CREDENTIALS) — references cell
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave_v3-ethereum-wsteth-weth-emode` but never builds an engine + never
       asserts that specific aave e-mode cell against the matrix. When the credentials/infra land, make it a real
-      round-trip smoke through the canonical path. Repo: e2e-testing. **Cross-reference (2026-07-28, not re-scoping
-      here)**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s orchestrator-stub is already exhaustively investigated and scoped
-      (not built) in `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — the
-      credentials/infra gap this D4 is waiting on is the SAME `RecursiveLoopOrchestrator` wire-in gap documented there.
-      Stays open here as the e2e-smoke half of that same underlying gap.
+      round-trip smoke through the canonical path. Repo: e2e-testing. **STATUS UPDATE 2026-08-11**: the engine-side half
+      of this gap is RESOLVED — the design ruling this cross-reference was waiting on (LTV-per-mode, recursion depth,
+      hedge sizing) was decided AND shipped 2026-08-09
+      (`plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`, all 8 todos done,
+      `RecursiveLoopOrchestrator` now has a real production caller across unified-api-contracts / strategy-service /
+      execution-service). The stale "not yet approved" framing in the cross-reference below no longer applies. **What's
+      still actually blocking D4**: the validation harness this smoke test would run through needs a Tenderly-fork +
+      PoolMatcher-fixtures test environment, still `BLOCKED-CREDENTIALS` — a genuine, unrelated credential gap (Tenderly
+      account/API access), not a design-decision gap. **Cross-reference (2026-07-28, historical — the "not built"
+      framing below is now stale, kept for the audit trail)**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s orchestrator-stub
+      is already exhaustively investigated and scoped (not built) in
+      `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — the credentials/infra
+      gap this D4 is waiting on is the SAME `RecursiveLoopOrchestrator` wire-in gap documented there. Stays open here as
+      the e2e-smoke half of that same underlying gap.
 
 ## Why it matters
 
@@ -262,3 +271,8 @@ sizing — the operator's core question — is **not a parameter anywhere**; it 
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — all four still directly cited by the doc's own
   body/frontmatter; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **2026-08-11** (operator decision, via main, part of an AO-dispatch-visibility gate unblocking pass): operator asked
+  to review the LTV/recursion-depth draft this todo's cross-reference cited as unapproved. Found it stale — the design
+  was decided and shipped 2026-08-09. Updated D4's text accordingly; item stays open and correctly `BLOCKED-CREDENTIALS`
+  — the real remaining blocker is the Tenderly-fork + PoolMatcher-fixtures validation environment, unaffected by the
+  design shipping.

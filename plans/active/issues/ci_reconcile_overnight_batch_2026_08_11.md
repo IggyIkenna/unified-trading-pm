@@ -235,8 +235,37 @@ split-vs-exempt engineering decision, not a config tweak). Blindly adding both f
 would silently accept new size debt without anyone deciding that's the right call; blindly splitting either file risks a
 bad module boundary in tradfi-canonical-naming-sensitive code without owner review.
 
-**Disposition: OPEN — filed as a follow-up below.** Currently blocking `live-defi-rollout`'s own file-size gate AND
-promote PR #950.
+**Disposition: RESOLVED (2026-08-11, later same day, follow-up session)** — the operator authorized the split. Fixed by
+`market-tick-data-service@b13e3a2b` (a parallel session, `[slot-4·laptop]`): `partitioned_writer.py` 906L→846L
+(extracted 4 pure chain-partition-dims/timestamp helpers into `engine/orchestrator/chain_partition_dims.py`, zero
+call-site changes) and `migrate_tradfi_canonical_2026_07.py` 905L→562L (extracted the classification half into
+`scripts/migrate_tradfi_canonical_classify_2026_07.py`, 45 names re-exported). That same commit also fixed a
+reader-routing bug from `c31cfe7a`'s combo→combo_chain rename (3 stale tests) — full detail archived at
+`/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`.
+
+**A further follow-up session then found `b13e3a2b`'s own promote PR (#952) still red** on a NEW gate: both
+`migrate_tradfi_canonical_classify_2026_07.py` (new, from the split) and
+`migrate_tradfi_underlying_display_names_2026_08.py` (new, from `486f82ba`) carried the fleet's common blanket
+file-level `# pyright: reportX=false, ...` suppression header, net-new relative to `main`'s diff base (STEP 5.94's
+diff-scoped attribution ratchet — passes on `live-defi-rollout` pushes since those files are pre-existing there, but
+fails on the promote-PR's diff against `main`, where they're brand new). Fixed by converting both files to narrow
+per-line `# pyright: ignore[exactRule]` suppressions plus two genuine type-safety improvements (a typed `_Args`
+dataclass boundary for the file's `argparse.Namespace` usage, a named function replacing an unannotated lambda passed to
+`ThreadPoolExecutor.map`) — verified `0 errors, 0 warnings, 0 notes` on both files with the blanket headers fully
+removed. Two more moving-target regressions from the same actively-iterating parallel session were ridden out (not fixed
+here) on the way to shipping: a test-collection break from an unrelated `instrument_id`-blank design change (`fbc9cc6f`)
+self-resolved when that session shipped its own follow-up (`143fceff`, deleted the now-backwards restamp script + test);
+a workspace-wide cross-repo check flagged an unrelated, already-tracked `deployment-service` file (`meta_watchers.py`,
+out of scope — see `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s own todo for it) — `quickmerge.sh`
+itself classified this as duration-budget/host-contention once MTDS's own core gate was independently confirmed green,
+and the ship went through with `IGNORE_TIMEOUT=true`.
+
+**Shipped**: `market-tick-data-service@ccb84c57c9` via
+`quickmerge.sh --agent --files 'market_tick_data_service/scripts/migrate_tradfi_canonical_classify_2026_07.py market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py'`.
+Landed on `live-defi-rollout`; `quality-gates-v2` = SUCCESS for that sha (confirmed via `gh run list`).
+Promote-to-`main` not yet confirmed as of this edit — the `ldr-to-main-promote-fleet.yml` fleet job runs on its own
+`*/15` cadence and was deliberately NOT manually dispatched (CLAUDE.md's ad-hoc-dispatch ban — shared single-concurrency
+slot).
 
 ### 11. cloud-build-failure-watcher CRITICAL: unified-api-contracts@`a621b0d` TIMEOUT (build `995609a7`) — ROOT-CAUSED + FIXED (combined with item 5)
 
@@ -392,22 +421,13 @@ not because anything needs follow-up.
 
 ## Follow-ups
 
-- [x] [CODE] P1. **Split or explicitly except the two MTDS files that crossed the 900-line hard cap** (item 10):
-      `market_tick_data_service/engine/orchestrator/partitioned_writer.py` (906 L) and
-      `market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py` (905 L), both pushed over by `e5581a63`
-      (2026-08-11T02:00:29Z). Resolved via split (not exemption). Split (local, not yet shipped — see below):
-      `partitioned_writer.py` 906→559 L (chain-bundle counters extracted into `ClusterBookkeepingMixin` /
-      `_cluster_bookkeeping.py`; row/prediction/event-contract counters into new `WriterCountersMixin` /
-      `_writer_counters.py`); `migrate_tradfi_canonical_2026_07.py` 905→466 L (pure classification/target-computation
-      logic extracted into new `_tradfi_canonical_classifier_2026_07.py`, re-exported in full so every external consumer
-      keeps importing from the host module unchanged). Verified 0 files >900L via the gate's own wc-based logic; full
-      local test suite green except 2 UNRELATED pre-existing regressions that also block PR #951 (the fleet bot's
-      current promote PR, superseding closed #950) — filed as
-      `/plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. **quickmerge could not land this
-      split** at the time this was written — its own pre-commit re-gate correctly refused a red tree (blocked by those 2
-      unrelated regressions, not by anything in the split itself). **UPDATE (same-day, later `/ci-reconcile` pass):
-      landed** — `market-tick-data-service@b13e3a2b` shipped the split together with the fix for both blocking
-      regressions (see the linked issue doc's Resolution section), confirmed GREEN on `quality-gates-v2`.
+- [x] [CODE] P1. **Split or explicitly except the two MTDS files that crossed the 900-line hard cap** (item 10) — DONE
+      via split (preferred option). `market-tick-data-service@b13e3a2b` (partitioned_writer.py 906L→846L,
+      migrate_tradfi_canonical_2026_07.py 905L→562L) + `market-tick-data-service@ccb84c57c9` (follow-up fix for a
+      net-new blanket-pyright-suppression-header regression the split's new files introduced on the promote PR). Full
+      writeup of the reader-routing regression:
+      `/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`; the blanket-suppression-header fix
+      is detailed in item 10 above. (repo: market-tick-data-service)
 - [ ] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A): no escalation path exists
       from a `cloud-build-failure-watcher` CRITICAL alert to an AO-dispatched fix attempt today — every Cloud-Build-
       only failure (GH Actions can stay green) depends on a human reading Slack. Needs a new `wall_type` in
@@ -417,13 +437,18 @@ not because anything needs follow-up.
 - [ ] [CODE] P2. **Add an AO `wall_type` for `main-backmerge-to-ldr` sync failures** (Structural finding B): same gap as
       above for a distinct failure class (backmerge `git fetch`/merge failures, not promotion-PR QG failures). Item 4
       happened to self-heal; a non-self-healing recurrence has zero AO coverage today. (repo: agent-orchestrator)
-- [ ] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
-      real trigger** (item 11 follow-up): the `QG_GOVERNOR_REPO=unified-api-contracts` fix is shipped and reasoned
-      through against the governor's admission logic, but has not yet been proven against a real Cloud Build run (no
-      `unified-api-contracts` push has triggered `cloudbuild.yaml` since the fix landed). Check
-      `gcloud builds list --filter='substitutions.REPO_NAME="unified-api-contracts"' --limit=3` after the next push and
-      confirm a `SUCCESS`/non-`TIMEOUT` conclusion; if it still times out, the governor's floor/budget constants
-      themselves (not just the repo-key lookup) need review. (repo: unified-api-contracts)
+- [x] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
+      real trigger** (item 11 follow-up) — VERIFIED CLEARED.
+      `gcloud builds list --project=central-element-323112 --region=asia-northeast1 --filter='substitutions.REPO_NAME="unified-api-contracts"'`
+      shows build `4465fc18-3277-4711-abd3-f86daac715e0` for `d7453ed` (the fix commit itself, self-triggering on push
+      to `live-defi-rollout`) is `SUCCESS`, 2026-08-11T06:10:24Z→06:14:01Z (~3.5min total, through
+      `publish-python`/`PUSH`/ `DONE`) — vs. the prior 20-build TIMEOUT streak (18:36Z→05:55Z, each hitting the 10min
+      step timeout). Full build log (`gcloud builds log 4465fc18-...`) has **zero** `[qg-governor] ... WAIT_RAM_LIVE`
+      lines (the only "governor" hit is the commit-message echo) — the admission wait loop that caused every prior
+      TIMEOUT never fired at all, confirming the governor now resolves UAC's real ~1.1GB baseline via `QG_GOVERNOR_REPO`
+      instead of the 5500MB unmeasured-repo fallback. Note: build `49413a09` for `8b8e9a3` (05:55:16Z, still pre-fix)
+      also TIMEOUT — expected, it predates `d7453ed`; not a regression. No further action needed. (repo:
+      unified-api-contracts, evidence: build=4465fc18-3277-4711-abd3-f86daac715e0)
 - [ ] [CODE] P3. **Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host `i-042a6332509482556`
       (Structural finding C): git-credential failure (`could not read Username for 'https://github.com'`) on the
       periodic mirror-refresh side-timer for ao/e2e-testing/execution-service/features-service/
@@ -448,7 +473,9 @@ not because anything needs follow-up.
    `aws ssm describe-instance- information` succeeding. Incidental finding C (7 failed glue-slot-refresh units) surfaced
    during this sweep and is filed above.
 
-**Bar for "unblocked" per the skill**: every item from sweeps 1-3 has an explicit, current, verified-clean status EXCEPT
-item 10 (MTDS file-size regression, OPEN, filed as a P1 follow-up above) and the item-11 Cloud-Build-fix verification
-(P2 follow-up, needs a real trigger to confirm). Everything else in both alert batches — 14 of the 17 original items —
-is confirmed resolved, self-healed, or a false alarm with cited evidence above.
+**Bar for "unblocked" per the skill**: every item from sweeps 1-3 now has an explicit, current, verified-clean status.
+Item 10 (MTDS file-size regression) is RESOLVED as of the follow-up session documented above
+(`market-tick-data-service@ccb84c57c9`, `quality-gates-v2` green on `live-defi-rollout`; promote-to-main pending the
+fleet job's own cadence). The item-11 Cloud-Build-fix verification (P2 follow-up) was independently VERIFIED CLEARED
+(see its follow-up checkbox above). All 17 original items are now resolved, self-healed, or false alarms with cited
+evidence.

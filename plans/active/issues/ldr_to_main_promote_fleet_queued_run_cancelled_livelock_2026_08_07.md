@@ -38,7 +38,7 @@ related:
   [
     /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
-    /plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
+    /plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
   ]
 created: 2026-08-07
 last_updated: "2026-08-07"

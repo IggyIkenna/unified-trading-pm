@@ -26,8 +26,9 @@ scope: [engineer, admin]
 tags: [ci-cd, cloud-build, alerting, slack, monitoring, coverage-gap, silent-failure, data-pipeline-alerts]
 related:
   [
-    /plans/active/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md,
+    /plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md,
     /codex/04-architecture/ci-alerting.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-10
 author: claude-agent
@@ -46,7 +47,7 @@ source:
 context_scope:
   [
     .github/workflows/cloud-build-failure-watcher.yml,
-    /plans/active/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md,
+    /plans/archive/2026_08/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md,
   ]
 ---
 

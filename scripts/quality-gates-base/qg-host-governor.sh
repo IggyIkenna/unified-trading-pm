@@ -116,7 +116,7 @@ _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"
 # UNGATED, so a host can carry many more live script instances than the heavy-phase K
 # ever caps — 12-19 observed against a live K<=6). Default cap = floor(cores × 0.75),
 # floored at 6 (TIGHTENED 2026-08-10,
-# plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4 —
+# plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4 —
 # was a flat `cores` with no headroom discount, e.g. 8 on this host's 8 physical cores;
 # now that the CI-glue-runner and interactive-slot reservation ledgers are unified
 # (todo 2, same doc), BOTH topologies' load is visible to the SAME admission gates for

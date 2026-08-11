@@ -253,14 +253,24 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
       declined. Checking this off as "diagnosed" per the todo's own literal scope and this doc's established precedent
       (the CF-8 sports todos above), NOT as "CF-3/CF-4 are GREEN," which they are not. No code shipped, no production
       write; read-only diagnostic + this doc edit only.
-- [ ] [DATA] P3. **BLOCKED-OPERATOR — BLK-d9137d48 + sports-cf8-maintenance-window-scheduled (FALSE since 2026-07-14,
-      operator chose option A: wait for a scheduled maintenance window).** Once the gate opens (same window as
-      `sports_cf8_available_at_backfill_regression-007`), bundle in a backfill/reclassification of the 3,833 legacy
-      `data_type=trades` denominator-seed rows on `instruments-store-sports-prd` found by the CF-3/CF-4 todo above
-      (either delete as superseded-by-the-v2-enumerator, or re-stamp `pipeline_mode`/`source` via
-      `_derive_pm_source_transport`-equivalent logic) so CF-3/CF-4 can actually reach GREEN — do this in the SAME
-      maintenance pass as the CF-8 available_at backfill rather than a separate production touch on this twice-regressed
-      surface. **Gate re-verified 2026-08-05 (slot-16): still FALSE, no dispatchable work.** Repo: instruments-service.
+- [ ] [DATA] P3. **OPERATOR-APPROVED — schedule + run now (2026-08-11).** Prior text's "FALSE since 2026-07-14" gate
+      state is STALE: `sports_consolidated_closeout_2026_07_19.md` (Track H, decision 11) shows `BLK-d9137d48` was
+      already lifted **2026-08-07** ("AUTHORIZED... not executed this pass — prior regressions + a coordinate-first
+      lesson mean real scheduling care"), which this doc's own last gate-check (2026-08-05, one entry above the fix)
+      predates — the 2026-08-05 "still FALSE" reading was correct AT THE TIME, just never re-checked after. Operator
+      reconfirmed 2026-08-11: proceed now. **Execution notes (do not fire-and-forget)**: acquire the
+      `unified_trading_library.maintenance_window` GCS-sentinel lease first
+      (`scheduler_maintenance.py::pause_for_maintenance()`), snapshot both canonicals, run
+      `market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py` (`af627b5b`,
+      per-`service_name`-grouped `ManifestWriter` fix already live) small-scale first, verify via direct GCS reads
+      before scaling to the full ~652K IS / ~287K MDPS rows, THEN bundle in this todo's own CF-3/CF-4 legacy-row cleanup
+      (3,833 `data_type=trades` denominator-seed rows on `instruments-store-sports-prd` — delete as
+      superseded-by-the-v2-enumerator, or re-stamp `pipeline_mode`/`source` via `_derive_pm_source_transport`-equivalent
+      logic) in the SAME pass, release the lease. This surface has regressed twice before — an agent executing this must
+      actively watch each step (rollback-ready), not dispatch-and-check-later. Repo: instruments-service +
+      market-tick-data-service. Prior text preserved: this item previously carried the standard operator-STOP tag citing
+      `BLK-d9137d48` + `sports-cf8-maintenance-window-scheduled`, operator had chosen option A (wait for a scheduled
+      maintenance window); gate re-verified 2026-08-05 (slot-16) as still FALSE at that time.
 - [x] ✅ [DATA] P3. Add a per-AG exception to `cf_manifest_audit.py::_check_era_b` so tradfi's already-adjudicated
       bundle-grain `data_type in {options_chain,futures_chain}` captured rows stop reading RED on every audit run
       (currently 107,296 rows, CME+ICE only, all historical — see the Era-B todo above for the full evidence chain).
@@ -339,3 +349,10 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   structural issue to address separately — per RULES.md §4, `prereqs.prerequisites` is yaml-only tuning, not
   plan-derivable. No code shipped this touch — read-only gate check + plan doc edits only.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-11** (operator decision, via main, part of an AO-dispatch-visibility gate unblocking pass): found this doc's
+  "still FALSE" gate reading (last checked 2026-08-05) was stale — `sports_consolidated_closeout_2026_07_19.md` shows
+  `BLK-d9137d48` was actually lifted 2026-08-07, just never executed pending real scheduling. Operator reconfirmed
+  today: proceed. Retagged to `OPERATOR-APPROVED`, now AO-dispatchable, with execution notes added citing the exact
+  script/lease/verification sequence a background-research pass just confirmed. Not executed this session — this is a
+  live production manifest rewrite on a twice-regressed surface; recommend a dedicated, actively-watched session, not
+  unattended dispatch.

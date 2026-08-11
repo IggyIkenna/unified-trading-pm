@@ -316,3 +316,68 @@ qg_cache_store() {  # $1=name $2=key — call ONLY after a clean/green step run
     mkdir -p "$_QG_CACHE_DIR" 2>/dev/null || return 0
     printf '%s' "$2" > "${_QG_CACHE_DIR}/$1" 2>/dev/null || :
 }
+
+# ── venv freshness ────────────────────────────────────────────────────────────
+# Fail closed when .venv EXISTS but has drifted from uv.lock. This is the same
+# reasoning as each base's "no usable .venv/bin/python" abort, one step further
+# along: gating against the WRONG dependency set is as meaningless as gating
+# against the wrong interpreter, but it is far harder to notice.
+#
+# Measured 2026-08-11 (fleet_venv_drift_after_pull_no_resync_2026_08_11.md):
+# agent-orchestrator carried fastapi 0.136.3 against a pyproject requiring
+# >=0.137.0 (lock pinned 0.140.7), so `from fastapi.routing import
+# iter_route_contexts` — reached via UTL from tests/conftest.py — raised
+# ImportError and the ENTIRE pytest suite failed to COLLECT. The gate ran every
+# other check around it and reported one failed pytest step, which reads as a code
+# defect rather than an environment one. A sweep the same day found 162/216 local
+# slot venvs and 135/194 on the orchestrator VM drifted, because
+# slot-cron-ff-pull.sh keeps CODE current and nothing re-syncs the environment
+# after a pull moves uv.lock.
+#
+# DEFINED HERE, CALLED BY THE BASES — never invoked at source time: quickmerge.sh
+# also sources this file for helpers, and in isolated-worktree mode its .venv is a
+# symlink into a cache that may be unprovisioned. Aborting there would break
+# shipping, which is not what this check is for.
+#
+# `-f uv.lock` is load-bearing, not defensive: with no lockfile the command fails
+# with "Unable to find lockfile" — a MISSING LOCK, not a stale env — which would
+# abort every lockless repo (measured: unified-trading-system-ui, a TS repo
+# carrying a pyproject.toml but no uv.lock).
+# NOTE: PROJECT_ROOT, never REPO_ROOT — in this codebase REPO_ROOT is the WORKSPACE dir
+# ($PROJECT_ROOT/..), so an earlier version of this function looked for
+# <workspace>/uv.lock, never found one, and silently returned 0 for every repo. A check
+# that no-ops is worse than no check: it reports green and looks installed.
+qg_assert_venv_fresh() {
+    [ "${QG_ALLOW_STALE_VENV:-0}" = "1" ] && return 0
+    [ -f "${PROJECT_ROOT:-.}/uv.lock" ] || return 0
+    [ -x "${PROJECT_ROOT:-.}/.venv/bin/python" ] || return 0
+    command -v uv >/dev/null 2>&1 || return 0
+    # Read-only: --check never writes the env and --frozen never touches the lock.
+    # ~50ms on an in-sync tree, so this costs nothing in the common case.
+    (cd "${PROJECT_ROOT:-.}" && uv sync --frozen --check >/dev/null 2>&1) && return 0
+
+    # WARN-ONLY BY DEFAULT (downgraded 2026-08-11, same day it shipped, on measurement).
+    # Blocking here is not yet safe fleet-wide: unified-trading-pm re-drifts its OWN venv
+    # across a gate run — verified by a controlled sync -> clean -> gate(exit 0) -> STALE
+    # cycle — so a blocking check would stop PM from ever gating green. Mechanism: `uv sync`
+    # regenerates uv.lock with editable-dep version churn, slot-cron-ff-pull.sh's [auto-clean]
+    # reverts that with `git checkout -- uv.lock` (uv.lock content unchanged in git but its
+    # mtime moves), and the venv is then consistent with the DISCARDED lock rather than the
+    # committed one. Measured blast radius: 2 of 215 local venvs re-drift within an hour, both
+    # unified-trading-pm.
+    #
+    # The signal is still worth printing everywhere — this is the class that let
+    # agent-orchestrator sit on fastapi 0.136.3 against a lock pinning 0.140.7 with the whole
+    # suite unable to collect. agent-orchestrator's own gate keeps a BLOCKING copy
+    # (agent-orchestrator@f9a61ebf62) because it was verified there and does not self-drift.
+    # Flip this to blocking fleet-wide with QG_ENFORCE_FRESH_VENV=1 once the PM lock-churn
+    # cycle is fixed.
+    echo "⚠ WARN — .venv is STALE against uv.lock in ${PROJECT_ROOT:-$PWD} (run 'uv sync')." >&2
+    echo "   Non-blocking: a stale venv can stop the suite COLLECTING, so treat a red pytest here" >&2
+    echo "   as possibly environmental. Set QG_ENFORCE_FRESH_VENV=1 to make this abort." >&2
+    if [ "${QG_ENFORCE_FRESH_VENV:-0}" = "1" ]; then
+        echo "❌ quality gate ABORTED — QG_ENFORCE_FRESH_VENV=1 and .venv is stale." >&2
+        exit 1
+    fi
+    return 0
+}

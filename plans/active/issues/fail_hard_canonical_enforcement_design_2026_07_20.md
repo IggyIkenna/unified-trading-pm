@@ -133,6 +133,42 @@ of a venue-day outage.
    under-specification).** The read path needs a disposition for a bare-wire stem that is neither registered-quarantine
    nor yet-migrated.
 
+## 5b. Design resolutions for the three §5 gaps (2026-08-11, operator-requested design pass)
+
+**Gap 1 — derivative/chain-bundle column gate.** The structural problem is that §3's "all four surfaces or the write
+fails" rule assumes one object = one instrument; a bundle object (stem = underlying, e.g. `ticks.parquet`) legitimately
+shares its stem and manifest key across every strike/leg it contains, so no per-leg marker can ever land on those two
+surfaces. Resolution: for bundle-shaped writers only (chain-bundle / `options_chain` lanes), add a row-level gate that
+validates the embedded instrument_id COLUMN value per row (not the stem, not the manifest key) against the canonical/
+quarantine registry, immediately before write. A row whose column value is `NON_CANONICAL` is dropped from the write and
+routed to `record_failed(NON_CANONICAL_INSTRUMENT_ID, granularity=row)` — matching Stage 1's existing STRUCTURAL per-row
+enforcement philosophy rather than inventing a new column-only quarantine marker (deferred as a later-stage nicety, out
+of scope for closing this gap). The manifest keeps its existing underlying-keyed row, plus a new
+`quarantined_legs: [...]` field so reconciliation can count dropped legs without needing per-leg manifest rows.
+
+**Gap 2 — TARDIS-only "column == manifest by construction."** The live/on-chain lane's two independent front-ends
+(`get_cefi_wire_map().canonical_for()` for the column, `resolve_cefi_instrument_id()` for the manifest key) can disagree
+because they're independent computations, not because the underlying data disagrees. Resolution: make the manifest key a
+deterministic function of the ALREADY-COMPUTED column value — derive it by parsing that value, not by an independent
+second resolution — since the column is written first in `partitioned_writer.py`, it's available before the manifest key
+is needed. `resolve_cefi_instrument_id()`'s independent path becomes a fallback ONLY for the case where no column value
+exists yet (should not occur at write time on this lane). This closes the divergence structurally instead of reconciling
+two answers after the fact.
+
+**Gap 3 — read-gate lacks a positive marker for "not yet migrated."** The three-valued verdict
+(`canonical`/`quarantined`/`non_canonical`) has no way to distinguish a legitimately-not-yet-backfilled row from a
+genuinely non-canonical one. Resolution: add a temporal `unclassified` state (not a new `capture_status`, consistent
+with §3) — any manifest row that predates Stage 2 and simply lacks the `instrument_id_form` field is `unclassified`, not
+`non_canonical`. The Stage 3 read gate checks field-presence before checking the verdict: `unclassified` rows
+PASS-WITH-WARNING (logged + counted, never failed) until Stage 2's backfill is verified complete (100% of manifest rows
+carry `instrument_id_form`), at which point a config flag flips `unclassified` to fail like `non_canonical` — closing
+the loophole once there is nothing left to legitimately be unclassified.
+
+These are design resolutions, not implementations — see the new `[WRITER]`/`[UAC]` todos in §7 for the actual code
+changes, each now a bounded, independently-dispatchable task. Flagging for a quick operator/engineering sanity check
+given this governs a live production correctness gate (options-chain/derivative data) — not blocking dispatch of the new
+implementation todos on that check, since they're each independently reviewable in their own PRs.
+
 ## 6. Stale premises corrected by verification (do not re-introduce)
 
 - **D-5 / Lane C colon-strip is ALREADY FIXED and committed** (`market-tick-data-service@953679de` —
@@ -153,8 +189,24 @@ of a venue-day outage.
       confirmed in the 2026-07-22 ~19:50Z DELTA per `cefi_4surface_migration_execution_log_2026_07_24.md`). Stale
       checkbox flip per `cefi_satellite_ao_dispatch_batch2_2026_07_26.md`'s Deferred-item re-check
       (`cefi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md` item -002) — commit verified to exist.
-- [ ] [DESIGN] P1. Close the three §5 gaps (derivative-bundle column gate; live-lane dual-resolver reconciliation; read
-      marker disposition) before write-enforce.
+- [x] ✅ [DESIGN] P1. Close the three §5 gaps (derivative-bundle column gate; live-lane dual-resolver reconciliation;
+      read marker disposition) before write-enforce. — **DONE 2026-08-11** (operator-requested design pass, via main):
+      see §5b for the three resolutions. Flagged for an operator/engineering sanity check given the correctness stakes,
+      but not gating dispatch of the three implementation todos below — each is independently reviewable in its own PR.
+      Implementation split into the 3 new todos below, one per gap.
+- [ ] [WRITER] P2. **Implement Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers
+      (chain-bundle / `options_chain` lanes) that validates each row's embedded instrument_id against the
+      canonical/quarantine registry before write; drop non-canonical rows to
+      `record_failed(NON_CANONICAL_INSTRUMENT_ID,     granularity=row)`; add `quarantined_legs: [...]` to the manifest
+      row. Repo: market-tick-data-service.
+- [ ] [WRITER] P2. **Implement Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic
+      function of the already-computed column value (parse it, don't re-resolve independently via
+      `resolve_cefi_instrument_id()`); keep the independent resolver only as a fallback for the no-column-yet case.
+      Repo: market-tick-data-service (`venue_fetch.py`, `partitioned_writer.py`).
+- [ ] [UAC] P3. **Implement Gap 3's resolution (§5b)**: add the temporal `unclassified` state (manifest row predates
+      Stage 2 / lacks `instrument_id_form`) distinct from `non_canonical`; wire the Stage 3 read gate to
+      pass-with-warning on `unclassified` until a backfill-complete flag promotes it to enforced-fail. Repo:
+      unified-api-contracts + market-tick-data-service (read gate).
 - [x] ✅ [WRITER] P2. Pass `violation_classes={STRUCTURAL}` explicitly at the 3 `canonical_path_violations` write
       callsites. — **SHIPPED as part of the same `market-tick-data-service@e49e1395` batch**: "mtds fail-hard
       write-guard fix (STRUCTURAL-only enforce + Stage-0 ID_FORM observe-log)" via the shared
@@ -201,3 +253,8 @@ of a venue-day outage.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — design 'APPROVED-IN-PRINCIPLE, not
   ready to implement' pending 3 adversarially-confirmed architecture gaps. Both open items are real design/judgment
   work, not worker-determinable.
+- **2026-08-11** (operator-requested design pass, via main, part of an AO-dispatch-visibility gate unblocking pass on
+  the downstream `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` doc, which was gated on this one):
+  proposed resolutions to all three §5 gaps (§5b), closed the `[DESIGN] P1` todo, split implementation into 3 new
+  bounded todos. Not implemented — design only. Recommend a quick operator/engineering sanity check on §5b before the
+  implementation todos ship, given this governs a live production correctness gate for options-chain/derivative data.

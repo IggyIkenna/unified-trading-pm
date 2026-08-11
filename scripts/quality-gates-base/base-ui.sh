@@ -44,6 +44,8 @@ set -euo pipefail
 
 # ── SHARED FOUNDATION (colors, logging, run_timeout, REPO_ROOT, CI_STATUS) ──
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
+# Fail closed on a venv that drifted from uv.lock (see qg_assert_venv_fresh).
+qg_assert_venv_fresh
 
 # ── UI-SPECIFIC LOG OVERRIDES (stderr for failures, extra indentation) ───────
 log_fail()    { echo -e "${RED}  ❌ $*${NC}" >&2; }

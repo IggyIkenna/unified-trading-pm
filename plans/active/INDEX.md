@@ -941,9 +941,10 @@ by hand._
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
   policy…
-- [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](./ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
-  — Gated closeout for issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md — machine-held via depends_on +
-  gate_on_depends: true until its 3 audit todos (glue-runner governor-ledger participation, host-undersizing verdict,…
+- [`deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11`](./deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md)
+  — Operator suspected DeepSeek costs were "off by a factor" because the wallet reconciliation showed a persistent
+  residual. Measured 2026-08-11: there is no factor error. The rate card matches DeepSeek's published prices exactly, no
+  turns are…
 - [`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08`](./multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md)
   — Gated closeout for `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` — machine-held
   via `depends_on` + `gate_on_depends: true` until all 4 of that doc's remaining todos (rename-corruption fix, the…

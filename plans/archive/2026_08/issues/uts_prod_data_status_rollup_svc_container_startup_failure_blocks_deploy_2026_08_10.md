@@ -15,7 +15,7 @@ summary: >-
   fails. Cloud Run correctly refuses to cut traffic to the broken revision, so the service is still SERVING (on an old
   image, imperatively updated with the new --timeout=1700s config but NOT the new code) — not a live outage, but a
   standing deploy blocker.
-status: open
+status: archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,7 +37,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: deployment-api@225a3e81c2
 source:
   Discovered while re-verifying deployment-api@f1b80de071 (the instruments-service rollup timeout fix) actually reached
   the live uts-prod-data-status-rollup-svc — it hadn't, 3 build attempts in, all with the same
@@ -51,6 +51,12 @@ context_scope:
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-11** — all 3 todos resolved. Root cause was NOT the recorded `DEPLOYMENT_API_MINIMAL_STARTUP`
+> hypothesis (ruled out) but `DISABLE_AUTH=true` in production tripping `deployment_api/auth.py`'s import-time guard.
+> Fixed with real OIDC auth (`deployment-api@34a091d3f0`), followed by 3 further genuinely distinct fixes (memory,
+> overlap guard, a `bounded_subprocess` deadlock) before the instruments-service rollup finally completed live
+> end-to-end. See Resolution section below for the full chain.
 
 ## What was found
 
@@ -140,15 +146,61 @@ the fast prod crash in the time available for this investigation.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Test the `DEPLOYMENT_API_MINIMAL_STARTUP` hypothesis directly (redeploy rollup-svc with it
-      temporarily unset; if the SAME image then starts, read `lifespan.py`'s `MINIMAL_STARTUP` branches for an unhandled
-      early exception). Done-when: hypothesis confirmed or ruled out with direct evidence.
-- [ ] [BACKEND] P1. If ruled out, escalate to image-layer diffing / GCP support per the archived sibling doc's own final
-      recommendation (its last unexplored angle for the same "total silence" symptom class). Done-when: root cause
-      identified.
-- [ ] [DATA] P2. Once the container starts cleanly, re-trigger the instruments-service rollup and confirm success + the
-      corrected sports coverage is visible via `/api/data-status/manifest`. Done-when: a fresh `full.json.gz` post-dates
-      this fix and a spot-check of instruments-service's sports coverage no longer counts the deleted out-of-scope rows.
+- [x] ✅ [BACKEND] P1. Test the `DEPLOYMENT_API_MINIMAL_STARTUP` hypothesis directly. **RULED OUT** — the real cause was
+      `deployment_api/auth.py`'s production guard (`DISABLE_AUTH=true` + `DEPLOYMENT_ENV=prod` raises `RuntimeError` at
+      IMPORT TIME during gunicorn's `preload_app`, before the port ever binds or any logging infra exists — exactly
+      explaining "zero application log output"). The rollup-svc had `DISABLE_AUTH=true` set as a workaround for its
+      Cloud Scheduler-triggered endpoint having no real auth; the guard correctly refused to start with it in prod.
+- [x] ✅ [BACKEND] P1. Root cause identified + fixed with the architecturally-correct pattern (not a workaround): real
+      OIDC auth on `/api/data-status/rollup-run`, mirroring the existing precedent
+      `deployment_api/routes/_reap_scheduler.py`'s `verify_reap_scheduler_oidc()`. `deployment-api@34a091d3f0`.
+- [x] ✅ [DATA] P2. Instruments-service rollup re-triggered and confirmed succeeding — see Resolution below. A fresh
+      `full.json.gz` (`update_time=2026-08-11T08:36:42Z`) post-dates every fix in this chain.
+
+## Resolution
+
+Five genuinely distinct root causes, discovered and fixed in sequence as each one unblocked the next (each verified live
+before moving to the next):
+
+1. **`deployment-api@f1b80de071`** (+ `deployment-service@34d65fad34`) — the original per-service timeout config fix
+   this doc was filed while verifying (420s→1500s join ceiling for instruments-service; matching Cloud Run
+   `--timeout=1700s` / Cloud Scheduler `--attempt-deadline=1700s`).
+2. **`deployment-api@34a091d3f0`** — this doc's original subject: `DISABLE_AUTH=true` in production crashed the
+   container at import time with zero log output. Fixed with real OIDC auth (see Todos above), not a workaround.
+3. **`deployment-api@e49af8295e`** — a genuine container OOM once auth was fixed and a real request could run ("Memory
+   limit of 32768 MiB exceeded with 33272 MiB used"). `_CHILD_RLIMIT_AS_BYTES` 20Gi→18Gi, evidence-based from the live
+   OOM's own numbers (33272 MiB used − 20480 MiB old rlimit ≈ 12.8Gi real baseline overhead under the actual
+   `POST /api/data-status/rollup-run` invocation path, not the lower baseline measured against a different invocation
+   path in the original 20Gi sizing).
+4. **`deployment-api@7c16c36be6`** — `uts-prod-data-status-rollup-cron` fires every 20 minutes, but a full 14-service
+   rollup routinely runs well past that, so overlapping scheduler ticks piled up concurrently in the same
+   `containerConcurrency=80` instance and starved each other's CPU. Added an overlap guard reusing the existing
+   `unified_trading_library.maintenance_window` CAS-lock primitive — a new tick now returns `skipped_overlap`
+   immediately instead of piling on, confirmed live.
+5. **`deployment-api@225a3e81c2`** — the actual reason instruments-service's CEFI manifest category kept timing out at
+   600s even once (4) removed the overlap: `bounded_subprocess.run_bounded()` called `process.join(timeout=...)` BEFORE
+   ever draining `result_queue` — a child whose queued result exceeds the OS pipe buffer blocks inside its own
+   `Queue.put()` while the parent is blocked in `join()`, neither ever proceeding (the classic multiprocessing "joining
+   a process that uses queues" deadlock). CEFI's result dict pickles to **1.89MB** (`venues` field alone ~1.97MB),
+   comfortably past any OS pipe buffer. This is why raising the timeout (600s→1800s, tested live) changed nothing — it
+   was never slow, it was stuck forever. Fixed by waiting on `result_queue.get(timeout=timeout_s)` instead of
+   `process.join(timeout=timeout_s)`; verified locally that the identical call which hung indefinitely at both 600s and
+   1800s now completes in 9.2s via the real production isolation path. Added a real-subprocess (not mocked) regression
+   test with a 4MB payload.
+
+**Also unblocked along the way (not this doc's subject, but required to ship (5)):** a fresh, fleet-wide regression in
+the shared `unified-trading-ci` reusable `python-quality-gates-v2.yml` workflow — `DEP_BRANCH` resolved to the calling
+repo's own PR head branch instead of `unified-trading-pm`'s default branch, so the `Install uv` step 404'd and killed
+`quality-gates-v2` on every promote PR fleet-wide (first hit: this repo's PR #577, landed ~30 min before discovery).
+Fixed upstream at `unified-trading-ci@700e6d3` (by a concurrent session — verified their fix was correct and did not
+duplicate it).
+
+**Live verification (2026-08-11)**: `POST /api/data-status/rollup-run?services=instruments-service` →
+`{"status":"ok","live_services":["instruments-service"],"exit_code_live":0,...}`. Cloud Build `1e480835` SUCCESS on
+merge commit `770fe6ec8a`. Live revision `uts-prod-data-status-rollup-svc-00406-29q`, 100% traffic. Maintenance-window
+lock acquired 08:32:43Z, `full.json.gz` written 08:36:42Z (1,621,803 bytes), lock released 08:40:07Z — squarely inside
+this request's own acquire/release window, confirming this specific request (not a stale concurrent one) produced the
+fresh blob. Was stuck at `2026-08-05T02:27:27Z` for the entire incident.
 
 ## Progress Log
 
@@ -159,4 +211,14 @@ the fast prod crash in the time available for this investigation.
   was inconclusive (arm64 laptop vs amd64 image, emulation too slow to reliably compare startup timing against prod's
   ~30s crash). Platform-level halves of the rollup-timeout fix (Cloud Run `--timeout=1700s`, Cloud Scheduler
   `--attempt-deadline=1700s`) are live regardless, applied directly via `gcloud` (not gated on this blocker) — only the
-  CODE half is stuck behind it.
+  CODE half is stuck behind it. The `DEPLOYMENT_API_MINIMAL_STARTUP` hypothesis recorded above turned out to be a red
+  herring — see Resolution.
+- **2026-08-10/11 (interactive session, /autonomous, continued)**: user asked why this 5+ hour incident never paged
+  Slack, which led to fixing `cloud-build-failure-watcher.yml`'s `--limit=30` coverage gap (separate doc:
+  `cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md`), then back to
+  actually solving this deploy blocker + the instruments-service rollup end to end. Root-caused and shipped all five
+  fixes in the Resolution above across several hours, each one live-verified via real OIDC-authenticated
+  `POST /api/data-status/rollup-run` calls before moving to the next (never trusted a green build alone). Also
+  discovered and unblocked the fleet-wide CI regression in `unified-trading-ci` along the way — found mid-diagnosis that
+  a concurrent session had already landed a better fix than the draft one in progress, verified it, and did not ship a
+  duplicate. Final live test: clean success, `exit_code_live=0`, fresh blob confirmed. Closing this doc.

@@ -91,27 +91,45 @@ leaves the environment behind, silently, forever.
       `uv sync --frozen --check` (read-only, ~50ms) in `scripts/quality-gates.sh`, with a `QG_ALLOW_STALE_VENV=1` escape
       hatch mirroring `QG_ALLOW_SYSTEM_PYTHON=1`, and a `-f uv.lock` guard so a lockless repo is not aborted on a
       missing-lockfile error. Gate green: 3411 python + 290 dashboard tests.
-- [ ] [OPERATOR] P1. **Decide whether to promote the stale-venv check into `quality-gates-base/`, gating ~30 repos.**
-      The fail-closed venv preflight currently exists ONLY in agent-orchestrator's gate — no other repo and no shared
-      base has it — so this is a new CI gate for the rest of the fleet, not a rollout of an existing one. Argument for:
-      the drift measured here was fleet-wide (70-75%), and CI provisions from the lock so an in-sync tree pays ~50ms.
-      Argument for caution: a check verified in one repo would start blocking every repo's CI. **Done when**: the
-      decision is recorded here, and if yes, the check lands in the shared base with the same `-f uv.lock` guard.
-- [ ] [INFRA] P1. **Give `slot-cron-ff-pull.sh` a venv counterpart so drift cannot re-accumulate.** Remediation without
-      this is a one-off: the same 5-minute pull that fixed the drift measured here will recreate it the next time
-      `uv.lock` moves. Cheapest correct shape is to `uv sync` a repo only when the pull actually changed its `uv.lock`
-      (compare pre/post blob), so a no-op pull stays free. **Done when**: a pull that moves a lockfile leaves that
-      repo's venv in sync, proven by a before/after check on a real slot. (repo: unified-trading-pm)
-- [ ] [INFRA] P2. **Root-cause why `uv sync --frozen` does not prune three packages in slot 8's `unified-trading-pm`.**
-      `mypy_boto3_s3`, `pyasn1`, `s3transfer-stubs` remain installed and unlocked immediately after a successful sync,
-      leaving that one venv permanently "stale" to `--check`. Not a race (measured: stale immediately, and again 40s
-      later). Bounded and low-impact — one repo in one slot — but it will keep any staleness gate red there forever.
-      **Done when**: the cause is identified and either the packages are removed or the repo is explicitly exempted with
-      a recorded reason. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. **Confirm `unified-trading-system-ui` carrying a `pyproject.toml` with no `uv.lock` is intentional.**
-      It is the one repo the sweep could not sync, and the reason is a missing lockfile rather than drift. If the
-      pyproject is vestigial for a TS-only repo, delete it; if python tooling is genuinely expected there, add the lock.
-      **Done when**: either the pyproject is removed or a lockfile exists. (repo: unified-trading-system-ui)
+- [x] ✅ [OPERATOR] P1. **Operator approved 2026-08-11; PROMOTED — unified-trading-pm@5c373663c8.**
+      `qg_assert_venv_fresh()` now lives in `qg-common.sh` and is called by all four bases (service / library / ui /
+      codex). Deliberately NOT fired at source time: `quickmerge.sh` also sources `qg-common.sh` for helpers and in
+      isolated-worktree mode its `.venv` is a symlink into a possibly-unprovisioned cache, so auto-firing would break
+      shipping. Verified both directions before shipping — passes on service/library/ui/codex/AO repos AND on a lockless
+      repo, and aborts with exit 1 against a deliberately drifted lock; a real `base-service` gate run
+      (market-tick-data-service) passed end-to-end with no false abort.
+- [x] ✅ [INFRA] P1. **SHIPPED — unified-trading-pm@5c373663c8.** `_resync_venv_if_lock_moved` runs at the FF-success
+      point and compares `uv.lock` between the pre-merge sha and the new HEAD, so an ordinary no-op tick costs one
+      `git diff --quiet`. Skips any repo with a live pytest/gate rather than rewriting site-packages under a peer,
+      deferring to a later tick. **Trap found while doing this**: the script OVERWRITES ITSELF from origin every 5 min
+      via its own crontab entry (`git show origin/<b>:<script> | cmp -s - <script> || mv`), so an in-place edit silently
+      reverts — landing on origin is the only way to change it.
+- [x] ✅ [INFRA] P2. **Root-caused — and it is NOT what this todo said.** Three corrections. (a) Not slot-8-specific:
+      `unified-trading-pm` drifts on local tabs 5 and 6 too, and PM was the ONLY repo to re-drift (2 of 215 re-checked
+      within an hour). (b) Not "three unpruned packages": PM's venv has **5 packages missing or at the wrong version**
+      (incl. `propcache` DOWNGRADED 0.5.2 -> 0.4.1) alongside 136 extras, so `--inexact` correctly still flags it — this
+      is genuine drift of the same class that broke fastapi, not benign leftovers. (c) Not "something re-adds packages":
+      `uv sync` regenerates `uv.lock` with editable-dep version churn, `slot-cron-ff-pull.sh`'s `[auto-clean]` reverts
+      that via `git checkout -- uv.lock` (content unchanged in git, only the mtime moves), and the venv is then
+      consistent with the DISCARDED lock rather than the committed one. Superseded by the lock-churn todo below.
+- [x] ✅ [INFRA] P3. **Confirmed intentional — no change made, and both branches of the original todo were wrong.**
+      `unified-trading-system-ui`'s `pyproject.toml` has **no `[project]` table**, so `uv lock` fails outright ("No
+      `project` table found") — a lockfile is not addable. Nor is it vestigial: it is a documented tool-config carrying
+      ruff / basedpyright / pytest / coverage / bandit for 8 real utility scripts under `scripts/`, and deleting it
+      would strip lint and typecheck config from live code. The `-f uv.lock` guard in `qg_assert_venv_fresh` already
+      skips it correctly, which is the right handling.
+
+- [ ] [INFRA] P1. **Fix the uv.lock churn cycle that leaves a venv matched to a DISCARDED lock.** `uv sync` regenerates
+      `uv.lock` with editable-dep version churn; `slot-cron-ff-pull.sh`'s `[auto-clean]` reverts it with
+      `git checkout -- uv.lock`; the environment is then consistent with the reverted lock and reads as permanently
+      stale. This is why the fleet-wide freshness check had to ship warn-only. Touches `setup.sh`'s sibling pinning
+      (STEP 7/8b `uv pip install -e ../sibling`) and the cron's auto-clean — both load-bearing fleet-wide, so scope it
+      before changing it. **Done when**: a sync -> gate -> re-check cycle on `unified-trading-pm` ends CLEAN, and
+      `QG_ENFORCE_FRESH_VENV=1` can be made the default. (repo: unified-trading-pm)
+- [ ] [INFRA] P2. **Flip the shared freshness check back to blocking once the churn cycle above is fixed.** It is
+      warn-only today purely because PM self-drifts; the check itself is verified working (fires, warns, and aborts
+      under `QG_ENFORCE_FRESH_VENV=1`). **Done when**: `QG_ENFORCE_FRESH_VENV` defaults to 1 in `qg-common.sh` and a
+      full fleet gate sweep stays green. (repo: unified-trading-pm)
 
 ## Codex SSOTs
 

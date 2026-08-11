@@ -3336,7 +3336,7 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > visible to the same admission gates for the first time, so the cap needed headroom for that, not just interactive-slot
 > load alone. Same tightening lowered `QG_HOST_RAM_ABORT_PCT` (runtime abort-monitor trip point) 80 → 75. Override via
 > `QG_TOTAL_INSTANCE_CAP` / `QG_REPO_INSTANCE_CAP` / `QG_HOST_RAM_ABORT_PCT`. SSOT:
-> `plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md` (todos 1, 2, 4).
+> `plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md` (todos 1, 2, 4).
 
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
    `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a

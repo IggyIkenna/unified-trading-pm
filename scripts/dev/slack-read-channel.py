@@ -10,13 +10,23 @@
 #   grep/re-analysis. Re-run it fresh each time — its answer has a date on it.
 #
 # Auth: GCP Secret Manager `SLACK_ALERTS_READER_BOT_TOKEN` (bot must be a member of the
-#   channel). The token never touches disk or argv — resolved in-process via gcloud ADC.
-#   Fallback (degraded path, gcloud ADC stays primary): a `SLACK_ALERTS_READER_BOT_TOKEN` env
-#   var, for the case every gcloud identity available in the session hits `PERMISSION_DENIED`
-#   on `secretmanager.versions.access` or a stale-token reauth prompt that can't run
-#   non-interactively (confirmed 2026-07-24,
-#   plan_health_tests_leak_real_slack_alerts_2026_07_24.md — the operator supplied the token
-#   directly from `.act-secrets` that session since neither gcloud path worked).
+#   channel). The token never touches disk or argv — resolved in-process.
+#   Pinned to a specific identity, not "whichever account happens to be ambient" (2026-08-11
+#   hardening — see /codex/05-infrastructure/agent-slack-read-access.md): tries, in order,
+#   (1) `--account=unified-trading-sa@<active-gcloud-project>.iam.gserviceaccount.com` — a real,
+#   directly-authenticated local credential on every host this matters on (AO's `ubuntu` worker
+#   user; the operator's laptop, via a service-account key activated 2026-08-11 specifically to
+#   dodge the org's human-reauth policy, which blocks plain ADC non-interactively); (2) plain
+#   ambient `gcloud` default, for any host that hasn't been migrated to the pinned account yet;
+#   (3) the `SLACK_ALERTS_READER_BOT_TOKEN` env var, for the case every gcloud path fails (no
+#   gcloud binary, `PERMISSION_DENIED` on `secretmanager.versions.access`, or a stale-token
+#   reauth prompt that can't run non-interactively — confirmed 2026-07-24,
+#   plan_health_tests_leak_real_slack_alerts_2026_07_24.md). Ambient ADC alone was the ORIGINAL
+#   design and is deliberately no longer the primary path: on a multi-account host (the AO VM's
+#   `ubuntu` user has 5+ configured accounts across per-slot configs) "whichever one is active"
+#   can silently change out from under a scheduled job if any interactive session on that same
+#   OS user runs `gcloud config set account`/`gcloud auth login` — pinning removes that
+#   footgun.
 #
 # TRAPS learned building this (do not re-learn):
 #   * Carrier posts (notify-slack.yml) put the REAL content in Block Kit `blocks`, not in
@@ -41,33 +51,59 @@ CHANNEL = args[0] if len(args) > 0 else "ci-failures"
 HOURS = float(args[1]) if len(args) > 1 else 24.0
 JSON_ONLY = "--json-only" in sys.argv
 
-try:
-    tok = subprocess.run(
-        [
-            "gcloud",
-            "secrets",
-            "versions",
-            "access",
-            "latest",
-            "--secret=SLACK_ALERTS_READER_BOT_TOKEN",
-            # project comes from the active gcloud config — every host this runs on
-            # (operator machines, slots, VMs) is configured for the prod project.
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-except (subprocess.CalledProcessError, FileNotFoundError) as exc:
-    # Degraded path: gcloud ADC failed (no gcloud binary, PERMISSION_DENIED on
+# Pinned identity first (see header): a real, directly-authenticated service-account
+# credential every migrated host already carries, so a scheduled job's Slack-read can't be
+# silently broken by an unrelated interactive session switching the ambient gcloud account.
+# Project comes from the active gcloud config (never hardcoded — same rule the original ambient
+# call always followed; only the ACCOUNT is pinned, not the project).
+_PINNED_SA_ACCOUNT_NAME = "unified-trading-sa"
+
+
+def _pinned_sa_email() -> str | None:
+    try:
+        project = subprocess.run(
+            ["gcloud", "config", "get-value", "project"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    return f"{_PINNED_SA_ACCOUNT_NAME}@{project}.iam.gserviceaccount.com" if project else None
+
+
+def _try_gcloud(extra_args: list[str]) -> str | None:
+    base_args = ["gcloud", "secrets", "versions", "access", "latest", "--secret=SLACK_ALERTS_READER_BOT_TOKEN"]
+    try:
+        return subprocess.run(
+            [*base_args, *extra_args],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+_pinned_email = _pinned_sa_email()
+tok = _try_gcloud([f"--account={_pinned_email}"]) if _pinned_email else None
+if tok is None:
+    # Pinned account not locally configured on this host yet (or project unresolved) — fall
+    # back to whatever's ambient.
+    tok = _try_gcloud([])
+if tok is None:
+    # Degraded path: every gcloud path failed (no gcloud binary, PERMISSION_DENIED on
     # secretmanager.versions.access, or a stale-token reauth prompt that can't run
     # non-interactively). Never silently substitute an empty string — an env var is the
     # documented secondary source, never a default.
     tok = os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa: qg-empty-fallback — env var legitimately absent; checked via `if not tok` immediately below
     if not tok:
         sys.exit(
-            f"gcloud ADC failed to resolve SLACK_ALERTS_READER_BOT_TOKEN ({exc}) and no "
-            "SLACK_ALERTS_READER_BOT_TOKEN env var is set as a fallback. Either fix gcloud auth, "
-            "or supply the token directly: "
+            f"gcloud failed to resolve SLACK_ALERTS_READER_BOT_TOKEN as both {_pinned_email!r} and the "
+            "ambient default account, and no SLACK_ALERTS_READER_BOT_TOKEN env var is set as a "
+            "fallback. Either activate the pinned SA locally (see "
+            "/codex/05-infrastructure/agent-slack-read-access.md), fix ambient gcloud auth, or "
+            "supply the token directly: "
             "SLACK_ALERTS_READER_BOT_TOKEN=<token> python3 scripts/dev/slack-read-channel.py ..."
         )
 

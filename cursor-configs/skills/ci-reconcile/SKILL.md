@@ -470,13 +470,18 @@ check in that session was a direct `gh`/`gcloud` sweep, never a second Slack rea
 the specific thing I'm looking at green" — they do not tell you about a DIFFERENT repo/PR/gate that just went red while
 you were heads-down on something else, which is exactly what a channel-wide Slack pull is for. Re-pull `#ci-failures`
 for the session's elapsed window immediately before writing the § 7 report, even if (especially if) the session has been
-running for a while. Separately: the GSM-backed read access (`scripts/dev/slack-read-channel.py`, § 0) depends on a
-`gcloud` user-OAuth ADC token that can expire mid-session on a long-running interactive session even though it worked at
-session start — if a re-poll attempt fails with a `gcloud`/ADC/reauth error, that is itself a coverage gap to report
-explicitly (not silently skip), since it means the rest of the session's "nothing more in Slack" claim was actually "I
-couldn't check," a materially different claim. This credential class needs the operator to run `gcloud auth login`
-interactively — you cannot self-heal it; say so plainly and keep working from `gh`/`gcloud` ground truth in the meantime
-rather than stalling on it.
+running for a while. Separately: the GSM-backed read access (`scripts/dev/slack-read-channel.py`, § 0) is pinned
+(2026-08-11 hardening) to the `unified-trading-sa` service-account identity first — a real, non-expiring local
+credential on every migrated host (AO's `ubuntu` worker user; the operator's laptop, since 2026-08-11 — see
+`/codex/05-infrastructure/agent-slack-read-access.md`) — precisely so it is NOT subject to a human's org-enforced reauth
+window. If a re-poll attempt still fails with a `gcloud`/reauth error, that means the pinned account isn't locally
+activated on THIS host (or its key is missing/revoked) — that is itself a coverage gap to report explicitly (not
+silently skip), since it means the rest of the session's "nothing more in Slack" claim was actually "I couldn't check,"
+a materially different claim. Self-heal path:
+`gcloud auth activate-service-account --key-file=~/.config/gcloud/keys/unified-trading-sa.json` if the key exists on
+this host already; only escalate to the operator if it doesn't (provisioning a new key is a real security decision, not
+a routine self-service action) — this is a materially smaller ask than the old "you must interactively
+`gcloud auth login`" gap.
 
 ## 7. Report
 

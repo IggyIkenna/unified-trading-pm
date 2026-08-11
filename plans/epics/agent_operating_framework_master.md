@@ -40,7 +40,7 @@ related_plans:
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
   - ../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md
   - ../active/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md
-  - ../active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md
+  - ../archive/2026_08/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md
   - ../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
@@ -417,7 +417,7 @@ cefi/defi/tradfi/prediction (sports treatment, generalized)
 **status**: active · **estimate**: 9.6 cal AI-days (class: research) **title**: Data-pipeline E2E milestones gate — 14
 cross-AG correctness criteria for the 5 asset-group consolidated closeouts
 
-### [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](../active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
+### [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](../archive/2026_08/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
 
 **status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
 

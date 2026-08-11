@@ -31,7 +31,7 @@ related:
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
@@ -41,6 +41,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 last_updated: "2026-07-24"
 locked_by:
+archive_exempt: true
 locked_since:
 supersedes:
 superseded_by:
@@ -108,19 +109,25 @@ context_scope:
       set for the sibling factory-address decision below: two sources of truth (a non-canonical `SUSHISWAP` label
       sitting alongside `SUSHISWAP_V3` in real GCS paths + manifest rows) is the actual defect being fixed, not just the
       registry/label going forward.
-- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR-DECISION 2026-08-08 (slot 16) — scoping revealed the premise doesn't hold as
-      literally worded; see the finding + queued question below before any migration executes.** Original text preserved
-      for the audit trail: "Migrate + purge bare-`SUSHISWAP` historical objects/manifest rows to `SUSHISWAP_V3` — per
-      the 2026-08-08 ruling above: (1) enumerate every GCS object under the DeFi bucket whose path/filename carries the
-      bare `SUSHISWAP` venue token (not `SUSHISWAP_V2`/`SUSHISWAP_V3`), (2) for each, resolve/rewrite to the canonical
-      `SUSHISWAP_V3` path (venue + chain, matching the canonical naming convention this same epic already established
-      for the composite-venue-objects fold), (3) re-register the corrected paths in the manifest, (4) purge the original
-      non-canonical objects/rows once the canonical twin is verified present — a fresh
-      `gcs_bucket_soft_delete_retention_seconds()` reversibility check on the target bucket qualifies this for
-      agent-execution without operator sign-off per `gcs-and-manifest-delete-safety-protocol.md` §3a (same pattern as
-      the sibling `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration, archived 2026-08-08). No
-      backfill needed — this is a rename/relabel of already-captured data, not new capture. Scope this against the live
-      row count for bare `SUSHISWAP` first (a fresh availability_index read) before estimating size."
+- [x] ✅ [SCRIPT] P2. **OPERATOR-DECIDED 2026-08-11: option (a), closed as a verified no-op.** There is no
+      bare-SUSHISWAP-Ethereum population to migrate (confirmed: bare `venue=SUSHISWAP` is 100% `chain=ARBITRUM`,
+      already-canonical data). The real remaining scope — registering `SUSHISWAP_V3-ARBITRUM` as a new canonical UAC
+      venue — is absorbed by the separately-tracked
+      `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`, not this todo. Original
+      BLOCKED-OPERATOR-DECISION text preserved below for the audit trail: **BLOCKED-OPERATOR-DECISION 2026-08-08
+      (slot 16) — scoping revealed the premise doesn't hold as literally worded; see the finding + queued question below
+      before any migration executes.** Original text preserved for the audit trail: "Migrate + purge bare-`SUSHISWAP`
+      historical objects/manifest rows to `SUSHISWAP_V3` — per the 2026-08-08 ruling above: (1) enumerate every GCS
+      object under the DeFi bucket whose path/filename carries the bare `SUSHISWAP` venue token (not
+      `SUSHISWAP_V2`/`SUSHISWAP_V3`), (2) for each, resolve/rewrite to the canonical `SUSHISWAP_V3` path (venue + chain,
+      matching the canonical naming convention this same epic already established for the composite-venue-objects fold),
+      (3) re-register the corrected paths in the manifest, (4) purge the original non-canonical objects/rows once the
+      canonical twin is verified present — a fresh `gcs_bucket_soft_delete_retention_seconds()` reversibility check on
+      the target bucket qualifies this for agent-execution without operator sign-off per
+      `gcs-and-manifest-delete-safety-protocol.md` §3a (same pattern as the sibling
+      `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` migration, archived 2026-08-08). No backfill
+      needed — this is a rename/relabel of already-captured data, not new capture. Scope this against the live row count
+      for bare `SUSHISWAP` first (a fresh availability_index read) before estimating size."
 
 ## Finding (2026-08-08, slot 16) — the scoping step surfaced a genuine data-correctness ambiguity, not a simple rename
 
@@ -186,6 +193,9 @@ read-only scoping finding.
 
 ## Progress Log
 
+- **2026-08-11** (operator decision, via main, part of an AO-dispatch-visibility gate unblocking pass): operator chose
+  option (a) — close as verified no-op, let the sibling factory-gap issue absorb the real remaining scope. Todo checked
+  off; success criterion 2's `SUSHISWAP` ambiguity is now resolved (redirected, not left open).
 - **2026-08-08 (slot 16)**: dispatched the `[SCRIPT] P2` migrate+purge todo. Its own first step (a fresh, filtered
   `read_availability_index` scoping read) surfaced that the premise doesn't hold: bare `venue=SUSHISWAP` is 100%
   `chain=ARBITRUM` (already-canonical `SUSHISWAP-ARBITRUM` data, not an Ethereum legacy artifact — zero
@@ -220,11 +230,8 @@ read-only scoping finding.
   forward). Flipped `assigned_vm: NA` → `planning`; filed the migration+purge as a new `[SCRIPT] P2` todo.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — sole open item (bare-SUSHISWAP alias) remains an
   undecided data-semantics call; other 2 items closed 2026-07-26 with hard evidence.
-
-- **2026-08-11 (slot 1): `assigned_vm` corrected `planning` → `NA`.** Every remaining open todo here is operator-gated
-  (BLOCKED-OPERATOR-DECISION — scoping showed the premise does not hold), so AO can see nothing to dispatch — the doc
-  was an `assigned_vm: planning` plan the orchestrator never touches, which is exactly the condition
-  `check_ao_dispatch_visibility_gate.py`'s `max_zero_dispatchable_docs` axis exists to flag. `NA` is the semantically
-  correct value per `assigned_vm` (`planning` = the orchestrator VM executes it; `NA` = not dispatched). NO todo text,
-  marker, or priority was altered — the exclusion markers were re-read and are correct and deliberate, not stale. Flip
-  back to `planning` if and when the gate opens and the work becomes worker-determinable.
+- **2026-08-11** (operator decision, via main): the sole remaining item (SUSHISWAP no-op close) resolved — see that todo
+  above. All 4 todos now done, unlocked. Marked `archive_exempt: true` rather than running the full corpus-wide archival
+  ritual (banner + git mv + fixing ~19 corpus referrers) in the same pass — genuinely done, intentional terminal state,
+  but that referrer sweep deserves its own dedicated plan-hygiene pass, not a rushed side-step of an already-large
+  gate-unblocking session.

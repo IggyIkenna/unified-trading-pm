@@ -461,3 +461,12 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   proven from the CLI's own control flow, not inferred from timing); CEFI/BTC/ETH rows were never on a broken path to
   begin with. No code change shipped — none is needed; this was a pure investigation task and the evidence is conclusive
   without a corrective commit. Checked this item's box.
+- **2026-08-11** (operator decision, via main, part of an AO-dispatch-visibility gate unblocking pass): operator
+  approved killing the 14 out-of-scope VMs named in the linked scope-ruling doc's 2026-08-09 ~13:16Z snapshot. Live
+  re-check found those specific 14 already completed naturally — nothing to kill there. Live check DID find a different,
+  newly-discovered set of 7 out-of-scope commodity-futures VMs still running (CL/GC/HG/NG/PA/PL), confirmed NOT from the
+  known (still-paused) `wave_launcher.py` cron — filed as a fresh issue,
+  `/plans/active/issues/tradfi_out_of_scope_commodity_futures_wave_2026_08_11.md`, since it's outside the scope of what
+  was actually approved. **This todo's singleton-lock blocker is likely still occupied** by that new set (any RUNNING
+  `tradfi-bf-*` holds the lock) — not re-verified against the ES_OPT retry directly this session; the P1 BLOCKED-ON tag
+  stays as-is until the new issue's kill/no-kill call resolves.

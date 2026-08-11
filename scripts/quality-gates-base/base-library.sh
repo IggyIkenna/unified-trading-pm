@@ -44,6 +44,8 @@ set -e
 
 # ── SHARED FOUNDATION (colors, logging, run_timeout, REPO_ROOT, CI_STATUS) ──
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
+# Fail closed on a venv that drifted from uv.lock (see qg_assert_venv_fresh).
+qg_assert_venv_fresh
 cd "$PROJECT_ROOT"
 
 # ── QG RESOURCE GOVERNANCE (mirror of base-service.sh) ────────────────────────
