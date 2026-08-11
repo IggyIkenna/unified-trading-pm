@@ -91,7 +91,7 @@ code_refs:
 > Two buckets per legacy object: **SAFE-TO-DELETE** (canonical twin verified) vs **MIGRATE-FIRST** (no twin → COPY to
 > canonical first via `migrate_*_v9_canonical`, then delete-safe). Require **100% canonical-twin coverage per AG**
 > before executing that AG's delete-list; deletion is OPERATOR-GATED. SSOT:
-> `plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` § "GCS delete safety — path/schema
+> `plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md` § "GCS delete safety — path/schema
 > migration prerequisite map" (moved 2026-07-26 — was
 > `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` before its 2026-07-24 3-way line-cap
 > split + 2026-07-26 archival) + `plans/audit/results/gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`.

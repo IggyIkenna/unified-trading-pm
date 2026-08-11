@@ -17,7 +17,7 @@ related:
   [
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
@@ -49,7 +49,7 @@ context_scope:
   [
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
   ]
 ---
 

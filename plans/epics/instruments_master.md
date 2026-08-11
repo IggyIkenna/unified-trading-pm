@@ -47,7 +47,7 @@ related_plans:
   - ../active/instruments_completion_tracker_2026_07_06.md
   - ../active/instruments_foundation_completeness_2026_06_24.md
   - ../active/instruments_foundation_phase0_cross_cutting_2026_07_24.md
-  - ../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
+  - ../archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
   - ../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md
   - ../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md
   - ../active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
@@ -87,7 +87,7 @@ locked_since: 2026-05-08
 >   →
 >   [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md);
 >   core F1-F7/N1-N9 audit-remediation residuals →
->   [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md);
+>   [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md);
 >   venue-onboarding + ops-hardening →
 >   [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)
 >   (absorbed `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
@@ -497,7 +497,7 @@ residuals
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
 finalize (reconcile source docs + archive)
 
-### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
+### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Instruments <-> MTDS F1-N9 consistency
 remediation -- residual continuation

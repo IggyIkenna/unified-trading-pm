@@ -42,7 +42,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-2, satellite-docs, instrumen
 related:
   [
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
@@ -69,7 +69,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

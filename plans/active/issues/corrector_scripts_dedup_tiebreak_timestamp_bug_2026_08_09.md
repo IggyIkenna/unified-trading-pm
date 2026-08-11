@@ -30,7 +30,7 @@ tags: [manifest, consolidator, data-correctness, dedup, per-vm-shards, corrector
 related:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     plans/active/cefi_consolidated_closeout_2026_07_18.md,
     plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]

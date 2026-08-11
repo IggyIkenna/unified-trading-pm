@@ -20,7 +20,7 @@ tags: [ao-dispatch, close-out, reclassification, manifest, consolidator, dedup, 
 related:
   [
     /plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

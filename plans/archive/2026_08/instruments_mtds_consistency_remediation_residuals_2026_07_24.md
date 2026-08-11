@@ -8,7 +8,7 @@ summary:
   map, the execution sequence, the v9 `_index` column population + venue/instrument_type spelling canonicalisation
   (N6r), the migration-unmappable-residue diagnosis, and Phase A-D findings/remediation. Mostly DONE (29/43 todos); 14
   residuals remain open.
-status: active
+status: complete # archived 2026-08-11 — every todo done (zero open); close-out verified by the finalize plan
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -50,11 +50,11 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: data_engineering
-last_updated: "2026-08-09"
+last_updated: "2026-08-11"
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize
 depends_on: []
 source:
   [
@@ -998,3 +998,27 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` with the correct scoped ADD+REMOVE swap design (mirrors the
   sports K1K2 precedent) rather than risk a rushed live write against a 1h-estimated task that is actually a multi-day
   migration. No live changes made.
+- **2026-08-11 (slot 17, finalize reconciliation)**: re-verified both remaining items' evidence before archival (per
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md` todo 1) — N1b's 4 cited commits
+  (instruments-service@097e230b/@8cf44c66/@159c0ebe, unified-trading-library@a35819ee) all confirmed present on this
+  checkout; N5r/N6r's EXTRACTED claim confirmed genuine (the batch2 doc exists and carries the item; its own remaining
+  VM-execution sub-step is tracked live in `issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`, not
+  silently dropped by this doc's archival). Migrated a prose-only deferral (the 2026-07-13 "who executed the
+  undocumented legacy delete" follow-up in the Fresh-audit section above, never a tracked todo) into
+  `issues/undocumented_legacy_gcs_delete_provenance_2026_08_11.md` per the archival-discipline "todos not prose" rule.
+  Codex-alignment check: no new contract — `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` already carries
+  the twin-verify/five-part-proof invariant this doc pioneered, and
+  `/codex/02-data/availability-manifest-and-data-status.md` already documents the v9/pipeline_mode column-population
+  history; both were sources this doc executed against, not targets this doc's completion changes. Corpus-wide referrer
+  sweep: 12 structured-path citations (`related:`/`context_scope:`/`code_refs:`-shaped, i.e. what
+  `check_reference_paths.py` enforces) repointed to `plans/archive/2026_08/`; `plans/active/INDEX.md` left untouched
+  (auto-generated, regenerates on its own cadence); a handful of bare-filename prose mentions (no leading-slash path,
+  narrative-only, e.g. "children `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (29/43 done...)")
+  left as historical prose, not link-shaped. Zero open todos confirmed (`grep -c '^- \[ \]'` = 0). Archiving now via the
+  standard 6-step ritual.
+
+> **ARCHIVED 2026-08-11** — every todo done (zero open `- [ ]`), `locked_by` empty. Archived via the standard 6-step
+> ritual per `instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md`. The N5r/N6r item's remaining
+> live-execution sub-step (the prod apply + post-verify) is NOT archived away with this doc — it stays open and tracked
+> in `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`. superseded_by:
+> `instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`.

@@ -63,7 +63,7 @@ context_scope:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    /plans/archive/2026_08/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
     instruments-service/scripts/audit_instruments_store_legacy_gcs_delete_list.py,
     instruments-service/scripts/canonicalize_instruments_store_index.py,
     instruments-service/instruments_service/engine/orchestrator,
