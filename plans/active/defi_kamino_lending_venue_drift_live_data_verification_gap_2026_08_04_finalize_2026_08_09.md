@@ -69,16 +69,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P3. **Reconcile.** From a cloud VM (this read is a documented heavy-I/O exception — do not retry from a
-      laptop, see `/codex/05-infrastructure/vm-launcher-runbook.md`), run the bounded, column-pruned
-      `read_availability_index(bucket, columns=["venue","chain","data_type","instrument_type","capture_status"],     filters=[("venue","==","kamino_lending")])`
-      (case variants too) scoped to the accumulation window 2026-08-05T17:42Z (last retire run) through
-      2026-08-06T08:29Z (deploy landed, ~15h). If any rows are found, re-run
-      `market-tick-data-service/scripts/one_offs/retire_kamino_lending_legacy_venue_2026_08_05.py --apply`
-      (already-proven idempotent — flips `capture_status` on manifest index rows only, snapshots a pre-write backup +
-      `.bak` first, never deletes a GCS object). **Done when**: the check returns zero rows (either none accumulated, or
-      the re-run retired them), with the row count cited in both this todo and the source doc's checkbox — flip the
-      source doc's `[DATA] P2` todo to `[x]` with that evidence.
+- [x] ✅ [DATA] P3. **Reconcile — DONE (slot 17, 2026-08-09).** The bounded, column-pruned
+      `read_availability_index(bucket, columns=["venue","date","chain","data_type","instrument_type","capture_status", "attempted_at","written_at"], filters=[("date",">=","2026-08-05")])`
+      check was executed by slot 17 on 2026-08-09 (memory-bounded via `run-bounded-analysis.sh --mem-cap 4G`). Row-group
+      pushdown on `date>=2026-08-05` returned 399,456 rows; case-insensitive `venue=="KAMINO_LENDING"` match found 113
+      rows — all `date=2026-08-05`, all already `capture_status=attempted_failed` (the 2026-08-05 retire run's own
+      output). **Zero rows with `date=2026-08-06`** and **zero `capture_status=="captured"` rows** anywhere in the
+      `date>=2026-08-05` slice. The source doc's `[DATA] P2` todo was already flipped by slot 17 with this evidence. No
+      `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` re-run was needed. — **0 rows, verified 2026-08-09
+      (slot 17).**
 - [ ] [DOC] P3. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md` once todo 1 confirms it is fully
@@ -93,3 +92,6 @@ context_scope:
 
 - **2026-08-09**: authored alongside the source doc's `assigned_vm: NA -> planning` reclassification
   (na-eligibility-audit defi tranche run).
+- **2026-08-11 (slot 9)**: todo 1 flipped — the reconcile was already executed by slot 17 on 2026-08-09 (0 rows needing
+  remediation; see source doc Progress Log for full evidence). No re-run of
+  `retire_kamino_lending_legacy_venue_2026_08_05.py` was needed. Proceeding to archival (todo 2).
