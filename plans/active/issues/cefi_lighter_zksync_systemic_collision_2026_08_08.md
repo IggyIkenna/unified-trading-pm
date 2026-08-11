@@ -372,3 +372,15 @@ pair (2026-07-03 `0G`):
   Cron resumed + verified ENABLED (was paused for the apply). /blocked to operator for the decision. Both comparison
   fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) shipped + tarball-republished — the comparison layer is
   now correct for every non-divergent pair.
+- **2026-08-10 (slot 18, operator answer on BLK-0a76df10: DIRECTION A — LEAVE-BOTH, disposition=final)** — The BTC
+  2026-05-01 pair is a fully-characterized Finding 2/5/8 "two real captures" class; leave-both is the unique lossless
+  resolution (prefer-wire/prefer-canonical both lose data). **Range-2 apply proceeds via date-range split EXCLUDING
+  2026-05-01** (established single-transitional-day precedent): apply `2026-04-18..04-30` + `2026-05-02..07-24` as two
+  ranges; 05-01 stays a tracked leave-both residual (both objects, wire non-canonical). **Range 1 (2026-04-18..04-30)
+  APPLIED — `canonical-migration-cefi-late-renames-20260810-234720`, EXIT_STATUS=0**:
+  `Outcome breakdown {already_canonical: 571, plan: 1737, would_rename: 1218, would_upgrade: 519}` +
+  `Collisions: 0 unhandled`; `GCS rename stats` executed;
+  `MANIFEST {manifest_total_rows_before: 26495621, in_scope_rows: 6965, instrument_ids_relabeled: 4469, rows_collapsed_in_dedup: 4573}`;
+  VM self-deleted on completion. **Range 2 (2026-05-02..07-24) IN FLIGHT —
+  `canonical-migration-cefi-late-renames-20260810-235650`** (cron paused). After Range-2: resume cron + verify ENABLED,
+  then flip the apply todo + final verify.
