@@ -187,9 +187,21 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260807-130321/`. LAUNCH_PARAMS.json
       confirmed written T+1min. unified-trading-pm@0273bc1e0
 
-- [ ] [DATA] P3. Investigate why 2025-11-01 and 2026-01-01 have no BYBIT futures_chain raw tick data in the cefi-prd GCS
-      bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).
-      Determine if Tardis re-download is needed. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P3. Investigate why 2025-11-01 and 2026-01-01 have no BYBIT futures_chain raw tick data in the cefi-prd
+      GCS bucket (no `instrument_type=futures_chain` directory under `venue=BYBIT` for those 2 days in batch_tardis).
+      Determine if Tardis re-download is needed. (repo: market-tick-data-service) **FINDING: the premise is FALSE — raw
+      tick data DOES exist for both days; no Tardis re-download needed.** Direct GCS listing
+      (`get_storage_client().list_blobs`, bucket `market-data-tick-cefi-prd-central-element-323112`) of
+      `raw_tick_data/by_date/day={day}/pipeline_mode=batch_tardis/asset_group=cefi/venue=BYBIT/instrument_type=futures_chain/data_type=trades/`
+      shows: **2025-11-01** → 4 shards (underlying=BTC 65,135B, DOGE 39,611B, SOL 13,477B, XRP 18,384B); **2026-01-01**
+      → 5 shards (BTC 14,277B, DOGE 22,528B, ETH 23,613B, SOL 24,678B, XRP 25,198B). Confirmed the prior "no raw data"
+      claim (this doc's Progress Log, slot-7 data_engineering 2026-08-07, and the P2 relaunch todo's exclusion note
+      below) was a **probe artifact**: its GCS prefix omitted the `pipeline_mode=batch_tardis/` hive segment
+      (`market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py::build_partition_path` — v9 paths are
+      `day=.../pipeline_mode={pm}/asset_group=cefi/venue=.../instrument_type=.../data_type=...`). Reproduced: the same
+      no-`pipeline_mode` prefix returns 0 blobs even on the known-good day 2023-06-01, proving it's a wrong-vocabulary
+      probe, not a real absence (per `/codex/02-data/four-surface-reconciliation-procedure.md`'s "confirm you probed the
+      vocabulary the WRITER actually emits" rule). The P2 relaunch todo's day-scope exclusion is corrected below.
 
 - [ ] [DATA] P2. **Once `mdps-backfill-cefi-20260808-095136` reaches a terminal state, relaunch scoped PER-DAY** (6
       single-day launches — `--start-date`==`--end-date` for each of 2023-06-01, 2023-08-02, 2023-11-02, 2024-02-01,
@@ -204,7 +216,13 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       found in `candle_write_mixin.py`/`canonical_writer.py`), which would recur regardless of `--force` correctness.
       Not yet live-confirmed (no post-fix relaunch has completed yet). When THIS todo's own audit runs, explicitly check
       for this failure mode before declaring done — see
-      `issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`.
+      `issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`. **SCOPE CORRECTION (2026-08-11,
+      data_engineering slot-30)**: this todo's 6-day scope excludes 2025-11-01 and 2026-01-01 on the premise that BYBIT
+      has no raw tick data those days — that premise is FALSE (see the P3 todo's finding above: raw
+      `instrument_type=futures_chain/data_type=trades` shards exist for both, 4 and 5 underlyings respectively; the "no
+      raw data" claim was a probe artifact from an omitted `pipeline_mode=batch_tardis/` path segment). **When this todo
+      executes, WIDEN scope to 8 single-day launches** (add 2025-11-01 and 2026-01-01 to the 6 listed above) — do not
+      carry the exclusion forward.
 
 ## 2026-08-08 84-cell audit (6 BYBIT + 6 DERIBIT days, pre-relaunch baseline)
 
@@ -280,3 +298,11 @@ relaunch todo added above for once it reaches a terminal state.
   logging — alive, not stale). Terminal state NOT reached — todo 2 remains gated on it. Releasing back to the queue with
   `reason_code: GATED` (fleet cooldown); not busy-waiting on a week-scale external condition (~175h ETA at the
   documented ~13 min/day rate).
+- **data_engineering (slot 30) 2026-08-11**: Resolved the P3 raw-data-gap todo. Direct GCS listing (correct v9 path
+  incl. `pipeline_mode=batch_tardis/`) proves BYBIT `instrument_type=futures_chain/data_type=trades` raw ticks EXIST for
+  both 2025-11-01 (4 underlyings) and 2026-01-01 (5 underlyings) — see the flipped todo above for the full evidence. The
+  prior "no raw data" claim (2026-08-07, carried into the P2 relaunch todo's day-scope exclusion) was a probe artifact:
+  an earlier GCS check omitted the `pipeline_mode=batch_tardis/` hive segment, which returns 0 blobs for EVERY day
+  (reproduced on the known-good 2023-06-01) — not a real gap. No Tardis re-download needed. Appended a SCOPE CORRECTION
+  note to the P2 relaunch todo so its next execution widens from 6 to 8 days instead of carrying the false exclusion
+  forward.
