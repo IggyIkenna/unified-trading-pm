@@ -104,6 +104,14 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the reconcile step's autostash (or a prek patch save/restore cycle) QUARANTINED the
+# caller's edits -- the working tree matches HEAD but NOT origin/$BRANCH, and the named files
+# had a real diff at entry. Never reported as success: the content is not on the remote, and
+# a bare re-run would push HEAD content (i.e. nothing of yours). The message prints the stash
+# list + per-file extraction commands for recovery. Added 2026-08-11
+# (safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md, second symptom -- the old
+# code verified against HEAD here, so a quarantined edit looked identical to an already-landed
+# one and exited 0).
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -1116,17 +1124,66 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already on remote"
+      # Verify against the REMOTE ref, not HEAD. If the reconcile step's autostash
+      # quarantined the caller's edits, the working tree now matches HEAD but NOT
+      # origin -- a HEAD-based check passes for the wrong reason, and this script
+      # would exit 0 reporting "a concurrent session landed identical content" while
+      # the work sits unrecoverable in an autostash stack that will be overwritten
+      # on the next `pull --rebase --autostash`. Measured twice 2026-08-10: the
+      # caller's uncommitted edits were destroyed, and "success" was reported.
+      # --- safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md (todo 1)
+      if git diff --quiet "origin/$BRANCH" -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+        # Content already on the REMOTE -- a peer genuinely landed the identical edit. The
+        # certify gate then distinguishes the three things "matches origin" can still mean:
+        # truly landed (0), no-op-at-entry (12), or entry-had-a-diff-but-blob-never-moved
+        # (13 -- the caller's edit was quarantined to HEAD while origin sat unchanged, the
+        # EXACT incident shape; exit 13's recovery text names the stash).
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files already match origin/${BRANCH} (a concurrent session landed identical content) -- treating as success."
           final_ok=true
           break
         fi
-        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+        echo "  content matches origin/${BRANCH} but end-to-end verification failed -- not trusting the fallback; retrying"
+      elif git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+        # Working tree matches HEAD but NOT origin. Two sub-cases, split on entry state:
+        if _sdp_all_named_noop_at_entry; then
+          # Nothing of the caller's to ship AT ENTRY -- identical to HEAD before this script
+          # ran, and origin has since moved. That is the plain no-op case, not a quarantine:
+          # route through the certify gate so it exits 12 with the tell-them-apart guidance
+          # (preserves the pre-existing exit-12 contract for this state).
+          _sdp_certify_success || exit $?
+          echo "✅ Named files already match HEAD at entry (origin moved independently) -- treating as success."
+          final_ok=true
+          break
+        fi
+        # The caller HAD a real diff at entry; the working tree now sits at HEAD content while
+        # origin/$BRANCH differs. The reconcile step's autostash (or a prek patch save/restore
+        # cycle) quarantined the caller's edits -- this is NOT a benign "already landed" case:
+        # the content never reached the remote, and re-running without recovering the stash
+        # first would push whatever is on disk now (HEAD content, i.e. nothing).
+        {
+          echo
+          echo "🛑 NOTHING STAGED -- YOUR EDITS WERE QUARANTINED DURING RECONCILE."
+          echo "   Working tree matches HEAD but NOT origin/${BRANCH}, and the named file(s) had a"
+          echo "   real diff when this run started -- so the reconcile step's autostash (or a prek"
+          echo "   patch save/restore cycle) swept your uncommitted changes into a stash entry."
+          echo "   This is NOT a benign 'already landed' case: your content is NOT on the remote."
+          echo
+          echo "   RECOVER your content before re-running:"
+          git stash list 2>/dev/null | head -8 | sed 's/^/     /'
+          echo "     Inspect a stash entry:  git stash show -p 'stash@{0}'"
+          echo "     Extract ONE file (safer than popping -- the stash may hold a peer's WIP):"
+          for _f in "${FILES[@]}"; do
+            echo "       git show 'stash@{0}:${_f}' > ${_f}"
+          done
+          echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md"
+          echo "   (Second symptom -- the quarantine-then-stage ordering)."
+        } >&2
+        exit 14
       else
-        echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
+        echo "  at least one named file is absent from HEAD or differs from the working tree -- staging genuinely failed, not already-landed; retrying"
       fi
     fi
 

@@ -66,31 +66,37 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message, not the hard could-not-stage one" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
   git push -q origin HEAD:live-defi-rollout
 
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
+  # The F8 gate (pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10) means the
+  # final disposition of a no-op-at-entry is exit 12 (indistinguishable causes), NOT success --
+  # but the WORDING distinction this test guards (staging-succeeded vs staging-failed) is
+  # unchanged: the benign "nothing to stage" branch is reached, the hard "could not stage"
+  # branch is not.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
-  [[ "$output" == *"✅"* ]]
+  # F8: not a success claim anymore.
+  [[ "$output" != *"✅"* ]]
 }
 
 @test "could-not-stage and nothing-to-stage produce distinct exit codes for the same script" {
-  # could-not-stage: persistent index.lock on a brand-new file -- must not succeed.
+  # could-not-stage: persistent index.lock on a brand-new file -- hard failure, escape hatch.
   echo "brand new content" > new_doc.md
   touch .git/index.lock
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: add new_doc" --files "new_doc.md"
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: genuinely already-landed tracked file -- F8 exit 12, distinct from 8.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +105,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -ne 0 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
