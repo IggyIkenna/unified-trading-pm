@@ -139,7 +139,7 @@ The measured contrast, same tree, same host:
 
 The 4 failures that vanish between those rows — `fleet-typed-agent-work` ×2 and `worker-chat` ×2 — each pass in
 isolation, which is the signature of starvation rather than a defect. The 2 that remain are genuine and are NOT harness
-issues; they moved to `/plans/active/issues/ao_dashboard_e2e_failures_exposed_by_repaired_harness_2026_08_11.md`.
+issues; they moved to `/plans/archive/2026_08/issues/ao_dashboard_e2e_failures_exposed_by_repaired_harness_2026_08_11.md`.
 
 ## 5. The original evidence for "55s", corrected
 
@@ -178,6 +178,6 @@ headroom for a genuinely loaded host.
   (`serversForThisRun()`) took a single-spec run from 9.3 min to 14.4 s and made finding 4 evaporate;
   `npm run test:e2e:all` runs the suite one project at a time (81 passed). Two genuine non-harness failures the working
   suite exposed were handed to
-  `/plans/active/issues/ao_dashboard_e2e_failures_exposed_by_repaired_harness_2026_08_11.md` rather than papered over.
+  `/plans/archive/2026_08/issues/ao_dashboard_e2e_failures_exposed_by_repaired_harness_2026_08_11.md` rather than papered over.
   Also corrected this doc's own opening claim: the "55s boot" was a contention artefact, not a fixed cost (~4s on a
   quiet host).
