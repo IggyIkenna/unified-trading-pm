@@ -312,10 +312,17 @@ removal + casing normalization remain before backfill-resume.
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
       `combo` string — both TradFi and CEFI (CEFI's Deribit multi-expiry wrapper is the direct `combo` string
       collision). Migrate existing historical manifest rows written under the old convention. Repos:
-      market-tick-data-service, unified-api-contracts.
+      market-tick-data-service, unified-api-contracts. **Recover-first (2026-08-11, review finding agt-533c4e):**
+      stranded implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `1777229f`
+      (rename combo wrapper to combo_chain across writer+manifest) and `e5581a63` (canonicalize chain underlying
+      naming). Cherry-pick from any slot worktree (shared object store), verify + QG, ship via quickmerge — do NOT
+      re-implement. `8147050e` (BYBIT futures_chain venue) is redundant vs origin, skip.
 - [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
       isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
-      systemic. Repo: market-tick-data-service.
+      systemic. Repo: market-tick-data-service. **Recover-first (2026-08-11, review finding agt-533c4e):** stranded
+      implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `2bcec56e` +
+      `5706f9bb` (force lifecycle_phase to string dtype). Cherry-pick from any slot worktree, verify + QG, ship via
+      quickmerge — do NOT re-implement.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
