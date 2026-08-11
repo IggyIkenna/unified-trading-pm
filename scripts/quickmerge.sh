@@ -96,6 +96,43 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # Fallback: .act-secrets at repo root (e.g. single-repo dev)
 [ ! -f "${WORKSPACE_ROOT}/.act-secrets" ] && [ -f "${REPO_ROOT}/.act-secrets" ] && WORKSPACE_ROOT="$REPO_ROOT"
 
+# ── PM_ROOT: resolve the unified-trading-pm checkout by CONTENT, not by directory NAME ──────
+# (2026-08-11, pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md, todo 2 --
+# mirrors scripts/quality_gates/_pm_root.py's fix for the identical class in Python, F7). Every
+# call site below used to hardcode "$WORKSPACE_ROOT/unified-trading-pm/...", which only works
+# when the sibling checkout's directory is literally named that. Measured 2026-08-11 shipping
+# FROM a private worktree: STAGE 2 failed to find pre-flight-audit.sh with a bare "not found at
+# <path> — required" that named no assumption, because the worktree's parent had no directory
+# by that literal name -- even though the PM repo itself was reachable one level up.
+# Resolution order: (1) the conventional layout, unchanged for every normal multi-repo
+# workspace; (2) this run's OWN repo, when it IS the PM checkout just renamed (a worktree of
+# PM itself); (3) any WORKSPACE_ROOT child that has the right shape, by content, same test the
+# Python resolver uses. Empty PM_ROOT is a distinct, expected outcome (a lone-repo workspace
+# with no PM sibling at all) -- every downstream user must treat that as a loud diagnosis, never
+# a silent path-not-found.
+_qm_looks_like_pm_root() {
+  [ -d "$1/plans" ] && [ -d "$1/scripts/quality_gates" ]
+}
+_qm_resolve_pm_root() {
+  _qm_looks_like_pm_root "$WORKSPACE_ROOT/unified-trading-pm" && { echo "$WORKSPACE_ROOT/unified-trading-pm"; return 0; }
+  _qm_looks_like_pm_root "$REPO_ROOT" && { echo "$REPO_ROOT"; return 0; }
+  local _qm_sib
+  for _qm_sib in "$WORKSPACE_ROOT"/*/; do
+    [ -d "$_qm_sib" ] || continue
+    _qm_looks_like_pm_root "${_qm_sib%/}" && { echo "${_qm_sib%/}"; return 0; }
+  done
+  return 1
+}
+PM_ROOT="$(_qm_resolve_pm_root)" || PM_ROOT=""
+if [ -z "$PM_ROOT" ]; then
+  echo "[quickmerge] ⚠️  no unified-trading-pm checkout found under $WORKSPACE_ROOT (looked for a" >&2
+  echo "   directory containing both plans/ and scripts/quality_gates/, and for this repo itself" >&2
+  echo "   being that checkout). PM-dependent stages (dependency alignment, pre-flight audit," >&2
+  echo "   push-host-governor, workspace-manifest lookups) will skip or fail with a named" >&2
+  echo "   diagnosis below rather than guessing a path. Expected in a lone-repo/sibling-less" >&2
+  echo "   worktree -- see codex/05-infrastructure/per-tab-worktrees.md." >&2
+fi
+
 # push-host-governor.sh (2026-08-09, cross-slot push contention): stubs defined FIRST,
 # unconditionally, so `set -e` above can never trip on "command not found" if the PM checkout
 # is missing/stale relative to this copy of quickmerge.sh -- source only OVERRIDES them with the
@@ -108,7 +145,7 @@ push_gov_acquire_validate() { :; }
 push_gov_release_validate() { :; }
 push_gov_acquire_push() { :; }
 push_gov_release_push() { :; }
-_QM_PUSH_GOV_FILE="$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/push-host-governor.sh"
+_QM_PUSH_GOV_FILE="$PM_ROOT/scripts/dev/push-host-governor.sh"
 if [ -f "$_QM_PUSH_GOV_FILE" ]; then
   # shellcheck disable=SC1090
   source "$_QM_PUSH_GOV_FILE"
@@ -429,10 +466,17 @@ fi
 # fleet one:
 #   * Laptop (Ikenna / Harsh): interactive sessions have no allocation mechanism -- two
 #     Claude sessions routinely share one .tabs/N checkout (CLAUDE.md documents this as an
-#     accepted operating mode). Isolation ON.
+#     accepted operating mode). Isolation ON in principle...
 #   * agent-orchestrator planning VM: the dispatcher assigns ONE task at a time per slot, and
 #     each slot is already its own clone. There is no second writer to race, so isolation
 #     would add a full worktree checkout per commit for zero safety gain. Isolation OFF.
+# ...but STALE as of the same-day correction in `_qm_should_isolate` below: "auto" resolves to
+# OFF UNCONDITIONALLY on every host, laptop included, until the venv-resolution problem
+# described there is solved — this comment predates that correction and describes intent, not
+# current behaviour. Isolation only ever runs today via an explicit `--isolated` /
+# `QUICKMERGE_ISOLATED=force`. (Left un-misleading here after it derailed part of the
+# investigation into pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md todo 1 —
+# see the block above _QM_SELF.)
 # Host detection reuses slot-identity-lib.sh's existing signal rather than inventing one:
 # ORCHESTRATOR_VM_ID / VM_NAME / `git config --global slotIdentity.host`, falling back to
 # "laptop". Explicit --isolated / --no-isolated always win; QUICKMERGE_ISOLATED sets the
@@ -503,9 +547,9 @@ fi
 # shipping; nothing watched the REST of the tree, so a reconcile that ate an uncommitted edit to
 # an unrelated file did so silently and still reported success. Measured 2026-08-10.
 _QM_WIP_SNAPSHOT=""
-if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" ]; then
+if [ -f "$PM_ROOT/scripts/dev/tree-wip-guard.sh" ]; then
   # shellcheck source=/dev/null
-  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" 2>/dev/null || true
+  source "$PM_ROOT/scripts/dev/tree-wip-guard.sh" 2>/dev/null || true
   declare -F wip_guard_snapshot >/dev/null 2>&1 && _QM_WIP_SNAPSHOT="$(wip_guard_snapshot)"
 fi
 
@@ -620,9 +664,114 @@ _qm_assert_entry_change_landed() {
 #     unconditional isolation is NOT simply copied here.
 #   * We re-exec "$_QM_SELF" (resolved before any cd), never the worktree's own copy, or a
 #     caller running a locally-fixed script would silently get the committed version instead.
+# ── isolation INPUT protection (2026-08-11, todo 1 of
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md) ──────────────────────
+# Isolation COPIES --files into the throwaway worktree but never touches the CALLER's own
+# copy — the caller's checkout keeps those same paths sitting dirty on disk for the entire
+# isolated run. That is a live target for a CONCURRENT PEER process reconciling the SAME
+# shared checkout: any tracked file dirty there that isn't in THAT peer's own --files is
+# exactly what autostash_guard_bound_backlog's extreme-backlog quarantine (tree-wip-guard.sh)
+# sweeps up — it has no way to know the dirt belongs to an isolated ship in flight elsewhere.
+#
+# What this is NOT: the originally-filed hypothesis was that STAGE 0.4's reconcile runs
+# against the caller's checkout BEFORE isolation copies files in. Verified false by reading
+# the code, not by re-running it: the isolated CHILD is created `--detach` and STAGE 5's
+# _qm_checkout_ship_branch forces it to STAY detached for the entire run (QM_IN_ISOLATION
+# short-circuits before the checkout), so `git branch --show-current` is empty at all three
+# _qm_stage_0_4_not_behind_gate call sites and the reconcile — including
+# autostash_guard_bound_backlog — never runs at all inside an isolated child. The PARENT
+# process re-execs and exits before ever reaching STAGE 0.4 either. So the mechanism that
+# actually moved the caller's tree was a PEER process (a second quickmerge or safe-doc-push
+# run in the SAME shared checkout, non-isolated) legitimately quarantining what looked, from
+# its perspective, like unrelated foreign dirt — corroborated by the doc's own second data
+# point, a repeat revert of the same files 30 minutes later "with no quickmerge of mine
+# running". Isolation's actual gap is narrower but just as real: it never evacuates the INPUT
+# from the caller's tree, so that tree stays a valid target for exactly that peer sweep for as
+# long as the isolated run takes.
+#
+# Fix: evacuate the caller's dirty copy of --files into a NAMED stash (never dropped by us,
+# always recoverable) for the run's duration, so a peer's dirty-tree sweep sees a clean file
+# and leaves it alone, then restore it unconditionally when the isolated run returns — success
+# or failure — so the caller's tree ends up exactly as they left it either way.
+_qm_iso_evac_find() {
+  # Looked up by MESSAGE, not by stash@{N} index: refs/stash is ONE ref shared by every
+  # linked worktree of this repo, so the isolated CHILD's own stash operations (STAGE 5's
+  # "stash before branch switch", the commit-retry loop) interleave with this entry in the
+  # same list and shift its index before we get back here to restore it.
+  git stash list 2>/dev/null | grep -F -- "$1" | head -1 | sed -E 's/^(stash@\{[0-9]+\}).*/\1/'
+}
+# Stash OUT (by name, never dropped here) every path in $2 that is currently dirty (unstaged
+# diff vs HEAD) in the repo at cwd. Prints the marker to stdout iff something was evacuated;
+# prints nothing and returns 0 if nothing needed it (a no-op is not a failure). Returns 1 only
+# if `git stash push` still fails after retrying.
+#
+# RETRIES on a transient failure (2026-08-11, coordinator review question: what happens under
+# TWO concurrent isolated runs in the same caller checkout). Measured with a real stress test
+# (30 evacuate calls across 15 concurrent same-checkout pairs, different files each side): 15/30
+# (50%) of the LOSING side's `git stash push` failed outright on `.git/index.lock` contention
+# with the other side's simultaneous push, no retry, first attempt only. Safe to retry: a failed
+# `git stash push` makes NO changes to the working tree or index (git only resets the pathspec's
+# content AFTER the stash object is successfully created), so re-attempting after the lock clears
+# cannot double-apply or corrupt anything -- it either succeeds cleanly or fails exactly as before.
+# $1: unique marker message  $2: space-separated candidate paths (the run's --files)
+_qm_iso_evacuate_caller_dirty() {
+  local marker="$1" files="$2" f targets=()
+  # shellcheck disable=SC2086
+  for f in $files; do
+    [ -f "$f" ] || continue
+    git diff --quiet -- "$f" 2>/dev/null || targets+=("$f")
+  done
+  [ ${#targets[@]} -gt 0 ] || return 0
+  for _ in 1 2 3; do
+    if git stash push -m "$marker" -- "${targets[@]}" >/dev/null 2>&1; then
+      printf '%s\n' "$marker"
+      return 0
+    fi
+    sleep 0.2
+  done
+  return 1
+}
+# Restore whatever _qm_iso_evacuate_caller_dirty stashed under $1, unconditionally — the
+# caller decides what "success" means, not this function; putting the working tree back to
+# how the caller left it is correct whether the ship landed or not.
+#
+# MUST be safe to call more than once with the SAME marker (2026-08-11, coordinator review):
+# it is invoked from both the normal post-child-return path AND an EXIT/INT/TERM trap, and the
+# EXIT trap ALWAYS fires — including right after the normal path already restored successfully.
+# The three return codes let a caller distinguish "nothing to do" from "something is actually
+# wrong" instead of collapsing both into one scary message on every clean run:
+#   0 = restored cleanly, OR $1 was empty (nothing was ever evacuated) -- normal, silent.
+#   2 = $1 was non-empty but no matching stash entry exists. This is the ROUTINE idempotent
+#       shape (an earlier call in THIS SAME process already popped it -- e.g. the trap firing
+#       after the normal path already restored) and must be treated as a SILENT no-op by every
+#       caller, never a warning: printing on every clean exit would cry wolf on the common case.
+#   1 = the stash WAS found but `git stash pop` failed (a real conflict -- e.g. a peer landed a
+#       change to the same file while this ran). Callers MUST surface this: print the marker
+#       and the by-hand recovery line. The entry is deliberately left in the stash list, never
+#       dropped, so nothing is destroyed by a failed auto-restore.
+_qm_iso_restore_caller_dirty() {
+  local marker="$1" ref
+  [ -n "$marker" ] || return 0
+  ref="$(_qm_iso_evac_find "$marker")"
+  [ -n "$ref" ] || return 2
+  git stash pop --quiet "$ref" 2>/dev/null && return 0
+  # `git stash pop` is apply-then-drop; under the SAME index.lock contention the evacuate side
+  # retries around, the apply half can succeed while only the drop half loses the race, so the
+  # overall command still reports failure even though the content is already back. Deliberately
+  # NOT a blind retry here (unlike evacuate's push retry) -- re-running `stash pop` against a
+  # working tree it already applied to would double-apply and could manufacture a conflict that
+  # never needed to exist. Instead: re-check whether the entry is still there. Gone means the
+  # content is already restored (drop raced and lost, or a concurrent call of ours already
+  # finished it) -- nothing left to recover, so this is success, not a conflict the operator
+  # would go looking for and not find.
+  [ -z "$(_qm_iso_evac_find "$marker")" ] && return 0
+  return 1
+}
+
 _QM_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 _QM_ISO_ROOT=""
 _QM_ISO_WT=""
+_QM_ISO_EVAC_MARKER=""
 _qm_cleanup_isolation() {
   [ -n "$_QM_ISO_ROOT" ] || return 0
   # Remove the RECORDED path, not a re-derived one -- the re-derivation stopped matching the
@@ -633,6 +782,40 @@ _qm_cleanup_isolation() {
     git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
   fi
   git worktree prune 2>/dev/null || true
+}
+# Combined isolation cleanup: worktree removal AND evacuation restore, in that specific order
+# reversed on purpose -- restore FIRST, so the caller's tree is fixed before we start tearing
+# anything else down; worktree removal is unaffected by it either way. Registered for EXIT,
+# INT and TERM (2026-08-11, coordinator review of the evacuation fix), not just EXIT: a
+# quickmerge killed mid-flight (Ctrl-C, SIGTERM, a harness stop) between evacuating and the
+# normal post-child restore previously left the caller's --files sitting in a named stash with
+# a CLEAN `git status` and the files themselves reverted to HEAD -- silently, and worse than a
+# peer-caused revert, because the only trace (the marker string) lived in scrollback that dies
+# with the process, versus a peer-caused revert's "safety-snapshot: pre-reconcile quarantine"
+# message the operator has since been taught to look for.
+#
+# Idempotent by construction, which matters because the EXIT trap ALWAYS fires too -- including
+# right after the normal post-child path (see below) already restored successfully, and again
+# after an INT/TERM handler below explicitly re-raises. _qm_iso_restore_caller_dirty's rc=2
+# ("nothing found, already restored or nothing was ever evacuated") is silent by design for
+# exactly this reason; only rc=1 (found the stash but the pop itself conflicted) is loud. SIGKILL
+# cannot be caught by any trap -- a `kill -9` mid-flight is an unavoidable gap, same as it would
+# be for any other cleanup trap in this or any shell script.
+_qm_iso_signal_cleanup() {
+  local sig="${1:-EXIT}" rc
+  _qm_iso_restore_caller_dirty "${_QM_ISO_EVAC_MARKER:-}"
+  rc=$?
+  if [ "$rc" -eq 1 ]; then
+    {
+      echo
+      echo "🛑 quickmerge isolation: interrupted ($sig) -- your evacuated --files could NOT be"
+      echo "   auto-restored (the stash was found but the pop conflicted; your tree may have moved"
+      echo "   during the run, e.g. a peer landed a change to the same file)."
+      echo "   Recover by hand, never blind-pop: git stash list | grep $_QM_ISO_EVAC_MARKER"
+      echo "   then git stash show -p <ref>, then re-apply per file / 3-way merge as needed."
+    } >&2
+  fi
+  _qm_cleanup_isolation
 }
 
 if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; then
@@ -645,7 +828,7 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
   # safe-doc-push.sh: shape the path so derivation is right by construction (git resolves the
   # author BEFORE hooks run, so a hook-only fix always costs a retry), plus a config pre-stamp.
   _qm_slot_seg=""
-  _qm_identity_lib="$WORKSPACE_ROOT/unified-trading-pm/scripts/hooks/slot-identity-lib.sh"
+  _qm_identity_lib="$PM_ROOT/scripts/hooks/slot-identity-lib.sh"
   [ -f "$_qm_identity_lib" ] || _qm_identity_lib="$(dirname "$_QM_SELF")/hooks/slot-identity-lib.sh"
   if [ -f "$_qm_identity_lib" ]; then
     # shellcheck disable=SC1090
@@ -673,7 +856,13 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       git -C "$_qm_iso_wt" config --worktree user.email "$SLOT_ID_CANON_EMAIL" 2>/dev/null \
         || git -C "$_qm_iso_wt" config user.email "$SLOT_ID_CANON_EMAIL"
     fi
-    trap _qm_cleanup_isolation EXIT
+    # INT/TERM handlers must explicitly re-raise (bash does not auto-terminate after a caught
+    # signal's handler returns) -- the exit they trigger then ALSO fires the EXIT trap below,
+    # which is fine: _qm_iso_signal_cleanup is idempotent. 130/143 match the conventional
+    # 128+signal exit codes so a caller inspecting $? still sees "killed by INT/TERM".
+    trap '_qm_iso_signal_cleanup EXIT' EXIT
+    trap '_qm_iso_signal_cleanup INT; exit 130' INT
+    trap '_qm_iso_signal_cleanup TERM; exit 143' TERM
     # ---- make the worktree a COMPLETE MINIATURE WORKSPACE -------------------------------
     # quality-gates.sh computes WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/.." and is
     # NOT env-overridable, then installs LOCAL_DEPS (unified-api-contracts, unified-trading-
@@ -771,7 +960,25 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       cp "$_qm_f" "$_qm_iso_wt/$_qm_f" || _qm_copy_ok=false
     done
     if [ "$_qm_copy_ok" = true ]; then
-      echo "🔒 quickmerge isolated-worktree mode (host=$(_qm_host_label)) — your working tree is NOT touched"
+      # Evacuate the caller's dirty --files BEFORE handing control to the isolated child —
+      # while cwd is still the caller checkout. See the block above _QM_SELF for why this,
+      # not a STAGE 0.4 ordering fix, is the actual gap.
+      _QM_ISO_EVAC_MARKER="qm-iso-evac-$$-$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      _QM_ISO_EVAC_OUT="$(_qm_iso_evacuate_caller_dirty "$_QM_ISO_EVAC_MARKER" "$FILES_ARG")" \
+        && _qm_evac_rc=0 || _qm_evac_rc=$?
+      if [ "$_qm_evac_rc" -ne 0 ]; then
+        echo "  isolation: could not evacuate your dirty --files from the caller tree — they stay" >&2
+        echo "    exposed to a concurrent peer's reconcile in this shared checkout for the run's duration." >&2
+        _QM_ISO_EVAC_MARKER=""
+      elif [ -z "$_QM_ISO_EVAC_OUT" ]; then
+        _QM_ISO_EVAC_MARKER=""   # nothing was dirty in the caller tree -- nothing to protect
+      fi
+      echo "🔒 quickmerge isolated-worktree mode (host=$(_qm_host_label))"
+      if [ -n "$_QM_ISO_EVAC_MARKER" ]; then
+        echo "   Your dirty --files are evacuated from the caller tree for the run's duration"
+        echo "   (marker: $_QM_ISO_EVAC_MARKER) — immune to a concurrent peer's reconcile in this"
+        echo "   shared checkout, restored automatically when this run finishes (success or failure)."
+      fi
       echo "   NOTE: a FULL quality-gates.sh re-gate will run here. Your checkout's Pass-1 sentinel"
       echo "   does not transfer: it attests YOUR tree, and this worktree is your named files on"
       echo "   origin/HEAD — a different tree. Re-gating is the correct behaviour (it validates"
@@ -790,6 +997,24 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
       _qm_rc=$?
       cd "$_qm_caller_repo" || true
+      if [ -n "$_QM_ISO_EVAC_MARKER" ]; then
+        _qm_iso_restore_caller_dirty "$_QM_ISO_EVAC_MARKER"
+        _qm_restore_rc=$?
+        case "$_qm_restore_rc" in
+          0) echo "  isolation: restored your evacuated --files to the caller tree (ship rc=$_qm_rc)" ;;
+          2) : ;; # already restored / nothing to do -- silent (see the function's own comment)
+          *)
+            echo "  isolation: could not cleanly auto-restore your evacuated --files -- your tree may" >&2
+            echo "    have moved during the run (e.g. a peer landed a change to the same file)." >&2
+            echo "    Recover by hand, never blind-pop: git stash list | grep $_QM_ISO_EVAC_MARKER" >&2
+            echo "    then git stash show -p <ref>, then re-apply per file / 3-way merge as needed." >&2
+            ;;
+        esac
+        # Idempotency for the EXIT trap that fires next (see _qm_iso_signal_cleanup): with the
+        # marker cleared, its restore call is a guaranteed silent no-op rather than relying on
+        # rc=2 alone to keep it quiet.
+        _QM_ISO_EVAC_MARKER=""
+      fi
       exit "$_qm_rc"
     fi
     echo "  isolation: could not stage caller files into the worktree — continuing in the shared checkout" >&2
@@ -884,7 +1109,7 @@ cd "$REPO_DIR"
 # repo defaults OFF (no prod-trading auto-build / no build-cost noise yet). An
 # explicit --build/--no-build always wins (BUILD_LDR_EXPLICIT guard).
 if [ "$BUILD_LDR_EXPLICIT" = false ]; then
-  _qm_manifest="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+  _qm_manifest="$PM_ROOT/workspace-manifest.json"
   if [ -f "$_qm_manifest" ] && command -v python3 >/dev/null 2>&1; then
     _auto_build="$(python3 -c "import json,sys; m=json.load(open('$_qm_manifest')); r=m.get('repositories',{}).get('$REPO_NAME',{}); print('true' if isinstance(r,dict) and r.get('auto_build_on_quickmerge') else 'false')" 2>/dev/null || echo false)"
     if [ "$_auto_build" = true ]; then
@@ -908,7 +1133,7 @@ fi
 #   - No version bumping is done (version bumping is only on main via semver-agent)
 cascade_dep_branch() {
   local branch_name="$1"
-  local manifest_path="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+  local manifest_path="$PM_ROOT/workspace-manifest.json"
 
   [ -f "$manifest_path" ] || { echo "[cascade] ⚠️  Manifest not found at $manifest_path — skipping cascade"; return 0; }
 
@@ -1332,7 +1557,7 @@ echo ""
 echo "=========================================="
 echo "STAGE 0.5: PM Manifest Staleness Check"
 echo "=========================================="
-PM_CHECK_PATH="$WORKSPACE_ROOT/unified-trading-pm"
+PM_CHECK_PATH="$PM_ROOT"
 if [ -d "$PM_CHECK_PATH" ] && [ "$REPO_NAME" != "unified-trading-pm" ]; then
   cd "$PM_CHECK_PATH"
   git fetch origin main --quiet 2>/dev/null || true
@@ -1368,7 +1593,7 @@ echo "=========================================="
 echo "STAGE 1: Dependency Validation"
 echo "=========================================="
 
-MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+MANIFEST_PATH="$PM_ROOT/workspace-manifest.json"
 if [ -f "$MANIFEST_PATH" ]; then
   DEPS=$(jq -r '.repositories["'"$REPO_NAME"'"].dependencies[]?.name // empty' "$MANIFEST_PATH" 2>/dev/null || echo "")
   # Resolve the reference branch: active_feature_branch from manifest, or fall back to main
@@ -1401,7 +1626,7 @@ if [ -f "$MANIFEST_PATH" ]; then
           echo "2. Do the same for ALL dep repos missing the branch (check each)."
           echo ""
           echo "3. Update active_feature_branch in workspace-manifest.json (HUMAN ONLY):"
-          echo "     cd $WORKSPACE_ROOT/unified-trading-pm"
+          echo "     cd $PM_ROOT"
           echo "     edit workspace-manifest.json → change active_feature_branch"
           echo "═══════════════════════════════════════════════════════"
           if [ "$AGENT_MODE" = true ]; then
@@ -1550,8 +1775,34 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
   echo "=========================================="
   echo "STAGE 1.5: Dependency Alignment (PM)"
   echo "=========================================="
-  ALIGN_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/check-dependency-alignment.py"
-  if [ -f "$ALIGN_SCRIPT" ]; then
+  ALIGN_SCRIPT="$PM_ROOT/scripts/manifest/check-dependency-alignment.py"
+  # Sibling-less workspace guard (2026-08-11, todo 2 of the same doc): dependency alignment
+  # compares THIS repo's pins against every OTHER repo checked out as a WORKSPACE_ROOT sibling.
+  # A private worktree created for the F6 shared-checkout mitigation typically has NONE (its
+  # parent dir was created fresh for this one ship) -- every manifest repo then reads
+  # disk-absent and check-dependency-alignment.py --json reports "aligned": false, which looks
+  # exactly like a real regression. Measured 2026-08-11: "aligned": true in the real checkout,
+  # FAILED in the worktree, with nothing distinguishing "your pins drifted" from "this
+  # workspace has nothing to compare against". Count real sibling checkouts (a directory with
+  # its own .git, excluding PM_ROOT itself) before running the check at all; skip with a named
+  # diagnosis instead of a misleading FAILED when there are none.
+  _qm_sibling_repo_count=0
+  if [ -n "$PM_ROOT" ]; then
+    for _qm_sib_dir in "$WORKSPACE_ROOT"/*/; do
+      [ -e "${_qm_sib_dir}.git" ] || continue
+      [ "${_qm_sib_dir%/}" = "$PM_ROOT" ] && continue
+      _qm_sibling_repo_count=$((_qm_sibling_repo_count + 1))
+    done
+  fi
+  if [ -n "$PM_ROOT" ] && [ -f "$ALIGN_SCRIPT" ] && [ "$_qm_sibling_repo_count" -eq 0 ]; then
+    echo "[$REPO_NAME] ⚠️  Dependency alignment SKIPPED — $WORKSPACE_ROOT has no sibling repo"
+    echo "   checkouts at all (only $PM_ROOT itself). This looks like a lone-repo/private worktree,"
+    echo "   not a full multi-repo workspace, so alignment against sibling pyproject files cannot"
+    echo "   be meaningfully evaluated here — a FAILED verdict would be about the workspace shape,"
+    echo "   not your change. Symlink sibling repos into the worktree's parent for real coverage"
+    echo "   (codex/05-infrastructure/per-tab-worktrees.md), or run quickmerge from the full"
+    echo "   workspace checkout."
+  elif [ -n "$PM_ROOT" ] && [ -f "$ALIGN_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
     # Guard the source: `source`/`.` is a POSIX special builtin, so a missing file under
     # `set -e` exits the shell IMMEDIATELY, bypassing `|| true` (incident 2026-06-03 — a
@@ -1568,7 +1819,7 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
     # errored with a MISLEADING "Run generate-derived-manifest.py first", masking the real
     # (generate / venv-PATH) root cause. Now: if generate fails, diagnose THAT and stop —
     # don't cascade into a confusing dep-alignment failure.
-    _GEN_OUT="$(python3 unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>&1)"
+    _GEN_OUT="$(python3 "$PM_ROOT/scripts/manifest/generate-derived-manifest.py" 2>&1)"
     if [ $? -ne 0 ]; then
       echo "[$REPO_NAME] ❌ derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment"
       echo "$_GEN_OUT" | tail -20
@@ -1593,16 +1844,19 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
       exit 1
     fi
     cd "$REPO_DIR"
+  elif [ -z "$PM_ROOT" ]; then
+    echo "[$REPO_NAME] ⚠️  Dependency alignment SKIPPED — no PM checkout resolvable at all (see the" >&2
+    echo "   PM_ROOT diagnosis printed at startup). Not a content failure." >&2
   fi
 
   # Regenerate SVG when manifest has been updated (so diagram always reflects current state)
-  SVG_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
+  SVG_SCRIPT="$PM_ROOT/scripts/manifest/generate_workspace_dag.py"
   if [ -f "$SVG_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
     python3 "$SVG_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Workspace DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  SVG generation failed (non-blocking)"
     cd "$REPO_DIR"
   fi
-  DATA_FLOW_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
+  DATA_FLOW_SCRIPT="$PM_ROOT/scripts/manifest/generate_data_flow_dag.py"
   if [ -f "$DATA_FLOW_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
     python3 "$DATA_FLOW_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Data Flow DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  Data Flow SVG generation failed (non-blocking)"
@@ -1623,7 +1877,7 @@ fi
 # Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
 # ============================================================================
 if [ -f "$MANIFEST_PATH" ]; then
-  PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
+  PM_DIR="$PM_ROOT"
   REMOTE_MANIFEST=""
   if [ -d "$PM_DIR/.git" ]; then
     # One fetch — get remote PM manifest from main (staging_versions are recorded there)
@@ -1849,7 +2103,7 @@ echo "=========================================="
 if [ "$SKIP_PREFLIGHT" = "true" ]; then
   echo "[$REPO_NAME] ⚠️  Pre-flight audit SKIPPED (--skip-preflight)"
 else
-PREFLIGHT_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/validation/pre-flight-audit.sh"
+PREFLIGHT_SCRIPT="$PM_ROOT/scripts/validation/pre-flight-audit.sh"
 if [ -f "$PREFLIGHT_SCRIPT" ]; then
   if bash "$PREFLIGHT_SCRIPT" "$REPO_NAME"; then
     echo "[$REPO_NAME] ✅ Pre-flight audit PASSED"
@@ -1857,8 +2111,18 @@ if [ -f "$PREFLIGHT_SCRIPT" ]; then
     echo "[$REPO_NAME] ❌ Pre-flight audit FAILED"
     exit 1
   fi
+elif [ -z "$PM_ROOT" ]; then
+  # Name the ASSUMPTION, not a missing file (2026-08-11, todo 2): a bare "not found at
+  # <path>" gave no hint that the real cause was "no PM checkout resolvable at all", and sent
+  # the previous incident chasing a directory-name theory by hand instead of reading this line.
+  echo "[$REPO_NAME] ❌ Pre-flight audit requires a sibling unified-trading-pm checkout, and none" >&2
+  echo "   could be located under $WORKSPACE_ROOT (see the PM_ROOT diagnosis printed at startup)." >&2
+  echo "   Not a content failure — skip with --skip-preflight for a lone-repo/sibling-less" >&2
+  echo "   worktree, or add PM as a sibling / run from the full workspace checkout." >&2
+  exit 1
 else
-  echo "[$REPO_NAME] ❌ pre-flight-audit.sh not found at $PREFLIGHT_SCRIPT — required"
+  echo "[$REPO_NAME] ❌ pre-flight-audit.sh not found at $PREFLIGHT_SCRIPT — required" >&2
+  echo "   (PM checkout resolved to $PM_ROOT; the script itself is missing there)." >&2
   exit 1
 fi
 fi
@@ -1884,7 +2148,10 @@ if [ -z "${ENVIRONMENT:-}" ]; then
   # qg-common.sh) is now the ONE place this check lives. `|| true` + the inline
   # fallback below: PM is a foundational sibling dependency fleet-wide, so a missing
   # sibling should not happen in practice, but quickmerge must never hard-fail on it.
-  _QM_ENV_HELPER="${REPO_DIR}/../unified-trading-pm/scripts/quality-gates-base/qg-environment.sh"
+  # PM_ROOT (resolved by content, not by directory name — see the PM_ROOT block near the top
+  # of this script); ${REPO_DIR}/../unified-trading-pm literally was the same directory-name
+  # assumption this todo exists to remove.
+  _QM_ENV_HELPER="${PM_ROOT}/scripts/quality-gates-base/qg-environment.sh"
   if [ -f "$_QM_ENV_HELPER" ]; then
     # shellcheck disable=SC1090
     source "$_QM_ENV_HELPER"
@@ -2288,7 +2555,7 @@ if [ -n "$DEP_BRANCH" ]; then
   _qm_checkout_ship_branch
 else
   # Read active_feature_branch from PM manifest (SSOT for feature branch name)
-  MANIFEST_PATH="$WORKSPACE_ROOT/unified-trading-pm/workspace-manifest.json"
+  MANIFEST_PATH="$PM_ROOT/workspace-manifest.json"
   MANIFEST_BRANCH=""
   if [ -f "$MANIFEST_PATH" ]; then
     MANIFEST_BRANCH=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(m.get('active_feature_branch',''))" 2>/dev/null || echo "")
@@ -2840,9 +3107,9 @@ while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
   # Heal evidence citations that a rebase invalidated -- INSIDE the loop, because the
   # push-retry path below rebases again and re-orphans whatever the previous pass fixed.
   # Same reconciler safe-doc-push uses; no-ops (one grep) when the staged files cite nothing.
-  if [ -n "$FILES_ARG" ] && [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+  if [ -n "$FILES_ARG" ] && [ -f "$PM_ROOT/scripts/dev/reconcile-sha-citations.sh" ]; then
     # shellcheck source=/dev/null
-    source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+    source "$PM_ROOT/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
     if declare -F reconcile_sha_citations >/dev/null 2>&1; then
       # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
       RSC_CALLER_REPO="${QM_CALLER_REPO:-$(git rev-parse --show-toplevel 2>/dev/null)}" \
@@ -2913,11 +3180,11 @@ fi
 # ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
 # resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
 # a second edit pass afterwards.
-if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+if [ -f "$PM_ROOT/scripts/dev/reconcile-sha-citations.sh" ]; then
   # shellcheck source=/dev/null
-  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+  source "$PM_ROOT/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
   if declare -F resolve_pending_citations >/dev/null 2>&1; then
-    resolve_pending_citations "$REPO_NAME" "$_QM_PUSHED_SHA" "$WORKSPACE_ROOT/unified-trading-pm" || true
+    resolve_pending_citations "$REPO_NAME" "$_QM_PUSHED_SHA" "$PM_ROOT" || true
   fi
 fi
 push_gov_release_push
@@ -3075,7 +3342,7 @@ fi
 # LDR copy — staging-to-main commits [skip ci] so main-backmerge-to-ldr's push trigger is suppressed;
 # LDR's workspace-manifest.json can carry a stale staging_status for up to 1h (until the drift-tick).
 if [ "$PR_BASE" = "staging" ]; then
-  PM_LOCK_DIR2="${WORKSPACE_ROOT}/unified-trading-pm"
+  PM_LOCK_DIR2="$PM_ROOT"
   if [ -d "$PM_LOCK_DIR2/.git" ] || git -C "$PM_LOCK_DIR2" rev-parse --git-dir >/dev/null 2>&1; then
     LOCK_JSON=$(git -C "$PM_LOCK_DIR2" show origin/main:workspace-manifest.json 2>/dev/null \
       | python3 -c "
