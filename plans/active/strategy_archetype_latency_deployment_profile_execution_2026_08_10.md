@@ -83,11 +83,14 @@ source: >-
       computes which deployment_profile instances should exist. Read-only/computing a plan, NOT auto-applying infra
       changes from this todo — that's a separate, later step gated on this one working correctly and being reviewed. —
       deployment-service@13223da3
-- [ ] [SCRIPT] P2. **Build live resource-sizing derivation** — given an active deployment_profile instance and the
+- [x] ✅ [SCRIPT] P2. **Build live resource-sizing derivation** — given an active deployment_profile instance and the
       archetypes routed to it, derive required compute sizing from the archetypes' live configuration (client count,
       instrument count per client) rather than a static guess. Start with the SIMPLEST sound rule (e.g., linear in
       client count per archetype, sum across archetypes on that instance) and flag as a documented starting assumption —
-      refining the sizing model is explicitly out of scope for this first pass.
+      refining the sizing model is explicitly out of scope for this first pass. `ArchetypeLiveConfig` / `ArchetypeLoad`
+      / `InstanceResourceSizing` + `derive_instance_resource_sizing()` / `derive_resource_sizing()` and a
+      `--live-config` CLI flag in `deployment_service/deployment_profile_derivation.py`; fails loud
+      (`MissingLiveConfigError`) when a routed archetype has no live-config row. — deployment-service@9116a2fe
 - [ ] [SCRIPT] P2. **Regression test**: two archetypes with different required deployment_profiles must NOT get silently
       collapsed onto one shared instance, and the derivation must be idempotent (same active-archetype-set in → same
       deployment-plan out, no drift between repeated runs with unchanged input).
@@ -106,6 +109,19 @@ source: >-
       service's real, currently-registered archetypes and confirm the computed deployment plan matches (or sensibly
       diverges from, with a stated reason) the currently-live GCP fleet — this is the "does this actually work" proof,
       not just a unit-test pass.
+- [ ] [SCRIPT] P3. **Translate `total_load_units` into a concrete machine size, and fix the load formula's two measured
+      blind spots** (repo: deployment-service, `deployment_service/deployment_profile_derivation.py`). The sizing todo
+      above deliberately stopped at a dimensionless load proxy — nothing yet maps it to vCPU/memory/machine_type, so no
+      caller can provision from it. Two measured defects in `ArchetypeLoad.load_units`
+      (`client_count * instrument_count_per_client`), verified 2026-08-11 by running the `--live-config` CLI: (a) an
+      archetype with 50 clients and 0 declared instruments derives `total_load_units: 0` — clients cost nothing when the
+      instrument count is zero, even though client isolation materialises per-client instances
+      (`/codex/04-architecture/client-funds-isolation.md`); (b) the product cannot distinguish 1 client × 100
+      instruments from 100 clients × 1 instrument, which are structurally different costs for the same reason. Fix =
+      separate per-client and per-instrument terms, then map to a machine size (a per-`DeploymentProfile` base is needed
+      too: `co_located_vm` bundles strategy/execution/MTDH on ONE VM, `distributed` scales them out separately).
+      Coefficients must be calibrated or explicitly labelled a starting assumption — do not ship invented numbers
+      unlabelled.
 
 ## Progress Log
 
@@ -131,6 +147,21 @@ source: >-
   `tests/unit/test_deployment_profile_derivation.py` cover co-location, no-collapse, idempotency, unknown-archetype
   fail-loud, and topology drift detection. Verified 2026-08-11: full 60-archetype set derives
   `[co_located_vm, distributed]` with zero drift vs runtime-topology.yaml (exit 0).
+
+- **backend_engineer (slot 4) 2026-08-11**: Todo 4 (live resource-sizing derivation) — checkbox flipped against
+  `deployment-service@9116a2fe`, which a peer session landed mid-flight while this slot was building the same thing.
+  **Duplicate dispatch, not duplicate work shipped**: the task was dispatched to this slot before that commit reached
+  LDR; the collision surfaced on the pre-commit branch-drift check, so this slot's own competing sizing module
+  (`deployment_profile_sizing.py`, a per-profile vCPU/GB linear model) was DISCARDED unshipped rather than landed
+  alongside — two parallel sizing surfaces in one repo would be the defect, and the peer's implementation already
+  satisfies the todo as written (linear in client count per archetype, summed across the archetypes on an instance,
+  flagged a starting assumption, fail-loud on a missing live-config row). Verified the landed code by running it, not by
+  reading it: `--active-archetypes` + `--live-config` + `--runtime-topology` over a 3-archetype set derives
+  `co_located_vm` (total_load_units 68) + `distributed` (80) with zero topology drift, exit 0. That run also measured
+  two blind spots in `ArchetypeLoad.load_units` — 50 clients × 0 instruments derives `total_load_units: 0`, and the
+  product cannot separate client-driven from instrument-driven cost — and nothing yet maps the dimensionless proxy to a
+  machine size. Filed as the new P3 todo above rather than folded in silently, since the plan scopes sizing-model
+  refinement out of this first pass.
 
 - 2026-08-10: Plan created, gated on the paired audit plan's decision artifact. Implements the operator's "union of
   registered deployments from union of registered archetypes, resources derived live from configuration" design
