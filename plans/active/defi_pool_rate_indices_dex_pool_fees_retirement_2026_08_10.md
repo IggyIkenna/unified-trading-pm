@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-          streaming footprint regardless of corpus size.
+              "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+              fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+              DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+              `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+              streaming footprint regardless of corpus size.
 
 - [ ] [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
       `captured` rows in `dex_pool_swaps` via the proven reversible `capture_status: captured→attempted_failed`
@@ -97,7 +97,15 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `retire_dex_swaps_legacy_captured_rows_2026_08_09.py` (both `market-tick-data-service/scripts/one_offs/`). Pause
       `uts-prod-manifest-consolidator-market-data-defi-cron` (`asia-northeast1`) before writing, resume after.
       Done-when: a fresh `read_availability_index()` query shows 0 remaining `captured` rows with
-      `instrument_type=POOL`. (repo: market-tick-data-service)
+      `instrument_type=POOL`. (repo: market-tick-data-service) — **NOT DONE, blocked on a genuine content-verify gap
+      found live 2026-08-11 (slot 31) — see Progress Log for full evidence.** Wrote
+      `retire_pool_uppercase_legacy_captured_rows_2026_08_11.py` (`market-tick-data-service@85677ff363`) mirroring the
+      sibling scripts' reversible pattern, but the canonical `pool` (lowercase) population turned out to be itself mixed
+      (a genuine subset still carries the full legacy wrapped id verbatim, not a clean bare-id rename) — a simple
+      twin-match cannot safely tell "real bare-form canonical twin" from "same-string mislabeled duplicate" apart. 0
+      rows retired, no manifest write executed (the script's own safety gate correctly excluded all 1,135,962 candidate
+      keys rather than guess). Needs a content-verify pass (read actual swap data, not just id strings) before this todo
+      can safely proceed.
 - [ ] [DATA] P1. **Retire `rate_indices` legacy `captured` rows** (fold already GENUINELY 100% COMPLETE 2026-08-07 per
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 — this is the retirement half only, never
       done). Same reversible pattern + consolidator pause/resume as the prior todo (share the pause window if run
@@ -124,6 +132,39 @@ picking this plan up cold should never trust the flip-time state without a fresh
 
 ## Progress Log
 
+- **2026-08-11 (slot 31, data_engineering) — todo 2 attempted, NOT completed: canonical `pool` population is itself
+  mixed, a simple casing-unwrap twin-match is unsafe.** First hit a real OOM (exit 137) using a bare
+  `pandas.read_parquet(BytesIO(...), filters=...)` against this manifest (7.16GB raw, 158.3M total rows) — confirmed
+  host recovered clean (`free -h`: 28GB available after), then redid every subsequent query via
+  `run-bounded-analysis.sh` + DuckDB streaming as todo 1's own note already recommended (should have started there).
+  Sampled `instrument_id` shapes for `instrument_type=POOL` (legacy, uppercase) vs `pool` (canonical, lowercase) within
+  `data_type=dex_pool_swaps`: **legacy `POOL` is 100% wrapped-form** (`VENUE-CHAIN:POOL:id`, e.g.
+  `AERODROME_V3-BASE:POOL:0xf8d5df4d3408acd52a3ff54e8dbce0b3b28aa744`) — ALL 7,930,863 captured rows contain a colon.
+  **Canonical `pool` is MIXED**: of ~8.75M captured rows, `contains_colon`=5,361,579 (still carrying the full wrapped
+  legacy-shaped id string VERBATIM, uppercase `POOL` token embedded and all — i.e. only the outer `instrument_type`
+  column was casing-normalized at some point, the id itself was never re-derived) vs `no_colon`=3,391,479 (genuinely
+  bare — hex address or bare symbol pair like `WEETH-WETH-1`). Wrote
+  `retire_pool_uppercase_legacy_captured_rows_2026_08_11.py` (`market-tick-data-service@85677ff363`) mirroring the
+  sibling scripts' Pass-1/Pass-2 reversible pattern (`captured→attempted_failed`, snapshot-before-write, round-trip
+  verify), unwrapping canonical ids to the segment after the last `:` to compare against legacy's bare id — the same
+  "wrong vocabulary" pattern `retire_dex_swaps_legacy_captured_rows_2026_08_09.py` already solved for a DIFFERENT
+  population. A first isolated DuckDB probe (against a since-superseded manifest snapshot, the consolidator actively
+  merges every few minutes) found 0 missing twins across 1,135,962 legacy keys; a full-corpus dry-run minutes later
+  against a FRESH download found the opposite — ALL 1,135,962 keys excluded, 0 retirable — illustrating exactly the
+  moving-target risk this plan's own `status: draft` rationale warned about, and confirming the population genuinely is
+  mixed (not a stale-read artifact): the wrapped-form subset of "canonical" `pool` rows can never match my
+  unwrap-last-segment key scheme since they're not actually in bare form. **Did not loosen the matching logic to force a
+  match** — that would risk either quietly leaving true duplicates un-retired (harmless) or, worse, misclassifying a
+  wrapped-form `pool` row that is NOT truly a duplicate of legacy `POOL` (different real data sharing a
+  coincidentally-similar id string) as safe-to-retire, an irreversible-class judgment call on real financial data under
+  time pressure — exactly the class of mistake `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s Part 2
+  (content, not path/label) exists to prevent, even though this is a manifest-status flip rather than a GCS delete. **0
+  rows retired, no manifest write executed** — the script's own Pass-1 safety gate is working exactly as designed.
+  **What's needed next**: a genuine content-verify pass (read actual swap/price data for a sample of wrapped-form
+  "canonical" `pool` rows vs their legacy `POOL` counterpart) to determine whether the wrapped-form `pool` subset is (a)
+  a partial, incomplete casing migration that still needs its ids re-derived to bare form before this retirement can
+  proceed, or (b) something else entirely. Filed as the blocking gap on the checkbox above rather than a separate issue
+  doc — same doc, same todo, narrower scope than a new investigation needs.
 - **2026-08-11 (slot 33)**: Todo 1 done. Rebuild VM `canonical-migration-defi-rebuild-20260810-204358` confirmed
   terminal SUCCESS (see checkbox evidence above). Stability-check counts (identical across 3 queries, 17:37:xx →
   17:43:41 UTC): `instrument_type=POOL` (`dex_pool_swaps`) = 7,930,863; `data_type=rate_indices` `captured` = 26,128;
