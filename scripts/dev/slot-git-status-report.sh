@@ -302,6 +302,20 @@ classify_repo() {
         *.stale-*) return 0 ;;
     esac
     int_branch="${INTEGRATION_BRANCH}"
+    # Per-repo override, mirroring agent-orchestrator's
+    # server/worktree_clean_check/_branch_state.py::_REPO_INTEGRATION_BRANCH (keep both
+    # in sync). unified-trading-ci is a single_branch repo (integration_branch: main
+    # per workspace-manifest.json) but its retired origin/live-defi-rollout ref still
+    # physically exists, so the "ref missing → fall back to main" check below never
+    # fires and ahead/behind got computed against the wrong, frozen base — this is the
+    # same DRIFT INCIDENT 2026-08-08 already fixed server-side for spawn-gating but not
+    # here, and it reproduced as a false "unified-trading-ci [ahead] on 'main' ≠
+    # live-defi-rollout" warning on the fleet git-health dashboard (isOffExpectedBranch
+    # in dashboard/src/layout.tsx) despite the repo being correctly on main with no
+    # real unpushed commits.
+    case "${repo_name}" in
+        unified-trading-ci) int_branch="main" ;;
+    esac
 
     pushd "${repo_dir}" >/dev/null 2>&1 || return 0
     # Per-repo identity for the dirty-ticks lookup — the resolved cwd (post-pushd),
