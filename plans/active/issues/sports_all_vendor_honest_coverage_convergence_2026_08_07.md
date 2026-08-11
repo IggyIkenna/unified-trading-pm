@@ -867,3 +867,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   permits the singleton). Frontier at last check ≈2020-12-21 (chunk 115/2171) — still before the first real gap
   (~2021-06-07); gap census not re-run. No VM launched from the P2 VERIFY dispatch (its own standing instruction forbids
   it; this tracker owns relaunching).
+- **2026-08-11T~07:52Z (slot 29, P1 dispatch of `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`) — FLEET
+  STALLED AGAIN: 0 `mtds-backfill-odds-*` VMs running.** `mtds-backfill-odds-20260811-0330` (the recovery VM from the
+  03:30Z stall) is now also absent — `insert`+`delete` ops confirmed, no `compute.instances.preempted` (not a routine
+  preemption; either clean self-deletion, silent-hang watchdog kill, or setup failure — could not distinguish without VM
+  log access). Frontier at last known state ≈2020-07-15 (chunk 8/452), well before first real gap (~2021-06-07). **This
+  tracker's next babysit/P1 dispatch should relaunch** per the established playbook:
+  `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-smallchunkN-20260811 --start 2020-06-06 --end 2026-08-11 --chunk-size 5`
+  (increment N, guard confirms `0+1 <= cap 1`). No VM launched from the P1 dispatch (its own standing instruction
+  forbids it; this tracker owns relaunching).
