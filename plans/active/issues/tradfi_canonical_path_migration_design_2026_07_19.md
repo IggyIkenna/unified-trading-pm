@@ -377,7 +377,27 @@ removal + casing normalization remain before backfill-resume.
       historical record of what was claimed. **Flagging as a BIG FINDING per governance** (data-correctness + a
       contradicted "done" claim on an irreversible-class operation) — this needs a fresh investigation session to
       determine which explanation is correct before ANY further delete on this todo proceeds; do not trust either "done"
-      state without re-verifying live GCS first.
+      state without re-verifying live GCS first. **FURTHER FINDING (slot 31, data_engineering, same day) — the "two
+      forms" framing itself undercounts the real path-shape population; a THIRD shape coexists, not previously
+      documented.** A full listing of `day=2020-01-06`'s `instrument_type=combo/` prefix (143 objects, both
+      `data_type=ohlcv_1m` and `ohlcv_1s`; `data_type=` sits BEFORE the `underlying=`/filename tail, not after — the
+      correct prefix order is `.../instrument_type=combo/data_type=<DT>/`, note for whoever writes the eventual per-cell
+      checker) shows THREE coexisting shapes for several roots: (a) `underlying=<X>/ticks.parquet` (bare), (b)
+      `underlying=<X>/quote=<Q>/margin=<M>/ticks.parquet` (quote/margin), AND (c) a filename-only shape directly under
+      `data_type=`, e.g. `CME:COMBO:GC.parquet` / `CME:COMBO:BTC.parquet` — 16 such objects present for `ohlcv_1m` alone
+      on this one day, one per root, never mentioned in this todo's prior "bare vs quote/margin" framing. **Also
+      confirmed the bare/quote-margin pattern is NOT stable across `data_type` for the same root/day**: GOLD's
+      `ohlcv_1m` has only a bare `underlying=GOLD/ticks.parquet` (no quote/margin twin), while GOLD's `ohlcv_1s` has
+      only the quote/margin form (no bare twin) — the inverse of each other, same day, same root. This means a per-cell
+      check must be done independently per `(date, underlying, data_type)` — NOT assumed consistent across `data_type`
+      for a given root — and the true scope includes a THIRD form class this doc has not yet designed a disposition for.
+      Did not attempt to quantify the `CME:COMBO:<ROOT>.parquet` shape's full population or run any further
+      delete/migration this session — the existing "BIG FINDING" (contradicted delete claim) and this new third-shape
+      discovery both argue for the SAME conclusion slot 32 already reached: this needs a dedicated, VM-dispatched
+      investigation (systematic per-`(date,underlying,data_type)` five-part-proof across all 506 combo dates × 11 named
+      roots × 2 data_types × up to 3 shapes, plus Part 2 content-verification, which needs to read parquet bytes — not
+      ad hoc host-side sampling), not further host-side exploration. Checkbox stays `[ ]` — no destructive action taken,
+      disposition remains `unknown`/`no-migrate-first` for every cell.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
