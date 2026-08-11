@@ -163,13 +163,14 @@ context_scope:
       `types.py` if the consumer module's TYPE_CHECKING block grows unwieldy). Repo: execution-service. Done-when: types
       import cleanly; no circular imports; `quality-gates.sh` green.
 
-- [ ] [BACKEND] P2. Extend `PerpHedgeConsumer._topup_guard()` to accept a `BybitDepositCallable | None` parameter. When
-      `instruction.perp_venue == PerpVenueId.BYBIT` and `instruction.source == TopupSource.TREASURY_HOT` and
+- [x] ✅ [BACKEND] P2. Extend `PerpHedgeConsumer._topup_guard()` to accept a `BybitDepositCallable | None` parameter.
+      When `instruction.perp_venue == PerpVenueId.BYBIT` and `instruction.source == TopupSource.TREASURY_HOT` and
       `bybit_deposit is not None`: return `None` (passes the guard — deposit proceeds). When `bybit_deposit is None`:
       return honest `NOT_WIRED` (the current behaviour). `TopupSource.COPPER_MPC` / `CEFFU_MPC` for Bybit returns
       `UNSUPPORTED_SOURCE` — gated on Group F item 19. Repo: execution-service. Done-when: unit tests (Bybit
       TREASURY_HOT with wired callable passes guard, Bybit TREASURY_HOT without callable returns NOT_WIRED, Bybit
-      COPPER_MPC returns UNSUPPORTED_SOURCE, HL topup path unchanged); `quality-gates.sh` green.
+      COPPER_MPC returns UNSUPPORTED_SOURCE, HL topup path unchanged); `quality-gates.sh` green. —
+      execution-service@bfe059d071.
 
 - [ ] [BACKEND] P2. Extend `PerpHedgeConsumer.dispatch_margin_topup()` to route Bybit deposits through
       `bybit_deposit(instruction.amount_usdc)` when the venue is `PerpVenueId.BYBIT`. The existing HL bridge path
@@ -250,3 +251,15 @@ context_scope:
   `tests/unit/defi_execution/test_bybit_connector.py::TestFetchDepositRecords`: asset-code pass-through, 4-way status
   normalisation, empty-list-on-no-deposits, uninitialised-adapter raises. `quality-gates.sh` green (167s, sentinel
   `f4725d73aa040c39cc16de22ca85261a1521d025`).
+- **2026-08-11 (slot 6, backend_engineer)**: Todo 4 (`_topup_guard` Bybit deposit param) — implemented in
+  `execution-service@bfe059d071`. `_topup_guard()` gained a `bybit_deposit: BybitDepositCallable | None = None`
+  parameter (default preserves the existing `dispatch_margin_topup()` call site, which todo 5 will extend separately).
+  Source check (`TREASURY_HOT` vs other) still runs first, so `COPPER_MPC`/`CEFFU_MPC` on Bybit returns
+  `UNSUPPORTED_SOURCE` before venue routing — no change needed there, it already fell through correctly. Venue check:
+  Bybit + `bybit_deposit is not None` → passes guard (`None`); Bybit + `bybit_deposit is None` → honest `NOT_WIRED`
+  (unchanged default behaviour, HL path untouched). Added `test_bybit_treasury_hot_wired_deposit_passes_guard`,
+  `test_bybit_treasury_hot_no_deposit_callable_returns_not_wired`, `test_bybit_copper_mpc_returns_unsupported_source` to
+  `tests/unit/defi_execution/test_perp_hedge_consumer.py`. `quality-gates.sh` green (305s, sentinel
+  `bfe059d071916668f470cd91d1d10e5b55ec3669`). Also shipped unrelated leftover WIP found dirty in this slot on boot:
+  `deployment-service@9116a2fe62` ("derive live resource sizing per deployment-profile instance") — QG green, verified
+  on origin, not tied to any plan checkbox.

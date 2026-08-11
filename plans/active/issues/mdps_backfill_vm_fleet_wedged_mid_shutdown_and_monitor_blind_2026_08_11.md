@@ -138,6 +138,46 @@ launch regardless, so a paused preemption-recovery loop delays recovery rather t
 would resume relaunching the 393 deleted VMs against a per-prefix budget whose durability in the deployed image is still
 unverified. The unpause is gated on the P0 below, not on elapsed time.
 
+## Second remediation — duplicate-year-shard prune (2026-08-11, continuation session)
+
+**Operator ruling: "prune the duplicates, wasting money" — executed same session.** Found while checking the
+liquidations P0 re-derive prerequisite (`/plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`): the
+fleet had grown BACK to 485 total / 467 RUNNING instances (up from the ~358 this doc's first remediation settled at),
+confirming the wedge/duplication pattern recurred rather than the fleet self-healing.
+
+**Verified safe before touching anything**:
+`gcloud scheduler jobs describe uts-prod-dp-exit-code-monitor-cron --location=asia-northeast1` returned
+`state=PAUSED, schedule="0 * * * *"` — the standing hold from the first remediation is still in effect, so a delete
+cannot trigger the same relaunch-storm this session (the monitor isn't consuming terminate events at all right now).
+
+**Selection, evidence-based (grouped, not name-based)**: grouped all RUNNING instances by name with the trailing
+`-YYYYMMDD-HHMMSS` run-ts stripped (47 distinct groups: `mdps-{cefi,tradfi,defi,sports}-{year}` × several years each,
+plus a handful of genuinely-singleton jobs with no duplication). Per group with N>1, kept the MOST RECENTLY CREATED
+instance (maximizes the chance it's running current code, e.g. the `contract_size` fix that landed hours earlier) and
+reaped the rest — **411 duplicate VMs across the 47 groups**, up to 42 duplicates in a single group (`mdps-cefi-2019`).
+Spot-checked 2 of the 47 kept VMs' serial console: both showed a live guest heartbeat (not wedged) — confirms the "keep"
+pick, per the FIRST remediation's own caveat, is a liveness check not a progress check, and that's what was verified.
+Explicitly excluded (never touched): 8 `-live-` producer VMs, 1 `vm-zombie-watchdog`, 1 `af-backfill-*` — different
+action class per this doc's existing P1 (live producers need restart, not delete).
+
+**Executed via the sanctioned tool, not a raw delete**:
+`deployment-service/scripts/vm/reap_vms.py --vms-file <411 names> --zone asia-northeast1-c` (tombstone-then-delete, the
+exact mechanism this doc's first P0 shipped to close the relaunch bug — `GCP_PROJECT_ID` had to be exported for the run,
+the script doesn't read it from `gcloud config`). Result: **tombstoned 411/411**, deleted in 14 batches of ≤30. One
+batch logged a non-zero exit despite every instance in it actually deleting (confirmed by content — the "FAILED" line's
+own body was a list of successful `Deleted [...]` lines) — a script-quality nit, not a real failure; verified by
+re-listing the live fleet afterward and finding **zero** of the 411 targeted names still present. **Fleet: 485 total /
+467 RUNNING → 69 total / 51 RUNNING.** 5 of the 47 "kept" VMs were also gone on the post-check, but NOT because this
+reap touched them — they were absent entirely (not merely `TERMINATED`), consistent with
+`VM_SHUTDOWN_ON_COMPLETION=true` self-deleting on a genuine finish in the few minutes between the pre- and post-
+snapshots (e.g. `betfair-egress-probe`, single-symbol `tradfi-bf-cme-ohlcv-1m-*` jobs — small, fast jobs finishing
+mid-operation is plausible). Full name list:
+`/plans/active/issues/vm_reap_lists/reaped_duplicate_year_shards_2026_08_11.txt`.
+
+**Not done as part of this pass** (scope was explicitly "prune duplicates", not the open P0/P1s below): the monitor
+stays PAUSED, the wedge root cause is still unknown, and the 47 "keep" VMs were not verified for backfill PROGRESS (only
+guest liveness on 2 samples) — a future check should confirm they're actually advancing, not merely alive.
+
 ## Follow-ups
 
 - [x] ✅ [SCRIPT] P0. **Taught the recovery path the difference between a preempted VM and a reaped one** —
