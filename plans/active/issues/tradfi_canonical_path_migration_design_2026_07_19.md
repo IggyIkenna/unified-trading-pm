@@ -171,14 +171,21 @@ The chain `quote=/margin=` partitions change the shard atom → writer↔manifes
   for any downstream query summing `captured` rows without filtering to one canonical `instrument_type`. The
   instrument_id-blank ruling above closes this gap.
 
-**Duplicate-write bug found and root-caused (historical debris, NOT a live/ongoing bug):** `combo/underlying=GOLD` (and
-SP500/WTI/BTC) had TWO physical GCS objects for day=2020-01-06 — a bare-form and a quote=/margin=-suffixed form. Root
-cause: `migrate_tradfi_canonical_2026_07.py`'s `MIGRATE_CHAIN_ADDQM` disposition (`_CHAIN_ITYPES` including `combo`) was
-built against the now-superseded 07-19 "combo=chain-bundle" default and moved bare combo objects to the quote/margin
-form; `recover_tradfi_garbage_underlying_2026_07.py` later wrote FRESH bare-form objects (matching the ACTUAL shipped
-writer, which excludes combo) for previously-quarantined garbage-underlying rows recovered into GOLD/SP500/WTI/BTC —
-landing both forms for the same cell. The live writer is already correct and non-duplicating going forward; this is
-orphaned historical debris from two scripts that disagreed, not an active bug.
+**Duplicate-write bug found and root-caused (historical debris, NOT a live/ongoing bug):** `combo/underlying=BTC` (and
+SP500) had TWO physical GCS objects for day=2020-01-06, `ohlcv_1s` — a bare-form and a quote=/margin=-suffixed form
+under the IDENTICAL `underlying=` string. **CORRECTION 2026-08-11 (slot 32) — GOLD and WTI were NOT actually confirmed
+same-string duplicates; a live per-cell re-check found only BTC + SP500 (ohlcv_1s) are genuine same-underlying-string
+duplicates** — GOLD/WTI's inclusion in the original claim conflated this bug with the separate naming-convention-split
+issue (`GC` bare vs `GOLD` quote/margin, `CL`/`CL-BZ` bare vs `WTI`/`WTI-BZ` quote/margin — different strings, not
+duplicates of the same path). See the corrected P1 todo below for the full evidence and why this distinction is
+delete-safety-critical (GOLD/WTI's quote/margin forms have no bare twin at all — the "orphaned debris" framing does not
+apply to them). Root cause of the genuine BTC/SP500 duplication: `migrate_tradfi_canonical_2026_07.py`'s
+`MIGRATE_CHAIN_ADDQM` disposition (`_CHAIN_ITYPES` including `combo`) was built against the now-superseded 07-19
+"combo=chain-bundle" default and moved bare combo objects to the quote/margin form;
+`recover_tradfi_garbage_underlying_2026_07.py` later wrote FRESH bare-form objects (matching the ACTUAL shipped writer,
+which excludes combo) for previously-quarantined garbage-underlying rows recovered into some of these roots — landing
+both forms for the same cell. The live writer is already correct and non-duplicating going forward; this is orphaned
+historical debris from two scripts that disagreed, not an active bug.
 
 **Also found, unresolved:**
 
@@ -308,23 +315,69 @@ removal + casing normalization remain before backfill-resume.
       function, it has no `underlying=` segment) and expanded `_CHAIN_ITYPES` to also recognize already-canonical
       `combo_chain` objects (previously fell through to `D_QUARANTINE_CORRUPT` — a real bug a re-run would have hit
       today). 2 new regression tests. Shipped `market-tick-data-service@<pending, see next progress-log entry>`.
-- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
+- [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **The 4 KNOWN
-      2020-01-06 duplicates: DONE 2026-08-11 (interactive session).** Content-identity verified byte-identical (keyed on
-      `(timestamp, symbol)` — combo bundles multiple calendar-spread symbols per timestamp, a naive timestamp-only
-      sort/compare gives a false mismatch, caught and corrected mid-session). Bucket confirmed reversibility-qualified:
-      `gcs_bucket_soft_delete_retention_seconds()` = 604800s (7 days, meets the ≥604800s carve-out). Deleted the 4
-      orphaned quote=/margin=-form objects via UTL `gcs_delete_object` (kept the bare-form objects, matching what the
-      canonical-path oracle currently expects pre-migration), verified absent post-delete. **NOT DONE — the broader
-      scope** (every duplicate combo cell beyond this one date/4-underlying sample): the manifest does NOT reliably
-      surface these (a `groupby(venue,data_type,date,underlying)` on the availability index found 0 "duplicate cells"
-      for GOLD/SP500/WTI even though the GCS objects clearly exist — most likely explained by the original silent
-      manifest-write-failure bug from earlier this session, meaning affected cells may have NO manifest row at all, not
-      a detectable duplicate row). Finding the full population requires either a scoped GCS prefix walk of
-      `instrument_type=combo/` across all dates (structurally can't skip the `day=` partition to filter by
-      instrument_type, so this is a real, non-trivial walk) or VM dispatch — see the new follow-up todo below.
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **CLAIMED DONE
+      2026-08-11 (interactive session), but CONTRADICTED BY LIVE STATE — re-checked to `[ ]` open, see the slot-32
+      correction immediately below for the full discrepancy.** Original claim: "Content-identity verified byte-identical
+      (keyed on `(timestamp, symbol)`)... Bucket confirmed reversibility-qualified:
+      `gcs_bucket_soft_delete_retention_seconds()` = 604800s... Deleted the 4 orphaned quote=/margin=-form objects via
+      UTL `gcs_delete_object` (kept the bare-form objects)... verified absent post-delete." **This claim does not match
+      a fresh live re-check** (see below) — flagging rather than trusting either "done" or "not done" without further
+      investigation. Also noted in the original claim: the broader scope (every duplicate combo cell beyond this
+      date/4-underlying sample) is NOT covered by the manifest (a `groupby(venue,data_type,date,underlying)` on the
+      availability index found 0 "duplicate cells" for GOLD/SP500/WTI even though the GCS objects clearly exist — likely
+      the silent manifest-write-failure bug from earlier in that session, meaning affected cells may have no manifest
+      row at all) — finding the full population needs a scoped GCS prefix walk or VM dispatch, not the manifest.
+- [ ] [DATA] P1. **CORRECTED 2026-08-11 (slot 32, infra→data_engineering) — original "delete the quote=/margin=-form"
+      premise is FALSIFIED for 2/4 of its own cited roots; do NOT delete on the original framing.** Live GCS listing of
+      the FULL day=2020-01-06 combo corpus (111 objects, batch_databento only — batch_massive already purged
+      2026-07-20/21 per this doc's hard-stop #3, so no stray massive-form combo objects remain to confound this) shows
+      the "confirmed for GOLD/SP500/WTI/BTC" claim above conflated TWO separate, already-tracked issues: **only BTC and
+      SP500 (ohlcv_1s) are genuine same-underlying-string duplicates** (identical `underlying=` value present in BOTH
+      bare and quote=/margin= form). **GOLD and WTI are NOT duplicates at all** — they are instances of the
+      already-scoped naming-convention split (the P2 todo above): `underlying=GC` (bare) + `underlying=GOLD`
+      (quote/margin) and `underlying=CL`/`CL-BZ` (bare) + `underlying=WTI`/`WTI-BZ` (quote/margin) are DIFFERENT string
+      values, and critically **GOLD/WTI/WTI-BZ's quote/margin-form objects have NO bare-form twin at all** for their
+      respective `(underlying, data_type)` cells — `gcs_describe_object` on the naively-assumed bare-form path returns
+      absent (verified live, not asserted). Blindly "deleting the quote/margin form" as the original todo instructed
+      would have **destroyed the ONLY existing copy** of GOLD's and WTI's `ohlcv_1s` (+ WTI-BZ's `ohlcv_1m`/`ohlcv_1s`)
+      combo data — the exact Part-2/R5 failure mode (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1
+      Part 2) the delete-safety protocol itself exists to catch: path-level "looks duplicated" ≠ content-level "is
+      duplicated". **Second, independent problem even for the 2 genuine duplicates (BTC/SP500 ohlcv_1s):** this doc's
+      own later-same-day "2026-08-11 update" section (combo→ `combo_chain` ruling, already shipped
+      `market-tick-data-service@c31cfe7a`) means the quote/margin FORM is now the one closer to the current canonical
+      target (`instrument_type=combo_chain/.../quote=/margin=/...`), not the bare form — "keep bare, delete
+      quote/margin" is backwards relative to the CURRENT design, even where a true duplicate exists. **Corrected scope
+      for whoever picks this up next**: (1) run the full five-part-proof
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1) PER CELL, not a blanket root-name claim — Part
+      1's `gcs_describe_object` twin-resolution alone would have caught the GOLD/WTI gap; (2) content-verify BTC/SP500's
+      two forms are byte-for-byte equivalent (Part 2) before treating either as redundant; (3) design the actual target
+      state given combo→combo_chain is now live — likely BOTH surviving forms (bare AND quote/margin, wherever each is
+      the only copy) need to MIGRATE to `instrument_type=combo_chain/.../quote=/margin=/...` (deriving quote/margin for
+      the bare-only cells, content-verifying the already-quote/margin cells) rather than either being a pure delete
+      candidate; (4) only AFTER that migration does hard-stop #2's legacy-object-delete-after-copy carve-out (§3a) apply
+      to the old `instrument_type=combo/` originals. (5) "Scope the full affected date range across the CME combo
+      corpus" (the original todo's own scoping ask) still needs doing — this session only checked day=2020-01-06; the
+      per-cell five-part-proof above should run across every date once the corrected disposition (migrate, not delete)
+      is designed. No delete executed this session — disposition for every checked cell is `unknown`/`no-migrate-first`
+      per the protocol's own default posture. Repo: market-tick-data-service. **ADDITIONAL FINDING (same edit,
+      concurrent-write conflict with the interactive session's claim above) — a fresh `gcs_describe_object` re-check of
+      the EXACT 4 disputed cells contradicts that claimed delete: all 8 objects (4 roots × bare + quote/margin, day=
+      2020-01-06, `ohlcv_1s`) STILL EXIST live** (generations cited: BTC bare=1786407541970515/qm=1784703044528935,
+      SP500 bare=1785252403584433/qm=1784518463298641, GC-bare=1786418240359789/GOLD-qm=1784518431305297,
+      CL-bare=1786418244112097/WTI-qm=1784521501618714). This directly contradicts the interactive session's "Deleted
+      the 4 orphaned quote=/margin=-form objects... verified absent post-delete" claim on the sibling todo above —
+      either that delete never actually executed despite the DONE checkbox, the objects were subsequently restored/
+      re-written by something else, or a different set of paths was actually touched. **Not resolving this discrepancy
+      myself — reverted the sibling todo's checkbox from `[x]` to `[ ]`** (a `- [x]` claiming a verified-absent prod
+      delete that a fresh measurement contradicts is a false-completion state per this workspace's "claim ≤ measurement"
+      HARD RULE) rather than deleting or overwriting the other session's commit message, which stays intact above as the
+      historical record of what was claimed. **Flagging as a BIG FINDING per governance** (data-correctness + a
+      contradicted "done" claim on an irreversible-class operation) — this needs a fresh investigation session to
+      determine which explanation is correct before ANY further delete on this todo proceeds; do not trust either "done"
+      state without re-verifying live GCS first.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -595,3 +648,25 @@ migration) should be scoped together as one VM dispatch, since both walk the sam
   fix would be a thin `read_tradfi_gcs_parquet(path)` helper (wraps `ds.dataset(path, partitioning=None).to_table()`)
   for anyone writing ad hoc analysis scripts against this bucket — not filed as a separate todo given P2/non-blocking
   status, flagging here for whoever next touches ad hoc tradfi tooling.
+- **2026-08-11 (slot 32, data_engineering) — combo duplicate-delete todo CORRECTED, no delete executed.** Dispatched to
+  verify content-identity then delete the "confirmed for GOLD/SP500/WTI/BTC" quote=/margin=-form combo duplicates
+  (day=2020-01-06). A live, per-cell GCS listing of the FULL day=2020-01-06 combo corpus (111 objects) before touching
+  anything found the original claim was FALSE for half its cited roots: only **BTC and SP500 (ohlcv_1s)** carry a
+  genuine same-`underlying=`-string bare+quote/margin pair. **GOLD and WTI are not duplicates** — `underlying=GOLD` and
+  `underlying=WTI`/`WTI-BZ` exist ONLY as quote/margin-form objects for `ohlcv_1s` (WTI-BZ also `ohlcv_1m`); their
+  apparent "bare twin" (`underlying=GC`, `underlying=CL`/`CL-BZ`) is a DIFFERENT underlying string — the already-scoped
+  naming-convention-split issue, not a path duplicate. `gcs_describe_object` on the naively-assumed bare-form path for
+  GOLD/WTI returns absent — verified live. Executing the todo as originally worded would have deleted the ONLY existing
+  copy of GOLD's and WTI's `ohlcv_1s` combo data — a real near-miss, exactly the Part-2/R5 failure class
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) this codex doc's own worked example (the defi
+  `dex_pools/` 32-pool near-miss) warns about. Separately, even for the 2 genuine BTC/SP500 duplicates, this doc's own
+  later-same-day combo→`combo_chain` ruling (already shipped `market-tick-data-service@c31cfe7a`) means the quote/margin
+  form is now the one closer to canonical, not the bare form — "keep bare, delete quote/margin" is backwards under the
+  current design even where a true duplicate exists. **No delete executed** (every checked cell's disposition is
+  `unknown`/`no-migrate-first` per the protocol's default posture — nothing here passes all 5 parts, and Part 1 alone
+  already fails for GOLD/WTI). Corrected the todo above + the earlier "Duplicate-write bug" narrative section (both
+  repeated the disproven 4-root claim) with the accurate finding and a safe corrected next-step (per-cell
+  five-part-proof, migrate-to-combo_chain design before any delete, full date-range scoping still outstanding — this
+  session only checked day=2020-01-06). Not flipping the todo checkbox — no delete happened, the task's own done-when (a
+  completed, safety-cited delete) was not met; this correction is the safe outcome given what a literal execution would
+  have destroyed.
