@@ -24,15 +24,37 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
   resolution and the connectivity-vs-execution-intelligence boundary, the repository/tier stack, infrastructure and data
   flow, the delivery and CI-escalation loop, live operations, the Article 4 carve-out with a per-repository hand-over
   manifest, and programme status.
-- **`carveout-engineering.html`** — CTO-audience companion. All 26 repositories classified (6 contribute to a carve-out,
-  20 do not), what "reduced" removes inside each of the six, light-adapter limits, static-config-versus-dynamism,
-  shared-infrastructure economics, the expansion path priced both ways with TradFi as the worked discontinuity.
+- **`carveout-engineering.html`** — **rev 2.0**, CTO-audience engineering specification. 9 sections, 2 SVG figures.
+  Defines the acceptance bar for "runnable"; specifies **11 proposed packages** with a declared ship form each (FULL /
+  REDUCED / STATIC / INTERFACE-ONLY); the 7-step runtime path; **the platform seam — 10 typed interfaces** that resolve
+  either to local implementations or to maintained services; the configuration snapshot; **9 hand-over acceptance
+  criteria**; 9 standing operational functions; extension work-items; and the 26-repo estate mapping as a §09 appendix.
 
-  > **⚠️ OPERATOR FEEDBACK 2026-08-11, NOT YET ACTIONED**: this document "discusses our methodology way too much" and is
-  > **not presentable to a CTO as written**. It reads as an internal negotiation memo (sections framed as "an honest
-  > summary of the trade", "what we would want to know if the positions were reversed", "our own position"). Needs a
-  > rewrite into a technical briefing register before it goes out. Tracked as a todo on
-  > [`elysium_sla_v4_support_period_and_stale_dates_2026_08_08`](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
+  > **Rev 1.0 was rejected by the operator** (2026-08-11) as discussing "our methodology way too much" and not
+  > presentable to a CTO — it read as an internal negotiation memo. **Rev 2.0 fixed that structurally, not by editing
+  > prose**, and the mechanism is the thing to preserve if this document is ever restructured again:
+  >
+  > **The twenty non-contributing repositories are expressed as ten typed interfaces, not as a list of things the client
+  > does not get.** `PortfolioRiskService.circuit_state()`, `TreasuryService.request_transfer()`,
+  > `AttributionService.decision_pnl()` — the scope of the platform is communicated in method signatures, with no
+  > implementation disclosed and no mechanism described. A loss-list invites argument; a seam invites integration
+  > planning. Every "what you don't get" table in rev 1.0 became either a ship-form column, an interface row, an
+  > acceptance condition, or an operational function.
+  >
+  > Also deleted in rev 2.0 and **do not reintroduce**: any first-person advocacy ("we would rather you stayed", "the
+  > three questions we would ask in your position"), any claim about our own measured contribution to returns, and any
+  > mechanism-level description of how the dynamic layer works (the §05 table states the capability boundary only).
+  >
+  > Structure was taken from an operator-supplied advisory draft,
+  > `~/Downloads/Odum_Elysium_Strategy_Carve_Out_CTO_Architecture.docx` — **input to us, never a document for the
+  > client**: its §1, §8 and §9 are an internal strategy memo containing a rebuild-day estimate and the note "I would
+  > not put the 180 AI days number in the external CTO document". Four ideas were adopted (ship-form taxonomy, the
+  > interface seam, acceptance criteria, proposed package names in place of our real repo names).
+
+  **Open caveat:** §02's eleven packages are labelled a _proposed_ structure and do not exist — verified 2026-08-11, no
+  `strategy-basis-core` / `contracts-platform` / lite package is in the workspace. Showing this document therefore
+  commits us to building the seam, since a CTO reading §04 will ask to see it. The lite-repo decision is now coupled to
+  whether the document goes out.
 
 ## Authoring traps — read before editing (each of these cost real time)
 
@@ -68,8 +90,25 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
 7. **Measure the layout claim, don't estimate it.** Collapsing four reference blocks was predicted to hide ~40% of the
    scroll; measured **7%**. The height was in the figures (17% of the page on their own) and in twelve sections of
    prose, not in the tables. What actually worked was restructuring so every section body sits behind one toggle with
-   its heading, lede and key-points strip always visible — measured **70–81%**. Estimate, then measure, then quote the
-   measurement.
+   its heading, lede and key-points strip always visible — measured **70–81%** for `platform-architecture.html`, and
+   **44% at default / 64% fully collapsed** for `carveout-engineering.html` rev 2.0 (lower because 3 of its 9 sections
+   are deliberately open, so both figures and the capability-boundary table are visible without a click). Estimate, then
+   measure, then quote the measurement.
+
+8. **A layout/collision detector that reports zero must be validated before the zero is believed.** Three buggy versions
+   of the SVG collision check were written across these two documents: one compared text boxes against _badge_ rects
+   across coordinate spaces, one picked an arbitrary host among equal-area sibling rects (reporting 849px phantom
+   "spills"), and `getBBox()` on rotated `<text>` returns the **pre-transform** box. The working recipe: use
+   `getBoundingClientRect()` for screen-space comparisons, pick the host rect by **nearest left edge**, transform
+   rotated corners through `t.transform.baseVal.consolidate().matrix` — and then **inject a known collision and a known
+   overflow and confirm the detector fires** before trusting a clean result. A null result from an unvalidated detector
+   is not evidence.
+
+9. **Re-derive every asserted count; two were wrong within a day.** Rev 1.0 claimed 8 carry archetypes (actual **6**)
+   and 13 venue adapters (actual **20** distinct adapters in `trade_execution/adapters/` alone — the claim _understated_
+   the estate). Note also that `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be
+   located in non-test UAC sources; the 20 is a **measured floor from the adapter directory**, not a registry read.
+   Quote the floor and say so, or find the registry.
 
 ## Design system
 
@@ -93,6 +132,16 @@ grouping reinforced spatially. Do not re-attempt a fourth hue without re-running
 Built 2026-08-11 in an interactive session from the codex commercial-model and architecture SSOTs, the underlying
 contract (now transcribed at
 [`/codex/14-customer-journeys/commercial-model/contracts/`](/codex/14-customer-journeys/commercial-model/contracts/)),
-and direct verification against the workspace tree. Repository classification reflects `workspace-manifest.json` as at
-that date — **re-derive it before reusing these documents**, since the 6/20 split is the organising number of
-`carveout-engineering.html` and a repo added or retired changes it.
+and direct verification against the workspace tree. `carveout-engineering.html` rewritten to rev 2.0 the same day.
+
+**Re-derive the counts before reusing either document.** The 26-repo estate and the 6/20 split are the organising
+numbers of the §09 appendix, and a repo added or retired changes them; the 2/6 archetype and 4/20 adapter figures were
+both wrong in rev 1.0 and were only caught by re-deriving. The estate count was verified by `.git`-bearing directories
+under the workspace root (26), not by `workspace-manifest.json` — that file is at
+`unified-trading-pm/workspace-manifest.json`, not the workspace root, which is where an earlier note implied it sits.
+
+**Known contradiction, operator-owned:** `platform-architecture.html` states a "complimentary 30-day support period" in
+three places, which conflicts with the 2026-08-09 operator ruling that **60 calendar days** is the binding Initial
+Support Period. Left unfixed deliberately — see the P0 in
+[`elysium_sla_v4_support_period_and_stale_dates_2026_08_08`](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
+`carveout-engineering.html` rev 2.0 states no number and defers to the SLA.

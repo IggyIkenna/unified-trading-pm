@@ -263,7 +263,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       check (re-run the 3-scope cefi probe against live prod) can pass; the existing open INFRA todo above (blocked on
       the `unified-trading-library@609299ad` release chain) should be re-run against THIS fix's deployed revision too
       once both land, rather than filing a duplicate re-verification todo.
-- [ ] [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
+- [x] ✅ [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
       replace the row-wise `df.apply(_classify, axis=1)` with a vectorized classification (boolean masks / pandas `str`
       ops) so the per-chunk cost drops from ~1.3 s/123k-row chunk to ~0.02 s. Measured 2026-08-10 (slot 5, infra
       re-verification): the live cefi availability index has grown to ~26M rows across 215 row groups (was 10.6M/88 at
@@ -274,7 +274,49 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       at 176-400 s — the 3-scope cefi probe FAILS all scopes on the fix-containing deployed revision. Local bounded
       repro of the exact deployed code path completes (215 chunks, peak 1.74 GiB, no abort) — the code is correct but
       pathologically slow; the vectorize fix also makes the DEFAULT `asset_groups=cefi,tradfi,defi` request feasible
-      (currently 3x the cefi-only time = guaranteed timeout). Repo: deployment-api.
+      (currently 3x the cefi-only time = guaranteed timeout). Repo: deployment-api. — **Already shipped as
+      deployment-api@fb3df79** (slot 4, 2026-08-10, per the nested todo + Progress Log entry below — this top-level
+      duplicate was never flipped). Re-confirmed 2026-08-11 (slot 32, infra): `origin/main`'s current file content is
+      byte-identical to LDR's (empty `git diff origin/main -- .../_live_coverage_venue_year.py`), the live 100%-traffic
+      revision `uts-shared-deployment-api-00523-kwt` (image tag `770fe6e`, deployed 2026-08-11T08:27:57Z) contains the
+      vectorized `str.lower()`/`str.contains()`/`.where()` form at lines 180-184, and neither of today's 2 fresh SIGABRT
+      reproductions (see Progress Log) implicates this call site — the vectorize fix holds in production.
+- [ ] [BACKEND] P0. **Vectorize `filter_to_mvp`'s row-wise `df.apply(_row_is_mvp, axis=1)`
+      (`deployment_api/routes/data_status/_coverage_scope.py:132`)** — same bug class as the now-fixed `_classify` apply
+      (above): `is_mvp_for_manifest_row` (a UAC `is_mvp` predicate call per row, `_coverage_scope.py:80-115`) runs via
+      `df.apply(..., axis=1)` once per row-group chunk (215 for cefi's current ~26M-row manifest), for EVERY `scope=mvp`
+      request. Live repro 2026-08-11 (slot 32, infra re-verification): `scope=mvp` against the deployed,
+      `_classify`-fixed revision `uts-shared-deployment-api-00523-kwt` still WORKER-TIMED-OUT + SIGABRT'd
+      (`Uncaught     signal: 6`, `[CRITICAL] WORKER TIMEOUT (pid:22)` @2026-08-11T17:17:39Z) — faulthandler dump
+      confirms the abort site as `_coverage_scope.py:76` (`_manifest_cell`) ← `is_mvp_for_manifest_row:111` ←
+      `_row_is_mvp:130` ← `pandas/core/apply.py` ← `filter_to_mvp:132` ← `_process_manifest_chunk:154` ←
+      `get_venue_year_coverage:320`. Needs a vectorized or per-row-group-cached `is_mvp` evaluation (the 4 extra axes —
+      `base_ccy`/`league`/ `market_group`/`source` — are read via `.get()` per row today; a boolean-mask /
+      groupby-then-broadcast approach mirroring the `_classify` fix's shape is the likely path, but the `is_mvp`
+      predicate itself may need a vectorization-friendly UAC entry point — confirm with
+      `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo: deployment-api.
+- [ ] [BACKEND] P1. **Reduce `provenance_breakdown()`/`union_reduce_to_cells()` per-row-group-chunk overhead
+      (`deployment_api/services/data_status_union.py:176`, called from
+      `deployment_api/routes/data_status/_live_coverage_venue_year.py:141`)** — `_process_manifest_chunk` calls
+      `provenance_breakdown(df)` UNCONDITIONALLY (any `scope=`) whenever the manifest carries provenance columns, once
+      per row-group chunk (215 for cefi); `provenance_breakdown` itself does a Python-level `.groupby(group_cols)` loop
+      and calls `union_reduce_to_cells()` (a `sort_values` + `drop_duplicates` pair — vectorized ops, but each pandas
+      call carries real per-call overhead) once per `(pipeline_mode, source)` group PER CHUNK — so total call count
+      scales with `row_groups × distinct_groups`, not just row count. Live repro 2026-08-11 (slot 32, infra
+      re-verification): during the same 3-scope probe run against deployed revision
+      `uts-shared-deployment-api-00523-kwt` (requests one-at-a-time, ≥15s apart — exact per-request attribution not
+      claimed, since Cloud Run may still be processing a client-abandoned request after its 90s client-side timeout), a
+      WORKER TIMEOUT + SIGABRT fired (`[CRITICAL] WORKER TIMEOUT (pid:21)` @2026-08-11T17:15:09Z) whose faulthandler
+      dump identifies the abort site as `data_status_union.py:176` (`union_reduce_to_cells`, inside `.assign()`) ←
+      `data_status_union.py:222` (`provenance_breakdown`) ← `_live_coverage_venue_year.py:141`
+      (`_process_manifest_chunk`) ← `_live_coverage_venue_year.py:320` (`get_venue_year_coverage`) — this call site is
+      reached BEFORE the `scope=="mvp"` branch (line 153) in `_process_manifest_chunk`, so it fires for EVERY scope
+      value, confirming this bottleneck is independent of (and in addition to) the `filter_to_mvp` bug above (which is
+      scope=mvp-only per its own `if scope == "mvp":` gate). Needs either batching `union_reduce_to_cells` calls across
+      chunks (accumulate raw provenance rows per group across ALL row-groups, then reduce ONCE at the end, mirroring how
+      `(venue, year)` counts already sum across chunks) or a cheaper per-chunk reduction shape. Repo: deployment-api. —
+      **this todo's own live repro is why the top-level INFRA todo above still cannot pass its acceptance bar** (all 3
+      scopes still fail — `could_exist`/`all` on this bottleneck, `mvp` on the `filter_to_mvp` bug above).
 
 ## Progress Log
 
@@ -374,3 +416,23 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
     `quality-gates.sh` green, sentinel=fb3df79. Combined with the row-group-streamed read (deployment-api@3d72470) and
     the narrowed-columns retry (unified-trading-library @609299ad), this removes the last known per-row-group CPU
     bottleneck on the venue-year-coverage hot path.
+- **2026-08-11 (slot 32, infra)**: **Live-prod re-verification of `deployment-api@fb3df79` (vectorized `_classify`) —
+  FAIL, but for TWO NEW reasons; the `_classify` fix itself holds.** Confirmed the fix is live: `origin/main`'s current
+  `_live_coverage_venue_year.py` is byte-identical to LDR's (empty diff), live 100%-traffic revision
+  `uts-shared-deployment-api-00523-kwt` (image tag `770fe6e`, deployed 2026-08-11T08:27:57Z) contains the vectorized
+  form. Ran the 3-scope cefi probe (auth = `X-API-Key` from `deployment-api-api-key` GSM secret, one-at-a-time, ≥16s
+  apart, `--max-time 90`): **all 3 scopes timed out client-side with 0 bytes received.** Cloud Logging over the probe
+  window shows the container-level OOM is still gone (no `Memory limit exceeded`), and the OLD `_classify` abort site
+  (`_live_coverage_venue_year.py:186`) is NOT implicated in either of 2 fresh WORKER TIMEOUT + SIGABRT events — instead
+  TWO NEW, DISTINCT abort sites fired: (1) `data_status_union.py:176` `union_reduce_to_cells()` (via
+  `provenance_breakdown()`, called unconditionally for every scope before the scope filter) @17:15:09Z, and (2)
+  `_coverage_scope.py:76` `_manifest_cell()` (via `filter_to_mvp`'s row-wise `df.apply(_row_is_mvp, axis=1)`, scope=mvp
+  only) @17:17:39Z — both filed as new BACKEND todos above (P0 for the mvp-scope `filter_to_mvp` apply, since it's the
+  same un-vectorized-per-row-Python-call bug class as the now-fixed `_classify`; P1 for the `provenance_breakdown`
+  per-chunk-per-group overhead, since it's a different shape — real pandas ops, not a bare Python loop, so likely a
+  smaller win but still the reason `could_exist`/`all` fail too). **Not flipping the top-level INFRA todo — the
+  clean-window acceptance bar is still not met**, now gated on these 2 new BACKEND todos rather than the UTL release
+  chain (confirmed moot for this route, per the 2026-08-10 entry above). Also flipped the stale duplicate
+  `[BACKEND] P0. Vectorize _classify` todo to done in the same edit (fb3df79 already shipped it 2026-08-10; this
+  top-level copy was never checked off, only its earlier nested copy was — a plan-hygiene gap fixed here per the
+  "misleading doc" HARD RULE, since leaving it open would cost the next reader a redundant investigation).

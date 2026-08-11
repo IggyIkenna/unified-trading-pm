@@ -544,3 +544,17 @@ independently verified that doc is archived/status: complete (direct grep), but 
 (2026-08-09 ~02:20-03:15Z, market-tick-data-service, a fresh corroborating pytest-timeout/typecheck-timeout occurrence
 under measured heavy host contention -- 9+ concurrent quality-gates.sh processes, 5.7-8.4GiB swap, 4-physical-core host
 per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the fix landing -- the archive-gate ('o...
+
+- **slot-2 2026-08-11 ~15:45Z (post-fix monitoring, task `pytest_timeout_60s_flaky_under_contention-472dc502ba82`, 29th
+  pass of the founding doc's monitoring-window todo — appended here per that doc's own 2026-08-11 hard-cap-split
+  note)**: surveyed latest 3 `quality-gates-v2` runs across all 10 primary repos tracked by the founding doc (runs
+  spanning ~04:30Z–15:22Z 2026-08-11). 9 service repos: 26/27 terminal runs `conclusion=success`; 3 failures
+  job-level-verified NOT the tracked flake: instruments-service `31469102636` (4 `FAILED`,
+  `AttributeError: module '...' has no attribute 'storage'` — unrelated code defect, not timeout);
+  market-data-processing-service `31433128155` (2 `FAILED`, `AssertionError: assert 'continuous_future' == 'FUTURE'` —
+  same tradfi-casing class slot-26 already flagged in the founding doc); market-tick-data-service `31472876767` (`ERROR`
+  at setup, `ImportError: cannot import name '_resolve_chain_bundle_manifest_id'` — unrelated import defect).
+  unified-trading-pm: 2 success + 1 failure (`31496502920`, `checks`-slice only, `tests`-slice unaffected — known
+  ratchet class). Zero `Timeout (>150s)` / pytest-timeout recurrence anywhere. Window NOT yet closed (day ~7 of ~14,
+  closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
+  the founding doc's slot-32 precedent.

@@ -990,3 +990,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `QG slice (tests): success` / `QG slice (checks): failure` — same known ratchet class, not the tracked flake. Zero
   `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via
   skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
+
+> **2026-08-11 note**: this doc hit its 1000-line hard cap on the entry directly above — further monitoring-pass entries
+> are appended to `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md` (the current
+> split with headroom) instead of here, per this doc-chain's established split practice.

@@ -156,13 +156,16 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [BACKEND] P2. **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2` (London) — see updated note
-      below, was BLOCKED-OPERATOR-DECISION.** Two-sided Betfair odds — persist back+lay, not just one side. Item `[5]`
-      under the source doc's "Smaller open items (documented, not blocking paper)" — items `[1]`-`[4]` shipped
-      2026-07-20, this one is still open and needs a Betfair-exchange book source. Different component (Betfair adapter)
-      from the EventTransport todo above — no file overlap expected, safe to run concurrently. **Source**:
-      `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]). **Done when**: back+lay both
-      persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
+- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20) — was `[BACKEND]`.** Remaining work is provisioning a NEW
+      `europe-west2` network egress (VM/proxy) — `infra` craft's domain, not `backend_engineer`'s (full rationale in the
+      mirrored issue doc's Progress Log). **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2`
+      (London) — see updated note below, was BLOCKED-OPERATOR-DECISION.** Two-sided Betfair odds — persist back+lay, not
+      just one side. Item `[5]` under the source doc's "Smaller open items (documented, not blocking paper)" — items
+      `[1]`-`[4]` shipped 2026-07-20, this one is still open and needs a Betfair-exchange book source. Different
+      component (Betfair adapter) from the EventTransport todo above — no file overlap expected, safe to run
+      concurrently. **Source**: `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]).
+      **Done when**: back+lay both persist for a sampled Betfair market and the source doc's item [5] is marked shipped
+      with the commit SHA.
 
       **Partial progress 2026-07-31 (slot 7, backend_engineer) — read-side shipped + tested; live capture confirmed
           credential-blocked (session token missing), NOT a design gap — see the RESOLVED note below. Researched the full chain before writing code: `betfair_yes_bid` is
@@ -773,6 +776,10 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
 `/ag-closeout-audit sports` sibling run (this same dispatch wave) claim it rather than duplicating here.
 
 ## Progress Log
+
+- 2026-08-11 (slot-20, backend_engineer): dispatched to the Betfair back+lay P2 item — retagged `[BACKEND]`→`[INFRA]`
+  (VM/network egress provisioning is out of craft scope; full rationale in the mirrored issue doc's Progress Log). No
+  code changed; skipped the dispatched task so it redispatches to `infra` craft.
 
 - 2026-07-29 (slot 14, ag_closeout_auditor, dispatch agt-17d52d): drafted by the `/ag-closeout-audit prediction`
   scheduled run. Phase 0: rediscovered the covering-plan set via `generate_ag_closeout_audit_candidates.py` (8

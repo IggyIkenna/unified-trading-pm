@@ -51,7 +51,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
-last_updated: "2026-07-24"
+last_updated: "2026-08-11"
 locked_by:
 locked_since:
 supersedes:
@@ -176,12 +176,11 @@ to logs.
 - **sports**: most entities high-cov; SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES cov 0.000 (all attempted_failed —
   credentialed/blocked scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set). Not a B0 gap.
 
-- [ ] [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket** —
-      `_run_coverage_status` calls `get_write_bucket_name("instruments", "prediction")` which raises `BucketNamingError`
-      (the per-asset_group instruments-store dict has no PREDICTION entry; prediction resolves via the FLAT
-      `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
-      `_get_instruments_bucket_for_asset_group` (the same resolver the write path uses) so prediction status renders.
-      Display-only gap; the backfill WRITE path already works. — instruments-service
+- [x] ✅ [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-10). `_run_coverage_status` was
+      already fixed at `instruments-service@086eeffe` (2026-08-03); the ADJACENT same-class bug in
+      `_run_reprocess_shards` (line 295, still used `get_write_bucket_name`) was fixed in the same batch-11 pass, routed
+      through `_get_instruments_bucket_for_asset_group`. Repo: instruments-service@c8e3686ca4.
 - [ ] [DATA] P2. **Stale `attempted_failed` rows survive a failed→captured retry in the consolidated `_index` (manifest
       dedup blank-column edge — KNOWN, already tracked)** (surfaced 2026-06-18 while backfilling the fixed venues).
       After re-fetching a previously-`attempted_failed` shard to `captured`, the consolidated
@@ -225,13 +224,13 @@ to logs.
       `VenueMapping.normalize_defi_venue` resolver) + 861 captured legacy↔canonical spelling-dedup, folded into the v9
       column-population walk (instruments-service@7a63be9 → APPLIED). Captured preserved 75,942→75,081 (−861
       all-captured twins, 0 captured cell shadowed). — instruments-service
-- [ ] [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain** (the
-      `_index` reconcile above fixed the STORED data; the WRITER still keys multi-chain protocol shards by the adapter's
-      bare `venue` property rather than `InstrumentRecord.venue`=`PROTOCOL-CHAIN`, so a fresh capture can re-introduce a
-      bare-spelling row). Make the adapter `venue` property, `InstrumentRecord.venue`, and the manifest shard key all
-      emit the canonical PROTOCOL-CHAIN id (shard-granularity SSOT) so new writes match the canonicalised `_index` with
-      no re-reconcile needed. — instruments-service / unified-trading-library (manifest shard key) — composes with the
-      `*_manifest_canonicalisation_*` + `source=` provenance tracks
+- [x] ✅ [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain** —
+      reconciled via `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (2026-08-09) — STALE PREMISE,
+      already shipped `instruments-service@6b7fbadf`/`ec73983e` (2026-08-05, four days before this doc's next audit
+      pass). Verified live against current HEAD: all 57 non-oracle multi-chain DeFi adapters' `venue` property +
+      `InstrumentRecord.venue` + the manifest writer's `_canonical_manifest_venue_chain()` split already emit the
+      canonical combined/split PROTOCOL-CHAIN form consistently; test coverage current. No code change needed. Repo:
+      instruments-service (verified, no change needed) / unified-trading-library (verified, no change needed).
 - [x] [DATA] P2. **DRIFT-SOLANA instrument adapter — `data.api.drift.trade/stats/markets` now 404** (diagnosed
       2026-06-18). The Drift Data API endpoint moved: `/stats/markets`→404, `/markets`→403, `/contracts`/`/perpMarkets`
       →403 (auth-gated), `dlob.drift.trade`→502. Find Drift's current PUBLIC markets endpoint (docs at
@@ -278,17 +277,14 @@ upstream limitation, NOT a silent placeholder).
 > - data-status "could-exist" are correct) — these gate/inform each other. Research-data canonical-copy (B3) is
 >   independent. Cross-links: `path_to_100pct_backfill_mtds_is_2026_06_17.md` (the backfill-to-100% home).
 
-- [ ] [INFRA] P1. **B3 — copy e2e research data to CANONICAL placement + e2e doc**: HL `perp_funding`/`perp_daily_ctx`
-      currently ONLY in the no-env-suffix research bucket `gs://perp-funding-central-element-323112/day=*/`; LST rates
-      ONLY in `gs://lst-rates-central-element-323112/day=*/`. These are prod-needed data. (a) Determine the canonical
-      home per data_type — the dedicated `-prd-` bucket (`lst-rates-prd`, exists) vs the
-      market-data-tick-{cefi|defi}-prd canonical `pipeline_mode=` path (cefi already carries
-      `pipeline_mode=batch_hyperliquid`; HL perp may be cefi-perp, LST is defi). (b) `gcs_copy_object` (workers=32,
-      in-region) the research objects → canonical placement (+ manifest `record_captured` so the `_index` reflects
-      them). (c) Write `e2e-testing/docs/` (or the e2e README) a note: research reads MUST migrate to the canonical
-      sources — list the old→canonical bucket/path mapping so the e2e funding scripts
-      (`staked_basis_funding_scan`/`colocated_engine`/etc.) update their fetch paths. Then the research buckets become
-      deletable (operator-gated). — instruments-service/deployment-service + e2e-testing(doc)
+- [x] ✅ [INFRA] P1. **B3 — copy e2e research data to CANONICAL placement + e2e doc** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 3 (2026-08-09) — STALE PREMISE, no copy needed.
+      Both the legacy research buckets and the `-prd-` twins this todo assumed existed are confirmed DELETED
+      (`gcloud storage buckets describe` → 404 on all 4). The real canonical home is the SHARED
+      `market-data-tick-defi-prd-central-element-323112` bucket — the dedicated `perp-funding`/`lst-rates` `kind=`
+      entries were removed 2026-07-13, data already carried forward. Content-verified via targeted
+      `read_availability_index` spot-check: HYPERLIQUID `perp_funding`/`perp_daily_ctx` + `lst_rates` present in the
+      shared bucket. e2e doc updated with a SUPERSEDED banner recording the true final state. Repo: e2e-testing@ea38428.
 - [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause (aggregation/dedup; "has this instrument ever existed" +
       available-from/to)**: `instruments-service/scripts/build_instrument_catalogue.py` +
       `reference_data/catalogue/catalogue_builder.py` EXIST; Cloud Run jobs
@@ -326,11 +322,18 @@ tracked here per the durable-facts rule):
 - [x] ✅ **Kalshi credential UPLOADED 2026-06-19** — `kalshi-api-credentials` v1 in Secret Manager (JSON
       `api_key_id`/`key_id` + RSA `private_key` PEM; account has no funds, market-data-only). The credential-registry
       already maps `"kalshi" → kalshi-api-credentials`.
-- [ ] [CODE] P1. **Wire Kalshi into the pipeline (hist + live market data)** — the credential is stored; now wire the
-      Kalshi market-data adapter to read `kalshi-api-credentials` + do RSA-PSS request signing (key_id + private_key),
-      for prediction hist + live (mirror the polymarket path, second venue for Polymarket-vs-Kalshi dispersion). Verify
-      the secret JSON field names match the adapter's expectation (I stored both `api_key_id` + `key_id`). Then run the
-      Kalshi backfill. — mtds / instruments-service (prediction)
+- [x] ✅ [CODE] P1. **Wire Kalshi into the pipeline (hist + live market data)** — re-verified 2026-08-11 (batch-11
+      finalize twin, per its "Flagged, not extracted" note) against CURRENT code, not just the two cited prior docs:
+      `instruments-service/instruments_service/reference_data/adapters/prediction/kalshi.py` fully implements RSA-PSS
+      request signing (`_parse_kalshi_creds` reads both `api_key_id`/`key_id` + `private_key` from the injected
+      `kalshi-api-credentials` blob; `_signed_headers` signs via `KALSHI-ACCESS-KEY`/`KALSHI-ACCESS-SIGNATURE`) —
+      exactly the field-name match this todo asked to verify. MTDS carries the live half:
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py::KalshiAdapter.get_trades_with_status` +
+      4 live WS connectors (`kalshi_ws.py`, `kalshi_trades_ws.py`, `kalshi_clob_ws.py`, `kalshi_perp_ws.py`) +
+      `scripts/ingest_kalshi_bulk_to_canonical.py` for the hist bulk path. Corroborates the two prior-referenced docs
+      (`data_completion_to_100_all_ag_2026_06_21.md` Kalshi deep-history seed backfill ran;
+      `prediction_live_clob_depth_capture_2026_07_24.md` trades-adapter URL fix shipped) — the checkbox was stale, work
+      is done. No code change needed. Repo: instruments-service / market-tick-data-service (verified, no change needed).
 - [x] ✅ **Extended public market data needs NO API key — "operator applying for API" was a FALSE blocker for the data
       pipeline (verified live 2026-06-22).** `api.starknet.extended.exchange/api/v1/info/{markets,candles,funding}` all
       return HTTP 200 with only a `User-Agent` header (no `X-Api-Key`, no stark key). The stark private key is needed
@@ -343,20 +346,28 @@ tracked here per the durable-facts rule):
       2024-07-26 testnet vs createdAt 2025-07-18 mainnet-migration bulk-stamp), so neither a global constant nor
       `createdAt` is honest — only the probed candle-genesis is. Fix produces 58 distinct `available_from` dates (was
       1). basedpyright clean; IS QG green (88.24% cov).
-- [ ] [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — IS daily-listing
-      CLI for EXTENDED-STARKNET (genesis-accurate now) + MTDS OHLCV/funding capture over 2024-07-26→yesterday (funding
-      only from 2025-08-01 mainnet). Verify honest coverage converts `expected_unattempted`→`captured`. — mtds /
-      instruments-service (defi/cefi perp)
-- [ ] [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation)** — the live `_umi_extended.py` candle
-      fetch sends `{interval, limit:1440, endTime}` with NO `startTime`; the API caps a single response at ~2800–3000
-      rows and returns the most-recent `limit` ending at `endTime`, so any window needing more than one page silently
-      drops the earlier rows. Per-day shards (PT1M, 1440 bars) are currently safe, but add `startTime` + window-aware
-      `limit` + a LOUD truncation warning so a multi-day/finer-interval call can never under-capture silently. — mtds
-- [ ] [CODE] P3. **Align/consolidate the two parallel Extended candle paths** — the live path is
-      `adapters/_umi_extended.py`; `market_interface/adapters/onchain_perps/extended_adapter.py::ExtendedAdapter` is a
-      SEPARATE, tested-but-unused parallel impl that still carries the global `EXTENDED_DEPLOY_DATE` pre-launch floor
-      (vs per-instrument genesis). Decide: wire ExtendedAdapter as canonical (and make its `_check_pre_launch`
-      per-instrument) OR delete it (no live importers). Parallel-paths anti-pattern per Delete-Deprecated-Code. — mtds
+- [x] ✅ [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed)** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4 (2026-08-09). Ran IS daily-listing refresh +
+      catalogue rollup, then launched 13 sharded SPOT VMs (`cefi-extended-starknet-*`) covering 2024-10-01→2026-08-08
+      (the real venue-launch floor for funding/trades; OHLCV was already fully captured pre-2024-10-01). Bounded per-VM
+      manifest-shard verification (677 files, ~17MB) confirmed 0 date gaps and 0 remaining `expected_unattempted` across
+      107,096 attempted shards. Repo: instruments-service@catalogue-rollup-cefi-20260809T203518Z +
+      market-tick-data-service (13 backfill VMs).
+- [x] ✅ [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation)** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 5 (2026-08-09) — STALE PREMISE, already shipped
+      `market-tick-data-service@3b9b27e` (2026-06-22, 48 days before this batch was authored):
+      `_extended_candle_params()` already startTime-bounds the request, caps `limit`, and loudly warns on an oversized
+      window. The remaining gap (a regression test) was closed: added
+      `test_extended_candle_params_within_cap_no_truncation_warning` +
+      `test_extended_candle_params_oversized_window_warns_loudly_instead_of_silent_truncation`. Repo:
+      market-tick-data-service@f8d9033b5.
+- [x] ✅ [CODE] P3. **Align/consolidate the two parallel Extended candle paths** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 6 (2026-08-09) — STALE PREMISE, already shipped.
+      The parallel `ExtendedAdapter` (`market_interface/adapters/onchain_perps/extended_adapter.py`) was already deleted
+      at `market-tick-data-service@f6bda91b` (2026-06-24, six weeks before this batch was authored). Verified against
+      current HEAD: zero `extended_adapter`/`ExtendedAdapter`/`extended_base_client` references anywhere; exactly one
+      candle-fetch path remains (`fetch_extended_candles` in `_umi_extended.py`). No code change needed. Repo:
+      market-tick-data-service (verified, no change needed) @f6bda91b.
 - Tardis: `tardis-api-key` (+ `-backup`, `-full`) already in SM — provisioned (not a gap).
 
 ## Databento SUBSCRIPTION CONTRACT (operator 2026-06-18 — supersedes PAYG model)
@@ -471,16 +482,15 @@ credits. Tracked todos below.
     (`registry/data_status_axis_matrix.py:70`), MTDS SSOT (`:105` + `manifest_recorder.py:25`), data-status drilldown
     (`deployment-api/.../data_status_hierarchical.py:15,43`), and the deployment-api drilldown alignment test. No
     surface drops league_id. — verified read-only
-- [ ] [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs is_mvp() canonical strings)** —
-      `prod/catalog.parquet` `league_id` holds NUMERIC provider IDs (`'10'`/`'100'`) while `is_mvp()`'s SportsMvpRule
-      keys canonical strings (`EPL`/`LA_LIGA`/`NFL`/`NBA`) → no sports league ever tags `mvp=True`. The catalogue
-      builder should map the provider league_id → canonical league_id (UAC `league_data`/`provider_league_ids`) before
-      the `is_mvp()` check, so the MVP subset is tagged. Low-risk display/classification fix (MVP tag unused downstream
-      today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service
-      (build_instrument_catalogue.py) > **[v10 RECONCILED 2026-06-27]** The `SportsMvpRule` keys
-      (`EPL`/`LA_LIGA`/`NFL`/`NBA`) described above reflect > the PRE-v10 definition. The canonical v10 sports MVP scope
-      is **94 FOOTBALL leagues** (NOT 4 leagues) via > `_mvp_football_league_ids()`. The catalogue `mvp` column fix (if
-      pursued) must check against the v10 94-league > set. SSOT: `/codex/02-data/mvp-scope-canonical.md`.
+- [x] ✅ [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs is_mvp() canonical strings)** —
+      reconciled via `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 7 (2026-08-10, slot 24) — STALE
+      PREMISE, ALREADY WORKING. No code change needed — the numeric→canonical mapping concern is moot because the
+      catalogue `league_id` is already canonical end-to-end. Measured against the LIVE prod catalogue (rebuilt
+      2026-08-10 10:52Z): 0 numeric `league_id` rows (532,868 rows, all canonical strings); all 96 v10 MVP football
+      leagues tagged `mvp=True` (0 false negatives), 272,006 rows `mvp=True`. One stale false positive
+      (`SEGUNDA_DIVISION`, cosmetic, tag unused downstream) — see batch-11's todo 7 note. The numeric-ID premise
+      reflects the 2026-06-19 catalogue verify; the sports by_date source has since canonicalized league_id. Repo:
+      instruments-service (verified, no change needed).
 
 ### Follow-up todos (tracked)
 
@@ -489,10 +499,17 @@ credits. Tracked todos below.
       change/0 destroy) created `uts-prod-manifest-consolidator-gas-fees` job + `*/1` cron; ran once to seed the index;
       relaunched gas-fees (`mtds-gas-fees-20260619-211114`) which now CLIMBS past the crash point (ETHEREUM+BSC
       sampling, 2021-01-01/02, **no ManifestConsolidatorStaleError**) — deployment-service@f0f7ded.
-- [ ] [SCRIPT] P2. market-tick-data-service / deployment-service — diagnose the sfi backfill mid-processing hang (log
-      froze 4min post-launch, no crash; SFI key works). Check for an SFI-API request timeout / manifest-write stall; add
-      a request timeout + per-date isolation so a single hung request can't freeze the whole chunk. Then relaunch the
-      SFI chunks. Target repo: market-tick-data-service (collector) + deployment-service (launcher).
+- [x] ✅ [SCRIPT] P2. **Diagnose the sfi backfill mid-processing hang + add a request timeout + per-date isolation** —
+      reconciled via `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 8 (2026-08-09) — STALE PREMISE,
+      already shipped well before this batch: bounded per-request HTTP timeouts (`instruments-service@0261e4259`,
+      2026-06-19), per-match `asyncio.wait_for` shard isolation (`instruments-service@367afc6e0`, 2026-06-24), the
+      `--chunks` ban for SFI's shared-key rate limit (`deployment-service@51cbacd9d`, 2026-06-19), a VM-level
+      silent-stall watchdog (`deployment-service@a8ee104e5`, 2026-06-22). Verified via 3 real recent production SFI
+      backfill VMs (`sfi-backfill-20260806-140815`,`-20260807-101503`,`-20260807-123519`) — all completed cleanly
+      despite hitting real transient errors mid-run, each correctly shard-isolated without stalling. No code change
+      needed. Distinct low-frequency data-quality finding (JSON truncation, not a hang) filed as
+      `/plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md`. Repo: instruments-service (verified,
+      no change needed) / deployment-service (verified, no change needed).
 - [ ] [SCRIPT] P2. **DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
       gas/sfi "VM RUNNING but work-process silent, log-tee daemon alive" class: detect work-process silence (run.log
       object mtime frozen N min while VM RUNNING) and auto-kill+alert, distinct from the existing heartbeat watchdog.
@@ -500,10 +517,14 @@ credits. Tracked todos below.
 
 ### Follow-up todos (tracked)
 
-- [ ] [SCRIPT] P2. instruments-service / market-tick-data-service — apply the same parallelization pattern to the
-      sfi/sports collector's per-date sequential loop **within the RapidAPI rate budget** (concurrency capped so it does
-      not increase 429s) so it's not needlessly serial on top of being rate-limited. Target repo: instruments-service
-      (SFI adapter) + market-tick-data-service (sports orchestration).
+- [x] ✅ [SCRIPT] P2. **Apply the parallelization pattern to the sfi/sports collector's per-date sequential loop within
+      the RapidAPI rate budget** — reconciled via `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9
+      (2026-08-09). Correction to this todo's own repo attribution: SFI is entirely owned by instruments-service (no
+      SFI/RapidAPI code in market-tick-data-service — MTDS sports adapters are a separate Sportradar/odds provider).
+      Applied `asyncio.Semaphore(5)` + `gather` to the per-match progressive-stats fetch in `_fetch_sfi_data()` (mirrors
+      the api_football pattern). The adapter's existing `_throttle()` token bucket serialises the actual send-rate
+      regardless of added concurrency (structurally cannot raise 429s). QG green. Repo: instruments-service@8afe2053;
+      market-tick-data-service has no SFI involvement.
 - [x] ✅ [CREDENTIALS] P1. SUPERSEDED — NOT a tier ask. Operator 2026-06-19: SFI RapidAPI is **4 req/s (max tier 6
       req/s) + 100k req/day**, so a tier upgrade is negligible (4→6). The 429s were SELF-INFLICTED: we ran **4
       chunk-parallel VMs sharing ONE RapidAPI key** (each self-pacing 0.34s≈2.94/s → 4Ã2.94≈11.8/s vs the 4/s ACCOUNT
@@ -519,12 +540,12 @@ credits. Tracked todos below.
 
 ### Follow-up todos (corrected)
 
-- [ ] [SCRIPT] P2. deployment-service — `launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse
-      `--chunks N>1`) because the RapidAPI key's 4/s limit is PER-ACCOUNT, not per-VM — N chunks just multiply 429
-      collisions. The `sfi_chunk_parallel_backfill_2026_04_22` plan's premise (independent per-chunk rate budgets) is
-      invalid for a shared key; supersede it. Optionally tighten the per-instance pace 0.34s→0.25s to use the full 4/s
-      on the single stream. Target repo: deployment-service (launcher) + instruments-service (`soccerfootball_info.py`
-      `_min_request_interval`).
+- [x] ✅ [SCRIPT] P2. **`launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`)** —
+      reconciled via `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 (2026-08-09) — STALE FINDING,
+      already fixed pre-audit. `launch-sfi-backfill-vm.sh` has hard-refused `--chunks N>1` since
+      `deployment-service@51cbacd9` (2026-06-19), which predates this doc's 2026-07-24 source scan; `--chunks` now only
+      accepts `1`/unset, `N>1` exits 1. The optional pace tighten (0.34s→0.25s) was NOT applied (explicitly optional,
+      outside this item's done-when). Repo: deployment-service (verified, no change needed).
 
 ### Follow-up todos
 
@@ -533,9 +554,11 @@ credits. Tracked todos below.
       `net_usd_now`/`net_leverage_now`, instead of a single `gross_usd` that conflates planned-ceiling vs live (it flips
       15M/6x ↔ 5.6M/2.2x between runs). UI currently derives gross-now from positions as the interim. Target: whoever
       owns paper_engine.py (batch-live-reconciliation / citadel paper-determinism).
-- [ ] [SCRIPT] P3. deployment-service — `launch-mtds-prediction-backfill-vm.sh` singleton lock matches
-      `^mtds-prediction-` so a KALSHI run is blocked by a concurrent POLYMARKET run (different APIs, no shared rate
-      limit) → make the lock per-venue. `--force` is the current bypass.
+- [x] ✅ [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 11 (2026-08-11, slot 28) — the per-venue
+      singleton lock (`^mtds-prediction-${VENUE_LOWER}-`), `VENUE_LOWER` variable, updated error message, DRY'd VM_NAME
+      landed before this task was dispatched. Verified against current HEAD: KALSHI and POLYMARKET runs no longer block
+      each other. Repo: deployment-service@fce66018.
 
 ### Follow-up todos
 
@@ -548,12 +571,14 @@ credits. Tracked todos below.
 
 ### Side-finding (2026-06-20, non-blocking)
 
-- [ ] [TEST] P3. unified-api-contracts — UEI-lifecycle contract-call ratchet baseline (27) for
-      `canonical/crosscutting/honest_coverage.py` is STALE: commit `27a80d2 feat(freshness): feed-SLA Phase 1` split the
-      honest_coverage cluster registries out (under the 900-line cap), so the contract calls MOVED to the new registry
-      files (file now ~21, was 27) — NOT deleted, NOT a regression. Both UAC + IS QG pass overall (warn-tier cross-repo
-      line). Re-baseline the ratchet for the post-split file set (sum across honest_coverage.py + the split-out
-      registries). Owned by the 27a80d2 split author. Repo: unified-api-contracts.
+- [x] ✅ [TEST] P3. **Re-baseline the UEI-lifecycle contract-call ratchet for
+      `canonical/crosscutting/honest_coverage.py` post-split** — reconciled via
+      `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` todo 12 (2026-08-09) — STALE PREMISE, baseline already
+      accurate. Verified live: `adapter_contract_baseline.yaml` already carries separate correct entries for
+      `honest_coverage.py` (38) + the three split-out registries (`_honest_coverage_clusters.py` 4,
+      `_honest_coverage_empty_reasons.py` 5, `_honest_coverage_logic.py` 11 — sum 58). Running
+      `check_adapter_contract_regression.py --regenerate-baseline` produced a byte-identical baseline (`git diff --stat`
+      empty). No baseline edit, no code change needed. Repo: unified-api-contracts (verified, no change needed).
 
 ## Deferred work — migrated to:
 
@@ -600,7 +625,7 @@ Two genuine hits in this plan:
   `instruments_mtds_subset_consistency_remediation_2026_06_17.md`), not executed this run.
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: this is that future doc-split. Extracted 11 of the
   ~10-12 items the 2026-08-07 entry above named to
-  [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
+  [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
   (+ gated finalize twin): prediction status-bucket fix, DeFi venue-grain adapter alignment, B3 e2e-data canonical copy,
   Extended public backfill, Extended candle sharp-edge hardening, Extended candle path consolidation, sports mvp-column
   fix, SFI hang diagnosis, sfi/sports parallelization, both VM-launcher script fixes, and the UEI ratchet re-baseline.
@@ -613,3 +638,17 @@ Two genuine hits in this plan:
   features-service + every OHLCV write-callsite), too broad a blast radius for a single bounded AO todo; left as-is. Doc
   stays `assigned_vm: NA` (the remaining ~10 open items are genuinely credential/dependency/design-gated, per the
   entries above). Extracted items' source checkboxes stay open here until batch 11's finalize twin reconciles them.
+- **batch-11 finalize reconcile 2026-08-11** (`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` todo
+  1, slot 3): flipped all 11 corresponding checkboxes in this doc against batch 11's now-done todos, citing the shipped
+  commit(s)/verification evidence per item (verified against batch 11's own text, not assumed verbatim — prediction
+  status-bucket fix, DeFi venue-grain alignment, B3 e2e-data canonical copy, Extended backfill, Extended candle
+  hardening, Extended candle path consolidation, sports mvp-column fix, SFI hang diagnosis, sfi/sports parallelization,
+  launch-sfi-backfill-vm.sh chunks default, launch-mtds-prediction-backfill-vm.sh singleton lock, UEI ratchet
+  re-baseline). Also re-verified the flagged "Wire Kalshi into the pipeline" checkbox against CURRENT code (not just the
+  two previously-cited docs): confirmed `instruments-service/.../adapters/prediction/kalshi.py` fully implements RSA-PSS
+  signing reading both `api_key_id`/`key_id` + `private_key`, and MTDS carries `KalshiAdapter.get_trades_with_status` +
+  4 live WS connectors + a bulk-ingest script — flipped as done. **9 open todos remain** (B0/B1/B2/B3-adjacent
+  backfill+catalogue-regen scope, `ohlcv-1s`/`BarTimeframe` closed-set extension, the manifest dedup blank-column fix,
+  the FLEET-WIDE v9-column populate, the silent-worker watchdog, `paper_engine.py` foreign-repo dependency, the
+  dirty-tree-gated PREDICTION tarball rebuild) — genuinely credential/dependency/design- gated, confirming the finalize
+  plan's own expectation ("unlikely" to reach 0). Doc does NOT archive; stays `assigned_vm: NA`.

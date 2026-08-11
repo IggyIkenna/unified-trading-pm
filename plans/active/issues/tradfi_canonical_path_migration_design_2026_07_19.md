@@ -308,10 +308,23 @@ removal + casing normalization remain before backfill-resume.
       function, it has no `underlying=` segment) and expanded `_CHAIN_ITYPES` to also recognize already-canonical
       `combo_chain` objects (previously fell through to `D_QUARANTINE_CORRUPT` — a real bug a re-run would have hit
       today). 2 new regression tests. Shipped `market-tick-data-service@<pending, see next progress-log entry>`.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **The 4 KNOWN
+      2020-01-06 duplicates: DONE 2026-08-11 (interactive session).** Content-identity verified byte-identical (keyed on
+      `(timestamp, symbol)` — combo bundles multiple calendar-spread symbols per timestamp, a naive timestamp-only
+      sort/compare gives a false mismatch, caught and corrected mid-session). Bucket confirmed reversibility-qualified:
+      `gcs_bucket_soft_delete_retention_seconds()` = 604800s (7 days, meets the ≥604800s carve-out). Deleted the 4
+      orphaned quote=/margin=-form objects via UTL `gcs_delete_object` (kept the bare-form objects, matching what the
+      canonical-path oracle currently expects pre-migration), verified absent post-delete. **NOT DONE — the broader
+      scope** (every duplicate combo cell beyond this one date/4-underlying sample): the manifest does NOT reliably
+      surface these (a `groupby(venue,data_type,date,underlying)` on the availability index found 0 "duplicate cells"
+      for GOLD/SP500/WTI even though the GCS objects clearly exist — most likely explained by the original silent
+      manifest-write-failure bug from earlier this session, meaning affected cells may have NO manifest row at all, not
+      a detectable duplicate row). Finding the full population requires either a scoped GCS prefix walk of
+      `instrument_type=combo/` across all dates (structurally can't skip the `day=` partition to filter by
+      instrument_type, so this is a real, non-trivial walk) or VM dispatch — see the new follow-up todo below.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -350,13 +363,24 @@ removal + casing normalization remain before backfill-resume.
       2bcec56e/5706f9bb, NOT on origin" note above was STALE — those exact SHAs are unreachable in this repo's object
       store (checked `git log --all`), but the equivalent fix landed under a different SHA (`8c264a4e`) and IS on
       origin; re-verified via `git merge-base --is-ancestor`.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Re-blank the 3,267 manifest rows the now-deleted
+- [ ] [OPERATOR] P1. **(NEW 2026-08-11) Re-blank the manifest rows the now-deleted
       `restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` already restamped with real synthetic ids**
       (41 roots, `venue=CME`, `instrument_type ∈ {futures_chain, options_chain}`, `data_type ∈ {ohlcv_1m, ohlcv_1s}` —
-      full per-root breakdown in `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s Progress Log, `--apply` ran
-      2026-08-09). These rows now contradict the new instrument_id-blank design shipped above — a manifest-row column
-      update (not a GCS object delete), so the delete-safety protocol may not directly apply, but this still needs a
-      real production manifest write; scope + safety approach not yet determined. Repo: market-tick-data-service.
+      historical figure 3,267 rows from `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s `--apply` run,
+      2026-08-09). These rows now contradict the new instrument_id-blank design shipped above. **Script written, tested,
+      shipped 2026-08-11: `scripts/unblank_tradfi_cme_chain_bundle_instrument_id_2026_08_11.py`
+      (`market-tick-data-service@2dc27de8`)** — exact-match candidate selection (never a substring match, so a real
+      per-contract dated id is never touched), same CAS-write safety pattern as the sibling
+      `restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py` (snapshot-before-write, self-verify,
+      stop-on-surprise, generation-conflict retry). 11/11 unit tests passing, QG green. **Dry-run against the LIVE prod
+      manifest measured 59,197 candidates — far above the historical 3,267 figure**: the restamp script only touched
+      historical rows as of 2026-08-09, but the underlying writer bug (`_resolve_chain_bundle_manifest_id`) stayed live
+      in the writer from 2026-07-30 until today's fix, so every new ohlcv_1m/1s capture in between kept accumulating
+      more non-blank rows. **`--apply` NOT YET RUN — Auto Mode's own classifier flagged the live prod-manifest write as
+      needing explicit operator confirmation, asked the operator directly, awaiting answer.** Run
+      `.venv/bin/python scripts/unblank_tradfi_cme_chain_bundle_instrument_id_2026_08_11.py --bucket     market-data-tick-tradfi-prd-central-element-323112 --apply`
+      once confirmed (dry-run first to re-measure the live count, may have grown further). Repo:
+      market-tick-data-service.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
@@ -388,19 +412,13 @@ removal + casing normalization remain before backfill-resume.
       canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
       in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
       and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
       path-based read (`pq.read_table(gcs_path)` / `pd.read_parquet(gcs_path)`) — real, confirmed, but NOT live-blocking
       (MTDS's own `reader.py::_read_parquet_bytes` reads via an in-memory buffer, a different pyarrow code path that is
-      unaffected — spot-checked, works fine on the same files).**
+      unaffected — spot-checked, works fine on the same files). — **ROOT-CAUSED + RESCOPED 2026-08-11 (slot 29,
+      data_engineering); the original within-file row-group-encoding hypothesis is WRONG, see Progress Log for full
+      evidence chain. No code change needed — closing as verified/scoped, not deferred.**
       `ArrowTypeError: Unable to merge: Field     instrument_type has incompatible types: string vs dictionary<values=string, indices=int32, ordered=0>`
-      — pyarrow's `ParquetDataset`/path-based read does row-group-level schema unification and finds `instrument_type`
-      encoded as plain BYTE_ARRAY in some row groups vs dictionary-encoded in others WITHIN the same file (confirmed via
-      `pq.ParquetFile(path).read()`, which succeeds — the physical storage is consistent, only the Arrow-inferred
-      logical type per row group differs by encoding choice). Confirmed on 3 separate combo/futures_chain files
-      (`day=2020-01-06`, SP500/GOLD, both combo and futures_chain instrument_type) — likely systemic wherever a shard
-      was written across multiple streaming-writer flushes. Real risk: any AD HOC script/analysis using a direct
-      path-based read (not the live reader's buffer-based path) will hard-fail on these files. Scope not yet measured
-      (how many historical files affected); root cause not yet traced to a specific writer flush-boundary condition.
       Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
       currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own
@@ -427,6 +445,19 @@ removal + casing normalization remain before backfill-resume.
       directly from the original module path — verified via repo-wide grep, not guessed. 300 tests passing across both
       split files + every downstream consumer + the originally-blocked reader.py/combo_chain fix, ruff clean. Shipped
       together in one commit: `market-tick-data-service@b13e3a2b98` → landed on live-defi-rollout.
+
+## Deferred work after 2026-08-11
+
+| Item                                                                                                                                 | State / why deferred                                                                                                                           | Blocked on                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Re-blank ~59,197 CME chain-bundle manifest rows                                                                                      | Not done — script ready, QG-green, dry-run confirms real scope                                                                                 | Operator confirmation (asked directly, awaiting answer)                                                                                     |
+| Broader orphaned-duplicate combo scope (beyond the 4 known GOLD/SP500/WTI/BTC objects)                                               | Not done — manifest doesn't reliably surface these (see finding above); needs a scoped `instrument_type=combo/` GCS prefix walk or VM dispatch | Real work — pick it up (VM-scale, not a quick local task)                                                                                   |
+| Migrate historical short-code `underlying=` objects to display-name form                                                             | Not done — dry-run script exists, needs an enumeration input + prod-bucket delete gate                                                         | Real work — needs VM dispatch (per `/codex/05-infrastructure/vm-launcher-runbook.md`, heavy I/O never runs on the operator's local machine) |
+| `_CHAIN_ITYPES`/combo target-path remap, instrument_id-blank design, `lifecycle_phase` dtype, ArrowTypeError path-read investigation | Done — all shipped/verified with real SHAs and evidence above                                                                                  | —                                                                                                                                           |
+
+Recommended next: the 59,197-row re-blank is the smallest, most-ready, highest-leverage item (script done, just needs a
+go/no-go) — do that first once the operator answers. The two VM-scale items (broader duplicate scope, short-code
+migration) should be scoped together as one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
 
 ## Progress Log
 
@@ -526,3 +557,41 @@ removal + casing normalization remain before backfill-resume.
 
   **Migration scope:** ~92K `futures_chain/` short-code objects (35 roots with existing display-name equivalents) +
   ~1,598 `combo/` objects (11 roots) → content-based rename to display-name paths. Filed as follow-up P2 todo above.
+
+- **2026-08-11 (slot 29, data_engineering) — path-based-read `ArrowTypeError` ROOT-CAUSED; original hypothesis was
+  wrong, closed the P2 todo above (no code change needed).** Reproduced on the doc's own 3 cited files
+  (`day=2020-01-06`, combo/GC and futures_chain/GOLD) plus a 4th, unrelated single-type file
+  (`venue=FX/ instrument_type=spot_pair/data_type=ohlcv_24h/ticks.parquet`) — **disproving the combo/futures_chain-only
+  framing**. Evidence chain: (1) `pq.ParquetFile(path).metadata.num_row_groups` == 1 for every affected file — the
+  "row-group-level schema unification within the same file" hypothesis is impossible on a single-row-group file. (2)
+  `pf.read_row_group(0)` and `pf.read()` (direct `ParquetFile` reads, bypassing dataset machinery) both succeed cleanly
+  on every affected file — the physical file is NOT corrupt. (3) Downloading the exact same bytes and reading from a
+  LOCAL path via `pd.read_parquet`/`pq.ParquetDataset` also succeeds cleanly — proves the failure is entirely a `gs://`
+  URI artifact, not a property of the file content. (4) `pyarrow.dataset.dataset(path, partitioning=None)` succeeds;
+  `pyarrow.dataset.dataset(path, partitioning="hive")` (explicit) also succeeds; only the DEFAULT/implicit partition
+  inference used by `pd.read_parquet(gs://…)` / bare `pq.ParquetDataset(gs://…)` / bare `pq.read_table(gs://…)` fails.
+  **Actual mechanism**: every tradfi `raw_tick_data` object is written with its own partition-key values ALSO stamped as
+  literal, self-describing DATA COLUMNS inside the parquet file (`day`, `pipeline_mode`, `venue`, `instrument_type`,
+  `underlying`, …), while the GCS path is simultaneously Hive-style (`day=…/venue=…/instrument_type=…/…`). When a bare
+  `gs://` path is handed to pyarrow's high-level convenience readers, implicit Hive-partition inference from the path
+  constructs a `dictionary<string>` partition column for each `key=value` segment, which then NAME-COLLIDES with the
+  file's own identically-named plain-`string` data column — producing exactly
+  `ArrowTypeError: Unable to merge: Field <X> has incompatible types: string vs dictionary<...>`. Confirmed the
+  colliding field varies by file (`instrument_type` for the combo/futures_chain samples, `venue` for the FX/spot_pair
+  sample) — it's whichever path-segment key happens to also be a real column in that file's schema, not a fixed field.
+  **Scope correction**: this is NOT "some combo/futures_chain files" — it reproduces on a SINGLE-type shard too, and the
+  mechanism (self-describing enrichment columns + Hive-style path, the standard write convention used fleet-wide, not a
+  defect isolated to specific files/dates) applies structurally to effectively every tradfi `raw_tick_data` object read
+  this way. Declined to run a new whole-corpus GCS walk to "count affected files" (single-walk discipline) — the answer
+  isn't a file-corruption count, it's "any file, when read via the naive default-partitioned `gs://` convenience API."
+  **Confirmed NOT live-blocking**, consistent with the todo's own claim: MTDS's own `reader.py::_read_parquet_bytes`
+  reads via an in-memory byte buffer (no `gs://` URI ever reaches pyarrow's dataset layer), the same mechanism as the
+  local-copy workaround in (3) above — genuinely immune, re-confirmed by this investigation, not just assumed.
+  **Confirmed workarounds for any future ad hoc script**: `ds.dataset(path, partitioning=None)`,
+  `ds.dataset(path, partitioning="hive")` (explicit), `pq.ParquetFile(path).read()`, or download-bytes-then-read-local —
+  any one avoids the collision. **No code change shipped** — no data is wrong, production is unaffected, and the defect
+  is a known, avoidable footgun in ad hoc tooling rather than a bug to fix; closing the todo as verified/root-caused
+  rather than leaving it open on a stale, disproven hypothesis. If a future session wants a standing guard, the cheapest
+  fix would be a thin `read_tradfi_gcs_parquet(path)` helper (wraps `ds.dataset(path, partitioning=None).to_table()`)
+  for anyone writing ad hoc analysis scripts against this bucket — not filed as a separate todo given P2/non-blocking
+  status, flagging here for whoever next touches ad hoc tradfi tooling.

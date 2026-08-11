@@ -110,8 +110,54 @@ mid-shutdown could not have resumed anyway. The name list is preserved for audit
 the box is up. It does not prove MDPS is doing anything. The wedge verdict is solid because a `Stopping <unit>` line is
 unambiguous; the liveness verdict is not, and was deliberately not used to justify any delete.
 
+## The deletion triggered a relaunch burst — cause attribution (2026-08-11 15:44-15:51 UTC)
+
+**Deleting the 393 wedged VMs made the monitor relaunch them.** A deleted VM reads to `exit_code_fleet_monitor` as
+`terminated with NO durable exit marker but captured climbed` — the `PARTIAL_UNCONFIRMED` verdict, which `_classify.py`
+deliberately auto-recover-routes "via the SAME resume-from-checkpoint relaunch as PREEMPTED" so a genuine partial run
+self-heals. That routing is correct in its intended case; it simply cannot distinguish "preempted mid-run" from "an
+operator reaped a corpse". Measured effect: the fleet went **250 → 364 in about six minutes**, in whole-launcher
+fan-outs (several VMs sharing one timestamp suffix, e.g. `...-154435` across every year, i.e.
+`launch-mdps-sharded-backfill.sh` invoked wholesale rather than a per-VM relaunch). The `_MAX_RELAUNCHES_PER_DAY = 2`
+budget did not stop it, which is further evidence the deployed image's budget is not actually durable.
+
+Stopped in three steps, each verified: schedule `*/5` → `0 * * * *` (15:44Z), scheduler **PAUSED** (15:46Z), then all
+six in-flight executions **cancelled** (15:50-15:51Z) — pausing alone was not enough because an execution runs up to its
+1800 s timeout and keeps relaunching the whole time. Last launch 15:51:07Z; zero launches after that, confirmed at
+15:53Z. Fleet settled at ~358.
+
+The sibling `uts-prod-dp-heartbeat-watcher` was checked and deliberately **left running**: it reports
+`heartbeat sweep: 272 running, 0 stalled` and exits 0 in seconds. It is healthy and is not a relaunch source.
+
+**⚠️ STANDING STATE — the exit-code monitor is PAUSED.** Genuine spot-preemption recovery is therefore OFF fleet-wide.
+This is a deliberate hold, not a fix, and it must be reversed as part of the bounded-sweep work below.
+
+**Operator ruling 2026-08-11 (recorded in this doc): KEEP IT PAUSED** until the classifier can tell a deliberate delete
+from a partial run. Rationale accepted at decision time: backfills resume from their progress checkpoint on the next
+launch regardless, so a paused preemption-recovery loop delays recovery rather than losing work — whereas unpausing now
+would resume relaunching the 393 deleted VMs against a per-prefix budget whose durability in the deployed image is still
+unverified. The unpause is gated on the P0 below, not on elapsed time.
+
 ## Follow-ups
 
+- [x] ✅ [SCRIPT] P0. **Taught the recovery path the difference between a preempted VM and a reaped one** —
+      deployment-service@ecd6d2bd90. `vm-logs/{vm}/REAPED` tombstone + `is_vm_reaped` (mirrors the existing `PREEMPTED`
+      marker: bounded `blob_exists`, never raises, fails toward not-reaped so a read error costs a spurious relaunch
+      rather than silently suppressing recovery for a genuinely preempted VM); a `REAPED` verdict checked FIRST, ahead
+      of `preempted`, because a reaped spot VM can still carry a stale `PREEMPTED` blob and PREEMPTED relaunches;
+      `_finding_for` returns `None`, which is what withholds the relaunch since the escalation tier rides on the
+      finding. `scripts/vm/reap_vms.py` writes the tombstone BEFORE deleting (order is load-bearing — the reverse leaves
+      the relaunch window open) with `--tombstone-only` for VMs already deleted. 5 tests including a negative control
+      asserting the SAME VM shape without a tombstone still classifies `PARTIAL_UNCONFIRMED`, so the positive test
+      cannot pass for the wrong reason. Evidence: gate green, 3,322 passed, basedpyright 1259/1259 (ratchet held, not
+      raised); `_gcs.py` 982 → 939 via the `_vm_markers` leaf split rather than raising the 960-line cap.
+- [ ] [SCRIPT] P0. **UNPAUSE `uts-prod-dp-exit-code-monitor-cron` — BLOCKED on deploy + tombstone backfill, in that
+      order.** The code is on LDR but landing on `main` deploys nothing: the monitor runs `deployment-api:latest` via
+      Cloud Build, so (1) wait for the image to carry `ecd6d2bd90`, (2) run
+      `reap_vms.py --tombstone-only --vms-file /plans/active/issues/vm_reap_lists/reaped_vms_2026_08_11.txt` (the exact
+      393 names, committed alongside this doc so the list outlives the session that produced it) — they were deleted
+      before the tool existed and still have no tombstones, so unpausing first would replay the exact burst — then (3)
+      unpause. Doing these out of order re-creates the incident.
 - [ ] [SCRIPT] P1. Make `exit_code_fleet_monitor` bounded and complete: it must either finish a full fleet sweep inside
       its task timeout (parallelise the per-VM probe, or page the fleet across executions with a durable cursor) or
       loudly report that it did NOT complete. A monitor that silently covers 3% of the fleet is worse than none — it
@@ -134,4 +180,6 @@ unambiguous; the liveness verdict is not, and was deliberately not used to justi
       `deployment-api:latest` image the monitor job runs. The fix is on the branch; the image build time was never
       checked, so the cap may still be reading an empty per-container tempdir in production.
 - [ ] [SCRIPT] P2. Re-probe the 39 VMs whose serial-console read returned no parseable timestamp — they are classified
-      neither live nor wedged and were left alone.
+      neither live nor wedged and were left alone. Tool: `deployment-service/scripts/vm/probe_vm_serial_liveness.sh`
+      (promoted from this incident's diagnostic session, read its header before trusting a fresh timestamp as more than
+      guest-alive).

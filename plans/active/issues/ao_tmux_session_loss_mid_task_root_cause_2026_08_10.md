@@ -164,20 +164,24 @@ memory and that's what kills sessions" as-is.
       and, if it's coarse (e.g. 60s+), consider whether a sub-interval spike is plausible given `iowait_percent`'s
       elevated p90 (40.7 vs 24.3 baseline) at loss moments — the one metric in this pass that wasn't clearly
       unremarkable. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **New lead (2026-08-11): pruner-loop delay under load, as a distinct candidate from the DeepSeek-
-      transport theory.** Live journal read (SSM, `journalctl -u orchestrator`) around a 25-session loss cluster
+- [ ] [INFRA] P3. **Pruner-loop delay under load — DOWNGRADED 2026-08-11, likely superseded by the tmux-server-death
+      finding below.** Live journal read (SSM, `journalctl -u orchestrator`) around a 25-session loss cluster
       (07:57:42-45 UTC) found a single `TmuxPruner: cleared 25 stale tmux_session reference(s)` line — one pruner TICK
       clearing a backlog of 25, not necessarily 25 sessions dying in the same instant. If the pruner's own loop was
       delayed/backed up (SQLite write contention under fleet load is a known pre-existing pattern per `tmux_pruner.py`'s
       own docstring on the `ensure_review_agents`-class lock contention it was refactored to avoid), losses that
       actually happened scattered over the PRECEDING window would only get detected+logged in one late batch, inflating
-      the appearance of a synchronized mass-kill. **Done when**: pull successive `TmuxPruner: cleared     N` log-line
-      timestamps over a longer window and check whether the gap between ticks is ever meaningfully wider than
-      `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no delay = the 25 really were
-      closely-clustered, still needing an explanation). A co-occurring `utempter: pututline: Permission denied` line at
-      the same timestamp was investigated and is very likely a red herring — it also fires during the routine respawns
-      immediately after, so it looks like constant/benign noise on this host's permission setup, not death-specific;
-      note this here so it isn't re-chased as a lead. Repo: agent-orchestrator.
+      the appearance of a synchronized mass-kill. A simpler, more direct explanation surfaced live the same day (see
+      "production breakthrough" Progress Log entry): if the tmux SERVER process itself dies, every pane it hosts is lost
+      in the SAME instant for real, no batching illusion needed — still worth confirming which (or both) explain the
+      historical clusters, but no longer the leading hypothesis. **Done when**: pull successive
+      `TmuxPruner: cleared     N` log-line timestamps over a longer window and check whether the gap between ticks is
+      ever meaningfully wider than `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no
+      delay = the 25 really were closely-clustered, still needing an explanation). A co-occurring
+      `utempter: pututline: Permission denied` line at the same timestamp was investigated and is very likely a red
+      herring — it also fires during the routine respawns immediately after, so it looks like constant/benign noise on
+      this host's permission setup, not death-specific; note this here so it isn't re-chased as a lead. Repo:
+      agent-orchestrator.
 - [x] [INFRA] P3. ~~Check for a per-cgroup OOM kill~~ — **CLOSED 2026-08-11, ruled out.** All workers run under
       `orchestrator.service`'s systemd cgroup, which DOES have a real memory ceiling (`MemoryAccounting=yes`,
       `MemoryHigh=24.7GB`, `MemoryMax=26GB` — confirmed via `systemctl show`). Read the cgroup's own lifetime kill
@@ -215,6 +219,71 @@ memory and that's what kills sessions" as-is.
       and root access is available via SSM. **Done when**: a live-caught death's underlying cause is identified from
       OS-level evidence (not just "confirmed absent again"), or enough sandbox runs accumulate that a pattern (timing,
       account, task shape) emerges. Repo: agent-orchestrator.
+- [ ] [INFRA] P1. **New lead (2026-08-11, production breakthrough): find the tmux SERVER process's own resource envelope
+      and monitor IT specifically, distinct from every check so far.** Live-caught a death where the ENTIRE tmux server
+      for `ubuntu` vanished, not one pane (see Progress Log) — every cgroup/OOM check this doc has run (including the
+      definitive `orchestrator.service` `oom_kill=0` ruling) covers the cgroup worker PANES inherit, never the
+      freestanding tmux SERVER process itself, which per `server/tmux_spawn.py`'s own comments on the (unarmed)
+      per-worker memory-cap feature likely sits outside any per-service cgroup entirely. **Done when**: (a) confirm what
+      cgroup/slice the tmux server process actually runs under on a live check
+      (`cat     /proc/<tmux-server-pid>/cgroup`), (b) if it's unconfined or under a DIFFERENT slice than
+      orchestrator.service, check that slice's own `memory.events` oom_kill counter for a nonzero reading correlated
+      with known death timestamps. Repo: agent-orchestrator.
+- [x] [INFRA] P1. ~~Alert + surface fleet-wide tmux server death~~ — **SHIPPED 2026-08-11,
+      `agent-orchestrator@d1e62b7317`.** Operator ask: this class of outage needs Slack visibility, Activity Log
+      visibility, and to colour the dashboard's "Multiple issues — eyes on this" HealthStrip, not just live silently
+      alongside routine per-slot churn. Added `tmux_spawn.tmux_server_running()` (distinguishes "server gone" from
+      "server up, this one session gone" via `tmux list-sessions`' stderr — the two known message variants observed live
+      this session, Linux `no server running on <socket>` and macOS `error connecting to <socket>`); wired into
+      `TmuxPruner.prune_once()` as a new fire-on-change + RESOLVED-bookend check (same shape as
+      `WorkerLivenessWatchdog`'s dormancy alert — one page opens the episode, still-down ticks stay silent, a RESOLVED
+      page closes it, latched on disk via `dedup_state.tmux_server_died_alerted_path()` so a restart mid-outage doesn't
+      re-page); logs `tmux_server_died`/`tmux_server_recovered` fleet-wide (`slot_id=None`) activity events either way,
+      so the Activity Log carries it even between Slack pages; pages `notify_tmux_server_died`/`_resolved` in
+      `server/notifications/slack.py`; and surfaces `StateResponse.tmux_server_down` on the dashboard's HealthStrip —
+      checked FIRST, ahead of even watchdog dormancy, since every other number on the strip is meaningless while the
+      server itself is down. 6 new backend tests + 2 new dashboard tests. Caught and fixed one real bug in review before
+      shipping: the first draft accidentally moved `agent_candidates`'s query outside its
+      `with read_only_session_scope()` block and inside a conditional, which would have broken agent-reaping
+      (`UnboundLocalError` whenever the fleet had zero worker sessions) — caught by the pre-existing pruner test suite,
+      not by inspection.
+- [ ] [INFRA] P1. **UPGRADED lead 2026-08-11 — named the specific cron jobs; now the leading hypothesis, not yet proven
+      causal.** The newly-shipped alert (previous todo) immediately caught the tmux server dying and recovering THREE
+      times in ~13 minutes while writing this doc — 16:55:28 (21 slots), 17:02:05 (19 slots), 17:07:34 (25 slots), each
+      recovering in ~85-90s. Checked all three against the VM's `crontab -l`: TWO all-slot, all-repo git-housekeeping
+      cron jobs run on a staggered 5-minute cadence — `slot-cron-ff-pull.sh --all-slots` at `:00,:05,:10,...` and
+      `slot-git-status-report.sh` (offset 2min later "after slot-cron-ff-pull's :05 boundary" per its own header
+      comment) at `:02,:07,:12,...`. 16:55:28 lands within 28s of the ff-pull grid; 17:02:05 and 17:07:34 land within
+      2-5s of the git-status-report grid — 3/3 deaths today align with one or the other, not random.
+      `slot-git-status-report.sh` itself never touches tmux (pure `git status`/`git rev-list`/`curl`), but walks EVERY
+      repo under EVERY slot (1132 directories at maxdepth 2 under `.tabs/`) — a burst of many hundreds of git subprocess
+      forks in a tight window. This also explains the operator's independent observation that a dying session's apparent
+      lifetime is "~3 min, seems random, but they definitely start and run real work first" (confirmed separately:
+      credits burned on BOTH DeepSeek and Anthropic around these deaths, live catches showed active
+      work/429-retry-loops, not stuck-at-boot) — if the ACTUAL trigger is a fixed 5-minute-grid cron tick rather than a
+      fixed per-session duration, a worker starting at a random offset into that cycle would show an observed lifetime
+      uniformly distributed across the cycle, averaging ~2.5min — matching "~3 min" closely without needing per-session
+      variance as an explanation. Checked PID/FD-exhaustion as the mechanism connecting the cron burst to the tmux
+      death, but only post-recovery snapshots were available (pid_max=4194304, ubuntu nproc limit=115876, TasksMax=76478
+      — all far from any current ceiling) — does NOT rule out a TRANSIENT spike during the actual burst, which this pass
+      had no visibility into. **Done when**: (a) pull a larger sample (50-100+) of `tmux_server_died` timestamps from
+      `state.db` and check statistically what fraction land within ~60s of either cron grid vs. a null/random-timing
+      expectation (attempted this pass, blocked on a wrong DB path —
+      `/home/ubuntu/agent-orchestrator/data/state/state.db` 404s, needs the correct path, not yet found); (b) if
+      confirmed, capture PID/thread/FD counts DURING a live burst (not after) to nail the actual resource-exhaustion
+      mechanism, or rule it out in favour of something else these two scripts share (e.g. shell fork storm starving the
+      tmux server of scheduler time even without hitting a hard ceiling). Repo: agent-orchestrator, unified-trading-pm
+      (the two cron scripts live there).
+- [ ] [INFRA] P3. **Wire `resource-watchdog`'s existing tick log into future death correlation.** Discovered live
+      2026-08-11 — a previously-undocumented-in-this-doc systemd service already logging periodic
+      `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
+      the same enrichment path as the cgroup `memory.events` counters (Tier 1, already shipped
+      `agent-orchestrator@4452cbb6da`) rather than re-discovering it ad hoc next time. Repo: agent-orchestrator.
+- [x] [INFRA] P3. ~~Confirm the 16:15:xx orchestrator.service restart was ao-self-pull.sh~~ — **CLOSED 2026-08-11,
+      confirmed.** `journalctl -u orchestrator` at 16:15:28 UTC:
+      `orchestrator running checkout 4452cbb — 0     pre-existing tmux session(s): []` — the self-pull restart landing
+      exactly as expected, ~43s after the tmux-server death, finding zero sessions (consistent with the server having
+      died and not yet respawned by then, not causing it). Confirmed coincidental, not causal. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -308,3 +377,42 @@ memory and that's what kills sessions" as-is.
   time this was checked — killed that too). Next step needs either live kernel signal tracing armed BEFORE the next
   death (not post-hoc), or moving the live-catch to the production Linux VM (`watch_production_slot_death.sh`, root via
   SSM, core dumps already enabled) instead of continuing to iterate on this Mac.
+- 2026-08-11 (continued, same day — production breakthrough): operator reported live production sessions now dying on
+  BOTH DeepSeek and a freshly-enabled Anthropic sub-account (`sub-g-alpavolt`) — **definitively closes the
+  DeepSeek-vs-provider-agnostic ambiguity** this doc flagged earlier that day: the mechanism is confirmed
+  provider-agnostic. Live-attached to a specific about-to-die slot (11, `ci-reconcile` role) via a tight SSM poll loop
+  (`sudo -u ubuntu tmux capture-pane`, ~7s cadence — first attempt queried the WRONG tmux socket namespace since SSM
+  executes as root by default, `/tmp/tmux-0/` not `/tmp/tmux-1000/`, giving a false immediate "dead" reading; fixed by
+  prefixing every tmux call with `sudo -u ubuntu`). Caught it live: the pane showed an active retry loop against **HTTP
+  429 rate-limiting** (`429 Rate limited · Retrying in Xs · attempt 6/10`, counting down through consecutive retries) at
+  the second-to-last poll, then ~10-19s later, the poll came back with **`no server running on /tmp/tmux-1000/default`**
+  — not "session 11 lost", the ENTIRE tmux SERVER process for the `ubuntu` user was gone. Confirmed via direct process
+  checks (`pgrep -u ubuntu -af tmux`, `sudo -u ubuntu tmux list-sessions`) that no tmux server existed for `ubuntu` at
+  all, even ~3 minutes after the death — a single point of failure that, if it recurs, would explain EVERY symptom
+  collected so far in one shot: provider-agnostic (shared infra, not account-specific), the earlier-observed
+  mass-simultaneous "14 sessions lost in one pruner tick" batches (killing the shared tmux server kills every pane it
+  hosts at once), the total absence of any per-process crash report (the individual worker processes' own
+  crash-reporting was never the right thing to check — the SERVER'S death is what needs explaining), and the RST-not-FIN
+  signature from the Mac sandbox catches (a pane's process loses its controlling terminal via SIGHUP when the tmux
+  server dies — uncaught, default action is terminate, abrupt enough to leave open sockets mid-teardown). Checked the
+  tmux SERVER's own death for a cause with the same rigor as every worker-level check so far: `journalctl -k` for the
+  exact window (16:14:35-16:14:55 UTC) — **zero kernel log entries at all**, and the full all-units journal for the same
+  window shows nothing tmux-related except this investigation's own SSM polling commands — no OOM, no service restart,
+  no crash, nothing. One coincidental-but-unconfirmed observation: a burst of ~20+ concurrent
+  `git fsck`/`gc.pruneExpire` commands across many unrelated repo checkouts landed in the same ~10s window
+  (16:14:38-16:14:51) — worth a closer look as a resource-contention candidate, though the VM's own `resource-watchdog`
+  (a previously-undiscovered systemd service already ticking `pressure=normal cgroup_mem=5GB` logs — a real,
+  already-built lightweight monitor, worth using for future correlation) reported calm conditions throughout. Also
+  discovered via `server/tmux_spawn.py`'s own comments (the per-worker memory-cap feature, confirmed NOT armed on this
+  VM) that the tmux SERVER process itself likely sits OUTSIDE any per-service cgroup — meaning every cgroup-scoped check
+  this doc has run (including the definitive `oom_kill=0` ruling from earlier the same day) covers
+  `orchestrator.service`'s cgroup, which worker PANES inherit, but says nothing about the tmux SERVER's own resource
+  envelope — a real gap, not yet closed. **This reframes the entire investigation**: the question is no longer "why does
+  an individual worker process crash" (every mechanism checked for that — app crash, jetsam, cgroup-OOM, the fleet's own
+  watchdog — has come back negative) but "why does the tmux SERVER process itself die", a much narrower and more unusual
+  question (tmux servers are famously minimal and stable; a bare server crash under normal load is not expected
+  behavior). The orchestrator BACKEND itself also restarted ~44s after this death (`uptime_seconds=54` at the next
+  check) — timing strongly suggests this was `ao-self-pull.sh`'s routine 15-min cron picking up this same session's own
+  just-shipped commit, NOT a cause of the tmux-server death (which preceded it and, per the documented
+  `KillMode=process` behavior, an orchestrator.service restart should not touch detached tmux-spawned children anyway) —
+  flagged as needing a quick confirming check, not yet done.
