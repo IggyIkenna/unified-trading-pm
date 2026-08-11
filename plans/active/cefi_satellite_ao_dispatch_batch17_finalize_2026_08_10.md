@@ -23,7 +23,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,6 +39,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 depends_on: [cefi_satellite_ao_dispatch_batch17_2026_08_10]
 gate_on_depends: true
 source: >-
@@ -83,11 +84,14 @@ context_scope:
       `unified-trading-pm@7d72b97723`); 0 open todos remain → archived it via the 6-step ritual to
       `plans/archive/2026_08/issues/` (`status: resolved`, ARCHIVED banner, `archive_exempt` bridge field dropped,
       referrers swept). `run_hygiene_sweep.sh` clean on the staged set.
-- [ ] [DOC] P2. Archive `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` itself (all 3 todos done, unlocked) via the
-      standard 6-step ritual — commit the checkbox-complete state first as a plain edit at its active path, THEN
+- [x] ✅ [DOC] P2. Archive `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` itself (all 3 todos done, unlocked) via
+      the standard 6-step ritual — commit the checkbox-complete state first as a plain edit at its active path, THEN
       `git mv` to archive as a separate follow-up commit (never combine the two in one commit, per RULES.md §2's
       incident note). Repo: unified-trading-pm. **Done when**: the plan is at `plans/archive/2026_08/` with a clean
-      `run_hygiene_sweep.sh` and `regenerate_active_plan_inventory.py` reports 0 new orphans.
+      `run_hygiene_sweep.sh` and `regenerate_active_plan_inventory.py` reports 0 new orphans. **DONE (2026-08-11,
+      slot 22)** — batch17 plan archived to `plans/archive/2026_08/` via the 6-step ritual (`git mv` + ARCHIVED banner,
+      `status: active → archived`), referrers swept. `run_hygiene_sweep.sh` clean + inventory regen reports 0 new
+      orphans.
 
 ## Codex SSOTs
 
@@ -117,3 +121,13 @@ context_scope:
   (`related:` + `context_scope:`), this plan's `related:`, and the archived
   `ag_closeout_audit_cefi_parked_2026_08_10.md` to the new `/plans/archive/2026_08/issues/` path. Checked
   `check_reference_paths` clean on the staged set. Todo 2 flipped.
+- **2026-08-11 (slot 22, data_engineering, todo 3)**: archived `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` via
+  the standard 6-step ritual — `git mv` to `plans/archive/2026_08/`, `status: active → archived`, ARCHIVED banner +
+  `archived:` frontmatter (batch's 3 todos all verified done + unlocked). Referrer sweep (ritual step 5): repointed
+  `/plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md` → `/plans/archive/2026_08/...` in this plan's
+  `related:`/`context_scope:`, the archived `ag_closeout_audit_cefi_parked_2026_08_10.md` (`related:`),
+  `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md` (`resolved_by:`),
+  `tardis_concurrency_gate_hardening_2026_08_09.md` (`resolved_by:` + banner prose), and
+  `plans/epics/infrastructure_master.md` (`related_plans:`). `run_hygiene_sweep.sh` clean on the staged set + inventory
+  regen reports 0 new orphans. Then archived this finalize plan itself (all 3 todos done, unlocked) in a follow-up
+  commit (`git mv` to `plans/archive/2026_08/`, ARCHIVED banner, `archive_exempt` bridge dropped). Todo 3 flipped.
