@@ -249,3 +249,20 @@ memory and that's what kills sessions" as-is.
   real fleet worker against the PRODUCTION VM; a fixed-PID liveness check produces false deaths because Claude Code can
   legitimately rotate its own subprocess PID mid-task (observed once, ~180s in, session/pane stayed healthy through it)
   — track session-level liveness (`tmux has-session`), never a specific PID.
+- 2026-08-11 (continued, same day): promoted the production-side SSM watcher pattern (used ad-hoc throughout this
+  session to poll for a live `tmux_session_lost` on a specific slot) into
+  `agent-orchestrator/scripts/orchestrator/watch_production_slot_death.sh` — companion to the already-shipped
+  `watch_sandbox_slot_death.sh`, same two gotchas documented in its header (`-c safe.directory="*"` needed for any
+  remote `git` call as root against the ubuntu-owned checkout; capture the SSM `CommandId` and poll it inside ONE
+  self-contained script invocation, since each tool call in an interactive session is a fresh shell with no shared
+  state). Shipped `agent-orchestrator@e661cc9247`. Deleted the superseded ad-hoc scratchpad copies (`check_activity.sh`,
+  `check_angle4.sh`, `check_tmux_death_deepdive{,2,3}.sh`, `death_watch.sh`, `poll_death_watch.sh`, `watch_slot5.sh`,
+  `remote_check{,2,3}.py`, `sandbox_death_watch{,2}.{sh,log}`, `wait_ao_ldr_sync.sh`, `ssm_out1.txt`) — none were
+  referenced by any committed doc (checked), and their one-shot findings are already folded into this Progress Log.
+  Also: the sandbox's worker session (`orch-slot-1`) had already died (consistent with the 332s-death entry above) with
+  no respawn — expected, `AutoSpawnLoop` is disabled by design in the sandbox — and the idle backend process
+  (`dev.sh --backend-only` on :8770) was stopped, since a live worker session is required to burn any DeepSeek budget
+  and none was running; this also satisfies the operator's standing "pause after one failure to avoid burn" instruction
+  for this sandbox account. Next session: re-run `setup_debug_sandbox.sh`'s printed next-steps to relaunch a worker for
+  another data point, or escalate to a live production catch via the newly-promoted watcher if the sandbox stops
+  reproducing.
