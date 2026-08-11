@@ -128,3 +128,76 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --guard-parent (creation-time idempotency guard) ──────────────────────────
+# duplicate_finalize_plans_created_for_one_parent_2026_08_06.md: two gated finalize
+# plans were authored for ONE parent the same day because nothing at the point of
+# creation re-derived gating over the CURRENT corpus. The guard keys on the depends_on
+# relationship (the real contract), never on the expected finalize filename shape.
+
+
+def test_guard_parent_allows_when_not_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_guard_parent_refuses_when_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_guard_parent_is_filename_shape_agnostic(tmp_path: Path) -> None:
+    """A parent gated by `..._finalize_2026_07_31.md` (the redundant date-suffixed shape
+    from the 2026-08-06 duplicate pair) must be refused just the same as `..._finalize.md` —
+    the guard keys on depends_on, never on the expected filename."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_guard_parent_refuses_when_multiple_finalize_plans_gate(tmp_path: Path) -> None:
+    """The duplicate-collision condition itself: TWO finalize plans gating the same parent."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_guard_parent_ignores_non_gating_depends_on(tmp_path: Path) -> None:
+    """A plan naming the parent in depends_on WITHOUT gate_on_depends: true is not a
+    finalize companion (mirrors _is_finalize_plan) — it must not trigger the guard."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "unrelated_plan_2026_08_05.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_05"])
+    assert rc == 0

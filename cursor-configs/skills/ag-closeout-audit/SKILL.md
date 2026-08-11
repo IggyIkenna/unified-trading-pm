@@ -572,8 +572,12 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
-`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
-**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
+`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. **Run the
+creation idempotency guard FIRST**:
+`.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --guard-parent <batchN-slug>` — exit 1 means the
+batch is ALREADY gated (a peer may have landed a differently-named finalize plan) — do NOT author a second, reconcile
+with the existing one instead (`plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`).
+Author it **`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
 `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
 `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
