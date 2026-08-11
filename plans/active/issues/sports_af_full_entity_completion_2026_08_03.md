@@ -1033,3 +1033,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   271), not terminal convergence — same rule-4a/slot-18/19/25 stale-baseline reasoning. Skipping `reason_code: GATED` +
   `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8
   entities stable ~0 / honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11 (slot 17, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  `af-backfill-20260811-012845` (STANDINGS all-383, 2020-06-06→2026-08-10) is RUNNING (GCP asia-northeast1-c). The two
+  other today VMs (`-154220`/`-160958`) are TERMINATED; `-162910` TERMINATED per slot-23. Only `-012845` running (GCP);
+  AWS none. Census now = mid-backfill STANDINGS snapshot (residual 271 at slot-25 census), not terminal convergence —
+  same rule-4a/slot-18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`. **Unpark**:
+  when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
+  honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
