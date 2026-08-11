@@ -512,6 +512,41 @@ than degrading silently (`agent-orchestrator@8f1a08ad53`). Node deps are cached 
 symlink** — `uv sync` pruned a shared `.venv` once already, and a linked `node_modules` would let `npm ci` do the same
 to the operator's real tree.
 
+### `git commit-tree` fallback — and its empty-refspec push guard (codified 2026-08-11)
+
+Under severe shared-checkout write contention (the "documented workaround" agents reach for when the shared index/
+working tree can't be staged/committed normally), the recovery path is to build a commit **against origin's HEAD
+directly** with `git commit-tree` and push an **explicit refspec** — never `git push -u origin <branch>`:
+
+```bash
+NEW_TREE=$(git write-tree)
+NEW_COMMIT=$(git commit-tree "$NEW_TREE" -p "$(git rev-parse origin/live-defi-rollout)" -m "<msg>")
+git push origin "$NEW_COMMIT":refs/heads/live-defi-rollout   # explicit refspec — load-bearing
+```
+
+**The empty-source deletion hazard (confirmed near-miss 2026-08-09):** if the source variable is unset/empty, the
+refspec collapses from `git push origin "<sha>:refs/heads/<branch>"` to `git push origin ":<branch>"` — which **deletes
+the remote branch**. A round-9 sweep agent hit this exactly (an unset commit-message variable produced the empty side),
+self-caught via `git ls-remote` and restored `live-defi-rollout` same-turn, no data lost — but nothing structural
+stopped it. Branch-protection rulesets (todo 1/2 of
+`plans/active/issues/live_defi_rollout_branch_has_no_delete_protection_2026_08_09.md`, deployed fleet-wide) block the
+delete on the SERVER; the guard below blocks the accidental form LOCALLY, before `git push` runs.
+
+**Guard — ALWAYS push the commit-tree fallback through it (HARD RULE):**
+
+```bash
+bash unified-trading-pm/scripts/dev/guard-safe-push.sh -- \
+  git push origin "$NEW_COMMIT":refs/heads/live-defi-rollout
+```
+
+`scripts/dev/guard-safe-push.sh` inspects every refspec (a token containing `:`) in the push invocation and refuses
+(exit 2, before `git push` runs) when the **local/source side is empty/unset** — the deletion form `:<dst>` — or when a
+non-empty source does not resolve to a real git object (`git rev-parse --verify`). On a clean refspec set it
+`exec git push "$@"`, so behavior is byte-identical to a bare push. `--allow-delete` is the explicit escape hatch for
+the ONE intentional delete path. Regression-guarded by `scripts/quality-gates-base/tests/test-guard-safe-push.sh`
+(drives the real guard against scratch repos + a local bare remote). Defense in depth: the ruleset and the guard address
+different layers and are not substitutes.
+
 ### What worktree isolation does NOT cover (codified 2026-07-30)
 
 Worktree/clone isolation covers exactly three things: the **working tree**, the **index**, and **HEAD**. Two surfaces
