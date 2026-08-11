@@ -178,12 +178,15 @@ memory and that's what kills sessions" as-is.
       the same timestamp was investigated and is very likely a red herring — it also fires during the routine respawns
       immediately after, so it looks like constant/benign noise on this host's permission setup, not death-specific;
       note this here so it isn't re-chased as a lead. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **Check for a per-cgroup OOM kill, distinct from the host-wide check todo 1 already ran.** Todo 1's
-      `free -h`/`journalctl -k` pass was HOST-WIDE; if slots run under a per-slot/per-user cgroup memory ceiling, a
-      cgroup-scoped kill logs a different kernel line (`Memory cgroup out of memory: Killed process...`) that a
-      host-wide-pressure check would miss even with plenty of free RAM fleet-wide. **Done when**: confirm whether slots
-      run under a cgroup memory limit at all, and if so, whether `journalctl -k` shows any cgroup-scoped OOM line
-      correlated with a sample of loss timestamps. Repo: agent-orchestrator.
+- [x] [INFRA] P3. ~~Check for a per-cgroup OOM kill~~ — **CLOSED 2026-08-11, ruled out.** All workers run under
+      `orchestrator.service`'s systemd cgroup, which DOES have a real memory ceiling (`MemoryAccounting=yes`,
+      `MemoryHigh=24.7GB`, `MemoryMax=26GB` — confirmed via `systemctl show`). Read the cgroup's own lifetime kill
+      counter directly (`/sys/fs/cgroup/system.slice/orchestrator.service/memory.events`, root via SSM): `oom_kill 0`,
+      `oom 0`, `max 0` — the cgroup crossed its soft `MemoryHigh` threshold 89,040 times (routine reclaim/throttle,
+      consistent with the previously-observed climbing-swap pattern) but has NEVER triggered an actual kill. This is the
+      cumulative counter, not a point-in-time sample, so it covers the whole recent elevated-death-rate window —
+      definitively rules out cgroup-scoped OOM as the mechanism, closing the gap the host-wide-only check in todo 1
+      couldn't see. Repo: agent-orchestrator.
 - [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask — FURTHER PROGRESS
       2026-08-11, still open — mechanism narrowed further but the actual signal-sender still unidentified). Built a
       fully isolated agent-orchestrator sandbox (`/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`,
