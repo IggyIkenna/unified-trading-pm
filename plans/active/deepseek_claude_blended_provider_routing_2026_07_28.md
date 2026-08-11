@@ -123,6 +123,44 @@ A new `select_account_for_spawn(task_context)` function sits in front of the exi
 
 ## Progress Log
 
+- **2026-08-11 (slot 3, interactive) — flash-vs-pro A/B is LIVE; first measured routing readout. Does NOT close the
+  `[REVIEW] P2` pilot todo** (see the caveat at the end — that todo's done-when asks for QG-pass/rework vs a CLAUDE
+  baseline, which is not obtainable right now). Operator asked to "extend DeepSeek to scheduled tasks and all roles" and
+  to add a 50/50 flash-vs-pro A/B; **both turned out to be already built and already running** — recorded here so the
+  next agent does not re-implement them:
+  - **All four spawn paths already route through the one provider-aware router** `autospawn.select_account_for_spawn`:
+    scheduled/cron (`plan_health.py`, `plan_health_deepseek_fallback_2026_08_06`), review
+    (`autospawn.ensure_review_agents`), main (`main_agent_keeper`, 3 call sites), escalation (`escalation.py`,
+    `escalation_deepseek_fallback_2026_08_05`). Nothing was left on the anthropic-only `_pick_headroom_account` path.
+  - **The A/B is not inert.** `deepseek_flash_route_fraction` was already `0.5`, and the planning VM's
+    `data/config/accounts.json` registers BOTH halves — `deepseek-v4-pro` (`variant: "pro"`) and `deepseek-v4-flash`
+    (`variant: "flash"`). The `config.py` comment claiming "no such account exists in any accounts.json today" was STALE
+    and actively misleading (it reads as "this knob does nothing"); corrected in the same change with the numbers below
+    — agent-orchestrator@<pending>.
+  - **Measured 24h to 2026-08-11 06:00Z**, from `activity_log` split by `account_id`:
+
+    | signal                              | flash | pro | normalised                     |
+    | ----------------------------------- | ----- | --- | ------------------------------ |
+    | `deepseek_spawn_selected`           | 1201  | 944 | **56.0% / 44.0%** vs 50/50 aim |
+    | `autospawn_succeeded`               | 618   | 449 | —                              |
+    | `autospawn_failed`                  | 27    | 22  | 95.8% vs 95.3% spawn success   |
+    | `spawn_retry_cap_reached`           | 106   | 108 | 8.8% vs 11.4% of selections    |
+    | `free_provider_health_gate_skipped` | 177   | 106 | 14.7% vs 11.2%                 |
+    | `main_agent_autospawned`            | 14    | 12  | opus-tier main IS on DeepSeek  |
+    | `agentkeeper_review_succeeded`      | 74    | 68  | review agents on DeepSeek      |
+
+  - **Fleet share**: DeepSeek took 5,643 of 5,705 spawns in that window (~99%); all six Anthropic accounts together took
+    62, because every one of them is rate_limited/disabled. `_quota_adaptive_fraction`'s "no usable Claude account →
+    1.0" short-circuit is doing exactly what it was built for.
+  - **Two things worth a follow-up rather than a silent assumption**: (a) the split is running ~6 points flash-heavy
+    against a 50/50 target — the accumulator is fair-share per DeepSeek-bound selection, so this is worth confirming is
+    sampling noise over a single window rather than a systematic skew; (b) flash trips
+    `free_provider_health_gate_skipped` ~30% more often than pro, normalised.
+  - **CAVEAT — this is a ROUTING readout, not the pilot's outcome comparison.** `[REVIEW] P2` asks for QG pass rate and
+    review-flagged rework rate against the **Claude baseline**; neither is in these numbers, and a contemporaneous
+    Claude baseline is not collectable while every Anthropic account is exhausted (62 spawns is not a comparison
+    cohort). That todo stays OPEN.
+
 > Condensed 2026-08-05 (was 999/1000 lines, at the hard cap) — every dated entry below still cites its sha/evidence;
 > trimmed the essay-length rationale now redundant with the shipped code + tests. Nothing removed changes done-when
 > status of any todo.
@@ -310,7 +348,22 @@ default from an external reference.
       passed), 2 Playwright tests.
 - [ ] [REVIEW] P2. Pilot the blended pool for one week at the default split, then compare DeepSeek-routed task outcomes
       (QG pass rate, review-flagged rework rate) against the Claude baseline before raising the split. Done when: a
-      dated comparison note with actual pass/rework numbers lands in this plan's Progress Log.
+      dated comparison note with actual pass/rework numbers lands in this plan's Progress Log. **Partial input landed
+      2026-08-11** (routing + spawn-health readout in the Progress Log) — still OPEN: that readout carries neither QG
+      pass rate nor rework rate, and a contemporaneous Claude baseline is uncollectable while every Anthropic account is
+      exhausted (62 spawns in 24h is not a cohort). Re-attempt once a Claude account clears its weekly window.
+- [ ] [REVIEW] P2. Confirm whether the flash-vs-pro split running ~6 points flash-heavy (measured 2026-08-11:
+      `deepseek_spawn_selected` flash 1201 / pro 944 = 56.0%/44.0% against a 0.5 target) is sampling noise over one 24h
+      window or a systematic skew in `_deepseek_flash_should_route`'s accumulator. Done when: either a second
+      independent window lands within a couple of points of 50/50 (→ noise, close it), or the accumulator is shown to
+      drift and is fixed. Note the accumulator is deliberately fair-share, not `random.random()`, so a persistent skew
+      would be a real defect rather than variance. Repo: agent-orchestrator.
+- [ ] [REVIEW] P3. Investigate why the flash variant trips `free_provider_health_gate_skipped` ~30% more often than pro,
+      normalised (measured 2026-08-11: flash 177/1201 = 14.7% vs pro 106/944 = 11.2%). The health gate skips a DeepSeek
+      account after `deepseek_health_failure_threshold` spawn failures in the trailing window, so a systematically
+      higher skip rate means flash spawns fail more — which, if real, is a genuine A/B signal about the cheaper variant
+      and belongs in the pilot comparison above. Done when: the difference is either explained as an artifact of the
+      higher flash spawn volume or confirmed as a real per-variant failure-rate gap. Repo: agent-orchestrator.
 - [x] [INFRA] P2. ✅ Document/fix the local-dev isolation gap (`AgentKeeper`/`ensure_review_agents` ungated by
       `ORCHESTRATOR_AUTOSPAWN_ENABLED`; `pm_repo_path` env-override docstring stale in 5 places). — New runbook
       `/codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md`; `agent-orchestrator@30568ec`.
@@ -353,18 +406,18 @@ default from an external reference.
       (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                                              isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                                              out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                                              **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                                              front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                                              integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                                              few hours".
+                                                  isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                                                  out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                                                  **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                                                  front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                                                  integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                                                  few hours".
 
-                                              **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                                              executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                                              simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                                              **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                                              configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+                                                  **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                                                  executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                                                  simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                                                  **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                                                  configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -384,9 +437,9 @@ default from an external reference.
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                                              further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                                              future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                                              there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+                                                  further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                                                  future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                                                  there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -425,25 +478,25 @@ default from an external reference.
       exact resource name is recorded in this todo.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 19): "Operator will create it - needs
-                              Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
-                              existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
-                              `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
-                              keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
-                              `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
-                              the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
-                              NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                              ```bash
-                              gcloud config set project central-element-323112
-                              echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                                gcloud secrets create deepseek-v4-pro-api-key \
-                                  --data-file=- \
-                                  --replication-policy=automatic
-                              ```
-                              If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
-                              todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
-                              (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
-                              name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
-                              the name.
+                                  Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
+                                  existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
+                                  `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
+                                  keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
+                                  `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
+                                  the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
+                                  NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
+                                  ```bash
+                                  gcloud config set project central-element-323112
+                                  echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                                    gcloud secrets create deepseek-v4-pro-api-key \
+                                      --data-file=- \
+                                      --replication-policy=automatic
+                                  ```
+                                  If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
+                                  todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
+                                  (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
+                                  name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
+                                  the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
       VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
@@ -460,14 +513,14 @@ default from an external reference.
       this doc's own new `[OPERATOR] P2` balance-recurrence todo above.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                                              > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                                              > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                                              > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                                              > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                                              > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                                              > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                                              > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                                              > retention returned a confident zero that meant nothing.
+                                                  > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                                                  > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                                                  > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                                                  > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                                                  > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                                                  > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                                                  > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                                                  > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
@@ -517,8 +570,8 @@ default from an external reference.
   fact: 2 operator-review production pilots (time-gated), 1 CLI-version design call, 1
   `accounts.json`-is-gitignored-per-VM data check. Whole-doc RECLASSIFY bar not cleared.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — prior verdict re-verified,
-  content unchanged since round9. The re-sourcing todo remains correctly EXTRACTED (do not action here). Of the 4
-  items still open on this doc: 2 are operator-review production pilots (one time-gated week-long comparison, one
-  needing a real Claude-headroom-dependent run this checkout cannot exercise), 1 is a CLI-version/design fix on a
-  fleet-wide worker-boot-critical-path file, 1 is a data check explicitly "not locally doable — `accounts.json` is
+  content unchanged since round9. The re-sourcing todo remains correctly EXTRACTED (do not action here). Of the 4 items
+  still open on this doc: 2 are operator-review production pilots (one time-gated week-long comparison, one needing a
+  real Claude-headroom-dependent run this checkout cannot exercise), 1 is a CLI-version/design fix on a fleet-wide
+  worker-boot-critical-path file, 1 is a data check explicitly "not locally doable — `accounts.json` is
   gitignored/per-VM." None bounded for a background worker today.
