@@ -223,3 +223,38 @@ context_scope:
   ANSWERED `rate_indices` canonical-target finding — `lending_indices` — that the open `[DIAG] P2` checkbox above does
   not yet reflect; flagging as a stale-candidate for `/plan-reconcile`, not resolving the checkbox here) and its VM
   launcher `launch-backfill-defi-legacy-datatype-fold-vm.sh`.
+- **2026-08-11 (slot-10, data_engineering, task `defi_satellite_ao_dispatch_batch9-008`) — POPULATION-OVERLAP FINDING
+  (PARTIAL MATCH + RESIDUAL SCOPE)**: verified via live bounded manifest reads
+  (`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`, columns-projected,
+  `data_type`-filtered) against both the batch6 composite-venue fold scope and the broader `rate_indices`/`utilization`
+  manifest population:
+
+  **What batch6 covered** (`market-tick-data-service@13f14b78`, 2026-08-01): the `rate_indices`/`utilization` →
+  `lending_indices` canonical target mapping was CORRECTLY identified and applied to **5,332 composite-venue GCS objects**
+  across 9 legacy composite venues (`AAVEV3-ETHEREUM`, `UNISWAPV2-ETHEREUM`, `UNISWAPV3-ETHEREUM`, `UNISWAPV4-ETHEREUM`,
+  `CURVE-ETHEREUM`, `ETHENA-ETHEREUM`, `ETHERFI-ETHEREUM`, `LIDO-ETHEREUM`, `MORPHO-ETHEREUM`). These objects had ZERO
+  manifest representation pre-fold (legacy paths at `raw_tick_data/by_date/day={D}/asset_group=defi/venue={COMPOSITE}/`
+  carried no `chain=`/`instrument_type=`/`data_type=` hive segments — `parse_hive_path()` returned `None` for all of
+  them). The fold script's `_LEGACY_DATA_TYPE_MAP` mapped `rate_indices`→`lending_indices` and `utilization`→
+  `lending_indices` for the composite-venue rows being folded, producing 324,867 canonical objects.
+
+  **What batch6 did NOT cover — RESIDUAL SCOPE**: as of 2026-08-11, the live manifest carries:
+  - **`rate_indices`**: **26,128 rows** (all `capture_status=captured`, venues `AAVE_V3`+`MORPHO` only, ETHEREUM chain,
+    `instrument_type` ∈ {`a_token`,`lending`}). These are under CANONICAL venue names with full hive segments — a
+    SEPARATE population from the composite-venue objects (which had no manifest rows at all).
+  - **`utilization`**: **250,928 rows** (26,128 `captured` + 218,768 `empty_confirmed` + 6,032 `expected_unattempted`,
+    across 72 venues). Same shape — canonical venue names, full hive segments, never touched by the composite-venue fold.
+
+  The 2026-07-22 census (~49,096 `rate_indices`) shrunk to 26,128 as of 2026-08-11; the ~22,968-row delta likely
+  reflects the composite-venue fold's GCS-object-level resolution (those composite-venue rows carried `rate_indices`/
+  `utilization` as their in-object `data_type` column values) plus the `dex_pools` retirement (2026-08-05).
+
+  **Verdict**: PARTIAL MATCH — batch6's canonical-target-name finding (`rate_indices`/`utilization` → `lending_indices`)
+  is CORRECT and was correctly applied to its own scope (5,332 composite-venue objects). But the 26,128 `rate_indices` +
+  250,928 `utilization` manifest rows are a SEPARATE, still-unresolved residual population. The already-built
+  `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py` + its VM launcher
+  `launch-backfill-defi-legacy-datatype-fold-vm.sh` handle exactly this residual — they fold ALL three legacy data_types
+  across the FULL manifest population, not just the composite-venue subset. This doc's open `[DATA] P2` (`dex_swaps` →
+  `dex_pool_swaps`) already captures the migration mechanism; `rate_indices`/`utilization` share the same fold script and
+  the same VM launcher — no separate migration design needed for them. Flipped batch9 todo
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md:219` with this evidence.

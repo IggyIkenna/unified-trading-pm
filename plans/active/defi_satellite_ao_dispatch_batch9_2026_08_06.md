@@ -216,14 +216,17 @@ over all pending draft batches) that independently spot-verified every todo belo
       `2023-01-01` default instead of an explicit manifest-derived `--start`, so it's redundantly re-walking
       already-captured ground — not a correctness issue, SPOT/idempotent, self-resolves in ~2 weeks): see
       `/plans/active/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
-- [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
-      2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
-      handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096
-      rows per the 2026-07-22 census) or only the narrower composite-venue-object subset that fold applied to — do NOT
-      touch the separate `dex_swaps` DATA migration item, that stays its own dedicated, too-large-for-batch migration.
-      Repo: market-tick-data-service. Source: `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`. Done
-      when: the source doc's open DIAG todo is checked off with an explicit population-overlap finding (full match /
-      partial match + residual scope) citing the batch6 evidence.
+- [x] ✅ [DIAG] P3. **Verify manifest migration scope** — this commit (slot-10, 2026-08-11).
+      **PARTIAL MATCH + RESIDUAL SCOPE.** Batch6 (`market-tick-data-service@13f14b78`, 2026-08-01) correctly identified
+      `rate_indices`/`utilization` → `lending_indices` canonical target AND applied it to 5,332 composite-venue GCS
+      objects (9 venues, zero manifest representation pre-fold). BUT the live manifest (bounded column-projected read
+      2026-08-11) still carries **26,128 `rate_indices` + 250,928 `utilization` rows** under CANONICAL venue names
+      (`AAVE_V3`/`MORPHO` for rate_indices; 72 venues for utilization) — a separate population from the composite-venue
+      objects, never touched by batch6. The already-built `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py` +
+      VM launcher handle exactly this residual (all 3 legacy data_types across the full manifest population). Full
+      population-overlap evidence in `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` Progress Log
+      (2026-08-11 entry). Source doc's DIAG todo was already closed 2026-08-07 (canonical-target half); this dispatch
+      closes the population-overlap half.
 - [x] ✅ [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
       (`--start-date 2023-11-01 --end-date 2026-08-05`, ~980 days, log `/tmp/lst_yields_resume_20260805.log`) actually
       ran to completion via a fresh `gcloud storage ls` day-partition count on
