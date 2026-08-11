@@ -505,6 +505,12 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
       re-measure before quoting, this number moves with every backfill wave.
+- [x] ✅ [SCRIPT] P2. The GCS guardrail hook's own block message told agents to
+      `from unified_trading_library.cloud_interface import list_blobs` — an import that raises `ImportError`, because
+      listing is a METHOD (`get_storage_client().list_blobs(bucket, prefix=...)`), not a module-level export. Hit live
+      2026-08-11 while following the hook's advice after it correctly blocked a `gcloud storage` call. A guardrail that
+      blocks the wrong path and then hands out a broken replacement costs every agent the same round-trip —
+      agent-orchestrator@03848b608c.
 - [ ] [SCRIPT] P2. `output_schemas.py`'s `expiration.applies_to={"options_chain", "futures_chain"}` is hardcoded and did
       NOT follow UAC adding `combo_chain` to `CEFI_CHAIN_INSTRUMENT_TYPES`. Bundle ROUTING follows automatically
       (`is_chain_bundle_data_type` reads the UAC frozenset), so the drift pin in `test_output_path_helpers.py` was
