@@ -990,3 +990,10 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `QG slice (tests): success` / `QG slice (checks): failure` — same known ratchet class, not the tracked flake. Zero
   `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via
   skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-11 2026-08-11 ~11:30Z (twenty-ninth pass, same task)**: surveyed latest 5 runs across all 10 repos (spanning
+  2026-08-10T16:14Z–2026-08-11T10:19Z, post-dating slot-18). 9 service repos: 43/45 success. 2 non-timeout failures:
+  instruments-service `31469102636` (uv-sync/clone WARNs, infra), features-service `31463593127` (GCP auth fail, no
+  pytest ran). market-tick-data-service `31474482394`: `checks`-slice fail, tests green. unified-trading-pm: 5/5
+  `checks`-slice failures, tests-slice green — known ratchet class. **Zero pytest-timeout recurrence** (day ~5 of ~14).
+  Window NOT yet closed; releasing via skip-current-task with `reason_code: "GATED"`,
+  `estimated_unblock_minutes: 20160` (~14 days to window-close ~2026-08-20).
