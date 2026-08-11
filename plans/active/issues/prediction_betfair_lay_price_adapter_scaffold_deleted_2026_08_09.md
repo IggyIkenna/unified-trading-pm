@@ -206,6 +206,41 @@ concrete reason not to).
       `prediction_arb_live_execution_bridge_2026_07_20.md` item [5] to done citing the commit SHA + the sampled market's
       evidence. (repo: market-tick-data-service)
 
+- [x] ✅ [INFRA] P2. **DONE 2026-08-11 (slot-18, data_engineering adopting infra craft).** Provision the
+      `europe-west2` egress path the operator decided on 2026-08-11, and MEASURE whether it actually clears
+      Betfair's block (the open question todo 4 could not answer from Tokyo). **Answer: it clears it.**
+      Reserved regional static address `betfair-egress-ip` = **34.39.85.36** (`europe-west2`) and launched a
+      probe VM + a real egress VM there. Measured, same two endpoints, same day:
+
+      | endpoint | Tokyo `13.113.200.22` | europe-west2 |
+      | --- | --- | --- |
+      | `identitysso.betfair.com/api/login` | 403 + Betfair "Restricted" page | **405** (real Betfair app HTML) |
+      | `api.betfair.com/exchange/betting/json-rpc/v1` | 403 + "Restricted" page | **400 `{"code":-32700,"message":"DSC-0008"}`** |
+
+      A 405-on-GET and a real JSON-RPC parse error are Betfair's OWN API responses — the geo/traffic block that has
+      held this todo since 2026-08-09 is NOT present from europe-west2. Shipped
+      `deployment-service/scripts/vm/launch-betfair-egress-vm.sh`: attaches the reserved static IP (Betfair fraud
+      heuristics key on IP STABILITY for a real-money account, so an ephemeral IP re-rolls that dice every launch),
+      `lc_singleton_check` so two concurrent logins can never race, self-deletes after the refresh unless `--keep`
+      (billing-waste rule), and carries a `# non-relaunchable:` marker since it writes no manifest shard.
+      (repo: deployment-service)
+
+- [ ] [OPERATOR] P1. **BLOCKED-OPERATOR — the Betfair credentials in GSM are INVALID; this now blocks todo 4, and
+      no further egress work can fix it.** With the europe-west2 path proven above, `refresh_betfair_session_token.py`
+      was re-run there against the REAL shipped code and got past the network entirely — reaching Betfair's
+      authentication layer and returning a genuine API error:
+      `betfairlightweight.exceptions.LoginError: API login: INVALID_USERNAME_OR_PASSWORD` (`REFRESH_RC=1`). All three
+      source secrets read fine (`betfair-username` 23 chars, `betfair-password` 9 chars, `betfair-app-key` 33 chars),
+      so this is NOT a GSM/IAM gap — the stored username/password simply do not authenticate.
+      **`betfair-session-token` therefore still has ZERO versions.** Operator action needed: verify / reset the
+      account password and update the `betfair-password` (and `betfair-username` if it changed) secret, OR confirm
+      whether this account requires Betfair's CERTIFICATE (non-interactive) login rather than `login_interactive()`
+      — an account with 2FA enabled cannot use the interactive flow at all.
+      **HARD — do NOT retry the login to "check" it.** Betfair locks an account after a small number of consecutive
+      failed logins, and unlocking a real-money account is operator/account-holder-only. Exactly ONE attempt has been
+      made (2026-08-11, slot-18); treat that budget as spent until the credentials are actually changed.
+      (repo: none — operator / account-holder action)
+
 ## Progress Log
 
 - 2026-08-09 (slot-17, backend_engineer): filed this issue doc after discovering the dispatched todo's premise (existing
@@ -385,3 +420,27 @@ concrete reason not to).
     something a backend_engineer worker should do itself per the craft-scoping rule. Mirror retag applied to the parent
     plan's item. No egress provisioned this session; skipping the dispatched task so it redispatches to an `infra`-craft
     worker.
+  - **2026-08-11** (slot-18, data_engineering adopting the `[INFRA]` craft per `worker.md`'s craft-adopt rule):
+    **egress provisioned + PROVEN; the blocker has MOVED from network to credentials.** Two new todos above capture
+    it. Sequence: (1) launched a throwaway probe VM in `europe-west2-a` and curled both Betfair endpoints — got
+    **405** and **400 `DSC-0008`** where Tokyo gets 403 + "Restricted", so the region choice the operator delegated
+    on 2026-08-11 is measurably correct, not just plausible; (2) reserved the regional static address
+    `betfair-egress-ip` = `34.39.85.36` and launched a real egress VM on it running execution-service's OWN shipped
+    `refresh_betfair_session_token.py` (passed in by metadata, not a reimplementation, so the verification is of the
+    real path); (3) it read all three GSM credential secrets successfully, called `login_interactive()`, and Betfair
+    answered `INVALID_USERNAME_OR_PASSWORD`. **That error is the good news and the bad news**: it can only be
+    produced by a request that reached Betfair's auth layer, which is the proof the geo-block is gone — and it means
+    the credentials themselves are wrong, so `betfair-session-token` still has 0 versions and todo 4's live-verify
+    remains genuinely undone. I did NOT retry (Betfair locks accounts on consecutive failures; real-money account).
+    Both throwaway VMs were deleted after their evidence was captured; only the reserved static IP persists
+    (~$7/mo unattached — kept deliberately, since a stable IP is the property Betfair's fraud heuristics care about
+    and re-rolling it would invalidate this session's measurement).
+    **Concurrency note — a peer effort exists, left untouched**: `lc_singleton_check` in my new launcher refused
+    its own first dry-run because `betfair-egress-proxy-20260811-211046` (e2-micro, `tier: daemon`,
+    `purpose: betfair-egress-proxy`, ephemeral IP `35.230.151.99`, created 21:10 UTC — ~50 min before this session)
+    was already RUNNING in `europe-west2-a`. That is another agent's in-flight PROXY-design egress, not mine; per
+    RULES.md I did not delete, modify, or reuse it, and my launcher deliberately singleton-guards against it so the
+    two designs can never issue concurrent Betfair logins. **Whoever owns that proxy should read the credential
+    finding above before investing further in proxy plumbing — a working proxy still returns
+    `INVALID_USERNAME_OR_PASSWORD`.** If the proxy design is the one kept, attach `betfair-egress-ip` to it rather
+    than leaving it on an ephemeral IP.
