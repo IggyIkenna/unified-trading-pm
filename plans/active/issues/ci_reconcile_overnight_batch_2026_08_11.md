@@ -403,10 +403,11 @@ not because anything needs follow-up.
       keeps importing from the host module unchanged). Verified 0 files >900L via the gate's own wc-based logic; full
       local test suite green except 2 UNRELATED pre-existing regressions that also block PR #951 (the fleet bot's
       current promote PR, superseding closed #950) — filed as
-      `/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. **quickmerge could not land this
-      split** — its own pre-commit re-gate correctly refused a red tree (blocked by those 2 unrelated regressions, not
-      by anything in the split itself). Follow-up: land the split once the 2 blockers in that issue doc are resolved
-      (either by this or another session). (repo: market-tick-data-service)
+      `/plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. **quickmerge could not land this
+      split** at the time this was written — its own pre-commit re-gate correctly refused a red tree (blocked by those 2
+      unrelated regressions, not by anything in the split itself). **UPDATE (same-day, later `/ci-reconcile` pass):
+      landed** — `market-tick-data-service@b13e3a2b` shipped the split together with the fix for both blocking
+      regressions (see the linked issue doc's Resolution section), confirmed GREEN on `quality-gates-v2`.
 - [ ] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A): no escalation path exists
       from a `cloud-build-failure-watcher` CRITICAL alert to an AO-dispatched fix attempt today — every Cloud-Build-
       only failure (GH Actions can stay green) depends on a human reading Slack. Needs a new `wall_type` in

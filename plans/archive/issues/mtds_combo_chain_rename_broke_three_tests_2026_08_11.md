@@ -19,7 +19,7 @@ summary: >-
   should still get old per-underlying-partition behavior (production bug in `c31cfe7a`) or the 3 tests are simply stale
   and should assert `combo_chain` instead (test bug) is a judgment call the rename's author should make — not guessed
   under time pressure alongside an unrelated file-size-cap fix.
-status: open
+status: resolved
 nature: issue
 scope: [engineer]
 asset_group: [tradfi]
@@ -47,6 +47,11 @@ depends_on: []
 ---
 
 # market-tick-data-service: combo→combo_chain rename broke 3 tests
+
+> **ARCHIVED** — 2026-08-11. Both follow-ups resolved in `market-tick-data-service@b13e3a2b`, confirmed GREEN on
+> `quality-gates-v2`. See the Resolution section below for the fix (tests updated to `combo_chain` per the documented
+> operator ruling in `tradfi_canonical_path_migration_design_2026_07_19.md`) and the parent
+> `ci_reconcile_overnight_batch_2026_08_11.md` item 10 for the file-size-cap split that landed in the same commit.
 
 ## Evidence
 
@@ -91,13 +96,30 @@ PR #951's `statusCheckRollup` at time of writing: `QG slice (tests)` FAILURE (co
 FAILURE (file-size cap this session is fixing, likely ALSO the empty-string-fallback ratchet once the size-cap clears it
 far enough to reach STEP 5.101), `quality-gates-v2` FAILURE overall.
 
-## Follow-ups
+## Resolution (2026-08-11, `/ci-reconcile` sweep)
 
-- [ ] [CODE] P1. Fix `migrate_tradfi_underlying_display_names_2026_08.py`'s 5 new empty-string-fallback sites (lines
+Both follow-ups below resolved in the same shipped commit: **`market-tick-data-service@b13e3a2b`** ("fix(tradfi):
+combo_chain reader routing + split 2 files past the 900-line SRP cap"), confirmed GREEN on `quality-gates-v2`
+(`gh run list --branch live-defi-rollout --repo IggyIkenna/market-tick-data-service`).
+
+- Combo/combo_chain regression: resolved as **option (b)** — the 3 tests were stale. `c31cfe7a`'s narrowing to
+  `"combo_chain"`-only was the INTENDED, documented behavior: confirmed via
+  `/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md` § "2026-08-11 update", which records the
+  explicit operator ruling that the Deribit/CME bundle-wrapper sense of "combo" collided with the real
+  `InstrumentType.COMBO` enum member and was renamed `combo_chain` to get the full v6 `quote=`/`margin=` chain tail
+  (matching `futures_chain`/`options_chain`). The 3 tests were updated to use `"combo_chain"` and the v6-tail-aware
+  assertions (verified against the actual writer output, not guessed) — not a production-code revert.
+- STEP 5.101 empty-string-fallback ratchet: cleared in the same commit (the shipped tree's fallback count is now BELOW
+  the baseline, not above it — confirmed via a clean local `quality-gates.sh --no-fix` run and the green CI result
+  above).
+
+## Follow-ups (original, superseded by the Resolution above — kept for the record)
+
+- [x] [CODE] P1. Fix `migrate_tradfi_underlying_display_names_2026_08.py`'s 5 new empty-string-fallback sites (lines
       129/130/140/141/142) — rewrite to fail fast or add `# noqa: qg-empty-fallback` with a one-line reason. Re-run
       `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` to confirm STEP 5.101 clears. (repo:
-      market-tick-data-service)
-- [ ] [CODE] P1. Decide + fix: either (a) restore bare `"combo"` to the per-underlying-partition /
+      market-tick-data-service) — market-tick-data-service@b13e3a2b
+- [x] [CODE] P1. Decide + fix: either (a) restore bare `"combo"` to the per-underlying-partition /
       empty-shard-key-third-element behavior in `symbol_rules.py` / `venue_fetch.py` / `partitioned_writer.py` if
       `c31cfe7a`'s narrowing to `"combo_chain"`-only was unintentional for the writer-partitioning path, or (b) update
       the 3 named tests to assert `"combo_chain"` behavior instead of legacy `"combo"` if the narrowing was intentional
@@ -105,4 +127,5 @@ far enough to reach STEP 5.101), `quality-gates-v2` FAILURE overall.
       instrument_type at all — check for any remaining live producer of bare `"combo"` before choosing). Verify via
       `bash scripts/quality-gates.sh --no-fix` full-green, then ship + verify
       `gh run list --branch live-defi-rollout --repo IggyIkenna/market-tick-data-service` goes green and PR #950
-      auto-merges. (repo: market-tick-data-service)
+      auto-merges. (repo: market-tick-data-service) — market-tick-data-service@b13e3a2b, PR #950 superseded/#951+
+      cleared
