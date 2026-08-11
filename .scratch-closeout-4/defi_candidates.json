@@ -1,0 +1,865 @@
+{
+ "tranche": "defi",
+ "covering_paths": [
+  "plans/active/defi_compute_gcp_migration_2026_08_08.md",
+  "plans/active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md",
+  "plans/active/defi_consolidated_closeout_2026_07_18.md",
+  "plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md",
+  "plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md",
+  "plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md",
+  "plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md",
+  "plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md",
+  "plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md",
+  "plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md",
+  "plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md",
+  "plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md",
+  "plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md",
+  "plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md",
+  "plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md",
+  "plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md",
+  "plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md",
+  "plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md",
+  "plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md",
+  "plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md",
+  "plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md"
+ ],
+ "total_members": 90,
+ "never_cited_count": 14,
+ "never_cited": [
+  {
+   "path": "plans/active/ag_closeout_audit_rollout_2026_07_25.md",
+   "basename": "ag_closeout_audit_rollout_2026_07_25.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md",
+   "basename": "adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md",
+   "basename": "defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md",
+   "basename": "defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md",
+   "basename": "defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md",
+   "basename": "defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md",
+   "basename": "dp_cron_did_not_fire_false_positive_burst_2026_08_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md",
+   "basename": "honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md",
+   "basename": "mdps_features_deadcode_consolidation_2026_07_20.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md",
+   "basename": "ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md",
+   "basename": "onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/operator_action_items_consolidated_2026_08_08.md",
+   "basename": "operator_action_items_consolidated_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md",
+   "basename": "phantom_audit_estate_coverage_gap_2026_07_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md",
+   "basename": "solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  }
+ ],
+ "candidates": [
+  {
+   "path": "plans/active/ag_closeout_audit_rollout_2026_07_25.md",
+   "basename": "ag_closeout_audit_rollout_2026_07_25.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/bybit_perp_hedge_execution_plan_2026_08_10.md",
+   "basename": "bybit_perp_hedge_execution_plan_2026_08_10.md",
+   "assigned_vm": "planning",
+   "status": "active",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/bybit_usdc_deposit_automation_plan_2026_08_11.md",
+   "basename": "bybit_usdc_deposit_automation_plan_2026_08_11.md",
+   "assigned_vm": "planning",
+   "status": "active",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/data_completion_defi_2026_07_15.md",
+   "basename": "data_completion_defi_2026_07_15.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/data_pipeline_check_mdps_features_2026_07_20.md",
+   "basename": "data_pipeline_check_mdps_features_2026_07_20.md",
+   "assigned_vm": "planning",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md",
+   "basename": "defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md",
+   "basename": "defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md",
+   "basename": "defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_migration_audit_log_2026_07_24.md",
+   "basename": "defi_migration_audit_log_2026_07_24.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_strategy_pnl_axis_index_2026_07_24.md",
+   "basename": "defi_strategy_pnl_axis_index_2026_07_24.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md",
+   "basename": "defi_track5_coverage_mvp_backfill_2026_07_24.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/defi_venue_lst_rates_residual_2026_07_24.md",
+   "basename": "defi_venue_lst_rates_residual_2026_07_24.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md",
+   "basename": "adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md",
+   "basename": "ag_closeout_audit_defi_parked_2026_08_06.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md",
+   "basename": "ag_closeout_audit_defi_parked_2026_08_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md",
+   "basename": "architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md",
+   "basename": "autonomous_session_operator_decisions_2026_07_25.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md",
+   "basename": "corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md",
+   "basename": "coverage_floor_registries_no_cross_propagation_2026_07_17.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md",
+   "basename": "defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md",
+   "basename": "defi_adapter_dead_code_audit_2026_07_24.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md",
+   "basename": "defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md",
+   "basename": "defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md",
+   "basename": "defi_bridge_events_historical_backfill_gap_2026_07_28.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md",
+   "basename": "defi_catalog_engine_config_key_contract_drift_2026_07_23.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md",
+   "basename": "defi_cefi_venue_chain_axis_contamination_2026_07_28.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_code_codex_drift_2026_05_27.md",
+   "basename": "defi_code_codex_drift_2026_05_27.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md",
+   "basename": "defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md",
+   "basename": "defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_contamination_doc_over_cap_and_prettier_dirty_blocks_routine_edits_2026_08_10.md",
+   "basename": "defi_contamination_doc_over_cap_and_prettier_dirty_blocks_routine_edits_2026_08_10.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md",
+   "basename": "defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md",
+   "basename": "defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md",
+   "basename": "defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md",
+   "basename": "defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md",
+   "basename": "defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md",
+   "basename": "defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md",
+   "basename": "defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md",
+   "basename": "defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md",
+   "basename": "defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md",
+   "basename": "defi_morpho_lending_indices_never_wired_2026_07_12.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md",
+   "basename": "defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_oracle_family_empty_path_exception_classification_2026_08_09.md",
+   "basename": "defi_oracle_family_empty_path_exception_classification_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md",
+   "basename": "defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md",
+   "basename": "defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md",
+   "basename": "defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md",
+   "basename": "defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md",
+   "basename": "defi_turbo_api_hides_real_captured_data_2026_07_07.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md",
+   "basename": "defi_upstream_instruments_catalog_stale_2026_07_15.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md",
+   "basename": "deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md",
+   "basename": "dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md",
+   "basename": "dp_cron_did_not_fire_false_positive_burst_2026_08_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md",
+   "basename": "dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md",
+   "basename": "e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/estate_orphan_assessment_2026_07_21.md",
+   "basename": "estate_orphan_assessment_2026_07_21.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md",
+   "basename": "features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md",
+   "basename": "features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md",
+   "basename": "features_service_manifest_coverage_gap_2026_08_03.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md",
+   "basename": "honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md",
+   "basename": "instruments_docs_audit_outstanding_items_2026_07_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/instruments_remaining_work_audit_2026_07_10.md",
+   "basename": "instruments_remaining_work_audit_2026_07_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md",
+   "basename": "instruments_service_defi_golden_red_capability_lockstep_gap_2026_08_05.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/kamino_instrument_key_colon_blocker_2026_08_07.md",
+   "basename": "kamino_instrument_key_colon_blocker_2026_08_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/lighter_tardis_writerless_route_hang_2026_07_28.md",
+   "basename": "lighter_tardis_writerless_route_hang_2026_07_28.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md",
+   "basename": "lst_rate_honest_coverage_over_cap_findings_2026_08_03.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md",
+   "basename": "mdps_features_deadcode_consolidation_2026_07_20.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md",
+   "basename": "ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md",
+   "basename": "mtds_dex_pools_swaps_backfill_verification_2026_07_24.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md",
+   "basename": "mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md",
+   "basename": "mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md",
+   "basename": "mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md",
+   "basename": "mtds_is_full_adapter_smoketest_findings_2026_07_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md",
+   "basename": "non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md",
+   "basename": "onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/operator_action_items_consolidated_2026_08_08.md",
+   "basename": "operator_action_items_consolidated_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md",
+   "basename": "over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md",
+   "basename": "phantom_audit_estate_coverage_gap_2026_07_10.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/plan_reconciler_findings_defi_2026_08_09.md",
+   "basename": "plan_reconciler_findings_defi_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md",
+   "basename": "pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md",
+   "basename": "silent_cap_source_audit_remaining_findings_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md",
+   "basename": "solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md",
+   "basename": "solana_dex_pool_swaps_indexer_scope_2026_07_12.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md",
+   "basename": "sports_manifest_consolidator_zero_growth_stall_2026_07_29.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md",
+   "basename": "strategy_ml_orphan_coverage_design_gaps_2026_08_03.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md",
+   "basename": "uac_data_type_validity_combinator_fragmentation_2026_07_07.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md",
+   "basename": "uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md",
+   "assigned_vm": "NA",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md",
+   "basename": "uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md",
+   "basename": "vault_share_price_handler_manifest_missing_instrument_id_2026_07_31.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md",
+   "basename": "venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md",
+   "assigned_vm": "planning",
+   "status": "open",
+   "cited_in_covering_doc": true,
+   "self_dispatched": true
+  },
+  {
+   "path": "plans/active/lst_rate_honest_coverage_2026_07_21.md",
+   "basename": "lst_rate_honest_coverage_2026_07_21.md",
+   "assigned_vm": "NA",
+   "status": "active",
+   "cited_in_covering_doc": true,
+   "self_dispatched": false
+  },
+  {
+   "path": "plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md",
+   "basename": "solana_dex_pool_swaps_indexer_2026_08_08.md",
+   "assigned_vm": "planning",
+   "status": "active",
+   "cited_in_covering_doc": false,
+   "self_dispatched": true
+  }
+ ],
+ "cited_somewhere_count": 76
+}
