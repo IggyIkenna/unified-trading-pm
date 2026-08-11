@@ -488,13 +488,21 @@ drift_direction: advance-code
       checkbox is left open with a freshly-dated status note (not silently re-committed). **DONE 2026-08-09 (slot 8)** —
       `20a92886` confirmed unresolvable; freshly implemented + committed + `quality-gates.sh` green, sentinel matches —
       instruments-service@9b91297f.
-- [ ] [CODE] P3. Swap the hand-maintained MTDS `_instruments_metadata.py` venue-prefix-map mirror for a direct import of
+- [x] ✅ [CODE] P3. Swap the hand-maintained MTDS `_instruments_metadata.py` venue-prefix-map mirror for a direct import of
       UAC's `VENUE_PREFIX_TO_PROTOCOL` (removing the duplicate mapping); also fix the stale comment in
       `unified-trading-system-ui/lib/types/defi.ts` naming the already-deleted `CANONICAL_VENUE_TO_ADAPTER`. Repo:
       market-tick-data-service, unified-trading-system-ui. Source:
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (prefix-map-mirror item). Done when:
       `_instruments_metadata.py` imports `VENUE_PREFIX_TO_PROTOCOL` from `unified-api-contracts` instead of a
-      hand-mirror; the stale UI comment is corrected.
+      hand-mirror; the stale UI comment is corrected. — market-tick-data-service@b5310181,
+      unified-trading-system-ui@813d79ea. `_PROTOCOL_TO_VENUE_PREFIX` now derives from UAC `VENUE_PREFIX_TO_PROTOCOL`
+      (first-wins inversion so canonical underscore spellings beat UAC's legacy glued aliases VELODROMEV2/TRADER_JOEV2),
+      with a tight documented supplement for 10 real IS venue prefixes UAC's map does not yet carry (PHOENIX/KAMINO/
+      SOLEND/MARGINFI/JITO/MARINADE/SOLBLAZE/LIDO/ETHERFI/EIGENLAYER — extending UAC's map is unsafe: its adapter-key
+      auto-gen loop would re-add PHOENIX-SOLANA to `VENUE_TO_ADAPTER_KEY`, contradicting that venue's deliberate
+      exclusion; UAC-side consolidation tracked in
+      `/plans/active/issues/uac_venue_prefix_to_protocol_missing_defi_prefixes_2026_08_11.md`). 3 new regression tests;
+      full `quality-gates.sh` green.
 - [ ] [SCRIPT] P3. Cloud-agnostic + hygiene sweep of instruments-service's script tier: replace ~60 scripts' direct
       `google.cloud`/`boto3` imports with `get_storage_client()`, replace ~30 inline legacy bucket-name literals with
       `resolve_bucket_name`, and replace the hardcoded `/tmp/` in `enumerate_expected_universe.py` with
