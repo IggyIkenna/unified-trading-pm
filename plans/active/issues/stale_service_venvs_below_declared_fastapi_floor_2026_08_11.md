@@ -137,9 +137,10 @@ itself; the CVE doc keeps ownership of the `--ignore-vuln` allowlist.
       first (0.136.3 → 0.140.7, `from fastapi.routing import iter_route_contexts` OK), then 15 more (synced=15 failed=0
       repos_left_dirty=0). `--frozen` was deliberate: every lockfile already resolved fastapi to 0.140.7, so no
       `uv.lock` was rewritten and no tracked file was dirtied — confirming the diagnosis that the venvs were stale
-      against their OWN locks, not that the pins were wrong. **Evidence**: PM `bash scripts/quality-gates.sh --no-fix`
-      exit code **0** (was `6 failed, 1961 passed` before the sync). Final spread: 15 venvs @ 0.140.7, 2 @ 0.141.1, and
-      0.136.3 remaining ONLY in the 4 `.stale-pre-history-rewrite-*` archive dirs (todo 6).
+      against their OWN locks, not that the pins were wrong. **Evidence**: unified-trading-pm@9307f909af + PM
+      `bash scripts/quality-gates.sh --no-fix` exit code **0** (was `6 failed, 1961 passed` before the sync). Final
+      spread: 15 venvs @ 0.140.7, 2 @ 0.141.1, and 0.136.3 remaining ONLY in the 4 `.stale-pre-history-rewrite-*`
+      archive dirs (todo 6).
 - [ ] [SCRIPT] P0. Make the swallowed ImportError loud in `unified-trading-pm/scripts/quality_gates/_capability_gaps.py`
       (~line 864): an ImportError while probing a sibling venv must fail the gate with the underlying message and the
       offending venv path, never degrade to an empty schema that surfaces as `assert 0 >= 29`.

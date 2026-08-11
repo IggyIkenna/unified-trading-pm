@@ -110,7 +110,7 @@ Second-order: nothing ever cleans it up. An agent in `.tabs/3` sees a dirty trac
 multi-agent rules correctly forbid committing or reverting another party's uncommitted change — so the diff persists
 indefinitely and the clone silently diverges from the SSOT.
 
-## Fix applied 2026-08-11
+## Fix applied 2026-08-11 — unified-trading-pm@9307f909af
 
 1. **Guard in `link-claude-skills.sh`** — block (4.5) now refuses when `$_local_settings` is a symlink and prints the
    readlink target plus why, instead of writing through it.
