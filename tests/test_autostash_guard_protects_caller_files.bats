@@ -30,6 +30,11 @@
 # Run: bats tests/test_autostash_guard_protects_caller_files.bats
 
 setup() {
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   GUARD_SH="${REPO_ROOT}/scripts/dev/tree-wip-guard.sh"
   QM_SH="${REPO_ROOT}/scripts/quickmerge.sh"

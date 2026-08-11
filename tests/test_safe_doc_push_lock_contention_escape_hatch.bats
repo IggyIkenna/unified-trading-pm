@@ -20,6 +20,11 @@
 # the live incident -- exiting 8, a code distinct from the generic exhausted-retries exit 5.
 
 setup() {
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   SCRIPT="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
 
@@ -75,7 +80,13 @@ setup() {
   [[ "$output" == *"git clone --reference"* ]]
   # Must stop BEFORE exhausting all 6 attempts -- only 3 "attempt N/6" lines should appear.
   attempt_lines="$(grep -c '── attempt' <<<"$output")"
-  [ "$attempt_lines" -eq 3 ]
+  # RANGE, not -eq 3. The counter is CONSECUTIVE lock failures; the number of ATTEMPTS needed
+  # to accumulate them is not fixed (any other failure resets the streak), so under load the
+  # hatch legitimately fires on attempt 4. -eq 3 pinned machine timing and failed ~1 run in 4
+  # while exit 8 and every message assertion PASSED — i.e. the hatch worked and the test went
+  # red anyway. The real claim is "short-circuits instead of burning all 6".
+  [ "$attempt_lines" -ge 3 ]
+  [ "$attempt_lines" -lt 6 ]
   # Never committed anything.
   run git log --oneline -- new_doc.md
   [ -z "$output" ]

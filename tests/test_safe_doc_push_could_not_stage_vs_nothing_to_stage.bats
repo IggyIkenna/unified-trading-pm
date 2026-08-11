@@ -21,6 +21,17 @@
 # reaches the (now clearly-labeled) "nothing to stage ... staging completed cleanly" message.
 
 setup() {
+  # SDP_ISOLATED=0 is REQUIRED, not incidental: this suite asserts on the IN-TREE staging path
+  # (it holds the CALLER repo's .git/index.lock and expects a hard failure). Isolated mode --
+  # the default -- commits from a separate worktree with its OWN index, so the lock is
+  # irrelevant there and the script correctly exits 0. The assertion then reads as
+  # "safe-doc-push ignores a held lock", which is not what happened.
+  export SDP_ISOLATED=0
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   SCRIPT="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
 
