@@ -54,17 +54,21 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. Reconcile `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`'s checkboxes against batch
-      11's 11 now-done todos — flip each corresponding checkbox, citing the shipped commit(s)/evidence (verify before
-      citing; do not assume batch 11's wording matches the source doc's exact todo verbatim, re-read both). Also
-      re-verify the flagged "Wire Kalshi into the pipeline" checkbox against current manifest state (per batch 11's
-      "Flagged, not extracted" section) and flip or annotate it accordingly. Re-check for 0 remaining open todos in the
-      source doc after flipping (unlikely — it has ~10 other genuinely credential/dependency/design-gated open items);
-      do not archive the source doc unless it genuinely reaches 0. Done when: the source doc's corresponding checkboxes
-      (incl. the Kalshi one) are flipped or annotated with verified evidence.
+- [x] ✅ [REVIEW] P2. Reconcile `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`'s checkboxes against
+      batch 11's 11 now-done todos — flipped all 11 corresponding checkboxes + the Kalshi checkbox (12 total), each
+      citing the actual shipped commit(s)/verification evidence (re-read both docs; matched by content, not verbatim
+      wording). Re-verified "Wire Kalshi into the pipeline" against CURRENT code (not just the two cited docs):
+      confirmed `kalshi.py` fully implements RSA-PSS signing + MTDS carries `get_trades_with_status` + 4 live WS
+      connectors + a bulk-ingest script — flipped as done. Re-checked remaining open count: **9 open todos remain**
+      (genuinely credential/dependency/design-gated) — source doc does NOT reach 0, does NOT archive. Repo:
+      unified-trading-pm (docs).
 - [ ] [DOC] P2. Archive `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` via the standard 6-step ritual once
       todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
       already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
       and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-11 (slot 3, backend_engineer)**: todo 1 done — reconciled all 11 batch-11 done-todos + the flagged Kalshi
+  checkbox against `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. Source doc has 9 open todos
+  remaining (genuinely gated), so it does not archive. Todo 2 (archive batch-11 itself) is now unblocked — next.
