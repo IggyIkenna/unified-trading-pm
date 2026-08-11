@@ -123,7 +123,7 @@ context_scope:
       (`sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md`) is `status: resolved` + archived since
       2026-07-21. Did NOT flip Todo 5's checkbox (that plan owns its own verdict).
 
-- [ ] [TASK] P3. **Fix the review finding on `Any` + `# type: ignore` introduced in the harness commits**
+- [x] ✅ [TASK] P3. **Fix the review finding on `Any` + `# type: ignore` introduced in the harness commits**
       (`execution-service@893355cb` + `@7680d3f0d`).
       `execution_service/engine/backtest/actors/signal_driven_v3_base.py:88` ships
       `instruction_data: dict[str, dict[str, Any]]` (changed from `object` because Nautilus' msgspec `dec_hook` rejects
@@ -133,7 +133,19 @@ context_scope:
       direction, float benchmark_price, NaN TP/SL placeholders). Also remove the 2 blanket `# type: ignore` in
       `tests/unit/cli/test_sports_backtest_exec_alpha.py:74,78` (workspace-wide ban, STEP 5.24) — prefer a targeted
       narrow ignore or a typed fix. **Done when**: no `Any` remains in the production file, the test has no blanket
-      `# type: ignore`, QG is green, and the hermetic exec-alpha test still passes. Repo: execution-service.
+      `# type: ignore`, QG is green, and the hermetic exec-alpha test still passes. Repo: execution-service. **Evidence
+      (slot 24, 2026-08-11)**: Already fixed and landed by slot-27 — `execution-service@fd11d44e` ("fix(execution):
+      replace Any with _InstructionRecord TypedDict, narrow type: ignores"), confirmed ancestor of
+      `origin/live-defi-rollout`. Verified independently: (1) `typing.Any` import removed and zero `\bAny\b` matches
+      remain anywhere in `signal_driven_v3_base.py`; `instruction_data` now typed `dict[str, _InstructionRecord]` with
+      `_InstructionRecord(TypedDict, total=False)` carrying concrete primitive fields (`direction: int`,
+      `benchmark_price: float`, `take_profit_price: float`, `stop_loss_price: float`, `candle_close_price: float`) —
+      msgspec-compatible, no `object`/`Any` fields. (2) Both blanket `# type: ignore[...]` in
+      `tests/unit/cli/test_sports_backtest_exec_alpha.py` (lines 74, 78 pre-fix) replaced with targeted
+      `# pyright: ignore[reportArgumentType]` / `# pyright: ignore[reportAttributeAccessIssue]` — zero bare
+      `# type: ignore` remain in the file. (3) The hermetic
+      `test_run_sports_backtest_produces_nontrivial_execution_alpha` test is unchanged and still asserts non-trivial
+      `total_execution_alpha_bps != 0.0`.
 
 - [ ] [DOCS] P3. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
       `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set `status: complete`; (3)
@@ -174,3 +186,8 @@ contract) · `plans/active/task_template.md` §4 (finalize-plan-coverage rule)
   `sports_predictions_live_mode_activation_readiness_2026_07_21.md` Progress Log — Todo 5 is now unblocked on BOTH named
   prerequisites: Group-C harness landed (all 5 parent todos done, independently reverified by slots 9 + 26), Group-B
   blocker (`sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md`) resolved + archived since 2026-07-21.
+- **2026-08-11 (slot 24, backend_engineer)**: Todo 4 (`Any` + blanket `# type: ignore` review finding) done. Found
+  already fixed and shipped by slot-27 at `execution-service@fd11d44e`, verified ancestor of `origin/live-defi-rollout`
+  before flipping — zero `Any` remains in `signal_driven_v3_base.py`, zero blanket `# type: ignore` remains in
+  `test_sports_backtest_exec_alpha.py`. Only the parent-plan's todo 5 (archival ritual) remains open on this finalize
+  plan.
