@@ -187,9 +187,12 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # 42c50b4b3) blocked on this exact ratchet — a claim added via safe-doc-push.sh sailed through
     # clean and only surfaced on the next unrelated full CI run. Sub-rule A (Cloud Build API
     # verification) stays CI-only — needs gcloud/network/auth, incompatible with a <1s local hook.
+    # Sub-rule C (§ 8d, added 2026-08-11): a `- [x]` prod DATA-mutation claim (restamp/backfill/
+    # GCS rename-delete/tofu-state op) with a stated quantity but no `Evidence: artifact=<ref>` —
+    # same regex-only, no-external-dependency shape as sub-rule B, so it rides the same fast path.
     python3 "$SCRIPT_DIR/../quality_gates/check_evidence_backed_completion.py" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Evidence-backed-completion (staged plans)" \
-      || { echo "  ❌ A staged plan's '- [x]' runtime-green claim (build/deploy/promote) has no Evidence: cloudbuild=<id> — add the citation, or confirm this genuinely isn't a runtime claim"; PF=$(( PF + 1 )); }
+      || { echo "  ❌ A staged plan's '- [x]' claim has no evidence ref — a runtime-green build/deploy/promote claim needs Evidence: cloudbuild=<id> (§ 8b), a prod-mutation claim (restamp/backfill/rename/delete/tofu-state) with a stated count needs Evidence: artifact=<ref> (§ 8d) — add the citation, or confirm this genuinely isn't either claim type"; PF=$(( PF + 1 )); }
     # Prosewrap-padding, --only-scoped (2026-08-09): this shrinking ratchet (baseline: corpus-wide
     # violation_count, 4472 lines at time of writing) previously had NO precommit-time presence,
     # only the full corpus-wide baseline mode — so a docs(plans) commit landing a NEW prettier

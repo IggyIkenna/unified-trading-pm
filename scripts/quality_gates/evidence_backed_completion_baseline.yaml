@@ -1,32 +1,202 @@
-claim_without_evidence_baseline: 14
-rule: evidence-backed-completion (sub-rule B only; sub-rule A is strict-0)
-source: "plans/PLAN_FORMAT.md \xA7 Evidence-backed completion"
+claim_without_evidence_baseline: 16
+prod_mutation_claim_without_evidence_baseline: 82
+rule: evidence-backed-completion (sub-rules B, C; sub-rule A is strict-0)
+source: "plans/PLAN_FORMAT.md \xA7\xA7 8b, 8d"
 baseline_files:
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md
-    line: 496
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/data_completion_sports_2026_07_24.md
-    line: 232
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md
-    line: 451
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md
-    line: 466
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/deployment_registry_firestore_migration_2026_07_14.md
-    line: 128
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/june_2026_vintage_audit_findings_2026_07_27.md
-    line: 475
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
-    line: 290
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
-    line: 371
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
-    line: 385
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
-    line: 484
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
-    line: 521
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md
-    line: 360
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md
-    line: 310
-  - path: /home/ubuntu/unified-trading-system-repos/.tabs/32/unified-trading-pm/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md
-    line: 358
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md
+  line: 496
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_sports_2026_07_24.md
+  line: 232
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  line: 130
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/june_2026_vintage_audit_findings_2026_07_27.md
+  line: 475
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  line: 290
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  line: 371
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  line: 385
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  line: 484
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/monitoring_control_plane_master_2026_06_10.md
+  line: 524
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md
+  line: 360
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md
+  line: 311
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md
+  line: 431
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md
+  line: 150
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md
+  line: 531
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md
+  line: 292
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md
+  line: 340
+baseline_files_prod_mutation:
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  line: 290
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/bucket_fold_ml_2026_07_17.md
+  line: 154
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cefi_4surface_migration_execution_log_2026_07_24.md
+  line: 104
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cefi_consolidated_closeout_2026_07_18.md
+  line: 136
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/content_derived_backlog_task_ids_2026_08_08.md
+  line: 142
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
+  line: 109
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md
+  line: 312
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  line: 97
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  line: 275
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
+  line: 319
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_cefi_2026_07_15.md
+  line: 61
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_defi_2026_07_15.md
+  line: 757
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_sports_2026_07_24.md
+  line: 800
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_to_100_all_ag_2026_06_21.md
+  line: 304
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_completion_tradfi_2026_07_15.md
+  line: 119
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/data_pipeline_reconciliation_skill_2026_07_20.md
+  line: 585
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
+  line: 419
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md
+  line: 344
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md
+  line: 196
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md
+  line: 219
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
+  line: 315
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
+  line: 522
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
+  line: 590
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/features_service_e2e_pipeline_test_2026_05_26.md
+  line: 202
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
+  line: 305
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
+  line: 458
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md
+  line: 625
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
+  line: 110
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
+  line: 126
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
+  line: 544
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/lst_rate_honest_coverage_2026_07_21.md
+  line: 190
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+  line: 389
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+  line: 469
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
+  line: 215
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
+  line: 717
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
+  line: 292
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+  line: 223
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md
+  line: 151
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md
+  line: 215
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md
+  line: 254
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+  line: 309
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+  line: 346
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+  line: 479
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+  line: 657
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+  line: 758
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md
+  line: 529
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md
+  line: 145
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md
+  line: 158
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/bybit_futures_chain_write_shape_2026_07_13.md
+  line: 142
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
+  line: 125
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md
+  line: 262
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md
+  line: 196
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md
+  line: 466
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md
+  line: 229
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md
+  line: 531
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_code_codex_drift_2026_05_27.md
+  line: 202
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_contamination_doc_over_cap_and_prettier_dirty_blocks_routine_edits_2026_08_10.md
+  line: 108
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/defi_upstream_instruments_catalog_stale_2026_07_15.md
+  line: 292
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md
+  line: 96
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md
+  line: 104
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md
+  line: 114
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/estate_orphan_assessment_2026_07_21.md
+  line: 99
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/estate_orphan_assessment_2026_07_21.md
+  line: 372
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/estate_orphan_assessment_2026_07_21.md
+  line: 439
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/features_service_manifest_coverage_gap_2026_08_03.md
+  line: 130
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md
+  line: 92
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md
+  line: 306
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md
+  line: 543
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md
+  line: 257
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md
+  line: 242
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md
+  line: 146
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md
+  line: 159
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md
+  line: 604
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md
+  line: 698
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
+  line: 76
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md
+  line: 436
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md
+  line: 140
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md
+  line: 209
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md
+  line: 113
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md
+  line: 402
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md
+  line: 440
+- path: /home/ubuntu/unified-trading-system-repos/.tabs/22/unified-trading-pm/plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md
+  line: 153

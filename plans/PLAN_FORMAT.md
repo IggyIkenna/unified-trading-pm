@@ -540,6 +540,48 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+### 8d. Prod data-mutation evidence — mutation claims cite a VERIFIED artifact (HARD RULE — codified 2026-08-11)
+
+> **Why:** § 8b/§8c close the evidence gap for **build/deploy/promote** and **code-ship** completions, but a **prod
+> DATA-mutation** completion — a restamp/backfill row count, a manifest backstamp, a GCS object rename/delete, a
+> tofu/terraform state op — had no equivalent. Review independently flagged this exact class three times (tofu-state-rm
+> with no re-verification pasted, `do_rename` GCS renames gated on new-name existence alone with no content-equality
+> evidence, a prediction restamp's "12,006 rows / 0 residual mismatches" claim resting only on the worker's self-report
+> of running its own script). "The code is correct" is verifiable from the diff; "it ran and produced the claimed
+> effect" was not. **RULED 2026-08-06: extend the §8b contract to this class.** See
+> `plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`.
+
+Any `- [x]` todo whose completion is a **prod DATA-mutation claim** — restamping/backfilling rows, a manifest backstamp,
+a GCS object rename/delete, a tofu/terraform state op — that also states a **quantity** (a row/shard/object/record count)
+MUST cite structured evidence on the checkbox line or its continuation lines:
+
+```markdown
+- [x] ✅ ... <the claim, e.g. "restamped 12,006 rows"> ... Evidence: artifact=<ref>
+```
+
+`<ref>` is ONE of the following independently-resolvable artifact kinds (multiple allowed, comma-separated; other
+`Evidence:` token kinds from § 8b, e.g. `cloudbuild=<id>`, may co-occur on the same line):
+
+- a written **manifest-delta** reference — `manifest-delta:<shard-key-or-path>` (a manifest row/diff a reviewer can
+  re-read to confirm the before/after state the claim describes);
+- a **`vm-logs/<unit>/RESULT.json`** path — a structured result artifact the mutation script itself wrote (row/object
+  counts, content-equality hashes) at a durable, independently-readable location;
+- a **GCS operation id** — `gcs-op=<id>` (or the equivalent object generation/crc32c pair for a rename/delete, so a
+  reviewer can re-`gcloud storage objects describe` and confirm content-equality, not just new-name existence);
+- a **before/after `state list`** — `state-list:<before-ref>..<after-ref>` for a tofu/terraform state op (two resolvable
+  refs, e.g. two `terraform state list` output snapshots or their log paths, a reviewer can diff).
+
+- **Scope**: this gate targets the same over-claim class as § 8b — a completion asserting a specific operational OUTCOME
+  (a count, a rename, a state change) that only the worker's own script-run self-report currently backs. A code-ship
+  claim (`<repo>@<sha>` + "QG green", § 8b) is out of scope; so is a plain design/decision todo with no quantity claim.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate): sub-rule
+  C (baselined ratchet, same shape as § 8b's sub-rule B) flags a prod-mutation-with-quantity claim that cites no
+  `artifact=` ref. Like sub-rule B, this is a **presence** check (an artifact ref exists), not a deep verification of
+  its content — mirroring § 8b's own posture ("can't independently resolve everything from a QG script"); the reviewer
+  agent is what actually re-reads the cited artifact before allowing the flip.
+- Pre-existing corpus claims without this evidence are grandfathered via baseline; re-baseline with `--baseline-write`
+  only after confirming genuine pre-existing debt, never to wave through a fresh over-claim.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
