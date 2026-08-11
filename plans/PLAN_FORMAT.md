@@ -540,6 +540,50 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+### 8d. Prod DATA-mutation evidence-backed completion (codified 2026-08-11)
+
+> **Why:** the "found-green-but-actually-not-verified" class also applies to prod data mutations — restamp/backfill
+> row counts, manifest backstamps, GCS object renames/deletes, terraform/tofu state ops. A `- [x]` claiming "restamped
+> 12,006 rows" or "renamed M GCS objects" without a cited, independently-resolvable artifact is unverifiable — the same
+> gap §8b closed for build/deploy claims. Review flagged this class 3 independent times (tofu-state, do_rename
+> content-equality, prediction restamp row-counts) before consolidation into the issue doc
+> `/plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`, whose operator ruling ("YES, extend it,"
+> 2026-08-06) this section codifies.
+
+Any `- [x]` todo whose completion is a **prod data-mutation claim** — asserting a specific outcome from a script
+that mutated production data (restamp, backfill, GCS rename/delete, manifest rewrite, tofu/terraform state change,
+data migration, or similar) — MUST cite structured evidence on the checkbox line or its continuation lines:
+
+```markdown
+- [x] ✅ ... restamped 12,006 rows ... Evidence: vm-log=prediction-phantom-fix/run.log
+- [x] ✅ ... renamed 42 GCS objects ... Evidence: gcs-op=pred/canonical-cutover/rename-2026-08-01
+- [x] ✅ ... removed resource from tofu state ... Evidence: tofu-state=module.defi_warehouse.aws_s3_bucket.raw
+```
+
+Accepted evidence artifact types (non-exhaustive — the requirement is a DURABLE, INDEPENDENTLY-RESOLVABLE reference
+a reviewer can check against live infra; the exact token form is elective, same as §8b's `cloudbuild=<id>`):
+
+| Artifact type    | Format                               | Example                                                    |
+| ---------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `vm-log`         | `vm-log=<vm-prefix>/<log-path>`      | `vm-log=pred-phantom-fix/run.log`                          |
+| `manifest-delta` | `manifest-delta=<path-or-reference>` | `manifest-delta=pred-prd/_manifest_status/2026-08-01.json` |
+| `gcs-op`         | `gcs-op=<operation-reference>`       | `gcs-op=pred/rename-2026-08-01`                            |
+| `tofu-state`     | `tofu-state=<resource-reference>`    | `tofu-state=module.defi_warehouse.aws_s3_bucket.raw`       |
+| `cloudbuild`     | `cloudbuild=<build-id>`              | (existing §8b convention; use when the mutation ran IN a Cloud Build) |
+
+A data-mutation claim is identified by the co-occurrence of a **mutation verb** (restamp, backfill, rename, delete,
+wipe, tofu/terraform state, migrate, regenerate, recompute, etc.) AND an **outcome/quantity signal** (a row count,
+"completed", "applied", "processed", "N rows/shards/objects") in the same clause of a `- [x]` todo block.
+
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate):
+  sub-rule C (baselined ratchet) flags a data-mutation claim that cites NO `Evidence:` ref. Baselined so legacy plans
+  ratchet down; new mutation claims without evidence push the count up → regression. A mutation claim that DOES cite
+  an `Evidence:` ref satisfies the gate — the verification of the cited artifact itself is the reviewer's
+  responsibility (same posture as §8b's Cloud Build id: the gate checks the citation EXISTS; the reviewer resolves it).
+- **Not in scope**: code-ship claims (`<repo>@<sha>` + "QG green") are already covered by §8c's commit-SHA check and
+  need no additional evidence. A todo that cites `<repo>@<sha>` AND describes a data mutation is covered by this rule
+  — add an `Evidence:` ref for the mutation outcome in addition to the commit citation.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**

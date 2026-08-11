@@ -623,20 +623,23 @@ if [ -f "$FINALIZE_PLAN_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
 fi
 
 # ── Post-gates: Evidence-backed completion (runtime-green claims cite a VERIFIED build) ──
-# SSOT: plans/PLAN_FORMAT.md § 8b "Evidence-backed completion" + CLAUDE.md.
+# SSOT: plans/PLAN_FORMAT.md § 8b "Evidence-backed completion" + § 8d "Prod DATA-mutation
+# evidence-backed completion" + CLAUDE.md.
 # A `- [x]` todo claiming a Cloud Build / deploy / promote went green MUST cite `Evidence: cloudbuild=<id>`;
 # sub-rule A (strict-0) fails the gate if any cited build resolves to a terminal NON-success (the over-claim catch —
 # verified live via `gcloud builds describe` when auth is present; soft-skips when offline/unauthed so CI never breaks);
-# sub-rule B (baselined ratchet) flags a runtime-green claim with no evidence ref. Re-baseline B with --baseline-write.
+# sub-rule B (baselined ratchet) flags a runtime-green claim with no evidence ref; sub-rule C (baselined ratchet)
+# flags a prod DATA-mutation claim (restamp/backfill/GCS-rename/delete/tofu-state) with no evidence ref.
+# Re-baseline B/C with --baseline-write.
 EVIDENCE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_evidence_backed_completion.py"
 if [ -f "$EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running Evidence-backed-completion check (cited builds must be SUCCESS)..."
     if python3 "$EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
-        log_success "Evidence-backed-completion check passed (no over-claims; sub-rule B at/below baseline)"
+        log_success "Evidence-backed-completion check passed (no over-claims; sub-rules B+C at/below baseline)"
     else
         echo "❌ Evidence-backed-completion FAILED — a '- [x]' runtime-green claim cites a non-SUCCESS build, OR a new" >&2
-        echo "   build/deploy/promote-green claim has no 'Evidence: cloudbuild=<id>' ref. See plans/PLAN_FORMAT.md § 8b." >&2
-        echo "   Re-baseline sub-rule B after intentional debt: python3 ${EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        echo "   build/deploy/promote-green or prod DATA-mutation claim has no 'Evidence:' ref. See § 8b + § 8d." >&2
+        echo "   Re-baseline after intentional debt: python3 ${EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
         _post_gate_fail "evidence-backed-completion"
     fi
 fi
