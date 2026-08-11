@@ -307,6 +307,7 @@ removal + casing normalization remain before backfill-resume.
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
+<<<<<<< Updated upstream
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** — all stranded
       commits already recovered + landed on origin by prior sessions (verified 2026-08-11, slot 20). MTDS: c31cfe7a
       (combo→combo_chain across writer+manifest, ≡ stranded 1777229f), e5581a63 (chain underlying naming convention),
@@ -321,6 +322,29 @@ removal + casing normalization remain before backfill-resume.
       implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `2bcec56e` +
       `5706f9bb` (force lifecycle_phase to string dtype). Cherry-pick from any slot worktree, verify + QG, ship via
       quickmerge — do NOT re-implement.
+=======
+- [ ] [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
+      update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
+      manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
+      `combo` string — both TradFi and CEFI (CEFI's Deribit multi-expiry wrapper is the direct `combo` string
+      collision). Migrate existing historical manifest rows written under the old convention. Repos:
+      market-tick-data-service, unified-api-contracts. **Recover-first (2026-08-11, review finding agt-533c4e):**
+      stranded implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `1777229f`
+      (rename combo wrapper to combo_chain across writer+manifest) and `e5581a63` (canonicalize chain underlying
+      naming). Cherry-pick from any slot worktree (shared object store), verify + QG, ship via quickmerge — do NOT
+      re-implement. `8147050e` (BYBIT futures_chain venue) is redundant vs origin, skip.
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirmed
+      SYSTEMIC (not isolated to combo/futures_chain): all non-FUTURE tradfi instrument_types affected (combo,
+      options_chain, equity, etf). Fix already on origin/live-defi-rollout — both the source cast
+      (`databento_enrichment.py::_enrich_with_canonical_ids` L262-269, `if "lifecycle_phase" in df.columns:`
+      `astype(pd.StringDtype())`) and the belt-and-suspenders cast (`tradfi_shared.py::finalise_tradfi_rows_and_path`
+      L617-623, identical guard+cast) are present. Stranded commits `2bcec56e` + `5706f9bb` both found in shared
+      object store (all slot worktrees), both already integrated into HEAD — cherry-pick was a no-op (fix already
+      applied by prior session). Test `test_lifecycle_phase_string_dtype_even_when_all_null` exists at
+      `tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py:685`. No code change needed this
+      turn. Only two non-test files reference lifecycle_phase (the two above); Yahoo/UMI path does not populate
+      the column. — market-tick-data-service@fbc9cc6f (fix already on HEAD, verified via source read).
+>>>>>>> Stashed changes
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
