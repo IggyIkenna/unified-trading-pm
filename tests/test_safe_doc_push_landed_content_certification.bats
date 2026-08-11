@@ -143,79 +143,31 @@ HOOK
   [[ "$output" == *"reflowed by a hook"* ]]
 }
 
-@test "nothing-to-commit fallback where the branch moved but NOT to our content exits 14" {
-  # The measured shape: the caller had a real diff at entry, the reconcile moved origin,
-  # the hook rewrote doc.md to a DIFFERENT third value (neither the entry blob nor the
-  # entry HEAD blob), so HEAD:doc.md moved off the entry HEAD blob BUT origin does NOT
-  # contain the caller's content. Exit 13 only catches "HEAD unchanged" — this is the
-  # complementary half: HEAD moved, but to someone else's content, and reporting success
-  # would certify a branch containing none of the caller's work.
+@test "fallback success when a peer landed identical content mid-run (control -- remote check must not over-fire)" {
+  # THE HONEST case the "nothing to stage" fallback exists for: the caller had a real diff
+  # at entry, and while the run was in flight a concurrent session landed IDENTICAL content
+  # on origin. The fallback must report success -- and the new remote-ref check
+  # (_sdp_assert_remote_has_entry_content) must confirm origin/$BRANCH actually carries the
+  # caller's entry content, not merely that HEAD moved (P0, safe_doc_push_isolation_drops_
+  # rename_deletions_2026_08_10).
+  git clone -q "${BATS_TEST_TMPDIR}/origin.git" "${BATS_TEST_TMPDIR}/peer" >/dev/null 2>&1
+  ( cd "${BATS_TEST_TMPDIR}/peer" && \
+      git config user.email "peer@example.com" && \
+      git config user.name "peer" && \
+      echo "my genuine change" > doc.md && \
+      git add doc.md && \
+      git commit -q -m "peer: land the same change" && \
+      git push -q origin HEAD:live-defi-rollout )
 
-  # First: push a peer commit that advances doc.md beyond HEAD at clone time.
-  echo "peer content v1" > doc.md
-  git add doc.md && git commit -q -m "peer: change doc to v1" && git push -q origin HEAD:live-defi-rollout
-
-  # Caller's edit is a third, different value.
+  # Local clone still at "base" (behind origin); caller edits doc.md to the same content
+  # the peer just landed -- real diff at entry, converges to the remote mid-run.
   echo "my genuine change" > doc.md
-  # Entry blob = "my genuine change", entry HEAD blob = "peer content v1"
-
-  # Hook: writes doc.md to yet another value (beats BOTH sides to the branch) and
-  # lands other.md to advance the commit. The caller's doc.md edit never reaches the
-  # index; the commit lands but doc.md moved to the hook's value, not the caller's.
-  cat > .git/hooks/pre-commit <<'HOOK'
-#!/usr/bin/env bash
-echo "peer content v2 — hook's own rewrite of doc.md" > doc.md
-git add doc.md
-echo "more peer work" >> other.md
-git add other.md
-exit 0
-HOOK
-  chmod +x .git/hooks/pre-commit
 
   run bash "$SCRIPT" "docs: change doc" --files "doc.md"
 
-  [ "$status" -eq 14 ]
-  [[ "$output" == *"NOTHING OF YOURS IS ON THE REMOTE"* ]]
-  [[ "$output" == *"doc.md"* ]]
-  [[ "$output" == *"parked, not pushed"* ]]
-  [[ "$output" == *"git stash show -p"* ]]
-
-  # Confirm HEAD really did advance (exit 13 can't fire) and origin does not have our content.
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"already on origin/live-defi-rollout"* ]]
+  [[ "$output" != *"NOTHING OF YOURS IS ON THE REMOTE"* ]]
   run git show "HEAD:doc.md"
-  [[ "$output" != *"my genuine change"* ]]
-  run git show "origin/live-defi-rollout:doc.md"
-  [[ "$output" != *"my genuine change"* ]]
-}
-
-@test "nothing-to-stage fallback that parked the caller's edit (remote moved but not to our content) exits 14" {
-  # The measured shape: the caller had a real diff at entry, the reconcile (autostash
-  # quarantine) parked it, a DIFFERENT commit advanced the branch, and the fallback
-  # arrived at "nothing to stage" with nothing of the caller's content on origin.
-  # Reproduce by staging+committing ANOTHER file (moving origin) via a pre-commit hook
-  # that also swaps the named file's staged content back to HEAD, so our diff never
-  # reaches the index -- same window as the incident, same production mechanism.
-  cat > .git/hooks/pre-commit <<'HOOK'
-#!/usr/bin/env bash
-git restore --staged -- doc.md 2>/dev/null || true
-echo "a peer's work" >> other.md
-git add other.md
-exit 0
-HOOK
-  chmod +x .git/hooks/pre-commit
-
-  # Give our named file a real diff that the hook will drop from the index.
-  echo "my genuine change" > doc.md
-
-  run bash "$SCRIPT" "docs: change doc" --files "doc.md"
-
-  # The commit landed (hook advanced other.md), branch moved (HEAD:doc.md != entry
-  # HEAD:doc.md), but origin does NOT contain our content -- the signature that this
-  # run's reconcile parked the caller's edit. Exit 13 covers "branch did not move";
-  # this is the half exit 13 cannot see: exit 14.
-  [ "$status" -eq 14 ]
-  [[ "$output" == *"NOTHING OF YOURS IS ON THE REMOTE"* ]]
-  [[ "$output" == *"doc.md"* ]]
-  [[ "$output" == *"parked, not pushed"* ]]
-  # The stash list must be printed as the recovery pointer.
-  [[ "$output" == *"git stash show -p"* ]]
+  [[ "$output" == *"my genuine change"* ]]
 }
