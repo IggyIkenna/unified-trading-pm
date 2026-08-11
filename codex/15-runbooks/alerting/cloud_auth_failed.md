@@ -16,7 +16,7 @@ related:
   [
     /codex/15-runbooks/alerting/operator-playbook.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
-    /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
   ]
 created: 2026-08-07
 owner: ikenna
@@ -150,5 +150,5 @@ File write-up within 24h for any HIGH true-positive:
 - **AlertCode taxonomy:** [`alert-code-taxonomy.md`](./alert-code-taxonomy.md).
 - **Self-service IAM grants:** `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
-- **Implementing plan:** `/plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
+- **Implementing plan:** `/plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md`.
 - **UAC SSOT:** `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/`.

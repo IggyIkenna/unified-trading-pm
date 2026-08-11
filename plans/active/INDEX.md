@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 281 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 279 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -365,7 +365,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (39)
+### sports (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -417,14 +417,6 @@ by hand._
   — Forked from data_status_page_ux_and_canonicalisation_2026_07_16.md's P10-B. The full-history fixtures rollup
   (105,509 fixtures across 2019-01-01→2026-07-17, kickoff/status/team names 100%) is shipped in prod. This plan
   switches…
-- [`sports_group_c_execution_backtest_harness_2026_07_21`](./sports_group_c_execution_backtest_harness_2026_07_21.md) —
-  Scopes a `run_sports_backtest` CLI in execution-service, mirroring the 3 existing domain runners
-  (run_cefi_backtest/run_tradfi_backtest/run_defi_backtest), so sports/predictions gets a real Group-C execution-alpha
-  harness. Decided…
-- [`sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08`](./sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md)
-  — Gated closeout for `sports_group_c_execution_backtest_harness_2026_07_21.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 5 of that plan's implementation todos are done. Retroactive-reclassification
-  finalize…
 - [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)
   — Enumerate expected bookmaker × market sets per league tier, perform NaN-fill on ODDS coverage blanks, and validate
   odds cluster configurations for the sports vertical.
@@ -500,7 +492,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (27)
+### prediction (25)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -581,14 +573,6 @@ by hand._
 - [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](./predictions_other_bucket_and_ui_drilldown_2026_06_20.md) —
   Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
   deployment-ui for predictions data.
-- [`sports_group_c_execution_backtest_harness_2026_07_21`](./sports_group_c_execution_backtest_harness_2026_07_21.md) —
-  Scopes a `run_sports_backtest` CLI in execution-service, mirroring the 3 existing domain runners
-  (run_cefi_backtest/run_tradfi_backtest/run_defi_backtest), so sports/predictions gets a real Group-C execution-alpha
-  harness. Decided…
-- [`sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08`](./sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md)
-  — Gated closeout for `sports_group_c_execution_backtest_harness_2026_07_21.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 5 of that plan's implementation todos are done. Retroactive-reclassification
-  finalize…
 - [`sports_odds_feature_naming_canonicalization_2026_07_21`](./sports_odds_feature_naming_canonicalization_2026_07_21.md)
   — Operator-ruled 2026-07-21 (BLK-a1ce4719) resolution of sports_odds_feature_naming_four_way_mismatch_2026_07_21.md —
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
