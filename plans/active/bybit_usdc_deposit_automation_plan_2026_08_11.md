@@ -156,11 +156,11 @@ context_scope:
       adapter not initialized raises clean); `quality-gates.sh` green.
 
 - [ ] [BACKEND] P2. Define `BybitDepositResult` TypedDict + `BybitDepositCallable` type alias.
-      `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None,     "confirmed_balance_delta": Decimal, "error": str | None}`.
-      `BybitDepositCallable = Callable[     [Decimal], Awaitable[BybitDepositResult]]` — the pre-bound deposit callable
-      the wiring layer produces. Lives alongside `BridgeDepositCallable` in `perp_hedge_consumer.py` (or a new
-      `types.py` if the consumer module's TYPE_CHECKING block grows unwieldy). Repo: execution-service. Done-when: types
-      import cleanly; no circular imports; `quality-gates.sh` green.
+      `BybitDepositResult = {"success": bool, "deposit_address": str, "tx_hash": str | None, "confirmed_balance_delta": Decimal, "error": str | None}`.
+      `BybitDepositCallable = Callable[ [Decimal], Awaitable[BybitDepositResult]]` — the pre-bound deposit callable the
+      wiring layer produces. Lives alongside `BridgeDepositCallable` in `perp_hedge_consumer.py` (or a new `types.py` if
+      the consumer module's TYPE_CHECKING block grows unwieldy). Repo: execution-service. Done-when: types import
+      cleanly; no circular imports; `quality-gates.sh` green.
 
 - [ ] [BACKEND] P2. Extend `PerpHedgeConsumer._topup_guard()` to accept a `BybitDepositCallable | None` parameter. When
       `instruction.perp_venue == PerpVenueId.BYBIT` and `instruction.source == TopupSource.TREASURY_HOT` and
@@ -181,7 +181,7 @@ context_scope:
 
 - [ ] [BACKEND] P2. Build the Bybit USDC transfer + confirmation helper at
       `execution_service/defi_execution/bybit_deposit.py`. Exports a single async function
-      `deposit_usdc_to_bybit(amount_usdc, deposit_address, funding_wallet_private_key,     funding_wallet_address, rpc_url, bybit_connector, poll_interval_seconds, timeout_seconds) →     BybitDepositResult`.
+      `deposit_usdc_to_bybit(amount_usdc, deposit_address, funding_wallet_private_key, funding_wallet_address, rpc_url, bybit_connector, poll_interval_seconds, timeout_seconds) → BybitDepositResult`.
       Phase 1: resolves the deposit address if not already cached (delegates to connector). Phase 2: initiates the USDC
       transfer from the funding wallet to the deposit address (on-chain ERC-20 `transfer()` via web3 — same lazy-import
       pattern as `hyperliquid_bridge.py`). Phase 3: polls `bybit_connector.fetch_deposit_records("USDC")` and/or

@@ -174,14 +174,13 @@ memory and that's what kills sessions" as-is.
       the appearance of a synchronized mass-kill. A simpler, more direct explanation surfaced live the same day (see
       "production breakthrough" Progress Log entry): if the tmux SERVER process itself dies, every pane it hosts is lost
       in the SAME instant for real, no batching illusion needed — still worth confirming which (or both) explain the
-      historical clusters, but no longer the leading hypothesis. **Done when**: pull successive
-      `TmuxPruner: cleared     N` log-line timestamps over a longer window and check whether the gap between ticks is
-      ever meaningfully wider than `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no
-      delay = the 25 really were closely-clustered, still needing an explanation). A co-occurring
-      `utempter: pututline: Permission denied` line at the same timestamp was investigated and is very likely a red
-      herring — it also fires during the routine respawns immediately after, so it looks like constant/benign noise on
-      this host's permission setup, not death-specific; note this here so it isn't re-chased as a lead. Repo:
-      agent-orchestrator.
+      historical clusters, but no longer the leading hypothesis. **Done when**: pull successive `TmuxPruner: cleared N`
+      log-line timestamps over a longer window and check whether the gap between ticks is ever meaningfully wider than
+      `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no delay = the 25 really were
+      closely-clustered, still needing an explanation). A co-occurring `utempter: pututline: Permission denied` line at
+      the same timestamp was investigated and is very likely a red herring — it also fires during the routine respawns
+      immediately after, so it looks like constant/benign noise on this host's permission setup, not death-specific;
+      note this here so it isn't re-chased as a lead. Repo: agent-orchestrator.
 - [x] [INFRA] P3. ~~Check for a per-cgroup OOM kill~~ — **CLOSED 2026-08-11, ruled out.** All workers run under
       `orchestrator.service`'s systemd cgroup, which DOES have a real memory ceiling (`MemoryAccounting=yes`,
       `MemoryHigh=24.7GB`, `MemoryMax=26GB` — confirmed via `systemctl show`). Read the cgroup's own lifetime kill
@@ -225,10 +224,10 @@ memory and that's what kills sessions" as-is.
       definitive `orchestrator.service` `oom_kill=0` ruling) covers the cgroup worker PANES inherit, never the
       freestanding tmux SERVER process itself, which per `server/tmux_spawn.py`'s own comments on the (unarmed)
       per-worker memory-cap feature likely sits outside any per-service cgroup entirely. **Done when**: (a) confirm what
-      cgroup/slice the tmux server process actually runs under on a live check
-      (`cat     /proc/<tmux-server-pid>/cgroup`), (b) if it's unconfined or under a DIFFERENT slice than
-      orchestrator.service, check that slice's own `memory.events` oom_kill counter for a nonzero reading correlated
-      with known death timestamps. Repo: agent-orchestrator.
+      cgroup/slice the tmux server process actually runs under on a live check (`cat /proc/<tmux-server-pid>/cgroup`),
+      (b) if it's unconfined or under a DIFFERENT slice than orchestrator.service, check that slice's own
+      `memory.events` oom_kill counter for a nonzero reading correlated with known death timestamps. Repo:
+      agent-orchestrator.
 - [x] [INFRA] P1. ~~Alert + surface fleet-wide tmux server death~~ — **SHIPPED 2026-08-11,
       `agent-orchestrator@d1e62b7317`.** Operator ask: this class of outage needs Slack visibility, Activity Log
       visibility, and to colour the dashboard's "Multiple issues — eyes on this" HealthStrip, not just live silently
@@ -281,7 +280,7 @@ memory and that's what kills sessions" as-is.
       `agent-orchestrator@4452cbb6da`) rather than re-discovering it ad hoc next time. Repo: agent-orchestrator.
 - [x] [INFRA] P3. ~~Confirm the 16:15:xx orchestrator.service restart was ao-self-pull.sh~~ — **CLOSED 2026-08-11,
       confirmed.** `journalctl -u orchestrator` at 16:15:28 UTC:
-      `orchestrator running checkout 4452cbb — 0     pre-existing tmux session(s): []` — the self-pull restart landing
+      `orchestrator running checkout 4452cbb — 0 pre-existing tmux session(s): []` — the self-pull restart landing
       exactly as expected, ~43s after the tmux-server death, finding zero sessions (consistent with the server having
       died and not yet respawned by then, not causing it). Confirmed coincidental, not causal. Repo: agent-orchestrator.
 

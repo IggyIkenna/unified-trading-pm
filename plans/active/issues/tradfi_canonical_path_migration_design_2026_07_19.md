@@ -362,7 +362,7 @@ removal + casing normalization remain before backfill-resume.
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
       **display names** via `EXCHANGE_CODE_TO_NAME` (already the SSOT in `tradfi_symbology.py`, already applied by
       futures_chain/options_chain writer path). Combo's short-code leak is a natural consequence of
-      `combo ∉     CHAIN_INSTRUMENT_TYPES` — resolved by the P1 `combo→combo_chain` todo, which adds it to the set and
+      `combo ∉ CHAIN_INSTRUMENT_TYPES` — resolved by the P1 `combo→combo_chain` todo, which adds it to the set and
       therefore the lookup. Historical short-code futures_chain objects need a separate GCS content-based migration
       (follow-up todo below). Repos: market-tick-data-service, unified-api-contracts.
 - [ ] [DATA] P2. **(NEW 2026-08-11) Migrate historical short-code `underlying=` GCS objects to display-name form** for
@@ -376,25 +376,25 @@ removal + casing normalization remain before backfill-resume.
       the blank-instrument_id expectation. Repo: market-tick-data-service. — **Verified 2026-08-11 (slot 14,
       data_engineering) — CONFIRMED, same conflict and worse.** Column-pruned single-object read of the consolidated
       tradfi `_index/availability_index.parquet` (no new GCS walk) for
-      `instrument_type ∈ {options_chain,     futures_chain}`: **2,775 `(venue, data_type, date, options_chain)` cells
-      carry BOTH a `captured` blank-id row AND a `captured` non-blank-id row** (futures_chain: 5,157 cells). The
-      non-blank captured set (n=2,847) includes the aggregate synthetic id **`CME:OPTION:SP500`** (ES options) +
-      per-contract `CME:OPTION:SP500-USD@LIN-<expiry>-     <strike>-<C/P>` — the direct parallel to futures_chain's
-      `CME:FUTURE:GOLD` + per-contract dated ids. **Worse than futures_chain:** options_chain blank-id captured rows are
-      **104,249/110,606 `row_count>0` with REAL DATA** (futures_chain blank-id captured rows are ~98% `row_count=0`
-      placeholders, 148,085/151,131), so the coexisting blank-id + non-blank-id captured rows in the same options_chain
-      cell are BOTH real-data rows → genuine data-level double-counting, not just placeholder row-count inflation. Any
+      `instrument_type ∈ {options_chain, futures_chain}`: **2,775 `(venue, data_type, date, options_chain)` cells carry
+      BOTH a `captured` blank-id row AND a `captured` non-blank-id row** (futures_chain: 5,157 cells). The non-blank
+      captured set (n=2,847) includes the aggregate synthetic id **`CME:OPTION:SP500`** (ES options) + per-contract
+      `CME:OPTION:SP500-USD@LIN-<expiry>- <strike>-<C/P>` — the direct parallel to futures_chain's `CME:FUTURE:GOLD` +
+      per-contract dated ids. **Worse than futures_chain:** options_chain blank-id captured rows are **104,249/110,606
+      `row_count>0` with REAL DATA** (futures_chain blank-id captured rows are ~98% `row_count=0` placeholders,
+      148,085/151,131), so the coexisting blank-id + non-blank-id captured rows in the same options_chain cell are BOTH
+      real-data rows → genuine data-level double-counting, not just placeholder row-count inflation. Any
       coverage/denominator query summing `captured` rows for `instrument_type=options_chain` without collapsing to one
-      canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
-      in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
-      and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
+      canonical row per `(venue, data_type, date, underlying)` cell double-counts. Confirms options_chain is in-scope
+      for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows and the
+      non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
       path-based read (`pq.read_table(gcs_path)` / `pd.read_parquet(gcs_path)`) — real, confirmed, but NOT live-blocking
       (MTDS's own `reader.py::_read_parquet_bytes` reads via an in-memory buffer, a different pyarrow code path that is
       unaffected — spot-checked, works fine on the same files). — **ROOT-CAUSED + RESCOPED 2026-08-11 (slot 29,
       data_engineering); the original within-file row-group-encoding hypothesis is WRONG, see Progress Log for full
       evidence chain. No code change needed — closing as verified/scoped, not deferred.**
-      `ArrowTypeError: Unable to merge: Field     instrument_type has incompatible types: string vs dictionary<values=string, indices=int32, ordered=0>`
+      `ArrowTypeError: Unable to merge: Field instrument_type has incompatible types: string vs dictionary<values=string, indices=int32, ordered=0>`
       Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
       currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own

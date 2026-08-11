@@ -140,8 +140,8 @@ applies.
       operator's own account — never a `github-token-sa`); that name from the prior session's summary does not
       correspond to a real identity here and should not be reused. **What remains genuinely open**: the operator's own
       LAPTOP gcloud session (`ikenna@odum-research.com`) hits an org-enforced reauth window that fails non-interactively
-      (`Reauthentication failed. cannot prompt during     non-interactive execution`, reproduced 2026-08-11) — this
-      affects only interactive/laptop sessions running the script as the operator's personal identity, not AO.
+      (`Reauthentication failed. cannot prompt during non-interactive execution`, reproduced 2026-08-11) — this affects
+      only interactive/laptop sessions running the script as the operator's personal identity, not AO.
       `slack-read-channel.py` already has a documented fallback (`SLACK_ALERTS_READER_BOT_TOKEN` env var) for exactly
       this case. A durable fix (SA impersonation or a dedicated key for local use) is a real security decision — flagged
       to the operator rather than self-served outright, since the self-service HARD RULE covers AO's own two cloud

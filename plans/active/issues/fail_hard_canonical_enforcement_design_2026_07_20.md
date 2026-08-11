@@ -197,8 +197,8 @@ implementation todos on that check, since they're each independently reviewable 
 - [ ] [WRITER] P2. **Implement Gap 1's resolution (§5b)**: add a row-level column-value gate for bundle-shaped writers
       (chain-bundle / `options_chain` lanes) that validates each row's embedded instrument_id against the
       canonical/quarantine registry before write; drop non-canonical rows to
-      `record_failed(NON_CANONICAL_INSTRUMENT_ID,     granularity=row)`; add `quarantined_legs: [...]` to the manifest
-      row. Repo: market-tick-data-service.
+      `record_failed(NON_CANONICAL_INSTRUMENT_ID, granularity=row)`; add `quarantined_legs: [...]` to the manifest row.
+      Repo: market-tick-data-service.
 - [ ] [WRITER] P2. **Implement Gap 2's resolution (§5b)**: make the live/on-chain lane's manifest key a deterministic
       function of the already-computed column value (parse it, don't re-resolve independently via
       `resolve_cefi_instrument_id()`); keep the independent resolver only as a fallback for the no-column-yet case.
