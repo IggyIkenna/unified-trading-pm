@@ -319,9 +319,23 @@ removal + casing normalization remain before backfill-resume.
 - [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** (exchange-root short codes
       vs display names vs currency-pair style, differing between combo/ and futures_chain/) — decide one canonical
       naming convention per axis and migrate. Repos: market-tick-data-service, unified-api-contracts.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Re-verify whether ES_OPT/options_chain rows hit the same real-captured-row-vs-
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Re-verify whether ES_OPT/options_chain rows hit the same real-captured-row-vs-
       EXPECTED_CHAIN_AGGREGATE-denominator conflict** found for futures_chain/GOLD — not yet directly checked against
-      the blank-instrument_id expectation. Repo: market-tick-data-service.
+      the blank-instrument_id expectation. Repo: market-tick-data-service. — **Verified 2026-08-11 (slot 14,
+      data_engineering) — CONFIRMED, same conflict and worse.** Column-pruned single-object read of the consolidated
+      tradfi `_index/availability_index.parquet` (no new GCS walk) for
+      `instrument_type ∈ {options_chain,     futures_chain}`: **2,775 `(venue, data_type, date, options_chain)` cells
+      carry BOTH a `captured` blank-id row AND a `captured` non-blank-id row** (futures_chain: 5,157 cells). The
+      non-blank captured set (n=2,847) includes the aggregate synthetic id **`CME:OPTION:SP500`** (ES options) +
+      per-contract `CME:OPTION:SP500-USD@LIN-<expiry>-     <strike>-<C/P>` — the direct parallel to futures_chain's
+      `CME:FUTURE:GOLD` + per-contract dated ids. **Worse than futures_chain:** options_chain blank-id captured rows are
+      **104,249/110,606 `row_count>0` with REAL DATA** (futures_chain blank-id captured rows are ~98% `row_count=0`
+      placeholders, 148,085/151,131), so the coexisting blank-id + non-blank-id captured rows in the same options_chain
+      cell are BOTH real-data rows → genuine data-level double-counting, not just placeholder row-count inflation. Any
+      coverage/denominator query summing `captured` rows for `instrument_type=options_chain` without collapsing to one
+      canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
+      in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
+      and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
 
 ## Progress Log
 
@@ -340,3 +354,22 @@ removal + casing normalization remain before backfill-resume.
   paths, and an `underlying` naming-convention inconsistency (short exchange codes vs display names vs FX-pair style)
   co-existing in `combo/` for the same date. See "2026-08-11 update" section above for full detail; 6 new todos filed.
   Per operator instruction, no backfill relaunches or migrations execute until these todos are actioned.
+- **2026-08-11 (slot 14, data_engineering) — ES_OPT/options_chain re-verify CONFIRMED** (closed the P2 todo above).
+  Column-pruned single-object read of the consolidated tradfi availability index (no new GCS walk), filtered to
+  `instrument_type ∈ {options_chain, futures_chain}`: 657,453 chain rows. options_chain capture_status distribution:
+  captured blank-id 110,606 · empty_confirmed EXPECTED_CHAIN_META_ROW_NOT_DOWNLOADABLE 29,008 ·
+  EXPECTED_INSTRUMENT_NOT_LISTED 31,656 · EXPECTED_INSTRUMENT_DELISTED 16,376 · expected_unattempted 16,959 ·
+  attempted_failed 2,894 · **captured non-blank-id 2,847** · EXPECTED_PRE_SOURCE_COVERAGE_START 893. **2,775
+  `(venue,data_type,date,options_chain)` cells have both a captured blank-id row AND a captured non-blank-id row**
+  (futures_chain: 5,157). The 35-distinct non-blank captured id set includes aggregate **`CME:OPTION:SP500`** (ES
+  options)
+  - per-contract `CME:OPTION:SP500-USD@LIN-<expiry>-<strike>-<C/P>` (+ EC6E/ECCL/ECGC/ECNQ/ECRTY option roots) — the
+    exact parallel of futures_chain's `CME:FUTURE:GOLD` + per-contract dated ids. **Key divergence:** options_chain
+    blank-id captured rows are 104,249/110,606 `row_count>0` (real data), while futures_chain blank-id captured rows are
+    ~98% `row_count=0` placeholders (148,085/151,131) — so options_chain's same-cell blank+non-blank captured rows are
+    BOTH real-data rows = genuine data-level double-counting risk for any downstream query summing `captured` without
+    collapsing to one canonical chain-bundle row per cell. options_chain captured spans venue CME (113,451) + CBOE (2),
+    dates 2020-01-01..2026-08-06, data_types options_chain (104,540) / ohlcv_1s (4,391) / ohlcv_1m (4,455) / trades
+    (67). No code change this turn (verification only) — options_chain is firmly in-scope for the P1
+    `instrument_id-blank / combo→combo_chain` design todo, which must reconcile BOTH the blank-id real-data rows and the
+    non-blank synthetic-id rows to one canonical chain-bundle row per cell.
