@@ -189,14 +189,15 @@ complete" by 30 June 2026, which did not happen.
 
 ### Added 2026-08-11 (third pass) — carve-out presentation strategy + the rebuild calibration
 
-> Client-facing documents now live in [`/presentations/elysium/`](/presentations/elysium/) (both published as private
-> artifacts; **URLs recorded in that directory's README — pass the URL when updating or you create a duplicate
+> Client-facing documents now live in
+> [`/codex/14-customer-journeys/commercial-model/`](/codex/14-customer-journeys/commercial-model/) (both published as
+> private artifacts; **URLs recorded in that directory's README — pass the URL when updating or you create a duplicate
 > artifact**).
 
 - [x] ✅ [AGENT] P1. **Rewrote `carveout-engineering.html` into a specification register** — rev 2.0, republished to the
       same artifact URL (`39d52123…`, favicon 🧩 unchanged), file at
-      [`/presentations/elysium/carveout-engineering.html`](/presentations/elysium/carveout-engineering.html). Operator
-      verdict 2026-08-11 was that it "discusses our methodology way too much" and was not presentable to a CTO.
+      [`/codex/14-customer-journeys/commercial-model/carveout-engineering.html`](/codex/14-customer-journeys/commercial-model/carveout-engineering.html).
+      Operator verdict 2026-08-11 was that it "discusses our methodology way too much" and was not presentable to a CTO.
       Restructured against an operator-supplied advisory draft
       (`~/Downloads/Odum_Elysium_Strategy_Carve_Out_CTO_Architecture.docx`, **input to us, not a document for the
       client**) whose structure was better than the original nine sections. Four ideas adopted from it: (1) a
@@ -241,8 +242,8 @@ complete" by 30 June 2026, which did not happen.
 ### Added 2026-08-11 (fourth pass) — defects found in our OWN published client documents while rewriting
 
 > All three were found by re-deriving numbers the previous pass had asserted, rather than by re-reading the prose. The
-> README in [`/presentations/elysium/`](/presentations/elysium/) instructs re-derivation before reuse for exactly this
-> reason; this is that instruction paying for itself one day later.
+> README in [`/codex/14-customer-journeys/commercial-model/`](/codex/14-customer-journeys/commercial-model/) instructs
+> re-derivation before reuse for exactly this reason; this is that instruction paying for itself one day later.
 
 - [ ] [OPERATOR] P0. **The published `platform-architecture.html` states a "complimentary 30-day support period" in
       three places (plus "the decision point is day 31") — which contradicts this issue's own operator ruling that **60
@@ -380,18 +381,19 @@ they were independent. Worth the operator knowing before forwarding it.
   Both filed as P0 above. Real paths and the import-closure extraction method are recorded in the client document's
   hand-over manifest section; the SSOT correction to Exhibit A itself is the P0 todo, not yet applied.
 - **2026-08-11 (third pass, pre-compact checkpoint)** — Two client-facing HTML documents built and published as private
-  artifacts, then promoted out of the session scratchpad into [`/presentations/elysium/`](/presentations/elysium/) with
-  a README recording the artifact URLs (republishing without the URL creates a duplicate rather than updating), the
-  authoring traps, and the validated palette. **The trap most worth carrying forward: CSS `var()` does not resolve in
-  SVG presentation attributes** — `fill="var(--x)"` renders black; it must be `style="fill:var(--x)"`. 498 occurrences
-  were written the wrong way first and would have shipped every diagram in black. Also recorded a self-correction: a
-  claimed ~40% scroll reduction from collapsing reference tables measured at **7%**; the height was in the figures and
-  the prose, and the fix that worked was restructuring every section behind a toggle (measured 70-81%). Operator
-  rejected `carveout-engineering.html` as too methodology-heavy for a CTO — rewrite is a tracked todo above, not yet
-  done. Pushed as docs-only; the operator had earlier said "don't worry about merging yet", which this checkpoint
-  overrides ONLY for documentation and plan files (zero code, zero shipping surface) because the alternative was losing
-  the artifacts and the calibration to compaction in a shared checkout that already carried another session's staged
-  changes and a stale unmerged index entry.
+  artifacts, then promoted out of the session scratchpad into
+  [`/codex/14-customer-journeys/commercial-model/`](/codex/14-customer-journeys/commercial-model/) with a README
+  recording the artifact URLs (republishing without the URL creates a duplicate rather than updating), the authoring
+  traps, and the validated palette. **The trap most worth carrying forward: CSS `var()` does not resolve in SVG
+  presentation attributes** — `fill="var(--x)"` renders black; it must be `style="fill:var(--x)"`. 498 occurrences were
+  written the wrong way first and would have shipped every diagram in black. Also recorded a self-correction: a claimed
+  ~40% scroll reduction from collapsing reference tables measured at **7%**; the height was in the figures and the
+  prose, and the fix that worked was restructuring every section behind a toggle (measured 70-81%). Operator rejected
+  `carveout-engineering.html` as too methodology-heavy for a CTO — rewrite is a tracked todo above, not yet done. Pushed
+  as docs-only; the operator had earlier said "don't worry about merging yet", which this checkpoint overrides ONLY for
+  documentation and plan files (zero code, zero shipping surface) because the alternative was losing the artifacts and
+  the calibration to compaction in a shared checkout that already carried another session's staged changes and a stale
+  unmerged index entry.
 - **2026-08-11 (fourth pass)** — `carveout-engineering.html` rewritten to rev 2.0 and republished to the same artifact
   URL. The register problem the operator identified was fixed structurally rather than by editing prose: the twenty
   non-contributing repositories are now **ten typed interfaces** (`contracts-platform`) that resolve either to local

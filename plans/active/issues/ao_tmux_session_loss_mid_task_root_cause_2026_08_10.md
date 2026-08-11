@@ -137,12 +137,6 @@ memory and that's what kills sessions" as-is.
 
 ## Todo
 
-- [ ] [DATA] P3. **Re-check the daily reaped-stale rate — spiked 2026-08-11.** Found closing a superseded todo
-      (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, slot 25): live snapshot (`live_20260811T171546Z.db`)
-      shows `exit_reason='reaped-stale'` at 93/152 (61%) of today's dispatched agents vs 8-12/day (12-32%) on
-      08-09/08-10, with `tmux_session_lost` firing in mass bursts (6-21 events in the same second) roughly every 5-17
-      minutes all day. Not investigated further (out of scope for that todo) — worth a fresh pass here to confirm this
-      is the same "unplanned loss" class already being measured, or a new regression. (repo: agent-orchestrator)
 - [ ] [INFRA] P2. **Get real tmux/system-level evidence for an unplanned loss**, not just orchestrator-side activity_log
       inference. On the orchestrator VM (`i-0c9b283b31d6b5ca7`, read-only SSM only — see
       `scripts/orchestrator/check-ao-backlog-status.sh` for the access pattern): (a) fix the `journalctl -k` OOM check
@@ -351,9 +345,32 @@ memory and that's what kills sessions" as-is.
       concurrency ceiling — how many slots can be simultaneously active/spawning before the VM saturates (from this
       data: healthy at load~~6-7 with ~27 sessions live, catastrophic once concurrent NEW dispatch + git fetches pile on
       top); (b) throttle/stagger AutoSpawn's dispatch rate and/or cap concurrent git subprocess fetches fleet-wide
-      rather than letting every slot fetch independently and simultaneously; (c) investigate whether the 900%-CPU
-      `rg --hidden --files` pattern recurs (a single runaway recursive scan is an outsized, fixable contributor even
-      before touching dispatch concurrency). Repo: agent-orchestrator, unified-trading-pm (cron/git tooling).
+      rather than letting every slot fetch independently and simultaneously. Repo: agent-orchestrator,
+      unified-trading-pm (cron/git tooling). **Correction (2026-08-11, same session)**: the `rg --hidden --files`
+      process named above was investigated as a possible independent culprit and **measured, not assumed** — reproduced
+      the identical call (`rg --no-config --files --hidden` against the full `.tabs/3` directory, 36 repos, 69,246 files
+      including hidden/hidden-ignored paths) under current calm conditions: **59ms**. Without `--hidden`: 34,546 files,
+      26ms. Neither is remotely expensive in isolation — ripgrep is fast even over a large multi-repo tree. This refutes
+      it as an independent root cause: it was a normal tool-call caught in the same CPU contention that starved the tmux
+      server, not a separate runaway pattern needing its own fix. No `.rgignore`/exclude change is warranted from this
+      evidence. Dropping it from the throttle-fix scope — the fix is dispatch/git-fetch concurrency, not this.
+- [x] [INFRA] P0. ~~Throttle fix~~ — **SHIPPED 2026-08-11, `agent-orchestrator@54da59c24b`.** Found the exact mechanism:
+      `_do_spawns_concurrently()` (`server/autospawn.py`) ran its `ThreadPoolExecutor` with `max_workers=len(calls)` —
+      fully unbounded. A burst of N slots needing respawn fired N `_do_spawn` calls (each doing multi-repo git
+      branch-state/dirty-resolution checks + a tmux boot) ALL AT ONCE — exactly the mechanism behind both live-caught
+      deaths above (death #1's ~27-wide utempter/pane-creation spike; death #2's 7+ simultaneous git fetches + climbing
+      load). Added `tuning.autospawn_max_concurrent_spawns` (default 8) and capped `max_workers` at
+      `min(len(calls), cap)`. Chosen to leave the common case (≤8 concurrent) at the exact same full-speed all-at-once
+      behavior as before — including the original SLA-fix motivating case (5 slots) this function was built to unblock
+      (`autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08`) — only throttling batches larger than that, which is
+      precisely when it's dangerous. **8 is a starting point, not a proven ceiling** — no data exists between "8
+      concurrent" and the 18-27-slot bursts that crashed the server twice; tune via this one config field (no code
+      change needed) once more live bursts are observed under the fix. 2 new tests
+      (`test_do_spawns_concurrently_never_exceeds_the_configured_cap`,
+      `test_do_spawns_concurrently_batch_at_or_under_cap_is_unaffected` — the second locks in the "no slowdown for the
+      common case" requirement explicitly). **Verification in progress**: `ao-self-pull.sh` redeploys from
+      `live-defi-rollout` within ~15min of the push; relaunched the live-capture loop to watch whether the next real
+      burst stays bounded now — see Progress Log for the result once caught. Repo: agent-orchestrator.
 - [ ] [INFRA] P2. **Promote `/tmp/tmux_server_live_capture.log`'s capture script into the repo.** Currently a
       hand-authored one-shot shipped via SSM directly to the VM (`/tmp/tmux_live_capture.sh`), not committed anywhere —
       it did its job for this catch but is NOT durable and doesn't survive a VM restart or an intentional cleanup pass.
