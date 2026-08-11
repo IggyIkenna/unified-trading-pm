@@ -64,10 +64,13 @@
 # EXIT CODES: 0 success -- verified end-to-end (incl. "nothing to commit" -- another slot
 # already landed the identical content; every success path, including that fallback, only
 # reports 0 after independently confirming `git log --oneline -1 -- <path>` is non-empty for
-# every named file and, post-push, that `git branch -r --contains HEAD` includes the target
-# branch -- see verify_committed/verify_pushed below). 2 bad usage. 3 unresolved rebase
+# every named file, that `git branch -r --contains HEAD` includes the target branch, AND
+# that each named file's blob at origin/<branch> matches HEAD
+# (verify_committed/verify_pushed/verify_pushed_per_file below). 2 bad usage. 3 unresolved rebase
 # conflict (real content collision, needs a human). 4 push rejected for a non-drift reason, OR
-# `git push` exited 0 but verify_pushed found origin/<branch> does not actually contain HEAD.
+# `git push` exited 0 but origin/<branch> does not contain HEAD, OR origin/<branch> contains
+# HEAD but one or more named files' blobs did not reach the remote (verify_pushed_per_file
+# failed — see that function for the partial-landing shape).
 # 5 exhausted retries under sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
 # for a DETERMINISTIC content reason (plan-hygiene, conflict markers,
 # frontmatter schema, terminal-status-archived, ...) -- fix the content; re-running cannot
@@ -687,6 +690,34 @@ verify_pushed() {
   return 0
 }
 
+# verify_pushed_per_file -- after verify_pushed() confirms HEAD is reachable from
+# origin/$BRANCH, independently verify each named file's blob at the remote tip
+# matches HEAD. verify_pushed() tells us HEAD is on the remote; this tells us each
+# file's CONTENT actually reached the remote, catching a partial-landing where one
+# file landed and another didn't (measured 2026-08-10: a multi-file --files push
+# landed ONE of two paths and still exited 0 -- the second symptom in
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md).
+verify_pushed_per_file() {
+  local _f _head_blob _remote_blob _missing=()
+  # Refresh remote-tracking refs so origin/$BRANCH reflects what actually landed
+  # (a concurrent push may have moved the ref since the fetch at loop top).
+  git fetch -q origin "$BRANCH" 2>/dev/null || true
+  for _f in "${FILES[@]}"; do
+    _head_blob="$(git rev-parse -q --verify "HEAD:$_f" 2>/dev/null)" || continue
+    _remote_blob="$(git rev-parse -q --verify "origin/${BRANCH}:$_f" 2>/dev/null)" || true
+    if [[ "$_head_blob" != "$_remote_blob" ]]; then
+      _missing+=("$_f")
+    fi
+  done
+  [[ ${#_missing[@]} -eq 0 ]] && return 0
+  echo "  ❌ per-file remote verification failed: these named file(s) did not reach origin/${BRANCH}:" >&2
+  local _m
+  for _m in "${_missing[@]}"; do
+    echo "     - $_m" >&2
+  done
+  return 1
+}
+
 # check_orphaned_prek_patches -- immediate safety net for
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09 (todo 2). prek stashes any
 # unstaged, out-of-scope edits in the working tree into a `~/.cache/prek/patches/*.patch` file
@@ -1118,7 +1149,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     else
       echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
-        if verify_committed && verify_pushed; then
+        if verify_committed && verify_pushed && verify_pushed_per_file; then
           _sdp_certify_success || exit $?
           echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
           final_ok=true
@@ -1132,7 +1163,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
-        if verify_committed && verify_pushed; then
+        if verify_committed && verify_pushed && verify_pushed_per_file; then
           _sdp_certify_success || exit $?
           echo "✅ Nothing to commit -- already landed. Treating as success."
           final_ok=true
@@ -1195,19 +1226,24 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
-    if verify_pushed; then
-      # verify_pushed proves a commit reached the branch. It does NOT prove YOUR change is in
-      # it -- that is what this gate adds, and it is the one four measured losses needed.
-      _sdp_certify_success || exit $?
-      echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
-      if [ -n "${_SDP_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
-        wip_guard_report "$_SDP_WIP_SNAPSHOT" "${FILES[*]}" || true
-      fi
-      final_ok=true
-      break
+    if ! verify_pushed; then
+      echo "❌ git push exited 0 but origin/${BRANCH} does not contain HEAD -- refusing to report success." >&2
+      exit 4
     fi
-    echo "❌ git push exited 0 but origin/${BRANCH} does not contain HEAD -- refusing to report success." >&2
-    exit 4
+    if ! verify_pushed_per_file; then
+      # verify_pushed_per_file already printed the per-path detail above
+      echo "❌ git push exited 0 and HEAD is on origin/${BRANCH}, but one or more named files did not reach the remote (see above)." >&2
+      exit 4
+    fi
+    # verify_pushed proves a commit reached the branch; verify_pushed_per_file proves
+    # each named file's content reached it. Neither alone proves both.
+    _sdp_certify_success || exit $?
+    echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
+    if [ -n "${_SDP_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
+      wip_guard_report "$_SDP_WIP_SNAPSHOT" "${FILES[*]}" || true
+    fi
+    final_ok=true
+    break
   fi
 
   if grep -qiE "non-fast-forward|rejected|fetch first" /tmp/_sdp_push_err; then
