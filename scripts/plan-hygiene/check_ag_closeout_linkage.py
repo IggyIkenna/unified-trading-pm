@@ -58,9 +58,22 @@ IS mechanically wrong (the fix is always "add a related: link or a closeout-doc
 mention", never "raise the baseline").
 
 Usage:
-  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline] [--tranche <name>]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (2026-08-11, `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`
+Todo 3): additive/opt-in narrowing for a single-tranche dispatch (e.g. `/ag-closeout-audit cefi`) —
+mirrors the already-shipped `--tranche` on generate_ag_closeout_audit_candidates.py (same
+`ALL_TRANCHES` vocabulary, same `infra` -> `infrastructure` CLI-name/enum-value mapping). No-flag
+mode is completely unchanged: the corpus-wide ratchet below is still the only path that gates.
+With `--tranche`, the full corpus is still scanned (the graph/closeout-family computation is
+inherently cross-tranche — see the `--only` paragraph below) but the printed/counted violations are
+filtered down to that one tranche's docs, and the result is INFORMATIONAL only (always exits 0, no
+baseline comparison) — the baseline is a single corpus-wide count, not decomposable per tranche, so
+asserting pass/fail on a tranche-scoped slice of it would be meaningless. This closes a real,
+measured cost: a 2026-08-06 cefi-scoped dispatch ran the flag-less full scan to cross-check its own
+candidates and got 80 non-cefi orphans as irrelevant noise alongside the 7 cefi ones it needed.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -113,6 +126,13 @@ COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
 # Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
+# `--tranche` CLI vocabulary — identical set to generate_ag_closeout_audit_candidates.py's
+# ALL_TRANCHES (direct precedent). Differs from COVERED_ASSET_GROUPS only in using the CLI/skill
+# name "infra" instead of the real asset_group enum value "infrastructure" — resolved via
+# TRANCHE_ASSET_GROUP_VALUE below, same mapping generate_ag_closeout_audit_candidates.py uses for
+# the identical CLI-name/enum-value mismatch.
+ALL_TRANCHES = ("cefi", "defi", "tradfi", "prediction", "sports", "cross-cutting", "ao", "ci", "infra", "ui")
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 MAX_HOPS = 3
 # Closed/terminal statuses excluded from orphan candidacy — a superseded, resolved,
 # cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
@@ -366,6 +386,24 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     return 0 if n == 0 else 1
 
 
+def _parse_tranche(argv: list[str]) -> tuple[str, str] | None:
+    """Parse `--tranche <name>` from argv -> (raw CLI name, resolved asset_group value), or None
+    if the flag is absent. Validated against ALL_TRANCHES, mirroring
+    generate_ag_closeout_audit_candidates.py:172's `--tranche` — direct precedent, additive/opt-in
+    only (absence leaves every other code path untouched)."""
+    if "--tranche" not in argv:
+        return None
+    idx = argv.index("--tranche")
+    if idx + 1 >= len(argv):
+        print("error: --tranche requires a value", file=sys.stderr)
+        raise SystemExit(2)
+    name = argv[idx + 1]
+    if name not in ALL_TRANCHES:
+        print(f"error: --tranche must be one of {', '.join(ALL_TRANCHES)}, got {name!r}", file=sys.stderr)
+        raise SystemExit(2)
+    return name, TRANCHE_ASSET_GROUP_VALUE.get(name, name)
+
+
 def main() -> int:
     if "--only" in sys.argv:
         idx = sys.argv.index("--only")
@@ -373,6 +411,7 @@ def main() -> int:
 
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
+    tranche = _parse_tranche(sys.argv)
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
@@ -392,6 +431,28 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    if tranche is not None:
+        # Informational filter only — see the module docstring's `--tranche` paragraph for why
+        # this never gates (the baseline is a single corpus-wide count, not decomposable per
+        # tranche). The full corpus graph/closeout-family computation above is unchanged; only
+        # the reported violations are narrowed.
+        tranche_name, tranche_ag = tranche
+        tranche_violations = sorted(
+            v for p, v in violations_by_path.items() if tranche_ag in docspec._as_list(all_docs[p].get("asset_group"))
+        )
+        if not quiet:
+            print(f"AG-closeout linkage check --tranche {tranche_name} ({len(all_docs)} docs scanned):")
+            print()
+            for v in tranche_violations:
+                print(f"  ORPHAN  {v}")
+            print()
+        print(
+            f"check_ag_closeout_linkage --tranche {tranche_name}: {len(tranche_violations)} orphan(s) "
+            "(informational — no baseline; see the flag-less full-corpus run for the ratchet gate)"
+        )
+        return 0
+
     violations = list(violations_by_path.values())
 
     baseline = load_baseline()
