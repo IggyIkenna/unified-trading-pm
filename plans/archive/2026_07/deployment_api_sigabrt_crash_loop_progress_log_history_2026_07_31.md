@@ -1049,3 +1049,52 @@ on the live doc; nothing here is still-open tracked work.
       stochastic-event-polling anti-pattern this doc's history repeatedly flags, not genuine progress — flipping now and
       letting the two fresh follow-up todos below carry the doc-wide root-cause question forward. No code shipped this
       entry (pure verification + doc reconciliation).
+
+---
+
+## 6th-pass extraction (2026-08-11, slot 18, line-cap remediation)
+
+Extracted from `deployment_api_sigabrt_crash_loop_2026_07_24.md` Progress Log — all fully resolved.
+
+- **2026-07-31 (slot 8, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-023` (blackout
+  bootstrap/fd-wiring todo). 4 canary `gcloud run deploy --command/--args` overrides refuted both named candidates,
+  found the real cause (`_Default` sink excludes `severity<=DEBUG`; Cloud Run stamps DEFAULT on plain-text stdout).
+  Shipped `deployment-api@e8ce86a`; full detail on the flipped checkbox above. Filed a `[REVIEW]` follow-up.
+
+- **2026-07-31 (slot 6, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-026` (diagnose why `e8ce86a`
+  "blocks its own rollout"). Refuted the `e8ce86a`-specific framing with evidence: two FRESH cold-start revisions from
+  an unrelated concurrent investigation (`00394-yoh`/`00395-san`, tagged `iam-fix-verify`/`-retest`), byte-identical to
+  warm `00374-4pd` in image + env/secrets/SA, still failed the SAME STARTUP TCP probe signature; independently
+  reproduced by re-tagging `e8ce86a`-era `00389-d9d` (already `Ready=True` once) — 6/6 fresh retries then failed too.
+  Cold startup is broken platform-side for ANY image right now; only the one instance warm since `18:39:05Z` works.
+  Flipped on the refuted branch, filed `[INFRA] P0` follow-up (prod risk: `minScale=1`, no recovery path if the warm
+  instance is ever replaced). Verified prod safe throughout. No code shipped — infra/IAM-scoped.
+
+- **2026-07-31 22:00-22:20Z (slot 14, infra)** — Dispatched `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
+  cold-container todo). Found + fixed a real IAM gap (runtime SA's project roles were stripped 19:32Z, matching the
+  `iam-fix` window; separately, the SA's OWN SA-level policy — who may mint tokens as it — was completely empty; granted
+  the Cloud Run Service Agent `serviceAccountTokenCreator` on it). Neither fix changed the symptom: 3 retests over
+  ~20min all failed at 31.3-31.4s, deterministic to the ms. Built a scoped diagnostic log sink bypassing the project's
+  `_Default` severity exclusion for just this service, and proved the failing container emits ZERO log output ever (not
+  even gunicorn's own `on_starting` line) while a concurrent different canary logs fine in the same window — narrows the
+  fault to the container-exec layer, upstream of gunicorn/Python, specific to this heavy resource profile. Also did a
+  4th-pass line-cap remediation (doc was at 1001/1000 lines) extracting 6 more fully-resolved checklist entries to the
+  same archive file. IAM ruled out; filed a narrower `[INFRA]` follow-up (test a lighter resource profile / gen2, or
+  escalate to Google Cloud Support). Left the IAM grant + diagnostic sink live for the next investigator. Production
+  safe throughout (`00374-4pd` still serving 200s). No code shipped — pure infra/IAM investigation + doc reconciliation.
+
+- **2026-07-31T22:57Z (slot 7, infra)** — Resumed `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
+  cold-container todo, both it and its slot-14 narrower follow-up). Found the platform-side cold-start failure has
+  RESOLVED: `gcloud run revisions list` shows a clean 4-failure streak (`00408-keh`→`00411-xic`, 22:40-22:44Z,
+  first-attempt Ready=False) immediately followed by 4 consecutive first-attempt Ready=True fresh cold starts
+  (`00398-mqj`, `diag-realtraffic-0731`, `00400-mxl` at 22:45Z, and `00401-4x7` at 22:56Z — the last deployed
+  organically by `cloudbuild.gserviceaccount.com`, i.e. routine CI/CD, not an investigation-driven test). `/api/health`
+  confirmed 200 in ~0.1s throughout. No explicit quota/capacity error text found in logs, but the correlation is exact:
+  12 revisions of this ONE service were created during the 19:32Z-22:44Z failure window (multiple investigators'
+  canary/diag deploys) and failures stopped the moment that churn subsided — consistent with the doc's own candidate (2)
+  (deploy-volume/capacity contention this investigation's own churn generated), all other candidates already ruled out.
+  Both P0 todos' done-when ("a freshly-cold-started instance passes the STARTUP TCP probe") is now unambiguously met —
+  flipped both. No Google Cloud Support case needed. Did a 5th-pass line-cap remediation (doc was at 1007/1000 lines
+  after the write-up) extracting the 7 oldest checked checklist entries (2026-07-24 root-cause dispatch through the
+  2026-07-30T12:09Z sandbox-external-termination entry) to the same archive file. No code shipped — pure infra
+  investigation + doc reconciliation.
