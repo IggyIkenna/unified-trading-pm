@@ -298,31 +298,65 @@ removal + casing normalization remain before backfill-resume.
       present and wired. Residual 82,311 pre-fix lowercase manifest rows are a separate, already-tracked repair todo
       (that doc's todo `-007`, re-tagged off `[OPERATOR]` 2026-07-28, gated on a fresh soft-delete-retention check) —
       out of this todo's own done-when, not re-duplicated here.
-- [ ] [OPERATOR] P1. **(NEW 2026-08-11) Correct or retire `migrate_tradfi_canonical_2026_07.py`'s stale
+- [x] ✅ [OPERATOR] P1. **(NEW 2026-08-11) Correct or retire `migrate_tradfi_canonical_2026_07.py`'s stale
       `MIGRATE_CHAIN_ADDQM`/`_CHAIN_ITYPES` combo membership** — the script still treats combo as chain-eligible for the
       quote/margin tail, contradicting the shipped writer (see "2026-08-11 update" above) and the now-superseded 07-19
       default. Prevents any future `--apply` rerun from recreating the bare/quote-margin split for combo. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **DONE 2026-08-11 (interactive session), operator go-ahead ("pick it all up").**
+      `migrate_tradfi_canonical_classify_2026_07.py`: added `_canonical_chain_itype()` (remaps the legacy on-disk
+      `combo` hive token to the target `combo_chain` path — a real single `combo` instrument never reaches this
+      function, it has no `underlying=` segment) and expanded `_CHAIN_ITYPES` to also recognize already-canonical
+      `combo_chain` objects (previously fell through to `D_QUARANTINE_CORRUPT` — a real bug a re-run would have hit
+      today). 2 new regression tests. Shipped `market-tick-data-service@<pending, see next progress-log entry>`.
 - [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
       `combo` string — both TradFi and CEFI (CEFI's Deribit multi-expiry wrapper is the direct `combo` string
       collision). Migrate existing historical manifest rows written under the old convention. Repos:
-      market-tick-data-service, unified-api-contracts. **Recover-first (2026-08-11, review finding agt-533c4e):**
-      stranded implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `1777229f`
-      (rename combo wrapper to combo_chain across writer+manifest) and `e5581a63` (canonicalize chain underlying
-      naming). Cherry-pick from any slot worktree (shared object store), verify + QG, ship via quickmerge — do NOT
-      re-implement. `8147050e` (BYBIT futures_chain venue) is redundant vs origin, skip.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
+      market-tick-data-service, unified-api-contracts. — **DONE, verified from two independent sessions (interactive +
+      slot 20).** combo→combo_chain rename + quote/margin tail: `market-tick-data-service@c31cfe7a` (≡ stranded
+      `1777229f`). Chain underlying naming: `e5581a63`. `lifecycle_phase` dtype: `8c264a4e`. combo_chain reader
+      routing + 900-line SRP split: `b13e3a2b`. **instrument_id-blank half: `market-tick-data-service@fbc9cc6f`** — a
+      dedicated investigation (agent) confirmed blanking `instrument_id` for futures_chain/options_chain ohlcv_1m/1s
+      does NOT reintroduce `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`'s bug (that bug's only proven trigger was an
+      ad hoc one-off gate-execution query, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md:126-128`, not a live
+      consumer; every standing consumer — `pipeline_e2e_check.py::_shard_match`, `preflight.py`'s atom-coverage check —
+      is already underlying-keyed for these 3 bundle types, and TradFi is explicitly excluded from the one
+      instrument-id-keyed preflight mechanism, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, spot-checked live). Removed
+      `_tradfi_manifest_shard.py::_resolve_chain_bundle_manifest_id` (the ohlcv_1m/1s special case) and its support
+      constants — `venue_fetch.py`'s `_record_venue_shard_counts` now blanks `instrument_id` unconditionally for every
+      `is_derivative` (chain-bundle) row. Deleted the now-backwards
+      `scripts/restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` + its test
+      (`market-tick-data-service@143fceff`) — that script's whole purpose (writing real synthetic ids into blank rows)
+      is the inverse of the new design. 2 tests updated to assert blank-id. 1895 tests passing. **UAC companion fix
+      (slot 20's finding): `807de834` + `a621b0de`** (combo_chain added to CEFI/TRADFI_CHAIN_INSTRUMENT_TYPES) — not
+      independently verified by this session, cited from slot 20's concurrent work. **New follow-up filed below**: the
+      restamp script's `--apply` already ran against prod before deletion (3,267 rows, 41 roots, confirmed via
+      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` Progress Log) — those manifest rows now need re-blanking to
+      match the new design.
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
       isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
-      systemic. Repo: market-tick-data-service. **Recover-first (2026-08-11, review finding agt-533c4e):** stranded
-      implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `2bcec56e` +
-      `5706f9bb` (force lifecycle_phase to string dtype). Cherry-pick from any slot worktree, verify + QG, ship via
-      quickmerge — do NOT re-implement.
+      systemic. Repo: market-tick-data-service. — **Already DONE — verified 2026-08-11 (interactive session): shipped
+      `market-tick-data-service@8c264a4e` ("force lifecycle_phase to explicit StringDtype to prevent null-vs-string
+      dtype drift"), confirmed live on origin/live-defi-rollout. Fixed at BOTH the source
+      (`databento_enrichment.py::_enrich_with_canonical_ids`) and belt-and-suspenders in the finaliser
+      (`tradfi_shared.py::finalise_tradfi_rows_and_path`) — systemic scope confirmed in the commit message (every
+      non-FUTURE tradfi instrument_type, since only FUTURE rows populate lifecycle_phase). Includes its own regression
+      test (`test_tradfi_canonical_writes.py`). No further action needed.** The earlier "Recover-first, stranded commits
+      2bcec56e/5706f9bb, NOT on origin" note above was STALE — those exact SHAs are unreachable in this repo's object
+      store (checked `git log --all`), but the equivalent fix landed under a different SHA (`8c264a4e`) and IS on
+      origin; re-verified via `git merge-base --is-ancestor`.
+- [ ] [DATA] P1. **(NEW 2026-08-11) Re-blank the 3,267 manifest rows the now-deleted
+      `restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` already restamped with real synthetic ids**
+      (41 roots, `venue=CME`, `instrument_type ∈ {futures_chain, options_chain}`, `data_type ∈ {ohlcv_1m, ohlcv_1s}` —
+      full per-root breakdown in `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s Progress Log, `--apply` ran
+      2026-08-09). These rows now contradict the new instrument_id-blank design shipped above — a manifest-row column
+      update (not a GCS object delete), so the delete-safety protocol may not directly apply, but this still needs a
+      real production manifest write; scope + safety approach not yet determined. Repo: market-tick-data-service.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
@@ -354,6 +388,20 @@ removal + casing normalization remain before backfill-resume.
       canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
       in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
       and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
+- [ ] [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
+      path-based read (`pq.read_table(gcs_path)` / `pd.read_parquet(gcs_path)`) — real, confirmed, but NOT live-blocking
+      (MTDS's own `reader.py::_read_parquet_bytes` reads via an in-memory buffer, a different pyarrow code path that is
+      unaffected — spot-checked, works fine on the same files).**
+      `ArrowTypeError: Unable to merge: Field     instrument_type has incompatible types: string vs dictionary<values=string, indices=int32, ordered=0>`
+      — pyarrow's `ParquetDataset`/path-based read does row-group-level schema unification and finds `instrument_type`
+      encoded as plain BYTE_ARRAY in some row groups vs dictionary-encoded in others WITHIN the same file (confirmed via
+      `pq.ParquetFile(path).read()`, which succeeds — the physical storage is consistent, only the Arrow-inferred
+      logical type per row group differs by encoding choice). Confirmed on 3 separate combo/futures_chain files
+      (`day=2020-01-06`, SP500/GOLD, both combo and futures_chain instrument_type) — likely systemic wherever a shard
+      was written across multiple streaming-writer flushes. Real risk: any AD HOC script/analysis using a direct
+      path-based read (not the live reader's buffer-based path) will hard-fail on these files. Scope not yet measured
+      (how many historical files affected); root cause not yet traced to a specific writer flush-boundary condition.
+      Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
       currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own
       work.** Confirmed live via quickmerge's isolated-worktree re-gate (pulls fresh from origin, so this is a real

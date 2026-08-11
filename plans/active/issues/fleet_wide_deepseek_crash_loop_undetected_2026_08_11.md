@@ -27,6 +27,7 @@ related:
     /codex/04-architecture/agent-orchestrator-autospawn.md,
     /plans/active/ao_satellite_ao_dispatch_batch19_2026_08_10.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
   ]
 created: 2026-08-11
 last_updated: 2026-08-11

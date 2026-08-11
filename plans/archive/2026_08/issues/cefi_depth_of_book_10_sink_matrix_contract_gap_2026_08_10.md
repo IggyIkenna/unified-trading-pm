@@ -15,7 +15,7 @@ summary: >-
   the completeness gate in tests/unit/test_sink_matrix_completeness.py)". The referenced completeness-gate test does not
   exist at that path in unified-api-contracts. Found during the batch13 finalize archival's codex-alignment step
   (2026-08-10).
-status: open
+status: archived
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -30,7 +30,9 @@ related:
   ]
 created: "2026-08-10"
 author: slot-6
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
+resolved_by: unified-api-contracts@ea098ad0
+archived: "2026-08-11"
 parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -49,9 +51,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
 depends_on: []
 ---
+
+> **ARCHIVED 2026-08-11** — both todos resolved. P2: SINK_MATRIX entry added (`unified-api-contracts@f604c5f3`); P3:
+> completeness-gate docstring reference corrected (`unified-api-contracts@ea098ad0`). Successor: none (fully resolved).
 
 # depth_of_book_10 missing from SINK_MATRIX (live shard, no contract entry)
 
@@ -100,9 +104,14 @@ would silently drop the depth_of_book_10 topic/subscription that production curr
       on LDR, ancestry-verified. Terraform (`deployment-service/.../live_event_log/{main.tf:481,warm_sink.tf:905}`)
       already carries the topic/subscription; the SINK_MATRIX entry now makes future regens (and the "generated from
       SINK_MATRIX" header claim) consistent — no committed regen script exists to re-run.
-- [ ] [DATA] P3. **Reconcile the missing `test_sink_matrix_completeness.py`** referenced by `sink_matrix.py`'s docstring
-      as the shard-completeness gate — either locate/restore it, or correct the docstring to name the actual gate (or
-      remove the claim if the gate was retired). Repo: unified-api-contracts.
+- [x] ✅ [DATA] P3. **DONE 2026-08-11 (slot-2) — `unified-api-contracts@ea098ad0`, verified + flip this session
+      (slot-19, `qa` re-check).** The missing-docstring-reference option (b) was taken: `sink_matrix.py`'s docstring now
+      names the actual gate — `tests/unit/test_persist_envelope.py` (`TestSinkMatrixCompleteness`) — instead of the
+      non-existent `tests/unit/test_sink_matrix_completeness.py`. Verified the referenced gate is real + meaningful: the
+      test file exists (`tests/unit/test_persist_envelope.py:249`) and `TestSinkMatrixCompleteness` contains 6
+      resolver-completeness tests (matrix non-empty, all explicit entries resolve, wildcard entries resolve for sample
+      asset_groups, execution_shards STREAM_ONLY, mtds_shards REPRODUCIBLE). Commit `ea098ad0` is an ancestor of
+      `origin/live-defi-rollout`. No further code change needed — the docstring↔gate contract is now consistent.
 
 ## Progress Log
 
@@ -116,3 +125,8 @@ would silently drop the depth_of_book_10 topic/subscription that production curr
   (422s); shipped `unified-api-contracts@f604c5f3` via quickmerge, ancestry-verified on LDR. P3 (missing
   `test_sink_matrix_completeness.py` docstring reference) remains open — the actual gate lives in
   `tests/unit/test_persist_envelope.py` (its `TestSinkMatrixResolver` + matrix-completeness check).
+- **slot-19 2026-08-11 (task `cefi_depth_of_book_10_sink_matrix_contract_gap-e9ddf03bcaae`)**: Executed the P3 todo's
+  option (b) — verified slot-2's `unified-api-contracts@ea098ad0` already corrected `sink_matrix.py`'s docstring to name
+  the real completeness gate (`tests/unit/test_persist_envelope.py`, `TestSinkMatrixCompleteness`, confirmed real at
+  `:249` with 6 resolver-completeness tests) — commit on origin. No code change needed; flipped the P3 checkbox with
+  evidence + `docs(plans):` commit.

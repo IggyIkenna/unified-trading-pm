@@ -288,24 +288,52 @@ Directions, cheapest first — each is a todo below:
       that the worktree matches HEAD. On mismatch, fail loudly naming a recovery ref. **Done when**: an induced run
       whose named file is reverted mid-flight exits non-zero naming the recovery ref instead of reporting "already match
       HEAD", and a test covers both branches. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **quickmerge's `--isolated` does not protect its INPUTS.** Isolation re-execs inside a throwaway
-      worktree, but STAGE 0.4's reconcile (and the autostash guard it calls) runs against the CALLER's checkout first —
-      so the named files can be quarantined and reverted BEFORE isolation ever copies them in. That is how the loss
-      above happened on an isolated run. The call-site fix closes the specific quarantine path, but the ordering is
-      still wrong in principle: any future reconcile step added ahead of isolation reintroduces it. **Done when**:
-      isolation snapshots the caller's `--files` content BEFORE any reconcile touches the caller's tree, and a
-      regression test proves an isolated run ships the caller's content even when the caller's tree is reverted mid-run.
-      Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **A ship script cannot run from an arbitrary worktree — two separate directory-name assumptions.**
-      Measured 2026-08-11 while shipping the fix above from a private worktree (the only way to hold uncommitted work on
-      a checkout a peer session keeps reverting): STAGE 2 resolved `pre-flight-audit.sh` via
-      `WORKSPACE_ROOT=$(dirname $PWD)` and looked for it under `<parent>/unified-trading-pm/...`, failing unless the
-      worktree directory is literally named `unified-trading-pm`; then STAGE 1.5's dependency alignment failed because
-      the parent held no sibling repos (`aligned: true` in the real checkout, FAILED in the worktree). Both were worked
-      around by hand — naming the worktree `unified-trading-pm` and symlinking 30 siblings into its parent. This is the
-      same class as F7 (resolve from git, not from the directory name), one level up. **Done when**: quickmerge resolves
-      the workspace root without depending on the checkout's directory name, or fails with a diagnosis naming the
-      assumption instead of a missing-file error. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **quickmerge's `--isolated` does not protect its INPUTS.** DONE 2026-08-11 —
+      unified-trading-pm@d001c8f879. **The hypothesis this todo was filed on is FALSE, and disproving it was the
+      finding.** It claimed STAGE 0.4's reconcile runs against the caller's checkout before isolation copies files in.
+      It does not: the isolated child is created `--detach` and STAGE 5's `_qm_checkout_ship_branch` keeps it detached
+      for the whole run under `QM_IN_ISOLATION`, so `_qm_stage_0_4_not_behind_gate` — the only caller of
+      `autostash_guard_bound_backlog` — sees an empty `git branch --show-current` and skips at every one of its 3 call
+      sites. The parent re-execs and exits before reaching that stage too. The blamed mechanism is structurally
+      unreachable during an isolated run, in both processes. **The real mechanism**: isolation COPIES `--files` into the
+      throwaway worktree but never touches the caller's originals, which sit dirty in the shared checkout for the run's
+      full duration — exactly what a CONCURRENT PEER's own extreme-backlog sweep acts on, since any tracked dirty file
+      outside _that_ peer's `--files` is fair game once the >=10-entry trigger is armed. This is the only account that
+      explains the second measured revert, which happened with no quickmerge of ours running at all. **Fix**: evacuate
+      the caller's dirty `--files` into a NAMED stash for the run's duration and restore unconditionally on return
+      (`_qm_iso_evac_find` / `_qm_iso_evacuate_caller_dirty` / `_qm_iso_restore_caller_dirty`). Looked up by MESSAGE,
+      never `stash@{N}` — `refs/stash` is one ref shared by every linked worktree, so the child's own stash ops shift
+      the index underneath us. **Two gaps found in review and closed before shipping**: (1) the restore was reachable
+      only on the happy path — the sole trap was `_qm_cleanup_isolation EXIT`, which only removes the worktree — so a
+      `set -e` trip, Ctrl-C, SIGTERM or a harness stop would have left the caller's files stashed and their tree showing
+      them reverted with a clean `git status`: the exact symptom this issue exists to kill, self-inflicted and WORSE,
+      since the marker lives only in scrollback that dies with the process. Now restored from EXIT/INT/TERM via
+      `_qm_iso_signal_cleanup`, with three return codes (0 restored · 2 idempotent no-op, silent by design, which is
+      what makes the re-fired EXIT trap safe · 1 genuine pop conflict, loud, entry never dropped); SIGKILL stays
+      uncatchable and is documented as such rather than papered over. (2) A 15-way concurrent stress test measured **50%
+      of the losing side's first `git stash push` failing on `.git/index.lock` contention** with no retry — not data
+      loss (a failed push touches nothing) but a real reliability gap. Evacuate now retries the push 3x with backoff;
+      restore deliberately does NOT retry the pop, because pop is apply-then-drop and a blind retry could double-apply
+      and manufacture a conflict — it re-checks whether the entry still exists instead of reporting a false conflict.
+      Re-measured after the fix: 30/30 evacuate, 30/30 restore, 0 leftover stashes. Tests:
+      `tests/test_quickmerge_isolation_evacuates_caller_dirty.bats` (14, incl. a SIGTERM-mid-flight case proving the
+      caller's dirty file is restored after the process exits 143, a real rc=1 conflict, and a deterministic
+      `index.lock` retry proof).
+- [x] ✅ [INFRA] P1. **A ship script cannot run from an arbitrary worktree — two separate directory-name assumptions.**
+      DONE 2026-08-11 — unified-trading-pm@d001c8f879. Added `PM_ROOT`, resolved by CONTENT (mirroring
+      `scripts/quality_gates/_pm_root.py`, the existing precedent): conventional `$WORKSPACE_ROOT/unified-trading-pm`
+      first, then this run's own repo, then a content-matching sibling search keyed on `plans/` +
+      `scripts/quality_gates/` being present. ~20 call sites migrated off the hardcoded literal. STAGE 1.5 now COUNTS
+      real sibling repos before running dependency alignment and skips with a named diagnosis when there are none,
+      instead of surfacing a bare `aligned: false` that is indistinguishable from a real regression. STAGE 2's
+      pre-flight lookup now separates "no PM checkout resolvable" from "PM resolved but the script is missing".
+      **Before**: a differently-named worktree got `not found at <path> — required`, with nothing pointing at the
+      directory name as the cause; a sibling-less parent got a misleading alignment FAILURE (`aligned: true` in the real
+      checkout, FAILED in the worktree). **After**: the differently-named worktree resolves via content search; the
+      sibling-less parent gets `⚠️ Dependency alignment SKIPPED — … has no sibling repo checkouts at all`, naming the
+      assumption. Tests: `tests/test_quickmerge_pm_root_resolution.bats` (9, incl. call-site tests asserting the literal
+      directory-name assumption is gone from the executed paths). Both were hit by hand while shipping the parent P0
+      from a private worktree, which is what surfaced them.
 - [x] ✅ [INFRA] P1. **Two interactive sessions in ONE slot checkout destroyed uncommitted work twice in 30 minutes.**
       DONE 2026-08-11 — unified-trading-pm@83debfb40a. **The framing in this todo was wrong, and the correction is the
       main finding.** It said the `.agent-claim` heartbeat "is WARN-only by design and did not prevent it". The measured
@@ -348,15 +376,7 @@ Directions, cheapest first — each is a todo below:
       command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
       the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
       key, with a regression test. Repo: unified-trading-pm. SSOT:
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`. Measured 2026-08-11 in slot 4: after the quarantine
-      fix above, a peer session sharing this checkout reverted this session's tracked edits again (5 files, `git status`
-      clean, content in neither worktree nor HEAD; recovered from the `pre-reconcile quarantine` stash by path both
-      times). The `.agent-claim` heartbeat is WARN-only by design and did not prevent it. The durable mitigation used
-      here was to stop holding uncommitted work in the shared checkout at all and ship from a private `git worktree` —
-      worth making the documented default for interactive sessions rather than an emergency manoeuvre. **Done when**:
-      either the collision hook escalates past WARN when a second session writes the same checkout, or the
-      shared-checkout ship path is documented as worktree-first with a one-command helper. Repo: unified-trading-pm.
-      SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
       non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
       entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering

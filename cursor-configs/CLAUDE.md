@@ -74,14 +74,12 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   — verify `git show HEAD:<f>`; Write+`git add` in ONE step, where every measured loss sat). Ship scripts assert it:
   **quickmerge 10 / safe-doc-push 12 (nothing of yours to ship) · 13 (pushed, change absent) = RECOVER from the printed
   ref, never plain re-run**; 11=script defect; 5=safe. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`. **QG
-  concurrency is RESOURCE-based, not a fixed count** (default `reservation`, 2026-08-10): admission weighs the repo's
-  MEASURED peak RSS (`scripts/dev/qg_resource_baseline.json`, unmeasured→5500 MB) vs live RAM budget + CPU slots under
-  one ledger lock — just invoke `quality-gates.sh`, it queues. Fixed counts (PM≤4/others≤1; flat cap = 7 on a 10-core
-  Mac, NOT 6) are LEGACY `QG_GOVERNOR_MODE=token` ONLY; `safe-doc-push.sh` keeps its own host-wide 8-cap
-  (`push-host-governor.sh`). Never bulk-kill a peer's `pytest`/QG. Both ship scripts reconcile against origin before
-  every commit and hard-fail on a genuine unresolvable conflict (never silently proceed); `check-quickmerge-provenance`
-  catches a missing trailer at COMMIT time too (WARN-only until `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT:
-  `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
+  concurrency is RESOURCE-based, not a fixed count** (default `reservation`, 2026-08-10): admission weighs measured peak
+  RSS vs live RAM + CPU under one ledger lock — just invoke `quality-gates.sh`, it queues. **Never quote a fixed cap
+  number** — those are legacy `token`-mode only; read the SSOT. Never bulk-kill a peer's `pytest`/QG. Both ship scripts
+  reconcile against origin before every commit and hard-fail on a genuine unresolvable conflict (never silently
+  proceed); `check-quickmerge-provenance` catches a missing trailer at COMMIT time too (WARN-only until
+  `QUICKMERGE_PROVENANCE_BLOCK=1`). SSOT: `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md`.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config`. Derivation SSOT
   `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a host via
@@ -92,9 +90,11 @@ Massive-fka-Polygon.io** (`polygon` = the CHAIN).
   check on `ldr_main` repos) + `quality-gates-v2` (promote PR) + quickmerge-provenance — label-check / SIT-digest /
   dep-order are RETIRED/advisory, NOT blocking. `staging` KEPT + REVERSIBLE (major/breaking bump or operator decision
   routes THROUGH it; gates unchanged). **LDR never runs server QG**; `main` = reconciled projection back-merged to LDR
-  (`main-backmerge-to-ldr`). `--hotfix` needs `[hotfix]`. **Release**: semver-agent on `push:[main]` → git-tag mint +
-  `publish-package` wheel to AR; major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not
-  minter. `unified-trading-codex` ARCHIVED (SSOT = PM's `codex/`).
+  (`main-backmerge-to-ldr`) — **landing on `main` DEPLOYS NOTHING**: AO self-pulls LDR (`ao-self-pull.sh`, 15-min cron,
+  restarts on HEAD move), other services deploy via Cloud Build → `…/runtime-deployment-topology.md` §5. `--hotfix`
+  needs `[hotfix]`. **Release**: semver-agent on `push:[main]` → git-tag mint + `publish-package` wheel to AR;
+  major/1.0.0 via human staging; `reconcile_release_tags.py` = stall detector, not minter. `unified-trading-codex`
+  ARCHIVED (SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared

@@ -36,6 +36,7 @@ related:
   - /codex/15-runbooks/safe-service-restart-procedures.md
   - /codex/05-infrastructure/deployment-observability.md
   - /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
@@ -162,6 +163,34 @@ memory and that's what kills sessions" as-is.
       and, if it's coarse (e.g. 60s+), consider whether a sub-interval spike is plausible given `iowait_percent`'s
       elevated p90 (40.7 vs 24.3 baseline) at loss moments — the one metric in this pass that wasn't clearly
       unremarkable. Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **New lead (2026-08-11): pruner-loop delay under load, as a distinct candidate from the DeepSeek-
+      transport theory.** Live journal read (SSM, `journalctl -u orchestrator`) around a 25-session loss cluster
+      (07:57:42-45 UTC) found a single `TmuxPruner: cleared 25 stale tmux_session reference(s)` line — one pruner TICK
+      clearing a backlog of 25, not necessarily 25 sessions dying in the same instant. If the pruner's own loop was
+      delayed/backed up (SQLite write contention under fleet load is a known pre-existing pattern per `tmux_pruner.py`'s
+      own docstring on the `ensure_review_agents`-class lock contention it was refactored to avoid), losses that
+      actually happened scattered over the PRECEDING window would only get detected+logged in one late batch, inflating
+      the appearance of a synchronized mass-kill. **Done when**: pull successive `TmuxPruner: cleared     N` log-line
+      timestamps over a longer window and check whether the gap between ticks is ever meaningfully wider than
+      `tmux_prune_interval_seconds` (delay = real backlog) vs. consistently on-cadence (no delay = the 25 really were
+      closely-clustered, still needing an explanation). A co-occurring `utempter: pututline: Permission denied` line at
+      the same timestamp was investigated and is very likely a red herring — it also fires during the routine respawns
+      immediately after, so it looks like constant/benign noise on this host's permission setup, not death-specific;
+      note this here so it isn't re-chased as a lead. Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Check for a per-cgroup OOM kill, distinct from the host-wide check todo 1 already ran.** Todo 1's
+      `free -h`/`journalctl -k` pass was HOST-WIDE; if slots run under a per-slot/per-user cgroup memory ceiling, a
+      cgroup-scoped kill logs a different kernel line (`Memory cgroup out of memory: Killed process...`) that a
+      host-wide-pressure check would miss even with plenty of free RAM fleet-wide. **Done when**: confirm whether slots
+      run under a cgroup memory limit at all, and if so, whether `journalctl -k` shows any cgroup-scoped OOM line
+      correlated with a sample of loss timestamps. Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask, still open): tmux's own
+      post-mortem bookkeeping is now CONFIRMED empty by capture time on every death sampled since
+      agent-orchestrator@4c5a86bc3f shipped (`pane_dead` itself reads blank, or the capture call finds no target at all)
+      — so reconstructing after the fact is a dead end; the only way to get the actual kill signal/cause is to watch one
+      slot live (strace on the tmux server/pane PID, or a tight `dmesg`/`journalctl -k` tail) and wait for its next
+      death. **Done when**: at least one death on the watched slot has a real-time-captured cause, or the watch ran long
+      enough with zero signal to conclude the mechanism leaves no OS-level trace either (a different, still useful,
+      negative result). Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -185,3 +214,17 @@ memory and that's what kills sessions" as-is.
   then a second loss during an overlapping concurrent-commit race on this heavily shared checkout — before landing on
   the third attempt. See `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the standing tracked
   pattern.)
+- 2026-08-11: fleet-wide DeepSeek fallback (all 6 Anthropic accounts simultaneously out of credit, operator-confirmed
+  expected — see `fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md`) forced ~100% of the fleet onto 2 DeepSeek
+  accounts; `tmux_session_lost` rate stepped up 4-7x (30-80/hr baseline -> 150-211/hr) starting exactly 2026-08-11 00:00
+  UTC and held through the day. Because Anthropic exposure was ~0% throughout, this pass could NOT distinguish "DeepSeek
+  causes it" from "the pre-existing mechanism is provider-agnostic and just got fully exposed" — flagging explicitly
+  since the 100%-DeepSeek correlation on its own is not proof of DeepSeek-causation. Shipped
+  agent-orchestrator@4c5a86bc3f (same day): `capture_pane_death_info` now also captures `#{pane_dead}` itself alongside
+  status/signal/time, closing part of todo 1's ask for real tmux-level evidence. First data since the fix went live
+  (service restart 08:00:25 UTC): every sampled death shows EITHER all four fields blank (`pane_dead` itself empty,
+  meaning tmux's pane object doesn't resolve to anything live at query time) OR the capture call finds no target at all
+  (`pane_death_info: null`) — never a confirmed-dead pane with a populated status/signal. This is consistent with an
+  abrupt SESSION-level teardown (which `remain-on-exit` cannot protect against, since it only preserves a pane after its
+  own process exits normally) rather than a graceful process exit — real, but still not a root cause; three new todos
+  filed above rather than closing this doc on the strength of it.

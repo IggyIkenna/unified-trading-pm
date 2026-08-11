@@ -42,7 +42,11 @@ description:
   against an actual RECOVERED/GREEN post in the alert channel, not just inferred from current-green CI state — a missing
   recovery post is itself a small asymmetric-alerting finding. Also expect (and reconcile with, never blindly trust or
   silently duplicate) a concurrent `/ci-reconcile` pass — check `plans/active/issues/` and `ps aux` for a peer session's
-  QG run on your target repo before diving in from scratch. Under
+  QG run on your target repo before diving in from scratch. A branch-scoped `gh run list` success is NOT proof a
+  shipped fix is promote-PR-clean — check every touched repo's open promote PR too (a promote-PR check-suite can fail
+  on a different diff base even when the plain branch push is green), and re-pull `#ci-failures` right before
+  declaring done, not just once at session start — a single early Slack snapshot misses everything that fires later
+  in a long session, and the read credential itself can expire mid-session without you noticing unless you retry. Under
   `/autonomous` this polls on an interval rather than doing one pass and stopping, since neither class has an
   automated detector elsewhere. Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
   Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
@@ -440,13 +444,39 @@ report:
    genuinely-firing host-dispatched alert went unchecked the whole window because the sweep only ever looked at
    GitHub-Actions-native run conclusions). Sweeps 2 and 3 are DIFFERENT populations found by DIFFERENT commands —
    completing one is never evidence the other was covered.
+4. **For every repo you SHIPPED a fix to this pass, check its open promote PR(s) too, not just its
+   `--branch live-defi-rollout` push CI** (2026-08-11 — a real live miss). Tell:
+   `gh run list --repo <r> --branch live-defi-rollout --limit 1` showing `success` is NOT the same claim as "this
+   content is mergeable into main" — a promote PR runs its OWN check-suite, sometimes against a different diff base (so
+   a diff-scoped ratchet like class (f)/(g)/(k) can fire there even though it stayed silent on the plain LDR push), and
+   a failure isolated to the promote-PR check-suite never shows up in a branch-scoped `gh run list`.
+   `gh pr list --repo <r> --search "promote" --state open --json number,mergeable,mergeStateStatus` on every repo you
+   touched, then `gh pr view <n> --json statusCheckRollup` on anything not `MERGEABLE`/clean — a run still `IN_PROGRESS`
+   is fine, a `FAILURE` conclusion is a live miss waiting to be caught by whoever reads Slack next instead of you.
 
-**The bar for saying "unblocked": every repo from sweep 1, every monitor from sweep 2, AND every monitor from sweep 3
-has an explicit, current, verified-clean status in this run — not "I didn't see anything more in Slack" and not "no new
-Actions-run failures."** Silence is not evidence of health; several of this skill's own real findings were monitors that
-were failing/stale while posting nothing new (a dedup/cooldown suppressing a repeat page, or a monitor that's simply not
-running on its expected cadence). If a monitor's coverage genuinely can't be verified this pass (no direct query path,
-credentials unavailable), say so explicitly as a coverage gap in § 7 — never silently drop it from the count.
+**The bar for saying "unblocked": every repo from sweep 1, every monitor from sweep 2, every monitor from sweep 3, AND
+every promote PR from sweep 4 has an explicit, current, verified-clean status in this run — not "I didn't see anything
+more in Slack" and not "no new Actions-run failures."** Silence is not evidence of health; several of this skill's own
+real findings were monitors that were failing/stale while posting nothing new (a dedup/cooldown suppressing a repeat
+page, or a monitor that's simply not running on its expected cadence). If a monitor's coverage genuinely can't be
+verified this pass (no direct query path, credentials unavailable), say so explicitly as a coverage gap in § 7 — never
+silently drop it from the count.
+
+**Re-poll `#ci-failures` before declaring done, not just once at session start** (2026-08-11 — a real live miss). A
+single Slack pull at the top of a long session is a snapshot, not a standing feed — 4 real, unrelated alerts (a
+different repo's push failure, a promote-PR-only failure, and a provenance bypass that fired TWICE) landed over the
+following ~70 minutes of active fixing and none were caught until the operator pasted them in, because every subsequent
+check in that session was a direct `gh`/`gcloud` sweep, never a second Slack read. Direct ground-truth checks answer "is
+the specific thing I'm looking at green" — they do not tell you about a DIFFERENT repo/PR/gate that just went red while
+you were heads-down on something else, which is exactly what a channel-wide Slack pull is for. Re-pull `#ci-failures`
+for the session's elapsed window immediately before writing the § 7 report, even if (especially if) the session has been
+running for a while. Separately: the GSM-backed read access (`scripts/dev/slack-read-channel.py`, § 0) depends on a
+`gcloud` user-OAuth ADC token that can expire mid-session on a long-running interactive session even though it worked at
+session start — if a re-poll attempt fails with a `gcloud`/ADC/reauth error, that is itself a coverage gap to report
+explicitly (not silently skip), since it means the rest of the session's "nothing more in Slack" claim was actually "I
+couldn't check," a materially different claim. This credential class needs the operator to run `gcloud auth login`
+interactively — you cannot self-heal it; say so plainly and keep working from `gh`/`gcloud` ground truth in the meantime
+rather than stalling on it.
 
 ## 7. Report
 
