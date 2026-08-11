@@ -1,0 +1,1745 @@
+[
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786404653.089879",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "ZJ3O8",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786404840.656439",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "7Y7",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786405543.955269",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "Abf6",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786405625.499419",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "vQNQJ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — sit-gate-stuck-detector",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "OuT1w",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `execution-service` — 8 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31443528242>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race\n---SLACK---\n:rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `execution-service` — 8 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31443528242>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "OfeRB",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31443598011|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":x: CRITICAL — sit-unlock",
+    "type": "message",
+    "ts": "1786405930.295429",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "/EBHO",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *CRITICAL* — sit-unlock  |  result: *FAILED* (`failure`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "fZTE9",
+        "text": {
+          "type": "mrkdwn",
+          "text": "SIT Failed — staging unlocked. Staging is open for fixes (breaking_pending kept — the set still needs a green SIT to promote).",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "Xak5f",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31443898918|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786406302.267719",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "4oOR9",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786406440.996869",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "VW4=",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — reconcile-release-tags",
+    "type": "message",
+    "ts": "1786406928.666869",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "/gAmE",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — reconcile-release-tags",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "3bnbW",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *RELEASE TAG STALL* — 1 repo(s) not advancing\\n  • ibkr-gateway-infra: 27 unreleased commit(s) on main; newest tag v0.5.0 is 16.1d old\\n→ Tag minter is semver-agent (fires on a push to the repo's promotion branch) — check it is enabled and targeting the branch this repo actually promotes to.",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "UsnwZ",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31444918457|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786407338.807159",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "T6b",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":information_source: INFO",
+    "type": "message",
+    "ts": "1786407414.391929",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "djgcU",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":information_source: *INFO*",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "gUh2T",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR→main fleet bot: auto-merge ARM FAILED for 1 repo(s):  market-tick-data-service — PR exists + provenance-clean but needs a MANUAL `gh pr merge --auto` (or plain merge once green); check repo `allow_auto_merge` + branch protection. WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.\n",
+          "verbatim": false
+        }
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786407676.202939",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "pEs4L",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — cloud-build-failure-watcher",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "R/lRV",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":building_construction: *cloud-build-failure-watcher: 1 failed Cloud Build(s)* in the last 20m (0 silent config-rejection(s)) — project central-element-323112\n:x: Cloud Build TIMEOUT unified-api-contracts@a621b0d — build 995609a7-0bf7-49c0-b2c9-aeb23b11550f — <https://console.cloud.google.com/cloud-build/builds;region=asia-northeast1/995609a7-0bf7-49c0-b2c9-aeb23b11550f?project=1060025368044>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "9RHOC",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31445678619|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — branch-health",
+    "type": "message",
+    "ts": "1786407802.474999",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "arr4W",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — branch-health",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "I6AEk",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":hourglass_flowing_sand: *PROMOTION LAG &gt; 60m* — 1 branch-pair(s) across 1 repo(s) un-propagated\\n  • unified-trading-pm LDR→main: cause unknown — 14 commit(s), oldest 299m old — \"docs(codex): sync Elysium delay letter + remaining-work appe\" (promote PR #2758 state matched none of the known causes; investigate directly)\\n→ open *deployment-ui* → CI/CD Repos page (`/repos`) for per-repo promotion state\\n  (CLI: `gh api repos/IggyIkenna/&lt;repo&gt;/compare/&lt;base&gt;...&lt;head&gt;` to inspect a specific pair)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "516df",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31445773660|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786408125.977839",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "juCSk",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — sit-gate-stuck-detector  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "WH1+l",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":ballot_box_with_check: *sit-gate-stuck-detector: RESOLVED* — the SIT-gate-block streak has cleared (prior tick paged WARNING)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "MS8Xd",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31446123758|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786408242.467249",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "Fdv",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786408290.500749",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "+dY8m",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786409140.987599",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "nSkA+",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786409198.402469",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "tXlt6",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "c1res",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | push to `promote/unified-trading-pm/c3d5dd1d6814` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31446922307|sha `c3d5dd1d6814525431657c3bed1c0227ab5872b0`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "ixnSy",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31446922307|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786410041.738119",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "uh2i",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786410796.519069",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "x996/",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786410944.275119",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "O6g",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786411841.512689",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "y5cuF",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":information_source: INFO — ldr-ci-monitor",
+    "type": "message",
+    "ts": "1786412010.715289",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "3cbUZ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":information_source: *INFO* — ldr-ci-monitor",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "pX5WT",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR-CI-red monitor detected live-defi-rollout state transition(s):\n:white_check_mark: *1 repo(s) LDR RECOVERED:*\n  • `unified-trading-pm`@`live-defi-rollout` RED → *GREEN* (ba8229d1) <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31445506920|gate run>\n",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "aB2iO",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31449583967|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786412056.952989",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "kgPhN",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — cloud-build-failure-watcher  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "p1ywN",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *cloud-build-failure-watcher: recovered* — no failed Cloud Builds this tick (prior tick had failure(s)) — project central-element-323112",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "k1fOr",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31449657866|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786412745.966079",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "c26",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786413604.565899",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "NSAp",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786413661.958239",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "mUubz",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786414544.303499",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "fTqMp",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786414861.849899",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "xfab2",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "MTvan",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *deployment-service* | PR #856 `promote/deployment-service/ecf711d8808b` → `main` | <https://github.com/IggyIkenna/deployment-service/actions/runs/31451856250|sha `9e3340db8d7ae2c0de6f6139640c9d470b8dc1ef`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "yfx6i",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/deployment-service/actions/runs/31451856250|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786415445.668329",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "q2Uo0",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786416341.144949",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "FUb",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — branch-health",
+    "type": "message",
+    "ts": "1786416404.379989",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "/5e76",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — branch-health",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "EfHhL",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":hourglass_flowing_sand: *PROMOTION LAG &gt; 60m* — 2 branch-pair(s) across 2 repo(s) un-propagated\\n  • unified-trading-pm LDR→main: cause unknown — 12 commit(s), oldest 442m old — \"docs(codex): sync Elysium delay letter + remaining-work appe\" (promote PR #2765 state matched none of the known causes; investigate directly)\\n  • deployment-service LDR→main: cause unknown — 3 commit(s), oldest 136m old — \"feat(deployment): derive required deployment set from active\" (promote PR #856 state matched none of the known causes; investigate directly)\\n→ open *deployment-ui* → CI/CD Repos page (`/repos`) for per-repo promotion state\\n  (CLI: `gh api repos/IggyIkenna/&lt;repo&gt;/compare/&lt;base&gt;...&lt;head&gt;` to inspect a specific pair)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "th/VV",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31453291893|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786416472.575529",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "aK3R1",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "k5m4Z",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *deployment-service* | push to `live-defi-rollout` | <https://github.com/IggyIkenna/deployment-service/actions/runs/31453209112|sha `ecf711d8808b853524f6c5c2fa27c6b6e0a568ee`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "pz5Tp",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/deployment-service/actions/runs/31453209112|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786416620.254269",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "K=1El",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":no_entry: *Provenance gate BLOCKED a promotion* — `IggyIkenna/unified-trading-pm` LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout.\n```  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]```",
+    "type": "message",
+    "ts": "1786417239.963759",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "rich_text",
+        "block_id": "=X7",
+        "elements": [
+          {
+            "type": "rich_text_section",
+            "elements": [
+              {
+                "type": "emoji",
+                "name": "no_entry",
+                "unicode": "26d4"
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "Provenance gate BLOCKED a promotion",
+                "style": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " — "
+              },
+              {
+                "type": "text",
+                "text": "IggyIkenna/unified-trading-pm",
+                "style": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": " LDR→main carries code that bypassed quickmerge (auto-merge NOT armed). Re-ship via quickmerge or revert on live-defi-rollout."
+              }
+            ]
+          },
+          {
+            "type": "rich_text_preformatted",
+            "elements": [
+              {
+                "type": "text",
+                "text": "  - 19dc43ec69 feat(hooks): in-loop tool-call batching nudge; fix PM QG worktree self-audit + version-cache split  [source changed without quickmerge: ['cursor-configs/hooks/batching-nudge.py']]"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
