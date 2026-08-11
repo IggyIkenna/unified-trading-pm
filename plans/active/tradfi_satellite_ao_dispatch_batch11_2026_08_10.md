@@ -370,6 +370,30 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   "backfill per-contract instrument_ids" approach assumes per-instrument rows; these are bundle-grain rows that need
   `instrument_type` reclassification, not per-contract id derivation. Needs operator re-triage.
 
+- 2026-08-10/11 (slot-21, data_engineering craft): **todo #3 (CME convergence VM) — Part A: UAC tradfi_roots.py convergence COMPLETE.**
+  Shipped `UAC@3c2f17047e` — 8 verbose `RootMetadata.underlying` values converged to compact `EXCHANGE_CODE_TO_NAME`
+  convention (HO:HEATING_OIL→HEATINGOIL, ZB/ZN/ZF/ZT:TREASURY_*→TBOND/TNOTE*, ZS/ZL/ZM:SOYBEANS/SOYBEAN_OIL/SOYBEAN_MEAL
+  →SOYBEAN/SOYOIL/SOYMEAL). Added HEATING-OIL alias (now requires explicit alias; previously resolved via normalization
+  against old verbose underlying). Removed redundant SOYBEAN/SOYOIL/SOYMEAL aliases (now direct registry matches). QG green.
+
+- 2026-08-10/11 (slot-21, data_engineering craft): **todo #3 — Part B: pre-migration measurement COMPLETE.** Live manifest
+  query (selected columns, MTDS venv): **26,019 rows** with old sector-identity underlying values across 8 codes
+  (~3,200 each — XAB/XAF/XAI/XAK/XAP/XAU/XAV/XAY → MATERIALS_SECTOR/ENERGY_SECTOR/.../CONSUMER_DISC_SECTOR). All
+  `batch_databento`, venue=CME, `capture_status=captured` (25,924) or `empty_confirmed` (95). Date range: 2020-01-02
+  to 2026-06-22. **ZERO micro-contract rows** found (M6A/M6B/.../MYM) — the "unresolved passthrough" theory was wrong;
+  these codes were never written as chain-bundle rows (either never captured, or silently folded into standard siblings).
+  GCS objects confirmed at old paths (e.g. `underlying=XAB/quote=USD/`); new-value paths empty. **Scope narrowed to
+  26,019 manifest rows + ~25K GCS objects** (sector-identity only; micro-contract population is a no-op).
+
+- 2026-08-10/11 (slot-21, data_engineering craft): **todo #3 — Part C: migration tooling COMPLETE.** Migration script
+  `migrate_tradfi_sector_underlying_2026_08_10.py` shipped `MTDS@c8e841421d` — Surface A-D playbook (dry-run → review →
+  --apply), bulk GCS enumeration per underlying, copy→verify→delete, CAS manifest write with snapshot backup. Launcher
+  category `tradfi-sector-remap` wired into `launch-canonical-migration-vm.sh`, shipped `deploy@672e3df592`. QG green
+  in all three repos (UAC, MTDS, deploy).
+
+- 2026-08-11 (slot-21, data_engineering craft): **todo #3 — VM dry-run LAUNCHED.** `canonical-migration-tradfi-sector-remap-20260811-000519`
+  (e2-standard-8, SPOT, asia-northeast1-c). Dry-run mode: census manifest rows + GCS objects only (no mutations).
+
 - 2026-08-10 (slot-21, data_engineering craft): ✅ executed todo #5 (WithinBoundsTradfiSourceZero bundle-grain purge).
   **Evidence**: (1) Fresh dry-run: 114,318 candidates (unchanged from original 2026-07-30 measurement), 90,842 droppable
   (+9,388 vs original 81,454 — more `captured` counterparts accumulated in the interim), 23,476 unresolved (genuine
