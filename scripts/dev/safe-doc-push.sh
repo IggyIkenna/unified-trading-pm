@@ -104,6 +104,12 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 (2026-08-11) nothing was staged AND the named file(s) match HEAD while origin/$BRANCH does
+# NOT carry the caller's entry content -- the payload was swept into a quarantine stash (or
+# destroyed) during this run, and NOTHING was pushed. RECOVER from the printed stash ref before
+# re-running (safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md, second symptom);
+# pre-14 the same condition fell through to exit 13's "the push landed" wording, which is
+# misleading because no push had occurred.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -656,6 +662,55 @@ files_exist_in_head() {
   return 0
 }
 
+# _sdp_all_entry_content_on_remote -- true when EVERY named file that had a real diff at entry
+# (i.e. was a payload this run was asked to ship) now carries that EXACT content at
+# origin/$BRANCH. This is the sound basis for the "already landed, treating as success" fallback
+# in the nothing-staged branch: it is verified against the REMOTE ref (fresh from this loop
+# iteration's fetch), never against HEAD. HEAD can match while the caller's content is
+# quarantined in a stash and origin has nothing -- the exact shape measured 2026-08-10
+# (safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md, second symptom). A file that was
+# a no-op at entry (already identical to HEAD) is not "a payload" and needs no confirmation.
+_sdp_all_entry_content_on_remote() {
+  local _f _disk _entry_head _remote
+  for _f in "${FILES[@]}"; do
+    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
+    case "$_disk" in ABSENT | MISSING | "") return 1 ;; esac
+    [[ "$_disk" == "$_entry_head" ]] && continue # no real diff at entry for this path -- nothing of ours to confirm
+    _remote="$(git rev-parse -q --verify "origin/${BRANCH}:$_f" 2>/dev/null || echo MISSING)"
+    [[ "$_remote" == "$_disk" ]] || return 1
+  done
+  return 0
+}
+
+# _sdp_fail_quarantined_payload -- the loud failure for the nothing-staged branch when the
+# working tree matches HEAD but the caller's entry content is NOT on origin/$BRANCH. That
+# combination means the payload was swept aside THIS run -- quarantined into a named stash (the
+# tree-wip-guard / autostash mechanisms) or destroyed -- and nothing was pushed. Returns 14; the
+# caller exits with it. Never report success here: a false-green no-op push strands the caller's
+# edits in the one place this workspace guarantees is unsafe (safe_doc_push_isolation_drops_
+# rename_deletions_2026_08_10.md, second symptom).
+_sdp_fail_quarantined_payload() {
+  {
+    echo
+    echo "🛑 NOTHING STAGED AND origin/${BRANCH} DOES NOT CARRY YOUR CONTENT -- NOTHING WAS PUSHED."
+    echo "   The named file(s) had a real diff when this run started, but the working tree now"
+    echo "   matches HEAD while origin/${BRANCH} does not -- so this run had nothing of yours to"
+    echo "   stage, and whatever made the tree clean also swept your change aside. Two causes are"
+    echo "   indistinguishable from in here: the reconcile QUARANTINED it (stashed it aside --"
+    echo "   recoverable) or it was destroyed."
+    echo
+    echo "   RECOVER BEFORE RE-RUNNING. Your content is most likely parked in a stash entry:"
+    git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+    echo "     Inspect:  git show -p 'stash@{0}'   (look for an 'autostash' / 'safety-snapshot' entry)"
+    echo "     Extract ONE file, never blind-pop (these stashes often hold a peer session's WIP):"
+    echo "       git show 'stash@{0}:<path>' > <path>"
+    echo "     If nothing is stashed, check ~/.cache/prek/patches/ -- a prek patch may hold the edit."
+    echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md (second symptom)."
+  } >&2
+  return 14
+}
+
 # verify_committed -- ground truth for "is this file genuinely committed", independent of any
 # git command's exit code. safe_doc_push_reports_success_having_committed_nothing_2026_08_09
 # (todo 2): a `git commit`/fallback path can report success (a 0 exit, or a "nothing to commit"
@@ -1062,31 +1117,14 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if [[ "$committed" == false ]]; then
-    ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
-
-    if [[ "$ahead" -eq 0 ]]; then
-      # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
-      # regardless of file overlap -- git refuses cleanly on a real conflict.
-      if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
-        if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
-          echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
-          if ! autostash_rebase_reconcile; then
-            exit 3
-          fi
-        else
-          echo "  pull failed:"; cat /tmp/_sdp_pull_err
-          backoff "$attempt"
-          continue
-        fi
-      fi
-    else
-      # Defensive: shouldn't normally happen pre-commit, but handle the same as the
-      # post-commit case if it does (e.g. a prior failed attempt left a local commit).
-      if ! autostash_rebase_reconcile; then
-        exit 3
-      fi
-    fi
-
+    # ── STAGE FIRST (P0 fix, 2026-08-11) ──────────────────────────────────────────────────
+    # Stage the named files BEFORE any reconcile step (pull/rebase). `git stash`/`--autostash`
+    # does NOT stash changes already in the index, so staging first guarantees the payload
+    # survives any quarantine created by the reconcile below.
+    # safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md (second symptom, P0 todo 2):
+    # the old ordering quarantined first and staged only after — a payload swept into an
+    # autostash whose pop silently failed left nothing to stage, and the "nothing to stage"
+    # branch then compared against HEAD and reported a false-green "already landed."
     if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
       # own exit code was never checked, so an index.lock failure here (the exact incident
@@ -1113,18 +1151,69 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     unstage_foreign_paths
     reassert_renames
 
+    # ── RECONCILE (after staging — the payload is safe in the index) ─────────────────────
+    ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
+
+    if [[ "$ahead" -eq 0 ]]; then
+      # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
+      # regardless of file overlap -- git refuses cleanly on a real conflict.
+      if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
+        if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
+          echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
+          if ! autostash_rebase_reconcile; then
+            exit 3
+          fi
+        else
+          echo "  pull failed:"; cat /tmp/_sdp_pull_err
+          backoff "$attempt"
+          continue
+        fi
+      fi
+    else
+      # Defensive: shouldn't normally happen pre-commit, but handle the same as the
+      # post-commit case if it does (e.g. a prior failed attempt left a local commit).
+      if ! autostash_rebase_reconcile; then
+        exit 3
+      fi
+    fi
+
+    # ── RE-SYNC INDEX AFTER RECONCILE ────────────────────────────────────────────────────
+    # autostash_rebase_reconcile calls `git restore --staged .` unconditionally, which
+    # unstages the payload we just staged above. Re-add the named files so the index
+    # reflects the current working-tree content (which may have been modified by the
+    # reconcile). For the plain-merge path (ahead=0 pull), the index is untouched and
+    # this re-add is a harmless no-op.
+    if ! git diff --cached --quiet -- "${FILES[@]}"; then
+      : # payload survived reconcile — nothing to do
+    else
+      git add -- "${FILES[@]}" 2>/dev/null || true
+      unstage_foreign_paths
+      reassert_renames
+    fi
+
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if the caller's content is on origin/${BRANCH}"
+      # safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (second symptom): the ONLY sound
+      # basis for a no-op success is that the caller's ENTRY content is genuinely on the REMOTE ref
+      # (a peer landed it while we ran, or a prior push already carried it) -- verified against the
+      # remote, never against HEAD. HEAD can match while the payload sits quarantined in a stash and
+      # origin has nothing; that combination must be a loud failure, not "already landed".
+      if _sdp_all_entry_content_on_remote; then
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files already match origin/${BRANCH} (a concurrent session landed identical content while this run was in flight) -- treating as success."
           final_ok=true
           break
         fi
-        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+        echo "  the caller's content is on origin/${BRANCH} but end-to-end verification failed -- not trusting the fallback; retrying"
+      elif git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+        # Working tree matches HEAD but origin/$BRANCH does NOT carry the caller's content -- the
+        # payload was swept into a quarantine stash (or destroyed) during this run. NEVER report
+        # success: a false-green no-op push strands the caller's edits in the stash.
+        _sdp_fail_quarantined_payload
+        exit $?
       else
         echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
       fi

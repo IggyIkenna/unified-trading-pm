@@ -66,20 +66,24 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a no-op-at-entry tracked file reaches the benign nothing-to-stage message and exits 12 (F8 certify gate -- never a false green)" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
   git push -q origin HEAD:live-defi-rollout
 
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
+  # "Already identical to HEAD at entry" is ambiguous (a peer landed it first vs. your edit was
+  # destroyed before we started), so the F8 certify gate resolves it to exit 12 -- never a green
+  # "already landed" claim -- while still reaching the benign "nothing to stage" wording.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
-  [[ "$output" == *"✅"* ]]
+  [[ "$output" != *"✅ Pushed"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED, AND THIS SCRIPT CANNOT TELL YOU WHY"* ]]
 }
 
 @test "could-not-stage and nothing-to-stage produce distinct exit codes for the same script" {
@@ -90,7 +94,8 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: tracked file unchanged at entry -- exit 12 via the F8 certify gate,
+  # distinct from both success (0) and the could-not-stage lock escape hatch (8).
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +104,7 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -ne 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
