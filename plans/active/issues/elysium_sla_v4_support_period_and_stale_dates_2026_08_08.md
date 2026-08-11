@@ -112,6 +112,182 @@ complete" by 30 June 2026, which did not happen.
       "message"). Recorded as-sent deliberately, since that doc is `authoritative_for` exact wording. Correct in any
       future reissue only.
 
+### Added 2026-08-11 — findings from transcribing the underlying contract into codex
+
+> Source docs now in codex:
+> [`contracts/elysium-consulting-agreement-2025-03.md`](/codex/14-customer-journeys/commercial-model/contracts/elysium-consulting-agreement-2025-03.md)
+> ·
+> [`contracts/elysium-subcontracting-agreement-ikenova-odum.md`](/codex/14-customer-journeys/commercial-model/contracts/elysium-subcontracting-agreement-ikenova-odum.md)
+
+- [ ] [OPERATOR] P0. **Locate the $90k → $135k variation document, or stop citing
+      $135k.** Annex A of the executed
+      contract totals **$90,000** ($45k + $45k) and no addendum exists in codex or
+      in `~/Downloads`. The $45k outstanding-balance position rests entirely on a document nobody has produced. Either
+      produce it, or agree the uplift in writing with Elysium before invoicing the final tranche.
+- [ ] [OPERATOR] P0. **Resolve the entity position before any SLA is signed as "Odum Research".** The only instrument on
+      file is an **unsigned, undated subcontracting agreement** under which IkeNova Ltd remains the Elysium counterparty
+      and remains fully liable (cl. 3) — not the novation its filename implies. Either execute a real novation with
+      Elysium's written consent (required by Art. 7.7), or draft the SLA with IkeNova as Service Provider and Odum
+      Research named as its subcontractor.
+- [ ] [OPERATOR] P1. **Obtain Elysium's Art. 1.4 prior written consent for the Odum Research subcontract.** Art. 1.4
+      permits outside services only with "the prior written consent of an officer of the Company". Clause 4 of the
+      subcontract binds Odum Research to the confidentiality/work-product terms, which covers the second limb of Art.
+      1.4 but not the consent limb. Both signatories being the same director makes a written acknowledgement more
+      important, not less.
+- [ ] [OPERATOR] P1. **Confirm which contract version was executed — 1 or 3 March 2025.** The e-signed PDF
+      (`Doc ID 5f6491d203e91ea6c5b836c722dba886e0d1565b`) says 3 March; the `(w specifics)` DOCX and track-changes PDF
+      say 1 March; the subcontract cites 3 March twice. Art. 4 and Art. 6 wording is identical across versions, so only
+      the date and anything clocking from it is affected — but the SLA preamble asserts a date, so it must be right.
+      **Supersedes the earlier codex claim that 1 March is correct and 3 March was an error** — that has been corrected
+      in
+      [`elysium-managed-sla-2026-05-14.md`](/codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md)
+      §1.
+- [ ] [OPERATOR] P1. **Get a written reading of Art. 6.2's 24-month clock.** "For 24 months following this agreement" is
+      ambiguous between "following execution" (expiring ~March 2027) and "following completion/termination". Codex
+      previously asserted the latter, which is the _less_ favourable reading; the text does not settle it. The answer
+      sets when the Carry & Yield family unlocks for our own book and other clients.
+- [ ] [OPERATOR] P2. **Raise Art. 4.4's "mimic" wording in any variation.** As drafted we may not "use, display, link
+      to, reproduce, or mimic materials used in creating any Work Product for any purpose whatsoever" without written
+      consent. Read literally that reaches beyond the non-compete and beyond the Work Product itself, to the materials
+      used in creating it. Narrow it, or obtain a standing consent scoped to our platform components.
+- [ ] [OPERATOR] P2. **Reconcile Annex A Phase One against the carve-out's "excluded" list.** Annex A Phase One
+      expressly includes "Development of back-testing framework" as a deliverable, so the backtesting framework is
+      arguably Work Product. The SLA Exhibit A manifest lists "Historical batch-ingestion pipelines … (back-test infra)"
+      as EXCLUDED platform IP. Those two positions are in tension and counsel should see it before Exhibit A is signed.
+- [ ] [AGENT] P3. Six drafting defects in the contract are catalogued in the consulting-agreement record's defect table
+      (misspelled "Eysium AM Ltd.", duplicate clause 2.2, Art. 4.1 cross-reference to a non-existent "Section 1.5",
+      stray `). ).`, "crypyo"). Raise as a housekeeping schedule if a variation is executed; do not silently fix the
+      verbatim record.
+
+### Added 2026-08-11 (second pass) — Exhibit A defects found while drafting the per-repo hand-over manifest
+
+- [ ] [AGENT] P0. **Exhibit A enumerates Work Product by file paths that do not exist.** The manifest in
+      [`elysium-managed-sla-2026-05-14.md`](/codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md)
+      §2.3 lists `execution_service/.../adapters/cefi/{okx,bybit,binance}_perp_adapter.py`,
+      `.../adapters/defi/{copper_mpc,ceffu_oes}_adapter.py` and `.../adapters/defi/lido_staking_adapter.py`. **None of
+      those paths resolve.** Verified 2026-08-11 against the tree; the real locations are
+      `execution_service/trade_execution/adapters/{okx,bybit,binance,deribit}_ccxt.py`,
+      `execution_service/custody/{copper,ceffu}.py`, and `execution_service/venues/lido.py` +
+      `execution_service/defi_execution/protocols/lido.py`. Enumerating owned code by a non-resolving path is
+      unverifiable for the client and unevidenceable for us — correct the manifest before Exhibit A is signed. Note the
+      adapters are ccxt-based, which is a dependency the carve-out inherits and which Exhibit A does not currently
+      mention.
+- [ ] [OPERATOR] P0. **The carve-out package cannot produce a value the strategy requires.** `staked_basis.py` reads
+      `features["funding_rate_apy_bps"]` (alongside `staking_apy_bps`) and returns no decision without it. Under the
+      managed service the feature pipeline supplies it. Under Option B there is no feature pipeline, and the ONLY
+      direct-from-venue funding-snapshot implementation in the workspace lives in
+      `e2e-testing/scripts/defi/funding_ensemble_engine.py` — a test-harness repo that is in neither the transferred nor
+      the licensed bucket. Verified 2026-08-11: no production repo (`strategy-service`, `execution-service`,
+      `market-tick-data-service`) contains a live funding fetcher outside test fixtures. **As drafted, a carve-out hands
+      over engines that ask for a number nothing in the package produces.** Resolve by productionising the venue funding
+      readers and adding them to the §A.3 licensed set, or by stating explicitly in the SLA that the client writes them.
+      Either way it must be decided before Option B is elected, not at hand-over.
+- [ ] [AGENT] P1. `staking_apy_total` exists at `features-service/features_service/onchain/engine/staking_apy_total.py`
+      and is correctly licensable. There is **no** counterpart calculator file named `funding_apy_bps` — Exhibit A's
+      licensed list implies one. Reword to describe the funding value as a pipeline-produced feature, which is what it
+      is, and then resolve it via the P0 above.
+
+### Added 2026-08-11 (third pass) — carve-out presentation strategy + the rebuild calibration
+
+> Client-facing documents now live in [`/presentations/elysium/`](/presentations/elysium/) (both published as private
+> artifacts; **URLs recorded in that directory's README — pass the URL when updating or you create a duplicate
+> artifact**).
+
+- [ ] [OPERATOR] P1. **Rewrite `carveout-engineering.html` into a technical-briefing register before it is shown to
+      anyone.** Operator verdict 2026-08-11: it "discusses our methodology way too much" and is not presentable to a CTO
+      as written. Diagnosis: the section framing is internal-negotiation shaped — "an honest summary of the trade",
+      "what we would want to know if the positions were reversed", "and to be direct about our own position". A CTO
+      briefing should assert architecture and let the commercial inference happen on its own. The repo classification
+      (§2), the reduction detail (§3), the light-adapter table (§4) and the expansion pricing (§8) are the reusable
+      substance; §1's framing and §9 in its entirety are the parts that read wrong.
+- [ ] [OPERATOR] P1. **Decide the carve-out presentation sequencing.** Three options were assessed; recommendation is
+      the third. (a) Build the lite repo and hand it over — maximum credibility, but pre-delivers the carve-out before
+      election, which is free optionality for the client. (b) Hand over deliberately unfinished/unconnected code —
+      **recommended against**: Art. 4.5 entitles them to Work Product on request so hobbled delivery is legally shaky,
+      and an engineer distinguishes "reduced by design" from "deliberately broken" in an afternoon, which converts a
+      commercial conversation into a trust problem. (c) **Build the lite repo now, demonstrate it, deliver on election**
+      — shows the file tree and the import closure running, hands over the manifest, and makes Art. 4.5 compliance a
+      days-not-weeks problem. Build it regardless of the client decision: it validates the import closure (and therefore
+      the tier architecture), becomes the template for the next Carry & Yield client per
+      [`elysium-account-trajectory-2026-05-14.md`](/codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md),
+      and surfaces gaps like the funding-reader defect above before a client does.
+- [ ] [OPERATOR] P1. **Decide which DOCUMENTATION ships with a carve-out — separately from the code.**
+      [`/codex/02-data/carry-venue-live-integration-reference.md`](/codex/02-data/carry-venue-live-integration-reference.md)
+      is worth more to a rebuilder than the source is: it enumerates, per venue, the exact endpoint, funding field,
+      settlement interval, symbol mapping and sign-convention gotcha for 13 venues. That single document turns the
+      largest carve-out work item (the live funding readers, ~5-10 AI-days) into roughly one day. It should not be in a
+      hand-over package by default, and Exhibit A currently says nothing about documentation scope either way.
+- [ ] [AGENT] P2. **Fix the funding-reader gap BEFORE any lite-repo demonstration**, not just before a hand-over
+      (upgrade of scope on the P0 above). If an engineer traces `features["funding_rate_apy_bps"]` to nothing during a
+      demo, that is the wrong impression at the worst moment. The readers exist in
+      `e2e-testing/scripts/defi/funding_ensemble_engine.py`; productionising them converts the most awkward gap in the
+      package into a completeness signal.
+
+#### Rebuild-effort calibration (recorded because it decides the sequencing question, and existed only in chat)
+
+Estimated 2026-08-11 against the workspace estimate multipliers (brand-new 1.0x, infra 0.8x, research 1.2x), assuming
+the client holds the carved-out code as reference and uses agent-assisted engineers. **These are estimates, not
+measurements** — but the shape is the point, not the precision.
+
+| Component to rebuild                            | AI-days | Note                                                    |
+| ----------------------------------------------- | ------- | ------------------------------------------------------- |
+| Runner, supervisor, tick loop                   | 3-5     | Genuinely easy                                          |
+| Live funding + staking readers, 4 venues        | 5-10    | **1-2 if they receive the venue-integration reference** |
+| Secrets, credentials, rotation                  | 3-5     |                                                         |
+| Deployment + CI (adequate, not ours)            | 8-15    |                                                         |
+| Basic monitoring + alerting                     | 8-15    |                                                         |
+| Position/balance reconciliation                 | 12-20   | First thing a fund admin asks for                       |
+| Ledger, factor attribution, three-method HWM    | 20-35   | Easy to do badly                                        |
+| Execution algos (TWAP/VWAP/POV + simple SOR)    | 20-40   | Agents do textbook versions well                        |
+| Backtest harness + determinism proof            | 40-80   | **Gated on data they do not have**                      |
+| Capture estate + coverage accounting            | 30-60   | Engineering is the small part                           |
+| Dynamic layer (rotation, switching, allocation) | 30-60   | Gated on data + research                                |
+
+**Bare-minimum runnable: 25-45 AI-days. Trustworthy-with-client-capital: 160-300 AI-days.** The operator's stated
+decision threshold was ~180 AI-days (below it they rebuild, above it they do not), so the answer straddles the line and
+**turns entirely on what standard the client holds itself to** — which is a variable this document set influences.
+Framed as "two engines and four adapters" they will estimate ~30 days and try; framed as "a system that produces a
+defensible monthly number" they will estimate ~200 and will not.
+
+**The strategic conclusion, which inverts the protective instinct:** the code is NOT the moat, and any strategy resting
+on "they cannot build it" depreciates every month that agent tooling improves. What has not become cheap is (1) the data
+history — three years of tick, funding and order-book history across four venues cannot be backfilled in a month at any
+price, and the vendor licences are real money; (2) the live-probed venue knowledge — which venue takes stETH versus
+wstETH, at what haircut, in which margin mode, and the two combinations that silently mis-mark a position daily; (3)
+operational track record. Therefore **transparency is the defensive move here, not the risky one**: showing the
+architecture does not accelerate a rebuild, it raises the client's internal definition of "done". The real risk is a
+client who UNDER-estimates production, tries, fails slowly, and ends the relationship badly.
+
+**Corollary that should shape the commercial framing:** the more ambitious the client roadmap, the worse a carve-out is
+for them — more coins needs the capture estate, more venues needs the collateral matrix and error classification, more
+strategies needs the shared spine, and TradFi is a second platform with a compliance surface rather than another venue.
+So the frame is "here is what the next 24 months costs on the platform versus alone", not "here is what you lose by
+leaving". Same facts, forward-looking, and it is the argument we actually believe.
+
+## Deferred work after 2026-08-11
+
+Separated by KIND, because these need different responses. Nothing below is half-committed — everything shipped this
+session is on `live-defi-rollout` at `05088f8a18`.
+
+| Item                                                                                                     | Kind                                 | Blocked on                             |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------- |
+| Rewrite `carveout-engineering.html` into a briefing register (drop the negotiation framing)              | **Not done** — real work, pick it up | nobody                                 |
+| Correct Exhibit A's non-resolving adapter paths in the SLA manifest                                      | **Not done** — real work, pick it up | nobody; wording wanted operator review |
+| Productionise the venue funding readers into the licensed set                                            | **Not done** — real work, pick it up | nobody                                 |
+| Build the lite carve-out repo (recommendation: build now, demo, deliver on election)                     | **Operator-owned**                   | operator go-ahead on sequencing        |
+| Decide which DOCUMENTATION ships with a carve-out (the venue-integration reference is the sensitive one) | **Operator-owned**                   | operator decision                      |
+| Locate the $90k → $135k variation document, or stop citing $135k                                         | **Operator-owned**                   | document may not exist                 |
+| Resolve the entity position (unsigned subcontract, not a novation) before any SLA names Odum Research    | **Operator-owned**                   | counsel + Elysium consent              |
+| Confirm which contract version was executed (1 vs 3 March 2025)                                          | **Operator-owned**                   | Elysium confirmation                   |
+| Written reading of Art. 6.2's 24-month clock                                                             | **Operator-owned**                   | counsel                                |
+| Elysium's Art. 1.4 written consent for the Odum Research subcontract                                     | **Cannot be done yet**               | external party                         |
+
+**Recommended NEXT item: productionise the funding readers.** It is the only one that is (a) pure engineering with no
+operator dependency, (b) a prerequisite for BOTH remaining paths — a lite-repo demonstration and a real hand-over — and
+(c) currently the single defect that would most damage credibility if an Elysium engineer found it first. The Exhibit A
+path correction is second and is roughly an hour, but it wants a wording review. The document rewrite is third: it is
+blocked on nothing, but it is presentation work and the substance underneath it is already correct.
+
 ## Progress Log
 
 - **2026-08-08** — Found during Elysium client-pack reconciliation. Both `.docx` attachments in `~/Downloads` extracted
@@ -125,3 +301,34 @@ complete" by 30 June 2026, which did not happen.
   (dispatched as part of a broader operator-queue cleanup session); both findings independently re-verified against the
   live `codex/14-customer-journeys/commercial-model/` docs before filing — still accurate, unchanged since 2026-08-08.
   Filed now rather than left in the stash pile.
+- **2026-08-11** — Operator flagged that "we own the trading code" (in a client-facing architecture deck) contradicts
+  the contract. Confirmed: Consulting Agreement **Art. 4.1–4.2** makes all Work Product the exclusive, irrevocably and
+  perpetually assigned property of the Elysium **Group**, with only "generic programming methods and open-sourced
+  components" retained (Art. 4.6). Located and transcribed both source instruments into codex under
+  `codex/14-customer-journeys/commercial-model/contracts/`. Three codex claims corrected in the same pass: (a)
+  `pod-elysium-client-onboarding.md` §2's "UTS-managed / trading code" row — relabelled **UTS-operated**, since it
+  described operational responsibility and was being read as ownership (this is the line that produced the deck error);
+  (b) `elysium-managed-sla-2026-05-14.md` §1's "dated 1 March 2025 (not 3 March)" — the e-signed PDF says 3 March, so
+  the date is UNRESOLVED rather than settled; (c) the same row's "IkeNova Ltd has migrated to Odum Research" — the
+  instrument on file is an unsigned **subcontract** that keeps IkeNova as counterparty and fully liable, not a novation.
+  Also found: the $135k variation document does not exist anywhere on the machine (Annex A totals $90k), and no Art. 1.4
+  Elysium consent is evidenced for the Odum Research subcontract. Eight todos filed above.
+- **2026-08-11 (second pass)** — Drafting a per-repository Option-B hand-over manifest for the client architecture
+  document surfaced two defects in Exhibit A that a checkbox review would not have caught, because both only appear when
+  you try to actually assemble the package: the enumerated adapter paths do not resolve against the current tree, and
+  the licensed set cannot produce `funding_rate_apy_bps`, which `staked_basis.py` requires to make any decision at all.
+  Both filed as P0 above. Real paths and the import-closure extraction method are recorded in the client document's
+  hand-over manifest section; the SSOT correction to Exhibit A itself is the P0 todo, not yet applied.
+- **2026-08-11 (third pass, pre-compact checkpoint)** — Two client-facing HTML documents built and published as private
+  artifacts, then promoted out of the session scratchpad into [`/presentations/elysium/`](/presentations/elysium/) with
+  a README recording the artifact URLs (republishing without the URL creates a duplicate rather than updating), the
+  authoring traps, and the validated palette. **The trap most worth carrying forward: CSS `var()` does not resolve in
+  SVG presentation attributes** — `fill="var(--x)"` renders black; it must be `style="fill:var(--x)"`. 498 occurrences
+  were written the wrong way first and would have shipped every diagram in black. Also recorded a self-correction: a
+  claimed ~40% scroll reduction from collapsing reference tables measured at **7%**; the height was in the figures and
+  the prose, and the fix that worked was restructuring every section behind a toggle (measured 70-81%). Operator
+  rejected `carveout-engineering.html` as too methodology-heavy for a CTO — rewrite is a tracked todo above, not yet
+  done. Pushed as docs-only; the operator had earlier said "don't worry about merging yet", which this checkpoint
+  overrides ONLY for documentation and plan files (zero code, zero shipping surface) because the alternative was losing
+  the artifacts and the calibration to compaction in a shared checkout that already carried another session's staged
+  changes and a stale unmerged index entry.

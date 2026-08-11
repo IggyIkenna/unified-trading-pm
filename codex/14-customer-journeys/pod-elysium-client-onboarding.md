@@ -70,6 +70,14 @@ delegated to us by POD.
 
 ## § 2 — Custody + venue onboarding ownership
 
+> **⚠️ "Managed" here means OPERATIONAL RESPONSIBILITY, never IP ownership (clarified 2026-08-11).** The "UTS-managed /
+> trading code" row below has been read as "we own the trading code", which is **wrong on the face of the contract**:
+> Consulting Agreement Art. 4.1–4.2 makes all Work Product the exclusive, perpetually-assigned property of the Elysium
+> Group, and Art. 4.6 retains only "generic programming methods and open-sourced components" for us. Read this section
+> as "who runs it and who holds the relationship", and take ownership exclusively from
+> [`/codex/14-customer-journeys/commercial-model/contracts/elysium-consulting-agreement-2025-03.md`](/codex/14-customer-journeys/commercial-model/contracts/elysium-consulting-agreement-2025-03.md)
+> § "Read this first".
+
 **POD-managed** (not us):
 
 - Copper.co institutional onboarding + KYB.
@@ -78,10 +86,11 @@ delegated to us by POD.
 - Per-venue institutional onboarding at the 6 perp venues + spot venues POD allocates to (Bybit / OKX / Deribit /
   Hyperliquid / Aster / Kraken / Bitfinex / Bitget — subject to POD venue-list approval).
 
-**UTS-managed** (us):
+**UTS-operated** (we run it; ownership per Art. 4 is a separate question — see the banner):
 
 - Pre-cutover testing infrastructure (MetaMask / Trust Wallet / sandbox).
-- Trading code (execution-service + strategy-service + per-archetype config).
+- Trading code (execution-service + strategy-service + per-archetype config) — **we build and operate it; the Work
+  Product it constitutes is the Elysium Group's under Art. 4.1–4.2.**
 - Cloud HSM CMKs (provisioned 2026-05-12 for envelope-encrypted test PK signing; replaced by POD-delivered Copper/CEFFU
   creds June-1).
 - Per-wallet `WalletProvisioningConfig` rows in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json`.
