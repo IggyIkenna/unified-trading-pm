@@ -288,25 +288,68 @@ _SDP_ISOLATED_EFFECTIVE="${SDP_ISOLATED:-$(_sdp_isolation_default)}"
 # newer content, and this script's whole premise is that it never destroys what it did not
 # write. (Byte-identity is checked against the pushed blob, not assumed from the fact that we
 # copied the file in: the caller may have edited it while the child was running.)
+# Same content, differently wrapped? (2026-08-11)
+#
+# prek runs prettier INSIDE the isolated worktree, so for any prose-wrapped `.md` the blob that
+# LANDS is re-wrapped relative to the caller's copy. Byte-identity therefore almost never holds on
+# exactly the file class this reconciler exists for -- measured 3 times in one session
+# (plan_alignment_npm_global_eacces_…, sit_gate_treadmill_…, codex_freshness_ratchet_…), every one a
+# pure re-wrap with ZERO word-level difference, each costing a conflicted pull and, once, a failed
+# quality gate via the conflict-marker check.
+#
+# Collapsing every whitespace run to a single space answers the real question: same words, same
+# order == same content, differently wrapped. Scoped to `.md` deliberately -- for code, whitespace
+# is semantic and byte-identity stays the only safe test.
+#
+# This is the wrong-property trap from /codex/12-agent-workflow/measurement-claims-discipline.md
+# reached from the inside: byte-identity was standing in for "same content", and the formatter
+# breaks the proxy without touching the property.
+_sdp_same_content() { # <path> <remote-ref-path> -> 0 when equivalent, 1 otherwise
+  local f="$1" ref="$2"
+  case "$f" in
+  *.md) ;;
+  *) return 1 ;;
+  esac
+  [ "$(git show "$ref" 2>/dev/null | tr -s '[:space:]' ' ')" = "$(tr -s '[:space:]' ' ' <"$f")" ]
+}
+
 _sdp_reconcile_caller_duplicates() {
-  local f blob_local blob_remote removed=0
+  local f blob_local blob_remote removed=0 restored=0 how
   for f in "${FILES[@]}"; do
     [ -f "$f" ] || continue
-    # Only an UNTRACKED file can produce the ff-only "would be overwritten" refusal.
-    [ -z "$(git ls-files -- "$f" 2>/dev/null)" ] || continue
     # The worktree shares this repo's object store and refs, so the child's push already
     # advanced origin/<branch> here -- no fetch needed. If it does not resolve, do nothing.
     blob_remote="$(git rev-parse -q --verify "origin/${BRANCH}:${f}" 2>/dev/null)" || continue
     [ -n "$blob_remote" ] || continue
     blob_local="$(git hash-object -- "$f" 2>/dev/null)"
-    if [ "$blob_local" = "$blob_remote" ]; then
-      rm -f -- "$f" && removed=$((removed + 1))
-      echo "  ✓ removed now-redundant untracked copy of $f — identical to what landed; it arrives TRACKED on your next ff-pull"
+
+    if [ -z "$(git ls-files -- "$f" 2>/dev/null)" ]; then
+      # UNTRACKED: a NEW file pushed from the private worktree never becomes tracked here, so the
+      # next `git pull --ff-only` refuses with "would be overwritten by merge".
+      if [ "$blob_local" = "$blob_remote" ] || _sdp_same_content "$f" "origin/${BRANCH}:${f}"; then
+        rm -f -- "$f" && removed=$((removed + 1))
+        echo "  ✓ removed now-redundant untracked copy of $f — same content as what landed; it arrives TRACKED on your next ff-pull"
+      else
+        echo "  ⚠ $f is untracked here and DIFFERS from what landed — left in place. A following ff-pull will refuse to overwrite it; that is a stale duplicate, NOT a conflict: move it aside, pull, then re-apply." >&2
+      fi
     else
-      echo "  ⚠ $f is untracked here and DIFFERS from what landed — left in place. A following ff-pull will refuse to overwrite it; that is a stale duplicate, NOT a conflict: move it aside, pull, then re-apply." >&2
+      # TRACKED + locally modified: the caller still holds the PRE-formatter text of a file whose
+      # content already landed. Left alone, the next pull's autostash pop conflicts (UU) on the
+      # caller's own doc -- which then trips the QG conflict-marker check and fails an unrelated
+      # gate run. Only ever touches a file named in THIS push's --files, and only when the landed
+      # version is content-equivalent, so no edit can be lost.
+      if ! git diff --quiet -- "$f" 2>/dev/null && _sdp_same_content "$f" "origin/${BRANCH}:${f}"; then
+        if git restore --source="origin/${BRANCH}" --worktree -- "$f" 2>/dev/null; then
+          restored=$((restored + 1))
+          echo "  ✓ synced $f to the landed (re-wrapped) version — same content; prevents a spurious conflict on your next pull"
+        fi
+      fi
     fi
   done
-  [ "$removed" -gt 0 ] && echo "  (isolated mode commits from a private checkout, so a NEW file never becomes tracked in your own tree)"
+  how=""
+  [ "$removed" -gt 0 ] && how="removed $removed"
+  [ "$restored" -gt 0 ] && how="${how:+$how, }synced $restored"
+  [ -n "$how" ] && echo "  ($how — isolated mode commits from a private checkout, and prek re-wraps prose there, so your copy lags the landed blob)"
   return 0
 }
 
