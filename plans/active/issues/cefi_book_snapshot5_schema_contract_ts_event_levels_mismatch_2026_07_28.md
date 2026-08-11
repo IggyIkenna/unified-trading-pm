@@ -947,3 +947,18 @@ against the reproduction script.
   exact same already-fully-investigated static-backlog condition, not a new regression. Session cost: doc read + this
   Progress Log append only, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with
   this outcome.
+- **2026-08-11 (data_pipeline_failure escalation worker, agt-a45914, slot 3) — SAME escalation_id as the three entries
+  directly above (slot 4, slot 7, slot 2, now slot 3) — a FOURTH duplicate worker dispatch of one escalation event, the
+  same exact-duplicate-escalation_id shape now documented 8+ times.** Read this doc first per the pre-task plan/issue
+  conflict-check rule; the slot-4/slot-7/slot-2 entries directly above already fully investigated this exact
+  escalation_id/reading (8,670/958,967 = 0.9%, "STATIC BACKLOG — only 15 attempted_failed row(s) in the last 1d") and
+  re-verified all seven fix commits ancestor-of-origin minutes ago (re-confirmed here via a fresh
+  `git merge-base --is-ancestor HEAD origin/live-defi-rollout` on this worktree — OK). Per the same precedent, did not
+  repeat the git-ancestor-per-repo check or GCS read this session. **Conclusion: no code fix needed** — this is a
+  duplicate dispatch of the exact same already-fully-investigated static-backlog condition, not a new regression.
+  Session cost: doc read + this Progress Log append only, no GCS read, no code change, no VM launch. Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome; this doc's own repeated-exact-duplicate-escalation_id pattern
+  (now 4 slots for `agt-a45914` alone) is squarely `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s
+  still-open Option A/B/C territory at the orchestrator dispatch layer (the per-doc dedup-gap fix, `9102eb9b`, only
+  suppresses re-dispatch on a stale checkpoint across ticks — it has no mechanism for one tick fanning the same
+  escalation_id out to multiple slots simultaneously, a different bug class).
