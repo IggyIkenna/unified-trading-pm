@@ -81,15 +81,20 @@ Three exits were available and two are closed:
 
 ## Todos
 
-- [ ] [DEVOPS] P1. **Re-review `/codex/05-infrastructure/live-deployment-monitoring.md` against the current live/forward
-      deployment path and set `last_reviewed` honestly.** Verify the per-archetype event cadence, heartbeat thresholds
-      and cross-cloud parity expectations still match what the services emit; correct the doc where they don't, THEN
-      date it. If it is accurate as written, say so in the Progress Log — an unchanged doc with a fresh review date is a
-      fine outcome, an undated review is not. Repo: unified-trading-pm.
-- [ ] [DEVOPS] P1. **Re-review `/codex/05-infrastructure/strategy-vm-launcher-shape.md` the same way.** Covers
-      `launch-strategy-paper-vm.sh` and `launch-strategy-live-vm.sh` (real capital, Copper MPC, the
-      `--dry-run-live-cutover-passed` gate) — check the safety-gate description still matches the script before dating
-      it. Repo: unified-trading-pm.
+- [x] [DEVOPS] P1. **Re-review `/codex/05-infrastructure/live-deployment-monitoring.md`.** ✅ Done by a peer session,
+      unified-trading-pm@3895be718f. It was a REAL review, not a date stamp: it caught a genuine path drift —
+      `heartbeat_daemon.py` had moved from `deployment-service/deployment_service/vm/` to
+      `deployment-service/scripts/vm/`, and the doc still pointed at the old location in two places. Corrected, then
+      dated `last_reviewed: 2026-08-11`.
+- [x] [DEVOPS] P1. **Re-review `/codex/05-infrastructure/strategy-vm-launcher-shape.md`.** ✅ Done by the same peer
+      session, unified-trading-pm@3895be718f — also substantive: the doc said "the two strategy VM launchers" when two
+      MORE have since been added under `deployment-service/scripts/vm/` (`launch-strategy-backtest-grid-vm.sh`,
+      `launch-strategy-test-vm.sh`). Rather than silently widening the scope it added an explicit
+      `SCOPE (verified 2026-08-11)` banner stating the doc is authoritative for the two CAPITAL-BEARING launchers only
+      and that neither new script touches custody or real capital — so "two" now means "the two in scope", not "the only
+      two that exist". Dated `last_reviewed: 2026-08-11`. **Gate verified GREEN after both**:
+      `check_codex_doc_freshness.py` → `Scanned 316 codex doc(s) … 0 violation(s)`, `✅ At-or-below baseline`. PM code
+      commits are unblocked; the ratchet was never re-baselined.
 - [ ] [DEVOPS] P2. **Decide whether a calendar-triggered ratchet should be able to block commits at all.** The content
       of these docs did not change; the clock moved. A staleness sweep that hard-fails Pass 1 converts a documentation
       hygiene signal into a fleet-wide commit outage on an arbitrary morning, and the only fast exits are a banned
