@@ -1044,6 +1044,17 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# Stage the named files FIRST, before any quarantine/reconcile step can sweep them
+# into a stash.  git's autostash (and `git stash` generally) only touches UNSTAGED
+# changes -- staging now ensures the payload survives whatever the reconcile does.
+# The post-reconcile git-add below (inside the retry loop) re-stages after
+# autostash_rebase_reconcile's `git restore --staged .` clears the index.
+# pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (F8) +
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (second symptom):
+# measured 2026-08-10 -- a dirty-tree quarantine BEFORE staging made the script
+# report success having shipped nothing.
+git add -- "${FILES[@]}" 2>/dev/null || true
+
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
 # --files are passed as protected so the extreme-pile self-arrest never quarantines the very
@@ -1062,6 +1073,11 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if [[ "$committed" == false ]]; then
+    # Re-protect the payload on every retry: stage before fetch+reconcile so the
+    # autostash (which only touches unstaged changes) cannot sweep it away.
+    # The post-reconcile git-add below re-stages after autostash_rebase_reconcile's
+    # `git restore --staged .` clears the index.
+    git add -- "${FILES[@]}" 2>/dev/null || true
     ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
 
     if [[ "$ahead" -eq 0 ]]; then
