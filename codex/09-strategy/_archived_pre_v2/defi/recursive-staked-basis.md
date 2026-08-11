@@ -17,7 +17,7 @@ related:
     /codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md,
     /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
     /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
-    reward-lifecycle.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
   ]
 created: 2026-03-27
 authoritative_for: []

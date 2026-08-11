@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [client-config, strategy, uac, defi, onboarding]
 related:
   [
-    client-onboarding.md,
+    /codex/09-strategy/operational/client-onboarding.md,
     /codex/09-strategy/operational/onboarding-checklist.md,
     ../../04-architecture/per-client-isolation-architecture.md,
   ]

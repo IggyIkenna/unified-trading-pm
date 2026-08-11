@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [defi, cefi, execution, strategy, reconciliation, uac]
 related:
   [
-    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
     /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
     ../../../04-architecture/capital-flow-model.md,
     ../../../04-architecture/transfer-architecture.md,

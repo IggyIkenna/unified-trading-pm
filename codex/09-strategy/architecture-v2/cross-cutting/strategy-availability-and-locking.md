@@ -18,7 +18,7 @@ related:
     ../category-instrument-coverage.md,
     ../uac-registry-gaps.md,
     /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
-    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
     ../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
   ]
 created: 2026-04-20

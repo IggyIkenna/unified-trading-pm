@@ -12,7 +12,7 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, cefi, ml, binance, features]
-related: [ml-directional.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
+related: [/codex/09-strategy/_archived_pre_v2/cefi/ml-directional.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:
