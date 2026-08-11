@@ -281,7 +281,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       revision `uts-shared-deployment-api-00523-kwt` (image tag `770fe6e`, deployed 2026-08-11T08:27:57Z) contains the
       vectorized `str.lower()`/`str.contains()`/`.where()` form at lines 180-184, and neither of today's 2 fresh SIGABRT
       reproductions (see Progress Log) implicates this call site — the vectorize fix holds in production.
-- [ ] [BACKEND] P0. **Vectorize `filter_to_mvp`'s row-wise `df.apply(_row_is_mvp, axis=1)`
+- [x] ✅ [BACKEND] P0. **Vectorize `filter_to_mvp`'s row-wise `df.apply(_row_is_mvp, axis=1)`
       (`deployment_api/routes/data_status/_coverage_scope.py:132`)** — same bug class as the now-fixed `_classify` apply
       (above): `is_mvp_for_manifest_row` (a UAC `is_mvp` predicate call per row, `_coverage_scope.py:80-115`) runs via
       `df.apply(..., axis=1)` once per row-group chunk (215 for cefi's current ~26M-row manifest), for EVERY `scope=mvp`
@@ -294,7 +294,16 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       `base_ccy`/`league`/ `market_group`/`source` — are read via `.get()` per row today; a boolean-mask /
       groupby-then-broadcast approach mirroring the `_classify` fix's shape is the likely path, but the `is_mvp`
       predicate itself may need a vectorization-friendly UAC entry point — confirm with
-      `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo: deployment-api.
+      `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo: deployment-api. — **deployment-api@ce37346** (slot-33,
+      2026-08-11T18:32:23Z, Quickmerge, verified ancestor of `origin/live-defi-rollout`): already shipped a
+      dedup-then-broadcast rewrite of `filter_to_mvp` — evaluates `is_mvp_for_manifest_row` once per distinct
+      `(venue, instrument_type, data_type, base_asset, league_id, market_group, source)` combo in the chunk (combo
+      cardinality orders of magnitude smaller than row count), then broadcasts the verdict back via a merge, falling
+      back to a single evaluation when no axis column is present — same per-row semantics, a fraction of the
+      Python-level predicate calls. New unit tests (`tests/unit/test_coverage_scope_filter_to_mvp.py`) pin
+      duplicate-combo broadcast correctness, NaN/missing-axis handling, and the no-axis-columns fallback. **This
+      checkbox was never flipped when the fix landed — flipped here (slot 7) after confirming the shipped code on disk
+      already implements the exact fix this todo describes and the SHA is on `origin/live-defi-rollout`.**
 - [x] ✅ [BACKEND] P1. **Reduce `provenance_breakdown()`/`union_reduce_to_cells()` per-row-group-chunk overhead
       (`deployment_api/services/data_status_union.py:176`, called from
       `deployment_api/routes/data_status/_live_coverage_venue_year.py:141`)** — `_process_manifest_chunk` calls
