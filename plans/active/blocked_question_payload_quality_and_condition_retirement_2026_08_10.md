@@ -337,14 +337,17 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
 
 ### D — corrections owed to the sibling doc
 
-- [ ] [DOCS] P2. **Correct the wrong repo in
+- [x] ✅ [DOCS] P2. **Correct the wrong repo in
       `/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`** — its `[UI] P2`
       transcript-jump todo says "Repo: deployment-ui" and its `repos:` frontmatter lists `deployment-ui`, but the
       blocked-question queue is rendered only by `agent-orchestrator/dashboard/src/layout.tsx`; `deployment-ui` has no
       blocked-question code (verified 2026-08-10 — its only `blocked` matches are `promotion_blocked` PR counters). Add
       a dated Progress Log marker recording that two `ui_developer` workers were dispatched onto that todo and neither
       caught it. **Done when**: the todo text and the frontmatter both name `agent-orchestrator`, and a dated marker
-      records the correction. Repo: unified-trading-pm.
+      records the correction. Repo: unified-trading-pm. — unified-trading-pm@da81b08733 (issue doc now names
+      `agent-orchestrator` in its `repos:` frontmatter, the `[UI] P2` todo's render parenthetical + `Repo:` line, and
+      the `-003` render annotation; dated 2026-08-10 Progress Log marker records the slot-11/slot-27 dispatch history;
+      `deployment-ui`'s only `blocked` matches remain `promotion_blocked` PR counters in `Cockpit.tsx`).
 
 ## Progress Log
 
@@ -467,3 +470,19 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   use of direct `BlockedRow()` (bypassing `add_blocked()`) is intentional — these rows represent operator-gated plan
   todos, not worker questions, and their primary resolution path is `find_resolution_in_plans` (an operator ruling
   documented in a plan Progress Log) or `task_terminal` (the task is done/cancelled). No follow-up todos needed.
+
+- **2026-08-10 (D1, slot-8 worker)**: Shipped todo D — corrected the wrong repo in the sibling issue doc
+  `blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`. Verified the claim first: `BlockedCard` (the
+  blocked-question queue render) lives in `agent-orchestrator/dashboard/src/layout.tsx` (line 344 `pendingBlocked`,
+  BlockedCard), and `deployment-ui`'s only `blocked` matches are `promotion_blocked` PR counters in `Cockpit.tsx` — no
+  blocked-question code. Edited that doc: `repos:` frontmatter `[agent-orchestrator, deployment-ui]` →
+  `[agent-orchestrator]`; the `[UI] P2` transcript-jump todo's render parenthetical + `Repo:` line →
+  `agent-orchestrator` (naming `dashboard/src/layout.tsx` — `BlockedCard`); the `-003` dedup todo's render annotation →
+  `BlockedCard` in `agent-orchestrator/dashboard/src/layout.tsx`; added a dated Progress Log marker recording that two
+  `ui_developer` workers (slot-11, slot-27, both 2026-08-08) were dispatched onto the `[UI] P2` todo, declined it as
+  GATED on the backend dependency, and neither caught the wrong repo. — unified-trading-pm@da81b08733 (issue-doc edit
+  shipped via safe-doc-push; plan flip follows in the same turn). Note: safe-doc-push exited 9 citing 7 orphaned prek
+  patches in the shared host cache touching 9 OTHER plan docs (satellite-batch files) — none is this task's file, the
+  tree is clean, my content is on origin, and per the foreign-WIP rule I left those patches untouched/unapplied
+  (recovery class already tracked in
+  `plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`).
