@@ -59,8 +59,10 @@ mention", never "raise the baseline").
 
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+--tranche <name> filters output to a single tranche (informational, no baseline comparison).
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -94,6 +96,7 @@ answer "did editing THIS file make IT worse", not "did the whole corpus's graph 
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 import sys
 from collections import deque
@@ -110,6 +113,15 @@ BASELINE_PATH = Path(__file__).resolve().parent / "ag_closeout_linkage_baseline.
 # Every real asset_group enum value except `meta`, which never had its own tranche (see
 # module docstring). Sorted for deterministic iteration/printing order.
 COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
+# Tranche names for the --tranche CLI flag — mirrors generate_ag_closeout_audit_candidates.py's
+# ALL_TRANCHES (the script whose already-shipped --tranche flag this one follows as precedent).
+# Not derived from docspec.ASSET_GROUP because the CLI uses the TRANCH name (e.g. "infra"), not
+# the enum VALUE (e.g. "infrastructure").
+ALL_TRANCHES = ["cefi", "defi", "tradfi", "prediction", "sports", "cross-cutting", "ao", "ci", "infra", "ui"]
+# The `infra` TRANCH name does not match the `infrastructure` asset_group enum VALUE — same
+# mismatch documented in generate_ag_closeout_audit_candidates.py. All other tranche names
+# equal their asset_group value.
+_TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 # Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
@@ -367,12 +379,31 @@ def _run_only(paths: list[str], quiet: bool) -> int:
 
 
 def main() -> int:
-    if "--only" in sys.argv:
-        idx = sys.argv.index("--only")
-        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+    parser = argparse.ArgumentParser(
+        description="Check that every single-asset-group plan/issue doc has a findable path "
+        "to its AG's consolidated closeout plan."
+    )
+    parser.add_argument(
+        "--tranche",
+        choices=ALL_TRANCHES,
+        default=None,
+        help="Filter to a single tranche (default: all tranches, full-corpus ratchet)",
+    )
+    parser.add_argument("--quiet", action="store_true", help="Suppress per-orphan output")
+    parser.add_argument(
+        "--update-baseline", action="store_true", help="Update the baseline to the current orphan count"
+    )
+    parser.add_argument(
+        "--only", nargs="*", default=None, metavar="PATH", help="Only check the given files (precommit mode)"
+    )
+    args = parser.parse_args()
 
-    quiet = "--quiet" in sys.argv
-    update = "--update-baseline" in sys.argv
+    if args.only is not None:
+        return _run_only(args.only, args.quiet)
+
+    quiet: bool = args.quiet
+    update: bool = args.update_baseline
+    tranche: str | None = args.tranche
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
@@ -392,10 +423,29 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    if tranche is not None:
+        # Filter to only the named tranche's asset_group value.
+        target_ag = _TRANCHE_ASSET_GROUP_VALUE.get(tranche, tranche)
+        violations_by_path = {p: v for p, v in violations_by_path.items() if _asset_group_of(all_docs, p) == target_ag}
+
     violations = list(violations_by_path.values())
+    n = len(violations)
+
+    if tranche is not None:
+        # Per-tranche view — informational, no baseline comparison (baseline is corpus-wide).
+        if not quiet:
+            n_docs = len(all_docs)
+            n_files = len(files)
+            print(f"AG-closeout linkage check --tranche {tranche} ({n_docs} docs scanned, {n_files} candidate files):")
+            print()
+            for v in sorted(violations):
+                print(f"  ORPHAN  {v}")
+            print()
+        print(f"check_ag_closeout_linkage (--tranche {tranche}): {n} orphan(s)")
+        return 0
 
     baseline = load_baseline()
-    n = len(violations)
     ok = n <= baseline
 
     if not quiet:
@@ -412,6 +462,19 @@ def main() -> int:
         print(f"Baseline updated: {min(n, baseline or n)}")
 
     return 0 if ok else 1
+
+
+def _asset_group_of(all_docs: dict[Path, dict], path: Path) -> str | None:
+    """Return the single asset_group value for *path* if it has exactly one covered value,
+    or None otherwise — mirrors the candidate-filtering logic in _orphans_for without
+    re-parsing the file."""
+    fm = all_docs.get(path)
+    if fm is None:
+        return None
+    ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
+    if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
+        return None
+    return ag_values[0]
 
 
 def load_baseline() -> int:
