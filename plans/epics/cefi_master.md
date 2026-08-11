@@ -42,8 +42,6 @@ related_plans:
   - ../active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md
   - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md
   - ../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md
-  - ../active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md
-  - ../active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md
   - ../active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
   - ../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md
   - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
@@ -689,16 +687,6 @@ closeout-completeness re-audit
 ### [`cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize`](../active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi satellite AO batch 10 — finalize
-(reconcile source docs + re-check deferrals + archive)
-
-### [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](../active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
-
-**status**: active · **estimate**: 0.64 cal AI-days (class: infra) **title**: CeFi satellite AO batch 9 —
-iterative-drain extraction over the batch8 residual
-
-### [`cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize`](../active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md)
-
-**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: CeFi satellite AO batch 9 — finalize
 (reconcile source docs + re-check deferrals + archive)
 
 ### [`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25`](../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md)
