@@ -975,3 +975,11 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   scheduling contention. Remaining 40 runs all `conclusion=success`. Zero `Timeout (>150s)` recurrence anywhere. Window
   NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`,
   `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-23 2026-08-11 ~06:45Z (twenty-eighth pass, same task)**: surveyed last 5 `quality-gates-v2` LDR runs across all
+  10 tracked repos (runs spanning ~2026-08-10 19:22Z–2026-08-11 06:19Z). 50 runs total. 8 failures: unified-trading-pm
+  3× `checks`-slice only (known ratchet class); MDPS `31433128155`
+  `AssertionError: assert 'continuous_future' == 'FUTURE'` (case-sensitivity, not timeout); deployment-service 2×
+  `checks`-slice only; MTDS 2× — `31464664365` (DERIBIT-COMBO data-type validation error, not timeout), `31461606130`
+  (coverage 2.7<79.0 + collection errors, not timeout). Remaining 42 runs all `conclusion=success`. Zero
+  `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via
+  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180`.
