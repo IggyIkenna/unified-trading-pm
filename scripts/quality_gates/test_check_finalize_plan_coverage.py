@@ -128,3 +128,78 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-parent pre-write idempotency guard ──────────────────────────────
+
+
+def test_check_parent_refuses_when_parent_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_06.md")
+    _write_plan(
+        active / "source_plan_2026_08_06_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_06]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_06"])
+    assert rc == 1
+
+
+def test_check_parent_allows_when_parent_ungated(tmp_path: Path) -> None:
+    _active_dir(tmp_path)  # empty corpus
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "brand_new_plan"])
+    assert rc == 0
+
+
+def test_check_parent_keys_on_depends_on_not_filename(tmp_path: Path) -> None:
+    """The two colliding plans differ only by a redundant date suffix — a guard keyed
+    on the expected filename would miss the collision; the depends_on-relationship
+    guard must catch it (duplicate_finalize_plans_created_for_one_parent_2026_08_06)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+    # A would-be second finalize plan carrying the redundant date suffix, SAME parent.
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "parent_plan_2026_07_31"])
+    assert rc == 1
+
+
+# ── duplicate-gate detector (default mode) ──────────────────────────────────
+
+
+def test_duplicate_gates_detects_multiple_finalize_plans_for_one_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_06.md")
+    _write_plan(
+        active / "parent_plan_2026_08_06_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_06]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_plan_2026_08_06_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_06]\ngate_on_depends: true",
+    )
+
+    # dup_count=1 > baseline 0 (no baseline file) -> regression -> exit 1
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 1
+
+
+def test_duplicate_gates_single_finalize_is_clean(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    # single finalize companion, parent gated -> no coverage violation, no duplicate
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0
