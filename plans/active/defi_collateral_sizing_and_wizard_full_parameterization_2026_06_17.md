@@ -198,9 +198,10 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       (`strategy-service`, docs-only diff, affects opportunity RANKING only, never sizing/funds). The constant's own
       comment still notes it can be exposed as a config param in a future Phase C wizard pass if the operator wants a
       per-deployment override later; no further calibration work is tracked here.
-- [ ] [TEST] P3. **`test_batch_harness.py::test_position_state_survives_across_ticks` fails in ISOLATION** with
+- [x] ✅ [TEST] P3. **`test_batch_harness.py::test_position_state_survives_across_ticks` fails in ISOLATION** with
       `Event logging not initialized` (pre-existing on HEAD, events-bus setup ordering — NOT Phase A); passes in the
-      full QG suite. Add a `setup_events()` fixture so it's isolation-safe. Repo: strategy-service.
+      full QG suite. Add a `setup_events()` fixture so it's isolation-safe. Repo: strategy-service. —
+      strategy-service@3ae05318
 - NOTE: a F28 live-probe (UAC@bc45549, ~2026-06-17) updated Drift haircuts to real on-chain initialAssetWeight
   (SOL/mSOL/JitoSOL = 0.15/0.20/0.20, were 0.10 placeholders) but left the dynamic-hedge tests stale (expected the old
   0.9 factor). Phase A reconciled them to 0.8 (the 0.20 haircut) — the SSOT is authoritative.
