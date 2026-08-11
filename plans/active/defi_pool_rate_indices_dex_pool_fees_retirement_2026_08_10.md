@@ -11,7 +11,7 @@ summary: >-
   `canonical-migration-defi-rebuild-20260810-093118` or its latest successor) reaches genuine terminal SUCCESS — flip to
   `active` only then; a draft plan is not ingested, so this avoids an AO worker claiming a todo whose precondition isn't
   met yet.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -74,10 +74,9 @@ picking this plan up cold should never trust the flip-time state without a fresh
 - [ ] [DATA] P1. **Verify the rebuild VM reached terminal SUCCESS + confirm POOL/rate_indices/dex_pool_fees counts are
       STABLE.** Check
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-rebuild-20260810-093118/run.log`
-      (or its latest successor, per `gcloud compute instances list --filter=name~canonical-migration-defi-rebuild` +
-      the deployments registry)
-      for a clean exit (no `rc=137`/ `Killed`, a `Rebuild complete:` line for the FINAL chunk reaching
-      `--end-date 2026-12-31`). Then run 2 live queries ~5min apart against `read_availability_index()` for
+      (or its latest successor, per `gcloud compute instances list --filter=name~canonical-migration-defi-rebuild` + the
+      deployments registry) for a clean exit (no `rc=137`/ `Killed`, a `Rebuild complete:` line for the FINAL chunk
+      reaching `--end-date 2026-12-31`). Then run 2 live queries ~5min apart against `read_availability_index()` for
       `instrument_type=POOL` (uppercase, `dex_pool_swaps`) and `data_type=rate_indices`/`dex_pool_fees`
       `capture_status=captured` counts — done-when: VM terminal SUCCESS confirmed AND all 3 counts identical across both
       queries (not still growing). If the VM instead failed again, STOP — do not proceed to todo 2; file a fresh issue
