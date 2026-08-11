@@ -572,8 +572,14 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
-`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
-**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
+`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. **BEFORE
+writing the finalize plan file, run the idempotency guard**:
+`.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root> --block-if-already-gated <batchN-slug>`.
+Exit 1 means a finalize plan ALREADY exists for this parent (gated on the `depends_on` relationship, not filename shape
+— so a near-duplicate filename with a different date suffix is still caught). Do NOT create a second one; the existing
+one already covers it. This is the direct fix for the duplicate-finalize-plan race documented in
+`/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`. Author it **`status: active`, NOT
+draft** (corrected 2026-07-30 — see finding below). Validate both with
 `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
 `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
