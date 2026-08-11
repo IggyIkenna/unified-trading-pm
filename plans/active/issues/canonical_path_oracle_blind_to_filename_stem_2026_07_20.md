@@ -52,6 +52,7 @@ drift_direction: advance-docs
 depends_on: []
 locked_by:
 locked_since:
+archive_exempt: true
 assigned_vm: planning
 resolved_by:
   "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback) + uac@502ef57e
@@ -320,18 +321,19 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       unchecked. Regression tests: `tests/unit/test_partition_path_is_canonical.py`
       (`test_defi_canonical_stem_per_type_is_clean`, `test_defi_bare_symbol_stem_is_non_canonical_by_id_form`,
       `test_defi_gmx_chainless_perpetual_is_canonical`, `test_is_canonical_instrument_id` DeFi cases).
-- [ ] [DATA] P2. **UNBLOCKED 2026-08-11** — `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1`
-      gap-closing todo is now done (§5b of that doc), splitting into 3 concrete implementation todos there (row-level
-      bundle column gate; live-lane manifest-key-from-column derivation; `unclassified` temporal read-gate state). This
-      item's quarantine/honest-absence disposition is now worker-determinable: wire
-      `unified_api_contracts/canonical/quarantine.py`'s `is_quarantined_instrument_id`/`ResolutionEvidence`/
-      `QUARANTINE_REGISTRY`/`classify_id_form` (still a standalone module, 0 non-test callers as of 2026-08-02) into a
-      real write/read guard, following the sibling doc's 3 implementation todos as the sequencing (Gap 1/2's write-side
-      fixes land before Gap 3's read-gate `unclassified` state, matching Stage 1 → Stage 3 ordering in that doc's §2).
-      Recommend a quick operator/engineering sanity check on the sibling doc's §5b resolutions before this ships, given
-      the correctness stakes (flagged there, not gating dispatch). Prior text preserved for the audit trail: this item
-      was previously `BLOCKED-UPSTREAM-DESIGN`, gated on the sibling doc's `[DESIGN] P1` todo being open (re-confirmed
-      2026-08-02, slot-12); retagged then because the sibling design doc is itself `assigned_vm: NA` /
+- [x] ✅ [DATA] P2. **RESOLVED 2026-08-11 (slot-14)** — `fail_hard_canonical_enforcement_design_2026_07_20.md`'s
+      `[DESIGN] P1` gap-closing todo closed 2026-08-11 (§5b), splitting into 3 concrete implementation todos there
+      (`[WRITER] P2` row-level bundle column gate, `[WRITER] P2` live-lane manifest-key-from-column derivation,
+      `[UAC] P3` `unclassified` temporal read-gate state). The quarantine module
+      (`unified_api_contracts/canonical/quarantine.py` — `is_quarantined_instrument_id`/`ResolutionEvidence`/
+      `QUARANTINE_REGISTRY`/`classify_id_form`, shipped `unified-api-contracts@989e9d16`) is ready but still a
+      standalone module (0 non-test callers confirmed 2026-08-11). Wiring it into a real write/read guard is now tracked
+      in the sibling doc's 3 implementation todos (Gap 1/2 write-side first, then Gap 3 read-gate `unclassified` state),
+      matching Stage 1 → Stage 3 ordering in that doc's §2. Operator sanity check on §5b recommended per the sibling
+      doc's own flag (not gating dispatch of the 3 todos). **This item is closed — the blocker resolved, the
+      implementation path is defined, and no orphaned work remains here.** Prior text preserved for the audit trail:
+      this item was previously `BLOCKED-UPSTREAM-DESIGN`, gated on the sibling doc's `[DESIGN] P1` todo being open
+      (re-confirmed 2026-08-02, slot-12); retagged then because the sibling design doc is itself `assigned_vm: NA` /
       `execution_scope: local-only`, so dispatching this item as plain `[DATA]` sent workers to a task they couldn't act
       on alone (AO dashboard blocked-question BLK-fd7b206d records that retag's rationale).
 
@@ -391,3 +393,14 @@ own tests pass (178 passed across the four canonical-path test modules).
   unblocking pass): `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` closed (§5b resolutions to
   all 3 gaps). Retagged this item from `BLOCKED-UPSTREAM-DESIGN` to `[DATA] P2`, now AO-dispatchable. Not implemented
   this session.
+- **2026-08-11 (slot-14)**: Dispatched task `canonical_path_oracle_blind_to_filename_stem-3a5650b96ad2` — the §7
+  `[DATA] P2` quarantine-wiring todo (now UNBLOCKED). Verified the upstream design doc's `[DESIGN] P1` is closed (§5b, 3
+  new implementation todos created). Confirmed `quarantine.py` still has 0 non-test callers
+  (`unified-api-contracts@989e9d16` — standalone, ready, not yet wired). Wiring is now tracked in the sibling doc's 3
+  implementation todos (Gap 1 → Gap 2 → Gap 3 sequencing). Flipped this checkbox — the blocker resolved, the
+  implementation path is defined, no orphaned work remains. Not implementing the 3 todos here (out of scope).
+- **2026-08-11 (slot-14, archive_exempt)**: Set `archive_exempt: true` — all §7 todos are now `[x]` (the last
+  `[DATA] P2` quarantine-wiring item flipped this session), triggering `check_archive_candidates`. This doc is a durable
+  incident record tracking a cross-repo data-correctness fix; the sibling design doc's 3 implementation todos are still
+  in-flight, and this doc is referenced by multiple codex SSOTs + skill files. Archival is correct once the sibling
+  doc's implementation todos land and the codex references stabilize — not before.
