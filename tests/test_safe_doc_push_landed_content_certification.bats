@@ -113,13 +113,94 @@ HOOK
   run bash "$SCRIPT" "docs: change doc" --files "doc.md"
 
   [ "$status" -eq 13 ]
-  [[ "$output" == *"THE PUSH LANDED BUT YOUR CHANGE DID NOT"* ]]
+  [[ "$output" == *"THE RUN SUCCEEDED (OR REPORTED SUCCESS) BUT YOUR CHANGE IS NOT ON origin/"* ]]
   [[ "$output" == *"doc.md"* ]]
   # Disk is untouched, so it must route to the re-run-is-safe branch...
   [[ "$output" == *"DROPPED-FROM-THE-COMMIT shape"* ]]
   # ...and the claim must be true: HEAD really does not carry the change.
   run git show "HEAD:doc.md"
   [[ "$output" != *"my genuine change"* ]]
+}
+
+@test "P0: a run whose own reconcile quarantines the caller's edit must exit 13, not report success" {
+  # The measured P0 shape (safe_doc_push_isolation_drops_rename_deletions_2026_08_10, second
+  # symptom): the caller's file has a REAL diff at entry, the run's own reconcile stashes it
+  # (disk reverts to HEAD), nothing stages, and the old fallback printed "✅ Named files already
+  # match HEAD -- treating as success" while origin/$BRANCH still carried the OLD blob. The fix
+  # keys the certify gate to origin/$BRANCH:<path>, so "content matches HEAD" can no longer be
+  # read as "content is on the branch" for a self-quarantined edit.
+  #
+  # Simulate the quarantine deterministically: a peer lands a commit to a DIFFERENT file so the
+  # script's pull does a real fast-forward (firing post-merge), and the post-merge hook stashes
+  # the caller's dirty doc.md -- exactly what the autostash guard's safety-snapshot does.
+  git clone -q "${WORK}/origin.git" "${WORK}/peer"
+  cd "${WORK}/peer" || return 1
+  git config user.email "peer@example.com"
+  git config user.name "peer"
+  git checkout -q -B live-defi-rollout 2>/dev/null || true
+  git pull -q origin live-defi-rollout 2>/dev/null || true
+  echo "peer change" > other.md
+  git add other.md
+  git commit -q -m "peer commit"
+  git push -q origin HEAD:live-defi-rollout
+  cd "${WORK}/work" || return 1
+
+  echo "my genuine change" > doc.md   # real diff at entry (disk X != HEAD Y)
+
+  cat > .git/hooks/post-merge <<'HOOK'
+#!/usr/bin/env bash
+# mimic the autostash guard's safety-snapshot: quarantine the caller's dirty named file so
+# the next staging step sees nothing to stage.
+if git diff --quiet -- doc.md 2>/dev/null; then
+  exit 0
+fi
+git stash push -q -m "safety-snapshot: test quarantine of doc.md" -- doc.md 2>/dev/null || true
+exit 0
+HOOK
+  chmod +x .git/hooks/post-merge
+
+  run bash "$SCRIPT" "docs: change doc" --files "doc.md"
+
+  # NOT a silent success: the change never reached origin, so exit 13 with the quarantine ref.
+  [ "$status" -eq 13 ]
+  [[ "$output" == *"THE RUN SUCCEEDED (OR REPORTED SUCCESS) BUT YOUR CHANGE IS NOT ON origin/"* ]]
+  [[ "$output" == *"doc.md"* ]]
+  # The else-branch must print the QUARANTINE REF recovery guidance (the self-quarantine shape).
+  [[ "$output" == *"QUARANTINE REF"* ]]
+  [[ "$output" == *"git show"* ]]
+  [[ "$output" != *"✅"* ]]
+  # Origin genuinely does not carry the change.
+  run git show "origin/live-defi-rollout:doc.md"
+  [[ "$output" == *"base"* ]]
+  [[ "$output" != *"my genuine change"* ]]
+}
+
+@test "P0: peer genuinely lands identical content on origin -> fallback reports success, keyed to the remote ref" {
+  # The legitimate cousin of the above: the caller's edit IS on origin/$BRANCH when the run
+  # reaches the nothing-staged fallback. This must still exit 0 (the fallback's success claim is
+  # "content is on the REMOTE", verified against origin/$BRANCH:<path> -- not merely "matches
+  # HEAD"). Guards the fix against over-correcting into a false 13 on the peer-landed-it case.
+  git clone -q "${WORK}/origin.git" "${WORK}/peer"
+  cd "${WORK}/peer" || return 1
+  git config user.email "peer@example.com"
+  git config user.name "peer"
+  git checkout -q -B live-defi-rollout 2>/dev/null || true
+  git pull -q origin live-defi-rollout 2>/dev/null || true
+  echo "my genuine change" > doc.md
+  git add doc.md
+  git commit -q -m "peer landed identical content"
+  git push -q origin HEAD:live-defi-rollout
+  cd "${WORK}/work" || return 1
+
+  # Caller's edit is byte-identical to what the peer landed; disk X != local HEAD Y at entry.
+  echo "my genuine change" > doc.md
+
+  run bash "$SCRIPT" "docs: change doc" --files "doc.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"genuinely on origin/live-defi-rollout"* ]]
+  run git show "origin/live-defi-rollout:doc.md"
+  [[ "$output" == *"my genuine change"* ]]
 }
 
 @test "a hook that reformats the named file on the way in is not a false positive" {

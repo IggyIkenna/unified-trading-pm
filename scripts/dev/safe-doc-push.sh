@@ -99,11 +99,15 @@
 # whose content had been destroyed before the script hashed it. The two causes ("a peer landed
 # it first" / "your edit was reverted first") are indistinguishable from inside this process,
 # so it resolves to neither; the message prints the command that tells them apart. Set
-# SDP_ALLOW_NOOP=1 to accept it as a deliberate idempotent re-run. 13 the push landed but a
-# named file that HAD a real diff at entry is still byte-identical to the PRE-RUN HEAD -- your
-# change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
-# dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
-# a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# SDP_ALLOW_NOOP=1 to accept it as a deliberate idempotent re-run. 13 the run succeeded (or
+# reported success) but a named file that HAD a real diff at entry is STILL byte-identical to the
+# PRE-RUN blob at origin/<branch> -- your change is not on the branch, whatever the push/fallback
+# claimed (measured twice 2026-08-10, once with the file left dirty on disk so no revert-detection
+# could have caught it; verdict now keyed to the REMOTE ref, not HEAD, per
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 P0 -- HEAD can move for a PEER's push
+# while our change never lands, and a self-quarantined edit leaves disk==HEAD so the old "matches
+# HEAD" check read it as landed). Recover per the printed guidance; a bare re-run may or may not
+# re-land it depending on which of the two shapes occurred.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -430,6 +434,17 @@ _SDP_ENTRY_FINGERPRINT="$(_sdp_fingerprint_named)"
 # routinely differs from what you handed over. "Still byte-identical to the PRE-RUN HEAD" is the
 # precise statement of "nothing of yours landed", and is immune to that.
 _sdp_head_blob() { git rev-parse -q --verify "HEAD:$1" 2>/dev/null || echo ABSENT; }
+
+# _sdp_remote_blob -- the same question asked of the REMOTE ref, which is the P0 ground truth for
+# "did the caller's change reach the branch" (safe_doc_push_isolation_drops_rename_deletions_2026_08_10
+# P0 todo: "verify against the remote ref, not HEAD"). HEAD and origin/$BRANCH can diverge across this
+# script's life, and the nothing-staged fallback can exit 0 on "content already matches HEAD" -- but
+# "matches HEAD" is true for the exact opposite reasons (a peer landed it, vs this run quarantined
+# the caller's own edit into a stash, leaving disk == HEAD while origin never saw the change). What
+# actually matters is origin/$BRANCH:<path>: after a real push it is the pushed blob; after a fetch
+# it is the latest known-good. A path absent there reads ABSENT -- a deletion landing is a change
+# too, and ABSENT != a real entry blob, so it does not falsely flag as stuck.
+_sdp_remote_blob() { git rev-parse -q --verify "origin/${BRANCH}:$1" 2>/dev/null || echo ABSENT; }
 _SDP_ENTRY_HEAD_BLOBS=""
 for _sdp_hf in "${FILES[@]}"; do
   _SDP_ENTRY_HEAD_BLOBS="${_SDP_ENTRY_HEAD_BLOBS}$(_sdp_head_blob "$_sdp_hf")  ${_sdp_hf}
@@ -535,13 +550,18 @@ _sdp_guard_already_landed_claim() {
 }
 
 # _sdp_assert_entry_change_landed -- the post-push ground truth. For every named file that had a
-# REAL diff at entry, HEAD's blob must have moved off the pre-run one. Still equal means the
-# commit that shipped does not contain your change, however it got there: reverted mid-run
-# (worktree fingerprint also drifted) or silently dropped from the index (worktree untouched, so
-# _sdp_warn_if_content_vanished is blind to it -- that shape was measured on 2026-08-10 as a
-# push containing NEITHER named file while both stayed dirty on disk).
+# REAL diff at entry, origin/$BRANCH's blob must have moved off the pre-run one -- the REMOTE ref,
+# not HEAD (P0: "verify against the remote ref, not HEAD"). Still equal means the branch does not
+# carry your change, however it got there: reverted mid-run (worktree fingerprint also drifted),
+# silently dropped from the index (worktree untouched, so _sdp_warn_if_content_vanished is blind
+# to it -- that shape was measured on 2026-08-10 as a push containing NEITHER named file while both
+# stayed dirty on disk), or quarantined by this run's own reconcile (nothing ever reached the
+# remote). HEAD is deliberately NOT the test: it can report the change landed when only a PEER's
+# push -- not ours -- moved it, and it can report it absent when the change is genuinely on origin
+# but behind an unreconciled HEAD. origin/$BRANCH:<path> is the one ref that answers "did MY change
+# reach the branch".
 _sdp_assert_entry_change_landed() {
-  local _f _disk _entry_head _now_head
+  local _f _disk _entry_head _now_remote
   local -a _stuck=()
   for _f in "${FILES[@]}"; do
     _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
@@ -550,16 +570,23 @@ _sdp_assert_entry_change_landed() {
     # "your change landed" is not expressible as a blob move, so it is not asserted here.
     case "$_disk" in ABSENT | MISSING | "") continue ;; esac
     [[ "$_disk" == "$_entry_head" ]] && continue # nothing of ours to land for this path
-    _now_head="$(_sdp_head_blob "$_f")"
-    [[ "$_now_head" == "$_entry_head" ]] && _stuck+=("$_f")
+    # P0 (safe_doc_push_isolation_drops_rename_deletions_2026_08_10): judge the REMOTE ref, not
+    # HEAD. "HEAD's blob moved" is satisfied by a PEER's push that we happened to reconcile in --
+    # which says nothing about whether OUR change is on the branch. The reverse hazard is the
+    # measured P0 shape: this run itself quarantined the caller's edit into a stash (disk reverts
+    # to HEAD, nothing stages, the fallback prints "already matches HEAD"), HEAD never moves, and
+    # the run exits 0 while origin/$BRANCH still carries the OLD blob. origin/$BRANCH:<path> still
+    # holding the entry blob is the one unambiguous "my change is not on the branch" signal.
+    _now_remote="$(_sdp_remote_blob "$_f")"
+    [[ "$_now_remote" == "$_entry_head" ]] && _stuck+=("$_f")
   done
   [[ ${#_stuck[@]} -eq 0 ]] && return 0
   {
     echo
-    echo "🛑 THE PUSH LANDED BUT YOUR CHANGE DID NOT."
-    echo "   These named file(s) had a real diff when this run started, and HEAD's content for"
-    echo "   them is STILL byte-identical to what it was before the run -- so the commit that"
-    echo "   just shipped contains none of your work on them:"
+    echo "🛑 THE RUN SUCCEEDED (OR REPORTED SUCCESS) BUT YOUR CHANGE IS NOT ON origin/${BRANCH}."
+    echo "   These named file(s) had a real diff when this run started, and origin/${BRANCH} STILL"
+    echo "   carries the exact pre-run blob -- whatever the push/fallback claimed, the branch does"
+    echo "   not contain your work on them:"
     printf '     %s\n' "${_stuck[@]}"
     echo
     if _sdp_warn_if_content_vanished; then
@@ -567,10 +594,15 @@ _sdp_assert_entry_change_landed() {
       echo "   is the DROPPED-FROM-THE-COMMIT shape, not a revert: re-running should land them."
       echo "   Confirm first:  git diff HEAD -- ${_stuck[*]}"
     else
-      echo "   ...and the on-disk content ALSO changed during the run (see above): recover from the"
-      echo "   stash BEFORE re-running, or the re-run ships the reverted content."
+      echo "   ...and the on-disk content ALSO changed during the run (see above). If THIS run's own"
+      echo "   reconcile quarantined your edit (the autostash guard's safety-snapshot), it is parked"
+      echo "   in a named stash, NOT lost -- recover the QUARANTINE REF below before re-running, or"
+      echo "   the re-run ships the reverted content:"
+      git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+      echo "       git show 'stash@{0}:<path>' > <path>   # extract ONE file, never blind-pop"
     fi
-    echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
+    echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)"
+    echo "   and plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md (P0)."
   } >&2
   return 1
 }
@@ -1116,11 +1148,11 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content genuinely landed on the REMOTE (origin/${BRANCH}), not just local HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files' content is genuinely on origin/${BRANCH} (a concurrent session landed identical content) -- treating as success."
           final_ok=true
           break
         fi
