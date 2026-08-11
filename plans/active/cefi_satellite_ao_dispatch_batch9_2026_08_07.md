@@ -141,21 +141,33 @@ context_scope:
       persistence. 3 VMs created + deleted (canonical-smoke-cefi/tradfi/defi-20260810-232401). No confounds. Evidence:
       source doc Progress Log + `/tmp/canonical-smoke-launch.log` on slot 12. Both done-when halves complete.
 
-- [ ] `LC_TARBALL_FRESHNESS` auto-republish.** The source doc's `[SCRIPT] P2` todo (flipped `[x]` 2026-08-06,
-      `deployment-service@c1e0481`) has a two-half done-when; half-2 — "a real VM launch against an intentionally-stale
-      tarball is observed auto-republishing before the workload starts" — was explicitly NOT performed. Execute the
-      observation SAFELY: (a) upload an intentionally-stale tarball under a THROWAWAY name in the deployment-scripts
-      bucket (e.g. `code/<service>-code-closeout-obs.tar.gz` — NEVER overwrite the live `<service>-code.tar.gz`; the
-      2026-08-06 "launched onto stale code twice" incident shows a shared-bucket overwrite would poison concurrent
-      sibling launches); (b) launch a short-lived VM via an existing launcher that is NOT `launch-cefi-forward-poll.sh`
-      (todo 2 is concurrently editing that file) and NOT one a sibling may concurrently use, pinned to the throwaway
-      tarball name; (c) observe auto-republish before workload start + verify the workload runs the FRESH code (per the
-      source doc's done-when); (d) lifecycle per the vm-launcher runbook (STARTED → ≥1 progress signal → STOPPED, verify
-      T+10 min), no GCS deletes of shared objects (the throwaway tarball may be left for natural overwrite or removed
-      via `gcs_delete_object` with a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` ≥ 604800s reversibility
-      check). Caveat: the sibling bug `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`
-      (auto mode returning success on a silent dirty-checkout skip) can confound the observation — if a silent skip is
-      suspected, record it and note the confound rather than forcing the result. Source:
+- [x] ✅ [SCRIPT] P2. **`LC_TARBALL_FRESHNESS` auto-republish — DONE 2026-08-10 (slot 12), half-2 recorded in source
+      doc; no new code shipped.** Half-2 of the source doc's `[SCRIPT] P2` done-when (real-VM auto-republish
+      observation) was completed 2026-08-10 by slot 12 and is recorded in the source doc's own DONE note — full evidence
+      there (auto-republish triggered in `auto` mode against a naturally-stale `unified-api-contracts` tarball,
+      republished ~5s, re-verified fresh, second launch persistence, VM lifecycle 3× STARTED→RUNNING→deleted, "No
+      confounds — silent-dirty-skip sibling bug did NOT manifest", "Both done-when halves now satisfied"). The
+      auto-republish code itself already shipped at `deployment-service@c1e0481` (verified ancestor of
+      `origin/live-defi-rollout`; `launcher_common.sh:1009` defaults `LC_TARBALL_FRESHNESS:-auto`). The remaining text
+      below is the plan's original prescription for HOW the observation was expected to run; the done-when is met by the
+      recorded observation, so no redundant VM re-launch was performed (same "otherwise demonstrated closed" reasoning
+      the plan itself applied to todo 2 — a re-run would cost real GCP spend + VM lifecycle for zero new information).
+      Source doc's `[SCRIPT] P2` todo (flipped `[x]` 2026-08-06, `deployment-service@c1e0481`) has a two-half done-when;
+      half-2 — "a real VM launch against an intentionally-stale tarball is observed auto-republishing before the
+      workload starts" — was explicitly NOT performed (as of the drafting of this batch; now recorded done 2026-08-10).
+      Execute the observation SAFELY: (a) upload an intentionally-stale tarball under a THROWAWAY name in the
+      deployment-scripts bucket (e.g. `code/<service>-code-closeout-obs.tar.gz` — NEVER overwrite the live
+      `<service>-code.tar.gz`; the 2026-08-06 "launched onto stale code twice" incident shows a shared-bucket overwrite
+      would poison concurrent sibling launches); (b) launch a short-lived VM via an existing launcher that is NOT
+      `launch-cefi-forward-poll.sh` (todo 2 is concurrently editing that file) and NOT one a sibling may concurrently
+      use, pinned to the throwaway tarball name; (c) observe auto-republish before workload start + verify the workload
+      runs the FRESH code (per the source doc's done-when); (d) lifecycle per the vm-launcher runbook (STARTED → ≥1
+      progress signal → STOPPED, verify T+10 min), no GCS deletes of shared objects (the throwaway tarball may be left
+      for natural overwrite or removed via `gcs_delete_object` with a fresh same-run
+      `gcs_bucket_soft_delete_retention_seconds()` ≥ 604800s reversibility check). Caveat: the sibling bug
+      `issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` (auto mode returning success on a
+      silent dirty-checkout skip) can confound the observation — if a silent skip is suspected, record it and note the
+      confound rather than forcing the result. Source:
       `issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` (`[SCRIPT] P2` todo,
       done-when half-2). **Done when**: the observation is recorded in the source doc's `[SCRIPT] P2` DONE note (half-2
       completed) with the observed auto-republish evidence + VM lifecycle (STARTED/STOPPED) + any confound noted.
