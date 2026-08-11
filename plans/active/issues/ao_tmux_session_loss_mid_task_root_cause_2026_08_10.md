@@ -229,6 +229,24 @@ memory and that's what kills sessions" as-is.
       (`cat     /proc/<tmux-server-pid>/cgroup`), (b) if it's unconfined or under a DIFFERENT slice than
       orchestrator.service, check that slice's own `memory.events` oom_kill counter for a nonzero reading correlated
       with known death timestamps. Repo: agent-orchestrator.
+- [x] [INFRA] P1. ~~Alert + surface fleet-wide tmux server death~~ — **SHIPPED 2026-08-11,
+      `agent-orchestrator@d1e62b7317`.** Operator ask: this class of outage needs Slack visibility, Activity Log
+      visibility, and to colour the dashboard's "Multiple issues — eyes on this" HealthStrip, not just live silently
+      alongside routine per-slot churn. Added `tmux_spawn.tmux_server_running()` (distinguishes "server gone" from
+      "server up, this one session gone" via `tmux list-sessions`' stderr — the two known message variants observed live
+      this session, Linux `no server running on <socket>` and macOS `error connecting to <socket>`); wired into
+      `TmuxPruner.prune_once()` as a new fire-on-change + RESOLVED-bookend check (same shape as
+      `WorkerLivenessWatchdog`'s dormancy alert — one page opens the episode, still-down ticks stay silent, a RESOLVED
+      page closes it, latched on disk via `dedup_state.tmux_server_died_alerted_path()` so a restart mid-outage doesn't
+      re-page); logs `tmux_server_died`/`tmux_server_recovered` fleet-wide (`slot_id=None`) activity events either way,
+      so the Activity Log carries it even between Slack pages; pages `notify_tmux_server_died`/`_resolved` in
+      `server/notifications/slack.py`; and surfaces `StateResponse.tmux_server_down` on the dashboard's HealthStrip —
+      checked FIRST, ahead of even watchdog dormancy, since every other number on the strip is meaningless while the
+      server itself is down. 6 new backend tests + 2 new dashboard tests. Caught and fixed one real bug in review before
+      shipping: the first draft accidentally moved `agent_candidates`'s query outside its
+      `with read_only_session_scope()` block and inside a conditional, which would have broken agent-reaping
+      (`UnboundLocalError` whenever the fleet had zero worker sessions) — caught by the pre-existing pruner test suite,
+      not by inspection.
 - [ ] [INFRA] P2. **Confirm or rule out the concurrent git-fsck/gc burst as a resource-contention trigger.** ~20+
       concurrent `git fsck --connectivity-only`/`gc.pruneExpire never` commands across unrelated repo checkouts landed
       in the same ~10s window as the live-caught tmux-server death (16:14:38-51 UTC) — coincidental timing only,
