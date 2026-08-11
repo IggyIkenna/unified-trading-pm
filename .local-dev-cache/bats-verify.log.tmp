@@ -1,0 +1,177 @@
+1..235
+ok 1 a mid-sentence marker in an open todo is caught
+ok 2 a marker declared inside the leading tag cluster is NOT flagged
+ok 3 a marker declared at the head of the description is NOT flagged
+ok 4 an unmodified plan is clean
+ok 5 a plan with no marker token at all short-circuits without invoking the AO module
+ok 6 the check is a silent no-op when handed no files
+ok 7 a protected (--files) path survives the extreme-backlog quarantine; an unprotected one is parked
+ok 8 THE BUG: passing only the remote ref leaves the caller's files unprotected
+ok 9 every protected path in a multi-file --files list survives
+ok 10 CALL SITE: quickmerge.sh passes --files FIRST, not the remote ref
+ok 11 CALL SITE: safe-doc-push.sh also passes its named files first (the call site that was always right)
+ok 12 check_archive_candidates.sh has valid bash syntax
+ok 13 --only flags a flip-only commit with no archive_exempt (the conflict this issue reports)
+ok 14 --only tolerates the flip-only commit when archive_exempt: true is the bridge
+ok 15 the immediately-following git-mv archival commit naturally clears --only's scope (old path gone)
+ok 16 --only still exempts a doc reaching 0-open/done with an UNRELATED extra content change (not a bare bridge)
+ok 17 check_line_caps.sh has valid bash syntax
+ok 18 small-marker-append carve-out is present in check_line_caps.sh
+ok 19 carve-out fires for a 4-line audit marker on an over-cap plan (pure append)
+ok 20 carve-out fires for a marker append on a plan sitting at EXACTLY the hard cap (boundary bug regression)
+ok 21 carve-out fires for a 10-line (max) marker on an over-cap plan
+ok 22 carve-out does NOT fire when file was under cap before this commit
+ok 23 carve-out does NOT fire when diff has deletions
+ok 24 carve-out does NOT fire when more than 10 lines are added
+ok 25 carve-out does NOT fire when an added line is a checkbox
+ok 26 carve-out does NOT fire when a closed checkbox is added
+ok 27 context-threshold-nudge: exits 0 on a large uncompacted transcript (no compact_boundary marker)
+ok 28 context-threshold-nudge: fires the nudge past threshold with no compact_boundary marker
+ok 29 context-threshold-nudge: exits 0 and emits nothing on a small transcript below threshold
+ok 30 context-threshold-nudge: exits 0 and fires correctly when a compact_boundary marker IS present
+ok 31 context-threshold-nudge: exits 0 with no session_id (missing input, early-exit path)
+ok 32 ff-starvation-detect.sh has valid bash syntax
+ok 33 slot-git-status-report.sh has valid bash syntax
+ok 34 ff-starvation-detect.sh --help renders
+ok 35 ff-starvation-detect.sh requires a repo dir
+ok 36 ff-starvation-detect.sh rejects a non-git dir
+ok 37 collision (dirty file collides with incoming) → STARVATION signal
+ok 38 non-colliding dirty file → NO signal
+ok 39 collision below behind+age threshold → NO signal
+ok 40 clean worktree behind remote → NO signal (FF would succeed)
+ok 41 up-to-date worktree → NO signal
+ok 42 PENDING is replaced with the landed sha, in active plans and epics
+ok 43 only the pushing repo's placeholders are touched
+ok 44 plans/archive is out of scope — the historical record is not rewritten
+ok 45 no placeholders anywhere is a silent no-op
+ok 46 the guard blocks a REAL unresolved placeholder
+ok 47 the guard does NOT block prose that documents the convention
+ok 48 the extracted detector is still identical to the one in run_hygiene_sweep.sh
+ok 49 has_numeric_target: -g with numeric value
+ok 50 has_numeric_target: -g attached numeric value
+ok 51 has_numeric_target: -g with comma-separated numeric list
+ok 52 has_numeric_target: -g with non-numeric value fails
+ok 53 has_numeric_target: no matching flag at all fails
+ok 54 has_numeric_target: -P (parent pid) numeric also allowed
+ok 55 extract_pattern: finds bare trailing pattern
+ok 56 extract_pattern: finds pattern after -f
+ok 57 extract_pattern: ignores a signal flag like -9
+ok 58 extract_pattern: skips the value of a consuming flag (-g)
+ok 59 check: refuses a bare -f pattern with no discriminator
+ok 60 check: refuses a bare name-only pattern
+ok 61 check: allows a numeric -g target regardless of cwd
+ok 62 check: allows a pattern containing the caller's own .tabs/<N>/ substring
+ok 63 check: refuses a pattern containing a DIFFERENT slot's .tabs/<N>/ substring
+ok 64 check: message points at the incident issue doc
+ok 65 check: same rules apply to pgrep as pkill
+ok 66 wrapper: pkill() refuses without invoking the real binary
+ok 67 wrapper: pgrep() refuses without invoking the real binary
+ok 68 scoped repair fixes the new violation and leaves pre-existing corruption untouched
+ok 69 backtick-padding violations are scoped the same way
+ok 70 absolute paths round-trip check → fixer → git add (the shape run_hygiene_sweep uses)
+ok 71 whole-file mode still rewrites everything (corpus-remediation contract unchanged)
+ok 72 --scoped with no input on stdin is a no-op, not an error
+ok 73 base-service.sh has valid bash syntax
+ok 74 sync guard: _qg_run_basedpyright_attempt is defined in base-service.sh
+ok 75 sync guard: MEM_WRAP TOCTOU retry detects a D-Bus connection failure
+ok 76 sync guard: retry log line distinguishes MEM_WRAP failure from a timeout
+ok 77 sync guard: retry only fires when MEM_WRAP is non-empty
+ok 78 D-Bus down on first (wrapped) attempt recovers via unwrapped retry
+ok 79 unwrapped host (MEM_WRAP empty) does not retry on a real empty failure
+ok 80 genuine basedpyright errors (not a MEM_WRAP failure) are reported, not retried
+ok 81 still fails after the unwrapped retry stops at exactly one retry (no infinite loop)
+ok 82 quickmerge.sh has valid bash syntax
+ok 83 gate PASSES when dep is STAGING_GREEN
+ok 84 gate PASSES when dep is SIT_VALIDATED
+ok 85 gate BLOCKS when dep is FEATURE_GREEN
+ok 86 gate BLOCKS when dep is LOCAL_PASS
+ok 87 gate BLOCKS when dep is NOT_CONFIGURED
+ok 88 gate BLOCKS when dep is FAILING
+ok 89 gate PASSES when repo has NO dependencies
+ok 90 gate BLOCKS only the below-staging dep (multi-dep: uac=STAGING_GREEN, utl=FEATURE_GREEN)
+ok 91 gate PASSES when repo is not in manifest (graceful no-op)
+ok 92 gate PASSES when manifest file is missing (graceful no-op)
+ok 93 --skip-dep-tier-gate in --agent mode is REJECTED
+ok 94 --skip-dep-tier-gate flag is parsed (present in case statement)
+ok 95 STAGE 1.7 header is present in quickmerge.sh
+ok 96 the collision is real: a detached worktree cannot check out a branch the main clone holds
+ok 97 in isolation the helper stays detached and succeeds instead of dying on the collision
+ok 98 outside isolation the helper still checks the branch out normally
+ok 99 an explicit refspec pushes a detached-HEAD commit onto the shared branch
+ok 100 the pre-fix push form would NOT have shipped the detached commit
+ok 101 a change that genuinely landed passes the assertion
+ok 102 a named file DROPPED from the commit fails, even with the worktree untouched
+ok 103 a hook that reformats the file on the way in is NOT a false positive
+ok 104 a named file that had nothing to ship is not asserted on
+ok 105 a staged deletion is not asserted on (absent at entry is not expressible as a blob move)
+ok 106 unscoped mode (no --files) is left completely alone
+ok 107 a change reverted on disk AND absent from HEAD routes to the recover-first branch
+ok 108 quickmerge.sh has valid bash syntax after the STAGE 5 guard addition
+ok 109 STAGE 5 no-regression guard block is present in quickmerge.sh
+ok 110 guard FIRES when checkout -B resets the same-named branch away from the certified commit
+ok 111 guard is SILENT when the branch still contains the certified commit (plain checkout, no reset)
+ok 112 guard is SILENT on a genuinely new PR branch (different branch name, no regression)
+ok 113 guard is SILENT when pre_head is empty (nothing captured, e.g. detached HEAD at snapshot time)
+ok 114 a foreign staged path is unstaged, the caller's own files survive
+ok 115 quickmerge's own chmod-staged script paths are never treated as foreign
+ok 116 unscoped mode (no --files) is left completely alone
+ok 117 a staged DELETION of a caller file stays staged (not re-added)
+ok 118 a persistent index.lock during 'git add' is reported as a hard could-not-stage failure, never the benign nothing-to-stage wording
+not ok 119 a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0
+# (in test file tests/test_safe_doc_push_could_not_stage_vs_nothing_to_stage.bats, line 78)
+#   `[ "$status" -eq 0 ]' failed
+# warning: You appear to have cloned an empty repository.
+# branch 'live-defi-rollout' set up to track 'origin/live-defi-rollout'.
+not ok 120 could-not-stage and nothing-to-stage produce distinct exit codes for the same script
+# (in test file tests/test_safe_doc_push_could_not_stage_vs_nothing_to_stage.bats, line 102)
+#   `[ "$nothing_to_stage_status" -eq 0 ]' failed
+# warning: You appear to have cloned an empty repository.
+# branch 'live-defi-rollout' set up to track 'origin/live-defi-rollout'.
+ok 121 plan-hygiene failure is DETERMINISTIC (the exact 2026-08-08 regression)
+ok 122 branch drift alone is RETRIABLE (a genuine race the retry loop clears)
+ok 123 drift PLUS a content failure is DETERMINISTIC (content must win)
+ok 124 a rejection with no parseable hook id stays RETRIABLE (preserves prior behaviour)
+ok 125 frontmatter-schema and todo-format hooks are DETERMINISTIC
+ok 126 script documents exit code 6 and still parses
+ok 127 the misleading unconditional transient claim is gone from EMITTED output
+ok 128 a path deleted in the caller but tracked on origin propagates as a deletion
+ok 129 a path absent AND untracked is a caller error — fails loudly, naming the path
+ok 130 an ordinary present file is still copied, not touched by the deletion path
+ok 131 the pre-fix loop would have dropped the deletion entirely
+ok 132 isolated-worktree mode preserves the caller's slot-29 identity (not main)
+ok 133 isolated push of a NEW file leaves the caller able to fast-forward
+ok 134 shared-index mode is untouched — the file becomes tracked locally, nothing is removed
+ok 135 same words re-wrapped is recognised as the SAME content
+ok 136 a REAL word change is NOT treated as the same content
+ok 137 non-markdown is refused even when only whitespace differs — indentation is semantic in code
+ok 138 a tracked doc whose content already landed is synced, not left to conflict
+ok 139 a real edit still commits, pushes and certifies (control -- the fix must not break the happy path)
+ok 140 every named file already identical to HEAD at entry is NOT reported as success
+ok 141 SDP_ALLOW_NOOP=1 accepts the no-op-at-entry case as a deliberate idempotent re-run
+ok 142 a push whose commit dropped the named file exits 13 instead of reporting success
+ok 143 a hook that reformats the named file on the way in is not a false positive
+ok 144 a persistent index.lock stops looping after LOCK_CONTENTION_MAX failures and prints the separate-clone escape hatch, exit 8
+ok 145 a momentary (self-clearing) index.lock does not trip the escape hatch -- the run still succeeds
+ok 146 escape hatch exit code (8) is distinct from the generic exhausted-retries exit code (5)
+ok 147 a normal multi-file push (modify + deletion) certifies: exit 0, both verified on origin
+ok 148 a lone archival deletion certifies: exit 0, path gone from origin
+ok 149 a deletion dropped from the commit exits 14 naming the path -- the partial landing is loud
+ok 150 a stubbed no-op git commit is never reported as success (end-to-end verification catches it)
+ok 151 a genuine commit+push still reports verified success (control case, fix must not break the happy path)
+ok 152 a brand-new untracked file is NEVER reported as already-matching-HEAD, even when staging keeps failing
+ok 153 a tracked file already identical to HEAD at entry no longer short-circuits to success
+ok 154 slot-cron-ff-pull.sh has valid bash syntax
+ok 155 _filter_nonblank_porcelain: blank-only capture -> empty (structural, cause-agnostic)
+ok 156 _filter_nonblank_porcelain: real porcelain line -> kept verbatim
+ok 157 clean + up-to-date tree -> ff_pull_last_result != skip:dirty
+ok 158 item 5: single-tick dirty (tracked modification) -> NOT skip:dirty yet (unconfirmed)
+ok 159 item 5: two consecutive dirty ticks on the same repo -> confirmed, second tick == skip:dirty
+ok 160 item 5: a clean tick after an unconfirmed dirty tick resets the streak
+ok 161 cross-repo isolation: repo Y's first-ever dirty tick is NOT confirmed by repo X's already-confirmed streak
+ok 162 no .agent-claim file -> no-op, exits 0
+not ok 163 claim present, tmux session alive -> mtime advances
+# (from function `_tmux' in file tests/test_slot_git_status_claim_heartbeat.bats, line 60,
+#  in test file tests/test_slot_git_status_claim_heartbeat.bats, line 112)
+#   `_tmux new-session -d -s "${TMUX_SESSION}" 2>/dev/null' failed
+rm: cannot remove '/tmp/bats-run-k3ESJ5/test': Directory not empty
+Terminated
