@@ -70,11 +70,16 @@ source: >-
       baseline `deployment-service` `wall_s=106.0` `measured_concurrency:1`. (3) YES CONFIRMED:
       `gh api repos/IggyIkenna/deployment-service/rulesets/13787653` — enforcement=active, required checks =
       quality-gates-v2 + sit-gate/fleet-green, bypass_actors=[], default_branch=main.
-- [ ] [REVIEW] P1. **Confirm any "if [gap found], file a follow-up todo" branch was actually followed.** Each of the 3
-      source todos conditions a NEW fix/wiring todo on its own finding — check whether a gap was found in each case and,
-      if so, that a properly-scoped `- [ ]` follow-up todo now exists (in the source doc or a new properly-targeted doc,
-      per standing "every follow-up is a todo, never prose"). **Do NOT write the fix inline here** — this finalize plan
-      reconciles the audit, it does not do the follow-up engineering work itself.
+- [x] ✅ [REVIEW] P1. **Confirm any "if [gap found], file a follow-up todo" branch was actually followed.** Each of the
+      3 source todos conditions a NEW fix/wiring todo on its own finding — check whether a gap was found in each case
+      and, if so, that a properly-scoped `- [ ]` follow-up todo now exists (in the source doc or a new properly-targeted
+      doc, per standing "every follow-up is a todo, never prose"). **Do NOT write the fix inline here** — this finalize
+      plan reconciles the audit, it does not do the follow-up engineering work itself. **VERIFIED 2026-08-11 (slot-3):
+      all 3 branches followed.** (1) Gap=YES (disjoint ledger) → wiring todo filed (source doc lines 146-153), now ✅
+      `unified-trading-pm@<see Progress Log>`. (2) Gap=YES (UNDERSIZED) → tighten-caps todo filed (source doc lines
+      170-174), now ✅ `unified-trading-pm@1ec1d683f9`. (3) Gap=YES (branch protection IS correctly wired, but
+      auto-merge race found) → investigate-race todo filed (source doc lines 183-191), now ✅. All 3 follow-ups properly
+      scoped in the source doc as `- [ ]` checkboxes (never prose); all 3 now `- [x]` done. No missed branches.
 - [ ] [DOC] P1. **Reconcile verified evidence into the source doc's own 3 checkboxes**, replacing any bare "done" claim
       with the actual cited evidence (code path / numbers / API output).
 - [ ] [REVIEW] P1. **Archive only if genuinely fully resolved.** If all 3 audits found no gap (or every found gap's
