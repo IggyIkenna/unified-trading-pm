@@ -1385,3 +1385,27 @@ deletes theirs. This was one keystroke from reverting a peer's shipped fix.
 Verified: `git merge-file` conflicts on ADJACENT-line edits and merges cleanly when the regions are separated —
 conservative, and correct. Coverage: `tests/test_tree_wip_guard.bats` (10 cases, including a peer's change surviving the
 restore).
+
+### `scripts/dev/guard-commit-tree-push.sh` — empty-refspec guard for the commit-tree fallback push (2026-08-11)
+
+The shared-checkout write-contention fallback builds a commit against `origin`'s HEAD directly
+(`git commit-tree <tree> -p <origin-tip> -m <msg>`) and pushes it with `git push origin <sha>:<branch>` — the workaround
+when a concurrent session's churn makes a normal `git commit` on the shared checkout unreliable. The fallback's danger
+is a refspec with an EMPTY local side: an unset/typo'd SHA turns `git push origin <sha>:live-defi-rollout` into
+`git push origin :live-defi-rollout`, a remote-branch DELETION on the integration branch every slot pulls against.
+Measured incident (2026-08-09, `/plans/active/issues/live_defi_rollout_branch_has_no_delete_protection_2026_08_09.md`):
+recovered same-turn only because the agent self-caught it; the `protect-live-defi-rollout` GitHub rulesets (`deletion` +
+`non_fast_forward`, that issue's todos 1-2) are the layer-1 backstop. This guard is layer-2, catching the empty refspec
+BEFORE `git push` runs — the two fixes address different layers (defense in depth).
+
+Route the fallback push through the guard instead of a bare `git push`:
+
+```bash
+bash scripts/dev/guard-commit-tree-push.sh origin '<sha>:<branch>' [extra git push args...]
+```
+
+It `exec`s `git push` with the SAME arguments after refusing (exit 1, nothing pushed) when: the refspec has no `:`; either
+side is empty/unset; or the local side does not resolve to a real commit (`^{commit}` peel — a bare `rev-parse --verify`
+accepts any 40-hex string, so it is not enough). Deliberately NOT wired into `quickmerge`/`safe-doc-push` (their refspecs
+are fixed `HEAD:<branch>`), and a DELIBERATE `git push origin :<branch>` deletion is a different, planned operation and
+must NOT go through this wrapper.

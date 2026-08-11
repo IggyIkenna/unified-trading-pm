@@ -98,12 +98,20 @@ process observed the deleted state.
       per-repo `gh api .../branches/live-defi-rollout/protection` + rulesets check across all repos would confirm scope.
       — unified-trading-pm@(this commit). Confirmed the gap was fleet-wide (23/26 repos) and fixed it in the same task —
       see Progress Log 2026-08-10 (slot-10) entry for the full per-repo breakdown and ruleset ids.
-- [ ] [INFRA] P3. **Consider hardening the `git commit-tree` fallback pattern itself** (documented in
+- [x] ✅ [INFRA] P3. **Consider hardening the `git commit-tree` fallback pattern itself** (documented in
       `SUB_AGENT_MANDATORY_RULES.md` as the recovery path for shared-checkout contention) — the specific bug here was an
       unset variable producing `git push origin :<branch>` instead of `git push origin <sha>:<branch>`. A small guard
       script wrapping this pattern (refuse to push if the local side of the refspec is empty/unset) would catch this
       class of bug before it reaches `git push`, independent of the branch-protection fix above (defense in depth — the
-      two fixes address different layers).
+      two fixes address different layers). — unified-trading-pm@(this commit): shipped
+      `scripts/dev/guard-commit-tree-push.sh` (validates the refspec's local side is non-empty + resolves to a real
+      commit via `^{commit}` peel, then `exec git push` with the SAME args; functional test covered every refusal branch
+      — empty local, bare refspec, bogus 40-hex, empty remote side — plus a real `git commit-tree` fast-forward push,
+      exit 0, remote tip advanced). Documented the fallback + guard at
+      `/codex/05-infrastructure/per-tab-worktrees.md` § "`scripts/dev/guard-commit-tree-push.sh` — empty-refspec guard
+      for the commit-tree fallback push". Note: the "(documented in `SUB_AGENT_MANDATORY_RULES.md`)" parenthetical was
+      STALE — `git log -S commit-tree` confirms that file never contained the fallback; per-tab-worktrees.md is now the
+      SSOT.
 
 ## Progress Log
 
@@ -174,3 +182,14 @@ process observed the deleted state.
   during this session's own strategy-service push (landed cleanly before this repo's ruleset existed, so not a direct
   test, but no other slot has reported a push failure since). Todo 3 (commit-tree guard script) remains open, correctly
   scoped as separate follow-up work.
+- **2026-08-11 (slot-22 infra worker)**: Shipped todo 3 (commit-tree fallback guard). Wrote
+  `scripts/dev/guard-commit-tree-push.sh` — wraps the `git push origin <sha>:<branch>` the shared-checkout write-contention
+  fallback uses, refusing (exit 1, nothing pushed) when the refspec's local side is empty/unset (the exact
+  `git push origin :live-defi-rollout` deletion bug this issue tracks), has no `:`, or does not resolve to a real commit
+  (`^{commit}` peel — measured: a bare `git rev-parse --verify` accepts ANY 40-hex string, so it is insufficient).
+  Functional test covered every refusal branch plus a real `git commit-tree` fast-forward push to a bare remote (exit 0,
+  remote tip advanced). Documented the fallback + guard at `/codex/05-infrastructure/per-tab-worktrees.md` §
+  "`scripts/dev/guard-commit-tree-push.sh` — empty-refspec guard for the commit-tree fallback push" — the todo's original
+  "(documented in `SUB_AGENT_MANDATORY_RULES.md`)" parenthetical was STALE (`git log -S commit-tree` shows that file never
+  contained the fallback); per-tab-worktrees.md is now the SSOT. With todos 1-2 (rulesets) already shipped 2026-08-10,
+  this doc's work is complete — all 3 todos `- [x]`.
