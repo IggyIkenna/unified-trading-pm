@@ -34,24 +34,28 @@
 # tracked work on an over-cap doc, only a small append like a dated verdict/Progress-Log marker.
 #
 # A THIRD DOCUMENTED EXCEPTION (operator ruling 2026-08-09,
-# plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md option (a)): a bounded,
-# same-line LINK-REPOINT edit on an already-over-cap LIVE doc is also allowed through in SCOPED
-# mode, alongside the small-marker-append exception above. Root problem this closes: the corpus-wide
-# broken-link gate (validate_plan_links.py, unconditional, HARD) can force a one-line path fix
-# (e.g. /plans/active/issues/<x>.md -> /plans/archive/2026_08/issues/<x>.md, after <x> archives)
-# inside an over-cap referrer doc -- but a same-line text substitution ALWAYS shows DELETED>=1 in
-# `git diff --numstat` (git diffs at line granularity, never character granularity), so the
-# small-marker-append exception's DELETED=0 requirement can never fire for this shape of edit,
-# deadlocking the two gates against each other with no escape hatch (live-verified 2026-08-08: a
-# real `sed -i 's#...#...#'` link-repoint on a 1007L over-cap doc produced `git diff --numstat` =
-# `1  1  ...`, confirmed not assumed). Narrowly scoped: only fires when (a) the file is already over
-# cap before this commit (automatically implied here -- see below), (b) the staged diff's ADDED line
-# count is <= its DELETED count (never grows the file), and (c) every changed (+/-) content line,
-# after normalizing any /plans/active/... or /plans/archive/<YYYY_MM>/... path segment to a common
-# token, is identical between the removed and added sides -- i.e. the ONLY difference on every
-# touched line is a path-token substitution, never new prose. Condition (a) needs no separate
-# PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
-# (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
+# plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md option (a); GENERALIZED
+# 2026-08-11 per tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md item
+# 3): a bounded, non-growing CONTENT-SUBSTITUTION edit on an already-over-cap LIVE doc is also
+# allowed through in SCOPED mode, alongside the small-marker-append exception above. Root problem
+# this closes: any same-line text substitution (a link repoint, a stale MVP-cell table-row content
+# correction, a status-text fix) ALWAYS shows DELETED>=1 in `git diff --numstat` (git diffs at line
+# granularity, never character granularity), so the small-marker-append exception's DELETED=0
+# requirement can never fire for this shape of edit, deadlocking the line-cap gate against ordinary
+# maintenance on any over-cap doc. Originally scoped narrowly to path-token-only substitutions
+# (link repoints); broadened 2026-08-11 because the identical deadlock recurred for a plain-prose
+# table-cell correction that a path-token normalization can never match (live-verified 2026-08-09:
+# a same-line "66% attempted_failed..." -> "94.8-100% covered..." MVP-cell edit on a 1005L over-cap
+# doc produced `git diff --numstat` = `1  1  ...`, same shape, different content class). Narrowly
+# scoped: only fires when (a) the file is already over cap before this commit (automatically implied
+# here -- see below), (b) the staged diff's ADDED line count is <= its DELETED count (never grows the
+# file -- the "net-zero-LENGTH" property), (c) ADDED is bounded (<=20 lines, mirroring the
+# marker-append exception's own smallness bound so this stays a routine-edit escape hatch, not a
+# vehicle for a large rewrite), and (d) no added OR removed line matches a checkbox pattern
+# (`- [ ]`/`- [x]`) -- so this can never be used to sneak in, silently complete, or silently drop
+# tracked work on an over-cap doc, only a bounded in-place content fix. Condition (a) needs no
+# separate PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit
+# line count (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
@@ -152,7 +156,7 @@ for f in "${TARGETS[@]}"; do
 
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
-    LINK_REPOINT_EDIT=""
+    CONTENT_SUBSTITUTION_EDIT=""
     if [ -n "$SCOPED" ]; then
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
@@ -167,27 +171,25 @@ for f in "${TARGETS[@]}"; do
           [ "$ADDED_CHECKBOX_LINES" = "0" ] && SMALL_MARKER_APPEND="1"
         fi
       fi
-      # Link-repoint exception (see policy comment above): only when neither the marker-append
-      # exception already fired, AND this diff never grows the file (ADDED<=DELETED), AND every
-      # changed line's only difference (after normalizing an /plans/active/... or
-      # /plans/archive/<YYYY_MM>/... path segment to a common token) is that path token -- i.e. a
-      # pure same-line link-repoint, never new prose.
+      # Content-substitution exception (see policy comment above, generalized 2026-08-11): only when
+      # the marker-append exception hasn't already fired, AND this diff never grows the file
+      # (ADDED<=DELETED), AND the added-line count stays bounded (<=20, a routine-edit-sized touch),
+      # AND no added or removed line is a checkbox -- i.e. a bounded, in-place content fix (a link
+      # repoint, a table-cell correction, a status-text fix) on a doc already over cap, never a
+      # vehicle for new/removed tracked work.
       if [ -z "$SMALL_MARKER_APPEND" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
-        && [ "$DELETED" -gt 0 ] 2>/dev/null && [ "$ADDED" -le "$DELETED" ] 2>/dev/null; then
-        RAW_DIFF="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null || true)"
-        REMOVED_NORM="$(echo "$RAW_DIFF" | grep -E '^-[^-]' | sed -E 's/^-//' \
-          | sed -E 's#/plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' | sort)"
-        ADDED_NORM="$(echo "$RAW_DIFF" | grep -E '^\+[^+]' | sed -E 's/^\+//' \
-          | sed -E 's#/plans/(active|archive/[0-9]{4}_[0-9]{2})/#/plans/__PATH__/#g' | sort)"
-        if [ -n "$REMOVED_NORM" ] && [ "$REMOVED_NORM" = "$ADDED_NORM" ]; then
-          LINK_REPOINT_EDIT="1"
-        fi
+        && [ "$DELETED" -gt 0 ] 2>/dev/null && [ "$ADDED" -le "$DELETED" ] 2>/dev/null \
+        && [ "$ADDED" -le 20 ] 2>/dev/null; then
+        CHANGED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null \
+          | grep -cE '^[+-]\s*-\s*\[.\]' || true)"
+        CHANGED_CHECKBOX_LINES="${CHANGED_CHECKBOX_LINES:-0}"
+        [ "$CHANGED_CHECKBOX_LINES" = "0" ] && CONTENT_SUBSTITUTION_EDIT="1"
       fi
     fi
     if [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
-    elif [ -n "$LINK_REPOINT_EDIT" ]; then
-      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$CONTENT_SUBSTITUTION_EDIT" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded non-growing content substitution, no checkbox change, operator ruling 2026-08-09/generalized 2026-08-11)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))

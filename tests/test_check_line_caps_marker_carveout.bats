@@ -212,3 +212,130 @@ _write_plan() {
     run _check_small_marker_append "$repo" "$plan" "$lines"
     [ "$status" -eq 1 ]
 }
+
+# ── content-substitution carve-out (generalized 2026-08-11, replaces the narrower
+#    path-token-only link-repoint exception) ─────────────────────────────────────
+# Fires when: (a) file already over cap, (b) ADDED<=DELETED (never grows the file),
+# (c) ADDED<=20, (d) no added/removed line is a checkbox. Replicated verbatim from
+# check_line_caps.sh's CONTENT_SUBSTITUTION_EDIT branch.
+
+_check_content_substitution() {
+    local repo="$1" fpath="$2"
+    local diff_numstat added deleted chg
+    diff_numstat="$(git -C "$repo" diff --cached --numstat -- "$fpath" 2>/dev/null || true)"
+    added="$(printf '%s' "$diff_numstat" | awk '{print $1}')"
+    deleted="$(printf '%s' "$diff_numstat" | awk '{print $2}')"
+    [ -n "$added" ] && [ -n "$deleted" ] || return 1
+    [ "$deleted" -gt 0 ] 2>/dev/null || return 1
+    [ "$added" -le "$deleted" ] 2>/dev/null || return 1
+    [ "$added" -le 20 ] 2>/dev/null || return 1
+    chg="$(git -C "$repo" diff --cached -- "$fpath" 2>/dev/null \
+        | grep -cE '^[+-]\s*-\s*\[.\]' || true)"
+    chg="${chg:-0}"
+    [ "$chg" = "0" ] || return 1
+    return 0
+}
+
+@test "content-substitution carve-out fires for a same-line prose table-cell correction (net-zero-length, not a path token)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/table_row.md"
+    _write_plan 1005 "$plan"
+    printf '| S&P index options | 66%% attempted_failed, not yet launched |\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak \
+        's/66% attempted_failed, not yet launched/94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial/' \
+        "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 0 ]
+}
+
+@test "content-substitution carve-out fires for a same-line path-token link-repoint (subsumes the old narrower exception)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/link_repoint.md"
+    _write_plan 1005 "$plan"
+    printf 'see /plans/active/issues/foo_2026_08_06.md\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak \
+        's#/plans/active/issues/foo_2026_08_06.md#/plans/archive/2026_08/issues/foo_2026_08_06.md#' \
+        "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 0 ]
+}
+
+@test "content-substitution carve-out does NOT fire when the diff grows the file" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/grows.md"
+    _write_plan 1005 "$plan"
+    printf 'OLD\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak 's/OLD/NEW LINE ONE\nNEW LINE TWO/' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "content-substitution carve-out does NOT fire when more than 20 lines change" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/big_swap.md"
+    _write_plan 1005 "$plan"
+    local i=1
+    while [ "$i" -le 25 ]; do
+        printf 'OLD LINE %d\n' "$i" >> "$plan"
+        i=$(( i + 1 ))
+    done
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak 's/OLD LINE/NEW LINE/' "$plan" && rm -f "$plan.bak"
+    i=1
+    while [ "$i" -le 25 ]; do
+        sed -i.bak "s/NEW LINE $i\$/NEW LINE $i EDIT/" "$plan" 2>/dev/null || true
+        rm -f "$plan.bak"
+        i=$(( i + 1 ))
+    done
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "content-substitution carve-out does NOT fire when a checkbox line is edited" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/checkbox_edit.md"
+    _write_plan 1005 "$plan"
+    printf -- '- [ ] [SCRIPT] P3. Old todo text.\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak 's/Old todo text\./New todo text./' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "content-substitution carve-out does NOT fire when a checkbox is flipped x/space (status change, not content fix)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/checkbox_flip.md"
+    _write_plan 1005 "$plan"
+    printf -- '- [ ] [SCRIPT] P3. Some todo.\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    sed -i.bak 's/- \[ \] \[SCRIPT\]/- [x] [SCRIPT]/' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_content_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
