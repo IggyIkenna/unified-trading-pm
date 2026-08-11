@@ -573,20 +573,22 @@ depends_on: []
           Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
         - No code shipped — pure monitoring.
 
-| Item                                                             | State / why deferred                                 | Blocked on                         |
-| ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2022-03-23`, ~646/2258 days (~28.6%)       | VM completion (real infra)         |
-| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
-| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
-| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
-| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)       | FIXTURE_LINEUPS VM exit_code=0     |
-| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging       | All per-entity VMs exit_code=0     |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                | Re-census confirms ~0 needed       |
-| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
-| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | STANDINGS checked ✅ keep; TEAMS+ pending            | After each VM >30min or terminates |
+| Item                                                             | State / why deferred                                  | Blocked on                         |
+| ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| **STANDINGS backfill** (`af-backfill-20260811-012845`)           | RUNNING, `2022-08-25`, ~36%, log 3.77MB active        | VM completion (real infra)         |
+| **Chain automator** (`run-af-residual-completion-chain.sh`)      | RUNNING (bg, slot 16), polls 120s, auto-launches next | STANDINGS VM exit_code=0           |
+| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
+| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
+| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
+| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)        | FIXTURE_LINEUPS VM exit_code=0     |
+| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging        | All per-entity VMs exit_code=0     |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                 | Re-census confirms ~0 needed       |
+| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works  | Post-hoc diagnosis (non-blocking)  |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | STANDINGS checked ✅ keep; TEAMS+ pending             | After each VM >30min or terminates |
 
-**Recommended NEXT item**: STANDINGS VM at `2022-03-23` (~28.6%). Monitor for `exit_code=0`; then launch TEAMS →
-FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
+**Recommended NEXT item**: STANDINGS VM at `2022-08-25` (~36%). Chain automator is running (slot 16 bg) — will
+auto-launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS on STANDINGS exit. Next worker: verify chain
+automator still alive, re-launch if session teardown killed it.
 
 - **2026-08-11 (slot 20, data_engineering, ~00:35Z)** — Resumed residual completion pass (task
   `sports_af_completion_pass-649179736927`):
@@ -683,3 +685,22 @@ FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
     EXIT_STATUS. On STANDINGS exit_code=0: launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS (serial,
     singleton lock, on-demand). On stall >30min: diagnose, stop VM if confirmed, re-launch.
   - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away. Task remains in-flight for the next slot.
+
+- **2026-08-11 (slot 16, data_engineering, ~11:42Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2022-08-25`
+    (PROGRESS.json, 11:39Z), run.log 3.77MB actively written (last_modified 11:40:49Z — seconds ago at check time).
+    Actively fetching 2026-season standings data. ~36% through range. Chunked 90-day `instruments-backfill` mode working
+    correctly (no stall). Monotonic forward progress confirmed.
+  - **Fresh census (11:41Z)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452 total** (byte-for-byte
+    match with slots 14/20/25/27). INJURIES converged 334→72 from first backfill VM.
+  - **Singleton**: exactly one `af-backfill-*` RUNNING (STANDINGS). Prior terminated: `-154220`, `-160958`, `-162910`
+    (slot 25's stalled STANDINGS VM), `-103218` (INJURIES, completed exit_code=0).
+  - **Chain automator LAUNCHED in background**: `deployment-service/scripts/vm/run-af-residual-completion-chain.sh`
+    (commit `54cdaf80` — confirmed ON origin, slot 21's lost push now landed). Polling 120s, waiting for STANDINGS
+    exit_code=0 → auto-launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS (serial, on-demand, under singleton
+    lock). Resume-aware + idempotent — re-launch on session teardown.
+  - **No code shipped** — pure operations + monitoring. Chain automator is the delivery; VM health confirmed; census
+    consistent with prior slots.
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS at ~36%, ~12-24h ETA; then 4 more
+    entities). Task remains in-flight for the next slot.
