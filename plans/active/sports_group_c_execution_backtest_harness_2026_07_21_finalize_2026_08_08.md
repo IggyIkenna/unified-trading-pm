@@ -110,13 +110,18 @@ context_scope:
       stays a manually-invoked one-off; sports is backtest-only, not on the live-mode critical path. Decision confirmed
       — no surface exists to add it to, and no diff is needed.
 
-- [ ] [REVIEW] P3. **Check whether this harness landing unblocks a downstream gate.**
+- [x] ✅ [REVIEW] P3. **Check whether this harness landing unblocks a downstream gate.**
       `/plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s Todo 5 (run a sports archetype
       through the promote-workflow CLI) is explicitly gated on "the Group-C execution-alpha harness landing." Confirm
       whether that todo is now unblocked (Group-B backtest also passing — check that plan's own prerequisites section)
       and, if so, leave a citation note there (do not flip its checkbox from this doc — that plan owns its own verdict).
       **Done when**: a citation note exists in the live-mode-readiness doc's Progress Log either way (still blocked on
-      Group-B, or genuinely unblocked). Repo: unified-trading-pm.
+      Group-B, or genuinely unblocked). Repo: unified-trading-pm. **Evidence (slot 23, 2026-08-11)**: Citation note
+      written in `sports_predictions_live_mode_activation_readiness_2026_07_21.md` Progress Log. Todo 5 is now unblocked
+      on BOTH named prerequisites: (1) Group-C harness — all 5 parent-plan todos done with re-verified evidence (slots
+      9 + 26, 2026-08-11); (2) Group-B backtest — the only named blocker
+      (`sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md`) is `status: resolved` + archived since
+      2026-07-21. Did NOT flip Todo 5's checkbox (that plan owns its own verdict).
 
 - [ ] [TASK] P3. **Fix the review finding on `Any` + `# type: ignore` introduced in the harness commits**
       (`execution-service@893355cb` + `@7680d3f0d`).
@@ -165,3 +170,7 @@ contract) · `plans/active/task_template.md` §4 (finalize-plan-coverage rule)
   `tests/unit/cli/test_sports_backtest_exec_alpha.py:74,78`. Not done-blocking (hermetic `execution_alpha_bps` test
   itself verified good) — routed as a new `[TASK] P3` todo above. Slot 19 (author) is killed; the todo is available for
   any worker.
+- **2026-08-11 (slot 23, review)**: Todo 3 done. Citation note written in
+  `sports_predictions_live_mode_activation_readiness_2026_07_21.md` Progress Log — Todo 5 is now unblocked on BOTH named
+  prerequisites: Group-C harness landed (all 5 parent todos done, independently reverified by slots 9 + 26), Group-B
+  blocker (`sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md`) resolved + archived since 2026-07-21.
