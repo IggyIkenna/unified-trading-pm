@@ -1040,3 +1040,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   same rule-4a/slot-18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`. **Unpark**:
   when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
   honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11 (slot 24, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  `af-backfill-20260811-012845` (STANDINGS all-383, 2020-06-06→2026-08-10) still RUNNING (GCP asia-northeast1-c),
+  VERIFIED genuinely progressing at 2026-08-11T07:54Z (~1 min before this check): run.log modified 07:54:36Z with fresh
+  `[[VM_PROGRESS]] last_completed_date=2021-10-28 monotonic=true` + `PIPELINE_HEARTBEAT` at 07:54:13Z, active per-fixture
+  STANDINGS work (`Entity-scoped mode: restricting to STANDINGS only`, fetching `['STANDINGS']`), no EXIT_STATUS /
+  SETUP_EXIT_STATUS. Only `-012845` running among `af-backfill-*` (GCP); AWS none. `fts-backfill-20260809-012626` is a
+  different launcher/API key (footystats), unrelated to the AF done-when. Census now = mid-backfill STANDINGS snapshot
+  (residual 271 at slot-25 census), not terminal convergence — same rule-4a/slot-17/18/19/23 stale-baseline reasoning.
+  Skipping `reason_code: GATED` + `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both
+  census scripts + confirm all 8 entities stable ~0 / honest-absence floors, then close this doc + notify operator. No
+  code changes; Progress Log only.
