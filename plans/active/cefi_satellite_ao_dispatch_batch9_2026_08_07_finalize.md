@@ -24,7 +24,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-11"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -63,8 +63,8 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 9's 3 todos draw from 3 source docs: (1)
-      `issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` — the `[DATA] P3` Follow-ups
+- [x] ✅ [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** Batch 9's 3 todos draw from 3 source docs:
+      (1) `issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` — the `[DATA] P3` Follow-ups
       checkbox (line ~617) only, flipping `[x]` with the confirm/refute verdict + evidence; (2)
       `issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` — the `[SCRIPT] P2` item only;
       the doc's items 1 (`[OPERATOR]` deployment-api redeploy) and 3 (time-gated serial-console capture) stay OPEN,
@@ -118,3 +118,17 @@ context_scope:
   code-free (every todo is a checkbox-reconciliation against named docs or the archival ritual itself). The paired
   `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (full detail on all 3 reconciliation targets + the 2 carried
   Deferred items) + the archival-discipline codex SSOT remain the right minimal set; both re-verified resolving.
+- **2026-08-11 (slot 14, task cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-001)** — reconciled all 3 source
+  docs. Verified each landed batch-9 source checkbox is flipped/recorded and its cited commit is an ancestor of
+  `origin/live-defi-rollout` (fresh-pulled slot trees, `git merge-base --is-ancestor` on `a8e98742`, `4c28ca640f`,
+  `c1e0481`). (1) `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` — Follow-ups `[DATA] P3`
+  checkbox already `[x]` citing `market-tick-data-service@a8e98742` (CONFIRMED verdict + evidence, flip + archive +
+  referrer-fix landed at `dd5940a215`); remaining open: **0**. (2)
+  `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` — `[SCRIPT] P2` item already `[x]` citing
+  `deployment-service@4c28ca640f` (flip at `ac5593f1bb`); **re-stated count is 1, not the 2 the draft text assumed** —
+  item 1 (`[OPERATOR]` deploy confirm) was independently RESOLVED 2026-08-08 (routine deployment-api build cadence
+  picked up the fix), leaving only item 3 (`[SCRIPT] P3`, time-gated serial-console capture) open, untouched; remaining
+  open: **1**. (3) `features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md` — `[SCRIPT] P2`
+  DONE note's half-2 completion record already appended (real-VM auto-republish observation, 2026-08-10 slot 12, flip at
+  `43ec2ec651`); todo stays `[x]`, remaining open: **0**. All three done-when halves satisfied; no source-doc edit
+  needed this run.
