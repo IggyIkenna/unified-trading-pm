@@ -142,3 +142,10 @@ is deliberately thin; reported honestly rather than padded.
   `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` (2 candidate fixes + `[OPERATOR]`
   decision todo) rather than absorb an unplanned architecture-judgment call. Todo 2 left `- [ ]`, annotated in place
   with the finding. No code shipped this session (nothing was safe to ship without the decision).
+- 2026-08-11 (slot-6): re-dispatched todo 2 (same backlog task, tier=1 prio=50). Re-verified
+  `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` is still `status: open`, its
+  `[OPERATOR]` decision todo (option a vs b) still unchecked, no resolution since 2026-08-09 — batch11 (2026-08-10)
+  still lists it operator-gated ("NOT something a single bounded worker todo should resolve unilaterally"). Not a code
+  gap; nothing safe to ship until the decision lands. Skipped the task with `reason_code=GATED` + `park_now=true` —
+  durably parked on `auto_unpark__tradfi_satellite_ao_dispatch_batch9-29d3d0bec9b3` (confirmed via `/api/backlog/parked`)
+  so it stops re-dispatching to fresh workers while the decision is pending. Todo 2 stays `- [ ]`.
