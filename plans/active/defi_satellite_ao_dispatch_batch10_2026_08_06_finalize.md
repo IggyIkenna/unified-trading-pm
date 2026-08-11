@@ -59,12 +59,19 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 
 ## Todos
 
-- [ ] [DOC] P1. **Source-doc reconciliation**: for each of batch10's 9 todos, confirm the cited source doc's own open
+- [x] ✅ [DOC] P1. **Source-doc reconciliation**: for each of batch10's 9 todos, confirm the cited source doc's own open
       item was actually flipped/closed-by-citation as that todo's Done-when specified (todos 1-9, one check each — most
       todos already instruct flipping the source doc's own checkbox/status directly as part of their own Done-when, so
       this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 8
       source docs listed in batch10's todos either shows the item closed in its own text, or a citation note pointing
-      back at the batch10 todo that closed it, with no orphaned "still looks open" gap.
+      back at the batch10 todo that closed it, with no orphaned "still looks open" gap. — **DONE 2026-08-11 (slot-31)**:
+      all 9 todos × 8 source docs checked. 7/8 clean (manifestwriter race: both items `[x]` w/ batch10 citations;
+      bridge_events: `[x]` + genesis/zero-stale criteria in Progress Log; clean_path: item 4 `[x]` @17aed396;
+      BLAZESTAKE: items 1-2 `[x]` w/ batch10 citations; yearn_v3: Todo 5 `[x]` + 08-11 slot-7 flip logged;
+      lst_rate_honest_coverage: 3 checkboxes `[x]` w/ citations; over_cap_findings: Todo 2+3 `[x]` w/ batch10
+      citations). 1 gap closed this turn: track5 Todo 1 lacked a batch10 citation note — Progress Log entry added
+      recording batch10 todo 3's milestone (VM `mtds-perp-funding-backfill` RUNNING + unpark prereq flipped true
+      2026-08-07T16:44Z); checkbox stays `[ ]` (backfill-to-100% genuinely open, not orphaned).
 - [ ] [DOC] P2. **Re-check the 27 Deferred items** (18 operator_gated, 4 too_large_or_risky, 4 time_gated, 1
       genuinely_human_only): has any blocking condition cleared since batch10 was drafted (an operator ruling landed,
       elapsed time passed, a competing claim shipped/superseded)? Per the skill's iterative-drain methodology, any item
