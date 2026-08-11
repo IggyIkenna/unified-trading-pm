@@ -71,18 +71,26 @@ picking this plan up cold should never trust the flip-time state without a fresh
 
 ## Todos
 
-- [ ] [DATA] P1. **Verify the rebuild VM reached terminal SUCCESS + confirm POOL/rate_indices/dex_pool_fees counts are
-      STABLE.** Check
-      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-rebuild-20260810-093118/run.log`
-      (or its latest successor, per `gcloud compute instances list --filter=name~canonical-migration-defi-rebuild` + the
-      deployments registry) for a clean exit (no `rc=137`/ `Killed`, a `Rebuild complete:` line for the FINAL chunk
-      reaching `--end-date 2026-12-31`). Then run 2 live queries ~5min apart against `read_availability_index()` for
-      `instrument_type=POOL` (uppercase, `dex_pool_swaps`) and `data_type=rate_indices`/`dex_pool_fees`
-      `capture_status=captured` counts — done-when: VM terminal SUCCESS confirmed AND all 3 counts identical across both
-      queries (not still growing). If the VM instead failed again, STOP — do not proceed to todo 2; file a fresh issue
-      doc citing this plan and the failure evidence, do not blind-retry a 3rd/4th time without new root-cause
-      information (RB-INFRA-RELAUNCH's stop clause, `/codex/15-runbooks/incidents/rb_infra_relaunch.md`). (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P1. **Verify the rebuild VM reached terminal SUCCESS + confirm POOL/rate_indices/dex_pool_fees counts
+      are STABLE.** — unified-trading-pm (verification-only, no code). Latest successor VM
+      `canonical-migration-defi-rebuild-20260810-204358` reached genuine terminal SUCCESS: `run.log` shows
+      `Rebuild complete:` for the final chunk (`2026-08-25..2026-11-22` then `2026-11-23..2026-12-31`, both empty —
+      corpus exhausted), `REBUILD_DEFI_MANIFEST_RUN_COMPLETED`, `[vm-exec] command exited rc=0`, deployment archived
+      `status=completed exit_code=0`, then self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`). 3 live
+      `read_availability_index()` queries (17:37:xx, 17:38:xx, 17:43:41 UTC 2026-08-11 — spanning the required ~5min)
+      against the freshly-consolidated index blob (confirmed fresh via `get_blob_metadata()`,
+      `last_modified=2026-08-11T17:33:39Z`) returned IDENTICAL counts every time: `instrument_type=POOL`
+      (`dex_pool_swaps`) = 7,930,863; `data_type=rate_indices` `captured` = 26,128; `data_type=dex_pool_fees` `captured`
+      = 21 (out of 39,349,334 total `captured` rows). Done-when met: VM terminal SUCCESS + all 3 counts stable. STOP
+      clause not triggered.
+
+      Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
+          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+          streaming footprint regardless of corpus size.
+
 - [ ] [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
       `captured` rows in `dex_pool_swaps` via the proven reversible `capture_status: captured→attempted_failed`
       pattern.** Mirror `retire_dex_pools_legacy_captured_rows_2026_08_05.py` /
@@ -113,3 +121,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       `captured` rows, not the ~5.3M raw count — that count is a KNOWN, separately-tracked panel over-report, see
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos). Record the live counts in this plan's
       Progress Log. (repo: unified-trading-pm)
+
+## Progress Log
+
+- **2026-08-11 (slot 33)**: Todo 1 done. Rebuild VM `canonical-migration-defi-rebuild-20260810-204358` confirmed
+  terminal SUCCESS (see checkbox evidence above). Stability-check counts (identical across 3 queries, 17:37:xx →
+  17:43:41 UTC): `instrument_type=POOL` (`dex_pool_swaps`) = 7,930,863; `data_type=rate_indices` `captured` = 26,128;
+  `data_type=dex_pool_fees` `captured` = 21. These are the baseline pre-retirement counts todo 2-4's workers should
+  expect to drive to 0.
