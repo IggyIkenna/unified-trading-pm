@@ -164,7 +164,7 @@ family, which is exactly the failure mode this gate exists to catch.
       the count down, not one coordinated link-adding pass. Closing on the stated done-when, but note the count is
       measurably volatile day-to-day (69→87→72→71→65 across 3 days) — a future re-measure reading over 69 again would be
       a regression of THIS todo, not evidence it was never really done; re-open rather than silently re-fix if so.
-- [ ] [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
+- [x] ✅ [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
       `check_ag_closeout_linkage.py`, mirroring the already-shipped `generate_ag_closeout_audit_candidates.py:172`
       (`parser.add_argument("--tranche", choices=ALL_TRANCHES, required=True)`) — direct existing precedent, not a novel
       design call. Keep additive/opt-in (no-flag preserves the full-corpus ratchet). AO-dispatchable, no operator

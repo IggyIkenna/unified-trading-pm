@@ -60,7 +60,32 @@ mention", never "raise the baseline").
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (2026-08-11): an additive, opt-in REPORT filter for a tranche-scoped
+consumer — an `/ag-closeout-audit <tranche>` dispatch runs this gate as its own safety net
+(SKILL.md Phase 0.3) but only cares about ITS tranche's orphans; the corpus-wide listing
+buries them (measured 2026-08-06: a cefi-scoped run had to read past 80 non-cefi orphans to
+find its own 7). Mirrors the already-shipped ``--tranche`` on
+generate_ag_closeout_audit_candidates.py, and accepts BOTH that script's CLI tranche
+vocabulary and the raw `asset_group` enum value for the one tranche where they differ
+(`infra` / `infrastructure`).
+
+Two properties this filter deliberately keeps:
+- The SCAN is never narrowed, only the OUTPUT. Orphan status depends on the full `related:`
+  graph (undirected, up to 3 hops, freely pathing through OTHER tranches' docs) and on the
+  closeout family's body text, so a tranche-scoped scan could invent orphans that a
+  corpus-wide scan resolves. `--tranche` computes the identical corpus-wide orphan set the
+  no-flag mode computes, then filters the printed rows to that tranche.
+- It is a REPORT, never a gate: it always exits 0 and refuses ``--update-baseline``. The
+  baseline is a single CORPUS-WIDE count; comparing one tranche's handful of orphans against
+  it would pass trivially (a false green for a gate that never measured most of the corpus),
+  and minting per-tranche baselines is a design call this filter deliberately does not make.
+  The no-flag full-corpus ratchet remains the one gate, unchanged, and stays what
+  run_hygiene_sweep.sh invokes. A tranche whose closeout family resolves to ZERO docs reports
+  a loud UNENFORCED warning instead of a silent clean 0 — same honest-absence contract the
+  full-sweep mode's empty-family warning already carries.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -94,6 +119,7 @@ answer "did editing THIS file make IT worse", not "did the whole corpus's graph 
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 import sys
 from collections import deque
@@ -113,6 +139,17 @@ COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
 # Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
+# `--tranche` CLI vocabulary. The /ag-closeout-audit skill and
+# generate_ag_closeout_audit_candidates.py's own `--tranche` call one tranche `infra`, while the
+# `asset_group` enum value is `infrastructure` (that script's TRANCHE_ASSET_GROUP_VALUE documents
+# the same mismatch). Accept BOTH spellings rather than picking a winner — a caller reaching for
+# the wrong one gets a working filter, not a silent zero-row report. Derived from
+# COVERED_ASSET_GROUPS (i.e. from docspec.ASSET_GROUP) rather than a second hardcoded tranche
+# list, so a future enum expansion widens this filter automatically — the 2026-07-27 expansion
+# going unnoticed is exactly what left the gate blind to four tranches
+# (ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md).
+_TRANCHE_ALIAS = {"infra": "infrastructure"}
+TRANCHE_CHOICES = tuple(sorted({*COVERED_ASSET_GROUPS, *_TRANCHE_ALIAS}))
 MAX_HOPS = 3
 # Closed/terminal statuses excluded from orphan candidacy — a superseded, resolved,
 # cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
@@ -228,6 +265,19 @@ def mentions_stem(text: str, stem: str) -> bool:
     return stem in text
 
 
+def single_covered_asset_group(fm: dict) -> str | None:
+    """The doc's `asset_group` when it is exactly ONE covered tranche, else None.
+
+    None means EXEMPT by construction — a multi-value list, `meta` (never had its own
+    tranche), or a missing/malformed value. Shared by `_orphans_for` (which decides orphan
+    candidacy) and the `--tranche` filter (which decides which orphans to print) so the two
+    can never disagree about which tranche a doc belongs to."""
+    ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
+    if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
+        return None
+    return ag_values[0]
+
+
 def _scan_current() -> tuple[dict[Path, dict], dict[Path, str]]:
     """Read every candidate doc's frontmatter + body from the CURRENT working-tree content."""
     all_docs: dict[Path, dict] = {}
@@ -293,10 +343,9 @@ def _orphans_for(
     for path, fm in all_docs.items():
         if fm.get("status") in EXCLUDED_STATUS:
             continue
-        ag_values = [v for v in docspec._as_list(fm.get("asset_group")) if isinstance(v, str)]
-        if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
+        ag = single_covered_asset_group(fm)
+        if ag is None:
             continue
-        ag = ag_values[0]
         family = closeout_family[ag]
         if not family or path in family:
             continue  # no closeout doc yet for this AG, or this doc IS the closeout family
@@ -366,13 +415,82 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     return 0 if n == 0 else 1
 
 
-def main() -> int:
-    if "--only" in sys.argv:
-        idx = sys.argv.index("--only")
-        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+def _run_tranche(
+    tranche: str,
+    violations_by_path: dict[Path, str],
+    all_docs: dict[Path, dict],
+    family: set[Path],
+    quiet: bool,
+) -> int:
+    """Print the corpus-wide orphan set filtered to ONE tranche. REPORT ONLY — always exit 0;
+    see the module docstring for why this is not (and must not silently become) a gate."""
+    ag = _TRANCHE_ALIAS.get(tranche, tranche)
+    scoped = sorted(msg for path, msg in violations_by_path.items() if single_covered_asset_group(all_docs[path]) == ag)
 
-    quiet = "--quiet" in sys.argv
-    update = "--update-baseline" in sys.argv
+    if not quiet:
+        for v in scoped:
+            print(f"  ORPHAN  {v}")
+        print()
+
+    if not family:
+        # A tranche with no closeout-family doc anywhere has every member skipped by
+        # `_orphans_for`, so its orphan count is 0 for a reason that is NOT "clean". Say so
+        # loudly rather than let a scoped run read as a pass — same contract as the
+        # full-sweep mode's EMPTY-family warning.
+        print(
+            f"⚠️  check_ag_closeout_linkage (--tranche {tranche}): UNENFORCED — no closeout family "
+            f"doc found for asset_group={ag}; 0 orphan(s) here does NOT mean clean",
+            file=sys.stderr,
+        )
+
+    print(
+        f"ℹ️  check_ag_closeout_linkage (--tranche {tranche}): {len(scoped)} orphan(s) "
+        f"of {len(violations_by_path)} corpus-wide — REPORT ONLY, not the ratchet gate "
+        f"(baseline {load_baseline()} counts the whole corpus; re-run with no --tranche to gate)"
+    )
+    return 0
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Check every single-asset-group plan/issue doc has a findable path to its AG's consolidated "
+        "closeout plan (shrinking ratchet).",
+    )
+    parser.add_argument("--quiet", action="store_true", help="suppress the per-orphan listing, print only the verdict")
+    parser.add_argument(
+        "--update-baseline", action="store_true", help="lower the baseline to today's count (never raises it)"
+    )
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        metavar="PATH",
+        help="precommit mode: flag only orphan status THIS commit's staged files newly introduced",
+    )
+    parser.add_argument(
+        "--tranche",
+        choices=TRANCHE_CHOICES,
+        help="report mode: list only this tranche's orphans out of the full corpus-wide scan (always exits 0)",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    if args.only and args.tranche:
+        parser.error("--only and --tranche are mutually exclusive (staged-file precommit mode vs. corpus report mode)")
+    if args.tranche and args.update_baseline:
+        parser.error(
+            "--update-baseline refuses a --tranche-scoped run: the baseline is a single CORPUS-WIDE count, so writing "
+            "one tranche's count into it would ratchet the gate down to a fraction of the corpus it never measured"
+        )
+
+    if args.only:
+        return _run_only(args.only, args.quiet)
+
+    quiet = args.quiet
+    update = args.update_baseline
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
@@ -392,6 +510,16 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    if args.tranche:
+        # Deliberately AFTER the identical full-corpus scan above — the filter narrows the
+        # OUTPUT, never the scan (module docstring: reachability paths freely cross tranches).
+        ag = _TRANCHE_ALIAS.get(args.tranche, args.tranche)
+        if not quiet:
+            print(f"AG-closeout linkage check ({len(all_docs)} docs scanned, {len(files)} candidate files):")
+            print()
+        return _run_tranche(args.tranche, violations_by_path, all_docs, closeout_family[ag], quiet)
+
     violations = list(violations_by_path.values())
 
     baseline = load_baseline()

@@ -356,7 +356,9 @@ For the target `<ag>`:
    `coinbase_bare_name_migration_execution_service_2026_07_10.md` was genuinely cefi-only, `cross-cutting` dropped;
    `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
    silently left dual-tagged or silently excluded from both audits. **After every retag, re-run
-   `scripts/plan-hygiene/check_ag_closeout_linkage.py` before moving on** — fixing the TAG is necessary but not
+   `scripts/plan-hygiene/check_ag_closeout_linkage.py` before moving on** (add `--tranche <name>` to list only YOUR
+   tranche's orphans out of the same full-corpus scan — a REPORT that always exits 0, never the gate; the no-flag run
+   stays the ratchet and is what a "corpus is clean" claim must cite) — fixing the TAG is necessary but not
    sufficient: a doc just retagged onto its real AG can be newly orphaned WITHIN that AG if nothing in that AG's
    closeout family (its `related:` graph or its aggregated-sources digest body text) mentions it yet — the check went
    0→4→0 orphans, then 0→1→0, then 0→3→0 across 3 separate retag rounds this session, each time because the fix landed
