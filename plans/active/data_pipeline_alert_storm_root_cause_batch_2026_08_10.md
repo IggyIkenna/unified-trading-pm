@@ -493,7 +493,7 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       the ONLY thing that unblocks inverse liquidation notional; until it lands every inverse shard fails honestly. When
       it does land, replace `TestInverseFailsClosedWithoutContractSize`'s fail-pins with real arithmetic assertions
       rather than deleting them.
-- [ ] [OPERATOR] P0. **~4,113 already-written shards carry a knowably-wrong inverse notional and are still readable.**
+- [ ] [DATA] P0. **~4,113 already-written shards carry a knowably-wrong inverse notional and are still readable.**
       Fail-closing stops NEW wrong values; it does not remove the ones on GCS, which keep their `captured` manifest rows
       so downstream features/strategy cannot tell them from correct ones. Scope at the 14:19Z snapshot (higher now — the
       fleet was still writing): `@INV` 3,347 shards — OKX-SWAP 2,172 / KRAKEN-FUTURES 667 / BYBIT 412 / DERIBIT 96 —
@@ -510,8 +510,11 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       WITHOUT the flip is strictly worse than today: it converts wrong-but-present data into phantom rows. **Safer route
       now available**: `--skip-existing` is opt-in (`store_true`, default False) and `--force` exists, so once
       `contract_size` lands a scoped re-derive OVERWRITES each wrong parquet in place and writes a fresh `captured` row
-      — correct values, no delete, no manifest surgery. Recommend that unless the wrong values must stop being readable
-      sooner than `contract_size` can land.
+      — correct values, no delete, no manifest surgery. **RE-DECIDED 2026-08-11: take the re-derive route.** The earlier
+      delete+flip choice is withdrawn (it predated the captured-outranks discovery); no GCS delete and no manifest
+      surgery will be performed. Retagged `[OPERATOR]` → `[DATA]` because nothing here is operator-gated any more — the
+      work is now entirely "land `contract_size`, then re-derive". Accepted cost: the wrong inverse values stay readable
+      until that lands, which is why the `contract_size` todo above is the highest-value next item.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —

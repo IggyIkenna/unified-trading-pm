@@ -132,6 +132,12 @@ The sibling `uts-prod-dp-heartbeat-watcher` was checked and deliberately **left 
 **⚠️ STANDING STATE — the exit-code monitor is PAUSED.** Genuine spot-preemption recovery is therefore OFF fleet-wide.
 This is a deliberate hold, not a fix, and it must be reversed as part of the bounded-sweep work below.
 
+**Operator ruling 2026-08-11 (recorded in this doc): KEEP IT PAUSED** until the classifier can tell a deliberate delete
+from a partial run. Rationale accepted at decision time: backfills resume from their progress checkpoint on the next
+launch regardless, so a paused preemption-recovery loop delays recovery rather than losing work — whereas unpausing now
+would resume relaunching the 393 deleted VMs against a per-prefix budget whose durability in the deployed image is still
+unverified. The unpause is gated on the P0 below, not on elapsed time.
+
 ## Follow-ups
 
 - [ ] [SCRIPT] P0. **Teach the recovery path the difference between a preempted VM and a reaped one, then UNPAUSE
