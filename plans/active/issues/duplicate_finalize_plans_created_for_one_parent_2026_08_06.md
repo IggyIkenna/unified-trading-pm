@@ -70,7 +70,7 @@ context_scope:
       refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
       two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
       filename would have missed this; key it on the `depends_on` relationship, which is the real contract. —
-      `unified-trading-pm@<pending-sha>`
+      `unified-trading-pm@a6ae34ab8e`
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
