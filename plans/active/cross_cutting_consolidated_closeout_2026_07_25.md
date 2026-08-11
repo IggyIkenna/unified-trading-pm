@@ -253,26 +253,16 @@ human-hard-stop; tradfi 13,971-row v4 tail is fleet-drain-gated) +
 
 ## Track 3 — Independent infra/devops leftovers (credential-gated) · P2
 
-**Sources**: `infra_capture_and_devops_leftovers_2026_07_06.md` (**UPDATED 2026-08-02**: 6/9 done; 3 remain — ASTER
-live-data-landing verification (freeze already lifted 2026-07-28, connector shipped; landing itself unconfirmed — see
-the doc's own issue-doc pointer), the Live-ODDS second-source scaffold (no longer operator-decision-gated — the quota
-decision itself cleared 2026-07-28/29 — but the api_football scaffold half is still unwired), and the rate-limit-probe
-VM sanction (still genuinely operator-decision-gated). MANTLE gas-fees RPC cleared for real 2026-07-29
-(`unified-api-contracts@1924bfed`, no Secret Manager grant needed after all).)
+**Sources**: `infra_capture_and_devops_leftovers_2026_07_06.md` (**ARCHIVED 2026-08-11**: 9/9 done — all 3 remaining items from
+the 2026-08-02 check have since cleared: rate-limit-probe RETIRED (operator, superseded), Live-ODDS second-source
+RESOLVED (api_football struck, live odds VM healthy), ASTER live-data verified (SSH + GCS 2026-08-09).)
 
-- [`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`](/plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
-  (**DONE but DELIBERATELY NOT ARCHIVED — do not move this file**; was: "[IN FLIGHT 2026-07-25] … a workflow is
-  re-verifying + archiving it now"). Its own single todo is `[x]`; a 2026-08-02 re-reconciliation found MANTLE (of the
-  original 4 named `BLOCKED-*` items) has fully cleared and the Live-ODDS quota decision-component cleared, but 3
-  checkboxes remain open on the parent (ASTER data-landing verification, Live-ODDS second-source scaffold,
-  rate-limit-probe VM) — parent updated with citations, archival still deferred. **Archiving it would break a hard
-  shared gate**: it is the parent's ONLY `depends_on`+`gate_on_depends: true` coverage, so removing it from
-  `plans/active/` regresses `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a post-gate
-  `exit 1` blocking every future `unified-trading-pm` commit (empirically verified by simulating the move; see that
-  doc's own 🟡 banner). Re-attempt archival only once the parent's remaining items clear (archive both together) or the
-  coverage-gate design changes.
-
-**Close-out criterion**: not AO-eligible as a whole — the remaining items each need a human credential/decision, a
+- [`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`](/plans/archive/2026_08/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
+  (**ARCHIVED 2026-08-11 — all 9 parent checkboxes resolved, both docs archived together.** The 2026-07-26
+  coverage-gate concern is resolved: `check_finalize_plan_coverage.py` baseline now 0. The finalize plan's 4-pass
+  standing watch (2026-07-25 ×3, 2026-08-02, 2026-08-11) is closed.)
+  was: "[IN FLIGHT 2026-07-25] … a workflow is
+  re-verifying + archiving it now"). **Close-out criterion**: not AO-eligible as a whole — the remaining items each need a human credential/decision, a
 scaffold shipped, or a live-data confirmation; this Track stays a pointer until all clear.
 
 ## Track 4 — MVP scope + manifest bug hygiene · P2

@@ -32,7 +32,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, backlog-dispatch, regex-parsing, operator-gate-retag, dispatch-correctness, false-exclusion]
 related:
   [
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
@@ -53,7 +53,7 @@ depends_on: []
 context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /cursor-configs/CLAUDE.md,
   ]

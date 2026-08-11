@@ -716,13 +716,6 @@ by hand._
 - [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) — Stands up a
   repeatable real-data end-to-end test of the full features-service pipeline per family (discover v8 manifest → read GCS
   inputs → calculate → write parquet + manifest row → read-back & assert). Fixes the WRITE blocker…
-- [`infra_capture_and_devops_leftovers_2026_07_06`](./infra_capture_and_devops_leftovers_2026_07_06.md) — The infra-role
-  slice of the instruments-completion capture work — the VM launches, connector registrations, and live runners that are
-  not data_engineering tasks, plus the credential/operator-gated capture items that stay visible but cannot…
-- [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
-  — Gated closeout for infra_capture_and_devops_leftovers_2026_07_06.md ("AO Plan 6" of the instruments-completion set),
-  added per the finalize-plan-coverage gate (task_template.md §4, operator ruling 2026-07-24 — every
-  `assigned_vm: planning`…
 - [`infra_ops_residual_migration_verification_2026_07_24`](./infra_ops_residual_migration_verification_2026_07_24.md) —
   9 residual todos forked verbatim out of the archived migration-verification/orphan-safety harness plan (2026-07-24
   plan line-cap remediation split) — the catch-all infra/ops/audit tail that didn't fit the other 3 named residual

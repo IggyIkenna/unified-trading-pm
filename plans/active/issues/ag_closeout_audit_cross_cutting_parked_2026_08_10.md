@@ -198,7 +198,7 @@ source: >-
       accurate — genuinely cross-cutting (external-data-vendor > credential ask, per CLAUDE.md's "external data is
       always available" rule), still open, still not AO-eligible. > Correctly stays a cross-cutting action item.
 - [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-10 — NOT orphaned; real coverage exists.** This doc's own Round-2 note already
-      corrected the verdict: `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (`status: active`,
+      corrected the verdict: `/plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md` (`status: archived`,
       `assigned_vm: planning`) cites the source issue doc by path and keeps its own matching `[INFRA] P1` open checkbox
       for the identical item. The spec ask is still real but is tracked there, so it must not be double-tracked here.
       Original text preserved for record. Was: **Supply the rate-limit-probe engineering spec** (finding 5,

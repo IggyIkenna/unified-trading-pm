@@ -110,7 +110,7 @@ source:
 > | **3** IS-catalogue completion      | `is_catalogue_completion_2d_2026_07_06.md`          | data_engineering | Sonnet / high   | 2d        | now (parallel)                        |
 > | **4** Layer-1 re-measure + certify | `layer1_remeasure_and_certify_2026_07_06.md`        | data_engineering | Sonnet / high   | 3         | **gated** `gate_on_depends` Plans 1-3 |
 > | **5** foundation gates + capture   | `foundation_gates_and_capture_to_100_2026_07_06.md` | data_engineering | Sonnet / high\* | 4-5       | handler-audit now; rest PREREQ Plan 4 |
-> | **6** infra capture + devops       | `infra_capture_and_devops_leftovers_2026_07_06.md`  | data_engineering | Sonnet / high   | 5 (infra) | now (re-homed from infra role 07-07)  |
+> | **6** infra capture + devops       | `infra_capture_and_devops_leftovers_2026_07_06.md`  | data_engineering | Sonnet / high   | 5 (infra) | ✅ **DONE 2026-08-11** (archived) |
 >
 > _\*Plan 5 is the closest call — new `risk_params` handler + defi-oracle design; bump to Opus if you want a margin._
 >
@@ -519,7 +519,7 @@ reconciling + signing off, not redoing.)_
       `--operation deribit-options-chain` (the handler is **live/replay only — no backfill**, `process()` collects
       `date.today()`), so it actually captures BTC/ETH `options_chain` daily → then feeds the Stage-3 re-measure.
       Historical options are NOT captured by this handler (separate concern if ever needed). **DONE — reconciled
-      2026-07-28 against `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (own todo `[x]`, shipped
+      2026-07-28 against `plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md` (own todo `[x]`, shipped
       2026-07-07 by slot-3).** New one-shot worker launcher `scripts/vm/launch-deribit-options-chain-daily.sh`
       (`deployment-service@e18d585`) — e2-standard-2, singleton-locked on `deribit-opts-fwd-` prefix,
       `VM_SHUTDOWN_ON_COMPLETION=true`, fires `--operation deribit-options-chain --mode batch --asset-group CEFI` with

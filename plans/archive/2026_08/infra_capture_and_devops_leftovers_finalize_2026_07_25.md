@@ -23,7 +23,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-02"
+last_updated: "2026-08-11"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -63,31 +63,13 @@ source: >-
 > by convention — this finalize plan does not wait on those to be individually cleared before re-checking; it
 > re-evaluates gate status whenever the ASTER item lands.
 
-> **🟡 RE-VERIFIED 2026-07-26 — genuinely done, but INTENTIONALLY NOT ARCHIVED; do not move this file.** This plan's own
-> (single) todo is correctly `[x]` and its confirmation that the parent's 4 remaining items stay genuinely blocked still
-> holds today: re-checked the live corpus and found no operator/credential resolution for the ASTER CeFi live-capture
-> cost-control freeze (`BLK-55d45a68` / `BLK-4f52080e`), the MANTLE paid-RPC key (still no Secret Manager grant —
-> restated 2026-07-24 in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` +
-> `data_completion_defi_2026_07_15.md`), the Live-ODDS quota decision (restated 2026-07-24/26 in
-> `sports_live_availability_and_source_latency_2026_07_24.md` + `sports_satellite_ao_dispatch_batch5_2026_07_26.md`), or
-> the rate-limit-probe VM sanction (restated in `instruments_completion_tracker_2026_07_06.md`) — all 4 remain genuinely
-> blocked, none silently stale.
->
-> **But archiving THIS doc (moving it out of `plans/active/`) would immediately break a hard, shared QG** —
-> `scripts/quality_gates/check_finalize_plan_coverage.py` — **verified empirically by simulating the move**: the live
-> check currently reads exactly 1 violation (baseline 1, `deployment_registry_firestore_p0_unblock_2026_07_14.md`). With
-> this doc removed from `plans/active/`, the parent (`infra_capture_and_devops_leftovers_2026_07_06.md`,
-> `assigned_vm: planning`, 9 total todos — NOT exempt via the single-todo carve-out) loses its ONLY `depends_on` +
-> `gate_on_depends: true` coverage, and the check regresses to 2 violations > baseline 1 — a hard `exit 1` post-gate
-> failure in `quality-gates.sh` (`_post_gate_fail`, not a warn-only print — confirmed by reading the
-> `POST_GATE_FAILURES` accumulator and its terminal `exit 1`), blocking every future `unified-trading-pm` commit and
-> recreating the exact problem class this plan was authored to fix
-> (`/plans/archive/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`). This doc correctly stays
-> `status: active` in `plans/active/` as the parent's standing gate + re-check pointer — its own todo already
-> anticipated exactly this ("this finalize todo itself becomes the standing pointer, re-run it later"). **Do not
-> re-attempt the archival ritual on this doc** until either the parent's remaining 4 items all clear (archive both
-> together at that point) or an operator decision changes how finalize-plan coverage should be satisfied for a
-> permanently-blocked parent.
+> **✅ ARCHIVED 2026-08-11 (slot 16, data_engineering) — parent fully resolved, coverage gate clean, both docs archived
+> together.** All 9 parent checkboxes are now `[x]` (rate-limit probe RETIRED 2026-08-11, ASTER verified 2026-08-09,
+> Live-ODDS resolved 2026-08-08, all prior items done by 2026-08-02). `check_finalize_plan_coverage.py` reads 0 violations
+> at baseline 0 — the 2026-07-26 coverage-gate concern is resolved. This finalize plan served its purpose as the parent's
+> standing re-check pointer across 4 reconciliation passes (2026-07-25 ×3, 2026-08-02, 2026-08-11); both docs now move to
+> `/plans/archive/2026_08/` together, satisfying the original gate ("only once every todo in the parent doc is genuinely
+> `[x]`"). All referrers updated corpus-wide — see the final Progress Log entry below.
 
 ## Todos
 
@@ -170,39 +152,37 @@ source: >-
       no referrer paths touched (the doc did not move). Re-run only once the parent's remaining 4 items clear or the
       coverage-gate design changes.
 
-- [ ] [DOC] P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED-*` items on
-      `infra_capture_and_devops_leftovers_2026_07_06.md` clears (ASTER CeFi live-capture cost-control freeze
-      `BLK-55d45a68`/`BLK-4f52080e`; MANTLE paid-RPC Secret Manager grant; Live-ODDS quota decision; rate-limit-probe VM
-      sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
-      permanently-blocked parent. Only then run the standard 6-step archival ritual on both this finalize plan and its
-      parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.) — **🟡 TRIGGER
-      MET, PARTIAL RECONCILIATION DONE 2026-08-02 (slot 2) — still NOT fully resolved, archival NOT run.** 2 of the 4
-      named items have cleared since the 2026-07-25 re-check: **MANTLE paid-RPC** — no Secret Manager grant was actually
-      needed; `unified-api-contracts@1924bfed` (2026-07-29) routes it through Alchemy's already-provisioned
-      `alchemy-api-key` instead, live-verified. **Live-ODDS quota decision** — operator ruled 2026-07-28 + a new
-      5M-credits/mo key landed + live-verified 2026-07-29; the sibling gate half (api_football second-source scaffold)
-      is still open but is no longer operator-decision-gated (tracked in
-      `sports_live_availability_and_source_latency_2026_07_24.md`'s own todo, not duplicated here). Both flipped/updated
-      on the parent with full citations — see the parent's 2026-08-02 Progress Log entry (parent checkbox count now 6/9
-      done, up from 5/9). **3 checkboxes remain genuinely open on the parent** (not 2 — the Live-ODDS item's
-      operator-decision component cleared, but its own checkbox stays `[ ]` pending the still-unwired second-source
-      scaffold): **rate-limit-probe VM** (as of the 2026-08-02 check, re-confirmed operator-decision-gated, no operator
-      answer found — since RULED 2026-08-06 (operator): AUTHORIZED, per
-      `infra_capture_and_devops_leftovers_2026_07_06.md`'s own todo; the operator-decision hold is cleared, the probe
-      itself has not yet been executed);
-      **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet wired — now a plain execution todo,
-      tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
-      VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across
-      2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a new finding in
-      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here).
-      Per this todo's own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all
-      clear" — **no archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the
-      standing re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
-      verification confirms, or the Live-ODDS second source ships.
+- [x] ✅ [DOC] P2. **Reconciliation COMPLETE 2026-08-11 (slot 16, data_engineering) — ALL 9 parent checkboxes now `[x]`,
+      archival executed.** All 3 remaining items from the 2026-08-02 check have since resolved: **rate-limit-probe VM** —
+      RETIRED 2026-08-11 (operator): superseded, closing as won't-do (the real solution already shipped via Tardis
+      1-concurrent-VM hard cap + boot-disk sizing; see
+      `/plans/active/issues/rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md` and parent line 324).
+      **Live-ODDS second-source scaffold** — RESOLVED 2026-08-08 (slot 10): api_football live odds was STRUCK per operator
+      decision B (conflicts with 2026-06-24 wipe ruling); the live odds_api VM confirmed healthy (running, continuous
+      `ManifestWriter` shard updates through 2026-08-08T17:23Z). See parent line 305.
+      **ASTER live-data-landing verification** — DONE 2026-08-09 (slot 6): SSH'd the current consolidated VM, confirmed
+      both `live-aster-book-snapshot-5.log` and `live-aster-liquidations.log` actively writing `ManifestWriter` shard
+      updates; cross-checked warm event-log tier shows objects timestamped within minutes. See parent line 79.
+      **Parent checkbox count: 9/9 done** (up from 6/9 at the 2026-08-02 check). **`check_finalize_plan_coverage.py`
+      baseline now 0** (the `deployment_registry_firestore_p0_unblock_2026_07_14.md` violation that blocked archival in
+      2026-07-26 has since resolved). Since the parent is fully done AND the coverage gate is clean, the 6-step archival
+      ritual fires on BOTH this finalize plan and its parent together. Archiving to
+      `/plans/archive/2026_08/` this same session — see Progress Log below for the full 6-step evidence.
+      — `unified-trading-pm@<pending-sha>`
 
 ## Progress Log
 
-- **2026-08-02 (slot 2, finalize reconciliation)**: re-ran the parent-reconciliation trigger check. Of the parent's
+- **2026-08-11 (slot 16, data_engineering) — FINAL RECONCILIATION: ALL 9 PARENT CHECKBOXES `[x]`, ARCHIVAL EXECUTED.**
+  Parent state: every checkbox now genuinely resolved. The 3 items still open at the 2026-08-02 check (rate-limit-probe,
+  Live-ODDS second-source, ASTER live-data) have all since cleared — see todo 2's checkbox annotation above for per-item
+  dates + evidence. `check_finalize_plan_coverage.py` baseline = 0 (the `deployment_registry_firestore_p0_unblock`
+  violation that blocked archival in 2026-07-26 has since resolved). **6-step archival ritual run on both docs**: (1) no
+  DEFERRED items to migrate; (2) archival banners added to both; (3) codex check — no new contracts established, purely
+  wiring/verification work; (4) CLAUDE.md unchanged; (5) referrer paths updated corpus-wide (INDEX.md entries removed,
+  `instruments_master.md` links repointed, `cross_cutting_consolidated_closeout`, `instruments_completion_tracker`,
+  `cross_cutting_satellite_ao_dispatch_batch1_finalize`, and issue docs with `/plans/active/` path references all
+  repointed to `/plans/archive/2026_08/`); (6) `git mv` both docs. This finalize plan's 2-year, 4-pass standing watch is
+  closed.
   originally-named 4 `BLOCKED-*` items, MANTLE paid-RPC fully cleared and the Live-ODDS quota decision-component cleared
   (2 of 4 blocker-framings resolved) — flipped/updated on the parent with citations (checkbox count 5/9 → 6/9). **3
   checkboxes remain open** (not 2): rate-limit-probe VM sanction (unchanged, still gated), Live-ODDS second-source

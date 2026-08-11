@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-08-09
+last_updated: 2026-08-11
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -55,6 +55,16 @@ source:
 
 # Infra capture wiring + devops leftovers (Stage 5 infra) — AO Plan 6
 
+> **✅ ARCHIVED 2026-08-11 (slot 16, data_engineering) — all 9/9 checkboxes resolved, archived together with its finalize
+> plan.** The last 3 open items cleared between 2026-08-08 and 2026-08-11: rate-limit-probe VM RETIRED (operator,
+> superseded), Live-ODDS second-source RESOLVED (api_football struck per operator decision), ASTER live-data-landing
+> verified (fresh SSH + GCS evidence 2026-08-09). All 6 prior checkboxes were already `[x]` from earlier sessions (ASTER
+> register+launch 2026-07-30, Deribit options_chain 2026-07-07, VM logs 2026-05-27, test-fleet images 2026-07-07, pyth
+> oracle 2026-07-25, MANTLE RPC 2026-07-29, hybrid-venue classification 2026-07-14). The finalize plan
+> (`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`) is archived in the same commit — its 4-pass standing watch
+> (2026-07-25 ×3, 2026-08-02, 2026-08-11) is closed. Both docs now live at
+> `/plans/archive/2026_08/`. All referrers updated corpus-wide.
+>
 > **🤖 AO PLAN 6 of the instruments-completion set.** Dispatched to the agent-orchestrator (`assigned_vm: planning`,
 > role `data_engineering`). **Dispatch tier (frontmatter-driven, EVERY task): Sonnet / high.** _(Re-homed 2026-07-07
 > from role `infra` → `data_engineering`: the fleet has no infra-craft worker, so these tasks parked as craft-mismatch

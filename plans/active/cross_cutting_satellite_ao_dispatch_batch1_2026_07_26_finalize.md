@@ -87,7 +87,7 @@ context_scope:
       (`/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`) — drop it too. (1) Retag
       the remaining 3 genuinely infra-scoped docs (`plans/active/bucket_fold_ml_2026_07_17.md`,
       `plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md`,
-      `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md` → `[infra]` or fold into
+      `plans/archive/2026_08/infra_capture_and_devops_leftovers_finalize_2026_07_25.md` → `[infra]` or fold into
       `infra_consolidated_closeout_2026_07_25.md`'s Sources list per that doc's own convention) — read each doc's real
       content first to confirm before retagging (do not blind-apply), then re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` after each retag. (2) Archive

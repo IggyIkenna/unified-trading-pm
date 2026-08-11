@@ -52,7 +52,7 @@ related:
   [
     /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/archive/2026_07/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md,
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md,
   ]

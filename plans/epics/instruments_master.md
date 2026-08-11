@@ -44,8 +44,8 @@ related_plans:
   - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
   - ../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md
-  - ../active/infra_capture_and_devops_leftovers_2026_07_06.md
-  - ../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md
+  - ../archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md
+  - ../archive/2026_08/infra_capture_and_devops_leftovers_finalize_2026_07_25.md
   - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
   - ../active/instruments_completion_tracker_2026_07_06.md
@@ -501,9 +501,9 @@ residuals
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
 finalize (reconcile source docs + archive)
 
-### [`infra_capture_and_devops_leftovers_2026_07_06`](../active/infra_capture_and_devops_leftovers_2026_07_06.md)
+### [`infra_capture_and_devops_leftovers_2026_07_06`](../archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers
+**status**: archived · **estimate**: 2.4 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers
 (Stage 5 infra) — AO Plan 6
 
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
@@ -540,9 +540,9 @@ finalize (reconcile source doc + archive)
 **status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Finalize — defi A_TOKEN/DEBT_TOKEN
 instrument_type-alias + oracle_prices validity fix close-out
 
-### [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
+### [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](../archive/2026_08/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
 
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers —
+**status**: archived · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers —
 finalize (reconcile parent checkboxes + archive)
 
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md)
