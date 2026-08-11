@@ -140,12 +140,24 @@ unverified. The unpause is gated on the P0 below, not on elapsed time.
 
 ## Follow-ups
 
-- [ ] [SCRIPT] P0. **Teach the recovery path the difference between a preempted VM and a reaped one, then UNPAUSE
-      `uts-prod-dp-exit-code-monitor-cron`** (currently PAUSED at `0 * * * *`, so fleet-wide spot-preemption recovery is
-      OFF). `PARTIAL_UNCONFIRMED` auto-relaunches any VM that vanished without a durable exit marker, which made a
-      deliberate cleanup of 393 corpses spawn ~108 replacements in six minutes. An operator/agent-initiated delete needs
-      a durable tombstone the classifier honours — otherwise reaping a wedged fleet is impossible without also disabling
-      recovery, which is the corner this issue is currently parked in.
+- [x] ✅ [SCRIPT] P0. **Taught the recovery path the difference between a preempted VM and a reaped one** —
+      deployment-service@ecd6d2bd90. `vm-logs/{vm}/REAPED` tombstone + `is_vm_reaped` (mirrors the existing `PREEMPTED`
+      marker: bounded `blob_exists`, never raises, fails toward not-reaped so a read error costs a spurious relaunch
+      rather than silently suppressing recovery for a genuinely preempted VM); a `REAPED` verdict checked FIRST, ahead
+      of `preempted`, because a reaped spot VM can still carry a stale `PREEMPTED` blob and PREEMPTED relaunches;
+      `_finding_for` returns `None`, which is what withholds the relaunch since the escalation tier rides on the
+      finding. `scripts/vm/reap_vms.py` writes the tombstone BEFORE deleting (order is load-bearing — the reverse leaves
+      the relaunch window open) with `--tombstone-only` for VMs already deleted. 5 tests including a negative control
+      asserting the SAME VM shape without a tombstone still classifies `PARTIAL_UNCONFIRMED`, so the positive test
+      cannot pass for the wrong reason. Evidence: gate green, 3,322 passed, basedpyright 1259/1259 (ratchet held, not
+      raised); `_gcs.py` 982 → 939 via the `_vm_markers` leaf split rather than raising the 960-line cap.
+- [ ] [SCRIPT] P0. **UNPAUSE `uts-prod-dp-exit-code-monitor-cron` — BLOCKED on deploy + tombstone backfill, in that
+      order.** The code is on LDR but landing on `main` deploys nothing: the monitor runs `deployment-api:latest` via
+      Cloud Build, so (1) wait for the image to carry `ecd6d2bd90`, (2) run
+      `reap_vms.py --tombstone-only --vms-file /plans/active/issues/vm_reap_lists/reaped_vms_2026_08_11.txt` (the exact
+      393 names, committed alongside this doc so the list outlives the session that produced it) — they were deleted
+      before the tool existed and still have no tombstones, so unpausing first would replay the exact burst — then (3)
+      unpause. Doing these out of order re-creates the incident.
 - [ ] [SCRIPT] P1. Make `exit_code_fleet_monitor` bounded and complete: it must either finish a full fleet sweep inside
       its task timeout (parallelise the per-VM probe, or page the fleet across executions with a durable cursor) or
       loudly report that it did NOT complete. A monitor that silently covers 3% of the fleet is worse than none — it
