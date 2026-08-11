@@ -110,6 +110,61 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
     assert rc == 1
 
 
+# ── duplicate-gate creation-time guard (todo 1, duplicate_finalize_plans_created_for_one_parent) ──
+
+
+def test_only_fails_when_staged_finalize_plan_duplicates_an_existing_gate(tmp_path: Path) -> None:
+    """Reproduces the 2026-07-31 race: a parent already has an active finalize
+    companion, and a SECOND finalize plan is staged for the same parent — the
+    filenames differ (no date-suffix collision needed), only the depends_on slug
+    matches."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "some_parent_2026_07_31.md")
+    _write_plan(
+        active / "some_parent_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [some_parent_2026_07_31]\ngate_on_depends: true",
+    )
+    new_dup = _write_plan(
+        active / "some_parent_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [some_parent_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_dup)])
+    assert rc == 1
+
+
+def test_only_passes_when_staged_finalize_plan_is_the_sole_gate(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "some_parent_2026_08_05.md")
+    sole_finalizer = _write_plan(
+        active / "some_parent_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [some_parent_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(sole_finalizer)])
+    assert rc == 0
+
+
+def test_only_ignores_duplicate_gate_outside_scope(tmp_path: Path) -> None:
+    """Two finalize plans collide on the same parent, but --only names neither —
+    RULE-11 blast-radius safety: a pre-existing unrelated collision never blocks
+    this commit."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "some_parent_2026_07_31.md")
+    _write_plan(
+        active / "some_parent_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [some_parent_2026_07_31]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "some_parent_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [some_parent_2026_07_31]\ngate_on_depends: true",
+    )
+    unrelated = _write_plan(active / "unrelated_2026_08_05.md", assigned_vm="NA")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(unrelated)])
+    assert rc == 0
+
+
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
 
 
