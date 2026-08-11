@@ -196,7 +196,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       connector — Uniswap-Swap-topic half deliberately excluded.** Create
       `market_tick_data_service/live/connectors/aave_liquidations_ethereum_ws.py`, mirroring `curve_defi_ws.py`'s
       polling-`WSFeedConnector` wrapper pattern: internally construct
-      `OnChainEventPoller(rpc_url=..., contracts=[<AAVE V3 Pool address>], topics=[OnChainEventPoller's own default     `_AAVE_LIQUIDATION_TOPIC`])`
+      `OnChainEventPoller(rpc_url=..., contracts=[<AAVE V3 Pool address>], topics=[OnChainEventPoller's own default `_AAVE_LIQUIDATION_TOPIC`])`
       from `market_tick_data_service/market_interface/adapters/defi/live/onchain_event_poller.py`, translate each
       yielded raw log dict (`address`/`tx_hash`/`block_number`/`timestamp`, per that class's existing
       `tests/market_interface/unit/test_defi_live_feeds.py::TestOnChainEventPoller` shape) into a `ReceivedTick` with

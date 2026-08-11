@@ -86,7 +86,7 @@ drift_direction: advance-code
 - [x] ✅ [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain — STALE
       PREMISE, already shipped (verification only).** Source: same doc. This exact fix landed on
       `instruments-service@6b7fbadf`/`ec73983e` (2026-08-05,
-      `fix(defi): align multi-chain adapter venue property to     PROTOCOL-CHAIN grain`, 42 adapter files + 49 test
+      `fix(defi): align multi-chain adapter venue property to PROTOCOL-CHAIN grain`, 42 adapter files + 49 test
       assertions) — **four days before this batch-11 doc was authored (2026-08-09)** — so the source doc's checkbox was
       already stale at extraction time. Verified live against current HEAD, not just the commit log: every multi-chain
       DeFi adapter's `venue` property returns the combined form (e.g.
@@ -142,7 +142,7 @@ drift_direction: advance-code
       (`--asset-group cefi --mode incremental`, promoted 431,777-row catalogue, 200 distinct EXTENDED-STARKNET
       instruments now resolve for the `ALL` symbol sentinel with correct per-instrument lifecycle windows) → (3)
       launched `scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
-      (`VENUES=EXTENDED-STARKNET SHARD_DAYS=60     CUTOFF_DATE=2026-08-08 SYMBOLS=ALL`) — 13 SPOT VMs sharding
+      (`VENUES=EXTENDED-STARKNET SHARD_DAYS=60 CUTOFF_DATE=2026-08-08 SYMBOLS=ALL`) — 13 SPOT VMs sharding
       2024-10-01→2026-08-08 (the venue's real `_VENUE_LAUNCH`/UAC capability floor; the plan's own 2024-07-26 predates
       the funding/trades floor and applies only to the OHLCV candle path, which was already fully `captured` with zero
       `expected_unattempted` before this run — verified, no gap). All 13 VMs confirmed RUNNING then completed +
@@ -190,18 +190,17 @@ drift_direction: advance-code
       STALE PREMISE, ALREADY WORKING (verified 2026-08-10, slot 24).** No code change needed in
       `build_instrument_catalogue.py` — the numeric→canonical mapping is moot because the catalogue `league_id` is
       ALREADY canonical end-to-end. Measured evidence (read-only, against the LIVE prod catalogue
-      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt 2026-08-10 10:52Z):
-      (1) **0 numeric `league_id` rows** (532,868 rows, all canonical strings like `ALLSVENSKAN`/`EPL`); (2) all 96 v10
-      MVP football leagues (`_mvp_football_league_ids()`) present in the catalogue are tagged `mvp=True` — **0 false
+      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt 2026-08-10 10:52Z): (1)
+      **0 numeric `league_id` rows** (532,868 rows, all canonical strings like `ALLSVENSKAN`/`EPL`); (2) all 96 v10 MVP
+      football leagues (`_mvp_football_league_ids()`) present in the catalogue are tagged `mvp=True` — **0 false
       negatives**; 272,006 rows `mvp=True` today, and recomputing with the CURRENT UAC `is_mvp` yields 267,893
       `mvp=True` — the done-condition ("a fresh build tags ≥1 MVP-qualifying league `mvp=True`") is met by the live
       catalogue. The ONLY anomaly is a STALE false positive: `SEGUNDA_DIVISION` (4,113 rows, a non-canonical alias of
       the Spanish second tier) is tagged `mvp=True` — current `is_mvp` returns False for it, so a rebuild with current
-      code drops it (cosmetic; the MVP tag is unused downstream today). Original premise (numeric provider IDs →
-      no league ever tagged True) reflects the 2026-06-19 catalogue verify; superseded by the later canonicalization of
-      the sports by_date source (`sports_reference/by_date/.../league=<canonical>` paths + the MTDS odds adapter
-      `_canonical_league_id`). Repo: instruments-service
-      (`build_instrument_catalogue.py`).
+      code drops it (cosmetic; the MVP tag is unused downstream today). Original premise (numeric provider IDs → no
+      league ever tagged True) reflects the 2026-06-19 catalogue verify; superseded by the later canonicalization of the
+      sports by_date source (`sports_reference/by_date/.../league=<canonical>` paths + the MTDS odds adapter
+      `_canonical_league_id`). Repo: instruments-service (`build_instrument_catalogue.py`).
 - [x] ✅ [SCRIPT] P2. **Diagnose the SFI backfill mid-processing hang + add a request timeout + per-date isolation —
       STALE PREMISE, already shipped (verification via 3 real production runs).** Source: same doc. The described
       2026-06-19 hang was already root-caused and fixed well before this batch was authored (2026-07-24 source doc /
@@ -349,10 +348,10 @@ drift_direction: advance-code
   `mvp=True` (0 false negatives), 272,006 rows `mvp=True`; recomputing with current UAC `is_mvp` yields 267,893
   `mvp=True` — done-condition met. The numeric-ID premise reflects the 2026-06-19 catalogue verify; the sports by_date
   source + MTDS odds adapter have since canonicalized league_id end-to-end. No code change needed. One stale false
-  positive observed (`SEGUNDA_DIVISION`, 4,113 rows — a non-canonical Spanish-second-tier alias tagged `mvp=True` by
-  the build's UAC version; current `is_mvp` returns False, so the next catalogue rebuild drops it; cosmetic, MVP tag
-  unused downstream). Source checkbox in `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` stays open for
-  the batch-11 finalize twin to reconcile.
+  positive observed (`SEGUNDA_DIVISION`, 4,113 rows — a non-canonical Spanish-second-tier alias tagged `mvp=True` by the
+  build's UAC version; current `is_mvp` returns False, so the next catalogue rebuild drops it; cosmetic, MVP tag unused
+  downstream). Source checkbox in `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` stays open for the
+  batch-11 finalize twin to reconcile.
 - **2026-08-10 (slot 24)**: recovery note — the safe-doc-push prek-patch orphan incident
   (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) manifested on this commit's push: a retried
   commit stashed unstaged foreign WIP into `~/.cache/prek/patches/` and the restore step never ran. Restored via
