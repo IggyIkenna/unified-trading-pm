@@ -184,19 +184,34 @@ memory and that's what kills sessions" as-is.
       host-wide-pressure check would miss even with plenty of free RAM fleet-wide. **Done when**: confirm whether slots
       run under a cgroup memory limit at all, and if so, whether `journalctl -k` shows any cgroup-scoped OOM line
       correlated with a sample of loss timestamps. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask — SUBSTANTIAL PROGRESS
-      2026-08-11, still open). Built a fully isolated agent-orchestrator sandbox
-      (`/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`,
+- [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask — FURTHER PROGRESS
+      2026-08-11, still open — mechanism narrowed further but the actual signal-sender still unidentified). Built a
+      fully isolated agent-orchestrator sandbox (`/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`,
       `agent-orchestrator/scripts/orchestrator/{setup_debug_sandbox,watch_sandbox_slot_death}.sh`) specifically to catch
       a death live without ptrace overhead. First real run caught a genuine session-level death (332s into a real
       DeepSeek-backed task, same empty-`pane_dead` signature as production) and additionally checked macOS's built-in
       crash reporter (`ReportCrash`, confirmed actively working on the same run — it logged OTHER processes' events in
       the same window) — **zero crash report for this death**, ruling out segfault/abort/uncaught-exception as the
       mechanism with a second, independent, always-on crash-capture system (the Linux VM's now-enabled core dumps gave
-      the same null result). Leading hypothesis narrowed to an uncatchable (SIGKILL-class) signal to the whole session,
-      or a pty/session teardown below where either OS's normal crash machinery watches. **Done when**: a live-caught
-      death's underlying cause is identified from OS-level evidence (not just "confirmed absent again"), or enough
-      sandbox runs accumulate that a pattern (timing, account, task shape) emerges. Repo: agent-orchestrator.
+      the same null result). A SECOND live catch (155s into a fresh task, same empty-`pane_dead` signature, see Progress
+      Log) added: (a) ruled out the fleet's own spawn-heartbeat watchdog as the killer — read
+      `server/worker_liveness/_auth_failover.py`'s working-pane guard, confirmed via the activity log it fired and
+      correctly SKIPPED any respawn while the pane was actively producing output, with the death happening independently
+      in the ~45s after that skip; (b) ruled out macOS jetsam/OOM — checked the ROOT-level kernel jetsam-kill log
+      directly (`sudo log show --predicate 'sender == "kernel" AND eventMessage CONTAINS "jetsam"'`), which showed an
+      unrelated `ecosystemd` process being jetsam-killed in a tight ~10s loop throughout the window but never touched
+      our PID; (c) NEW positive signature — at the exact death instant, `runningboardd` logged
+      `termination reported by proc_exit` for the process, and its long-lived (211s) DeepSeek-API TCP connection was
+      simultaneously torn down via **RST, not FIN** — the signature of an abrupt, ungraceful termination (no time to
+      close sockets), consistent with the standing uncatchable-signal hypothesis rather than a clean app exit; (d) no
+      `launchd`-attributed "exited due to SIGKILL sent by X" line exists for this PID — that attribution only covers
+      launchd-managed services, not a plain tmux child process, so the actual signal-sender remains unidentified via
+      `log show` alone. **Practical ceiling reached for post-hoc unified-log archaeology on this Mac** — getting the
+      actual sender needs either live kernel signal tracing (`dtrace`/`ktrace`, needs SIP considerations) attached
+      BEFORE the next death, or shifting the live-catch to the production Linux VM where core dumps are already enabled
+      and root access is available via SSM. **Done when**: a live-caught death's underlying cause is identified from
+      OS-level evidence (not just "confirmed absent again"), or enough sandbox runs accumulate that a pattern (timing,
+      account, task shape) emerges. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -266,3 +281,27 @@ memory and that's what kills sessions" as-is.
   for this sandbox account. Next session: re-run `setup_debug_sandbox.sh`'s printed next-steps to relaunch a worker for
   another data point, or escalate to a live production catch via the newly-promoted watcher if the sandbox stops
   reproducing.
+- 2026-08-11 (continued, same day — third catch): re-ran the sandbox per the note above. Second live death this session,
+  155s into a fresh task (never reached its first Write tool call — no output file was ever created), same
+  empty-`pane_dead` signature. Also observed the fleet's own spawn-heartbeat watchdog fire mid-window
+  (`spawn_heartbeat_timeout_pane_working` at elapsed_s=202) and correctly skip respawning since the pane was actively
+  working — confirmed by reading `server/worker_liveness/_auth_failover.py` that this guard exists and is not what
+  killed the session; the session died independently ~45s later. With operator-granted `sudo` on this Mac, went three
+  levels deeper than any prior pass: (1) root-level `DiagnosticReports` — one unrelated file (`disk writes_...`,
+  timestamped ~10 min before the spawn even happened) found, no jetsam/crash report for this death; (2) root-level
+  kernel jetsam-kill log, unfiltered — found a real, unrelated, actively-looping jetsam kill of a process called
+  `ecosystemd` (fresh PID every ~10s, hitting a 15MB InactiveHard limit) throughout the window, but zero jetsam kills
+  for our PID at any point; (3) kernel-level TCP/process-lifecycle log around the exact death instant — found
+  `runningboardd` logging `termination reported by proc_exit` for the process at 16:00:29.247 local, with its
+  211-second-old DeepSeek-API connection AND a secondary connection both torn down via **TCP RST (not FIN)** at the
+  exact same timestamp — an ungraceful-termination signature (a clean exit sends FIN; RST means the kernel auto-reset
+  sockets left open by an abruptly-terminated process), and consistent with the SIGKILL-class hypothesis. Checked
+  `launchd`'s "exited due to SIGKILL | sent by X" attribution format (found it firing correctly for unrelated `mdworker`
+  processes in the same window) — it never fired for our PID, because that specific attribution only covers
+  launchd-managed services, and this is a plain tmux child process, so it doesn't apply here. **This is the practical
+  ceiling of what `log show` (even root-level) can establish post-hoc on this Mac** — the actual signal-sender is still
+  unidentified. Stopped the sandbox worker + backend immediately after this catch per the standing "pause after a
+  failure" instruction (fleet's own liveness watchdog had already auto-respawned a new worker on the dead session by the
+  time this was checked — killed that too). Next step needs either live kernel signal tracing armed BEFORE the next
+  death (not post-hoc), or moving the live-catch to the production Linux VM (`watch_production_slot_death.sh`, root via
+  SSM, core dumps already enabled) instead of continuing to iterate on this Mac.
