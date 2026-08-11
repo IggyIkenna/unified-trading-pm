@@ -354,6 +354,18 @@ removal + casing normalization remain before backfill-resume.
       canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
       in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
       and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
+- [ ] [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
+      currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own
+      work.** Confirmed live via quickmerge's isolated-worktree re-gate (pulls fresh from origin, so this is a real
+      current-tree state, not stale): `market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py` (905 L) and
+      `market_tick_data_service/engine/orchestrator/partitioned_writer.py` (906 L). Discovered while trying to ship an
+      unrelated, independently-verified fix (reader.py missing `combo_chain` in its own copy of
+      `_UNDERLYING_PARTITIONED_TYPES` — c31cfe7a updated the writer/manifest but not the reader, misrouting every
+      `combo_chain` read through the single-file path for both tradfi and cefi; +3 stale tests updated to match
+      c31cfe7a's intentional behavior change, 29/29 passing locally) — that fix is ready but blocked until this gate
+      clears. `partitioned_writer.py` is under active same-day WIP from this rename effort — not touched here to avoid
+      collision; whoever owns that work should extract a natural SRP boundary (e.g. chain-partition-dims resolution)
+      into a companion module. Repo: market-tick-data-service.
 
 ## Progress Log
 
