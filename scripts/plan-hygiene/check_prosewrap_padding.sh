@@ -39,10 +39,26 @@
 #       instance observed (the very first, single-pass case) was 18 spaces. 14 sits with margin on
 #       both sides of that gap.
 #
-# Usage: check_prosewrap_padding.sh [--quiet] [--update-baseline] [files...]
+# Usage: check_prosewrap_padding.sh [--quiet] [--update-baseline] [--diff-base <ref>] [files...]
 #   no files -> scans plans/active + plans/epics + plans/audit + codex (plans/archive excluded —
 #     historical record, out of repair scope, same convention as check_prettier_mangling.sh)
 #   check_prosewrap_padding.sh --only <path> [<path> ...]
+#
+# --diff-base <ref> (2026-08-11, closing the last unconverted check named in
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md): the whole-corpus
+# scalar baseline above is a promote-batch snapshot race — under fleet commit velocity, individual
+# local `quality-gates.sh` runs each see a different corpus snapshot, so unrelated concurrent
+# commits can push the live TOTAL past a frozen baseline with no single local run ever seeing a
+# violation; the CI gate on whichever commit happens to land last then blocks that unrelated
+# commit (confirmed live: unified-trading-pm@80cba81c, 2026-08-11 — 3805 > baseline 3655, already
+# fixed by a concurrent commit before this mode existed). Same proven pattern as
+# check_archive_candidates.sh/check_reference_paths.py/check_effort_signal_ratchet.py/
+# check_na_corpus_ratchet.py: compare the violation SIGNATURE SET (file + detector-type +
+# matched-content, never a line number — those shift) at HEAD vs at `<ref>` (both read via
+# `git ls-tree`/`git show`, not the working tree, so it's meaningful even off a shallow checkout),
+# fail only on signatures new at HEAD. Wired into run_hygiene_sweep.sh's shared DIFF_BASE_REF
+# guard exactly like the four proven checks — never a bare `[ -n "$CI_MODE" ]`-only guard (that
+# shape's latent periodic-sweep bug, fixed 2026-08-09, must not be reintroduced here).
 #
 # ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 # precommit-time presence, only the full corpus-wide baseline mode — so a docs(plans) commit
@@ -228,19 +244,92 @@ fi
 
 QUIET=0
 UPDATE_BASELINE=""
+DIFF_BASE=""
 FILES=()
-for a in "$@"; do
+_ARGS=("$@")
+i=0
+while [ "$i" -lt "${#_ARGS[@]}" ]; do
+  a="${_ARGS[$i]}"
   case "$a" in
     --quiet) QUIET=1 ;;
     --update-baseline) UPDATE_BASELINE="1" ;;
+    --diff-base)
+      i=$(( i + 1 ))
+      DIFF_BASE="${_ARGS[$i]:-}"
+      ;;
     *) FILES+=("$a") ;;
   esac
+  i=$(( i + 1 ))
 done
 if [ "${#FILES[@]}" -eq 0 ]; then
   while IFS= read -r f; do FILES+=("$f"); done < <(
     find "$PM_DIR/plans/active" "$PM_DIR/plans/epics" "$PM_DIR/plans/audit" "$PM_DIR/codex" \
       -name '*.md' 2>/dev/null
   )
+fi
+
+# ── Diff-scoped mode (`--diff-base <ref>`) ──────────────────────────────────────────────
+# Returns "relpath<TAB>signature" lines for the whole corpus at an arbitrary git ref (empty
+# ref = current disk content, i.e. HEAD's checkout in CI). Signature = detector-type + matched
+# content, line number stripped (line numbers shift between refs for reasons unrelated to
+# whether a violation is genuinely new).
+_violations_at() {
+  ref="$1"
+  if [ -z "$ref" ]; then
+    for f in "${FILES[@]}"; do
+      [ -f "$f" ] || continue
+      case "$f" in */plans/archive/*|plans/archive/*) continue ;; esac
+      rel="${f#"$PM_DIR"/}"
+      _detect_hits "$f" | sed -E 's/^[0-9]+://' | while IFS= read -r sig; do
+        printf '%s\t%s\n' "$rel" "$sig"
+      done
+    done
+  else
+    rel_paths="$(git -C "$PM_DIR" ls-tree -r --name-only "$ref" -- plans/active/ plans/epics/ plans/audit/ codex/ 2>/dev/null | grep '\.md$' || true)"
+    while IFS= read -r rel; do
+      [ -z "$rel" ] && continue
+      case "$rel" in plans/archive/*) continue ;; esac
+      git -C "$PM_DIR" show "$ref:$rel" 2>/dev/null | _detect_hits | sed -E 's/^[0-9]+://' | while IFS= read -r sig; do
+        printf '%s\t%s\n' "$rel" "$sig"
+      done
+    done <<< "$rel_paths"
+  fi
+}
+
+if [ -n "$DIFF_BASE" ]; then
+  if ! git -C "$PM_DIR" rev-parse --verify "$DIFF_BASE" >/dev/null 2>&1; then
+    [ "$QUIET" -eq 0 ] && echo "⚠️  check_prosewrap_padding: --diff-base ref '$DIFF_BASE' not reachable — falling back to baseline mode"
+    DIFF_BASE=""
+  fi
+fi
+
+if [ -n "$DIFF_BASE" ]; then
+  BASE_SIGS_FILE="$(mktemp)"
+  trap 'rm -f "$BASE_SIGS_FILE"' EXIT
+  _violations_at "$DIFF_BASE" | sort -u > "$BASE_SIGS_FILE"
+  HEAD_SIGS="$(_violations_at "" | sort -u)"
+  NEW_SIGS="$(comm -23 <(printf '%s\n' "$HEAD_SIGS") "$BASE_SIGS_FILE" 2>/dev/null || true)"
+  NEW_COUNT=0
+  [ -n "$NEW_SIGS" ] && NEW_COUNT=$(printf '%s\n' "$NEW_SIGS" | grep -c .)
+
+  if [ "$QUIET" -eq 0 ]; then
+    echo "Prettier proseWrap continuation-padding NEW since $DIFF_BASE (diff-scoped — pre-existing debt tolerated):"
+    echo ""
+    if [ "$NEW_COUNT" -gt 0 ]; then
+      printf '%s\n' "$NEW_SIGS" | sed 's/^/  /'
+    else
+      echo "  (none)"
+    fi
+    echo ""
+  fi
+
+  if [ "$NEW_COUNT" -eq 0 ]; then
+    [ "$QUIET" -eq 0 ] && echo "✅ check_prosewrap_padding: 0 new violation(s) vs $DIFF_BASE (diff-scoped — pre-existing debt in corpus tolerated)"
+    exit 0
+  else
+    [ "$QUIET" -eq 0 ] && echo "❌ check_prosewrap_padding: ${NEW_COUNT} NEW violating line(s) vs $DIFF_BASE — this PR's diff adds prosewrap-padding corruption. scripts/plan-hygiene/fix_prosewrap_padding.py <file> automates the repair (whole-file scoped — review the diff, keep only what this commit introduced). Never raise the baseline; this mode doesn't use it."
+    exit 1
+  fi
 fi
 
 BASELINE_COUNT="$(grep -E '^violation_count:' "$BASELINE_PATH" 2>/dev/null | sed -E 's/^violation_count:[[:space:]]*//')"

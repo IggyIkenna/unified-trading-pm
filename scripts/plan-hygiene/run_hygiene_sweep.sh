@@ -416,10 +416,18 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
 # item; each reformat pass ADDS leading-space padding instead of converging). Corpus already
 # carries real debt (found while root-causing 2026-08-03), so this is a shrinking ratchet like
-# check_archive_candidates.sh below — full-corpus only, not wired into --precommit (a staged-subset
-# count would trivially pass against the corpus-wide baseline). SSOT + repro:
+# check_archive_candidates.sh below. SSOT + repro:
 # plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md
-run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh"
+# Diff-scoped in CI-gate mode (2026-08-11, closing the last check named in
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md as never converted)
+# — same DIFF_BASE_REF guard as reference-path/archive-candidates/effort-ratchet/na-corpus above;
+# a per-commit staged-subset run still uses --only (wired elsewhere in this script) since a
+# handful of staged files would trivially pass the corpus-wide baseline either way.
+PROSEWRAP_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  PROSEWRAP_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "No prettier proseWrap continuation-padding (ratchet)" hard "$SCRIPT_DIR/check_prosewrap_padding.sh" "${PROSEWRAP_DIFF_ARGS[@]}"
 # Broken relative links (plans/active/*.md -> a doc that moved to plans/archive/... without the
 # referrer's path being updated) — the same check the --precommit fast path runs on any staged
 # plans/ change, run here too so the operator's daily sweep catches drift from commits that landed
