@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "1001aa76a0ebe300f3fe1f30c80470261fc7d35f"
+      "ldr_ci_status_sha": "a9bbb1bb932e860c29466dabb1e6f511211f8dc3"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "4b34ceea14aa30279a77b26d2f4da5576774c167"
+      "ldr_ci_status_sha": "01d9802970a159c9d31c8e4d9bfec2bc7c2535d6"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "05088f8a18f069d12afcf20057c36189e184a7bf"
+      "ldr_ci_status_sha": "80cba81cc8f65ea053713b7dc72eaea2e19efd92"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1514,7 +1514,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests",
-      "ldr_ci_status_sha": "7e421b04f49f357b8520743ad8a3293de8911aaa"
+      "ldr_ci_status_sha": "70b36276c2cad540de785b1683149ba8492b4c8a"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_terminal",
@@ -1557,7 +1557,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "e661cc92475526c6e7fb934a22a8db65f203e906"
+      "ldr_ci_status_sha": "4452cbb6da91e4a3efd0fb0eb4ef48f01ddee6eb"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
