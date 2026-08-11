@@ -17,7 +17,7 @@ The `Evidence:` convention (SSOT: plans/PLAN_FORMAT.md § Evidence-backed comple
   Multiple build-ids and additional token kinds (e.g. `gha=<run-url>`) are allowed; this gate
   VERIFIES every `cloudbuild=<id>` resolves SUCCESS in the Cloud Build API.
 
-Two sub-rules:
+Three sub-rules:
   - **A (strict, baseline 0): cited build must be SUCCESS.** Every `cloudbuild=<id>` in a `- [x]`
     todo is resolved via `gcloud builds describe`. A build whose OVERALL status is a terminal
     NON-success (FAILURE / TIMEOUT / CANCELLED / INTERNAL_ERROR / EXPIRED) is a HARD violation —
@@ -28,8 +28,16 @@ Two sub-rules:
   - **B (ratchet, baselined): runtime-green claim without any Evidence ref.** A `- [x]` todo that
     makes a build/deploy/promote-green claim but cites NO `Evidence:` ref is flagged. Baselined
     so legacy plans ratchet down; new over-claims without evidence push the count up → regression.
+  - **C (ratchet, baselined): prod DATA-mutation claim without a cited mutation artifact.** A
+    `- [x]` todo that claims a prod data/state mutation ran with a concrete outcome — a restamp /
+    backstamp / backfill / rename / delete of rows-shards-objects, or a tofu/terraform state op —
+    must cite a prod-mutation evidence artifact (`manifest_delta=` / `vm_logs=` / `gcs_op=` /
+    `state_list=`), the data-mutation analogue of `cloudbuild=<id>`. A `<repo>@<sha>` citation
+    evidences the CODE, not the OUTCOME, and does NOT satisfy C. SSOT:
+    plans/PLAN_FORMAT.md § 8d. Baselined so legacy claims ratchet down; a NEW mutation claim
+    without a cited artifact pushes the count up → regression.
 
-Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rule B); 1 = violation;
+Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rules B + C); 1 = violation;
 2 = arg/IO error.
 """
 

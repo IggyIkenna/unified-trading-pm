@@ -540,6 +540,33 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+### 8d. Prod DATA-mutation evidence — a checked-off mutation claim must cite a verifiable outcome artifact (HARD RULE — codified 2026-08-06)
+
+> **Why:** builds/deploys/promotes already cite `cloudbuild=<id>` (§ 8b) — a machine-checkable outcome. Prod
+> DATA-mutation completions (restamp/backstamp row counts, backfill shard counts, GCS renames/deletes, tofu/terraform
+> state ops) had no equivalent: the `- [x]` rested on the worker's self-report of running their own script, with no
+> cited log path / manifest-delta / operation id a reviewer could independently resolve. Review flagged this same class
+> three independent times (tofu-state rm, do_rename GCS renames, prediction restamp row-counts —
+> `plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`). This rule makes the check structural.
+
+Any `- [x]` todo whose completion is a **prod data/state mutation outcome claim** — a restamp / backstamp / backfill /
+rename / delete / purge / unphantom of rows-shards-objects, or a tofu/terraform state op — MUST cite a prod-mutation
+evidence artifact on the checkbox line or its continuation lines, the data-mutation analogue of `cloudbuild=<id>`:
+
+```markdown
+- [x] ✅ ... <the claim> ... Evidence: manifest_delta=<path-or-count>[,vm_logs=<path>,gcs_op=<id>,state_list=<path>]
+```
+
+- Accepted artifact kinds (at least one; a `<repo>@<sha>` citation evidences the CODE, not the OUTCOME, and does NOT
+  satisfy this rule):
+  - `manifest_delta=<...>` — a manifest before/after delta (row-count change, or the written delta artifact path).
+  - `vm_logs=<...>` — a `vm-logs/<unit>/RESULT.json` (or run.log) path a reviewer can resolve.
+  - `gcs_op=<...>` — a GCS operation id (rename/delete/rewrite op).
+  - `state_list=<...>` — a before/after `tofu`/`terraform state list` (or `state rm` output) captured for the completion.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` sub-rule C (PM post-gate
+  + precommit `--only`): a baselined ratchet — pre-existing corpus claims are grandfathered; a NEW data-mutation claim
+  that cites no artifact regresses the gate. Re-baseline sub-rule C with `--baseline-write-c`.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
