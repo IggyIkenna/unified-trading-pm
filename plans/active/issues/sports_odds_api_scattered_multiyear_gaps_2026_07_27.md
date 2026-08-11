@@ -1002,6 +1002,14 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   ≈2020-12-21, still before first real gap (~2021-06-07); census unchanged ~550/2257 (declining to re-run). Silent-hang
   count stays 12. Full live tracker: `plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
   Skip `GATED` (est 180); next dispatch: re-check `smallchunk14` (or successor) for terminal before flipping.
+- **2026-08-11T03:30Z (slot 5, P2 VERIFY `-0b21bc7d0f7e`): FLEET STALLED — 0 `mtds-backfill-odds-*` VMs running;
+  `smallchunk14-20260809` SPOT-preempted 01:34Z (routine, NOT the tracked silent-hang — no watchdog delete op; hang
+  count stays 12), no auto-recovery in ~2h since (prior preemptions auto-recovered in 2-4min). Frontier ≈2020-12-21
+  (chunk 115/2171), still before first real gap (~2021-06-07) → gap census NOT re-run (unchanged ~550/2257). Per this
+  todo's standing instruction ("NO new backfill VM launch needed from this slot"), did NOT launch; P1/babysit chain owns
+  the relaunch — flagged in the tracker doc's Progress Log. Not flipping either checkbox. Skip `GATED` (est 180).
+  **Next dispatch**: re-check for a live instance (or `smallchunkN` relaunch by the tracker chain) and terminal state
+  before flipping.
 
 ## Codex SSOTs
 

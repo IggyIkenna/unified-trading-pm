@@ -858,3 +858,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   PROGRESS.json last_completed=2020-10-16 monotonic (frontier advanced from 2020-08-30 at the prior dispatch), heartbeat
   blob 16:33:35Z. Silent-hang occ. count: 12 (unchanged, no 13th; hang-doc Timeline). Frontier ≈2020-10-17, NOT past the
   2021-06-07 milestone → gap census NOT re-run (300/2257 unchanged per todo guidance). No code/VM changes this dispatch.
+- **2026-08-11T03:30Z (slot 5, P2 VERIFY dispatch of `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`) — FLEET
+  STALLED: 0 `mtds-backfill-odds-*` VMs running.** `smallchunk14-20260809` (by then the campaign's longest-lived
+  instance) was SPOT-preempted at 2026-08-11T01:34Z (`compute.instances.preempted` per operations list — routine, NOT
+  the tracked silent-hang; hang-doc count stays 12x). No auto-recovery fired in the ~2h since, unlike the 2-4min
+  auto-recovery windows seen earlier for the same preemption class — flagging for this doc's next babysit/P1 tick to
+  relaunch per the established step-4 playbook (`--vm-name mtds-backfill-odds-smallchunkN-20260811`, increment N; guard
+  permits the singleton). Frontier at last check ≈2020-12-21 (chunk 115/2171) — still before the first real gap
+  (~2021-06-07); gap census not re-run. No VM launched from the P2 VERIFY dispatch (its own standing instruction forbids
+  it; this tracker owns relaunching).
