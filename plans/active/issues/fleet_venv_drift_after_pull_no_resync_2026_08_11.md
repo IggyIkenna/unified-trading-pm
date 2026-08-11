@@ -91,17 +91,19 @@ leaves the environment behind, silently, forever.
       `uv sync --frozen --check` (read-only, ~50ms) in `scripts/quality-gates.sh`, with a `QG_ALLOW_STALE_VENV=1` escape
       hatch mirroring `QG_ALLOW_SYSTEM_PYTHON=1`, and a `-f uv.lock` guard so a lockless repo is not aborted on a
       missing-lockfile error. Gate green: 3411 python + 290 dashboard tests.
-- [ ] [OPERATOR] P1. **Decide whether to promote the stale-venv check into `quality-gates-base/`, gating ~30 repos.**
-      The fail-closed venv preflight currently exists ONLY in agent-orchestrator's gate — no other repo and no shared
-      base has it — so this is a new CI gate for the rest of the fleet, not a rollout of an existing one. Argument for:
-      the drift measured here was fleet-wide (70-75%), and CI provisions from the lock so an in-sync tree pays ~50ms.
-      Argument for caution: a check verified in one repo would start blocking every repo's CI. **Done when**: the
-      decision is recorded here, and if yes, the check lands in the shared base with the same `-f uv.lock` guard.
-- [ ] [INFRA] P1. **Give `slot-cron-ff-pull.sh` a venv counterpart so drift cannot re-accumulate.** Remediation without
-      this is a one-off: the same 5-minute pull that fixed the drift measured here will recreate it the next time
-      `uv.lock` moves. Cheapest correct shape is to `uv sync` a repo only when the pull actually changed its `uv.lock`
-      (compare pre/post blob), so a no-op pull stays free. **Done when**: a pull that moves a lockfile leaves that
-      repo's venv in sync, proven by a before/after check on a real slot. (repo: unified-trading-pm)
+- [x] ✅ [OPERATOR] P1. **Operator approved 2026-08-11; PROMOTED — unified-trading-pm@5c373663c8.**
+      `qg_assert_venv_fresh()` now lives in `qg-common.sh` and is called by all four bases (service / library / ui /
+      codex). Deliberately NOT fired at source time: `quickmerge.sh` also sources `qg-common.sh` for helpers and in
+      isolated-worktree mode its `.venv` is a symlink into a possibly-unprovisioned cache, so auto-firing would break
+      shipping. Verified both directions before shipping — passes on service/library/ui/codex/AO repos AND on a lockless
+      repo, and aborts with exit 1 against a deliberately drifted lock; a real `base-service` gate run
+      (market-tick-data-service) passed end-to-end with no false abort.
+- [x] ✅ [INFRA] P1. **SHIPPED — unified-trading-pm@5c373663c8.** `_resync_venv_if_lock_moved` runs at the FF-success
+      point and compares `uv.lock` between the pre-merge sha and the new HEAD, so an ordinary no-op tick costs one
+      `git diff --quiet`. Skips any repo with a live pytest/gate rather than rewriting site-packages under a peer,
+      deferring to a later tick. **Trap found while doing this**: the script OVERWRITES ITSELF from origin every 5 min
+      via its own crontab entry (`git show origin/<b>:<script> | cmp -s - <script> || mv`), so an in-place edit silently
+      reverts — landing on origin is the only way to change it.
 - [ ] [INFRA] P2. **Root-cause why `uv sync --frozen` does not prune three packages in slot 8's `unified-trading-pm`.**
       `mypy_boto3_s3`, `pyasn1`, `s3transfer-stubs` remain installed and unlocked immediately after a successful sync,
       leaving that one venv permanently "stale" to `--check`. Not a race (measured: stale immediately, and again 40s
