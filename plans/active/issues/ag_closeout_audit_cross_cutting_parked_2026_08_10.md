@@ -61,7 +61,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /plans/active/issues/ci_escalation_no_coverage_for_local_ratchet_gate_breaches_2026_08_10.md,
     /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
     /plans/active/issues/fill_completed_event_schema_break_live_defi_2026_08_08.md,

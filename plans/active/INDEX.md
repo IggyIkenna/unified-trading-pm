@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 288 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 284 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -137,7 +137,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (41)
+### defi (40)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -189,10 +189,6 @@ by hand._
 - [`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`](./defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md)
   — Gated finalize companion for issues/defi_expected_unattempted_backlog_1m_2026_07_03.md (reclassified NA→planning,
   na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the `_INSTRUMENT_TYPE_ALIASES` +…
-- [`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09`](./defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md)
-  — Gated closeout for issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md — machine-held
-  via depends_on + gate_on_depends: true until the source doc's sole remaining item (the bounded
-  read_availability_index…
 - [`defi_migration_audit_log_2026_07_24`](./defi_migration_audit_log_2026_07_24.md) — Verbatim DeFi-specific migration
   audit trail (WAVE-2 G2-defi readiness verdict, APPLY-READY verdict, PRE-APPLY ①–⑫ audit, data_type MIGRATION-COVERAGE
   matrix, ORPHAN-COVERAGE drilldown) extracted from…
@@ -209,9 +205,9 @@ by hand._
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its…
 - [`defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10`](./defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md)
-  **[draft]** — Extracted from `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos section — every
-  judgment call this work depended on is now resolved (POOL/rate_indices/dex_pool_fees scope confirmed, the retirement
-  pattern already…
+  — Extracted from `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos section — every judgment call
+  this work depended on is now resolved (POOL/rate_indices/dex_pool_fees scope confirmed, the retirement pattern
+  already…
 - [`defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10`](./defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md)
   — Gated finalize companion (operator ruling 2026-07-24) for the POOL/rate_indices/dex_pool_fees retirement plan. This
   is a batch-style extraction from `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos section —…
@@ -613,7 +609,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (60)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -656,14 +652,6 @@ by hand._
 - [`citadel_paper_batch_live_reconciliation_2026_06_19`](./citadel_paper_batch_live_reconciliation_2026_06_19.md) —
   Implement the determinism spine ensuring paper(W)==batch-rerun(W) trade-for-trade, with full reconciliation across
   paper/batch/live trading modes.
-- [`citadel_satellite_ao_dispatch_batch1_2026_08_08`](./citadel_satellite_ao_dispatch_batch1_2026_08_08.md) —
-  Operator-authorized extraction 2026-08-08 of the agent-shippable items from
-  `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s own "Remaining-work register" § A ("Agent-shippable
-  infra/code — NO operator gate — a VM/agent can ship…
-- [`citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize`](./citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md)
-  — Gated closeout for citadel_satellite_ao_dispatch_batch1_2026_08_08.md — machine-held via depends_on +
-  gate_on_depends: true until that plan's 7 todos are done. Mirrors the prediction/cefi/defi/sports satellite-batch
-  finalize pattern…
 - [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](./colocated_feature_pipeline_in_memory_handoff_2026_06_21.md)
   — Land deferred colocated feature pipeline I/O efficiency items (in-memory DAG handoff, parquet consolidation, column
   pruning) and restore features-service basedpyright strictness.
@@ -826,7 +814,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (45)
+### ao (44)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -844,10 +832,6 @@ by hand._
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
-- [`ao_satellite_ao_dispatch_batch10_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md) —
-  TENTH AO-dispatch batch for the `ao` topic tranche — produced by a satellite-batch-extraction pass (mirroring
-  `/ag-closeout-audit`'s pattern) over 21 `ao`-owned `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read
-  end-to-end but…
 - [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until all 6 of that batch's todos are done. Reconciles each verified todo's evidence back into its

@@ -25,7 +25,7 @@ summary: >-
   section-C migration — all 4 are already live, open checkboxes in `crypto_alpha_research_2026_07_24.md` (lines 436,
   487, 440, 480) — not orphaned, not part of this extraction, and the source doc's register is corrected accordingly in
   the same commit as this batch.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -45,13 +45,13 @@ tags: [reconciliation, paper-trading, determinism, ao-dispatch, close-out, batch
 related:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/epics/batch_live_symmetry_master.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-11"
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -92,6 +92,12 @@ source: >-
   `archetype_capability_manifest`, `reversion_zscore`, `145-strateg`/`14-strategy run`, `GroupC smart-fill`) — one
   genuine conflict found (P2.11.15 vs `crypto_alpha_research_2026_07_24.md` line 536), held back; the other 7 cleared.
 ---
+
+> **🟢 ARCHIVED 2026-08-11 — COMPLETE.** All 7 todos shipped with verified evidence (see Progress Log). Reconciled by
+> `citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md` (now also archived) — P1 confirmed all 7 source-doc
+> checkboxes flipped with resolving commit citations, register corrected; P2 re-checked the held-back P2.11.15 conflict
+> (still open, no action); P3 archived both plans to `plans/archive/2026_08/` per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 # Citadel satellite AO batch 1 — 7 conflict-clear agent-shippable items
 

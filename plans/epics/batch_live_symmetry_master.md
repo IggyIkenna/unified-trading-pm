@@ -29,8 +29,8 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/citadel_paper_batch_live_reconciliation_2026_06_19.md
-  - ../active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md
-  - ../active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md
+  - ../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md
+  - ../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md
   - ../active/daily_trading_analyst_llm_job_design_2026_07_29.md
   - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md
   - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md
@@ -87,14 +87,11 @@ Pub/Sub subscriptions + build the cold-compaction job
 **status**: active · **estimate**: 38 cal AI-days (class: infra) **title**: Citadel-grade Paper ⟷ Batch ⟷ Live
 Reconciliation — the Determinism Spine
 
-### [`citadel_satellite_ao_dispatch_batch1_2026_08_08`](../active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+### `citadel_satellite_ao_dispatch_batch1_2026_08_08` (+ finalize) — 🟢 ARCHIVED 2026-08-11
 
-**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
-
-### [`citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize`](../active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md)
-
-**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Citadel satellite AO batch 1 — finalize
-(reconcile source doc + re-check the held-back conflict + archive)
+**status**: complete — see
+[`../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md) +
+[`../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md`](../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md)
 
 ### [`daily_trading_analyst_llm_job_design_2026_07_29`](../active/daily_trading_analyst_llm_job_design_2026_07_29.md)
 
