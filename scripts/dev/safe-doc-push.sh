@@ -954,6 +954,11 @@ autostash_rebase_reconcile() {
     echo "  explicit pop succeeded -- edits restored to the working tree"
   fi
   git restore --staged . 2>/dev/null || true
+  # Stage the named files FIRST (safe_doc_push_isolation_drops_rename_deletions P0: "Do not
+  # quarantine before staging"). The `git restore --staged .` just unstaged EVERYTHING, and the
+  # stale-pop guard below scans unstaged changes -- a payload left unstaged here is structurally
+  # sweepable. Re-stage it so the guard cannot see it; the protected-list remains the fallback.
+  git add -- "${FILES[@]}" 2>/dev/null || true
   # autostash chain-breaker (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md):
   # if the pop restored stale content that reverts origin, quarantine it NOW so the next cycle does
   # NOT re-stash it. Only affects files NOT in this run's --files (the caller's explicit edits).
@@ -1115,6 +1120,15 @@ final_ok=false
 # from inside the loop (rebase conflict, non-drift push failure, a deterministic hook
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
+
+# Stage the named files FIRST -- they are the payload (safe_doc_push_isolation_drops_rename_deletions
+# P0: "Do not quarantine before staging"). Both quarantine guards in this script (the backlog
+# self-arrest here and the stale-pop guard inside autostash_rebase_reconcile) decide what to sweep
+# by scanning UNSTAGED changes (`git diff --name-only`) and stash only the paths they list. A
+# payload that is already STAGED is structurally invisible to that scan -- it can never be swept,
+# whatever the protected-list string matching does. Best-effort here (an index.lock is handled by
+# the retry loop's own add); the guards' protected-list remains the fallback if this fails.
+git add -- "${FILES[@]}" 2>/dev/null || echo "  ⚠ could not pre-stage the payload before the backlog guard -- the protected-list is the only protection this run" >&2
 
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
