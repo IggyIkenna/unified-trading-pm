@@ -316,6 +316,38 @@ memory and that's what kills sessions" as-is.
       recently, or if this has always silently occurred) and whether they're incidental noise or somehow contribute to
       the crash; (c) if confirmed, the fix candidate is throttling/serializing concurrent new-pane creation against the
       tmux server rather than firing them all at once. Repo: agent-orchestrator.
+- [x] [INFRA] P0. ~~Second live catch, ~14 minutes later~~ — **CONFIRMS TWO DISTINCT DEATH MECHANISMS, not one.** Same
+      capture session, still running. Death #2: `tmux_server_died` at **2026-08-11 18:24:41** (21 slots). This one does
+      NOT match death #1's flat-then-instant signature at all. Instead, `load average` (1m) climbs **steadily and
+      continuously for ~9 minutes before the death**: 5.71 (18:15:00) -> 7.11 (18:16:09) -> 14.23 (18:16:45) -> 15.84
+      (18:18:20) -> 20.31 (18:19:15) -> **70.92 (18:19:35)** -> 77.29 peak (18:22:00) -> 48.35 (18:23:56, last healthy
+      sample) -> server gone (18:24:09). At 18:19:35 the capture script's own `tmux list-sessions` call — normally
+      9-12ms every single time — took **6,815ms**, and the capture loop then MISSED its 1s cadence for ~~2.5 minutes
+      (18:19:35 to 18:22:00, no samples at all) — the monitoring script's own subprocess calls were themselves too
+      starved of scheduler time to complete on schedule. This is genuine, sustained, severe resource starvation, not an
+      instant crash. A `ps -eo pid,ppid,pcpu,...--sort=-pcpu` snapshot taken seconds after the death (18:24:43, load
+      still 30.82/38.32/22.47) names the actual load: **7+ concurrent `ssh git-upload-pack` fetches to the same repo**
+      (`unified-trading-system-ui.git` — plausibly several different slots independently fetching it at once), **9+ live
+      `claude` worker processes each at 18-25% CPU** (dozens of slots resuming work simultaneously post-pause), and
+      **one `rg --no-config --files --hidden` recursive scan alone at 900% CPU** (a single file-listing tool call
+      consuming up to 9 full cores). `top` also showed 16.1% iowait and swap in active use (5.2GB), consistent with
+      genuine multi-resource contention (CPU + disk I/O), not one narrow bottleneck. **Revised model — two failure
+      modes, one root class of trigger**: both death #1 (instant crash on a concurrent new-pane-creation burst) and
+      death #2 (gradual death under sustained aggregate CPU/IO starvation) point at the SAME underlying condition — **a
+      large number of slots becoming simultaneously active drives resource demand past the VM's capacity**, whether that
+      shows up as an instant crash-on-spawn-storm or a multi-minute starvation death. This reframes the fix target away
+      from "find and patch a tmux bug" toward **"the orchestrator dispatches more concurrent work than this VM can
+      actually carry"** — a capacity/throttling problem, not a tmux-specific one. Notably, this ALSO retroactively
+      explains why the earlier (now-refuted) cron-alignment hypothesis felt so plausible for 3/3 early samples: the two
+      named cron jobs are ONE SOURCE of concurrent git load among MANY (7+ concurrent git fetches here came from
+      ordinary slot work, not cron) — the real trigger was always "how much concurrent git/CPU load is the fleet
+      generating right now," which cron ticks are only sometimes correlated with. **Done when**: (a) determine a safe
+      concurrency ceiling — how many slots can be simultaneously active/spawning before the VM saturates (from this
+      data: healthy at load~~6-7 with ~27 sessions live, catastrophic once concurrent NEW dispatch + git fetches pile on
+      top); (b) throttle/stagger AutoSpawn's dispatch rate and/or cap concurrent git subprocess fetches fleet-wide
+      rather than letting every slot fetch independently and simultaneously; (c) investigate whether the 900%-CPU
+      `rg --hidden --files` pattern recurs (a single runaway recursive scan is an outsized, fixable contributor even
+      before touching dispatch concurrency). Repo: agent-orchestrator, unified-trading-pm (cron/git tooling).
 - [ ] [INFRA] P2. **Promote `/tmp/tmux_server_live_capture.log`'s capture script into the repo.** Currently a
       hand-authored one-shot shipped via SSM directly to the VM (`/tmp/tmux_live_capture.sh`), not committed anywhere —
       it did its job for this catch but is NOT durable and doesn't survive a VM restart or an intentional cleanup pass.
