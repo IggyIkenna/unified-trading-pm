@@ -94,6 +94,20 @@ BASELINE_PATH="$SCRIPT_DIR/prosewrap_padding_baseline.yaml"
 
 INDENT_THRESHOLD=14
 
+# Emits a loud, hard-failing error when a `sort` invocation itself failed (as
+# opposed to an upstream grep finding no matches, which is a normal empty
+# result, not a failure) -- e.g. the locale/encoding crash this gate hit
+# before LC_ALL=C was pinned above (prosewrap_padding_precommit_gate_locale_
+# false_positive_2026_08_09.md). Every call site below isolates its `sort -u`
+# to either a standalone `printf | sort` pipe (so pipefail's exit status can
+# only reflect sort, never a preceding grep/sed stage) or reads sort's own
+# PIPESTATUS slot directly -- so this is called ONLY on a genuine sort
+# failure, never on a benign "grep found nothing" case.
+_die_sort_failed() {
+  echo "❌ check_prosewrap_padding: sort failed (exit $1) while computing violation signatures$2 — likely a locale/encoding regression (LC_ALL=C is pinned at the top of this script; if you're seeing this, something overrode it or fed sort invalid bytes). Aborting rather than risk a silent false result." >&2
+  exit 1
+}
+
 # Shared detector — reads from the file given as $1, or from stdin if called with no args (used
 # for `git show HEAD:<path>` content, which has no filesystem path of its own). Prints
 # "FNR:type:content" per violating line; callers needing a HEAD-vs-current SIGNATURE (--only
@@ -178,8 +192,12 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    cur_backtick_raw="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    cur_backtick="$(printf '%s\n' "$cur_backtick_raw" | sort -u)"
+    sort_ec=$?; [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (current backtick hits, $f)"
+    head_backtick_raw="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    head_backtick="$(printf '%s\n' "$head_backtick_raw" | sort -u)"
+    sort_ec=$?; [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (HEAD backtick hits, $f)"
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -195,8 +213,12 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    cur_overindent_raw="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://')"
+    cur_overindent="$(printf '%s\n' "$cur_overindent_raw" | sort -u)"
+    sort_ec=$?; [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (current over-indent hits, $f)"
+    head_all_content_raw="$(printf '%s' "$head_content" | _all_content_previews)"
+    head_all_content="$(printf '%s\n' "$head_all_content_raw" | sort -u)"
+    sort_ec=$?; [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (HEAD content previews, $f)"
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
@@ -307,7 +329,11 @@ if [ -n "$DIFF_BASE" ]; then
   BASE_SIGS_FILE="$(mktemp)"
   trap 'rm -f "$BASE_SIGS_FILE"' EXIT
   _violations_at "$DIFF_BASE" | sort -u > "$BASE_SIGS_FILE"
-  HEAD_SIGS="$(_violations_at "" | sort -u)"
+  sort_ec="${PIPESTATUS[1]}"
+  [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (diff-base signature set, $DIFF_BASE)"
+  head_sigs_raw="$(_violations_at "")"
+  HEAD_SIGS="$(printf '%s\n' "$head_sigs_raw" | sort -u)"
+  sort_ec=$?; [ "$sort_ec" -ne 0 ] && _die_sort_failed "$sort_ec" " (HEAD signature set)"
   NEW_SIGS="$(comm -23 <(printf '%s\n' "$HEAD_SIGS") "$BASE_SIGS_FILE" 2>/dev/null || true)"
   NEW_COUNT=0
   [ -n "$NEW_SIGS" ] && NEW_COUNT=$(printf '%s\n' "$NEW_SIGS" | grep -c .)
