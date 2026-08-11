@@ -107,7 +107,13 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       drawdown, else a topped-up window reads as spending less than nothing. A window whose start predates the series
       returns `real_spend_usd=None`, never 0. 5 tests; `quality-gates.sh` green (3410 python, 290 dashboard). Deployed +
       verified live: series sampling at 61s intervals, `/api/healthz` ok.
-- [ ] [DATA] P0. **Record the first TRUE 24h window residual — available from ~2026-08-12 07:46 UTC.** This is the
+- [ ] [OPERATOR] P0. **BLOCKED-OPERATOR-TIME-GATE until 2026-08-12 07:46 UTC — record the first TRUE 24h window
+      residual.** Tagged operator-blocked deliberately so nothing picks it up early. The balance series began
+      **2026-08-11 07:46:24 UTC** (first sample after the @b4e3e74205 restart), so a 24h window has no opening reading
+      until exactly 24h later and the endpoint correctly returns `real_spend_usd=null` until then. Running it sooner
+      yields a null, not a small number — and a null misread as "zero residual" is the one wrong conclusion available
+      here. Command (read-only, on the orchestrator VM via SSM):
+      `curl -s "localhost:8765/api/accounts/deepseek/wallet-reconciliation/window?window_hours=24"`. This is the
       operator's stated success criterion (24h residual to zero, no non-AO DeepSeek usage). Curl the windowed endpoint
       once the series covers a full 24h and record `real_spend_usd`, `attributed_total_usd`, `residual_usd` and BOTH
       balance sample timestamps here. At 1-minute cadence the edge skew is ~$0.13, so a residual materially above that
