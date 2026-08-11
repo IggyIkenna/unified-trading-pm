@@ -60,7 +60,21 @@ mention", never "raise the baseline").
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <asset_group> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <asset_group>`` (2026-08-11, `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`
+Todo 3): additive/opt-in scoped view for a single-tranche audit dispatch (e.g.
+`/ag-closeout-audit cefi`) that doesn't want the other 8 tranches' orphans in its output —
+mirrors the already-shipped `generate_ag_closeout_audit_candidates.py --tranche` flag.
+Choices are `COVERED_ASSET_GROUPS` (the real `asset_group` enum values this script already
+operates on, NOT `generate_ag_closeout_audit_candidates.py`'s separate `ALL_TRANCHES` CLI
+vocabulary, which uses `infra`/`ui` tranche names distinct from the `infrastructure`/`ui`
+enum values this script keys off of). Filters the reported orphans to just that tranche and
+is ALWAYS INFORMATIONAL — it never enforces the corpus-wide ratchet baseline (which has no
+meaningful per-tranche split; a handful of tranches' scoped counts don't sum to a baseline
+seeded against the whole corpus), so it always exits 0. No-flag mode is entirely unchanged:
+the full-corpus ratchet gate remains the only exit-code-bearing mode.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -374,6 +388,26 @@ def main() -> int:
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
 
+    tranche: str | None = None
+    if "--tranche" in sys.argv:
+        idx = sys.argv.index("--tranche")
+        if idx + 1 >= len(sys.argv):
+            print("error: --tranche requires a value", file=sys.stderr)
+            return 2
+        tranche = sys.argv[idx + 1]
+        if tranche not in COVERED_ASSET_GROUPS:
+            print(
+                f"error: --tranche must be one of {', '.join(COVERED_ASSET_GROUPS)} (got {tranche!r})",
+                file=sys.stderr,
+            )
+            return 2
+        if update:
+            print(
+                "error: --tranche and --update-baseline are mutually exclusive (baseline is corpus-wide)",
+                file=sys.stderr,
+            )
+            return 2
+
     files = target_files()
     all_docs, all_bodies = _scan_current()
 
@@ -392,20 +426,36 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+    if tranche is not None:
+        violations_by_path = {
+            p: v for p, v in violations_by_path.items() if docspec._as_list(all_docs[p].get("asset_group")) == [tranche]
+        }
     violations = list(violations_by_path.values())
 
     baseline = load_baseline()
     n = len(violations)
-    ok = n <= baseline
+    # A --tranche run is a scoped, informational view only — the ratchet baseline is
+    # corpus-wide and has no meaningful per-tranche split (see module docstring), so it
+    # never fails the gate. Only the full-corpus (no --tranche) mode enforces the ratchet.
+    ok = True if tranche is not None else n <= baseline
 
     if not quiet:
-        print(f"AG-closeout linkage check ({len(all_docs)} docs scanned, {len(files)} candidate files):")
+        scope = (
+            f"tranche={tranche}"
+            if tranche is not None
+            else f"{len(all_docs)} docs scanned, {len(files)} candidate files"
+        )
+        print(f"AG-closeout linkage check ({scope}):")
         print()
         for v in sorted(violations):
             print(f"  ORPHAN  {v}")
         print()
 
-    print(f"{'✅' if ok else '❌'} check_ag_closeout_linkage: {n} orphan(s) (baseline {baseline})")
+    if tranche is not None:
+        mark = "✅" if ok else "❌"
+        print(f"{mark} check_ag_closeout_linkage --tranche {tranche}: {n} orphan(s) (informational, not ratchet-gated)")
+    else:
+        print(f"{'✅' if ok else '❌'} check_ag_closeout_linkage: {n} orphan(s) (baseline {baseline})")
 
     if update:
         write_baseline(n, baseline)
