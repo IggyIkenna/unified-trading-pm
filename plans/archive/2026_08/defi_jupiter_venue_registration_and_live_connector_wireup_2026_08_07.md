@@ -7,7 +7,7 @@ summary: >-
   onchain_event_poller.py's Aave-liquidation path into a real MTDS live connector. 2 of the operator's 5 named Jupiter
   surfaces (execution-service support, MVP-venue-list inclusion) turned out to already exist / be automatic — see "Scope
   corrections vs the operator's framing" below.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -19,10 +19,10 @@ related:
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
     /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
     /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md,
-    defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07,
+    /plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

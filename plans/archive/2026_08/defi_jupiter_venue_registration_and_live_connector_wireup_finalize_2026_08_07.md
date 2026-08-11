@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion for defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md — re-verifies the
   build's evidence (incl. its own todo 6's audit-doc + codex-doc edits), then archives both docs per
   plan-completion-and-archival-discipline once every todo is done.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -14,11 +14,11 @@ scope: [engineer]
 tags: [defi, jupiter, finalize, archival, ao-build]
 related:
   [
-    defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07,
+    /plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -40,7 +40,7 @@ source: >-
   /plans/active/task_template.md §4).
 context_scope:
   [
-    defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07,
+    /plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
   ]
@@ -71,16 +71,24 @@ Machine-held (`gate_on_depends: true`) until every todo in
       to the build plan (not duplicated content), codex `solana-defi-coverage.md` JUPITER line now "live connector
       SHIPPED" + `spot_trades`→`dex_pool_swaps` corrected (no `spot_trades` refs remain); edit commit
       unified-trading-pm@c328a59f20 on origin. **No mis-citations found — nothing to correct in the build plan.**
-- [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
+- [x] ✅ [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` and this finalize doc itself: archive
       both to `plans/archive/2026_08/`, and fix every corpus referrer path (grep the repo for the old paths and update
       each hit). Also check whether `defi_adapter_dead_code_audit_2026_07_24.md` now has zero remaining open `- [ ]`
       todos in §6 (the governance-params-poller re-verify item stays open — it was never in this plan's scope) — if it
       does not, leave it active; do not archive it prematurely. Done-when: `regenerate_active_plan_inventory.py` shows
-      zero orphan referrers to the archived paths.
+      zero orphan referrers to the archived paths. — unified-trading-pm@<sha>
 
 ## Progress Log
 
 - **2026-08-07 (interactive session)**: finalize plan authored alongside the build plan per `task_template.md`'s
   finalize-plan-coverage rule.
+- **2026-08-11 (slot-12, data_engineering)**: executed 6-step archival ritual on both docs. Step 1 (deferred items):
+  none to migrate — build plan todos all done, open questions explicitly marked NOT-todos. Step 2 (archival banner):
+  `status: complete` + `last_updated` bumped on both. Step 3 (codex alignment): `solana-defi-coverage.md` already
+  updated by build plan todo 6 (verified by slot-17 review). Step 4 (CLAUDE.md): no new contracts to promote. Step 5
+  (referrer sweep): updated paths in epic (`infrastructure_master.md`), issue doc
+  (`defi_adapter_dead_code_audit_2026_07_24.md`), batch11 plan, archived sports + inventory docs, and INDEX.md. Step 6
+  (archive): confirmed `defi_adapter_dead_code_audit_2026_07_24.md` §6 still has 1 open `- [ ]`
+  (governance-params-poller re-verify) — stays active per plan instructions.
