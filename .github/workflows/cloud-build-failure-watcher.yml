@@ -52,6 +52,7 @@ jobs:
       report: ${{ steps.poll.outputs.report }}
       dedup_key: ${{ steps.poll.outputs.dedup_key }}
       recovered: ${{ steps.poll.outputs.recovered }}
+      escalation_repos: ${{ steps.poll.outputs.escalation_repos }}
     steps:
       # Secrets are not directly testable in `if:` without exposing them; map to env
       # in a probe step and emit presence flags so the auth steps can be skipped
@@ -182,6 +183,11 @@ jobs:
           SHA_KEYS = ("_SHA", "COMMIT_SHA", "SHORT_SHA", "REVISION_ID")
           MAX_LINES = 8  # cap per tick; overflow collapses to "+N more"
           failed_ids: list[str] = []  # for the carrier content dedup_key (sorted set of build IDs)
+          # AO escalation fan-out (cloud_build_failure wall_type, 2026-08-11): the distinct set of
+          # REAL, repo-attributable failing builds this tick -- deliberately excludes the silent
+          # config-rejection class (no repo to check out / fix) and the manual-submit class (no
+          # trigger/commit context either) below, only ever populated in the genuine "else" branch.
+          escalation_repos: set[str] = set()
 
           lookback = timedelta(minutes=int(os.environ.get("LOOKBACK_MINUTES", "20")))
           cutoff = datetime.now(timezone.utc) - lookback
@@ -296,6 +302,8 @@ jobs:
                           f"build {build_id} — {log_url}",
                       )
                   )
+                  if repo:
+                      escalation_repos.add(repo)
 
           # Silent rejections first — they are the invisible class.
           failed.sort(key=lambda item: (not item[0]))
@@ -359,6 +367,10 @@ jobs:
               fh.write(f"silent={silent_count}\n")
               fh.write(f"dedup_key={dedup_key}\n")
               fh.write(f"recovered={'true' if recovered else 'false'}\n")
+              # cloud_build_failure escalation fan-out (2026-08-11): one matrix job per
+              # distinct real-failure repo this tick, consumed by the "escalate" job below
+              # (mirrors ldr-ci-monitor.yml's red_transitions_json -> escalate matrix pattern).
+              fh.write(f"escalation_repos={json.dumps(sorted(escalation_repos))}\n")
               # Multiline report via a randomized heredoc delimiter (GitHub-recommended).
               fh.write("report<<__CB_RPT__\n")
               fh.write(report + "\n")
@@ -442,4 +454,44 @@ jobs:
       # Explicit recovery flag — the carrier's routine-green suppressor only posts an INFO/success
       # message when `recovery: true` (same belt-and-suspenders as ci-status-update.yml's notify job).
       recovery: true
+    secrets: inherit
+
+  # ── ESCALATE REAL FAILURES TO THE ORCHESTRATOR (2026-08-11, cloud_build_failure wall_type) ──
+  # Closes Structural Finding A (ci_reconcile_overnight_batch_2026_08_11.md): GH Actions
+  # quality-gates-v2 can stay green while a repo's Cloud Build image pipeline is completely
+  # broken (a separate pipeline) -- before this, the ONLY path from a CRITICAL Cloud Build alert
+  # to an actual fix was a human reading this workflow's Slack post and manually running
+  # `gcloud builds log`/`gcloud builds list` (confirmed live: both real fixes in that session --
+  # features-service's stale uv.lock, unified-api-contracts' qg-governor livelock -- sat
+  # FAILING/TIMEOUT for 9+ hours with zero AO-dispatched attempt). One matrix job per DISTINCT
+  # repo among this tick's REAL (non-silent-config-rejection, non-manual-submit -- see the `poll`
+  # step's `escalation_repos` set, only populated in the genuine per-repo failure branch) failing
+  # builds -- mirrors ldr-ci-monitor.yml's existing red_transitions_json -> escalate matrix
+  # pattern exactly. Not PR-scoped (pr_number: 0) -- the worker fixes it directly on
+  # live-defi-rollout. escalate-to-orchestrator.yml's OWN notify job already pages on both
+  # outcomes (dispatched ✅ / hard-failure ⚠️, deduped), so this job has no notify step of its own.
+  escalate:
+    needs: watch
+    if: needs.watch.outputs.escalation_repos != '' && needs.watch.outputs.escalation_repos != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.watch.outputs.escalation_repos) }}
+    uses: ./.github/workflows/escalate-to-orchestrator.yml
+    with:
+      repo: ${{ matrix.repo }}
+      pr_number: 0
+      wall_type: cloud_build_failure
+      context:
+        "cloud-build-failure-watcher detected a Cloud Build FAILURE/TIMEOUT/INTERNAL_ERROR/EXPIRED
+        for ${{ matrix.repo }} in the last ~20m. GH Actions quality-gates-v2 can be green while
+        this repo's Cloud Build image pipeline is broken -- they are separate pipelines. Diagnose
+        via `gcloud builds list --project=central-element-323112 --filter='substitutions.REPO_NAME=\"${{
+        matrix.repo }}\" OR substitutions._REPO_NAME=\"${{ matrix.repo }}\"' --limit=5` (check both
+        --region=asia-northeast1 and the global pool) then `gcloud builds log <build-id>` for the
+        failing step's actual error. Fix on live-defi-rollout (cloudbuild.yaml / a dependency
+        lock file / Dockerfile, per what the log shows), verify quality-gates.sh --no-fix green,
+        ship via quickmerge."
+      authoring_slot: "cloud-build-failure-watcher"
+      model: sonnet
     secrets: inherit
