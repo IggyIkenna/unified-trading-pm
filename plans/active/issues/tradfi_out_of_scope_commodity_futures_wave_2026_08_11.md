@@ -99,9 +99,17 @@ for what this session was doing; flagging for whoever picks this up).
 
 ## Action items
 
-- [ ] [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the known
-      `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
-      AO-dispatched todo that shouldn't have targeted these roots, or another automation path. Repo: deployment-service.
+- [x] ✅ [INFRA] P1. Launch source IDENTIFIED (slot 8, 2026-08-11 ~11:45Z): `deployment-service/scripts/wave_launcher.py`,
+      invoked by a **HOST-level cron** on the planning/orchestrator VM (NOT the Cloud Scheduler
+      `uts-prod-tradfi-wave-launcher-cron` which is PAUSED, NOT the Cloud Run Job `uts-prod-tradfi-wave-launcher` which has
+      zero August executions). Launches every ~3h — confirmed 4 waves today (00:09Z, 03:02Z, 06:06Z, 09:01Z) matching the
+      `0 */3 * * *` schedule. **Scope-violation root cause**: `_cme_root_universe()` reads `MVP_SCOPE["tradfi"].underliers`
+      from UAC `_mvp_scope_rules.py`, which STILL includes CL/GC/HG/NG/PA/PL/SI — the 2026-08-09 scope ruling
+      (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) that removed commodities "until November" was NEVER
+      applied to the MVP_SCOPE SSOT. Also discovered a THIRD wave at 09:01-09:04Z adding SI-2020, HG-2020, NG-2020,
+      MBT-2021, MET-2021 (silver + additional micro-crypto) — the source is STILL ACTIVE and will re-fire at ~12:00Z.
+      Fix options: (a) remove CL/GC/HG/NG/PA/PL/SI from MVP_SCOPE["tradfi"].underliers + bump config version, or
+      (b) pause the host cron. Repo: deployment-service (launcher) + unified-api-contracts (MVP_SCOPE SSOT).
 - [x] ✅ [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data
       writes) on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
       sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill. — completed 2026-08-11 (slot-26):
@@ -109,6 +117,15 @@ for what this session was doing; flagging for whoever picks this up).
 
 ## Progress Log
 
+- **2026-08-11T11:45Z (slot 8, P1 launch-source identification): IDENTIFIED.** `wave_launcher.py` invoked by HOST-level
+  cron on the planning VM (NOT Cloud Scheduler — PAUSED; NOT Cloud Run Job — zero August executions). 4 waves today at
+  ~3h intervals (00:09Z, 03:02Z, 06:06Z, 09:01Z). **Scope-violation root cause**: `_cme_root_universe()` reads
+  `MVP_SCOPE["tradfi"].underliers` from `unified-api-contracts/_mvp_scope_rules.py` — CL/GC/HG/NG/PA/PL/SI are ALL still
+  listed there. The 2026-08-09 scope ruling (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) that removed
+  commodities "until November" was NEVER back-propagated to the UAC SSOT. Source still ACTIVE — next wave expected
+  ~12:00Z. No code changed (read-only investigation). Fix: remove the 7 commodity underliers from
+  `MVP_SCOPE["tradfi"].underliers` + bump `MVP_SCOPE_CONFIG_VERSION` to 25 in UAC, OR pause the host cron on the
+  planning VM.
 - **2026-08-11**: filed after discovering this live during an unrelated kill-execution attempt (see Observation above).
   Not investigated further this session.
 - **2026-08-11 ~09:00Z, slot-26 (dispatched P2 — 3-signal staleness check)**: Completed the 3-signal staleness check on
