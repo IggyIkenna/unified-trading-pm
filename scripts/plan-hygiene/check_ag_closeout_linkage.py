@@ -60,7 +60,17 @@ mention", never "raise the baseline").
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (2026-08-11, ag_closeout_linkage_baseline_regression_87_vs_69): scope the
+report + exit to ONE tranche's orphans, mirroring generate_ag_closeout_audit_candidates.py's
+``--tranche`` flag (same ALL_TRANCHES vocabulary, incl. the ``infra`` -> ``infrastructure`` name
+mismatch). Additive/opt-in: no flag = the full-corpus ratchet exactly as before. The scoped run
+is zero-tolerance on its own tranche (exit 1 if THIS tranche has any orphan) so a tranche-scoped
+/ag-closeout-audit dispatch sees only its own never-cited docs — not the full corpus's orphans,
+which are irrelevant to (and often NOT owned by) that tranche. --update-baseline is rejected
+under --tranche: the baseline is corpus-wide, not per-tranche.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -113,6 +123,15 @@ COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
 # Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
+# Tranche vocabulary for --tranche, mirrored from generate_ag_closeout_audit_candidates.py
+# (same list, same infra-name mismatch) so a tranche-scoped run takes the same names the
+# /ag-closeout-audit skill and its Phase-0 pre-filter use.
+AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
+NON_AG_TRANCHES = ["ao", "ci", "infra", "ui"]
+ALL_TRANCHES = (*AGS, "cross-cutting", *NON_AG_TRANCHES)
+# The `infra` TRANCHE name != the `infrastructure` asset_group enum VALUE (the enum has no
+# "infra" member) — map it explicitly, same as generate_ag_closeout_audit_candidates.py.
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 MAX_HOPS = 3
 # Closed/terminal statuses excluded from orphan candidacy — a superseded, resolved,
 # cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
@@ -366,13 +385,73 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     return 0 if n == 0 else 1
 
 
-def main() -> int:
-    if "--only" in sys.argv:
-        idx = sys.argv.index("--only")
-        return _run_only(sys.argv[idx + 1 :], "--quiet" in sys.argv)
+def _parse_tranche(argv: list[str]) -> tuple[str | None, list[str]]:
+    """Extract `--tranche <name>` from argv as a pair -> (name, remaining argv).
 
-    quiet = "--quiet" in sys.argv
-    update = "--update-baseline" in sys.argv
+    Consuming both tokens means the value can never leak into a following `--only` path list.
+    Unknown name or missing value = usage error (exit 2, argparse's convention).
+    """
+    name: str | None = None
+    rest: list[str] = []
+    i = 0
+    while i < len(argv):
+        tok = argv[i]
+        if tok == "--tranche":
+            if i + 1 >= len(argv) or argv[i + 1].startswith("--"):
+                sys.exit(f"check_ag_closeout_linkage: --tranche requires a name (choices: {', '.join(ALL_TRANCHES)})")
+            cand = argv[i + 1]
+            if cand not in ALL_TRANCHES:
+                sys.exit(f"check_ag_closeout_linkage: invalid --tranche {cand!r} (choices: {', '.join(ALL_TRANCHES)})")
+            name = cand
+            i += 2
+            continue
+        rest.append(tok)
+        i += 1
+    return name, rest
+
+
+def _run_tranche(
+    tranche: str,
+    all_docs: dict[Path, dict],
+    violations_by_path: dict[Path, str],
+    quiet: bool,
+    argv: list[str],
+) -> int:
+    """Scoped variant of the full ratchet: report + gate only `tranche`'s orphans.
+
+    The full corpus scan runs unchanged (a doc's orphan status is corpus-global — its graph
+    path can go through any doc, so a filtered subgraph would change the answer); only the
+    REPORT and the exit are scoped to the tranche. Zero-tolerance on its own tranche (mirrors
+    `_run_only`'s scoped exit), so a tranche-scoped /ag-closeout-audit dispatch sees its own
+    never-cited docs as the actionable signal, not the corpus's unrelated orphans. The
+    no-flag full-corpus ratchet path is untouched.
+    """
+    if "--update-baseline" in argv:
+        sys.exit("check_ag_closeout_linkage: --update-baseline is corpus-wide; not supported with --tranche")
+    tranche_ag = TRANCHE_ASSET_GROUP_VALUE.get(tranche, tranche)
+    scoped = {
+        p: v for p, v in violations_by_path.items() if tranche_ag in docspec._as_list(all_docs[p].get("asset_group"))
+    }
+    n = len(scoped)
+    ok = n == 0
+    if not quiet:
+        print(f"AG-closeout linkage check (--tranche {tranche}, {len(all_docs)} docs scanned):")
+        print()
+        for v in sorted(scoped.values()):
+            print(f"  ORPHAN  {v}")
+        print()
+    print(f"{'✅' if ok else '❌'} check_ag_closeout_linkage (--tranche {tranche}): {n} orphan(s)")
+    return 0 if ok else 1
+
+
+def main() -> int:
+    tranche, argv = _parse_tranche(sys.argv)
+    if "--only" in argv:
+        idx = argv.index("--only")
+        return _run_only(argv[idx + 1 :], "--quiet" in argv)
+
+    quiet = "--quiet" in argv
+    update = "--update-baseline" in argv
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
@@ -392,6 +471,10 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    if tranche is not None:
+        return _run_tranche(tranche, all_docs, violations_by_path, quiet, argv)
+
     violations = list(violations_by_path.values())
 
     baseline = load_baseline()
