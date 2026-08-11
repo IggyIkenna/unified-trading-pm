@@ -37,7 +37,7 @@ repos: [agent-orchestrator]
 tags: [ao, agent-orchestrator, plan_reconciler, tmux, worker-liveness, tmux_pruner, regression-watch]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,

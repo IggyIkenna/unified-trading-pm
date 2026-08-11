@@ -844,9 +844,10 @@ by hand._
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
-- [`ao_satellite_ao_dispatch_batch10_2026_08_09`](./ao_satellite_ao_dispatch_batch10_2026_08_09.md) — TENTH AO-dispatch
-  batch for the `ao` topic tranche — produced by a satellite-batch-extraction pass (mirroring `/ag-closeout-audit`'s
-  pattern) over 21 `ao`-owned `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read end-to-end but…
+- [`ao_satellite_ao_dispatch_batch10_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md) —
+  TENTH AO-dispatch batch for the `ao` topic tranche — produced by a satellite-batch-extraction pass (mirroring
+  `/ag-closeout-audit`'s pattern) over 21 `ao`-owned `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read
+  end-to-end but…
 - [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
   Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until all 6 of that batch's todos are done. Reconciles each verified todo's evidence back into its

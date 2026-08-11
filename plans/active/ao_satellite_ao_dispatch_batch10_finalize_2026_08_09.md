@@ -19,14 +19,14 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-10, finalize, satellite-extraction]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-11"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,9 +44,10 @@ superseded_by:
 depends_on: [ao_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 sequential: true
+archive_exempt: true
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -58,7 +59,7 @@ source: >-
 
 # AO satellite AO batch 10 — finalize
 
-> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md`** (`depends_on` +
+> **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until all 6 of that batch's todos are `done`. The batch itself stays
 > `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
@@ -111,11 +112,11 @@ source: >-
       "archival ritual on the batch plan itself", now ungated + dispatchable since batch2 is fully done) — deliberately
       NOT archived here to avoid double-archival with that tracked plan; `archive_exempt: true` stays on batch2 until
       its own finalize's `git mv` drops it.
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/active/ao_satellite_ao_dispatch_batch10_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
-      corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
-      inventory generator. **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly,
-      and `check_finalize_plan_coverage.py` no longer names this pair.
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`, moved to `plans/archive/2026_08/`, all
+      corpus-wide referrers fixed (finalize plan's own `related:`/`context_scope:`/prose, orchestrator_master, INDEX.md,
+      plan_reconciler_unexplained), inventory regenerated cleanly, and `check_finalize_plan_coverage.py` no longer names
+      this pair. **DONE 2026-08-11 (slot 28, infra) — unified-trading-pm@9368e739e2**.
 - [x] ✅ [REVIEW] P1. **Corpus-wide plan-hygiene gates drifted since batch10's sweep — archive the 2 new
       `check_archive_candidates.sh` candidates + epic-wire the orphaned 2026-08-10 satellite plans.** Re-opened by P0's
       re-verification (claim 3 held as-of the 2026-08-09 sweep, but both gates are now RED against baseline). (1)
