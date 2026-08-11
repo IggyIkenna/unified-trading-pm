@@ -98,3 +98,4 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `stale-build-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
 | `version-coherence-check` | schedule(*/30 * * * *) · manual | — | Firestore | — |
 | `version-registry-update` | dispatch:version-registry-update · manual | — | Firestore | — |
+
