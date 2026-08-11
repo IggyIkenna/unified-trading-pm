@@ -317,19 +317,34 @@ recipe above.
       `reconcile_blank_error_reason_rows.py`, `reconcile_legacy_blank_to_typed_reason.py`,
       `reconcile_expected_absence_reasons.py`), several more checked and ruled safe. Fix tracked as a new todo below
       (mirrors this issue's own todo1→todo2 precedent: audit and fix as separate tracked units). — cross-cutting
-- [ ] [SCRIPT] P2. **Fix the 4 newly identified defective correction scripts** (mirror the already-shipped
-      `instruments-service@159c0ebe0`/`@7be93d5d` timestamp-stamp pattern — on every corrected row, stamp a fresh
-      `datetime.now(UTC).isoformat()` onto both `attempted_at` and `written_at`, guarded by `if "<col>" in df.columns`):
-      `reconcile_attempted_failed_to_captured_2026_05_13.py` (replace the `attempted_at = None` clear),
-      `reconcile_blank_error_reason_rows.py`, `reconcile_legacy_blank_to_typed_reason.py` (only the status-flip +
-      reason-upgrade shapes both need the stamp), `reconcile_expected_absence_reasons.py`. Add regression tests
-      mirroring `test_apply_flips_bumps_timestamps_past_original_row` — note 3 of the 4 scripts have ZERO existing test
-      coverage today (only `reconcile_legacy_blank_to_typed_reason.py` has a test file), so this todo also needs the
-      same `_download_manifest()`-extraction-for-monkeypatchability step the generic cefi/defi fix commit
-      (`instruments-service@7be93d5d`) already did for its own previously-untested script. — instruments-service
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-11 — `instruments-service@c51e37ab` + `@f6caf7f5`.** Stamped fresh
+      `attempted_at`/`written_at` in all 4 newly identified scripts
+      (`reconcile_attempted_failed_to_captured_2026_05_13.py`, `reconcile_blank_error_reason_rows.py`,
+      `reconcile_legacy_blank_to_typed_reason.py`, `reconcile_expected_absence_reasons.py`), mirroring the
+      `instruments-service@159c0ebe0`/`@7be93d5d` timestamp-stamp pattern.
+      `reconcile_attempted_failed_to_captured_2026_05_13.py` got the same
+      `_download_manifest()`-extraction-for-monkeypatchability step (it had zero test coverage before). `@f6caf7f5` also
+      fixed a pre-existing, unrelated bug found in the same file: `reconcile_blank_error_reason_rows.py` imported
+      `classify_blank_reason_row` from the `unified_trading_library` top-level package, which does not re-export it
+      (only `classify_legacy_empty_row` is re-exported) — the script would `ImportError` on any real invocation; fixed
+      to import from `unified_trading_library.legacy_reason_classifier` directly. Regression tests added for all 4
+      (`test_apply_flips_bumps_timestamps_past_original_row`), 3 of which had no test file before. — instruments-service
 
 ## Progress Log
 
+- **2026-08-11 (slot 6, task `corrector_scripts_dedup_tiebreak_timestamp_bug-f95fb1296179`):** worked the final
+  `[SCRIPT] P2` todo (fix the 4 newly identified scripts). Implemented the same fix independently (timestamp stamp in
+  all 4 scripts + `_download_manifest()` extraction + regression tests), ran `quality-gates.sh` green, and hit a
+  duplicate-work collision on `git pull --rebase --autostash` before shipping: another slot had already landed the
+  identical fix moments earlier (`instruments-service@c51e37ab` "stamp fresh attempted_at/written_at in 4 more manifest
+  correctors" + `@f6caf7f5` "fix broken classify_blank_reason_row import in blank-reason corrector" — that second commit
+  independently found + fixed the SAME pre-existing import bug in `reconcile_blank_error_reason_rows.py` this session
+  also found). Resolved the stash-apply conflict by keeping the already-landed origin content (my own duplicate WIP is
+  stashed locally, not force-dropped — recoverable, discarded in favor of the landed version). No new code shipped this
+  session; flipped this doc's checkbox to reflect the already-landed fix (it had gone unflipped — the landing slot's
+  commit didn't touch this doc). All 4 todos in this doc are now done; the companion finalize plan
+  (`/plans/active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`) owns the
+  archive-once-closed step, not this session.
 - **round9-reclassify-satellite-sweep 2026-08-09** (cefi tranche): **RECLASSIFY, `assigned_vm: NA -> planning`**
   (`execution_scope` `local-only -> orchestrator-agent`). All 3 open todos clear the bounded/worker-determinable bar:
   todo 1 is a live-comparison verification whose exact method this doc's own "Live evidence" section already spells out
