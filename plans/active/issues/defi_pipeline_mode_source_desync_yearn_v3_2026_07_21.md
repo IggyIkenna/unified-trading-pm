@@ -29,7 +29,8 @@ tags: [data-correctness, defi, pipeline-mode, manifest, source-desync, yearn-v3,
 related: [data_pipeline_reconciliation_defi_2026_07_20]
 created: 2026-07-21
 author: unknown
-last_updated: 2026-07-21
+last_updated: 2026-08-11
+archive_exempt: true
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -165,9 +166,9 @@ vault-share-price collector) end-to-end:
       same-day fix rather than a deferred multi-source design decision). Verified live 2026-08-08 against
       `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:344-357` — the code
       comment there cites this exact todo and confirms the rename rationale.
-- [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
-      audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
-      `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+- [x] 5. [DATA] P3. **DONE 2026-07-26** — appended to `/codex/02-data/canonical-cutover-register.md` §2 (line 136) via
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md` (`unified-trading-pm@0c4172c31`), closing the audit's own §9
+      maintenance-contract follow-up flag. — repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -199,3 +200,7 @@ vault-share-price collector) end-to-end:
 - **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA-STALE (already-duplicated) re-confirmed — batch10's own
   citation todo (lines 154-158) still active and unshipped; also independently re-confirmed by
   `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s same-day conflict-check. Doc stays `assigned_vm: NA`.
+- **2026-08-11 (slot-7, batch10 item 7)**: Todo 5 flipped `[x]` — F10 register-append substance shipped 2026-07-26
+  (`unified-trading-pm@0c4172c31`, register §2 line 136), verified live before flipping. `archive_exempt: true` set as
+  the flip-then-mv bridge (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`) — the `git mv`
+  archival to `plans/archive/issues/` follows in the immediately-next commit.

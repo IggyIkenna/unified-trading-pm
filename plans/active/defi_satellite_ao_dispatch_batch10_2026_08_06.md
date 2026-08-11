@@ -151,12 +151,13 @@ same day) before being drafted here.
       2026-08-07 (slot-10)**: exemption live `features-service@919ab7ed`; VM `features-onchain-defi-20260807-172238`
       exit_code=0; dep-check ✅; 7/13 groups; lending_rates 28045 rows + lst_yields 18 rows; throughput ~121
       s/benchmark-day. Numbers in source issue doc progress log (pipeline check plan at 1000L hard cap).
-- [ ] [DATA] P3. **Sync a stale checkbox**: `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`'s Todo 5 ("Append
-      F10 to the reconciliation register") is unchecked but the substance already shipped 2026-07-26
+- [x] ✅ [DATA] P3. **Sync a stale checkbox**: `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`'s Todo 5
+      ("Append F10 to the reconciliation register") is unchecked but the substance already shipped 2026-07-26
       (`unified-trading-pm@0c4172c31`, via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`, appended to
       `/codex/02-data/canonical-cutover-register.md` §2). Repo: unified-trading-pm. Source:
       `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` (Todo 5). Done when: the checkbox is flipped
-      `[x]` with the batch2/commit citation inline.
+      `[x]` with the batch2/commit citation inline. — **Done 2026-08-11 (slot-7): source-doc Todo 5 flipped `[x]`;
+      substance verified live in register §2 (line 136) + commit `0c4172c31`; both flips shipped same turn.**
 - [x] ✅ [DOC] P2. **DONE 2026-08-08 (na-eligibility-audit, defi tranche)** — both stated "done when" conditions are now
       satisfied, via a different mechanism than originally scoped: this todo's premise (source doc over the 1000L hard
       cap, needing the VM-monitoring-history extraction to get under it) was stale — an unrelated 2026-08-05 trim
@@ -288,3 +289,7 @@ sizing/scoping pass across 5 protocols before it is worker-determinable; batch9 
   9 todos. One minor same-file overlap noted between todos 8/9 (both touch `lst_rate_honest_coverage_2026_07_21.md` via
   different source citations) — not a real conflict, worth a quick self-check whenever this batch actually dispatches
   those two.
+- 2026-08-11 (slot-7): Todo 7 (sync stale checkbox) done — source doc
+  `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`'s Todo 5 flipped `[x]`; F10 substance verified live in
+  `canonical-cutover-register.md` §2 (line 136) + commit `unified-trading-pm@0c4172c31`. Source doc archival (`git mv`)
+  follows in the next commit per the flip-then-mv bridge.
