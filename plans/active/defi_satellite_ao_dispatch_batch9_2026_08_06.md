@@ -215,7 +215,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       `updated=2026-08-09T20:53:35Z`). **Efficiency gap found and filed separately** (the relaunch used the launcher's
       `2023-01-01` default instead of an explicit manifest-derived `--start`, so it's redundantly re-walking
       already-captured ground — not a correctness issue, SPOT/idempotent, self-resolves in ~2 weeks): see
-      `/plans/active/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
+      `/plans/archive/2026_08/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
 - [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
       2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
       handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096

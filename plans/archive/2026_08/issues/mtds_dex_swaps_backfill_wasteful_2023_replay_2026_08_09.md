@@ -11,7 +11,7 @@ summary: >-
   (the original `mtds-dex-swaps-backfill-1`/`-2` VMs, before being consolidated into this one VM, had already completed
   2024-10-07 through 2025-12-14). As of this filing the VM's `PROGRESS.json` shows `last_completed_date=2023-07-10` —
   still ~15 months of redundant (idempotent, non-corrupting, but wasted) re-crawl before it reaches new ground.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -25,8 +25,9 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
-author: slot-32 (data_engineering)
+last_updated: "2026-08-11"
+author: slot-17 (infra)
+resolved_by: deployment-service@a6db0639
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,6 +54,9 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
   ]
 ---
+
+> **ARCHIVED** — resolved by `deployment-service@a6db0639` on 2026-08-11. Auto-derive `--start` logic shipped; next
+> relaunch will compute the start date from the availability manifest instead of defaulting to `2023-01-01`.
 
 # mtds-dex-swaps-backfill's 2026-08-07 relaunch is redundantly re-crawling already-captured dates
 
@@ -98,15 +102,19 @@ currently-healthy, actively-progressing run for a marginal efficiency gain today
 
 ## Action items
 
-- [ ] [INFRA] P3. Next time `mtds-dex-swaps-backfill` needs a relaunch (preemption, redeploy, or a deliberate efficiency
-      pass), compute `--start` from the current manifest's max already-captured `date` for `dex_pool_swaps` (bounded
-      read of `_index/availability_index.parquet`, filtered `data_type=dex_pool_swaps`) instead of accepting the
-      launcher's `2023-01-01` default, so the run doesn't redundantly re-walk already-covered ground. Repo:
+- [x] ✅ [INFRA] P3. Next time `mtds-dex-swaps-backfill` needs a relaunch (preemption, redeploy, or a deliberate
+      efficiency pass), compute `--start` from the current manifest's max already-captured `date` for `dex_pool_swaps`
+      (bounded read of `_index/availability_index.parquet`, filtered `data_type=dex_pool_swaps`) instead of accepting
+      the launcher's `2023-01-01` default, so the run doesn't redundantly re-walk already-covered ground. Repo:
       deployment-service. Done when: the next relaunch of this VM passes an explicit `--start` derived from the manifest
-      rather than the script default.
+      rather than the script default. — deployment-service@a6db0639
 
 ## Progress Log
 
+- **2026-08-11 (slot-17, infra)** — auto-derive logic already shipped by `deployment-service@a6db0639`
+  (`feat(vm): auto-derive dex-swaps-backfill START_DATE from availability manifest`). Launcher script lines 69-101 now
+  compute `--start` from `_index/availability_index.parquet` (filtered `data_type=dex_pool_swaps`) when no explicit
+  `--start` is passed. Task complete.
 - **2026-08-09 (slot-32, data_engineering)** — filed while closing `defi_satellite_ao_dispatch_batch9_2026_08_06.md`
   todo 8. Correctness goal already met by an independent 2026-08-07 relaunch; this doc tracks only the leftover
   launch-parameter inefficiency.
