@@ -230,17 +230,39 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-gated",
+        default=None,
+        metavar="SLUG",
+        help=(
+            "Idempotency guard for finalize-plan CREATION (not detection — see "
+            "duplicate_finalize_plans_created_for_one_parent_2026_08_06.md). Re-derives _gated_slugs() over the "
+            "CURRENT corpus and reports whether SLUG (the parent plan's stem, e.g. "
+            "'live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31') is already gated by an existing "
+            "finalize plan — keyed on the depends_on relationship, not filename shape, so a near-duplicate "
+            "filename (the exact collision this guard exists for) is still caught. Run this BEFORE writing a new "
+            "<parent>_finalize*.md; exit 0 + 'not gated' means safe to create one, exit 1 + 'ALREADY GATED' means "
+            "refuse — a companion finalize plan already exists, find and use it instead."
+        ),
+    )
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    ns = _parse_args(argv)
-    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
-    baseline_path: Path = cast(Path, ns.baseline_path)
-    baseline_write: bool = cast(bool, ns.baseline_write)
-    strict: bool = cast(bool, ns.strict)
-    only: list[str] | None = cast("list[str] | None", ns.only)
+def _run_check_gated(active_dir: Path, slug: str) -> int:
+    """Idempotency guard for finalize-plan CREATION (`--check-gated`) — see
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gated = _gated_slugs(all_plans)
+    slug = slug.strip()
+    if slug in gated:
+        print(f"❌ ALREADY GATED: '{slug}' already has a companion finalize plan (depends_on + gate_on_depends).")
+        print("Refuse to create a new finalize plan — find the existing one instead.")
+        return 1
+    print(f"✅ not gated: '{slug}' has no companion finalize plan yet — safe to create one.")
+    return 0
 
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
     # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
     # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
     # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
@@ -257,20 +279,36 @@ def main(argv: list[str] | None = None) -> int:
     # checkout root regardless of what `--workspace-root` was given or what the checkout directory
     # happens to be named.
     active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    print(
+        f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+        file=sys.stderr,
+    )
+    return None
+
+
+def main(argv: list[str] | None = None) -> int:
+    ns = _parse_args(argv)
+    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
+    baseline_path: Path = cast(Path, ns.baseline_path)
+    baseline_write: bool = cast(bool, ns.baseline_write)
+    strict: bool = cast(bool, ns.strict)
+    only: list[str] | None = cast("list[str] | None", ns.only)
+
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        return 2
+
+    check_gated: str | None = cast("str | None", ns.check_gated)
+    if check_gated is not None:
+        return _run_check_gated(active_dir, check_gated)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)

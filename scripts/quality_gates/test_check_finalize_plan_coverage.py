@@ -128,3 +128,51 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-gated: idempotency guard at finalize-plan CREATION time ──────────
+
+
+def test_check_gated_passes_when_parent_has_no_finalize_companion(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-gated", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_check_gated_refuses_when_parent_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-gated", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_check_gated_catches_a_near_duplicate_filename_finalize_plan(tmp_path: Path) -> None:
+    """The exact collision this guard exists for: two finalize plans differing only by a
+    redundant date suffix both gating on the same parent's slug — the guard is keyed on
+    depends_on, not filename shape, so a second creator asking about the same parent slug
+    is refused regardless of what the first finalize plan happened to be named."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md")
+    _write_plan(
+        active / "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter=(
+            "depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]\ngate_on_depends: true"
+        ),
+    )
+
+    rc = main(
+        [
+            "--workspace-root",
+            str(tmp_path),
+            "--check-gated",
+            "live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31",
+        ]
+    )
+    assert rc == 1

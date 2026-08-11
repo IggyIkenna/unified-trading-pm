@@ -493,6 +493,14 @@ version.
   operator DIRECTLY asks for Fable (it is for the hardest / longest-running interactive work — overkill for routine
   dispatch). Effort: Haiku has NO effort levels (thinking on/off only); sonnet/opus/fable support `--effort` low→max.
   _[ROLLING OUT: fable spawn + per-model effort.]_
+- **Before authoring a new `<parent>_finalize*.md`, check idempotency first (2026-08-11 fix —
+  `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`).** Run
+  `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --check-gated <parent-slug>` (the parent
+  plan's filename stem, no extension). Exit 0 ("not gated") means safe to create one; exit 1 ("ALREADY GATED") means a
+  companion finalize plan already exists somewhere in the corpus under a DIFFERENT name than you might expect — find
+  and use it instead of authoring a second one. This is keyed on the `depends_on` relationship, not filename shape, so
+  it catches the exact failure mode that caused two finalize plans differing only by a redundant date suffix to both
+  gate on the same parent and both become dispatchable on the same tick.
 - **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** Alongside any
   `assigned_vm: planning` plan, author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` +
   `gate_on_depends: true` + `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into
