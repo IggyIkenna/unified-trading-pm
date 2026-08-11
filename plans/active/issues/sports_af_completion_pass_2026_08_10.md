@@ -662,3 +662,24 @@ FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
     The STANDINGS VM itself is independent (GCE on-demand, `VM_SHUTDOWN_ON_COMPLETION=true` → self-terminates on exit).
   - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS ETA 24-60h). Task remains in-flight
     for the next slot.
+
+- **2026-08-11 (slot 27, data_engineering, ~05:48Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2021-05-11`
+    (PROGRESS.json, 05:47Z), monotonic; run.log 1.57MB actively written (last_modified 05:46:31Z); per-VM shard
+    `c4.parquet` (52,156 entries, 767 new) in `deployment-scripts-central-element-323112` bucket; watchdog trace shows
+    steady log growth every ~60s — no stall. VM RUNNING since 01:31Z (~4.25h), ~15.3% through range. Rate budget 110
+    req/min. Chunked 90-day mode working correctly (c1→c2→c3→c4 progression confirmed). ETA ~28-30h to completion.
+  - **Fresh census (05:40Z)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452**; FIXTURE_STATS 132 ·
+    FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** (byte-for-byte match with prior slots). STANDINGS
+    unchanged at 271 — VM mid-flight at 2021-05-11.
+  - **Bucket resolution**: VM artifacts (run.log, PROGRESS.json, WATCHDOG_TRACE) are in
+    `deployment-scripts-central-element-323112/vm-logs/af-backfill-20260811-012845/` — NOT in
+    `instruments-store-sports-prd`. Per-VM manifest shards go to
+    `instruments-store-sports-prd/_index/per_vm/af-backfill-20260811-012845-c4.parquet`.
+  - **Chain automator**: slot 21's script (`run-af-residual-completion-chain.sh`) never landed (push lost); not present
+    in origin. Next worker should either re-create it or manually manage the serial chain.
+  - **Terminal-state watchdog armed** (`run_in_background`, 5-min poll, 30-min stall detection) — watches run.log for
+    EXIT_STATUS. On STANDINGS exit_code=0: launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS (serial,
+    singleton lock, on-demand). On stall >30min: diagnose, stop VM if confirmed, re-launch.
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away. Task remains in-flight for the next slot.
