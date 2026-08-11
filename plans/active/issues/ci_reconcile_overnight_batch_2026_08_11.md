@@ -409,13 +409,18 @@ not because anything needs follow-up.
 - [ ] [CODE] P2. **Add an AO `wall_type` for `main-backmerge-to-ldr` sync failures** (Structural finding B): same gap as
       above for a distinct failure class (backmerge `git fetch`/merge failures, not promotion-PR QG failures). Item 4
       happened to self-heal; a non-self-healing recurrence has zero AO coverage today. (repo: agent-orchestrator)
-- [ ] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
-      real trigger** (item 11 follow-up): the `QG_GOVERNOR_REPO=unified-api-contracts` fix is shipped and reasoned
-      through against the governor's admission logic, but has not yet been proven against a real Cloud Build run (no
-      `unified-api-contracts` push has triggered `cloudbuild.yaml` since the fix landed). Check
-      `gcloud builds list --filter='substitutions.REPO_NAME="unified-api-contracts"' --limit=3` after the next push and
-      confirm a `SUCCESS`/non-`TIMEOUT` conclusion; if it still times out, the governor's floor/budget constants
-      themselves (not just the repo-key lookup) need review. (repo: unified-api-contracts)
+- [x] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
+      real trigger** (item 11 follow-up) — VERIFIED CLEARED.
+      `gcloud builds list --project=central-element-323112     --region=asia-northeast1 --filter='substitutions.REPO_NAME="unified-api-contracts"'`
+      shows build `4465fc18-3277-4711-abd3-f86daac715e0` for `d7453ed` (the fix commit itself, self-triggering on push
+      to `live-defi-rollout`) is `SUCCESS`, 2026-08-11T06:10:24Z→06:14:01Z (~3.5min total, through
+      `publish-python`/`PUSH`/ `DONE`) — vs. the prior 20-build TIMEOUT streak (18:36Z→05:55Z, each hitting the 10min
+      step timeout). Full build log (`gcloud builds log 4465fc18-...`) has **zero** `[qg-governor] ... WAIT_RAM_LIVE`
+      lines (the only "governor" hit is the commit-message echo) — the admission wait loop that caused every prior
+      TIMEOUT never fired at all, confirming the governor now resolves UAC's real ~1.1GB baseline via `QG_GOVERNOR_REPO`
+      instead of the 5500MB unmeasured-repo fallback. Note: build `49413a09` for `8b8e9a3` (05:55:16Z, still pre-fix)
+      also TIMEOUT — expected, it predates `d7453ed`; not a regression. No further action needed. (repo:
+      unified-api-contracts, evidence: build=4465fc18-3277-4711-abd3-f86daac715e0)
 - [ ] [CODE] P3. **Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host `i-042a6332509482556`
       (Structural finding C): git-credential failure (`could not read Username for 'https://github.com'`) on the
       periodic mirror-refresh side-timer for ao/e2e-testing/execution-service/features-service/
