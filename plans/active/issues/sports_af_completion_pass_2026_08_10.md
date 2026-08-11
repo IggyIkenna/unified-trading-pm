@@ -774,3 +774,19 @@ automator still alive, re-launch if session teardown killed it.
   - **No code shipped** — pure operations + monitoring. **Checkbox NOT flipped** — done-when (census ~0) is still
     multi-day away (STANDINGS ~56%, then 4 more entities serially under the singleton lock). Task remains in-flight;
     next worker should re-verify VM health + chain-automator liveness (same durability caveat) and re-run the census.
+
+- **2026-08-11 (slot 23, infra, ~18:35Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-162726` confirmed HEALTHY + progressing**: `PROGRESS.json` →
+    `last_completed_date=2023-11-15`, `updated=2026-08-11T18:33:56Z` (fresh at check time, no stall). Monotonic forward
+    progress from slot-21's `2023-11-07` check (~18:28Z). Read via UTL `gcs_read_object_range`/`gcs_describe_object`
+    (`unified_trading_library.cloud_interface.gcs_blob_ops`), not subprocess `gsutil` (blocked by the
+    subprocess-GCS-object-op guardrail).
+  - **Chain automator confirmed DEAD** (no `run-af-residual-completion-chain.sh` process on this host) — expected, died
+    with the prior session's teardown. **Re-launched in background** (`run_in_background`, no nohup, same command:
+    `--start-date 2020-06-06 --end-date 2026-08-10`).
+  - **No code shipped** — pure operations + monitoring. **Checkbox NOT flipped** — done-when (census ~0) is still
+    multi-day away (STANDINGS ~57%, then 4 more entities serially under the singleton lock). This task is time-gated on
+    VM completion, not a genuine blocker — skipping with `reason_code: GATED` so the fleet cooldown arms instead of the
+    task immediately re-dispatching to the next heartbeat. Next worker should re-verify VM health + chain-automator
+    liveness (same durability caveat — session-bound background process) and re-run the census.
