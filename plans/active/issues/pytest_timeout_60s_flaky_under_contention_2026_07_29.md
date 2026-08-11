@@ -965,3 +965,13 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   out, not the tracked flake. Zero `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~5-6 of ~14, closes
   ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
   slot-32's fix.
+- **slot-26 2026-08-11 ~03:30Z (twenty-seventh pass, same task)**: surveyed last 5 `quality-gates-v2` runs across all 10
+  tracked repos (runs spanning ~21:16Z 2026-08-10–02:43Z 2026-08-11). 45 runs across 9 service repos. 5 failures across
+  5 repos: instruments-service `31433123760` (5 failed, `AssertionError: assert 'continuous_future' == 'FUTURE'`, not
+  timeout), MDPS `31433128155` (2 failed, same case-sensitivity class), MTDS `31435532344` (3 failed, same
+  `continuous_future`/`combo` case-sensitivity), deployment-service `31453209112` (`checks`-slice failure, not the
+  tracked flake), unified-trading-pm `31441459455`/`31437432141` (both `checks`-slice, known ratchet class). The 3
+  tests-slice failures are all `continuous_future`/`combo` AssertionError — tradfi canonical-naming migration, not
+  scheduling contention. Remaining 40 runs all `conclusion=success`. Zero `Timeout (>150s)` recurrence anywhere. Window
+  NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`,
+  `estimated_unblock_minutes: 180` per slot-32's fix.
