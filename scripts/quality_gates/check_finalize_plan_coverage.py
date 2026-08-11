@@ -168,6 +168,39 @@ def _find_draft_gate_violations(active_dir: Path) -> list[Path]:
     return violations
 
 
+def _find_duplicate_gate_violations(active_dir: Path) -> dict[str, list[Path]]:
+    """Find parent slugs named in the `depends_on` of MORE THAN ONE `gate_on_depends: true`
+    plan — a duplicate finalize gate where two gated plans would race the identical
+    archival ritual against one target. Returns a dict mapping parent_slug -> list of
+    finalize-plan paths gating on it, only for parents with >1 gater.
+
+    Scoped to `assigned_vm: planning` + `status: active` gating plans only: a superseded
+    or draft finalize plan does not actually gate dispatch, and an NA-track plan is never
+    ingested regardless of its frontmatter.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+
+    # Map parent_slug -> list of finalize-plan paths that gate on it
+    parent_to_finalizers: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        fm = cov.frontmatter
+        if fm.get("assigned_vm") != "planning":
+            continue
+        if fm.get("status") != "active":
+            continue
+        if not _is_finalize_plan(fm):
+            continue
+        depends_on = fm.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                parent = dep.strip()
+                parent_to_finalizers.setdefault(parent, []).append(cov.path)
+
+    return {k: v for k, v in parent_to_finalizers.items() if len(v) > 1}
+
+
 def _load_baseline_count(baseline_path: Path, key: str) -> int:
     if not baseline_path.exists():
         return 0
