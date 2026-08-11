@@ -133,6 +133,23 @@ _all_content_previews() {
   ' "$@"
 }
 
+# sort wrapper with an explicit exit-code check. `set -o pipefail` makes a failing
+# `sort` propagate through the pipeline, but the command substitutions below
+# (`cur="$(... | sort -u)"`) swallow that status silently — a locale/encoding
+# regression re-triggering "sort: Illegal byte sequence" would degrade into a
+# truncated comparison set and false-flag byte-identical HEAD content as a NEW
+# violation (the failure class `LC_ALL=C` above was added to stop, for the cases
+# LC_ALL=C can't cover). This wrapper returns `sort`'s exit status so each caller
+# can abort loudly with `|| exit $?`; the diagnostic itself is written to stderr
+# here so it survives the command-substitution subshell.
+_checked_sort() {
+  sort "$@" || {
+    rc=$?
+    echo "❌ check_prosewrap_padding: 'sort' failed (exit $rc) — locale/encoding regression. Aborting loudly instead of silently false-flagging byte-identical HEAD content (see prosewrap_padding_precommit_gate_locale_false_positive_2026_08_09.md)" >&2
+    return "$rc"
+  }
+}
+
 if [ "${1:-}" = "--only" ]; then
   shift
   QUIET=0
@@ -162,8 +179,12 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    # grep legitimately exits 1 on "no match" (a normal, expected state) — guard
+    # it with `|| true` so only a genuine `sort` failure (checked below) can abort.
+    pre_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' || true)"
+    cur_backtick="$(printf '%s\n' "$pre_backtick" | _checked_sort -u)" || exit $?
+    pre_head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' || true)"
+    head_backtick="$(printf '%s\n' "$pre_head_backtick" | _checked_sort -u)" || exit $?
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -179,8 +200,9 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    pre_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' || true)"
+    cur_overindent="$(printf '%s\n' "$pre_overindent" | _checked_sort -u)" || exit $?
+    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | _checked_sort -u)" || exit $?
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
