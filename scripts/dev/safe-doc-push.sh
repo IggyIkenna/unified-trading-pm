@@ -440,6 +440,37 @@ done
 # unrepresentable at this script's interface.
 _sdp_blob_of() { printf '%s\n' "$2" | awk -v f="$1" '$2 == f { print $1; exit }'; }
 
+# _sdp_save_payload / _sdp_restore_payload — save the caller's named-file content to git's
+# object store BEFORE any reconcile step so a failed autostash pop cannot eat the payload.
+# Measured 2026-08-10: "nothing to stage for the named files ... checking if content already
+# matches HEAD" reported success when the autostash had quarantined the dirty tree BEFORE
+# staging and the pop silently failed — the script's own reconcile step ate the change it was
+# asked to ship. Saving via `git hash-object -w` writes an unreferenced blob that survives
+# rebase (git's object store is append-only during normal operations; no gc runs).
+# Restore is unconditional: if the file already has the same content it is a no-op write;
+# if the reconcile modified it (a real rebase conflict would have exited 3 before we reach
+# here, and a hook reformat happens post-restore at `git commit` time), we overwrite it
+# because the caller explicitly named this file as the payload to land.
+_sdp_payload_blobs=""
+_sdp_save_payload() {
+  local _f _hash
+  _sdp_payload_blobs=""
+  for _f in "${FILES[@]}"; do
+    if [[ -f "$_f" ]]; then
+      _hash="$(git hash-object -w -- "$_f" 2>/dev/null)" && _sdp_payload_blobs="${_sdp_payload_blobs}${_hash}  ${_f}
+"
+    fi
+  done
+}
+_sdp_restore_payload() {
+  local _hash _f
+  [[ -z "$_sdp_payload_blobs" ]] && return 0
+  while IFS='  ' read -r _hash _f; do
+    [[ -z "$_hash" || -z "$_f" ]] && continue
+    git cat-file blob "$_hash" > "$_f" 2>/dev/null || true
+  done <<<"$_sdp_payload_blobs"
+}
+
 # Whole-tree snapshot. The fingerprint above covers only the NAMED files -- the work being
 # shipped. An uncommitted edit elsewhere in the tree can still be eaten by the reconcile's
 # autostash and vanish silently (measured 2026-08-10, /codex/05-infrastructure/per-tab-worktrees.md
@@ -1062,6 +1093,14 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if [[ "$committed" == false ]]; then
+    # Save the caller's named-file content BEFORE any reconcile step so a failed
+    # autostash pop cannot eat the payload. Measured 2026-08-10: the reconcile ran
+    # FIRST, the autostash quarantined the dirty tree, the pop silently failed, and
+    # the script reported "✅ Named files already match HEAD" for content it had
+    # itself stashed. Saving to git's object store survives rebase; we restore
+    # unconditionally after the reconcile, before staging. (P0, todo 2)
+    _sdp_save_payload
+
     ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
 
     if [[ "$ahead" -eq 0 ]]; then
@@ -1086,6 +1125,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         exit 3
       fi
     fi
+
+    # Restore the payload the reconcile step may have eaten (P0, todo 2). The saved
+    # blob survives rebase; an unconditional cat-file restore is a no-op write when
+    # the file already has the same content. If the rebase had a genuine conflict we
+    # would have exited 3 above, so the only caller here is a clean tree.
+    _sdp_restore_payload
 
     if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
@@ -1118,9 +1163,44 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     else
       echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+        # P0 (todo 1): before reporting "already landed", verify against origin/$BRANCH
+        # rather than just HEAD. When the reconcile step itself quarantined the caller's
+        # edits (autostash pop failed silently), HEAD still matches the working tree —
+        # but origin/$BRANCH does NOT carry the caller's intended content. A check
+        # against HEAD alone cannot tell "peer landed identical content" from "we ate
+        # our own changes"; a check against the remote CAN.
+        if ! git fetch -q origin "$BRANCH" 2>/dev/null; then
+          echo "  could not fetch origin/$BRANCH to verify -- retrying"
+          backoff "$attempt"
+          continue
+        fi
+        if ! git diff --quiet "origin/${BRANCH}" -- "${FILES[@]}" 2>/dev/null; then
+          # Named files differ from what is on the remote — the reconcile step itself
+          # likely stashed them and failed to restore. This is a SELF-INFLICTED no-op:
+          # the caller handed us real edits and we ate them.
+          {
+            echo
+            echo "🛑 NOTHING WAS STAGED, BUT YOUR CONTENT IS NOT ON THE REMOTE EITHER."
+            echo "   The named file(s) differ from origin/${BRANCH} — this script's own"
+            echo "   reconcile step (pull/rebase/autostash) likely quarantined your edits"
+            echo "   and did not restore them. This is a SELF-INFLICTED no-op, NOT a"
+            echo "   benign 'peer already landed it' case."
+            echo
+            echo "   Your content may still be in a stash entry:"
+            git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+            echo "     Inspect:  git stash show -p 'stash@{0}'"
+            echo "     Extract:  git show 'stash@{0}:<path>' > <path>"
+            echo "   Also check for orphaned prek patches:"
+            echo "     ls -t ~/.cache/prek/patches/ | head"
+            echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md"
+            echo "   (Second symptom — quarantine before staging)."
+          } >&2
+          exit 4
+        fi
+        # Content matches origin/$BRANCH — a peer genuinely landed identical content.
         if verify_committed && verify_pushed; then
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files already match origin/${BRANCH} (a concurrent session landed identical content while this run was in flight) -- treating as success."
           final_ok=true
           break
         fi
