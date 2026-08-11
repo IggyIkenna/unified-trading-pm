@@ -25,7 +25,7 @@ summary: >-
   section-C migration — all 4 are already live, open checkboxes in `crypto_alpha_research_2026_07_24.md` (lines 436,
   487, 440, 480) — not orphaned, not part of this extraction, and the source doc's register is corrected accordingly in
   the same commit as this batch.
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -45,13 +45,13 @@ tags: [reconciliation, paper-trading, determinism, ao-dispatch, close-out, batch
 related:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/epics/batch_live_symmetry_master.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-11"
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -94,6 +94,11 @@ source: >-
 ---
 
 # Citadel satellite AO batch 1 — 7 conflict-clear agent-shippable items
+
+> **ARCHIVED 2026-08-11** — all 7 todos done + verified (each todo's evidence + Progress Log below, incl. the
+> 2026-08-11 slot-27 source-doc reconciliation in the finalize twin). Archived alongside its gated finalize plan
+> `citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md` per the finalize plan's todo P3 (slot-22 finalize
+> worker).
 
 > **`status: active` — operator already authorized this split** (see `source:` above); no double-gate per
 > `task_template.md` §4's no-double-gate rule. The finalize plan below ships `active` from the start too —

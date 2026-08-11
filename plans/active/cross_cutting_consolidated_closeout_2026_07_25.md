@@ -77,8 +77,8 @@ related:
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
     /plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-09"
