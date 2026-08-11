@@ -285,17 +285,11 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       script REPORTS how many changed rows still have a `claude_session_id`, which is the information needed to decide
       whether the exact path is worth building at all. **Still open because the done-when requires a live dry run**
       against the VM DB.
-- [ ] [SCRIPT] P2. **Run `reprice_task_usage.py --apply` against the live orchestrator VM via SSM after reviewing the
-      dry-run report.** Retagged `[OPERATOR]` -> `[SCRIPT]` on operator instruction 2026-08-11 — no human gate needed.
-      **Safe-idempotent justification** (required for any AO `--apply` todo per `plans/active/task_template.md` finding
-      O): this is NOT a delete and touches no GCS object. It recomputes `task_usage.spend_usd` from each row's OWN
-      already-stored token counts and `model` — a pure DB recompute, no transcript access — writing a column that is
-      currently NULL on ~1,993 of 2,622 rows. It is dry-run BY DEFAULT (`--apply` required to write), fully re-runnable
-      (a second run recomputes the same values and reports them unchanged), and `--only-unpriced` narrows it to just the
-      blank rows. A partial or interrupted run is safe to re-invoke. The values it writes are derived, not authored, so
-      a wrong result is corrected by re-running after fixing the rate table rather than by restoring data. **Done
-      when**: a post-run query showing the remaining `spend_usd IS NULL` count (and the reason for any residual) is
-      pasted into the Progress Log.
+- [ ] [OPERATOR] P2. **Run `reprice_task_usage.py --apply` against the live orchestrator VM via SSM after reviewing the
+      dry-run report.** Tagged `[OPERATOR]` because it mutates ~1,993 live production rows; mirrors the established
+      precedent of `deepseek_flash_ab_routing_test_2026_08_05.md` todo 16's `repair_unpriced_deepseek_spend.py --apply`.
+      Not a delete — it fills NULL columns only and is re-runnable. **Done when**: a post-run query showing the
+      remaining `spend_usd IS NULL` count (and the reason for any residual) is pasted into the Progress Log.
 - [ ] [REVIEW] P2. **Verify the operator's original symptom is gone: the DeepSeek + Planning filter must show a dollar
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
@@ -482,6 +476,53 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       recorded below.** If the multipliers converge into a narrow band per tier, record it; if they stay divergent, open
       an issue doc rather than averaging the spread into a single misleading number. **Done when**: the re-run output is
       recorded here with an explicit converged/not-converged verdict.
+
+### Anthropic Wallet Reconciliation (operator ask 2026-08-11)
+
+Operator ask, interactive session 2026-08-11: _"track our Anthropic usage in tokens converted to $ against our actual $
+spend on the weekly limits, from Wednesday"_ — i.e. the subscription-side analogue of the DeepSeek Wallet Reconciliation
+panel (`server/state_store/slots.py::compute_deepseek_wallet_reconciliation` + `dashboard/src/DeepSeekWalletPanel.tsx`),
+which answers "where did the money go" for a metered wallet and surfaces the unattributed remainder as an explicit
+`residual_usd` instead of folding it into whichever bucket is biggest.
+
+- [ ] [BACKEND] P1. **Persist an operator-recorded real-charges ledger per Anthropic account — the analogue of
+      `DeepSeekTopupRow`.** That row type exists precisely because DeepSeek publishes no spend-history API; Anthropic
+      publishes none either, so "what we actually paid" has to be a recorded fact, not derived from a plan-price
+      constant. Must carry the subscription charge for the period PLUS the `extra_usage` credits the TUI-capture todo
+      above obtains, with CURRENCY recorded (the laptop account's live payload is GBP, not USD — £150.78 this month,
+      measured 2026-08-10). **Done when**: the ledger persists real charges with period + currency, never edits a prior
+      entry (audit trail, same contract as `record_deepseek_topup`), and a test proves a window carrying overage is not
+      priced at bare subscription cost.
+- [ ] [BACKEND] P1. **`compute_anthropic_wallet_reconciliation()` — per account, per weekly window: paid $, consumed $,
+      residual.** Mirrors the DeepSeek reconciliation's shape, including the worker / orchestrator (slot 0) / review
+      split taken from the `is_review_slot` value SNAPSHOTTED on each row at sweep time rather than re-derived from
+      today's config (see `orm.py::DeepSeekMessageUsageRow.is_review_slot` for why a query-time membership check
+      retroactively relabels an entire historical sum). Consumed $ = list-priced value from `model_pricing.py` converted
+      by that account's MEASURED multiplier, never a hardcoded one. `residual_usd` must be None whenever the multiplier
+      or the paid-charges row is missing — never a number computed against an unset baseline, same contract the DeepSeek
+      view already holds. **Done when**: the endpoint returns a per-account, per-window breakdown and tests cover the
+      missing-multiplier and missing-payment cases.
+- [ ] [BACKEND] P1. **Store each weekly window's OPEN and CLOSE meter readings so a past window stays reconcilable after
+      the meter rolls.** The meter-history sampler records `weekly_pct` over time, but a reconciliation needs the pair
+      anchored to the Wednesday reset (`weekly_resets_at`); without a stored boundary pair a closed window cannot be
+      reconstructed. This is the same defect measured on the DeepSeek side on 2026-08-11 — no balance history is
+      persisted anywhere (`account_usage_history` has no balance column, `account_usage` holds only the CURRENT
+      reading), which is why the DeepSeek wallet view can only ever be lifetime and a "last 24 hours" residual is not
+      computable at all today. Do not repeat it here. **Done when**: every closed weekly window since the Wednesday
+      resets has a stored (open, close) reading per account, and the reconciliation can be recomputed for any past
+      window.
+- [ ] [UI] P2. **`AnthropicWalletPanel.tsx` beside `DeepSeekWalletPanel.tsx` — per-account weekly-window table.** Same
+      structure as the DeepSeek panel (pure exported formatters, vitest-covered; the React shell owns only fetch/poll
+      state and the latest-request-id guard against a slow poll clobbering a fresher write). Shows paid $ / consumed $ /
+      residual / implied multiplier per account per window, with the spend BASIS labelled — a subscription dollar and a
+      metered dollar are not the same unit. **Done when**: the panel renders live data and a cited playwright regression
+      spec passes; `[UI]` + `pw:L2 ✓` required per `/codex/06-coding-standards/ui-testing-layers.md`.
+- [ ] [DATA] P1. **Report the reconciliation for the first full post-Wednesday-reset window and state a residual
+      target.** This is the acceptance measurement for the four todos above. With the two RESERVED AO-exclusive accounts
+      the denominator is exact by construction, so an unexplained residual on those two is a real attribution defect,
+      not laptop contamination. **Done when**: the first closed window's per-account residual is recorded here with an
+      explicit within-target / not verdict, and any gap is either root-caused or opened as an issue doc rather than
+      averaged away.
 
 ## Progress Log
 
