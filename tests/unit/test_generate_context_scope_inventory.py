@@ -174,6 +174,25 @@ def test_marker_claimed_count_returns_none_when_no_parenthetical():
     assert MOD._marker_claimed_count(body, marker_pos) is None
 
 
+def test_marker_claimed_count_extracts_comma_extended_claim_not_a_later_quoted_spillover():
+    """Reproduces context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md:
+    the marker's own claim is comma-extended prose ("(4 entries, written and counted with extra
+    care ...)"), so the closing paren isn't immediately after "entries" -- the old strict regex
+    skipped it and matched a LATER, strict-form quoted excerpt of a different doc's marker
+    ("context-scout 2026-08-01 (5 entries)") instead, producing a false claimed=5. The real claim
+    (4) must win."""
+    body = (
+        "- **context-scout 2026-08-07**: refreshed context_scope (4 entries, written and counted "
+        "with extra care given this doc's own subject matter) -- swapped the now-fixed "
+        "`lst_rate_honest_coverage_2026_07_21.md` for the sibling that superseded it, plus "
+        "`check_line_caps.sh`. Live-checked `data_completion_defi_2026_07_15.md` at write time: "
+        "still 1000L, still carries the stale `context-scout 2026-08-01 (5 entries)` marker, "
+        "unrelated to this doc.\n"
+    )
+    marker_pos = body.index("context-scout")
+    assert MOD._marker_claimed_count(body, marker_pos) == 4
+
+
 # ---------------------------------------------------------------------------
 # End-to-end: main() over a real fixture tree
 # ---------------------------------------------------------------------------

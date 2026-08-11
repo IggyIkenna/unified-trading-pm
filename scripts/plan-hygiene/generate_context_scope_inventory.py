@@ -55,8 +55,18 @@ IN_SCOPE_STATUS = {
 MARKER_RE = re.compile(r"context-scout\s+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 # COUNT_MISMATCH detection: parenthetical count claim in a context-scout Progress Log bullet.
-# Matches "(1 entry)" and "(4 entries)" — the two forms used in corpus markers.
-COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\)")
+# Matches "(1 entry)" and "(4 entries)" plus a comma/prose-extended claim like
+# "(4 entries, written and counted with extra care ...)" -- a `\b` after "entr(y|ies)" instead of
+# requiring the closing paren immediately: the closing-paren-required form let a non-conforming
+# real claim (comma-extended) fall through to a LATER, strict-form match elsewhere in the same
+# window (e.g. a quoted excerpt of a different doc's marker), producing a false COUNT_MISMATCH --
+# confirmed corpus false positive on
+# plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md, see
+# plans/active/issues/context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md.
+# Verified against the live corpus (2026-08-11): this widening only ever RESOLVES a previously
+# `None` claim to the doc's actual live count (4 docs affected, all now correct) -- no doc's
+# extracted count flips to a different, wrong value.
+COUNT_RE = re.compile(r"\((\d+)\s+entr(?:y|ies)\b")
 # Marker bullet window: bounds how far to scan before/after the marker text.
 _WINDOW_END_PATTERNS = ("\n- ", "\n## ", "\n```", "\n---", "\n> ")
 _MAX_MARKER_WINDOW_CHARS = 2000
