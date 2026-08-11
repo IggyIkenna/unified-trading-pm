@@ -53,6 +53,25 @@
 # PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
 # (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
+# A FOURTH DOCUMENTED EXCEPTION (2026-08-11,
+# tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md todo 3): a bounded,
+# NET-ZERO-LENGTH content substitution on an already-over-cap LIVE doc is also allowed through in
+# SCOPED mode, alongside the marker-append and link-repoint exceptions above. Root problem this
+# closes: a routine MVP-cell table-row content update (e.g. correcting a stale coverage-status cell)
+# is neither a pure append (marker-append needs DELETED=0) nor a path-only substitution
+# (link-repoint requires the changed prose to be identical once path tokens are normalized) --
+# swapping one table cell's TEXT always shows DELETED>=1 with genuinely different prose on both
+# sides, so neither existing carve-out can fire, permanently blocking routine content corrections on
+# any closeout doc that has already crossed the cap (same root-cause CLASS as the link-repoint gap,
+# confirmed live 2026-08-09 on tradfi_consolidated_closeout_2026_07_18.md). Narrowly scoped: only
+# fires when (a) the file is already over cap before this commit (automatically implied -- ADDED ==
+# DELETED means the file's line count is unchanged by this diff, so if it's over cap after, it was
+# over cap before too), (b) the staged diff is NET-ZERO-LENGTH (ADDED == DELETED, never grows OR
+# shrinks the file -- broader than the marker-append's DELETED=0, but still line-count-neutral), (c)
+# the diff stays SMALL (ADDED <= 10, same bound as marker-append, so this is a bounded touch-up, not
+# a wholesale rewrite), and (d) no touched (+/-) line is a checkbox line -- so this can never be used
+# to sneak in a todo change, only a content-only edit like a status/coverage-number correction.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -153,6 +172,7 @@ for f in "${TARGETS[@]}"; do
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
+    CONTENT_SUBSTITUTION_EDIT=""
     if [ -n "$SCOPED" ]; then
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
@@ -183,11 +203,24 @@ for f in "${TARGETS[@]}"; do
           LINK_REPOINT_EDIT="1"
         fi
       fi
+      # Content-substitution exception (see policy comment above): only when neither the
+      # marker-append nor link-repoint exceptions already fired, AND the diff is NET-ZERO-LENGTH
+      # (ADDED == DELETED -- a same-line content swap, never a net grow/shrink), AND bounded
+      # (ADDED <= 10, same guard as marker-append), AND no touched line is a checkbox line.
+      if [ -z "$SMALL_MARKER_APPEND" ] && [ -z "$LINK_REPOINT_EDIT" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
+        && [ "$ADDED" -eq "$DELETED" ] 2>/dev/null && [ "$ADDED" -ge 1 ] 2>/dev/null && [ "$ADDED" -le 10 ] 2>/dev/null; then
+        TOUCHED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null \
+          | grep -cE '^[+-]\s*-\s*\[.\]' || true)"
+        TOUCHED_CHECKBOX_LINES="${TOUCHED_CHECKBOX_LINES:-0}"
+        [ "$TOUCHED_CHECKBOX_LINES" = "0" ] && CONTENT_SUBSTITUTION_EDIT="1"
+      fi
     fi
     if [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$CONTENT_SUBSTITUTION_EDIT" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded net-zero-length content substitution only, 2026-08-11)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))

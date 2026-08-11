@@ -69,11 +69,22 @@ depends_on: []
       already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
       the stale "66% attempted_failed... not yet launched" text). Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
+- [x] ✅ [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
       content substitution** (not just `DELETED=0`), per the root-cause analysis already done in
       `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a shared fix would unblock both that
       doc's link-archival case and this doc's table-row-update case without requiring every over-cap closeout plan to be
-      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
+      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`. —
+      `unified-trading-pm@<pending>`. Added a FOURTH SCOPED-mode carve-out (`CONTENT_SUBSTITUTION_EDIT`), sibling to the
+      marker-append (2026-08-02) and link-repoint (2026-08-09) exceptions: fires when (a) the file is already over cap
+      before this commit (implied — ADDED==DELETED keeps the line count unchanged), (b) the staged diff is
+      NET-ZERO-LENGTH (`ADDED == DELETED`, broader than the marker-append's `DELETED=0`), (c) the diff stays bounded
+      (`ADDED <= 10`, same guard as marker-append), and (d) no touched (+/-) line is a checkbox line. Verified against 3
+      positive cases (single-line table-cell swap — the exact tradfi S&P-index-options scenario this issue was filed
+      over, a 5-line and the max-bound 10-line net-zero swap) and 4 negative cases (net growth, pure append — correctly
+      still routed to the marker-append carve-out instead, >10-line swap, checkbox smuggled in either direction) using
+      the real script copied into isolated scratch git repos (not the live corpus). Added
+      `tests/test_check_line_caps_content_substitution_carveout.bats` (10 tests, all passing) mirroring the existing
+      marker-append regression-test convention. Existing marker-append suite (10 tests) still green — no regression.
 
 ## Progress Log
 
@@ -87,3 +98,7 @@ depends_on: []
   the established 2026-07-24/2026-07-25 split precedent. Parent doc 1005L → 879L; `check_line_caps.sh` now exits 0 on
   it. Todos 2 and 3 remain open (out of this task's scope — a P3 content-landing todo and a P3 tooling-improvement todo,
   both separate follow-ups).
+- **2026-08-11, slot-11 (backend_engineer, dispatched as data_engineering)**: closed todo 3. Implemented the
+  `CONTENT_SUBSTITUTION_EDIT` carve-out in `check_line_caps.sh` per this todo's own spec — see the flip note above for
+  the exact scoping + verification. Todo 2 (landing the corrected S&P index options MVP-cell row on the now-unblocked
+  parent doc) remains open as its own separate follow-up — out of this task's scope.
