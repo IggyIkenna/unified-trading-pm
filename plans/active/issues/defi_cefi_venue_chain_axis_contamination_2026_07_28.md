@@ -641,6 +641,18 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
   (unrelated `canonical-migration-prediction-shape4-merge-20260810-201105` + backfill/cefi-queue VMs still RUNNING); AWS
   clean. Task re-skipped `reason_code=GATED` — re-dispatch when step-1 corpus-freshness gate clears.
 
+- **slot-23 2026-08-11 (task -019 re-check, same gates — fresh verification 2026-08-11T09:35Z)**: Both gates re-verified
+  fresh — **still unmet, deletion remains correctly blocked**. (1) Corpus freshness FAIL: bounded UTL list-only probe of
+  `market-data-tick-defi-prd-central-element-323112` (`probe_corpus_freshness_20260811.py`, single-date single-venue,
+  never a corpus walk) — **0** `perp_funding`/`perp_daily_ctx` objects on 2026-08-01..11 across all 6 `catalog_carry.py`
+  venues (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`BYBIT-FUTURES`/`OKX-FUTURES`/`BITFINEX-FUTURES`/`BITGET-FUTURES`) + DERIBIT,
+  under both `batch_tardis` and `batch_onchain_rpc` (0/154 venue-mode-day prefixes) — `funding_window()` returns empty
+  for current days; step-1 not landed. (2) In-flight defi rebuild CLEAR: `canonical-migration-defi-rebuild-20260810-204358`
+  absent from GCE instance list (unrelated `canonical-migration-prediction-shape4-merge-20260810-201105` + the
+  `mdps-defi-*` backfill fleet + `expected-universe-v2-defi-*` TERMINATED still RUNNING). Task re-skipped
+  `reason_code=GATED` — re-dispatch when step-1 corpus-freshness gate clears (forward-poll cron + corpus recompute
+  current for all 6 venues).
+
 ## Deferred after 2026-08-09
 
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
