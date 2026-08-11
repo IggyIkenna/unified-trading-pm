@@ -17,7 +17,7 @@ summary: >-
 created: 2026-08-11
 author: slot-10
 source: ["sports_taxonomy_p3_consumers_2026_08_08.md dispatch, 2026-08-11"]
-resolved_by:
+resolved_by: slot-18, agent-orchestrator@153c0a0f3f, 2026-08-11
 locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -28,6 +28,7 @@ repos: [agent-orchestrator]
 tags: [ao, auto-park, dispatch, gated, sports]
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 # AO durable park wiring missing from task entry → false condition does not gate dispatch
@@ -102,9 +103,25 @@ recorded in the P3 plan's Progress Log (slots 15/22/10).
 
 ## Follow-ups
 
-- [ ] [CODE] P1. **Fix `agent-orchestrator` park/unpark so a parked task stays gated**: (1) `unpark_task` clears the
+- [x] ✅ [CODE] P1. **Fix `agent-orchestrator` park/unpark so a parked task stays gated**: (1) `unpark_task` clears the
       cooldown row's `parked_condition`; (2) `manual_park` re-applies the full park recipe when the task's current
       backlog entry is missing `priority_override`/the prereq instead of no-oping on a stale marker; (3) dispatcher
       gates on the DB `auto_unpark__<task-id>` condition even when the YAML prereq is absent. Add a unit test proving a
       GATED+parked task cannot dispatch while the condition is false (and CAN once cleared true). (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@153c0a0f3f. `unpark_task` was already correct (verified: `mark_unparked`
+      already clears `parked_condition`); shipped (2) `manual_park`/`maybe_auto_park` now re-apply the recipe instead of
+      no-oping on a stale marker, and (3) `dispatch._prereqs_met` gates on the DB `auto_unpark__<task-id>` condition
+      even when the YAML prereq reference is absent. 5 new unit tests in `tests/test_auto_park.py` (repair-on-stale-
+      marker for both park paths, no-op-when-genuinely-intact guard, and the DB-condition dispatch gate both ways). Full
+      quality-gates.sh green (3440 pytest + 295 dashboard vitest).
+
+## Progress Log
+
+- 2026-08-11 (slot-18): Fixed + shipped (agent-orchestrator@153c0a0f3f). This flip commit deliberately leaves
+  `status: open` (non-terminal) AND sets a temporary `archive_exempt: true` — this doc is now 0-open/done/unlocked,
+  which `check_archive_candidates --only` would otherwise hard-block on ("archive it in this commit"), but
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip with the
+  `git mv` archival" rule forbids doing the archival in this SAME commit (see
+  `/plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` for the full
+  same-day conflict this sidesteps, using its documented `archive_exempt: true` bridge). A follow-up commit flips
+  `status: resolved` + performs the real 6-step archival ritual + drops this exemption key.
