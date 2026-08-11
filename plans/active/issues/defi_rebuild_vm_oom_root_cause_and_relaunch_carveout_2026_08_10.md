@@ -206,6 +206,64 @@ Rather than a 3rd blind identical SPOT retry, relaunched with `ON_DEMAND=true`
 (`canonical-migration-defi-rebuild-20260810-113426`, non-preemptible, verified `RUNNING`) — the launcher's existing
 opt-out for exactly this case. Fresh watchdog armed for this instance name.
 
+## Resolution (2026-08-10/11) — second root cause found + fixed, chain reached terminal SUCCESS
+
+The `-113426` on-demand relaunch above was not the end of the chain: its eventual successor
+(`canonical-migration-defi-rebuild-20260810-180141`) OOM'd for real on an over-aggressive `e2-standard-4` (4vCPU/16GB)
+resize — a genuine RAM shortfall on a denser chunk, unrelated to the `covered_keys` bug above (confirmed via
+`host_metrics_window`: 50%→85%+ within-chunk, no reset). Relaunched on `e2-highmem-4` (restores 32GB RAM, keeps the
+validated-fine 4-vCPU reduction).
+
+While that ran, a **second, deeper root cause** was found by direct investigation (operator: "why is memory bloating,
+fix the leakage, add canonical resource monitoring"): `ManifestWriter`'s per-VM-shard flush path
+(`unified_trading_library/manifest_writer/_writer_io.py::_flush_per_vm_pending`) does a full read+merge+reserialize+
+upload of the ENTIRE cumulative per-VM shard on every debounce-triggered flush — O(cumulative-shard-size) per flush. The
+library's tight default debounce (`flush_entries=50`, `flush_interval_sec=5.0`, tuned for MDPS's bursty small-shard
+case) meant this expensive rewrite ran roughly every 5s for hours on this script's multi-hour multi-million-row run,
+paying real O(N²)-style total cost — the actual driver a bigger machine had merely been masking. Fixed canonically in
+UTL (`unified-trading-library@77fef206f6`): new `ManifestWriter(per_vm_flush_entries=, per_vm_flush_interval_sec=)`
+constructor overrides (additive, existing callers unaffected), wired into this script with coarser values
+(`50_000`/`300.0`), plus the canonical `ResourceProfiler` self-monitoring safety valve wired in for the first time
+(`market-tick-data-service@c30e07091c`).
+
+Coarsening the debounce had its own side effect, caught live: a **data-loss regression**, found via a follow-up
+GCS-I/O-contention test (two short ~1min rebuild VMs on 2026-06-01..06 each lost >20k manifest rows on exit —
+`atexit manifest flush failed ... cannot schedule new futures after interpreter shutdown`, the documented
+`manifest_atexit_drain_races_asyncio_shutdown_2026_07_09` race). Root cause: `rebuild_defi_manifest.py` called
+`writer.flush()` (debounced, per-VM-shard-skipping) at its own process-final points instead of `writer.close()`
+(guaranteed drain) — harmless under the OLD tight debounce (the threshold was always already crossed by then) but
+load-bearing once the debounce was coarsened. Fixed (`market-tick-data-service@00268ba8b5`, both process-final
+call-sites switched to `.close()`, test updated), and the June 2026-06-01..06 manifest gap it caused was repaired
+
+- the fix verified live via a clean re-run (`process_final=True`, all 45,050 rows force-written, no atexit failure).
+
+The main VM was then cycled onto the fully-fixed code (`canonical-migration-defi-rebuild-20260810-204358`,
+`e2-highmem-4`, resumed from `2025-11-28` since no `--chunk-days 90` boundary had completed yet) and **reached genuine
+terminal SUCCESS**: `exit_code=0`, all 5 chunks complete through `--end-date 2026-12-31`, 5,832,208 total shards, 255
+distinct dates, elapsed 12780.2s (~3h33m) — self-deleted cleanly via `VM_SHUTDOWN_ON_COMPLETION`. This satisfies the
+downstream gate in `/plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md`, which has been flipped
+`draft` → `active` (`unified-trading-pm@9f00ae4e02`) and is now AO-ingested (confirmed live via the backlog: 8 tasks
+queued across it + its `_finalize` companion).
+
+The GCS-shared-bucket-contention pattern surfaced by that same I/O test (a newcomer VM measured ~7-9x throttled vs. an
+already-running incumbent's ~8%-noise impact) is now a codified HARD RULE, not just this doc's finding:
+`/codex/05-infrastructure/vm-launcher-runbook.md` § "Concurrent VMs Sharing a GCS Bucket" +
+`unified-trading-pm/cursor-configs/CLAUDE.md` § "Launching VMs / infra?" (`unified-trading-pm@f7f4311dcd`).
+
+## Todos
+
+- [ ] [DATA] P3. **Verify whether the declining DeFi shard-density trend observed across this session's rebuild runs is
+      genuine (venue retirement/consolidation) or an actual capture gap.** Measured, unverified: Dec 2025–Feb 2026
+      averaged ~28,000 shards/day; 2026-06-10..29 averaged ~5,695/day; 2026-06-30..07-19 averaged only ~934/day — a >30x
+      drop that was ASSUMED (not confirmed) to reflect ongoing DeFi venue retirement/consolidation reducing raw shard
+      counts over time (several retirement plans are in flight — `dex_pools`/`dex_swaps`/`kamino_lending`/
+      `blazestake`/`sushiswap`), never independently checked against actual venue-count/capture-coverage data for
+      June/July 2026. If wrong, this could indicate a real, currently-unflagged DeFi capture gap for that window.
+      Done-when: cross-check per-day distinct-venue counts for a June/July 2026 sample against a known-good earlier
+      month (e.g. via `read_availability_index()` `distinct_venues` — the rebuild's own per-chunk summary already logs
+      this) — confirm the drop tracks a documented retirement, or file a fresh capture-gap issue if it doesn't. (repo:
+      market-tick-data-service)
+
 ## Pointers
 
 - Full evidence trail:
