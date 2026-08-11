@@ -248,7 +248,7 @@ One-line digest additions made this run to `cefi_consolidated_closeout_aggregate
 cefi-tagged linkage-orphans so each has a graph/mention path to the closeout family (the skill's own sanctioned remedy
 for a linkage gap; same pattern as batch8's "Self-dispatched, linkage-fix-only" section):
 `issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`,
-`issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
+`/plans/archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
 `issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`,
 `issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`,
 `issues/mtds_live_mode_never_touches_authenticated_tardis_datasets_endpoint_2026_08_02.md`,

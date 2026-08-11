@@ -217,8 +217,8 @@ context_scope:
   need an operator decision on catalogue-orphan disposition; not a checkable-fact audit.
 - **`issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`** — a Tardis credential/billing entitlement
   upgrade, or alternatively an operator judgment call accepting reduced scope; neither is worker-bounded.
-- **`issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`** — the shipped fix's residual todo
-  is an operator sign-off/verification step, not further code work.
+- **`/plans/archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`** — the shipped fix's
+  residual todo is an operator sign-off/verification step, not further code work.
 - **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — **RESOLVED + ARCHIVED 2026-08-09**: re-verified
   the HYPERLIQUID VMs are no longer running (live `aws ec2 describe-instances` returns zero results, consistent with
   both multi-year backfills having completed since the 08-04 confirmation); closed and moved to

@@ -230,7 +230,7 @@ last_updated: 2026-06-27
       silently. Evidence: DuckDB query over
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, discriminated by
       `service_name` + `error_reason`. Prior doc
-      `/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
+      `/plans/archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
       at exactly 1 row as of 2026-08-02, which is what dates the onset.
 - [ ] [DATA] P2. Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
       an `@INV` suffix (`BINANCE-FUTURES:PERPETUAL:IP-USDC`, `BYBIT:PERPETUAL:XRPUSD`, `BYBIT:FUTURE:BTC-20250926`, …)
