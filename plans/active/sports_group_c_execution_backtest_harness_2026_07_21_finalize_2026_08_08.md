@@ -92,16 +92,23 @@ context_scope:
       no SportsMatchingEngine reference anywhere in `backtest_domains.py`; (c) hermetic test asserts non-trivial alpha,
       not just success exit code. Zero discrepancies found — all 5 parent todos carry verified, checkable evidence.
 
-- [ ] [REVIEW] P3. **Resolve the parent plan's one remaining judgment call — todo 5 (docs/BACKTESTS.md placement) — via
-      existing-sibling precedent, not fresh judgment.** Check whether `docs/BACKTESTS.md` (or its replacement, if the
-      "currently DEAD" finding in the parent plan is still accurate) lists the 3 existing domain runners
+- [x] ✅ [REVIEW] P3. **Resolve the parent plan's one remaining judgment call — todo 5 (docs/BACKTESTS.md placement) —
+      via existing-sibling precedent, not fresh judgment.** Check whether `docs/BACKTESTS.md` (or its replacement, if
+      the "currently DEAD" finding in the parent plan is still accurate) lists the 3 existing domain runners
       (`run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`) in a routine verification surface. If yes, add
       `run_sports_backtest` alongside them for consistency (default: match the established pattern, per this corpus's
       script/tooling-gap self-service precedent — an exact existing sibling precedent in the same repo needs no fresh
       operator judgment). If no such surface currently exists for any domain runner, leave it a manually-invoked one-off
       and record why. **Done when**: the placement decision is made and evidenced (either a real diff adding the entry,
       or a stated reason no surface exists to add it to), and the parent plan's todo 5 is flipped `[x]` with that
-      evidence. Repo: execution-service.
+      evidence. Repo: execution-service. **Evidence (slot 26, 2026-08-11)**: Independently verified the placement
+      decision. (1) `execution-service/docs/BACKTESTS.md` does NOT exist — confirmed via direct file check in the slot
+      clone. (2) No execution-service verification surface lists `run_cefi_backtest`/`run_tradfi_backtest`/
+      `run_defi_backtest` — confirmed via `grep -r` across execution-service/docs/ (zero hits). Adding
+      `run_sports_backtest` to a surface that doesn't exist for the other 3 would be asymmetric. (3) Parent plan's todo
+      5 is already `[x]` with evidence from slot 33 (2026-08-11) reaching the same conclusion: `run_sports_backtest`
+      stays a manually-invoked one-off; sports is backtest-only, not on the live-mode critical path. Decision confirmed
+      — no surface exists to add it to, and no diff is needed.
 
 - [ ] [REVIEW] P3. **Check whether this harness landing unblocks a downstream gate.**
       `/plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s Todo 5 (run a sports archetype
