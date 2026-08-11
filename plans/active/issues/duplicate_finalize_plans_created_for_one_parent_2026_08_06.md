@@ -52,6 +52,7 @@ sequential: true # todo 3 (corpus-wide sweep) depends on todo 2's detector exist
 resolved_by:
 locked_by:
 depends_on: []
+archive_exempt: true # 2026-08-11: last-todo-flip commit; archival follows after /done (cross-repo mode-2 two-commit split per plan-completion-and-archival-discipline.md)
 context_scope:
   [
     /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md,
@@ -65,22 +66,22 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
+- [x] ✅ [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
       `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
       refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
       two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
       filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
 
-- [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
-      `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
-      frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would have
-      surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same way
-      the orphan count is reported — a non-zero count is review-blocking.
+- [x] ✅ [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in
+      the `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every
+      plan's frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would
+      have surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same
+      way the orphan count is reported — a non-zero count is review-blocking.
 
-- [ ] [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over `plans/active/`
-      and de-race any other parent found with >1 gated finalize plan, using the same procedure applied here: port any
-      todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated banner. Report
-      the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces.
+- [x] ✅ [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over
+      `plans/active/` and de-race any other parent found with >1 gated finalize plan, using the same procedure applied
+      here: port any todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated
+      banner. Report the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces.
 
 ## Progress Log
 
@@ -123,3 +124,31 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **infra slot 18, 2026-08-11 — todos 1+2 shipped; todo 3 corpus sweep complete**. Shipped in `unified-trading-pm`:
+  - **Todo 1**: Added `parent_already_gated(parent_slug, active_dir) → list[Path]` to
+    `scripts/quality_gates/check_finalize_plan_coverage.py`. Re-derives `_gated_slugs()` over the live corpus and
+    returns every existing finalize-plan path that already gates _parent_slug_. Keyed on the `depends_on` relationship,
+    not on filename shape — the two colliding files from the original incident differed only by a redundant date suffix,
+    so a filename-based guard would have missed this. Any script/agent that creates a finalize plan should call this
+    first.
+  - **Todo 2**: Added `_find_duplicate_gates()` + `--duplicate-gates` CLI mode to the same script; wired as a hard
+    shrinking-ratchet check into `run_hygiene_sweep.sh` (post-archive-candidates, same shape as the other ratchet
+    checks). Baseline written at 5 (`duplicate_finalize_gates_baseline.yaml`), covering 5 pre-existing multi-gate
+    parents.
+  - **Todo 3 — corpus sweep results**: The detector found 5 parents with >1 gated finalize plan. **All 5 are legitimate
+    multi-dependent patterns, not the "two finalize plans for the same parent" bug class.** Specifically:
+    - `prediction_phase_ab_residuals_2026_07_24` — 3 downstream phase plans (C/D/E) each gating on the shared AB phase
+      prerequisite (legitimate phased rollout).
+    - `sports_closeout_track_s2_foldin_2026_07_25` — a consolidated closeout plan + a per-track finalize plan (different
+      purposes; consolidated closeout aggregates multiple tracks).
+    - `sports_taxonomy_p1_capture_and_contracts_2026_08_08` — 3 downstream phase plans (P2/P3/fixture-catalogue) each
+      gating on P1 (legitimate phased rollout).
+    - `sports_taxonomy_p2_migration_2026_08_08` — a downstream phase (P4 backfill) + a per-phase finalize plan
+      (different purposes).
+    - `tradfi_manifest_content_recovery_completion_2026_07_24` — one actual finalize plan + one downstream registry-
+      coverage work plan (different purposes). None required de-racing. The original incident's pair (the only confirmed
+      case of two finalize plans for one parent) was already de-raced manually before this issue was filed.
+      **Conclusion**: the original bug was a one-off, and todo 1's `parent_already_gated()` guard would prevent any
+      recurrence — if it had existed then, the second responder would have seen the first responder's already-created
+      finalize plan and aborted. Belt-and-braces with todo 2's detector now catching any future case.
