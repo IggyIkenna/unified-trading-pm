@@ -1047,3 +1047,16 @@ are genuinely in scope for the operator's "no exceptions" directive.
   — same rule-4a/slot-17/18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`.
   **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
   honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11 (slot 33, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  `af-backfill-20260811-012845` (STANDINGS all-383, 2020-06-06→2026-08-10, e2-standard-8 asia-northeast1-c) RUNNING (GCP
+  asia-northeast1-c; AWS none) and VERIFIED GENUINELY PROGRESSING, not a zombie: re-verified at 11:25Z via a UTL cloud
+  read of the live GCS log (no subprocess gsutil — guardrail-compliant) — run.log tail 11:24:34Z shows active
+  per-fixture STANDINGS enrichment on 2022-08-09/10, `[[VM_PROGRESS]] last_completed_date=2022-08-10 monotonic=true`;
+  `PROGRESS.json updated=2026-08-11T11:25:46Z` with `last_completed_date=2022-08-11 monotonic=true`;
+  `ManifestWriter: per-VM shard updated (57525 total entries, 767 new)` — a genuinely live mid-range pass. Census now =
+  mid-backfill STANDINGS snapshot (residual 271 at slot-25 census, the very gap this VM is closing), not terminal
+  convergence — same rule-4a/slot-18/19/23/24 stale-baseline reasoning. Skipping `reason_code: GATED` +
+  `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts
+  (`census_all_af_entities_completion_2026_08_03.py` + `census_fixture_stats_lineups_widening_volume_2026_07_31.py`)
+  - confirm all 8 entities stable ~0 / honest-absence floors, then close this doc + notify operator the API-Football
+    plan can be downgraded. No code changes; Progress Log only.
