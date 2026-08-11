@@ -1125,31 +1125,21 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   fi
 
   if [[ "$committed" == false ]]; then
-    ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
-
-    if [[ "$ahead" -eq 0 ]]; then
-      # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
-      # regardless of file overlap -- git refuses cleanly on a real conflict.
-      if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
-        if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
-          echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
-          if ! autostash_rebase_reconcile; then
-            exit 3
-          fi
-        else
-          echo "  pull failed:"; cat /tmp/_sdp_pull_err
-          backoff "$attempt"
-          continue
-        fi
-      fi
-    else
-      # Defensive: shouldn't normally happen pre-commit, but handle the same as the
-      # post-commit case if it does (e.g. a prior failed attempt left a local commit).
-      if ! autostash_rebase_reconcile; then
-        exit 3
-      fi
-    fi
-
+    # ── STAGE THE NAMED FILES FIRST — they are the payload (P0 ordering fix, "Second
+    #    symptom", safe_doc_push_isolation_drops_rename_deletions_2026_08_10, todo "Do not
+    #    quarantine before staging"). The false-green no-op push traced to the run QUARANTINING
+    #    the dirty tree before staging: the payload was swept into a stash, `git add` then found
+    #    nothing to stage, and "nothing to stage — already matches HEAD" reported success. The
+    #    autostash-backlog self-arrest now skips --files and the certify gate refuses that false
+    #    success, but the payload can STILL be swept by a stash-capable reconcile: `git pull
+    #    --rebase --autostash` stashes the whole dirty tree — staged AND unstaged (verified
+    #    empirically 2026-08-11: a staged payload is swept and comes back UNSTAGED). So when
+    #    anything of the caller's is staged it is COMMITTED below BEFORE any stash-capable
+    #    reconcile runs: once committed it lives in git history and no autostash can touch it.
+    #    The reconcile block therefore runs only when nothing of the caller's is staged (no
+    #    payload left to protect); a committed payload's origin drift is handled by the
+    #    post-commit push-race rebase further down, which then only ever sweeps foreign
+    #    uncommitted work — or nothing at all when the tree is clean.
     if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
       # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
       # own exit code was never checked, so an index.lock failure here (the exact incident
@@ -1176,8 +1166,97 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     unstage_foreign_paths
     reassert_renames
 
+    if git diff --cached --quiet -- "${FILES[@]}"; then
+      # Nothing staged for the named files yet — there is no payload for a reconcile to
+      # sweep, so reconcile to origin first (cheap merge-pull fast-forward, or
+      # rebase+autostash on real divergence), then re-check below.
+      ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
+
+      if [[ "$ahead" -eq 0 ]]; then
+        # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
+        # regardless of file overlap -- git refuses cleanly on a real conflict.
+        if ! git pull origin "$BRANCH" --no-edit -q 2>/tmp/_sdp_pull_err; then
+          if grep -qiE "divergent branches|would be overwritten|Please commit your changes|Need to specify how to reconcile" /tmp/_sdp_pull_err; then
+            echo "  merge-pull can't fast-forward (real divergence) -- falling back to rebase+autostash"
+            if ! autostash_rebase_reconcile; then
+              exit 3
+            fi
+          else
+            echo "  pull failed:"; cat /tmp/_sdp_pull_err
+            backoff "$attempt"
+            continue
+          fi
+        fi
+      else
+        # Defensive: shouldn't normally happen pre-commit, but handle the same as the
+        # post-commit case if it does (e.g. a prior failed attempt left a local commit).
+        if ! autostash_rebase_reconcile; then
+          exit 3
+        fi
+      fi
+      # Re-stage after the reconcile so the checks below see the reconciled base
+      # (reassert_renames may also have staged a rename-source deletion).
+      git add -- "${FILES[@]}" 2>/dev/null || true
+      unstage_foreign_paths
+      reassert_renames
+    fi
+
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
-      : # there is something to commit
+      # There IS something to commit. Commit it now — and, when it was staged at the top of
+      # this block, this is the commit BEFORE any stash-capable reconcile ran, which is the
+      # whole point of the P0 fix above. The post-commit push loop handles origin drift (a
+      # non-FF push rejection triggers autostash_rebase_reconcile, which only ever sweeps
+      # foreign uncommitted work — the payload is already in git history).
+      if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
+        if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
+          if verify_committed && verify_pushed; then
+            _sdp_certify_success || exit $?
+            echo "✅ Nothing to commit -- already landed. Treating as success."
+            final_ok=true
+            break
+          fi
+          echo "  git reported nothing-to-commit but end-to-end verification failed -- not trusting it; retrying" >&2
+        fi
+        if grep -qi "index.lock" /tmp/_sdp_commit_err; then
+          lock_contention_count=$((lock_contention_count + 1))
+          echo "  index.lock contention (another process is writing this instant) -- short wait, retry (${lock_contention_count}/${LOCK_CONTENTION_MAX} consecutive lock failures)"
+          if [[ "$lock_contention_count" -ge "$LOCK_CONTENTION_MAX" ]]; then
+            print_lock_contention_escape_hatch
+            exit 8
+          fi
+          sleep 2
+          continue
+        fi
+        if grep -qi "prek stash/restore race detected" /tmp/_sdp_commit_err; then
+          # prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3): a
+          # DETECTED silent revert, not contention -- retrying only invites another race on
+          # the same file. Hard-stop with the diagnosis locked_git_commit already printed.
+          echo >&2
+          cat /tmp/_sdp_commit_err >&2
+          exit 7
+        fi
+        if ! commit_failure_is_retriable /tmp/_sdp_commit_err; then
+          {
+            echo
+            echo "❌ COMMIT REJECTED BY A PRE-COMMIT HOOK -- this is a DETERMINISTIC content failure, NOT contention."
+            echo "   Retrying will fail identically. Do NOT re-run this script until the content is fixed."
+            echo "   Failing hook(s): $(sed -n 's/^- hook id: //p' /tmp/_sdp_commit_err | paste -sd', ' -)"
+            echo "   The hook's own output (its remedy line is the thing to act on):"
+            echo
+            cat /tmp/_sdp_commit_err
+          } >&2
+          exit 6
+        fi
+        echo "  commit blocked by a retriable hook (branch drift re-detected mid-race) -- reconciling and retrying:"
+        cat /tmp/_sdp_commit_err
+        backoff "$attempt"
+        continue
+      fi
+      if ! verify_committed; then
+        echo "❌ git commit exited 0 but the named file(s) have no commit reachable from HEAD -- refusing to report success (a mocked/stubbed commit call, or a deeper git-state anomaly)." >&2
+        exit 6
+      fi
+      committed=true
     else
       echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
@@ -1192,57 +1271,6 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
       fi
     fi
-
-    if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
-      if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
-        if verify_committed && verify_pushed; then
-          _sdp_certify_success || exit $?
-          echo "✅ Nothing to commit -- already landed. Treating as success."
-          final_ok=true
-          break
-        fi
-        echo "  git reported nothing-to-commit but end-to-end verification failed -- not trusting it; retrying" >&2
-      fi
-      if grep -qi "index.lock" /tmp/_sdp_commit_err; then
-        lock_contention_count=$((lock_contention_count + 1))
-        echo "  index.lock contention (another process is writing this instant) -- short wait, retry (${lock_contention_count}/${LOCK_CONTENTION_MAX} consecutive lock failures)"
-        if [[ "$lock_contention_count" -ge "$LOCK_CONTENTION_MAX" ]]; then
-          print_lock_contention_escape_hatch
-          exit 8
-        fi
-        sleep 2
-        continue
-      fi
-      if grep -qi "prek stash/restore race detected" /tmp/_sdp_commit_err; then
-        # prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3): a
-        # DETECTED silent revert, not contention -- retrying only invites another race on
-        # the same file. Hard-stop with the diagnosis locked_git_commit already printed.
-        echo >&2
-        cat /tmp/_sdp_commit_err >&2
-        exit 7
-      fi
-      if ! commit_failure_is_retriable /tmp/_sdp_commit_err; then
-        {
-          echo
-          echo "❌ COMMIT REJECTED BY A PRE-COMMIT HOOK -- this is a DETERMINISTIC content failure, NOT contention."
-          echo "   Retrying will fail identically. Do NOT re-run this script until the content is fixed."
-          echo "   Failing hook(s): $(sed -n 's/^- hook id: //p' /tmp/_sdp_commit_err | paste -sd', ' -)"
-          echo "   The hook's own output (its remedy line is the thing to act on):"
-          echo
-          cat /tmp/_sdp_commit_err
-        } >&2
-        exit 6
-      fi
-      echo "  commit blocked by a retriable hook (branch drift re-detected mid-race) -- reconciling and retrying:"
-      cat /tmp/_sdp_commit_err
-      backoff "$attempt"
-      continue
-    fi
-    if ! verify_committed; then
-      echo "❌ git commit exited 0 but the named file(s) have no commit reachable from HEAD -- refusing to report success (a mocked/stubbed commit call, or a deeper git-state anomaly)." >&2
-      exit 6
-    fi
-    committed=true
   fi
 
   # Rebase-invalidated evidence citations are reconciled HERE -- after the last rebase, before
