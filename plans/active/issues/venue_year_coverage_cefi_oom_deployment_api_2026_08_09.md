@@ -295,7 +295,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       groupby-then-broadcast approach mirroring the `_classify` fix's shape is the likely path, but the `is_mvp`
       predicate itself may need a vectorization-friendly UAC entry point — confirm with
       `mvp_scope_catalogue_tagging_2026_06_08.md`). Repo: deployment-api.
-- [ ] [BACKEND] P1. **Reduce `provenance_breakdown()`/`union_reduce_to_cells()` per-row-group-chunk overhead
+- [x] ✅ [BACKEND] P1. **Reduce `provenance_breakdown()`/`union_reduce_to_cells()` per-row-group-chunk overhead
       (`deployment_api/services/data_status_union.py:176`, called from
       `deployment_api/routes/data_status/_live_coverage_venue_year.py:141`)** — `_process_manifest_chunk` calls
       `provenance_breakdown(df)` UNCONDITIONALLY (any `scope=`) whenever the manifest carries provenance columns, once
@@ -316,7 +316,27 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       chunks (accumulate raw provenance rows per group across ALL row-groups, then reduce ONCE at the end, mirroring how
       `(venue, year)` counts already sum across chunks) or a cheaper per-chunk reduction shape. Repo: deployment-api. —
       **this todo's own live repro is why the top-level INFRA todo above still cannot pass its acceptance bar** (all 3
-      scopes still fail — `could_exist`/`all` on this bottleneck, `mvp` on the `filter_to_mvp` bug above).
+      scopes still fail — `could_exist`/`all` on this bottleneck, `mvp` on the `filter_to_mvp` bug above). —
+      **deployment-api@b4b81502c0** (Quickmerge, verified ancestor of `origin/live-defi-rollout`): took the "cheaper
+      per-chunk reduction shape" branch of the recommended fix (batching raw provenance rows across ALL row-groups
+      before reducing was rejected — it would re-materialize the full corpus in memory, reintroducing the exact OOM the
+      row-group-streaming architecture exists to prevent). Extracted the shared per-row M5/M4 rank computation into
+      `_union_rank_series()` (pure row-wise — provably identical whether computed once over the whole chunk or
+      per-group, since a row's rank never depends on which other rows share its group) and replaced
+      `provenance_breakdown`'s per-`(pipeline_mode, source)`-group Python loop (each iteration calling
+      `union_reduce_to_cells`'s own `sort_values`+`drop_duplicates`) with ONE vectorized rank + ONE
+      `groupby(group_cols + cell_keys).idxmin()` reduction per chunk — call count now scales with row_groups, not
+      row_groups × distinct_groups. `idxmin`'s first-occurrence tie-break matches the prior stable-sort-then-keep-first
+      semantics exactly. `union_reduce_to_cells`'s own public behavior/signature is unchanged (still used unmodified by
+      `data_status_hierarchical.py` + `coverage_metrics.py`). Full test suite: **5293 passed, 17 skipped**; full
+      `quality-gates.sh` (no skip flags) green, sentinel=b4b81502c0bb5b8aa829e17fc598714e7987267e. Existing
+      `TestProvenanceBreakdown`/`TestProvenanceBreakdownIsPureInMemory`/`TestM4ModePrecedenceTiebreak` regression
+      coverage in `tests/unit/test_data_status_union.py` (cell-grain dedup, transport double-count guard, M4 tiebreak,
+      pure-in-memory no-storage-IO) passed unmodified against the new implementation — no test changes needed since the
+      public input/output contract of both functions is unchanged. **Live-prod re-verification (redeploy + re-run the
+      3-scope cefi probe) is a separate follow-up**, same pattern as this issue's other BACKEND fixes — the top-level
+      INFRA todo above should be re-run against the deployed revision containing this SHA once it also picks up the
+      still-open `filter_to_mvp` fix (mvp scope) for a genuinely clean 3-scope pass.
 
 ## Progress Log
 
@@ -436,3 +456,18 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   `[BACKEND] P0. Vectorize _classify` todo to done in the same edit (fb3df79 already shipped it 2026-08-10; this
   top-level copy was never checked off, only its earlier nested copy was — a plan-hygiene gap fixed here per the
   "misleading doc" HARD RULE, since leaving it open would cost the next reader a redundant investigation).
+- **2026-08-11 (slot 29, backend_engineer)**: Todo (BACKEND P1, `provenance_breakdown`/`union_reduce_to_cells`
+  per-row-group-chunk overhead) done — shipped `deployment-api@b4b81502c0`. Rejected the "batch raw provenance rows
+  across ALL row-groups, reduce once at the end" option from the recommended-decision text — that would re-accumulate
+  the full manifest in memory, exactly the OOM shape the row-group-streaming architecture (deployment-api@3d72470) was
+  built to avoid — and instead took the "cheaper per-chunk reduction shape" branch: extracted the shared per-row M5/M4
+  rank computation into `_union_rank_series()` and replaced `provenance_breakdown`'s Python-level
+  per-`(pipeline_mode, source)`-group loop (each iteration separately calling `union_reduce_to_cells`'s
+  `sort_values`+`drop_duplicates`) with one vectorized rank + one `groupby(group_cols + cell_keys).idxmin()` reduction
+  per chunk. Call count now scales with row_groups, not row_groups × distinct_groups; `union_reduce_to_cells`'s own
+  public behavior is untouched. Full test suite (5293 passed, 17 skipped) + full `quality-gates.sh` green,
+  sentinel=b4b81502c0bb5b8aa829e17fc598714e79 87267e; existing `TestProvenanceBreakdown*`/`TestM4ModePrecedenceTiebreak`
+  regression coverage passed unmodified (no test changes needed — input/output contract unchanged). **Not re-running the
+  top-level INFRA todo's 3-scope probe** — this fix isn't deployed yet, and the `filter_to_mvp` P0 todo (scope=mvp abort
+  site) is still open, so a clean 3-scope pass isn't reachable yet regardless; live-prod re-verification stays a
+  separate follow-up per this issue's established pattern.
