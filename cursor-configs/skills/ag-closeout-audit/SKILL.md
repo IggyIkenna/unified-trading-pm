@@ -571,6 +571,21 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
+**IDEMPOTENCY GUARD — re-derive gated slugs BEFORE writing the finalize plan (2026-08-11,
+`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`).** Before authoring the finalize plan, verify the batch
+is not ALREADY gated by an existing finalize plan — key on the `depends_on` relationship, not on the expected filename
+(the two colliding files that spawned this guard differed only by a redundant `_2026_07_31` suffix). Run:
+
+```bash
+.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root> 2>&1 \
+  | grep -Fw "<batchN-slug>" && echo "ALREADY GATED — skip finalize-plan creation" || echo "not gated — proceed"
+```
+
+Or programmatically: re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the current corpus and check
+`<batchN-slug> in gated`. If already gated, SKIP finalize-plan creation entirely — a companion already exists and
+creating a second one is the exact race this guard prevents. Report the skip + the existing plan's path so the operator
+can verify.
+
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
 `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
 **`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
