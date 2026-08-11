@@ -571,6 +571,14 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
+**Create-time idempotency guard (2026-08-11, `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`)** — BEFORE
+authoring ANY finalize companion, run
+`.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --guard-finalize <parent-slug>`: it re-derives
+gating over the CURRENT corpus and exits non-zero if `<parent-slug>` is already the `depends_on` target of an existing
+finalize plan, regardless of that plan's filename shape (the colliding pair differed only by a `_2026_07_31` suffix). If
+it refuses, do NOT write a second finalize plan — reuse/extend the existing gating plan, or supersede the loser first;
+two gated plans race the identical archival ritual against one target.
+
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
 `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
 **`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with

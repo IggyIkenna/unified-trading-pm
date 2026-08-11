@@ -128,3 +128,70 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --guard-finalize create-time idempotency guard (2026-08-11,
+#    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md todo 1) ──────
+
+
+def test_guard_refuses_a_parent_already_gated_by_a_finalize_plan(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-finalize", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_guard_refuses_regardless_of_finalize_filename_shape(tmp_path: Path) -> None:
+    """The live collision differed only by a redundant `_2026_07_31` suffix — a guard keyed on
+    the expected filename would miss the date-suffixed gater. Keyed on depends_on, it must not."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-finalize", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_guard_allows_an_ungated_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")  # no finalize companion yet
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-finalize", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_guard_ignores_a_finalize_plan_gating_on_a_different_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "other_parent_2026_08_05.md")
+    _write_plan(
+        active / "other_parent_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [other_parent_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-finalize", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_guard_reports_every_existing_gater_when_duplicates_exist(tmp_path: Path) -> None:
+    """The exact shape this guard exists to prevent: two finalize plans gating one parent."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_1.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2_2026_07_31.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-finalize", "source_plan_2026_08_05"])
+    assert rc == 1
