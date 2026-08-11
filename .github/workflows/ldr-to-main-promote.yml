@@ -116,7 +116,22 @@ jobs:
           PROV_RANGE="$(python3 scripts/cicd/promote_provenance_range.py \
             --repo "$REPO" --owner "$OWNER" --base-branch main --fetch-remote origin)" || PROV_RANGE=""
           [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/main..origin/live-defi-rollout"
-          PROV_OUT="$(python3 scripts/cicd/check_strict_quickmerge.py --range "$PROV_RANGE" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
+          # Hardening (2026-08-11, ci_reconcile silent-exit-1 investigation): this scan does
+          # O(commits) git subprocess spawns and has been measured taking 15-40s locally over PM's
+          # ~425-commit marker=∅ fallback range (no merged promote PR yet to shrink it to an
+          # incremental one) — 3 consecutive scheduled ticks (06:25/06:30/06:45Z) died with exit 1
+          # and ZERO further output anywhere in this ~15s window, self-recovering on the next tick
+          # with no root cause ever pinned down (the call site is otherwise airtight under
+          # set -euo pipefail — `"$(cmd)" && A || B` never propagates cmd's failure to -e). Whatever
+          # the true cause (a hang, an OOM/SIGKILL of the python3 subprocess, or a runner hiccup),
+          # its output was being captured silently into $PROV_OUT either way — this bounds the
+          # worst case to 60s and turns any nonzero/timeout exit into a VISIBLE line instead of an
+          # opaque "Process completed with exit code 1" with nothing printed.
+          echo "  provenance scan: check_strict_quickmerge.py over $PROV_RANGE (bounded 60s)…"
+          PROV_OUT="$(timeout 60 python3 scripts/cicd/check_strict_quickmerge.py --range "$PROV_RANGE" --block 2>&1)" && PROV_RC=0 || PROV_RC=$?
+          if [ "${PROV_RC:-0}" -eq 124 ]; then
+            echo "⚠️  provenance checker TIMED OUT after 60s scanning $PROV_RANGE — failing OPEN (never reported as '0 violations')"
+          fi
           if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
             PROV_BLOCKED=1
             echo "⛔ provenance: PM LDR carries non-quickmerge CODE — LDR→main auto-merge will NOT be armed:"
@@ -492,6 +507,29 @@ jobs:
             echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
             ACTION="pending"
           fi
+          # Escalation gap hardening (2026-08-11, ci_reconcile): the QG-failure wall (above) has
+          # dispatched an orchestrator escalation since 2026-07-25 — a genuine dirty/conflict wall
+          # never did (the comment at that call site literally says "every other wall type here
+          # (dirty/conflict) escalates via main-backmerge-to-ldr", but that workflow runs its own
+          # independent reconcile and has no visibility into THIS PR being stuck — it is not an
+          # escalation path for THIS bot's state). Observed live: PR #2779 sat DIRTY on a genuine
+          # workspace-manifest.json published_packages version/timestamp conflict across multiple
+          # ticks, superseded-and-recreated every time LDR advanced, with zero human notification —
+          # `ahead_by` grew (425→432) instead of shrinking and nobody was ever paged. Mirrors the
+          # ldr_main_qg_failure dispatch above; same server-side wall-cooldown dedup applies, so
+          # it's safe to fire on every tick the condition persists.
+          case "$ACTION" in
+            conflict_escalated | dirty_nonmanifest)
+              if [ "$DRY_RUN" != "true" ]; then
+                CTX="LDR->main promote PR #$PR_NUM ($PR) is DIRTY on a GENUINE conflict (action=$ACTION), not a checker crash. The inline forward-drain reconcile could not auto-resolve it — either a non-CI workspace-manifest.json conflict (e.g. published_packages version/published_at bumped on both main and live-defi-rollout) or a conflict outside workspace-manifest.json entirely. This blocks the ENTIRE LDR->main drain until a human resolves the conflict (reconcile the manifest / merge main into live-defi-rollout by hand); every subsequent */15 tick just supersedes this PR with a fresh attempt against the SAME unresolved conflict."
+                PAYLOAD=$(jq -n --arg ctx "$CTX" --arg pr "$PR_NUM" \
+                  '{event_type:"escalate-to-orchestrator",client_payload:{repo:"unified-trading-pm",pr_number:$pr,wall_type:"ldr_main_dirty_conflict",context:$ctx,authoring_slot:"ldr-to-main-promote"}}')
+                printf '%s' "$PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - \
+                  && echo "  dispatched ldr_main_dirty_conflict escalation for PR #$PR_NUM" \
+                  || echo "::warning::ldr_main_dirty_conflict escalation dispatch failed for PR #$PR_NUM (non-fatal)"
+              fi
+              ;;
+          esac
           { echo "action=$ACTION"; echo "pr=$PR"; echo "arm_failed=$ARM_FAILED"; } >> "$GITHUB_OUTPUT"
 
   # Hardening (2026-08-03, ci_satellite_ao_dispatch_batch1 [CI] P1 — mirrors
