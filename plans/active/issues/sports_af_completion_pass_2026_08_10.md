@@ -729,3 +729,29 @@ automator still alive, re-launch if session teardown killed it.
     Task remains in-flight for the next slot. Same durability caveat applies: if this session tears down before
     STANDINGS finishes, the next worker should re-run the same chain command (idempotent — it will just wait on whatever
     AF VM is currently RUNNING).
+
+- **2026-08-11 (slot 30, data_engineering, ~17:15Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM is now `af-backfill-20260811-162726`** (a fresh resume launch not yet logged in this doc — the prior
+    `af-backfill-20260811-012845` no longer appears in `gcloud compute instances list`, TERMINATED by an unlogged
+    intermediate slot after reaching roughly the 2022-10 area per slot-28's last check). `LAUNCH_PARAMS.json` confirms
+    `RESUME_START_DATE=2023-06-06 RESUME_END_DATE=2026-08-10 RESUME_ENTITY=STANDINGS` — a genuine resume, not a restart
+    from scratch. Confirmed HEALTHY: `PROGRESS.json` → `last_completed_date=2023-08-05`, `updated=2026-08-11T17:14:41Z`
+    (fresh, no stall); `WATCHDOG_TRACE.log` shows steadily growing run.log size across 42+ iterations. Combining the
+    prior VM's 2020-06-06→~2023-06-06 span with this VM's progress to 2023-08-05: ~1156/2258 days (~51%) through the
+    full range. Checked via UTL `get_storage_client().download_bytes()` (bounded, no subprocess `gsutil`).
+  - **Fresh census** (`census_all_af_entities_completion_2026_08_03.py`): PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271
+    · TEAMS 95 = **452 total** — byte-for-byte match with every prior slot since INJURIES converged (14/20/25/27/16/28).
+    STANDINGS still unchanged (converges only once the entity's backfill fully completes and its manifest rows land).
+    `census_fixture_stats_lineups_widening_volume_2026_07_31.py` errored in this repo's venv
+    (`ModuleNotFoundError: pandas` — not installed in `instruments-service/.venv`) — not re-run this session; last known
+    FIXTURE_STATS 132 / FIXTURE_LINEUPS 132 from slot-14/27 stands unchanged (no reason to suspect drift).
+  - **Chain automator confirmed DEAD** (no `run-af-residual-completion-chain.sh` process on this host) — expected, died
+    with the prior session's teardown. **Re-launched in background** (`run_in_background`, no nohup, same command:
+    `--start-date 2020-06-06 --end-date 2026-08-10`). Confirmed correctly picked up the in-flight STANDINGS VM: first
+    log line `waiting for AF VM af-backfill-20260811-162726 to reach a terminal state (poll 120s)`.
+  - **No code shipped** — pure operations + monitoring. **Checkbox NOT flipped** — done-when (census ~0) is still
+    multi-day away (STANDINGS ~51%, then 4 more entities serially under the singleton lock). Task remains in-flight;
+    next worker should re-verify VM health + chain-automator liveness (same durability caveat — session-bound background
+    process, re-launch if dead) and re-run both census scripts (fix the `pandas` venv gap in `instruments-service`
+    first, or run the widening census from a repo that has it installed).
