@@ -10,6 +10,7 @@ summary:
   declaration is stale (never actually re-enabled) or a real, silent, multi-year capture gap exists for whatever venues
   are supposed to be producing this data.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -241,7 +242,7 @@ one commit that modeled `arbitrage_opportunity` at all treated it as a downstrea
 target. This does not contradict the external-data-always-available rule (that rule protects against descoping a
 genuinely wanted, credential-blocked feature) — it establishes these were never a real capture target to begin with.
 
-- [ ] [CODE] P2. **OPERATOR-DECIDED 2026-08-11: RETIRE.** Remove the `markets`/`outcomes`/`settlements`/
+- [x] ✅ [CODE] P2. **OPERATOR-DECIDED 2026-08-11: RETIRE.** Remove the `markets`/`outcomes`/`settlements`/
       `arbitrage_opportunity` tuples for ODDS_API/PINNACLE/BETFAIR from `VENUE_DATA_TYPE_CAPABILITIES` (repo:
       unified-api-contracts and/or instruments-service / market-tick-data-service as needed). Decision confirmed safe
       2026-08-11 by an independent check of the operator's specific concern (whether `outcomes`/`settlements` are
@@ -336,3 +337,12 @@ confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
   citations). Operator then confirmed: retire. Retagged todo 3 from `BLOCKED-OPERATOR-DECISION` to
   `OPERATOR-DECIDED: RETIRE`, now AO-dispatchable. Implementation (the actual registry edit + golden regression update)
   not done in this session.
+- **2026-08-11 (slot 23)**: todo 3 flipped ✅ — the implementation was ALREADY shipped by the sports-taxonomy P1 effort
+  on 2026-08-08: `unified-api-contracts@975f0191` removed `markets`/`outcomes`/`settlements` from
+  `VENUE_DATA_TYPE_CAPABILITIES` (PINNACLE entry emptied) + `05a709fd` removed the ODDS_API capability entry (incl.
+  `arbitrage_opportunity`) + `49e83239` removed bare BETFAIR; `instruments-service@06791d0e` + `0c143439` synced the
+  expected-universe golden to match. Verified fresh this session (regen-diff): `build_expected("sports")` == checked-in
+  golden — 31 trades-only tuples, byte-semantic IN SYNC for all 5 AGs (cefi 73 / defi 366 / tradfi 28 / sports 31 /
+  prediction 0), and none of `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` appear in the sports expected
+  universe — the honest-coverage denominator reflects the retirement. (The prior line's "Implementation ... not done in
+  this session" is now superseded: the registry edit + golden update landed 2026-08-08; this session verified it.)
