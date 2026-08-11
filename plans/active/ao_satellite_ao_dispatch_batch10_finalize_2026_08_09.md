@@ -116,7 +116,8 @@ source: >-
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`, moved to `plans/archive/2026_08/`, all
       corpus-wide referrers fixed (finalize plan's own `related:`/`context_scope:`/prose, orchestrator_master, INDEX.md,
       plan_reconciler_unexplained), inventory regenerated cleanly, and `check_finalize_plan_coverage.py` no longer names
-      this pair. **DONE 2026-08-11 (slot 28, infra) — unified-trading-pm@9368e739e2**.
+      this pair. **DONE 2026-08-11 (slot 28, infra) — unified-trading-pm@3f54c71acc** (evidence re-verified + inventory
+      dashboard refreshed 2026-08-11; original commit was rebase-orphaned — corrected to the landing SHA).
 - [x] ✅ [REVIEW] P1. **Corpus-wide plan-hygiene gates drifted since batch10's sweep — archive the 2 new
       `check_archive_candidates.sh` candidates + epic-wire the orphaned 2026-08-10 satellite plans.** Re-opened by P0's
       re-verification (claim 3 held as-of the 2026-08-09 sweep, but both gates are now RED against baseline). (1)
