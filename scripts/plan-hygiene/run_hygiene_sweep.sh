@@ -115,7 +115,7 @@ if [ "$CI_MODE" = "--precommit" ]; then
     # above).
     python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Finalize-plan coverage (staged plans)" \
-      || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
+      || { echo "  ❌ Finalize-plan coverage — see detail above (missing/duplicate gated finalize companion, or a finalize plan stuck at status:draft — task_template.md §4)"; PF=$(( PF + 1 )); }
 
     # Evidence gates, --only-scoped (2026-08-09). These lived ONLY in the full quality-gates.sh,
     # so the CLAUDE.md-sanctioned pure-doc fast path (safe-doc-push.sh -> prek only) could land an

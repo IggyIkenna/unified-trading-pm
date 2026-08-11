@@ -130,6 +130,29 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _find_duplicate_gate_violations(active_dir: Path) -> dict[str, list[Path]]:
+    """Parent slugs gated by MORE THAN ONE finalize plan (depends_on + gate_on_depends: true).
+
+    Keyed on the depends_on relationship — the real contract, not filename shape. Two
+    finalize plans for the same parent differing only by a redundant date suffix (the
+    2026-07-31 incident this closes) still collide here even though no single filename
+    pattern would have caught them. See
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    by_slug: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                by_slug.setdefault(dep.strip(), []).append(cov.path)
+    return {slug: sorted(paths) for slug, paths in by_slug.items() if len(paths) > 1}
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -186,6 +209,7 @@ def _write_baseline(
     baseline_path: Path,
     violations: list[Path],
     draft_gate_violations: list[Path],
+    duplicate_gate_violations: dict[str, list[Path]],
     workspace_root: Path,
 ) -> None:
     def _rels(paths: list[Path]) -> list[str]:
@@ -197,17 +221,227 @@ def _write_baseline(
                 out.append(str(v))
         return out
 
+    def _dup_rels(by_slug: dict[str, list[Path]]) -> list[str]:
+        return [f"{slug}: {', '.join(_rels(paths))}" for slug, paths in sorted(by_slug.items())]
+
     payload: dict[str, object] = {
         "violation_count": len(violations),
         "draft_gate_violation_count": len(draft_gate_violations),
+        "duplicate_gate_violation_count": len(duplicate_gate_violations),
         "rule": "finalize-plan-coverage",
         "source": (
             "task_template.md §4 'Every AO-dispatched plan needs a gated finalize plan' (operator ruling 2026-07-24)"
         ),
         "baseline_files": _rels(violations),
         "draft_gate_baseline_files": _rels(draft_gate_violations),
+        "duplicate_gate_baseline_files": _dup_rels(duplicate_gate_violations),
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
+    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
+    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
+    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
+    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
+    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
+    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
+    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
+    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
+    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
+    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
+    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
+    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
+    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
+    # happens to be named.
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    print(
+        f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+        file=sys.stderr,
+    )
+    return None
+
+
+def _run_only_mode(
+    only: list[str],
+    violations: list[Path],
+    draft_gate_violations: list[Path],
+    duplicate_gate_violations: dict[str, list[Path]],
+) -> int:
+    # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
+    # since argparse hands us whatever the caller typed) and keep just the violations that
+    # ARE one of them — the corpus scan already ran in full (gating is inherently
+    # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
+    # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
+    # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
+    only_resolved = {Path(o).resolve() for o in only}
+    violations = [v for v in violations if v.resolve() in only_resolved]
+    draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
+    # Idempotency guard at the point of creation (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md
+    # todo 1): a staged finalize plan whose gated slug is ALSO gated by another (already-existing or
+    # co-staged) finalize plan is refused here, regardless of filename shape — keyed on the depends_on
+    # relationship, the same corpus-wide _find_duplicate_gate_violations() the hygiene sweep uses at rest.
+    duplicate_gate_violations_only = {
+        slug: paths
+        for slug, paths in duplicate_gate_violations.items()
+        if any(p.resolve() in only_resolved for p in paths)
+    }
+    if not violations and not draft_gate_violations and not duplicate_gate_violations_only:
+        print("✅ finalize-plan-coverage (--only): clean.")
+        return 0
+    if violations:
+        print(
+            "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+            " to a new/existing companion plan — see task_template.md §4):"
+        )
+        for v in violations:
+            print(f"  - {v}")
+    if draft_gate_violations:
+        print(
+            "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4):"
+        )
+        for v in draft_gate_violations:
+            print(f"  - {v}")
+    if duplicate_gate_violations_only:
+        print(
+            "❌ Duplicate finalize-plan gate(s) — this parent is already gated by another finalize plan"
+            " (keyed on depends_on, not filename — see"
+            " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):"
+        )
+        for slug, paths in sorted(duplicate_gate_violations_only.items()):
+            print(f"  - {slug}: gated by {[str(p) for p in paths]}")
+    return 1
+
+
+def _report_and_ratchet(
+    *,
+    workspace_root: Path,
+    baseline_path: Path,
+    baseline_write: bool,
+    strict: bool,
+    violations: list[Path],
+    draft_gate_violations: list[Path],
+    duplicate_gate_violations: dict[str, list[Path]],
+) -> int:
+    def _print_paths(paths: list[Path]) -> None:
+        for v in paths[:20]:
+            try:
+                rel = v.relative_to(workspace_root)
+            except ValueError:
+                rel = v
+            print(f"  - {rel}")
+        if len(paths) > 20:
+            print(f"  ... + {len(paths) - 20} more")
+
+    print(
+        f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "
+        f"{len(violations)} violation(s)."
+    )
+    print(
+        f"Scanned plans/active/ for finalize plans redundantly stuck at status: draft — "
+        f"{len(draft_gate_violations)} violation(s)."
+    )
+    print(
+        f"Scanned plans/active/ for parent slugs gated by more than one finalize plan — "
+        f"{len(duplicate_gate_violations)} violation(s)."
+    )
+
+    if baseline_write:
+        _write_baseline(baseline_path, violations, draft_gate_violations, duplicate_gate_violations, workspace_root)
+        print(
+            f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate / "
+            f"{len(duplicate_gate_violations)} duplicate-gate violations) to {baseline_path}"
+        )
+        return 0
+
+    if violations:
+        print(
+            "\nPlans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+            " to a new/existing companion plan — see task_template.md §4):"
+        )
+        _print_paths(violations)
+
+    if draft_gate_violations:
+        print(
+            "\nFinalize plans redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4 / ag-closeout-audit SKILL.md 2026-07-30 fix):"
+        )
+        _print_paths(draft_gate_violations)
+
+    if duplicate_gate_violations:
+        print(
+            "\nParent slugs gated by more than one finalize plan (de-race per"
+            " duplicate_finalize_plans_created_for_one_parent_2026_08_06.md — port any todo unique to the loser"
+            " into the survivor, then supersede):"
+        )
+        for slug, paths in sorted(duplicate_gate_violations.items())[:20]:
+            print(f"  - {slug}: gated by {[str(p) for p in paths]}")
+        if len(duplicate_gate_violations) > 20:
+            print(f"  ... + {len(duplicate_gate_violations) - 20} more")
+
+    if strict:
+        if violations or draft_gate_violations or duplicate_gate_violations:
+            print(
+                f"\n❌ STRICT: {len(violations)} coverage + {len(draft_gate_violations)} draft-gate + "
+                f"{len(duplicate_gate_violations)} duplicate-gate violation(s)."
+            )
+            return 1
+        return 0
+
+    baseline = _load_baseline_count(baseline_path, "violation_count")
+    draft_gate_baseline = _load_baseline_count(baseline_path, "draft_gate_violation_count")
+    duplicate_gate_baseline = _load_baseline_count(baseline_path, "duplicate_gate_violation_count")
+    regressed = False
+    if len(violations) > baseline:
+        print(
+            f"\n❌ Regression: {len(violations)} > baseline {baseline}. New AO plan(s) shipped without a gated"
+            " finalize plan — author one before merging (task_template.md §4)."
+        )
+        regressed = True
+    elif len(violations) < baseline:
+        print(f"\n⚠️  Improvement: {len(violations)} < baseline {baseline}. Re-baseline to codify.")
+
+    if len(draft_gate_violations) > draft_gate_baseline:
+        print(
+            f"\n❌ Regression: {len(draft_gate_violations)} > baseline {draft_gate_baseline}. A finalize plan shipped"
+            " (or reverted to) status: draft — flip to active, gate_on_depends already holds it."
+        )
+        regressed = True
+    elif len(draft_gate_violations) < draft_gate_baseline:
+        print(
+            f"\n⚠️  Improvement: {len(draft_gate_violations)} < baseline {draft_gate_baseline}. Re-baseline to codify."
+        )
+
+    if len(duplicate_gate_violations) > duplicate_gate_baseline:
+        print(
+            f"\n❌ Regression: {len(duplicate_gate_violations)} > baseline {duplicate_gate_baseline}. A new finalize"
+            " plan was shipped gating a parent already gated by an existing finalize plan — de-race"
+            " (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md)."
+        )
+        regressed = True
+    elif len(duplicate_gate_violations) < duplicate_gate_baseline:
+        print(
+            f"\n⚠️  Improvement: {len(duplicate_gate_violations)} < baseline {duplicate_gate_baseline}."
+            " Re-baseline to codify."
+        )
+
+    if regressed:
+        return 1
+    print(
+        f"\n✅ At baseline ({baseline} coverage / {draft_gate_baseline} draft-gate / "
+        f"{duplicate_gate_baseline} duplicate-gate)."
+    )
+    return 0
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -241,147 +475,26 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        return 2
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
+    duplicate_gate_violations = _find_duplicate_gate_violations(active_dir)
 
     if only is not None:
-        # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
-        # since argparse hands us whatever the caller typed) and keep just the violations that
-        # ARE one of them — the corpus scan above still ran in full (gating is inherently
-        # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
-        # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
-        # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.resolve() in only_resolved]
-        draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
-            print("✅ finalize-plan-coverage (--only): clean.")
-            return 0
-        if violations:
-            print(
-                "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
-                " to a new/existing companion plan — see task_template.md §4):"
-            )
-            for v in violations:
-                print(f"  - {v}")
-        if draft_gate_violations:
-            print(
-                "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
-                " flip to status: active, see task_template.md §4):"
-            )
-            for v in draft_gate_violations:
-                print(f"  - {v}")
-        return 1
+        return _run_only_mode(only, violations, draft_gate_violations, duplicate_gate_violations)
 
-    print(
-        f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "
-        f"{len(violations)} violation(s)."
+    return _report_and_ratchet(
+        workspace_root=workspace_root,
+        baseline_path=baseline_path,
+        baseline_write=baseline_write,
+        strict=strict,
+        violations=violations,
+        draft_gate_violations=draft_gate_violations,
+        duplicate_gate_violations=duplicate_gate_violations,
     )
-    print(
-        f"Scanned plans/active/ for finalize plans redundantly stuck at status: draft — "
-        f"{len(draft_gate_violations)} violation(s)."
-    )
-
-    if baseline_write:
-        _write_baseline(baseline_path, violations, draft_gate_violations, workspace_root)
-        print(
-            f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate "
-            f"violations) to {baseline_path}"
-        )
-        return 0
-
-    if violations:
-        print(
-            "\nPlans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
-            " to a new/existing companion plan — see task_template.md §4):"
-        )
-        for v in violations[:20]:
-            try:
-                rel = v.relative_to(workspace_root)
-            except ValueError:
-                rel = v
-            print(f"  - {rel}")
-        if len(violations) > 20:
-            print(f"  ... + {len(violations) - 20} more")
-
-    if draft_gate_violations:
-        print(
-            "\nFinalize plans redundantly stuck at status: draft (gate_on_depends already holds them —"
-            " flip to status: active, see task_template.md §4 / ag-closeout-audit SKILL.md 2026-07-30 fix):"
-        )
-        for v in draft_gate_violations[:20]:
-            try:
-                rel = v.relative_to(workspace_root)
-            except ValueError:
-                rel = v
-            print(f"  - {rel}")
-        if len(draft_gate_violations) > 20:
-            print(f"  ... + {len(draft_gate_violations) - 20} more")
-
-    if strict:
-        if violations or draft_gate_violations:
-            print(f"\n❌ STRICT: {len(violations)} coverage + {len(draft_gate_violations)} draft-gate violation(s).")
-            return 1
-        return 0
-
-    baseline = _load_baseline_count(baseline_path, "violation_count")
-    draft_gate_baseline = _load_baseline_count(baseline_path, "draft_gate_violation_count")
-    regressed = False
-    if len(violations) > baseline:
-        print(
-            f"\n❌ Regression: {len(violations)} > baseline {baseline}. New AO plan(s) shipped without a gated"
-            " finalize plan — author one before merging (task_template.md §4)."
-        )
-        regressed = True
-    elif len(violations) < baseline:
-        print(f"\n⚠️  Improvement: {len(violations)} < baseline {baseline}. Re-baseline to codify.")
-
-    if len(draft_gate_violations) > draft_gate_baseline:
-        print(
-            f"\n❌ Regression: {len(draft_gate_violations)} > baseline {draft_gate_baseline}. A finalize plan shipped"
-            " (or reverted to) status: draft — flip to active, gate_on_depends already holds it."
-        )
-        regressed = True
-    elif len(draft_gate_violations) < draft_gate_baseline:
-        print(
-            f"\n⚠️  Improvement: {len(draft_gate_violations)} < baseline {draft_gate_baseline}. Re-baseline to codify."
-        )
-
-    if regressed:
-        return 1
-    print(f"\n✅ At baseline ({baseline} coverage / {draft_gate_baseline} draft-gate).")
-    return 0
 
 
 if __name__ == "__main__":

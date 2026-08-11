@@ -128,3 +128,74 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate-gate idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) ──
+
+
+def test_only_refuses_a_newly_staged_finalize_plan_duplicating_an_existing_gate(tmp_path: Path) -> None:
+    """The exact incident this closes: a second finalize plan is staged for a parent that
+    already has one, under a DIFFERENT filename shape (no redundant date suffix). Keyed on
+    depends_on, not filename, so this must be caught."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    new_dup = _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(new_dup)])
+    assert rc == 1
+
+
+def test_only_ignores_a_duplicate_gate_outside_scope(tmp_path: Path) -> None:
+    """Two existing finalize plans already duplicate-gate a parent, but --only names a
+    different, clean plan — must pass, same RULE-11 blast-radius safety as coverage."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    clean = _write_plan(active / "unrelated_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(clean)])
+    assert rc == 0
+
+
+def test_only_passes_when_the_staged_finalize_plan_is_the_sole_gate(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    sole = _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(sole)])
+    assert rc == 0
+
+
+def test_default_mode_regresses_on_a_new_duplicate_gate(tmp_path: Path) -> None:
+    """No baseline file present (defaults to 0 duplicates) — a corpus with a parent gated
+    by two finalize plans must regress in the default corpus-wide scan too."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 1

@@ -65,11 +65,12 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
+- [x] ✅ [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
       `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
       refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
       two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
+      filename would have missed this; key it on the `depends_on` relationship, which is the real contract. —
+      `unified-trading-pm@<pending-sha>`
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
@@ -123,3 +124,15 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **2026-08-11 — todo 1 shipped**: added `check_finalize_plan_coverage.py::_find_duplicate_gate_violations()`, keyed on
+  `depends_on` (not filename), returning every parent slug gated by >1 finalize plan. Wired it into the existing
+  `--only` precommit path (the same one `run_hygiene_sweep.sh`'s prek hook and `safe-doc-push.sh` already invoke on
+  staged plans) so a newly staged finalize plan duplicating an existing gate is refused at commit time — the "point of
+  creation" the todo asked for. Also added it to the default corpus-wide scan as a third baselined ratchet sub-rule
+  (`duplicate_gate_violation_count`, baseline 0 — the one known pair was already de-raced 2026-08-06) alongside the
+  existing coverage/draft-gate checks, so a duplicate that somehow lands via the full `quality-gates.sh` Pass-1 run (not
+  just the fast staged-files path) still regresses the gate. Baseline yaml + hygiene-sweep echo message updated to
+  match. 6 new unit tests (staged-duplicate refusal, blast-radius scoping, sole-gate pass, default-mode regression).
+  Todo 2 (the corpus-wide detector surfaced in the hygiene sweep report, review-blocking like the orphan count) and todo
+  3 (the one-time sweep + de-race) remain — `_find_duplicate_gate_violations()` is now available for todo 2 to call.
