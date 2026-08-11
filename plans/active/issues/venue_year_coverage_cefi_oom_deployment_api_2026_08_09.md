@@ -263,18 +263,31 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       check (re-run the 3-scope cefi probe against live prod) can pass; the existing open INFRA todo above (blocked on
       the `unified-trading-library@609299ad` release chain) should be re-run against THIS fix's deployed revision too
       once both land, rather than filing a duplicate re-verification todo.
-- [ ] [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
-      replace the row-wise `df.apply(_classify, axis=1)` with a vectorized classification (boolean masks / pandas `str`
-      ops) so the per-chunk cost drops from ~1.3 s/123k-row chunk to ~0.02 s. Measured 2026-08-10 (slot 5, infra
-      re-verification): the live cefi availability index has grown to ~26M rows across 215 row groups (was 10.6M/88 at
-      the P2 audit), so the row-wise apply makes the venue-year-coverage request take ~250-400 s server-side for cefi
-      ALONE — near/over the 300 s gunicorn `timeout=300` + Cloud Run request timeout — and the WORKER aborts mid-apply
-      with SIGABRT (faulthandler dump: `_live_coverage_venue_year.py:186`; 6+ `Worker (pid:*) was sent SIGABRT!`
-      2026-08-10 22:05-22:16 UTC on revisions 00515/00516/00517), yielding 503 "connection to the instance had an error"
-      at 176-400 s — the 3-scope cefi probe FAILS all scopes on the fix-containing deployed revision. Local bounded
-      repro of the exact deployed code path completes (215 chunks, peak 1.74 GiB, no abort) — the code is correct but
-      pathologically slow; the vectorize fix also makes the DEFAULT `asset_groups=cefi,tradfi,defi` request feasible
-      (currently 3x the cefi-only time = guaranteed timeout). Repo: deployment-api.
+- [x] ✅ [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
+      replaced the per-row `df.apply(_classify, axis=1)` (measured ~280 s for cefi's ~26M-row/215-row-group manifest,
+      causing worker-level SIGABRT under the 300 s gunicorn timeout) with vectorized pandas column operations
+      (`str.lower()` + `str.contains()` + `.where()`) — same semantics, ~100× faster. Shipped `deployment-api@fb3df79`
+      (Quickmerge, verified ancestor of `origin/live-defi-rollout`), promoted to `main` as `b60f56b`
+      (`Promoted-From-LDR: fb3df79...`), deployed in revision `00523-kwt` (2026-08-11T08:27Z, confirmed ancestor of
+      `b60f56b`). **VERIFIED live 2026-08-11 (slot 6, infra): the vectorized code IS in the deployed revision** — line
+      186 is now `agg = df.groupby(...)` not `df.apply(_classify, axis=1)`, the faulthandler no longer points to line
+      186, and this fix works. — deployment-api@fb3df79 + live verification.
+- [ ] [BACKEND] P0. **Vectorize `filter_to_mvp` in `_coverage_scope.py:132` (ANOTHER `df.apply(axis=1)`) + investigate
+      `provenance_breakdown` performance** — the 2026-08-11 live-prod re-verification confirmed the OOM is fixed (no
+      `Memory limit exceeded`/signal 9 in Cloud Logging) and the `_classify` vectorization works (line 186 is clean), but
+      the 3-scope probe STILL fails with SIGABRT at TWO NEW call sites: `_live_coverage_venue_year.py:141`
+      (`provenance_breakdown(df)` — calls `df.copy()` + `groupby()` + `union_reduce_to_cells` per row group, each
+      ~100k rows, ~215 row groups = ~21.5M rows of copies + groupby passes) and `_live_coverage_venue_year.py:154`
+      (`filter_to_mvp(df, ag)` — `_coverage_scope.py:132`: `df.apply(_row_is_mvp, axis=1)` calling UAC's `is_mvp(...)`
+      for EACH row, the SAME row-wise anti-pattern as the old `_classify`). All 3 scopes (could_exist/mvp/all) timed out
+      at 120s client-side, 300s server-side (gunicorn timeout → SIGABRT). `filter_to_mvp` only fires for `scope=mvp`, so
+      the `provenance_breakdown` path alone is also too slow for cefi's 26M-row/215-row-group manifest. Both functions
+      need vectorization/streaming treatment — `filter_to_mvp`'s `df.apply(axis=1)` → pandas column ops, and
+      `provenance_breakdown`'s per-row-group `df.copy()` + `groupby()` → either a single-pass accumulation (accumulate
+      `source_breakdown` rows in the caller's per-row-group loop without a per-chunk copy+groupby) or a narrow-column
+      projection before the copy. Measured: Cloud Logging shows `Worker (pid:21) was sent SIGABRT!` + faulthandler
+      `_live_coverage_venue_year.py:141`/`:154` on revision `00523-kwt` (2026-08-11 11:44:46-47 UTC); HTTP latency 300s
+      (gunicorn timeout). Repo: deployment-api.
 
 ## Progress Log
 
