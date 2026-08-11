@@ -1,0 +1,21 @@
+duplicate_parent_count: 5
+rule: duplicate-finalize-gates
+source: plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md
+detail:
+  sports_closeout_track_s2_foldin_2026_07_25:
+    - unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md
+    - unified-trading-pm/plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md
+  sports_taxonomy_p1_capture_and_contracts_2026_08_08:
+    - unified-trading-pm/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md
+    - unified-trading-pm/plans/active/sports_fixture_grain_catalogue_build_2026_08_10.md
+    - unified-trading-pm/plans/active/sports_taxonomy_p2_migration_2026_08_08.md
+  prediction_phase_ab_residuals_2026_07_24:
+    - unified-trading-pm/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md
+    - unified-trading-pm/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md
+    - unified-trading-pm/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
+  sports_taxonomy_p2_migration_2026_08_08:
+    - unified-trading-pm/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md
+    - unified-trading-pm/plans/active/sports_taxonomy_p2_migration_2026_08_08_finalize.md
+  tradfi_manifest_content_recovery_completion_2026_07_24:
+    - unified-trading-pm/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
+    - unified-trading-pm/plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md
