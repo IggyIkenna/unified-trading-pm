@@ -417,6 +417,50 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       defect was fixed or any data moved — no GCS object was touched.** The manifest lost visibility into rows it
       previously tracked; treat the true remaining scope as still ~15,119 rows (§2b's count) for this review, not 0,
       until the manifest-row-disappearance is root-caused (new todo below).)
+      **2026-08-11 (slot 32, task `deribit_combo_perpetual_partition_move-74ce5c3b03c5`) — CANARY DONE + VERIFIED;
+      FULL BATCH DEFERRED, see the new todo below.** Shipped `market-tick-data-service@<pending-sha>`: wired
+      `--apply` for real (was a hard `SystemExit` refusal before), added the S3a fresh
+      `gcs_bucket_soft_delete_retention_seconds` check (was missing — the design's own 7-step plan never had it),
+      and fixed two live bugs found while exercising this: (1) `resolve_cefi_instrument_id` is
+      disabled-by-default until `register_cefi_id_resolver_builder` runs — nothing in this script ever called it
+      standalone, so every catalogue-confirmation check silently returned `None` and both `census()` and the
+      canary path found 0 candidates before the fix (same wiring as
+      `scripts/verify_cefi_canonical_4surface_2026_07_20.py` Surface D now reused here); (2) added a
+      manifest-independent `canary_candidates()` path that reads the two S6-named objects directly via
+      `gcs_describe_object`/parquet metadata instead of going through `census()`'s manifest read, since (3) the
+      manifest-driven `census()` — even with the catalogue fix — found only **974** candidates against the
+      ~15,119-row scope, not 0 (an improvement on the 2026-08-03 "0" finding, consistent with the P1 root-cause
+      todo's "regenerate naturally" resolution partially working, but still an ~94% undercount) — confirms the
+      manifest-visibility-loss finding from the 2026-08-03 sessions is still live and the current `census()`
+      cannot be trusted to discover the full population. Ran the canary for real (`--apply --canary`): 2/2 moved,
+      S3a check passed (604800s retention), then **independently re-verified outside the script** — old objects
+      confirmed gone (`gcs_describe_object` → `None` for both), new `instrument_type=combo` objects confirmed
+      present with the EXACT pre-move row counts (6,318 and 37,258, matching §2's original measurement) and 100%
+      of rows carrying the corrected `DERIBIT:COMBO:...` id, backups confirmed present at the exact pre-move byte
+      sizes (88,425 and 630,882, also matching §2). **Did NOT run the full batch** — two independent reasons, both
+      genuinely blocking, not a judgment call to skip: (a) live fleet — at time of dispatch and re-checked twice
+      across this session, ~35+ `mdps-cefi-2019/2020-*` VMs plus 1 `canonical-migration-prediction-*` VM were
+      RUNNING against the exact same bucket (`market-data-tick-cefi-prd-central-element-323112`) this migration
+      writes/deletes on — the delete-safety protocol's "pre-delete drain" requirement
+      (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §5) is not met, and killing 35+ unrelated
+      in-flight VMs to force a drain is outside this task's scope/authority; (b) `census()`'s 974/15,119 discovery
+      gap (above) means even a "full batch" run right now would silently touch under 7% of the real population
+      while reporting itself complete — a GCS-listing-based census (§2a's methodology, run exhaustively rather
+      than 13-day-sampled) is needed first. See the new todo below for both blockers. Checkbox NOT flipped — the
+      canary-then-full-batch plan explicitly requires the full batch, which has not safely run.
+- [ ] [DATA] P2. **NEW 2026-08-11 (slot 32)** — Before the full 15,119-row `--apply` can run: (1) re-check the live
+      fleet on `market-data-tick-cefi-prd-central-element-323112` is clear (no `mdps-cefi-*`/`canonical-migration-*`
+      VM actively writing) — do NOT force a drain by killing unrelated VMs, wait for a natural quiet window or get
+      explicit operator sign-off to drain; (2) build a GCS-listing-based census (extend
+      `scripts/deribit_combo_perpetual_partition_move_2026_08_03.py`'s `census()`, or add a sibling function) that
+      enumerates candidates via bounded per-day-prefix listing (§2a's methodology) across the full day range
+      (2023-06-01 to present, both `perpetual`/`future` partitions) rather than trusting the manifest — the
+      current manifest-driven `census()` found only 974/15,119 candidates live 2026-08-11, confirming the
+      2026-08-03 manifest-visibility-loss finding is not self-healing to completion. This day-range enumeration is
+      itself heavy/long-running (~1,150+ days × 2 itypes ≈ 2,300+ list calls) — per
+      `codex/05-infrastructure/vm-launcher-runbook.md`'s "Dispatch it" rule, run it (and the subsequent full
+      `--apply`, ~15,119 objects × 7 GCS ops each) on a dedicated VM via `launch-canonical-migration-vm.sh` or the
+      generic `VM_MIGRATION_CMD` dispatch, not inline in a worker session. Repo: market-tick-data-service.
 - [x] ✅ [DATA] P1. **DONE 2026-08-03 (slot 14, task `deribit_combo_perpetual_partition_move-005`)** — Root-caused via
       direct evidence, not inference: read the ACTUAL pre-apply manifest snapshot the Surface C v2 dedup script itself
       wrote
