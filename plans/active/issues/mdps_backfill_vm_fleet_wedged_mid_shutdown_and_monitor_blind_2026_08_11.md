@@ -110,8 +110,36 @@ mid-shutdown could not have resumed anyway. The name list is preserved for audit
 the box is up. It does not prove MDPS is doing anything. The wedge verdict is solid because a `Stopping <unit>` line is
 unambiguous; the liveness verdict is not, and was deliberately not used to justify any delete.
 
+## The deletion triggered a relaunch burst — cause attribution (2026-08-11 15:44-15:51 UTC)
+
+**Deleting the 393 wedged VMs made the monitor relaunch them.** A deleted VM reads to `exit_code_fleet_monitor` as
+`terminated with NO durable exit marker but captured climbed` — the `PARTIAL_UNCONFIRMED` verdict, which `_classify.py`
+deliberately auto-recover-routes "via the SAME resume-from-checkpoint relaunch as PREEMPTED" so a genuine partial run
+self-heals. That routing is correct in its intended case; it simply cannot distinguish "preempted mid-run" from "an
+operator reaped a corpse". Measured effect: the fleet went **250 → 364 in about six minutes**, in whole-launcher
+fan-outs (several VMs sharing one timestamp suffix, e.g. `...-154435` across every year, i.e.
+`launch-mdps-sharded-backfill.sh` invoked wholesale rather than a per-VM relaunch). The `_MAX_RELAUNCHES_PER_DAY = 2`
+budget did not stop it, which is further evidence the deployed image's budget is not actually durable.
+
+Stopped in three steps, each verified: schedule `*/5` → `0 * * * *` (15:44Z), scheduler **PAUSED** (15:46Z), then all
+six in-flight executions **cancelled** (15:50-15:51Z) — pausing alone was not enough because an execution runs up to its
+1800 s timeout and keeps relaunching the whole time. Last launch 15:51:07Z; zero launches after that, confirmed at
+15:53Z. Fleet settled at ~358.
+
+The sibling `uts-prod-dp-heartbeat-watcher` was checked and deliberately **left running**: it reports
+`heartbeat sweep: 272 running, 0 stalled` and exits 0 in seconds. It is healthy and is not a relaunch source.
+
+**⚠️ STANDING STATE — the exit-code monitor is PAUSED.** Genuine spot-preemption recovery is therefore OFF fleet-wide.
+This is a deliberate hold, not a fix, and it must be reversed as part of the bounded-sweep work below.
+
 ## Follow-ups
 
+- [ ] [SCRIPT] P0. **Teach the recovery path the difference between a preempted VM and a reaped one, then UNPAUSE
+      `uts-prod-dp-exit-code-monitor-cron`** (currently PAUSED at `0 * * * *`, so fleet-wide spot-preemption recovery is
+      OFF). `PARTIAL_UNCONFIRMED` auto-relaunches any VM that vanished without a durable exit marker, which made a
+      deliberate cleanup of 393 corpses spawn ~108 replacements in six minutes. An operator/agent-initiated delete needs
+      a durable tombstone the classifier honours — otherwise reaping a wedged fleet is impossible without also disabling
+      recovery, which is the corner this issue is currently parked in.
 - [ ] [SCRIPT] P1. Make `exit_code_fleet_monitor` bounded and complete: it must either finish a full fleet sweep inside
       its task timeout (parallelise the per-VM probe, or page the fleet across executions with a durable cursor) or
       loudly report that it did NOT complete. A monitor that silently covers 3% of the fleet is worse than none — it
