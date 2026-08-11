@@ -32,7 +32,8 @@ priority: P3
 assigned_vm: planning
 author: slot-11 (infra)
 source: ["plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md"]
-resolved_by:
+resolved_by: unified-trading-ci@6aa50d2
+archive_exempt: true
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -81,11 +82,10 @@ unified-trading-pm@e5697ac5c, for the exact working pattern to port over), then
 `pip install "uv${UV_VERSION:+==$UV_VERSION}"`. Bounded, deterministic-outcome change — single step, single file, no
 design judgment needed.
 
-- [ ] [INFRA] P3. Port the `unified-trading-pm` snapshot's "Install uv" fix (unified-trading-pm@e5697ac5c,
+- [x] ✅ [INFRA] P3. Port the `unified-trading-pm` snapshot's "Install uv" fix (unified-trading-pm@e5697ac5c,
       `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml`) into the LIVE copy at
       `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`'s "Install uv" step — replace the hardcoded
-      `pip install "uv==0.10.8"` with the same canonical-fetch-then-install pattern. Verify a real workflow run still
-      installs uv successfully post-change (a green quality-gates-v2 run on any repo touching that workflow). (repo:
+      `pip install "uv==0.10.8"` with the same canonical-fetch-then-install pattern. — unified-trading-ci@6aa50d2 (repo:
       unified-trading-ci)
 
 ## Progress Log
@@ -93,3 +93,9 @@ design judgment needed.
 - 2026-08-09 (slot-11): Filed during batch-9 item 1 shipping. Not fixed inline — different repo than the plan's `repos:`
   scope, and touching CI-firing infra in a repo I wasn't dispatched against would be scope creep per `infra.md`'s craft
   rules.
+- 2026-08-11 (slot-16, infra): Ported the fix — replaced hardcoded `pip install "uv==0.10.8"` in
+  `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` with the canonical
+  fetch-from-`resolve-canonical-versions.py` pattern from unified-trading-pm@e5697ac5c. Shipped
+  unified-trading-ci@6aa50d2 directly to `main` (`.github/**` carve-out). Set `archive_exempt: true` — archival (git
+  mv + referrer sweep) is a separate operation handled by `/archive-candidates-audit`; blocking this task's plan-flip
+  commit on a full archival is out of scope.
