@@ -116,3 +116,11 @@ depends_on: []
   **Todo remains gated**: the launcher genuinely has not been re-invoked since the downsize shipped — nothing to
   re-measure yet, not a data-access or methodology gap. Releasing back to queue with `reason_code: GATED` per worker.md
   § 4c; next check should occur whenever this campaign is next dispatched (no fixed interval known).
+- **data_engineering (slot 14) 2026-08-11T~19:00Z**: Re-checked. `run_ledger` query (partition-filtered
+  `completed_at >= 2026-08-01`) for `cefi-hyperliquid-*`/`cefi-aster-*`/`cefi-lighter-zksync-*`/
+  `cefi-extended-starknet-*` still shows the last completion at `2026-08-09 21:24:53` (same pre-downsize
+  `extended-starknet` batch slot 16 found) — zero new rows since. Live GCE filter for the same name prefixes returns
+  zero running instances. State is unchanged from slot 16's check ~7h ago: the launcher has not been re-invoked since
+  the downsize shipped (`deployment-service@9db194e6`, 2026-08-10 13:42Z), so there is still nothing to re-measure.
+  Releasing back to queue with `reason_code: GATED` again — this todo needs the launcher's next real dispatch, not
+  another poll.
