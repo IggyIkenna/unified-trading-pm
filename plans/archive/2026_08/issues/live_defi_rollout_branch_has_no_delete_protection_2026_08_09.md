@@ -1,5 +1,13 @@
 ---
 doc_type: issue
+archive_banner: |
+  Archived 2026-08-11 — all 3 todos complete. live-defi-rollout now has GitHub-side delete/force-push protection
+  fleet-wide: todo 1 created the `protect-live-defi-rollout` ruleset (deletion + non_fast_forward, no bypass actors) on
+  unified-trading-pm; todo 2 audited all 26 repos (23/26 had the same gap) and fixed all 23 with the identical ruleset;
+  todo 3 shipped `scripts/dev/guard-commit-tree-push.sh` (unified-trading-pm@27da76dea2), the client-layer guard that
+  refuses a push with an empty/unset refspec local side — the `git push origin :<branch>` branch-delete bug class this
+  issue documents. Defense in depth: server rulesets block deletion of live-defi-rollout; the guard catches the bug at
+  the client layer for ANY branch.
 title: >-
   live-defi-rollout carries zero GitHub protection — a near-miss force-push-delete during a round-9 sweep worked out
   only because the bug was self-caught in the same turn
@@ -17,7 +25,7 @@ summary: >-
   lands on and every concurrent agent pulls/rebases against directly — it is exactly the branch this workspace's own
   HARD RULE ("NEVER force-push a shared branch") is written to protect, and it currently has no GitHub-side backstop if
   that rule is ever violated (accidentally, via a bug like this one, or otherwise).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -98,12 +106,23 @@ process observed the deleted state.
       per-repo `gh api .../branches/live-defi-rollout/protection` + rulesets check across all repos would confirm scope.
       — unified-trading-pm@(this commit). Confirmed the gap was fleet-wide (23/26 repos) and fixed it in the same task —
       see Progress Log 2026-08-10 (slot-10) entry for the full per-repo breakdown and ruleset ids.
-- [ ] [INFRA] P3. **Consider hardening the `git commit-tree` fallback pattern itself** (documented in
+- [x] ✅ [INFRA] P3. **Consider hardening the `git commit-tree` fallback pattern itself** (documented in
       `SUB_AGENT_MANDATORY_RULES.md` as the recovery path for shared-checkout contention) — the specific bug here was an
       unset variable producing `git push origin :<branch>` instead of `git push origin <sha>:<branch>`. A small guard
       script wrapping this pattern (refuse to push if the local side of the refspec is empty/unset) would catch this
       class of bug before it reaches `git push`, independent of the branch-protection fix above (defense in depth — the
-      two fixes address different layers).
+      two fixes address different layers). — **Shipped `scripts/dev/guard-commit-tree-push.sh`
+      (unified-trading-pm@27da76dea2), validated live, 2026-08-11 (slot 25).** Note on the pointer: the todo's
+      parenthetical said the commit-tree fallback is "documented in `SUB_AGENT_MANDATORY_RULES.md`" — a grep of that
+      file (and the whole repo) found NO `commit-tree` reference there; the pattern was not actually documented
+      anywhere. The guard script's header now self-documents the pattern (the
+      `git commit-tree … && git push origin <sha>:<branch>` sequence for the shared-checkout contention case) + the
+      incident, so the recovery path exists in the tree. The guard refuses a push when the refspec's local side is
+      empty/unset (exit 2, nothing pushed): tested live against the exact bug refspec `:live-defi-rollout` (refused),
+      empty refspec (refused), bare branch name (refused), and a valid `<sha>:<branch>` (passes through to `git push`,
+      extra args like `--dry-run` forwarded). Defense-in-depth pair: server-side rulesets (todos 1-2) block deletion of
+      `live-defi-rollout` on every repo; this guard blocks the empty-local-refspec bug at the client layer for ANY
+      branch, independent of branch name.
 
 ## Progress Log
 
@@ -174,3 +193,18 @@ process observed the deleted state.
   during this session's own strategy-service push (landed cleanly before this repo's ruleset existed, so not a direct
   test, but no other slot has reported a push failure since). Todo 3 (commit-tree guard script) remains open, correctly
   scoped as separate follow-up work.
+- **2026-08-11 (slot-25 infra worker)**: Shipped todo 3 — wrote + validated `scripts/dev/guard-commit-tree-push.sh`
+  (commit `unified-trading-pm@27da76dea2`), the client-layer hardening for the `git commit-tree` fallback pattern. It
+  refuses a `git push` whose refspec local side is empty/unset (exit 2, nothing pushed) — the exact
+  `git push origin :<branch>` remote-branch-DELETE bug class this issue documents. Tested live against the incident's
+  exact refspec `:live-defi-rollout` (REFUSED), an empty refspec (REFUSED), a bare branch name (REFUSED — the wrapper
+  requires an explicit `<local>:<remote>` refspec), and a valid `<sha>:<branch>` (passes through to `git push`, extra
+  args like `--dry-run` forwarded). **Stale-pointer finding, corrected**: the todo's text claimed the commit-tree
+  fallback is "documented in `SUB_AGENT_MANDATORY_RULES.md` as the recovery path for shared-checkout contention" — a
+  repo-wide grep found ZERO `commit-tree` references there (or anywhere in the tree); the pattern was not actually
+  documented. The guard script's header now self-documents the pattern (the `git commit-tree` +
+  `git push origin <sha>:<branch>` sequence for the contended-shared-index case) + this incident, so the recovery path
+  exists in the tree and points at the guard. `SUB_AGENT_MANDATORY_RULES.md` itself was NOT edited — it sits at 10,216
+  bytes vs. the 10 KiB QG hard cap (24 bytes of headroom), so no section could be added there without a cap breach, and
+  this issue doc's `drift_direction: none` scopes out codex edits; the script header + this Progress Log entry are the
+  durable record. All 3 todos now complete.
