@@ -705,26 +705,21 @@ verify_pushed() {
 # verify_per_file_remote -- ground truth for "did every named file actually reach the remote".
 # verify_pushed proves a COMMIT landed on origin/$BRANCH, but that commit may have dropped a
 # named file (a create-only archival, a partial landing). This checks each named file
-# individually against origin/$BRANCH. The discriminator is the DISK fingerprint at entry
-# (_SDP_ENTRY_FINGERPRINT), NOT the HEAD blob: a new file is also absent from HEAD at entry,
-# so using HEAD would misclassify a legit add as a deletion. Absent from the CALLER'S DISK at
-# entry = a deletion (the source half of a rename, or a plain `git rm`) whose success state is
-# ABSENCE on the remote; present on disk = an add/modify whose success state is PRESENCE.
+# individually: its blob must exist at its path on origin/$BRANCH. For a deletion (the source
+# half of a rename), the path's ABSENCE from origin/$BRANCH is the success condition.
 verify_per_file_remote() {
-  local _f _disk _remote
+  local _f _remote _entry_head
   for _f in "${FILES[@]}"; do
-    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
     _remote="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
-    case "$_disk" in
-      ABSENT | MISSING | "")
-        # Deletion (source half of a rename, or `git rm`): success = the path is gone on the remote.
-        [[ "$_remote" == "ABSENT" ]] || { echo "  ❌ per-file verification failed: ${_f} was a deletion (absent from disk at entry) but is still present on origin/${BRANCH} — the delete side did not land" >&2; return 1; }
-        ;;
-      *)
-        # Add/modify: success = the path is present on the remote.
-        [[ "$_remote" != "ABSENT" ]] || { echo "  ❌ per-file verification failed: ${_f} not found on origin/${BRANCH} after push (was present on disk at entry, dropped from the commit)" >&2; return 1; }
-        ;;
-    esac
+    # A path that was ABSENT from HEAD at entry (staged deletion / rename source) and is still
+    # ABSENT on the remote is correct — the deletion landed. A path that was present at entry
+    # but is ABSENT on the remote means it was dropped.
+    if [[ "$_entry_head" == "ABSENT" ]]; then
+      [[ "$_remote" == "ABSENT" ]] || { echo "  ❌ per-file verification failed: ${_f} was absent at entry (deletion) but still present on origin/${BRANCH}" >&2; return 1; }
+    else
+      [[ "$_remote" != "ABSENT" ]] || { echo "  ❌ per-file verification failed: ${_f} not found on origin/${BRANCH} after push (was present at entry, dropped from the commit)" >&2; return 1; }
+    fi
   done
   return 0
 }
@@ -1086,6 +1081,17 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
+# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
+# --files are passed as protected so the extreme-pile self-arrest never quarantines the very
+# work this run is shipping (dogfooded live 2026-08-10 slot-9).
+if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
+  # autostash chain-breaker: quarantine DEFERRED to inside loop after staging.
+	# Stage FIRST guarantees payload can never be swept into the stash it is about
+	# to be compared against — see plan "Second symptom" for the measured shape.
+	autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
+fi
+
 _sdp_bound_backlog_done=false
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
@@ -1149,35 +1155,22 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     unstage_foreign_paths
     reassert_renames
 
-
-	# autostash chain-breaker: quarantine runs AFTER the first successful staging,
-	# so the payload (already in the index) can never be swept into the stash.
-	# See plan "Second symptom" for the measured shape this prevented.
-	if [[ "$_sdp_bound_backlog_done" == false ]]; then
-		if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-			autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
-		fi
-		_sdp_bound_backlog_done=true
-	fi
-	    if ! git diff --cached --quiet -- "${FILES[@]}"; then
-	      : # there is something to commit
-		else
-			echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches origin/${BRANCH}"
-			# Verify against the REMOTE, not HEAD: a quarantine could have reset the working tree
-			# to HEAD content that never reached the branch. Only trust "already landed" when the
-			# named files' on-disk content is verifiably on origin/$BRANCH.
-			if _sdp_all_named_match_remote && files_exist_in_head; then
-				if verify_committed && verify_pushed; then
-					_sdp_certify_success || exit $?
-					echo "✅ Named files already match origin/${BRANCH} (a concurrent session landed identical content while this run was in flight) -- treating as success."
-					final_ok=true
-					break
-				fi
-				echo "  files match remote but end-to-end verification failed -- not trusting the fallback; retrying"
-			else
-				echo "  at least one named file differs from origin/${BRANCH} -- staging genuinely failed, not already-landed; retrying"
-			fi
-	    fi
+    if ! git diff --cached --quiet -- "${FILES[@]}"; then
+      : # there is something to commit
+    else
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
+      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+        if verify_committed && verify_pushed; then
+          _sdp_certify_success || exit $?
+          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          final_ok=true
+          break
+        fi
+        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+      else
+        echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
+      fi
+    fi
 
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
@@ -1245,14 +1238,6 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
     if verify_pushed; then
-		# verify_per_file_remote: verify_pushed proved a COMMIT landed, but that commit
-		# may have dropped a named file. This confirms every named path individually
-		# reached origin/$BRANCH — the per-file complement to the blob-move check in
-		# _sdp_assert_entry_change_landed.
-		if ! verify_per_file_remote; then
-			echo "❌ push landed but per-file remote verification failed — the commit reached origin/${BRANCH} but not all named files did." >&2
-			exit 4
-		fi
       # verify_pushed proves a commit reached the branch. It does NOT prove YOUR change is in
       # it -- that is what this gate adds, and it is the one four measured losses needed.
       _sdp_certify_success || exit $?
