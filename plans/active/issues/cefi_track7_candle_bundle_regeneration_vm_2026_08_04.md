@@ -274,3 +274,9 @@ relaunch todo added above for once it reaches a terminal state.
   (seconds before this check), heartbeat file present, not a `canonical-migration-` prefix. Terminal state NOT reached —
   todo 2 remains gated on it. Releasing back to the queue with `reason_code: GATED` (fleet cooldown will re-dispatch
   after the ~3h window); not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 24) 2026-08-11T03:35Z**: Re-checked terminal-state gate for todo 2. VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (live `gcloud compute instances list`, created
+  2026-08-08T01:57Z-07:00) — run.log 244MB, last_modified `2026-08-11T03:34:55Z` (seconds before this check, actively
+  logging — alive, not stale). Terminal state NOT reached — todo 2 remains gated on it. Releasing back to the queue with
+  `reason_code: GATED` (fleet cooldown); not busy-waiting on a week-scale external condition (~175h ETA at the
+  documented ~13 min/day rate).
