@@ -142,6 +142,16 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
    located in non-test UAC sources; the 20 is a **measured floor from the adapter directory**, not a registry read.
    Quote the floor and say so, or find the registry.
 
+10. **`safe-doc-push` does not carry deletions, so a `git mv` half-lands.** The script copies **named files** into an
+    isolated worktree and commits from there; a deleted path is not a file to copy, so the new path lands and the old
+    one stays. Moving these artefacts into codex left **four stale duplicate copies** of client-facing documents live on
+    origin at once. After any rename or move, verify both halves:
+
+    ```bash
+    git ls-tree -r --name-only origin/live-defi-rollout -- <old-path>   # MUST be empty
+    git ls-tree -r --name-only origin/live-defi-rollout -- <new-path>   # MUST list the file
+    ```
+
 ## Design system
 
 Both files share one token set so they read as a pair. The three categorical hues (component group / carve-out bucket)

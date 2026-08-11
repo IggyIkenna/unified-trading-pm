@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: >-
-  Elysium October delivery — production completion and issue fixes ahead of the strategy-service repository send
+  Elysium October delivery — close the gap between what the client documents assert and what the code contains
 summary: >-
   Internal plan for closing the gap between what the codebase should contain for the October delivery and what currently
   exists. Four workstreams: (1) a falsifiable code-completion bar for strategy-service, since the operator's decision to
@@ -16,13 +16,15 @@ asset_group: [defi]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
-tags: [elysium, custody, transfers, production-readiness, commercial-model]
+tags: [elysium, custody, transfers, production-readiness, audit, commercial-model]
 last_updated: "2026-08-11"
 related:
   [
     /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,
     /codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md,
     /codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html,
+    /codex/14-customer-journeys/commercial-model/platform-architecture.html,
+    /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -33,8 +35,8 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: infra
-estimate_baseline_ai_days: 14
-estimate_calibrated_ai_days: 11.2
+estimate_baseline_ai_days: 16
+estimate_calibrated_ai_days: 12.8
 assigned_role:
 drift_direction: none
 depends_on: []
@@ -48,209 +50,206 @@ source: >-
   plan away from carve-out extraction to production completion and issue fixes, with a carve-out plan to follow later.
 ---
 
-# October delivery — production completion and issue fixes
+# October delivery — the claims audit
 
-**Scope, stated precisely because it changed on 2026-08-11.** This plan covers the gap between **what the codebase
-should contain for the October delivery** and what it contains today. It is **not a carve-out plan** — the carve-out is
-deferred past October and will get its own plan when it is scheduled. Extraction, packaging and interface-seam work are
-therefore out of scope here.
+**What this plan is.** Three documents are now in the client's hands or about to be. They assert specific things about
+the system. This plan closes the distance between those assertions and the code — in the direction of **making the code
+true** wherever that is the right answer, and correcting the document wherever it is not.
 
-> **HARD RULE — nothing in this plan appears in a client artefact.** This is the internal gap list. Placeholder values,
-> stub handlers, unbuilt routing matrices and missing readers are all recorded here so they get fixed; none of them is
-> discussed in the platform-architecture document, the carve-out specification, the strategy-service deep dive or the
-> deferral message. The client-facing documents describe the system as it will be delivered. If a gap is material enough
-> that a client-facing document would be misleading without it, that is an escalation to the operator, not a licence to
-> add it to an artefact.
+**Two hard constraints, from the operator, 2026-08-11:**
 
-**Codex SSOTs this plan is checked against** — read before touching the relevant todos:
+1. **No new repositories and no new packages.** Nothing here creates a carve-out repo, a lite repo or an extraction
+   package. Every item lands inside an existing repository.
+2. **Every fix follows the existing architecture** — the tier model, the instruction contract, the typed-config pattern,
+   the protocol-plus-factory pattern for pluggable providers, and the existing service boundaries. If a gap seems to
+   need a new architectural concept, that is a signal the gap was misdiagnosed: stop and re-read the relevant codex
+   SSOT.
 
-- [/codex/04-architecture/client-funds-isolation.md](/codex/04-architecture/client-funds-isolation.md) — funds never
-  move between clients; `CrossClientTransferForbiddenError` is the structural guarantee
-- [/codex/04-architecture/defi-execution-overview.md](/codex/04-architecture/defi-execution-overview.md) — custody
-  convention, `DefiErrorCode`
-- [/codex/06-coding-standards/quality-gates.md](/codex/06-coding-standards/quality-gates.md) — every code todo ships
-  from a green tree
+> **HARD RULE — nothing in this plan appears in a client artefact.** This is the internal gap list. If a gap is material
+> enough that a client document would be misleading without disclosing it, that is an operator escalation, not a licence
+> to add it to an artefact.
 
-## Measured starting position (2026-08-11, verified against the tree)
+**Codex SSOTs each fix is checked against:** [client-funds-isolation](/codex/04-architecture/client-funds-isolation.md)
+· [defi-execution-overview](/codex/04-architecture/defi-execution-overview.md) ·
+[tier-and-import-architecture](/codex/04-architecture/tier-and-import-architecture.md) ·
+[config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md) ·
+[quality-gates](/codex/06-coding-standards/quality-gates.md)
 
-Recorded so no todo re-derives it, and so a later session can tell what has moved.
+## A. The claims audit — verified 2026-08-11
 
-| Thing                               | State                                                                                                          |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `CustodyProvider` Protocol          | **Exists**, clean — `sign_transaction` / `get_balance` / `create_transfer` / `list_wallets` / `health_check`   |
-| Custody factory                     | **Exists** — `mock · local_key · cloud_kms · copper · ceffu`                                                   |
-| `TransferAdapter` Protocol          | **Exists** — internal transfer / withdrawal / on-chain / status / balance                                      |
-| `CompositeTransferAdapter`          | **Exists** — routes internal+withdrawal to CCXT, on-chain to custody                                           |
-| `TransferCoordinator`               | **Exists** in both services; `CrossClientTransferForbiddenError` enforced; idempotency cache present           |
-| `IntraClientRebalanceCoordinator`   | **Exists** — nets per-pair requests before emitting intents                                                    |
-| `TransferInstructionV2` / `Bridge…` | **Exists** — strategy names venue/chain and target balance, never a rail                                       |
-| `LiquidationProximityCircuit`       | **Exists** — 7 graded responses (oracle buffer → pause → partial unwind → hedge failover → flash close)        |
-| `ArchetypeKillSwitchSubscriber`     | **Exists** — per-archetype arm/disarm over the bus with declared halt behaviour                                |
-| Transfer handlers                   | **PARTIAL** — `transfer_coordinator.py` carries "built-in stub handlers (used when no real handler is wired)"  |
-| `CustodyRoute` enum                 | **NOT BUILT** — proposed in the archived routing-matrix plan, never implemented                                |
-| ClearLoop                           | **NOT IN CODE** — 4 planning docs, 0 source files. Copper's service; we instruct Copper                        |
-| `VenueWalletCapabilities`           | **Exists** but `custody_provider` is a single string; no per-chain deposit routing                             |
-| Risk thresholds in client config    | **PLACEHOLDERS** — `configs/carry_staked_basis.yaml` header marks them conservative, pending operator approval |
-| Funding-rate reader                 | **TEST-ONLY** — only direct-from-venue implementation lives in `e2e-testing`                                   |
-| Code-completion bar                 | **DOES NOT EXIST** — Phase 1                                                                                   |
+Every row is a load-bearing assertion from a client document, checked against the tree. **Verified** means the named
+symbol or behaviour was read in source. This table is the audit; the todos below are what it produced.
 
----
+| Claim (document)                                             | Status         | Evidence / gap                                                                            |
+| ------------------------------------------------------------ | -------------- | ----------------------------------------------------------------------------------------- |
+| 11 instruction types + shared envelope (deep dive §02)       | **VERIFIED**   | `architecture_v2/schemas.py` — all 11 subtypes + `StrategyInstructionEnvelope` read       |
+| Targets not deltas, so re-emission is idempotent (§02)       | **VERIFIED**   | `target_position_units`, `target_balance_at_destination`, `target_staked_amount`          |
+| `eligible_venues` + `SOR_AT_EXECUTION` boundary (§02)        | **VERIFIED**   | Envelope fields present with that default                                                 |
+| Atomic multi-leg with leader, deadline, compensation (§02)   | **VERIFIED**   | `AtomicInstruction`, `AtomicLeg`, `CompensationPolicy`                                    |
+| `V2EngineOrchestrator` ticks archetypes (§01, §07)           | **VERIFIED**   | `engine/strategies/v2/orchestrator.py`; `register_instance`; 55 `on_tick` implementations |
+| ~22 typed config schemas (§03)                               | **VERIFIED**   | `config.py` — all `TypedDict`, counted                                                    |
+| Family defaults under `configs/defaults/` (§03)              | **VERIFIED**   | 8 default files                                                                           |
+| `LiquidationProximityCircuit`, 7 graded responses (§04)      | **VERIFIED**   | All seven private methods read                                                            |
+| `ArchetypeKillSwitchSubscriber`, per-archetype halt (§04)    | **VERIFIED**   | `on_armed` / `on_disarmed` / `is_archetype_halted` / `halt_behaviour`                     |
+| `CustodyProvider` protocol + 5 providers (§05)               | **VERIFIED**   | Protocol + factory over mock/local_key/cloud_kms/copper/ceffu                             |
+| `CompositeTransferAdapter` routes by transfer kind (§05)     | **VERIFIED**   | CCXT for internal + withdrawal, custody for on-chain                                      |
+| Netting before intents exist (§05)                           | **VERIFIED**   | `IntraClientRebalanceCoordinator`                                                         |
+| Cross-client transfer structurally impossible (§05)          | **VERIFIED**   | `CrossClientTransferForbiddenError` raised in `TransferCoordinator`                       |
+| 19 API route modules (§06)                                   | **VERIFIED**   | Counted, all present                                                                      |
+| Batch/live determinism verdict is produced (§09, platform)   | **VERIFIED**   | `batch-live-reconciliation-service`: `trade_recon.py`, daily determinism handler + stage  |
+| Copper integration is live (§05)                             | **VERIFIED**   | `custody/copper.py` — sign, poll, balance, transfer, wallets, health                      |
+| ClearLoop is Copper's mechanism, not our code (§05)          | **VERIFIED**   | 0 source hits fleet-wide; wording already credits Copper                                  |
+| Promotion ladder candidate → paper → early live → live (§09) | **PARTIAL**    | `CANDIDATE`, `PAPER_1D`, `live_early` found; **no terminal full-live state confirmed**    |
+| "Strategy families present" count (§08, factbar)             | **WAS WRONG**  | `StrategyFamily` has **9** members; document said 8 and invented "liquidity provision"    |
+| "Attestation on every instruction" (§07 inherit-list)        | **WAS WRONG**  | `attestations=` populated only in MEV modules, **not** the carry archetypes               |
+| Backtests launch through the deployment API (§09)            | **UNVERIFIED** | Inferred from test _filenames_; no endpoint decorator located. Verify or soften           |
+| Capital budget enforced per instance (§07 inherit-list)      | **UNVERIFIED** | `capital_budget` in 13 modules; **no enforcement guard read**                             |
+| Transfer handlers are real (implied by §05)                  | **FALSE**      | `transfer_coordinator.py` carries stub handlers "for May-23"                              |
 
-## Phase 1 — The code-completion bar (gates the repository send)
+## B. Close the unverified claims — do these first, a document asserts each one
 
-- [ ] [OPERATOR] P0. **Define "does everything we need" for strategy-service as a written, falsifiable checklist —
-      scoped to CODE completeness only.** Operator clarified 2026-08-11: the strategy-service _code_ completes this
-      week; the data pipeline and the live/batch deployment continue to October. The bar gates the repository send on
-      code, not on mandate readiness, and the sent message says so explicitly. Enumerate per archetype in scope: which
-      decisions it must make, which features it must consume, which instruction types it must emit, and what "correct"
-      means for each. Output is a codex doc, not a note in this plan.
-- [ ] [AGENT] P0. **Audit strategy-service against the bar once written** and append the gap list here as `- [ ]` todos.
-      Do not start closing gaps before the audit — the bar exists to stop scope drifting.
-- [ ] [AGENT] P1. **Verify the two contracted archetypes emit every instruction type the mandate requires, end to end.**
-      `staked_basis` and `basis_perp` must produce `TradeInstruction`, `StakeInstruction`/`UnstakeInstruction`,
-      `TransferInstructionV2` and `AtomicInstruction` correctly.
-- [ ] [AGENT] P1. **Productionise the venue funding readers.** The only direct-from-venue implementation is in
-      `e2e-testing/scripts/defi/funding_ensemble_engine.py`. `staked_basis` consumes a funding-rate feature and returns
-      no decision without it. An engineer reading the sent repository will trace the feature and find a test harness.
-- [ ] [AGENT] P2. **Confirm the promotion ladder runs end to end for the contracted archetypes** — candidate, paper,
-      early live, live, with the pre-flight gate firing at each step. The deep-dive document describes this to the
-      client as a live mechanism, so it must be one.
+- [ ] [AGENT] P0. **Verify capital-budget enforcement, or build it.** The deep dive tells the client an external
+      strategy inherits "capital budget enforcement per instance". `capital_budget_amount` is on
+      `StrategyInstanceDefinition` and appears in 13 modules, but no guard was read that refuses an instruction
+      exceeding it. Find the enforcement point; if there is none, add it in `allocation_sizer.py` or the existing risk
+      gate — **not a new component**.
+- [ ] [AGENT] P0. **Verify the backtest launch path end to end, or correct §09.** `test_strategy_backtest_launch.py` and
+      `test_execution_backtest_launch.py` exist in `deployment-api`, but no route decorator for a backtest endpoint was
+      located. **Test filenames are a proxy, not the endpoint.** Exercise the real launch and record the route, or
+      soften the document.
+- [ ] [AGENT] P1. **Confirm the promotion ladder's terminal state.** `CANDIDATE`, `PAPER_1D` and `live_early` exist; the
+      final full-live state was not confirmed. Two documents describe a four-rung ladder — either the fourth rung exists
+      under another name (record it) or the ladder is three rungs and both documents need correcting.
+- [ ] [AGENT] P1. **Decide whether the carry archetypes should populate `attestations`.** The field is on every
+      instruction; only the MEV modules fill it. For a regulated allocator an attestation trail is a due-diligence
+      answer, so populating it is probably right — but it is a deliberate choice, and the document has been softened so
+      nothing is misstated meanwhile.
+- [ ] [AGENT] P2. **Reconcile the two family enums.** `StrategyFamily` (mechanism axis, 9 members) and
+      `StrategyFamilyId` (risk-aggregation axis) both exist, and `StrategyFamily` is declared in **two** places
+      (`architecture_v2/enums.py` and `canonical/crosscutting/strategy_family.py`). Establish which is SSOT and whether
+      the second is a re-export or a duplicate — an ambiguous count is what produced the document error above.
 
-## Phase 2 — Custody and transfer: finish the layer
+## C. Production gaps found by reading the tree
 
-> The abstraction is already right. What is missing is the routing matrix beneath it and the handlers behind the
-> coordinator. Nothing here requires redesigning the protocols.
-
-- [ ] [AGENT] P0. **Replace the stub `TransferHandler` implementations in
-      `execution-service/execution_service/transfer_coordinator.py`.** The file states they exist "when no real handler
-      is wired for May-23". Enumerate every `BusTransferType`, state which have real handlers, and implement the rest or
-      fail loudly. **A stub returning a success result on a funds-movement path is the highest-risk item in this plan**
-      — it reports money moved that did not move.
-- [ ] [AGENT] P0. **Add `CustodyRoute` to UAC** as proposed in
+- [ ] [AGENT] P0. **Replace the stub `TransferHandler` implementations** in
+      `execution-service/execution_service/transfer_coordinator.py`. The file states they exist "when no real handler is
+      wired for May-23". Enumerate every `BusTransferType`, state which have real handlers, implement the rest or fail
+      loudly. **A stub returning success on a funds-movement path reports money moved that did not move** — the
+      highest-risk item in this plan. Fix within the existing handler protocol; introduce no new abstraction.
+- [ ] [OPERATOR] P0. **Approve the real risk thresholds for `configs/carry_staked_basis.yaml`.** Its header reads
+      "MAY-23 CUTOVER PLACEHOLDER VALUES — Risk thresholds below are CONSERVATIVE PLACEHOLDERS pending operator
+      approval", covering `health_factor_target`, `health_factor_emergency_reduce_at`,
+      `health_factor_emergency_close_at`, `staking_apr_threshold`, `perp_funding_threshold_bps`, `max_leverage` and
+      `capital_usd`. **This is the client's own configuration, and the repository being sent contains that banner.**
+      Values plan-of-record: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
+- [ ] [AGENT] P0. **Productionise the venue funding readers.** The only direct-from-venue implementation lives in
+      `e2e-testing/scripts/defi/funding_ensemble_engine.py`; `staked_basis` consumes a funding-rate feature and returns
+      no decision without it. Land them in `features-service` following the existing calculator pattern — **no new
+      repo**.
+- [ ] [AGENT] P1. **Add `CustodyRoute` to UAC**, per
       [the archived routing-matrix plan](/plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md):
-      `DIRECT_VENUE_WALLET · CLEARLOOP · CEFFU_MIRRORX · COPPER_SUB_ACCOUNT · FIREBLOCKS`. Re-derive that plan's
-      recommendation against the current tree first — `VenueWalletCapabilities` has moved since it was written.
-- [ ] [AGENT] P0. **Extend `VenueWalletCapabilities` with per-chain deposit routing.** A single `custody_provider`
-      string cannot express "this venue's USDT deposits route via ClearLoop on one chain and direct on another", which
-      is the operational question when moving capital.
+      `DIRECT_VENUE_WALLET · CLEARLOOP · CEFFU_MIRRORX · COPPER_SUB_ACCOUNT · FIREBLOCKS`. Re-derive that plan against
+      the current tree first — `VenueWalletCapabilities` has moved since it was written.
+- [ ] [AGENT] P1. **Extend `VenueWalletCapabilities` with per-chain deposit routing.** A single `custody_provider`
+      string cannot express "this venue's deposits route via ClearLoop on one chain and direct on another".
 - [ ] [OPERATOR] P1. **Decide whether ClearLoop is modelled explicitly or stays opaque behind Copper.** Explicit makes
-      per-route counterparty risk visible for operational due diligence (ClearLoop = LedgerEdge/Copper; MirrorX = CEFFU;
-      direct = venue insolvency), which an allocator's ODD will ask about. Opaque is less code, and Copper already
-      routes. **Gates the two todos above**, since it decides whether the schema work is one enum or a routing table.
-- [ ] [AGENT] P1. **Confirm the treasury-versus-trading split executes, not just types.** `WalletType` has
-      `FUNDING · TRADING · SPOT · UNIFIED` and `treasury_monitor.py` exists; verify a treasury → per-strategy trading
-      wallet move completes on testnet, and that an instance cannot exceed its `capital_budget_amount`.
-- [ ] [AGENT] P1. **Verify `reserve_ratio`-style behaviour exists, or retire the concept.** `rg reserve_ratio` returns
-      zero hits fleet-wide, yet an earlier draft of a client document described capital moving "on a reserve ratio".
-      Either find the mechanism under its real name and record it, or confirm it does not exist so it never reappears.
-- [ ] [AGENT] P2. **Cross-venue capital movement integration test**: treasury → venue A trading wallet → venue B, across
-      a CCXT rail and a custody rail, asserting idempotency on replay and refusal across `client_id`.
-- [ ] [AGENT] P2. **Record the custody and transfer architecture in codex** once this phase lands — the protocol seam
-      plus the routing matrix, `authoritative_for` custody routing. The archived plan is a proposal that was never
-      executed; leaving it as the only record is how this gap survived three months.
+      per-route counterparty risk visible for operational due diligence; opaque is less code and Copper already routes.
+      **Gates the two todos above.**
+- [ ] [AGENT] P1. **Confirm the treasury-versus-trading split executes, not just types.** Verify a treasury →
+      per-strategy trading wallet move completes on testnet, and that an instance cannot exceed its budget.
+- [ ] [AGENT] P1. **Verify `reserve_ratio`-style behaviour exists or retire the concept.** Zero hits fleet-wide, yet an
+      early document draft described capital moving "on a reserve ratio". Find it under its real name or confirm
+      absence.
+- [ ] [AGENT] P2. **Sweep the contracted archetypes' configs for other placeholder or TODO markers** and list them here.
+      One known banner means the convention exists; assume more until measured.
+- [ ] [AGENT] P2. **Cross-venue capital movement integration test** — treasury → venue A → venue B across a CCXT rail
+      and a custody rail, asserting idempotency on replay and refusal across `client_id`.
+- [ ] [AGENT] P2. **Record the custody and transfer architecture in codex** once C lands: the protocol seam plus the
+      routing matrix, `authoritative_for` custody routing. The archived plan is a proposal that was never executed, and
+      leaving it as the only record is how this gap survived three months.
 
-## Phase 3 — Placeholder and provisional values
+## D. Code-completion bar — gates the repository send
 
-- [ ] [OPERATOR] P0. **Approve the real risk thresholds for `configs/carry_staked_basis.yaml`.** The committed file's
-      header reads "⚠️ MAY-23 CUTOVER PLACEHOLDER VALUES ⚠️ — Risk thresholds below are CONSERVATIVE PLACEHOLDERS
-      pending operator approval". The affected values include `health_factor_target`,
-      `health_factor_emergency_reduce_at`, `health_factor_emergency_close_at`, `staking_apr_threshold`,
-      `perp_funding_threshold_bps`, `max_leverage` and `capital_usd`. **This is the client's own strategy
-      configuration**, and the repository being sent contains that header — so an engineer reading it learns the risk
-      limits are unapproved. Approve the values and remove the banner, or the send exposes an open question as a defect.
-      Plan-of-record for the values: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
-- [ ] [AGENT] P1. **Sweep the contracted archetypes' configs for other placeholder or TODO markers** before the send,
-      and list them here. One known banner means the convention exists; assume there are others until measured.
-- [ ] [AGENT] P2. **Resolve the stale June/May-2026 dates in SLA v4** — five occurrences, all overtaken by the
-      September-readiness / October-acceptance timeline. Tracked in detail on the
-      [SLA issue doc](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
+- [ ] [OPERATOR] P0. **Define "does everything we need" for strategy-service as a falsifiable checklist — CODE
+      completeness only.** The operator clarified that the code completes this week while data and live/batch deployment
+      continue to October, and the sent message says exactly that. Enumerate per archetype: decisions it must make,
+      features it must consume, instruction types it must emit, and what "correct" means. Output is a codex doc.
+- [ ] [AGENT] P0. **Audit strategy-service against the bar once written**, appending gaps here as todos. Do not start
+      closing gaps before the bar exists — it is what stops scope drifting.
+- [ ] [AGENT] P1. **Verify the two contracted archetypes emit every required instruction type end to end** —
+      `TradeInstruction`, `StakeInstruction`/`UnstakeInstruction`, `TransferInstructionV2`, `AtomicInstruction`.
 
-## Phase 4 — Repository send readiness
+## E. Repository send readiness — disclosure review, not engineering
 
-> Required because the operator decided to send strategy-service in full. This is a disclosure review, not engineering,
-> and it is the phase most likely to be underestimated.
-
-- [ ] [OPERATOR] P0. **Scope review: enumerate what the repository discloses before it goes.** All six carry archetypes;
-      arbitrage, statistical arbitrage, volatility, market making, directional and liquidity-provision families; the
-      risk engine; the position monitor; P&L attribution. Confirm explicitly that disclosing the non-carry families is
-      intended — Exhibit B defines Carry & Yield as the contracted scope, so the others are our own IP shown
-      voluntarily.
+- [ ] [OPERATOR] P0. **Enumerate what the repository discloses before it goes.** All nine declared families, the risk
+      engine, the position monitor, P&L attribution. Confirm that disclosing the non-carry families is intended —
+      Exhibit B defines Carry & Yield as the contracted scope, so the rest is our own IP shown voluntarily.
 - [ ] [OPERATOR] P0. **Confirm no other client's identifiers, configuration or capital data are present — including in
-      git history.** Configs keyed by `client_id`, share classes, wallet identifiers and fixtures are the likely
-      carriers. A working-tree scrub does not scrub the log.
-- [ ] [AGENT] P1. **Produce the disclosure inventory** for that review: every archetype module, every config naming a
-      client, every fixture with real identifiers. Read-only; no deletions without the operator ruling.
-- [ ] [OPERATOR] P1. **Decide the transfer mechanism** — snapshot archive, read-only mirror, or time-boxed repository
-      grant — and whether it carries a confidentiality acknowledgement beyond the Consulting Agreement.
+      git history.** A working-tree scrub does not scrub the log.
+- [ ] [AGENT] P1. **Produce the disclosure inventory** for that review. Read-only; no deletions without a ruling.
+- [ ] [OPERATOR] P1. **Decide the transfer mechanism** — snapshot, read-only mirror or time-boxed grant — and whether it
+      carries a confidentiality acknowledgement beyond the Consulting Agreement.
 - [ ] [OPERATOR] P2. **Decide which documentation accompanies the repository.**
       [`carry-venue-live-integration-reference.md`](/codex/02-data/carry-venue-live-integration-reference.md) is worth
-      more to a rebuilder than the source: per venue it gives the endpoint, funding field, settlement interval, symbol
-      mapping and sign-convention gotcha. It should not travel with the code by default.
+      more to a rebuilder than the source. It should not travel with the code by default.
 
-## Phase 5 — Client document consistency (hygiene only)
+## F. Document consistency
 
-- [x] ✅ [AGENT] P0. **Support period standardised at 30 days** (operator ruling 2026-08-11, reversing the 2026-08-09
-      ruling of 60). `ODUM_SLA_v4_2026-07-24.md` §1 line 88, §3 line 131 and §5 line 220 all read 30. §11's "sixty (60)
-      days' notice" for Option-A termination is a **different term** and was deliberately left alone.
-- [x] ✅ [AGENT] P0. **WITHDRAWN — the premise was wrong.** A previous revision of this plan claimed
-      `platform-architecture.html` carried 8-archetype / 13-venue counts needing correction. Cross-check 2026-08-11
-      found it states **no archetype or venue total at all** — zero `N of M` patterns. Those counts existed only in
-      `carveout-engineering.html` rev 1.0 and were already fixed there. Recorded rather than deleted because the error
-      was mine: I asserted a defect in one document from a measurement taken on another.
-- [x] ✅ [AGENT] P1. **All four client-facing artefacts consolidated into
-      [`/codex/14-customer-journeys/commercial-model/`](/codex/14-customer-journeys/commercial-model/)** alongside the
-      existing Elysium materials, and cross-checked against each other. Support period consistent at 30 days across all
-      of them; ClearLoop wording corrected to credit Copper; the carve-out specification gained an
-      inspection-is-not-transfer note reconciling its narrower package scope against sending the full repository.
+- [x] ✅ [AGENT] P0. **Support period standardised at 30 days.** Operator ruling 2026-08-11, recorded in
+      [`/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md`](/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md),
+      reversing the 2026-08-09 ruling of 60 days recorded in
+      [`/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md`](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
+      `ODUM_SLA_v4` §1/§3/§5 all read 30; §11's "sixty (60) days" Option-A termination notice is a different term and
+      was left alone deliberately.
+- [x] ✅ [AGENT] P0. **Deep-dive factual errors corrected**: family count 8 → **9** with the real member names (the
+      earlier list invented "liquidity provision"), and "compliance attestation on every instruction" softened to "the
+      attestation field on every instruction", since only the MEV modules populate it.
+- [x] ✅ [AGENT] P0. **WITHDRAWN — premise was wrong.** An earlier revision claimed `platform-architecture.html` carried
+      8-archetype / 13-venue counts needing correction; it states **no totals at all**. Those existed only in
+      `carveout-engineering.html` rev 1.0 and were already fixed. Recorded because the error was mine: I asserted a
+      defect in one document from a measurement taken on another.
+- [x] ✅ [AGENT] P0. **Stale duplicates removed.** Moving the artefacts into codex left the old
+      `presentations/elysium/*` paths and the old `…voice-note…` path live on origin, because `safe-doc-push` copies
+      _named files_ into an isolated worktree and a deletion is not a file to copy. **Four stale copies of client-facing
+      documents existed simultaneously.** Deleted, and the lesson recorded in the authoring notes.
+- [x] ✅ [AGENT] P1. **All client artefacts consolidated and cross-checked** in
+      [`/codex/14-customer-journeys/commercial-model/`](/codex/14-customer-journeys/commercial-model/).
 - [ ] [OPERATOR] P0. **Reissue or side-letter the SLA to make 30 days binding.** The copy in the client's hands states
-      **sixty (60) calendar days** in its substantive §3, under an express "substantive provisions prevail" clause.
-      **Editing our record does not reduce their entitlement.** This was optional cleanup before the 30-day ruling; it
-      is now the step that gives the ruling effect.
-- [ ] [AGENT] P2. **Correct Exhibit A's non-resolving adapter paths** in the SLA manifest — real paths already verified
-      and recorded on the issue doc. Wants a wording review before it lands.
-- [ ] [AGENT] P3. **Re-check every client HTML document for the `var()`-in-SVG trap and count drift before any send**,
-      per the [authoring notes](/codex/14-customer-journeys/commercial-model/elysium-presentation-authoring-notes.md).
+      **sixty (60) calendar days** in its substantive §3 under an express "substantive provisions prevail" clause.
+      **Editing our record does not reduce their entitlement.**
+- [ ] [AGENT] P2. **Correct Exhibit A's non-resolving adapter paths** in the SLA manifest; real paths already verified.
+- [ ] [AGENT] P2. **Resolve the five stale June/May-2026 dates in SLA v4.**
+- [ ] [AGENT] P3. **Re-check every client HTML for the `var()`-in-SVG trap and count drift before any send**, per the
+      [authoring notes](/codex/14-customer-journeys/commercial-model/elysium-presentation-authoring-notes.md).
 
-## Deferred — carve-out extraction (separate plan, not scheduled)
+## G. Deferred — carve-out extraction (separate plan; DO NOT START)
 
-Recorded here only so the work is not lost. **Do not start any of it under this plan.** A carve-out plan will be
-authored after the October delivery, per the operator's 2026-08-11 decision and the
-[deferral message](/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md).
-
-- [ ] [OPERATOR] P3. **DO NOT START — build the eleven-package extraction structure.** Specified in
-      `carveout-engineering.html` as a proposal; not built. Belongs to the future carve-out plan.
-- [ ] [OPERATOR] P3. **DO NOT START — build `contracts-platform`, the ten-interface seam.** The specification commits us
-      to producing it if a CTO asks to see it, which is the one item here with an external trigger.
-- [ ] [OPERATOR] P3. **DO NOT START — local, static and mock implementations behind each of the ten interfaces**: mocks,
-      documented extension points, static universe and frozen config.
-- [ ] [OPERATOR] P3. **DO NOT START — run the nine-condition hand-over acceptance test** specified in the carve-out
-      document's §06.
+- [ ] [OPERATOR] P3. **DO NOT START — the eleven-package extraction structure.** Specified in
+      `carveout-engineering.html` as a proposal, not built.
+- [ ] [OPERATOR] P3. **DO NOT START — `contracts-platform`, the ten-interface seam.** The document commits us to
+      producing it if a CTO asks to see it: the one deferred item with an external trigger.
+- [ ] [OPERATOR] P3. **DO NOT START — local, static and mock implementations behind the ten interfaces.**
+- [ ] [OPERATOR] P3. **DO NOT START — the nine-condition hand-over acceptance test** from the document's §06.
 - [ ] [OPERATOR] P3. **DO NOT START — carve-out estimate stands at ~1 week concentrated for a beta**, production-grade
-      longer again. Revised 2026-08-11 from the earlier ~3-day figure after the operator began the work.
-
-### Research-contribution path — specification deferred with the above
-
-- [ ] [AGENT] P2. **Specify how the client runs their own ideas through our backtests.** The launch path is
-      `deployment-api` (`test_strategy_backtest_launch` and `test_execution_backtest_launch` exist, so the endpoints are
-      real). Define what they submit, what isolation applies, what comes back, and what they may not see. The deep-dive
-      document describes this at a level that now needs the detail behind it.
-- [ ] [OPERATOR] P2. **Decide the commercial and IP treatment of client-contributed research.** If they propose a
-      parameter set or variant that works, who owns it — this interacts with Consulting Agreement Art. 4 and Exhibit B's
-      non-compete. Answering it before a contribution exists is much easier than after.
-- [ ] [AGENT] P3. **Document the promotion ladder as the client sees it** — candidate through paper to live, the
-      pre-flight gates, and which steps they can observe or approve under the managed service.
+      longer again.
+- [ ] [AGENT] P2. **Specify how the client runs their own ideas through our backtests** — depends on the backtest-path
+      verification in section B.
+- [ ] [OPERATOR] P2. **Decide the commercial and IP treatment of client-contributed research** before a contribution
+      exists rather than after.
+- [ ] [AGENT] P3. **Document the promotion ladder as the client sees it** — depends on confirming its terminal state.
 
 ## Progress Log
 
-- **2026-08-11** — Plan created, then **rescoped the same day on operator instruction: this is no longer a carve-out
-  plan.** It now covers production completion and issue fixes only; carve-out extraction is deferred to a separate plan
-  and is listed at the end purely so it is not lost. The measured starting position was recorded rather than assumed and
-  changed Phase 2 materially: the custody and transfer abstraction is **already agnostic and clean** (`CustodyProvider`
-  and `TransferAdapter` protocols, `CompositeTransferAdapter` routing by transfer kind, `TransferInstructionV2` naming a
-  target balance rather than a rail), so this is completion work rather than design work. Three genuine gaps found by
-  reading the tree: **`CustodyRoute` was proposed in a plan archived ~3 months ago and never built**;
-  **`transfer_coordinator.py` still carries stub handlers labelled "for May-23"** — a stub returning success on a
-  funds-movement path is the highest-risk item here; and **the client's own strategy config carries a placeholder banner
-  on its risk thresholds**, which the repository send would expose. **ClearLoop appears in 4 planning documents and 0
-  source files** — it is Copper's service, and our code instructs Copper. Also corrected an error of my own: a todo
-  asserting `platform-architecture.html` carried wrong counts, which it never did.
+- **2026-08-11** — Rewritten as a **claims audit** on operator instruction: no new repository build, full audit of
+  everything missing, every fix in line with the existing architecture. Twenty-three load-bearing document claims were
+  checked against the tree: **17 verified in source, 1 partial, 2 unverified, 1 false, 2 already-wrong-and-now-fixed.**
+  The two wrong ones were in a document already published, and both are corrected — the family count was 8 where the
+  enum has **9** members and the list invented "liquidity provision"; and "compliance attestation on every instruction"
+  is untrue for the contracted archetypes, since only the MEV modules populate the field. The unverified claims are now
+  todos rather than assumptions: capital-budget enforcement, and the backtest launch endpoint (inferred from test
+  _filenames_, which is a proxy for an endpoint, not evidence of one). Production gaps carried from reading the tree:
+  **stub transfer handlers labelled "for May-23"** — the highest risk, because a stub returning success on a funds path
+  reports money moved that did not move — the never-built `CustodyRoute` matrix, **placeholder risk thresholds in the
+  client's own strategy config**, and a test-only funding reader. Separately found and fixed: the codex move left **four
+  stale duplicate copies** of client documents live on origin, because `safe-doc-push` commits named files from an
+  isolated worktree and therefore never saw the deletions.
