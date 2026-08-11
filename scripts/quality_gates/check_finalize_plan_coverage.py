@@ -35,8 +35,18 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
-Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
-2 = arg/IO error.
+Third role (added 2026-08-11, `--guard-parent`, todo 1 of
+duplicate_finalize_plans_created_for_one_parent_2026_08_06.md): a CREATION-TIME idempotency
+guard for the finalize-plan remediation path. The coverage checks above only DETECT a parent
+with no finalize companion; nothing guarded the act of authoring a new `<parent>_finalize*.md`
+in response, so two responders to the same violation each wrote a finalize plan for the same
+parent — the 2026-07-31 colliding pair differed only by a redundant `_2026_07_31` filename
+suffix. `--guard-parent <slug>` re-derives the CURRENT gating corpus and REFUSES (exit 1) if
+the parent is already gated, keyed on the `depends_on` relationship (the real contract), not
+on the expected filename shape.
+
+Exit-code semantics: 0 = at/below baseline (both checks) / guard-clear; 1 = regression
+(either check) / guard-refusal; 2 = arg/IO error.
 """
 
 from __future__ import annotations
@@ -68,6 +78,14 @@ def _pm_root_or_legacy(workspace_root):
 
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "finalize_plan_coverage_baseline.yaml"
+
+_GUARD_HINT = (
+    "\n⚠️  Before authoring a NEW finalize plan for any flagged parent, run"
+    " `scripts/quality_gates/check_finalize_plan_coverage.py --guard-parent <parent-slug>` — it re-derives the"
+    " CURRENT gating corpus (keyed on the depends_on edge, not the filename) and REFUSES if that parent already"
+    " has a finalize companion. Duplicate `_finalize` plans authored in response to this flag are a"
+    " review-blocking race (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md)."
+)
 
 _FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 _TODO_RE = re.compile(r"^-\s+\[[ x]\]\s+\[\w+\]\s+P\d\.", re.MULTILINE)
@@ -115,9 +133,16 @@ def _is_finalize_plan(fm: dict[str, object]) -> bool:
     return bool(has_deps and gate is True)
 
 
-def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
-    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
-    out: set[str] = set()
+def _gating_plans(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """Map every gated parent-slug -> the finalize plans whose `depends_on` +
+    `gate_on_depends: true` name it. The REAL finalize-plan-coverage contract is this
+    `depends_on` edge, not the filename shape — the 2026-07-31 colliding pair
+    (`..._finalize.md` vs `..._finalize_2026_07_31.md`) differed only by a redundant date
+    suffix, so any guard/detector keyed on the expected filename would have missed it. A
+    parent with >1 entry here is the duplicate-gate signal (refused at creation time by
+    `--guard-parent` [todo 1], reported at rest by the corpus-wide detector [todo 2, of
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md])."""
+    out: dict[str, list[Path]] = {}
     for cov in all_plans:
         if not _is_finalize_plan(cov.frontmatter):
             continue
@@ -126,8 +151,13 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
             continue
         for dep in cast(list[object], depends_on):
             if isinstance(dep, str):
-                out.add(dep.strip())
+                out.setdefault(dep.strip(), []).append(cov.path)
     return out
+
+
+def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
+    """Every plan-slug named in some OTHER plan's depends_on + gate_on_depends: true."""
+    return set(_gating_plans(all_plans))
 
 
 def _find_violations(active_dir: Path) -> list[Path]:
@@ -166,6 +196,54 @@ def _find_draft_gate_violations(active_dir: Path) -> list[Path]:
         if fm.get("status") == "draft":
             violations.append(cov.path)
     return violations
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Resolve plans/active/ to the real PM checkout, falling back through three candidates
+    (sibling-checkout, workspace-root, self-locate from __file__). Returns None when none
+    resolve — the caller prints the error and exits 2."""
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    return None
+
+
+def _guard_parent_mode(active_dir: Path, workspace_root: Path, guard_parent: str) -> int:
+    """Creation-time idempotency guard (todo 1 of
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md): before writing a NEW
+    `<parent>_finalize*.md`, re-derive the CURRENT gating corpus and refuse if the parent is
+    already gated by an existing finalize plan. Keyed on the `depends_on` edge (the real
+    contract), NOT the filename shape — the 2026-07-31 colliding pair differed only by a
+    redundant `_2026_07_31` suffix."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gating_this = _gating_plans(all_plans).get(guard_parent.strip(), [])
+    if gating_this:
+        print(
+            f"❌ REFUSE: parent '{guard_parent}' is ALREADY gated by an existing finalize plan —"
+            " do NOT write a new `<parent>_finalize*.md` for it:"
+        )
+        for p in gating_this:
+            try:
+                rel = p.relative_to(workspace_root)
+            except ValueError:
+                rel = p
+            print(f"  - {rel}")
+        print(
+            "  Attach to / extend the existing companion instead (supersede it only after porting its"
+            " todos — see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md)."
+        )
+        return 1
+    print(
+        f"✅ guard: parent '{guard_parent}' is not currently gated by any finalize plan —"
+        " safe to author a new `<parent>_finalize*.md`."
+    )
+    return 0
 
 
 def _load_baseline_count(baseline_path: Path, key: str) -> int:
@@ -230,6 +308,17 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--guard-parent",
+        type=str,
+        default=None,
+        help=(
+            "Creation-time idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md "
+            "todo 1): REFUSE (exit 1) if this parent slug is already gated by an existing finalize plan, so a "
+            "duplicate `<parent>_finalize*.md` is never authored in response to a coverage violation. Keyed on "
+            "the depends_on edge, not the filename shape."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -241,36 +330,19 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
         fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+        self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+        print(
+            f"ERROR: plans/active not found at {workspace_root}/unified-trading-pm/plans/active,"
+            f" {fallback_dir}, or {self_located_dir}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if ns.guard_parent:
+        return _guard_parent_mode(active_dir, workspace_root, cast(str, ns.guard_parent))
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
@@ -295,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             for v in violations:
                 print(f"  - {v}")
+            print(_GUARD_HINT)
         if draft_gate_violations:
             print(
                 "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
@@ -334,6 +407,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {rel}")
         if len(violations) > 20:
             print(f"  ... + {len(violations) - 20} more")
+        print(_GUARD_HINT)
 
     if draft_gate_violations:
         print(

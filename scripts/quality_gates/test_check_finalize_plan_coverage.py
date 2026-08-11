@@ -128,3 +128,68 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --guard-parent creation-time idempotency guard (issue
+#    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md todo 1) ──
+#
+# The guard REFUSES (exit 1) when the given parent slug is already named in the
+# `depends_on` of an existing finalize plan (`depends_on` + `gate_on_depends: true`),
+# keyed on that EDGE rather than the filename shape — the 2026-07-31 colliding pair
+# (`..._finalize.md` vs `..._finalize_2026_07_31.md`) differed only by a date suffix.
+
+
+def test_guard_allows_a_parent_with_no_finalize_companion(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_11"])
+    assert rc == 0
+
+
+def test_guard_refuses_a_parent_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    _write_plan(
+        active / "source_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_guard_refuses_regardless_of_filename_shape(tmp_path: Path) -> None:
+    """The exact collision that started this issue: the companion carries a redundant
+    date suffix, so a guard keyed on the expected `_finalize.md` filename would miss it —
+    the guard must key on the `depends_on` edge."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "parent_plan_2026_07_31"])
+    assert rc == 1
+
+
+def test_guard_ignores_a_finalize_plan_gating_a_different_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    _write_plan(
+        active / "other_plan_finalize.md",
+        extra_frontmatter="depends_on: [other_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent", "source_plan_2026_08_11"])
+    assert rc == 0
+
+
+def test_guard_does_not_disturb_normal_coverage_mode(tmp_path: Path) -> None:
+    """--guard-parent short-circuits main(); without it the default path is unchanged
+    (a fresh corpus with zero violations and no baseline file passes)."""
+    _active_dir(tmp_path)  # empty corpus
+
+    rc = main(["--workspace-root", str(tmp_path)])
+    assert rc == 0

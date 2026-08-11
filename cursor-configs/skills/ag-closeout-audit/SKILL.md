@@ -572,8 +572,15 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
-`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
-**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
+`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. **Run the
+creation-time idempotency guard BEFORE authoring that finalize companion** (todo 1 of
+`/plans/active/issues/duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`):
+`python3 scripts/quality_gates/check_finalize_plan_coverage.py --guard-parent <batchN-slug>` — it re-derives the CURRENT
+gating corpus keyed on the `depends_on` edge (not the filename shape; the 2026-07-31 duplicate pair differed only by a
+date suffix) and REFUSES (exit 1) if the batch already has a finalize companion. On refusal, do NOT write a new plan —
+attach to / extend the existing companion (supersede it only after porting its todos, per
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Author it **`status: active`, NOT draft**
+(corrected 2026-07-30 — see finding below). Validate both with
 `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
 `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
