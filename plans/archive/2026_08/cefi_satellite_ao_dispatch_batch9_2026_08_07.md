@@ -24,7 +24,7 @@ summary: >-
   todos below, zero genuine conflicts, zero BLOCKED-OPERATOR-DECISION parked this run (the 2 carried conflict-gated
   items are re-verified still open — 5th consecutive re-check — and flagged explicitly for the operator per
   batch8-finalize's own instruction, not silently re-deferred).
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -45,7 +45,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-11"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -79,6 +79,9 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 9 — iterative-drain extraction
+
+> **🟢 ARCHIVED 2026-08-11** — all 3 todos complete; moved to `plans/archive/2026_08/` via the standard 6-step ritual
+> (finalize plan `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md`).
 
 > **Status: ACTIVE — operator-approved 2026-08-07** (was DRAFT; missed by an earlier casing-sensitive grep fixing the
 > frontmatter and PLAN_FORMAT.md reference but not this differently-cased banner — corrected here). The paired finalize
@@ -270,3 +273,10 @@ for a linkage gap; same pattern as batch8's "Self-dispatched, linkage-fix-only" 
   separate from this edit) confirmed this batch's own explicit Phase 3 conflict-check + cross-todo file-collision
   statement, no rename/archival ops among its todos (the class of the 2026-07-25 mass-flip safety incident), content
   verified safe to dispatch.
+- **2026-08-11 (slot 21, task `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-003`)** — ARCHIVED via the standard
+  6-step ritual. All 3 todos done (shipped 2026-08-07→2026-08-10; per-todo reconciliation in the finalize plan's Progress
+  Log). The "Cross-tranche notes", "Deferred — *", "Reconciliation" and "Linkage housekeeping" sections confirmed
+  informational (every deferred item already tracked as an open todo in its source issue doc — no separate migration
+  needed); codex-alignment check confirms batch9 creates no new durable contract (no codex/CLAUDE.md update warranted);
+  `locked_by` empty. Moved to `plans/archive/2026_08/`; every corpus referrer repointed to the archived path;
+  `run_hygiene_sweep.sh` green; finalize doc archived alongside in the same commit.

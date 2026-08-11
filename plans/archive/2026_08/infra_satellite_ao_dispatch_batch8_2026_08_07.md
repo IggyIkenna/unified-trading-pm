@@ -34,9 +34,9 @@ related:
     /plans/active/issues/lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md,
     /plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md,
     /plans/active/issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

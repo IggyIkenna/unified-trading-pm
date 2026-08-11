@@ -43,7 +43,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
   ]

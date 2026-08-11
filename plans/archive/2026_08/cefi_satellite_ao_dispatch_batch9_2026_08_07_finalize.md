@@ -8,7 +8,7 @@ summary: >-
   batch8-finalize's standing instruction if still unresolved), and archiving batch9 via the 6-step ritual. `status:
   active` from the start per the 2026-07-30 no-double-gate ruling; `gate_on_depends: true` machine-holds every todo
   until batch9's own tasks are done.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-9, finalize, iterative-drain]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md,
     /plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -47,12 +47,15 @@ source: >-
   finalize-plan-coverage rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 9 — finalize
+
+> **🟢 ARCHIVED 2026-08-11** — all 3 todos complete; moved to `plans/archive/2026_08/` alongside batch9 in the same
+> commit (slot 21, task `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-003`).
 
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch9's own 3 tasks are `done`, regardless of batch9's own `status` (draft or active). Only
@@ -105,7 +108,7 @@ context_scope:
       flag was POSTED to the cefi parked-findings doc
       (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`, appended to its Progress Log) and surfaced
       in this run's report below.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Deferred — *", "Reconciliation" and "Linkage
       housekeeping" sections (informational, never batch todos) need no separate migration → add the archive banner →
       run the codex-alignment check (batch9 creates no new durable contract; confirm still true) → grep the corpus for
@@ -156,3 +159,12 @@ context_scope:
   parked-findings doc (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`, Progress Log) and surfaced
   in this run's report. No source-doc edit needed (both source docs already carry their own na-eligibility-audit
   markers).
+- **2026-08-11 (slot 21, task `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-003`)** — todo 3 (archival) DONE.
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` archived via the standard 6-step ritual: (1) all Deferred /
+  Cross-tranche / Reconciliation / Linkage-housekeeping items confirmed informational (each already a tracked open todo
+  in its source issue doc — no separate migration); (2) `🟢 ARCHIVED` banner + `status: complete` added; (3) codex-
+  alignment check — batch9 creates no new durable contract, no codex/CLAUDE.md update warranted; (4) same as (3) — no
+  new contract shipped; (5) every corpus referrer repointed: batch10 pair (2 docs), `infra_satellite_ao_dispatch_batch8`,
+  `tardis_concurrency_gate_hardening`, `cefi_master.md` (entries removed per the epic's archived-batch convention),
+  `plans/active/INDEX.md` (entries dropped by the auto-regenerator); (6) `locked_by` was already empty — confirmed.
+  `run_hygiene_sweep.sh --precommit` verified green. Both docs `git mv`'d to `plans/archive/2026_08/` in the same commit.
