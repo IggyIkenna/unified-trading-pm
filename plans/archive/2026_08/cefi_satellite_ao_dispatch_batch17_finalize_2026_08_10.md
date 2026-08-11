@@ -7,7 +7,7 @@ summary: >-
   `issues/tardis_concurrency_gate_hardening_2026_08_09.md`'s and
   `issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s own checkboxes, archives
   either source doc that reaches 0 open todos, then archives the batch plan itself via the standard 6-step ritual.
-status: active
+status: archived
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [cefi, ao-dispatch, close-out, batch-17, finalize, satellite-extraction]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
     /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/archive/2026_08/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -39,7 +39,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 depends_on: [cefi_satellite_ao_dispatch_batch17_2026_08_10]
 gate_on_depends: true
 source: >-
@@ -47,12 +46,17 @@ source: >-
   rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_2026_08_10.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 17 — finalize
+
+> **ARCHIVED 2026-08-11** — all 3 todos done: the batch17 plan was archived to `plans/archive/2026_08/` via the 6-step
+> ritual (its 3 todos — watchdog relaunch `deployment-service@3d545372`, 21 unit tests `deployment-service@0c14f54050`,
+> ASTER/book_snapshot_5 recurrence check confirmed non-recurring — all verified against reality, and the tardis + ASTER
+> source issue docs were archived first). Referrers swept corpus-wide. Archived by this finalize plan's own completion.
 
 > **Machine-held via `gate_on_depends: true`** — this plan's todos do not dispatch until
 > `cefi_satellite_ao_dispatch_batch17_2026_08_10.md`'s 3 todos are all `done` (regardless of the batch's own `status`,
