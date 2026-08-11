@@ -356,18 +356,14 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       on a real multi-hour-wait case (`plan_reconciler:ao:2026-08-09`, queued 02:01 -> dispatched 02:47, `agt-fe4564`,
       one worker). New minor finding tracked below (not a correctness bug — no double-dispatch, no lost work). (repo:
       agent-orchestrator)
-- [ ] [DATA] P3. Same-day timer refire AFTER its `<job>:<tranche>:<day>` queue row is already `status=dispatched`
-      reports a misleading `status="queued"` in `/api/scheduled-jobs/recent` — found live 2026-08-09 verifying the todo
-      above. `_queue_for_capacity()` (`server/plan_health.py`) unconditionally returns `{"status": "queued", ...}`
-      regardless of whether `queue_scheduled_job()` actually (re-)queued the row or hit its `else: return row` no-op
-      branch (already dispatched that day — deliberately not re-queued, to avoid double-dispatch). No work is lost (the
-      tranche already got its one worker earlier that day) and the dedup PK still holds, but the LABEL is wrong: a no-op
-      read as "queued" looks like real pending work on the dashboard, and no run will ever complete for that specific
-      report. Live example: `ag_closeout_auditor:ao:2026-08-09` — worker `agt-41d860` dispatched 02:31, then 3 more
-      `queued` reports at 00:40/02:31/07:55/08:40 for the same key, none of which will ever get their own worker. Fix:
-      have `_queue_for_capacity()` (or `queue_scheduled_job()`) distinguish "freshly queued/attempts bumped" from
-      "already dispatched today, no-op" and return a distinct status (e.g. `"already_dispatched_today"`) for the latter.
-      (repo: agent-orchestrator)
+- [x] ✅ [DATA] P3. Same-day timer refire after its `<job>:<tranche>:<day>` row already dispatched reported a misleading
+      `status="queued"` (a no-op read as real pending work on the dashboard) — **SHIPPED agent-orchestrator@a38423e**
+      (verified on `origin/live-defi-rollout`; slot-33 flip — the fix commit landed 2026-08-11 21:37 without its
+      checkbox flip, Half-1-without-Half-2). `_queue_for_capacity()` (`server/plan_health.py:455`) now returns
+      `f"already_{row.status}_today"` (e.g. `already_dispatched_today`) on `queue_scheduled_job()`'s no-op branch,
+      distinct from the genuine-defer `"queued"`; all 10 `install-*-timer.sh` scripts updated to grep the new status and
+      skip re-reporting a phantom dispatch (status consumed by the script, never persisted — no `ScheduledJobStatus`
+      change). +2 tests (`tests/test_scheduled_jobs.py`). (repo: agent-orchestrator)
 - [ ] [DATA] P3. Confirm the hoisted working-pane guard reduced false spawn-retry-cap pages (agent-orchestrator@9d26598,
       deployed 2026-08-06 15:04 UTC). Baseline to beat, measured 2026-07-30..08-06 from the orchestrator journal: 45 cap
       declarations, pane state at cap = frozen 19 / no_session 11 / **working 8** / idle 7. The 8 `pane=working` pages
@@ -389,44 +385,44 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-                                              SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-                                              2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-                                              below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-                                              pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-                                              rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-                                              survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-                                              both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-                                              original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-                                              per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-                                              08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-                                              also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-                                              week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-                                              rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-                                              above for a causal read. New follow-up filed directly below given the climbing raw rate.
-                                              (repo: agent-orchestrator)
+                                                      SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                                                      2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                                                      below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                                                      pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                                                      rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                                                      survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                                                      both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                                                      original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                                                      per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                                                      08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                                                      also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                                                      week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                                                      rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                                                      above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                                                      (repo: agent-orchestrator)
 
-                      **RE-CHECKED 2026-08-10 (slot 20, data_engineering) — CLOSED (fix holds; metric-label defect surfaced).** Now that the
-                      observability enabler (@0c27963, session-teardown `checkout_sha` instrumentation) is LIVE, this re-check has a
-                      causal read the 08-09 pass lacked. Read path: S3 DR SQLite snapshot `live_20260810T145504Z.db` (mode=ro), same
-                      as slot-20's 08-09 capacity-queue verification. **(1) Enabler verified live**: 289 `activity_log` rows carry
-                      `checkout_sha`; running build `7e4d643` AND the build that observed the flagged `agt-3589f2` death (`514df29`)
-                      both contain fix @5941552 AND instrumentation @0c27963 (`git merge-base --is-ancestor`). **(2) `kind=cicd`
-                      reaped-stale is ~4.5x BELOW the pre-fix baseline**: 7 total (08-08→1, 08-09→2, 08-10→4 by 14:55Z) ≈ 2.3/day vs
-                      the 72/7d ≈ 10.3/day baseline; all 7 are short-runtime 113-509s `ldr_qg_failure`/`sit_failure`/`plan_health`
-                      walls (the "different mechanism" class), NOT the original 26420s/51302s long-runner collision signature. The
-                      post-fix post-instrumentation death the 08-06 note flagged (`agt-3589f2`) died on `514df29`, a build WITH the
-                      fix — no evidence the collision fix regressed. **(3) NEW METRIC-LABEL DEFECT (follow-up filed)**: 7 agents
-                      archived `reaped-stale` carry populated `done_evidence` (4 = cicd: agt-2b025d/agt-6eb218/agt-a169a6/
-                      agt-558c62) — a real `/done` resolved them but the row never flipped to `lifecycle-complete`
-                      (`recover_reaped_stale_agent` was NOT called; no `slot_done_one_off_recovered_reaped_stale` event exists for
-                      any). Mechanism: the recovery lookup `find_reaped_stale_agent_for_session` keys on `last_tmux_session ==
-                      tmux_session`, which misses when an escalation's re-dispatch lands the worker on a DIFFERENT slot than the one
-                      the pruner snapshotted — `/done` then takes the plain `archive_agent` branch whose first-write-wins
-                      `exit_reason` keeps `reaped-stale` while `done_evidence` is written. So the "reaped-stale" badge OVER-reports
-                      real mid-run death (dashboard says reaped-stale for runs that actually completed + resolved their wall). The
-                      true mid-run-death rate is even lower than the 2.3/day figure. FLIPPED: the collision fix holds; the residual
-                      metric inflation is a separate labeling bug tracked by the new todo below.
-                                              (repo: agent-orchestrator)
+                              **RE-CHECKED 2026-08-10 (slot 20, data_engineering) — CLOSED (fix holds; metric-label defect surfaced).** Now that the
+                              observability enabler (@0c27963, session-teardown `checkout_sha` instrumentation) is LIVE, this re-check has a
+                              causal read the 08-09 pass lacked. Read path: S3 DR SQLite snapshot `live_20260810T145504Z.db` (mode=ro), same
+                              as slot-20's 08-09 capacity-queue verification. **(1) Enabler verified live**: 289 `activity_log` rows carry
+                              `checkout_sha`; running build `7e4d643` AND the build that observed the flagged `agt-3589f2` death (`514df29`)
+                              both contain fix @5941552 AND instrumentation @0c27963 (`git merge-base --is-ancestor`). **(2) `kind=cicd`
+                              reaped-stale is ~4.5x BELOW the pre-fix baseline**: 7 total (08-08→1, 08-09→2, 08-10→4 by 14:55Z) ≈ 2.3/day vs
+                              the 72/7d ≈ 10.3/day baseline; all 7 are short-runtime 113-509s `ldr_qg_failure`/`sit_failure`/`plan_health`
+                              walls (the "different mechanism" class), NOT the original 26420s/51302s long-runner collision signature. The
+                              post-fix post-instrumentation death the 08-06 note flagged (`agt-3589f2`) died on `514df29`, a build WITH the
+                              fix — no evidence the collision fix regressed. **(3) NEW METRIC-LABEL DEFECT (follow-up filed)**: 7 agents
+                              archived `reaped-stale` carry populated `done_evidence` (4 = cicd: agt-2b025d/agt-6eb218/agt-a169a6/
+                              agt-558c62) — a real `/done` resolved them but the row never flipped to `lifecycle-complete`
+                              (`recover_reaped_stale_agent` was NOT called; no `slot_done_one_off_recovered_reaped_stale` event exists for
+                              any). Mechanism: the recovery lookup `find_reaped_stale_agent_for_session` keys on `last_tmux_session ==
+                              tmux_session`, which misses when an escalation's re-dispatch lands the worker on a DIFFERENT slot than the one
+                              the pruner snapshotted — `/done` then takes the plain `archive_agent` branch whose first-write-wins
+                              `exit_reason` keeps `reaped-stale` while `done_evidence` is written. So the "reaped-stale" badge OVER-reports
+                              real mid-run death (dashboard says reaped-stale for runs that actually completed + resolved their wall). The
+                              true mid-run-death rate is even lower than the 2.3/day figure. FLIPPED: the collision fix holds; the residual
+                              metric inflation is a separate labeling bug tracked by the new todo below.
+                                                      (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Fix the `reaped-stale`-label-with-`done_evidence` contradiction (metric over-reports mid-run
       death)** — found 2026-08-10 (slot 20) re-checking todo -020: 7 agents archived `exit_reason=reaped-stale` carry
@@ -445,19 +441,19 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       snapshot after the fix ships. (repo: agent-orchestrator)
 
       — SHIPPED agent-orchestrator@2f485e3 (2026-08-10, slot 2). **VERIFIED MECHANISM DIFFERS FROM THE SLOT-20
-                  HYPOTHESIS** — the recovery lookup was NOT the miss. The escalation re-dispatch `register_agent` upserts the SAME
-                  agent_id (`escalation_id == agent_id`) back to `status="active"` with the new slot's tmux_session but KEEPS the
-                  prior reap's `exit_reason="reaped-stale"`, so the worker's genuine `/done` finds the row via tmux_session while the
-                  old `recovering_reaped_stale` guard (`status == "archived"`) read False — it falls into `archive_agent`'s
-                  first-write-wins `exit_reason` (agents.py:376-383): stale `reaped-stale` survives, `done_evidence` is written.
-                  Fix: `recovering_reaped_stale` now keys on `exit_reason == "reaped-stale"` regardless of status, and the reactivated
-                  (non-archived) sub-case archives the row + frees the worker's OWN slot (its own — unlike the reassigned-stranger
-                  case the recovery branch deliberately preserves). Regression test
-                  `test_one_off_done_recovers_reactivated_reaped_stale_agent`; QG green 3352 python + 290 vitest + tsc clean.
-                  Before/after: 7 (live_20260810T145504Z snapshot) → 8 (live DB 21:28 — still growing pre-fix) → **0** (corrected on
-                  the live DB to `lifecycle-complete`; all 8 carry genuine `/done` evidence; pre-correction backup
-                  `state_backup_before_correction.db`). The reaped-stale badge no longer over-reports real mid-run death for this
-                  class. (repo: agent-orchestrator)
+                          HYPOTHESIS** — the recovery lookup was NOT the miss. The escalation re-dispatch `register_agent` upserts the SAME
+                          agent_id (`escalation_id == agent_id`) back to `status="active"` with the new slot's tmux_session but KEEPS the
+                          prior reap's `exit_reason="reaped-stale"`, so the worker's genuine `/done` finds the row via tmux_session while the
+                          old `recovering_reaped_stale` guard (`status == "archived"`) read False — it falls into `archive_agent`'s
+                          first-write-wins `exit_reason` (agents.py:376-383): stale `reaped-stale` survives, `done_evidence` is written.
+                          Fix: `recovering_reaped_stale` now keys on `exit_reason == "reaped-stale"` regardless of status, and the reactivated
+                          (non-archived) sub-case archives the row + frees the worker's OWN slot (its own — unlike the reassigned-stranger
+                          case the recovery branch deliberately preserves). Regression test
+                          `test_one_off_done_recovers_reactivated_reaped_stale_agent`; QG green 3352 python + 290 vitest + tsc clean.
+                          Before/after: 7 (live_20260810T145504Z snapshot) → 8 (live DB 21:28 — still growing pre-fix) → **0** (corrected on
+                          the live DB to `lifecycle-complete`; all 8 carry genuine `/done` evidence; pre-correction backup
+                          `state_backup_before_correction.db`). The reaped-stale badge no longer over-reports real mid-run death for this
+                          class. (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
       08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
