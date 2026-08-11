@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion for defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md — re-verifies the
   build's evidence (incl. its own todo 6's audit-doc + codex-doc edits), then archives both docs per
   plan-completion-and-archival-discipline once every todo is done.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -18,7 +18,7 @@ related:
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-07"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,10 +46,19 @@ context_scope:
   ]
 ---
 
+> **🟢 ARCHIVED 2026-08-11.** All 2 todos done — the build plan's 6 code SHAs independently re-verified on origin
+> (slot-17 review, 2026-08-11) and this finalize doc's own archival todo completed (slot-18). The build plan
+> `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` and this finalize doc are both archived to
+> `/plans/archive/2026_08/`. Source issue doc `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` stays
+> ACTIVE — its governance-params-poller re-verify `- [ ]` todo remains open (never in this plan's scope). No new durable
+> contract from this finalize plan itself — the codex-alignment work (solana-defi-coverage.md JUPITER line +
+> xfail-tracked-todo rule) is recorded on the build plan's banner + todo 8's annotation.
+
 # Finalize — Jupiter DeFi venue registration + MTDS live-connector wire-in
 
 Machine-held (`gate_on_depends: true`) until every todo in
-`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` is done. Do not start manually before then.
+`/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` is done. Do not start
+manually before then.
 
 ## Todos
 
@@ -71,16 +80,28 @@ Machine-held (`gate_on_depends: true`) until every todo in
       to the build plan (not duplicated content), codex `solana-defi-coverage.md` JUPITER line now "live connector
       SHIPPED" + `spot_trades`→`dex_pool_swaps` corrected (no `spot_trades` refs remain); edit commit
       unified-trading-pm@c328a59f20 on origin. **No mis-citations found — nothing to correct in the build plan.**
-- [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
+- [x] ✅ [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` and this finalize doc itself: archive
       both to `plans/archive/2026_08/`, and fix every corpus referrer path (grep the repo for the old paths and update
       each hit). Also check whether `defi_adapter_dead_code_audit_2026_07_24.md` now has zero remaining open `- [ ]`
       todos in §6 (the governance-params-poller re-verify item stays open — it was never in this plan's scope) — if it
       does not, leave it active; do not archive it prematurely. Done-when: `regenerate_active_plan_inventory.py` shows
-      zero orphan referrers to the archived paths.
+      zero orphan referrers to the archived paths. — ✅ DONE 2026-08-11 (slot-18): both plans archived to
+      `plans/archive/2026_08/`; all corpus referrers repointed (dead-code audit §6 paths ×3, infrastructure_master epic
+      links ×4 + status, satellite-batch11 stale ACTIVE label); INDEX.md regenerated;
+      `defi_adapter_dead_code_audit_2026_07_24.md` left ACTIVE (governance-params-poller re-verify `- [ ]` still open —
+      out of scope). No orphan referrers to the archived paths remain.
 
 ## Progress Log
 
 - **2026-08-07 (interactive session)**: finalize plan authored alongside the build plan per `task_template.md`'s
   finalize-plan-coverage rule.
+- **2026-08-11 (slot-18, `defi_jupiter_venue_registration_and_live_connector_wireup_finalize-002`)**: ran the 6-step
+  archival ritual. Verified the build plan is genuinely done (todo 7's WS-frame cassettes present for both
+  `jupiter_solana_ws` + `aave_liquidations_ethereum_ws`; xfails removed from `test_ws_cassette_coexistence.py`; all 6
+  code SHAs already re-verified by slot-17). Archived the build plan + this finalize doc to `plans/archive/2026_08/`,
+  repointed every corpus referrer (`defi_adapter_dead_code_audit_2026_07_24.md` §6 ×3 paths, `infrastructure_master.md`
+  epic ×4 links + status fields, `defi_satellite_ao_dispatch_batch11` stale ACTIVE label), regenerated INDEX.md.
+  `defi_adapter_dead_code_audit_2026_07_24.md` left ACTIVE — its governance-params-poller re-verify `- [ ]` todo remains
+  open and was never in this plan's scope.

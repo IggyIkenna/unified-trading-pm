@@ -7,7 +7,7 @@ summary: >-
   onchain_event_poller.py's Aave-liquidation path into a real MTDS live connector. 2 of the operator's 5 named Jupiter
   surfaces (execution-service support, MVP-venue-list inclusion) turned out to already exist / be automatic — see "Scope
   corrections vs the operator's framing" below.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07,
   ]
 created: "2026-08-07"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -54,6 +54,16 @@ context_scope:
     /plans/archive/2026_08/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-11.** All 8 todos done + evidence independently re-verified on origin (slot-17 review,
+> 2026-08-11): unified-api-contracts@ad003d03 (UAC JUPITER-SOLANA live venue), instruments-service@06c6f2dd
+> (JupiterReferenceDataAdapter wired), market-tick-data-service@9e9c9817 + @73abd655 (Jupiter + Aave-liquidation live
+> connectors), execution-service@507093de (JupiterConnector wired into DeFiAdapter), unified-trading-pm@c328a59f20
+> (audit-doc §6 close-out + codex `solana-defi-coverage.md` update), the two WS-frame cassettes (xfails removed from
+> `test_ws_cassette_coexistence.py`), and the xfail-tracked-todo rule (unified-trading-pm@32c5440a8d). Archived with its
+> finalize companion `defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md` to
+> `/plans/archive/2026_08/`. Source issue doc `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` stays
+> ACTIVE (its governance-params-poller re-verify todo remains open, out of this plan's scope).
 
 # Jupiter DeFi venue registration + MTDS live-connector wire-in (2026-08-07)
 

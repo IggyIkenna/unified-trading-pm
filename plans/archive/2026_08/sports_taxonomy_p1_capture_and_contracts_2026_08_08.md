@@ -561,7 +561,7 @@ achieved by exclusion, not canonicalisation.**
       tests (`databento_fetch.py` -266, `tardis_csv_transport.py` -104); the subject genuinely went away. **(4)
       `unified-api-contracts@12bed42e` + the jupiter sibling** — honest xfails ("needs a real WS capture, not a
       fabricated cassette") but with NO tracked remediation; now tracked in
-      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`. **(5)
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`. **(5)
       `unified-api-contracts@8f670c45` / `market-tick-data-service@2f7d7840`** — net +3 and +11 assertions, not
       weakening. **Then extended the sweep to the fleet-scale form of the same anti-pattern — RAISED RATCHET BASELINES**
       (a ratchet says "NEVER raise a count"). Found `fabricated_sha_citation_baseline` raised **2 -> 4 -> 6 -> 8 in two

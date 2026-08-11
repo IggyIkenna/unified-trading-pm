@@ -408,11 +408,11 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       capture-side adapter), (e) execution-service support so Jupiter routes are actually tradable. This is real,
       multi-repo build-out, not a same-pass fix — needs its own scoped plan (LOCAL vs AO-dispatch TBD, see this doc's
       Progress Log). **Tracked as of 2026-08-07**: AO-dispatched plan
-      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this (todos
-      1-4 + close-out todo 6, which flips this checkbox) — that plan's investigation also found (c) is automatic (no
-      separate list) and (e) already exists unwired (`JupiterConnector`), narrowing the real remaining scope; see its
-      "Scope corrections vs the operator's framing" section. ✅ **DONE 2026-08-10 — that plan's todos 1-5 all shipped**:
-      unified-api-contracts@ad003d03 (UAC venue registration — `DEFI_VENUE_PHASE["JUPITER-SOLANA"]="live"` +
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this
+      (todos 1-4 + close-out todo 6, which flips this checkbox) — that plan's investigation also found (c) is automatic
+      (no separate list) and (e) already exists unwired (`JupiterConnector`), narrowing the real remaining scope; see
+      its "Scope corrections vs the operator's framing" section. ✅ **DONE 2026-08-10 — that plan's todos 1-5 all
+      shipped**: unified-api-contracts@ad003d03 (UAC venue registration — `DEFI_VENUE_PHASE["JUPITER-SOLANA"]="live"` +
       `VENUE_TO_ADAPTER_KEY["JUPITER-SOLANA"]="jupiter"`), instruments-service@06c6f2dd (`JupiterReferenceDataAdapter`
       wired into `_ADAPTERS` + `_SOLANA_DEFI_VENUES`), market-tick-data-service@9e9c9817 (JUPITER-SOLANA live
       `WSFeedConnector`, `data_type=dex_pool_swaps`), execution-service@507093de (`JupiterConnector` wired into
@@ -428,7 +428,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       register into the real `live/connectors/` registration mechanism (`register_all()` /
       `WS_FEED_CONNECTOR_FACTORIES`) — the code is already built + tested per § 2.2, this is wiring, not new
       implementation. **Tracked as of 2026-08-07**: AO-dispatched plan
-      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 5 covers
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 5 covers
       `onchain_event_poller.py` (Aave-liquidation path only — its own investigation found none of the 3 named classes is
       a `WSFeedConnector`-conforming self-registering class, so real new wrapper code is needed, not a one-line
       `register_all()` addition; the Uniswap-Swap-topic half is deliberately excluded as a duplicate of the already-live
@@ -566,8 +566,8 @@ files.
   items are now real scoped engineering work that needs its own plan (dispatch destination TBD), not something this
   issue doc itself executes.
 - **2026-08-07 (interactive session)**: authored the AO-dispatched plan pair
-  `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` + `..._finalize_2026_08_07.md`
-  covering both 2026-08-07 rulings, per full cross-repo investigation (UAC/
+  `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` +
+  `..._finalize_2026_08_07.md` covering both 2026-08-07 rulings, per full cross-repo investigation (UAC/
   instruments-service/market-tick-data-service/execution-service). Both this doc's §6 checkboxes updated with pointers
   to that plan (not flipped — work not yet shipped). Key findings that change the operator's own framing: Jupiter's
   "MVP-venues list inclusion" is automatic (no separate list — `_mvp_defi_venues()` derives from `DEFI_VENUE_PHASE`);
