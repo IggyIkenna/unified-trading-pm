@@ -60,11 +60,12 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify each audit's stated YES/NO/verdict against the cited evidence** — todo 1's
+- [x] ✅ [REVIEW] P1. **Re-verify each audit's stated YES/NO/verdict against the cited evidence** — todo 1's
       governor-ledger participation call (code path cited, function + file), todo 2's undersized/adequate verdict
       (numbers cited, compared against `qg_resource_baseline.json`), and todo 3's branch-protection YES/NO (the actual
       `gh api`/ruleset output quoted, not paraphrased). **Done when**: independently reproduced or the cited command
-      output directly confirms the stated verdict.
+      output directly confirms the stated verdict. — ✅ all three independently reproduced (slot-20, 2026-08-11); full
+      evidence in the Progress Log entry below.
 - [ ] [REVIEW] P1. **Confirm any "if [gap found], file a follow-up todo" branch was actually followed.** Each of the 3
       source todos conditions a NEW fix/wiring todo on its own finding — check whether a gap was found in each case and,
       if so, that a properly-scoped `- [ ]` follow-up todo now exists (in the source doc or a new properly-targeted doc,
@@ -87,3 +88,28 @@ source: >-
 
 - **2026-08-10** — Authored in the same turn as the source doc's RECLASSIFY, per the mandatory finalize-twin rule.
   `sequential: true` since the 4 todos are a genuine reconcile→archive chain (and all touch the same source doc).
+
+- **2026-08-11 (slot-20, review craft) — todo 1 RE-VERIFIED: all three audit verdicts independently confirmed.**
+  - **Todo 1 verdict (governor-ledger participation) = NO/disjoint — confirmed.** `base-service.sh:826` calls
+    `qg_governor_acquire()` before TESTS/TYPECHECK (unless sentinel-hit or no heavy phase);
+    `qg-host-governor.sh:676-678` dispatches to `_qg_governor_acquire_reservation()` in reservation mode;
+    `python-quality-gates-v2.yml:313` sets `QG_GOVERNOR_MODE: reservation` for self-hosted runners (token only on
+    single-tenant ubuntu-latest); zero `QG_GOVERNOR_DISABLE` hits fleet-wide. `_qg_shared_root()`
+    (`qg-host-governor.sh:338-345`) resolves the ledger per-topology; the glue-runner branch now unifies onto the
+    interactive-slot root (fix commit `f3534a90ea`), which closes the disjoint state this verdict documented. Pre-fix
+    disjointness (interactive → `${ws%/.tabs/*}` vs glue → `/opt/.qg-governor-glue-shared`) confirmed by the code
+    comments at lines 277-292 + git history.
+  - **Todo 2 verdict (host undersized) = UNDERSIZED — confirmed.** Live: 8 physical / 16 logical cores (lscpu), 30GiB
+    RAM (`free -h`), `orchestrator.service` cgroup `memory.max=27917287424` (~26.0GiB), current load 13.52 on 8 physical
+    cores (still oversubscribed). `qg_resource_baseline.json`: `measured_concurrency: 1` uniformly and
+    `deployment-service/local/wall_s=106.0` (reproduced) vs. the doc's own 345s observation = 3.25×. The 2026-08-09
+    slot-29 peak (load 40→69, 19 concurrent `quality-gates.sh`, 14GB+ swap) is on record in the source doc's Progress
+    Log. One honest caveat: the cited UTL baseline `wall_s=215.7/peak_rss_mb=5406` is NOT reproducible from the current
+    PM `qg_resource_baseline.json` (no `unified-trading-library` entry in its 20-repo key list) — minor, does not change
+    the verdict.
+  - **Todo 3 verdict (branch protection) = YES, correctly wired — confirmed against live GitHub API.** Classic
+    protection → 404 "Branch not protected". `gh api repos/IggyIkenna/deployment-service/rulesets` →
+    `require-quality-gates` (id 13787653), `target: branch`, `enforcement: active`,
+    `conditions.ref_name.include: ["~DEFAULT_BRANCH"]`, `bypass_actors: []`, `current_user_can_bypass: never`, one
+    `required_status_checks` rule listing exactly `Quality Gates (deployment-service) / quality-gates-v2` +
+    `sit-gate/fleet-green`. created 2026-03-11 / updated 2026-07-12, both predating PR#678's merge.
