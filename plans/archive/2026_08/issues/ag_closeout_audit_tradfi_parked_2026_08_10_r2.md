@@ -1,26 +1,30 @@
 ---
 doc_type: issue
-title: ag-closeout-audit tradfi parked findings 2026-08-10
+title: "ag-closeout-audit tradfi parked findings 2026-08-10 (Round 2, slot 24)"
 summary: >-
   Phase 0-2 audit of 27 tradfi-primary candidates (from 81 tradfi-tagged docs, 29 covering-plan + 25 multi-AG excluded).
   No batch13 draft warranted — genuinely orphaned docs are all operator-gated or conflicted. Phase 3 skipped.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [ag-closeout-audit, tradfi, parked, orphan-audit]
+tags: [ag-closeout-audit, tradfi, parked, orphan-audit, round-2]
 related:
   - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
   - /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md
   - /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
+  - /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md
 created: "2026-08-10"
 author: slot-24 (ag_closeout_auditor)
 priority: P3
 parent_epic: tradfi_master
 source: ag-closeout-audit tradfi Phase 0-2 2026-08-10 (dispatch agt-ab2792, slot-24)
 resolved_by:
+  "audit run closed — Finding 1's 3 orphans are operator-gated/conflict-gated, Finding 2's 4 are draft-covered pending
+  batch11/12 activation, Finding 3's archivable candidates were reconciled 2026-08-10 (see referencing issue doc); no
+  fix commit applies to this report itself"
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -28,7 +32,19 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-# ag-closeout-audit tradfi — parked findings 2026-08-10
+> **📦 ARCHIVED 2026-08-10 (\_r2)** — this is Round 2 of the same-date tradfi closeout audit, re-created at the same
+> slug after Round 1 (`ag_closeout_audit_tradfi_parked_2026_08_10.md`, slots 26+25+22, tradfi's first-ever
+> `/ag-closeout-audit` pass with 6 findings, archived earlier the same day) was already archived. Both rounds are
+> independently resolved and neither is stale — this Round 2 (slot 24) ran a separate Phase 0-2 pass over 27
+> tradfi-primary candidates and reached its own 3-finding set below; it does not supersede Round 1's findings.
+>
+> **SKILL DEFECT (documented in `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`):** Round 1 was archived
+> via `safe-doc-push.sh`, but the rename/deletion was dropped, and Round 2 independently re-created the same slug with
+> different content. The active copy persisted alongside the archived copy. This archival resolves the stalemate. The
+> RECURRENCE is closed: the `/ag-closeout-audit` skill now checks `plans/archive/**` before writing a parked-findings
+> slug (`unified-trading-pm@ced0ff96b9`).
+
+# ag-closeout-audit tradfi — parked findings 2026-08-10 (Round 2)
 
 ## Resolved this run (mechanical fixes, shipped in-run)
 
@@ -97,3 +113,8 @@ doc archives once batch6 todo#2 (ES_OPT coverage) resolves.
 - **2026-08-10, slot-24 (ag_closeout_auditor)**: Phase 0-2 audit complete. 27 tradfi-primary candidates classified. 3
   genuinely orphaned (operator-gated/conflicted), 4 draft-covered, 14 covered-by-active-plans-or-self-dispatched, 6
   archivable (0 open). No batch13 draft — no AO-eligible bounded orphaned work to extract.
+- **2026-08-10, slot-22 (infra, archival)**: Reconciled the Round-1/Round-2 slug collision (this doc is Round 2).
+  Archived this doc with an `_r2` suffix per the `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` P3 todo;
+  `status` flipped `open` → `resolved` (the audit run itself is closed — Findings 1-3 remain pointers to
+  operator-gated/draft-covered/reconciled work, not open work owned by this report). Referrers repointed to the new
+  path.

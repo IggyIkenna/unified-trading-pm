@@ -64,11 +64,6 @@ PM_DIR = Path(__file__).resolve().parents[2]
 # plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md § "Full sweep".
 ALLOWED_DUPLICATE_STEMS: frozenset[str] = frozenset(
     {
-        # Active copy is a NEWER, independently-authored /ag-closeout-audit report written at a slug
-        # that had already been archived; neither side is a stale copy of the other.
-        "ag_closeout_audit_cefi_parked_2026_08_10.md",
-        "ag_closeout_audit_prediction_parked_2026_08_10.md",
-        "ag_closeout_audit_tradfi_parked_2026_08_10.md",
         # An archived snapshot of the generated active-plan index; both copies are intentional.
         "INDEX.md",
     }

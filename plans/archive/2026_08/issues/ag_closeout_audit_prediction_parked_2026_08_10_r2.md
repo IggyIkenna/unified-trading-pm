@@ -1,8 +1,8 @@
 ---
 doc_type: issue
 title:
-  "2026-08-10 /ag-closeout-audit prediction (sharded, agt-c11349) — strict-coverage-bar correction: 4 orphaned docs (all
-  non-batchable), 0 new batch"
+  "2026-08-10 /ag-closeout-audit prediction (sharded, agt-c11349, Round 2, slot 25) — strict-coverage-bar correction: 4
+  orphaned docs (all non-batchable), 0 new batch"
 summary: >-
   Independent sharded `/ag-closeout-audit prediction` run (dispatch agt-c11349, slot 25) that reached a DIFFERENT orphan
   count than the earlier 2026-08-10 runs (slot 26 `all`-mode + slot 24 sharded, which reported "0 real orphans" on the
@@ -16,7 +16,7 @@ summary: >-
   `## Todos` counts). 3 docs the naive bar would call orphaned are reclassified self-dispatched (`planning`+`open`, AO
   ingests their own open checkboxes) and 1 is genuinely multi-AG — both corrections recorded here so a future run does
   not over-report them.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -48,6 +48,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "audit run closed — all 4 orphaned docs are non-batchable (operator/time/design-gated per Findings 1-4); no fix commit
+  applies to this report itself"
 depends_on: []
 context_scope: [/scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py]
 source: >-
@@ -55,6 +57,19 @@ source: >-
   `$TRANCHE=prediction` set). Full per-doc Phase-1 Workflow (34 agents) + Phase-2 synthesis; Phase 3 not run (0 new
   batchable orphans).
 ---
+
+> **📦 ARCHIVED 2026-08-10 (\_r2)** — this is Round 2 of the same-date prediction closeout audit, re-created at the same
+> slug after Round 1 (`ag_closeout_audit_prediction_parked_2026_08_10.md`, slot 26 `all`-mode, archived earlier the same
+> day reporting "0 real orphans") was already archived. Both rounds are independently resolved and neither is stale:
+> Round 1 used the softer linkage-signal coverage check; this Round 2 re-audits under the strict dispatched-`## Todos`
+> coverage bar and surfaces 4 non-batchable orphans the softer signal missed — a methodological refinement, not a
+> contradiction (see summary above).
+>
+> **SKILL DEFECT (documented in `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`):** Round 1 was archived
+> via `safe-doc-push.sh`, but the rename/deletion was dropped, and Round 2 independently re-created the same slug with
+> different content. The active copy persisted alongside the archived copy. This archival resolves the stalemate. The
+> RECURRENCE is closed: the `/ag-closeout-audit` skill now checks `plans/archive/**` before writing a parked-findings
+> slug (`unified-trading-pm@ced0ff96b9`).
 
 # Parked findings — 2026-08-10 `/ag-closeout-audit prediction` (sharded, strict coverage bar)
 
@@ -170,3 +185,7 @@ accidental miss.
   self-dispatched `planning`+`open`, 1 genuinely multi-AG) — all 4 non-batchable. Prior 08-10 "0 orphans" conclusion
   (slot 24, linkage-signal-based) corrected: the linkage checker counts body-mentions as coverage; the strict bar does
   not, which is why 4 NA docs surface here. Phase 3: no new batch (0 batchable candidates). Ledger balanced 4==4.
+- **2026-08-10, slot-22 (infra, archival)**: Reconciled the Round-1/Round-2 slug collision (this doc is Round 2).
+  Archived this doc with an `_r2` suffix per the `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` P3 todo;
+  `status` flipped `open` → `resolved` (the audit run itself is closed — Findings 1-4 remain pointers to non-batchable
+  operator/time/design-gated work, not open work owned by this report). Referrers repointed to the new path.

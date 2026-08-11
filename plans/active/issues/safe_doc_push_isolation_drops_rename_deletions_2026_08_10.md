@@ -155,9 +155,10 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       genuinely different reports and still need a per-doc merge decision — they stay on `ALLOWED_DUPLICATE_STEMS` until
       that happens — now tracked as the last [DOCS] P3 todo below, deliberately not bundled here.
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-10 — `[unlock-plan]` GRANTED by direct operator ruling** (recorded in
-      `/plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md` § "Finding 3", where the ask was tracked; the
-      granted ruling is also stamped in each archived doc's banner). `plan_reconciler_findings_2026_08_06.md`
-      (`locked_by: plan_reconciler — run in progress`) and `plan_reconciler_findings_tradfi_2026_08_09.md`
+      `/plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md` § "Finding 3", where the ask was
+      tracked; the granted ruling is also stamped in each archived doc's banner).
+      `plan_reconciler_findings_2026_08_06.md` (`locked_by: plan_reconciler — run in progress`) and
+      `plan_reconciler_findings_tradfi_2026_08_09.md`
       (`locked_by: plan_reconciler (agt-642862) since     2026-08-09T16:00:00Z`) each still carried their lock in the
       ACTIVE copy while an archived copy sat at `status: resolved` — so the archival had already been performed on the
       strength of an unlock nobody had issued. Both archived copies carried a banner asserting the `[unlock-plan]` had
