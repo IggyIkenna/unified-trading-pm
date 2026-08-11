@@ -17,7 +17,7 @@ summary: >-
   copy — the run prints `isolation: named file not present in caller tree, skipping copy: <path>` and the deletion is
   dropped. So the documented-safe path is now create-only for ANY rename, and the SSOT's advice is actively wrong under
   the new default.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -48,7 +48,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "all todos done — unified-trading-pm@038cecf566 (last remaining P3); archived same-commit, 0 open"
 depends_on: []
 context_scope:
   [
@@ -60,6 +60,11 @@ source: >-
   Found during the 2026-08-10 autonomous ag-closeout close-out (slot 1) while verifying commit `8ac88720e6` against
   origin rather than trusting the ship script's exit code. `git show --name-status` showed 17 `A` and zero `D`.
 ---
+
+> **📦 ARCHIVED 2026-08-10 — all todos done, unlocked.** Every fix (deletion-propagation, fail-loud on caller error,
+> archival-ritual SSOT correction, `check_create_only_archive_commits.py` widening, the full 10-pair sweep, the 4-pair
+> reconciliation, the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink, and the final 3-pair `_r2` reconciliation — this doc's own
+> last P3 todo) shipped and verified on origin. `ALLOWED_DUPLICATE_STEMS` now carries only `INDEX.md`.
 
 # safe-doc-push isolated mode drops deletions → create-only archival commits
 
@@ -183,17 +188,17 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       the reverse direction of what this todo described: fix the archive copy's 2 refs, then delete the active copy.
       **Lesson**: a raw `diff` line count is not a measure of content divergence in a prose corpus that reflows — check
       `diff -w -B` before calling two documents different, or a reformat reads as 30 lines of lost work.
-- [ ] [DOCS] P3. **Reconcile the last 3 pairs — the `ag_closeout_audit_{cefi,prediction,tradfi}_parked_2026_08_10.md`
-      slug collisions.** These are the ONLY entries left on `ALLOWED_DUPLICATE_STEMS` besides the intentional
-      `INDEX.md`. Unlike the other seven, both sides here are REAL, independently-authored audit reports that happen to
-      share a slug: the archive copy is the earlier same-day run, the active copy a later one (cefi 61L vs 151L,
-      prediction 172L vs 115L, tradfi 95L vs 302L — note the size relationship is not consistent, so there is no "the
-      bigger one wins" shortcut). Verify with `diff -w -B` first (a raw `diff` overstates divergence here, per the todo
-      above). The RECURRENCE is already closed — the skill now checks `plans/archive/**` before writing a slug
-      (`unified-trading-pm@ced0ff96b9`) — so this is bounded cleanup of 3 existing docs, not an open-ended class. **Done
-      when**: each pair is either merged into one doc or split onto distinct slugs, both sides' findings are preserved
-      (neither run's findings may be dropped on the grounds that the other exists), referrers are repointed, and all 3
-      stems come off `ALLOWED_DUPLICATE_STEMS` leaving only `INDEX.md`.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-10 — `unified-trading-pm@038cecf566`.** cefi was already reconciled
+      (`unified-trading-pm@86a76c61e3`, split into `ag_closeout_audit_cefi_parked_2026_08_10_r2.md`) before this todo
+      was picked up. Reconciled the remaining 2 (prediction, tradfi) the same way: `diff -w -B` confirmed both sides
+      genuinely diverged (not a reformat), so each active copy was `git mv`'d into `plans/archive/2026_08/issues/` with
+      an `_r2` suffix, given an ARCHIVED banner citing Round 1 + this doc's skill-defect root cause, `status` flipped
+      `open`→`resolved` (the audit run itself is closed; both docs' non-batchable findings are preserved verbatim, none
+      dropped), and a Progress Log entry. 5 leading-slash path referrers repointed
+      (`plan_reconciler_findings_prediction_2026_08_10.md`, `tradfi_satellite_ao_dispatch_batch11/12_2026_08_10.md`,
+      `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, and this doc's own Finding-3 citation two todos up).
+      `ALLOWED_DUPLICATE_STEMS` shrunk 3→1, leaving only `INDEX.md`. Guard re-run against HEAD after the commit landed:
+      `no create-only archive/active duplicate pairs at HEAD`.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — `unified-trading-pm@843df70447` (LDR, post-push ancestry verified; whole-tree
       re-gate green). Land the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink** in
       `scripts/plan-hygiene/check_create_only_archive_commits.py` (drop `plan_reconciler_findings_2026_08_06.md`,

@@ -95,7 +95,7 @@ are already `status: active` per the skill's Phase 3 rule). This unblocks 4 docs
 - ~~`plan_reconciler_findings_2026_08_06.md` — locked_by: plan_reconciler (run in progress).~~ **RESOLVED 2026-08-10**:
   `[unlock-plan]` granted by direct operator ruling; lock was stale (the run that set it had ended, 0 open todos).
   Archived, and the stale duplicate left at `plans/active/issues/` deleted. See
-  `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` § "Full sweep".
+  `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` § "Full sweep".
 - ~~`plan_reconciler_findings_tradfi_2026_08_09.md` — locked_by: plan_reconciler (agt-642862).~~ **RESOLVED
   2026-08-10**: same ruling, same disposition.
 - `tradfi_backfill_oom_remediation_2026_06_24.md` — 0 open, 12 done. locked_by: live-defi-rollout.
