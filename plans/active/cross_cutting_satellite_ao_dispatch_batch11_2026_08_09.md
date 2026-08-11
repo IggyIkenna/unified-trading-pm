@@ -266,13 +266,24 @@ drift_direction: advance-code
       UTC) before this task was dispatched to slot 22. Verified against current HEAD: filter reads
       `name~^mtds-prediction-${VENUE_LOWER}-`, KALSHI and POLYMARKET runs no longer block each other. No code change
       needed. Repo: deployment-service@fce66018.
-- [ ] [TEST] P3. **Re-baseline the UEI-lifecycle contract-call ratchet for `canonical/crosscutting/honest_coverage.py`
-      post-split.** Source: same doc. Commit `27a80d2` ("feat(freshness): feed-SLA Phase 1") split the honest_coverage
-      cluster registries out from `honest_coverage.py` (900-line cap), so the UEI-lifecycle contract-call baseline of 27
-      moved WITH the split calls into the new registry files (the file now carries ~21, was 27) — not a deletion, not a
-      regression. Re-baseline the ratchet across `honest_coverage.py` + the split-out registry files' combined call
-      count so the warn-tier cross-repo line reflects the post-split file set accurately. Done when: the ratchet
-      baseline is updated and both UAC + IS QG pass with the new baseline. Repo: unified-api-contracts.
+- [x] ✅ [TEST] P3. **Re-baseline the UEI-lifecycle contract-call ratchet for
+      `canonical/crosscutting/honest_coverage.py` post-split — STALE PREMISE, baseline already accurate (verification
+      only).** Source: same doc. This is the per-file adapter/manifest contract-call ratchet —
+      `unified-trading-pm/scripts/quality_gates/check_adapter_contract_regression.py` (QG STEP 5.83, invoked cross-repo
+      via `base-service.sh`/`no_adapter_contract_regression.sh` against the shared `adapter_contract_baseline.yaml`,
+      scanning the whole workspace regardless of which repo's QG triggers it — the "cross-repo line" the todo refers
+      to). Verified live: the baseline already carries separate, correct entries for `honest_coverage.py` (38) and all
+      three split-out registry files created by `27a80d2` and later commits — `_honest_coverage_clusters.py` (4,
+      baselined 2026-06-22, 3 days after the split), `_honest_coverage_empty_reasons.py` (5, last touched 2026-08-10),
+      `_honest_coverage_logic.py` (11, baselined 2026-06-11) — summing to 58 combined contract calls across the
+      post-split file set. Direct pattern-count against the live files matches the baseline exactly (38/4/5/11, zero
+      drift), and running `check_adapter_contract_regression.py --regenerate-baseline` over the whole workspace produced
+      a **byte-identical** `adapter_contract_baseline.yaml` (`git diff --stat` empty) — definitive proof the baseline
+      already reflects current reality with no stale entry. The scanner's own workspace-wide run reports
+      `OK — 361 baselined file(s) at or above minimum`. UAC's own QG (`base-library.sh`) doesn't invoke this
+      service-template-only check directly, but IS's QG (`base-service.sh`) does and it passes cross-repo, which is what
+      the done-when's "both UAC + IS QG pass" resolves to. No baseline edit, no code change. Repo: unified-api-contracts
+      (verified, no change needed).
 
 ## Flagged, not extracted (stale-checkbox, needs the source doc's own maintainer to re-verify)
 
