@@ -899,3 +899,26 @@ against the reproduction script.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — read the full ~900-line, 25+-dispatch
   escalation history for a RE-TRIAGE trap; found none. Both remaining items are self-declared design/maintainer calls.
+- **2026-08-11 (data_pipeline_failure escalation worker, agt-a45914, slot 4) — 24th+ dispatch: numerator DROPPED again
+  (18,999→8,670), continuing healthy backlog resolution; no code fix needed.** Received another `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL page for `(cefi, book_snapshot_5)`: 8,670/958,967 = 0.9% (abs>=500 path), alert context
+  labeled "STATIC BACKLOG — only 15 attempted_failed row(s) in the last 1d (below the 500-row materiality floor); a
+  decaying trickle on already-tracked backlog, not a fresh regression." No issue doc pre-linked
+  (`Filed issue: (none — alert carries the details)`); found this doc via the standard pre-task plan/issue
+  conflict-check grep. Re-verified all seven fix commits are still ancestors of `origin/live-defi-rollout` (fresh
+  `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service
+  `a564cca`/`1b035c52`/`9102eb9b` — all OK. Confirmed `deployment_service/data_pipeline_monitors/escalation_dedup.py`
+  present on `origin/live-defi-rollout` HEAD, and the `dp_escalation_checkpoint` frontmatter field is still ABSENT on
+  this doc — consistent with the 23rd dispatch's documented expectation: `9102eb9b`'s dedup gate only advances its
+  per-doc checkpoint going forward from the fix's landing, so a dispatch generated before the next checkpoint write is
+  not retroactively suppressed. The numerator's continued drop (300,674 → 18,999 → 8,670 across the last four verified
+  readings, ratio 26.8% → 2.0% → 0.9%) is the OPPOSITE signature of the schema-contract mechanism (which only ever
+  pushed `attempted_failed` UP, never down by an order of magnitude) — straightforwardly the normal idempotent backfill
+  re-attempt working down the historical backlog this doc's Progress Log already flagged, with the 24h trickle (15 rows)
+  well under the 500-row materiality floor and `stale_backlog_annotation()` correctly labeling it STATIC BACKLOG.
+  **Conclusion: no code fix needed** — all three root-cause fixes (contract shape, ts_event derivation, nullable levels)
+  plus both alerting-layer fixes (materiality downgrade, dedup-gap) continue to hold under production load. Session
+  cost: doc reads + git-ancestor batch check (7 commits) + this Progress Log append, no GCS read, no code change, no VM
+  launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 24th+ dispatch for this
+  condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s closed Option A
+  dedup fix (the checkpoint-write lag documented in the 23rd dispatch's own entry).
