@@ -498,9 +498,20 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       so downstream features/strategy cannot tell them from correct ones. Scope at the 14:19Z snapshot (higher now — the
       fleet was still writing): `@INV` 3,347 shards — OKX-SWAP 2,172 / KRAKEN-FUTURES 667 / BYBIT 412 / DERIBIT 96 —
       plus 766 unsuffixed BYBIT shards the heuristic resolved to `inverse`. Timeframes 1d 3,030 · 4h 315 · 1h 2. The
-      108,575 linear shards are correct and must NOT be touched. A prod-bucket delete is human-only per the delete-
-      safety protocol, so this needs the operator: delete the objects + flip the manifest rows to `attempted_failed`, or
-      accept wrong data until `contract_size` lands and a re-derive overwrites it.
+      108,575 linear shards are correct and must NOT be touched. **Operator chose delete + manifest-flip 2026-08-11;
+      that route then proved to require prod manifest SURGERY, so it is held pending a re-decision.** The blocker:
+      `_merge_shard_frames`' **captured-outranks tie-break** (`_read_index.py`, added 2026-07-13 by
+      `sports_index_recency_masked_captured_atoms_2026_07_13`) makes `capture_status='captured'` beat any non-captured
+      row for the same key **regardless of recency** — so writing a `record_failed` row does NOT flip these shards, the
+      stale `captured` row keeps winning at read time. Removing the row needs a maintenance rewrite, and UTL exposes no
+      instrument-scoped removal (only `purge_venue_before_date`, venue+date-scoped, and the whole-corpus
+      `rebuild_manifest_from_canonical_paths`) — i.e. exactly the operation class that destroyed 7,185 rows describing
+      ~344k objects in the 2026-07-17 consolidator incident cited by the delete-safety SSOT. Deleting the objects
+      WITHOUT the flip is strictly worse than today: it converts wrong-but-present data into phantom rows. **Safer route
+      now available**: `--skip-existing` is opt-in (`store_true`, default False) and `--force` exists, so once
+      `contract_size` lands a scoped re-derive OVERWRITES each wrong parquet in place and writes a fresh `captured` row
+      — correct values, no delete, no manifest surgery. Recommend that unless the wrong values must stop being readable
+      sooner than `contract_size` can land.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
