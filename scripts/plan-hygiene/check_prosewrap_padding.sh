@@ -149,6 +149,24 @@ _all_content_previews() {
   ' "$@"
 }
 
+# Checks the exit status of a just-run `sort -u` pipe (pass "$?" immediately after —
+# every sort call below is the RIGHTMOST stage of its pipeline, so pipefail already makes
+# the pipeline's/command-substitution's own $? equal sort's exit code, masking nothing).
+# Called directly (never from inside a `$(...)` command substitution) so `exit` here
+# terminates the actual script, not just a throwaway subshell. A non-zero sort exit —
+# e.g. the locale/glibc "Illegal byte sequence" collation failure this script's LC_ALL=C
+# pin already guards against — is a HARD error: silently continuing past a possibly-
+# truncated sort output is exactly the failure mode
+# (prosewrap_padding_precommit_gate_locale_false_positive_2026_08_09.md) that made this
+# script false-flag byte-identical HEAD content as a NEW violation. Fail loudly instead.
+_check_sort_exit() {
+  local rc="$1" ctx="$2"
+  if [ "$rc" -ne 0 ]; then
+    echo "❌ check_prosewrap_padding: sort failed (exit ${rc}) computing ${ctx} — locale/encoding regression? LC_ALL=C is already pinned at the top of this script; refusing to continue on a possibly-truncated comparison set. See plans/active/issues/prosewrap_padding_precommit_gate_locale_false_positive_2026_08_09.md." >&2
+    exit 1
+  fi
+}
+
 if [ "${1:-}" = "--only" ]; then
   shift
   QUIET=0
@@ -178,8 +196,16 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    # The grep upstream of each sort legitimately exits 1 on "no match" (the common case,
+    # not an error) -- materialize its output into a var FIRST, then re-pipe that fixed
+    # string through a standalone `printf | sort` pair so pipefail's $? reflects ONLY
+    # sort's own exit status, never grep's incidental no-match code.
+    raw_cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    cur_backtick="$(printf '%s\n' "$raw_cur_backtick" | sort -u)"
+    _check_sort_exit "$?" "cur_backtick for $f"
+    raw_head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    head_backtick="$(printf '%s\n' "$raw_head_backtick" | sort -u)"
+    _check_sort_exit "$?" "head_backtick for $f"
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -195,8 +221,12 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    raw_cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://')"
+    cur_overindent="$(printf '%s\n' "$raw_cur_overindent" | sort -u)"
+    _check_sort_exit "$?" "cur_overindent for $f"
+    raw_head_all_content="$(printf '%s' "$head_content" | _all_content_previews)"
+    head_all_content="$(printf '%s\n' "$raw_head_all_content" | sort -u)"
+    _check_sort_exit "$?" "head_all_content for $f"
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
@@ -306,8 +336,16 @@ fi
 if [ -n "$DIFF_BASE" ]; then
   BASE_SIGS_FILE="$(mktemp)"
   trap 'rm -f "$BASE_SIGS_FILE"' EXIT
-  _violations_at "$DIFF_BASE" | sort -u > "$BASE_SIGS_FILE"
-  HEAD_SIGS="$(_violations_at "" | sort -u)"
+  # Materialize _violations_at's output into a var FIRST, then re-pipe that fixed string
+  # through a standalone `printf | sort` pair -- same isolation rationale as the --only
+  # branch above: _violations_at's own internal exit status (its last loop iteration)
+  # is not a reliable stand-in for "did sort fail", so don't let it share a pipe with sort.
+  raw_base_sigs="$(_violations_at "$DIFF_BASE")"
+  printf '%s\n' "$raw_base_sigs" | sort -u > "$BASE_SIGS_FILE"
+  _check_sort_exit "$?" "base signature set at $DIFF_BASE"
+  raw_head_sigs="$(_violations_at "")"
+  HEAD_SIGS="$(printf '%s\n' "$raw_head_sigs" | sort -u)"
+  _check_sort_exit "$?" "HEAD signature set"
   NEW_SIGS="$(comm -23 <(printf '%s\n' "$HEAD_SIGS") "$BASE_SIGS_FILE" 2>/dev/null || true)"
   NEW_COUNT=0
   [ -n "$NEW_SIGS" ] && NEW_COUNT=$(printf '%s\n' "$NEW_SIGS" | grep -c .)
