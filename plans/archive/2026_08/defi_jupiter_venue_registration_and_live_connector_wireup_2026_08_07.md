@@ -7,7 +7,7 @@ summary: >-
   onchain_event_poller.py's Aave-liquidation path into a real MTDS live connector. 2 of the operator's 5 named Jupiter
   surfaces (execution-service support, MVP-venue-list inclusion) turned out to already exist / be automatic — see "Scope
   corrections vs the operator's framing" below.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -56,6 +56,15 @@ context_scope:
 ---
 
 # Jupiter DeFi venue registration + MTDS live-connector wire-in (2026-08-07)
+
+> **✅ ARCHIVED 2026-08-11 — COMPLETE.** All 6 todos shipped and verified on origin/live-defi-rollout: UAC
+> `JUPITER-SOLANA` live-venue registration (unified-api-contracts@ad003d03), instruments-service
+> `JupiterReferenceDataAdapter` factory wiring (instruments-service@06c6f2dd), MTDS `jupiter_solana_ws` +
+> `aave_liquidations_ethereum_ws` live connectors (market-tick-data-service@9e9c9817 / @73abd655), execution-service
+> `JupiterConnector` wiring (execution-service@507093de), audit-doc + Solana-DeFi codex close-out (unified-trading-pm
+> todo 6), and the xfail-tracking rule (unified-trading-pm@32c5440a8d). Independent re-verification by the finalize plan
+> (slot-17 review) found no mis-citations. Archived by the gated finalize companion's todo 2 (6-step ritual). Successor:
+> none.
 
 ## Why this plan exists
 
@@ -251,6 +260,9 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
 
 ## Progress Log
 
+- **2026-08-11 (slot-24, finalize todo 2)**: plan archived to `plans/archive/2026_08/` per the standard 6-step ritual
+  (all todos done + independently re-verified by the finalize's slot-17 review; no deferrals; codex already updated by
+  todo 6). Every corpus referrer repointed to the archive path.
 - **2026-08-07 (interactive session)**: plan authored per operator ruling on
   `defi_adapter_dead_code_audit_2026_07_24.md` §6 items 1 and 3. Full cross-repo investigation done before drafting (UAC
   `venue_adapter_keys.py`/`defi_venues.py`/`_mvp_scope_rules.py`, IS `factory.py`/`engine/orchestrator/defi.py`, MTDS

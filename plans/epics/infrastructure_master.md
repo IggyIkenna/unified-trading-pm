@@ -59,8 +59,8 @@ related_plans:
   - ../active/data_pipeline_check_mdps_features_2026_07_20_finalize_2026_07_27.md
   - ../active/defi_compute_gcp_migration_2026_08_08.md
   - ../active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md
-  - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md
-  - ../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md
+  - ../archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md
+  - ../archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md
   - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md
@@ -610,9 +610,9 @@ Cloud Run — data already lives in GCS
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: DeFi AWS-to-GCP compute migration —
 finalize
 
-### [`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07`](../active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md)
+### [`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07`](../archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md)
 
-**status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: Jupiter DeFi venue registration
+**status**: complete · **estimate**: 4 cal AI-days (class: brand-new) **title**: Jupiter DeFi venue registration
 (full-stack) + wire in 3 orphaned MTDS live-connector building blocks
 
 ### [`qg_host_adaptive_resource_governor_2026_07_14`](../active/qg_host_adaptive_resource_governor_2026_07_14.md)
@@ -682,9 +682,9 @@ determinism + capability-registry — Track 24 extraction
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07`](../active/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md)
+### [`defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07`](../archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — Jupiter DeFi venue
+**status**: complete · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — Jupiter DeFi venue
 registration + MTDS live-connector wire-in
 
 ### [`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06`](../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md)

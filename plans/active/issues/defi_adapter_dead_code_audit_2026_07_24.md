@@ -408,7 +408,7 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       capture-side adapter), (e) execution-service support so Jupiter routes are actually tradable. This is real,
       multi-repo build-out, not a same-pass fix — needs its own scoped plan (LOCAL vs AO-dispatch TBD, see this doc's
       Progress Log). **Tracked as of 2026-08-07**: AO-dispatched plan
-      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this (todos
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` now covers this (todos
       1-4 + close-out todo 6, which flips this checkbox) — that plan's investigation also found (c) is automatic (no
       separate list) and (e) already exists unwired (`JupiterConnector`), narrowing the real remaining scope; see its
       "Scope corrections vs the operator's framing" section. ✅ **DONE 2026-08-10 — that plan's todos 1-5 all shipped**:
@@ -423,12 +423,18 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `GovernanceParamsEventPoller` never runs in production; either wire the poller into a real entrypoint (a
       `live/connectors/`-style registration, or a scheduled batch job) or update the plan/codex record to state plainly
       that this feature has never been live.
+- [ ] [DOC] P3. market-tick-data-service: repoint the now-dangling `/plans/active/` plan-reference in
+      `market_tick_data_service/live/connectors/aave_liquidations_ethereum_ws.py`'s module docstring (line ~10 — "Plan:
+      /plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md todo 5") to
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` (build plan
+      archived 2026-08-11 by the finalize ritual). The sibling `jupiter_solana_ws.py` docstring's bare-filename
+      reference (line 22) still resolves and can be repointed in the same pass if editing that file.
 - [x] ✅ [SERVICE] P2. **RULED 2026-08-07 (operator) — wire in, do not delete.** market-tick-data-service:
       `adapters/defi/live/onchain_event_poller.py` and `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}`
       register into the real `live/connectors/` registration mechanism (`register_all()` /
       `WS_FEED_CONNECTOR_FACTORIES`) — the code is already built + tested per § 2.2, this is wiring, not new
       implementation. **Tracked as of 2026-08-07**: AO-dispatched plan
-      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 5 covers
+      `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 5 covers
       `onchain_event_poller.py` (Aave-liquidation path only — its own investigation found none of the 3 named classes is
       a `WSFeedConnector`-conforming self-registering class, so real new wrapper code is needed, not a one-line
       `register_all()` addition; the Uniswap-Swap-topic half is deliberately excluded as a duplicate of the already-live
@@ -566,7 +572,8 @@ files.
   items are now real scoped engineering work that needs its own plan (dispatch destination TBD), not something this
   issue doc itself executes.
 - **2026-08-07 (interactive session)**: authored the AO-dispatched plan pair
-  `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` + `..._finalize_2026_08_07.md`
+  `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` +
+  `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md`
   covering both 2026-08-07 rulings, per full cross-repo investigation (UAC/
   instruments-service/market-tick-data-service/execution-service). Both this doc's §6 checkboxes updated with pointers
   to that plan (not flipped — work not yet shipped). Key findings that change the operator's own framing: Jupiter's
@@ -579,7 +586,8 @@ files.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read §6 end to end (4 open items).
   Items 1 (Jupiter) and 3 (onchain_event_poller wiring) are deliberately-open citation-trackers only — both explicitly
   say "leave this checkbox open until that plan's todo N lands," with the REAL execution already `assigned_vm: planning`
-  in `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; flipping this doc's own `assigned_vm`
+  in `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; flipping this
+  doc's own `assigned_vm`
   would risk a worker picking these up as fresh, redundant work. Item 4 (Helius/native_staking_handler consolidation)
   gained a full operator ruling + detailed scoping TODAY (2026-08-08) and is now genuinely bounded — a strong RECLASSIFY
   candidate on its own, flagged for a future round or a dedicated extraction. Item 2 (governance-params-poller
@@ -588,9 +596,9 @@ files.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 579-line audit doc, 6 prior na-eligibility-audit
   rounds all landed KEEP-NA valid, re-confirmed today. 2 open checkboxes: a deliberate citation-tracker held open until
-  `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6 lands (verified active/planning, real
-  citation), plus one other gated item. Doc stays `assigned_vm: NA`.
-- **2026-08-10 (slot-18, `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6)**: closed out
+  `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6 lands
+  (verified active/planning, real citation), plus one other gated item. Doc stays `assigned_vm: NA`.
+- **2026-08-10 (slot-18, `/plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6)**: closed out
   this doc's §6. Jupiter checkbox (item 1) flipped ✅ citing the plan's shipped SHAs (unified-api-contracts@ad003d03,
   instruments-service@06c6f2dd, market-tick-data-service@9e9c9817, execution-service@507093de,
   market-tick-data-service@73abd655). The wire-in item (item 3) was already flipped by the 2026-08-08 alchemy/thegraph

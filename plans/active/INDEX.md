@@ -195,12 +195,6 @@ by hand._
 - [`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`](./defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md)
   — Gated finalize companion for issues/defi_expected_unattempted_backlog_1m_2026_07_03.md (reclassified NA→planning,
   na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the `_INSTRUMENT_TYPE_ALIASES` +…
-- [`defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07`](./defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md)
-  — Executes the operator's 2026-08-07 ruling on defi_adapter_dead_code_audit_2026_07_24.md §6 — register Jupiter
-  (Solana DEX aggregator) as a live DeFi venue across UAC/instruments-service/MTDS/execution-service, and wire…
-- [`defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07`](./defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md)
-  — Gated finalize companion for defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md — re-verifies
-  the build's evidence (incl. its own todo 6's audit-doc + codex-doc edits), then archives both docs per…
 - [`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09`](./defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md)
   — Gated closeout for issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md — machine-held
   via depends_on + gate_on_depends: true until the source doc's sole remaining item (the bounded

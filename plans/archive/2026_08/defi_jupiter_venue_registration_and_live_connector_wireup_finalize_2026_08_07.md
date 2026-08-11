@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion for defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md — re-verifies the
   build's evidence (incl. its own todo 6's audit-doc + codex-doc edits), then archives both docs per
   plan-completion-and-archival-discipline once every todo is done.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -48,6 +48,14 @@ context_scope:
 
 # Finalize — Jupiter DeFi venue registration + MTDS live-connector wire-in
 
+> **✅ ARCHIVED 2026-08-11 — COMPLETE.** Both todos done. Todo 1 (slot-17 review) independently re-verified all 6 build
+> SHAs against origin/live-defi-rollout — no mis-citations found; todo 6's audit-doc + codex edits confirmed landed.
+> Todo 2 (slot-24) executed the full 6-step archival ritual on both this doc and the build plan: archived both to
+> `plans/archive/2026_08/`, banners + `status: complete` added, and every corpus referrer repointed
+> (`infrastructure_master.md` list + 2 section headers, `INDEX.md` entries removed, `defi_satellite_ao_dispatch_batch11`,
+> `defi_adapter_dead_code_audit_2026_07_24.md`). The audit doc stays active — its §6 governance-params-poller re-verify
+> item remains open (never in this plan's scope). Successor: none.
+
 Machine-held (`gate_on_depends: true`) until every todo in
 `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` is done. Do not start manually before then.
 
@@ -71,16 +79,26 @@ Machine-held (`gate_on_depends: true`) until every todo in
       to the build plan (not duplicated content), codex `solana-defi-coverage.md` JUPITER line now "live connector
       SHIPPED" + `spot_trades`→`dex_pool_swaps` corrected (no `spot_trades` refs remain); edit commit
       unified-trading-pm@c328a59f20 on origin. **No mis-citations found — nothing to correct in the build plan.**
-- [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
+- [x] ✅ [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` and this finalize doc itself: archive
       both to `plans/archive/2026_08/`, and fix every corpus referrer path (grep the repo for the old paths and update
       each hit). Also check whether `defi_adapter_dead_code_audit_2026_07_24.md` now has zero remaining open `- [ ]`
       todos in §6 (the governance-params-poller re-verify item stays open — it was never in this plan's scope) — if it
       does not, leave it active; do not archive it prematurely. Done-when: `regenerate_active_plan_inventory.py` shows
-      zero orphan referrers to the archived paths.
+      zero orphan referrers to the archived paths. — ✅ DONE 2026-08-11 (slot-24): 6-step ritual run on both docs —
+      archived to `plans/archive/2026_08/`, banners + `status: complete` added, all corpus referrers repointed
+      (`infrastructure_master.md` list + section headers, `INDEX.md` entries removed,
+      `defi_satellite_ao_dispatch_batch11_2026_08_09.md`, `defi_adapter_dead_code_audit_2026_07_24.md`); audit doc §6
+      left active (governance-params-poller re-verify item still open — correctly not archived).
+      `regenerate_active_plan_inventory.py` shows zero orphan referrers to the archived paths.
 
 ## Progress Log
 
 - **2026-08-07 (interactive session)**: finalize plan authored alongside the build plan per `task_template.md`'s
   finalize-plan-coverage rule.
+- **2026-08-11 (slot-17 review)**: todo 1 done — independently re-verified all 6 build SHAs (see todo 1 marker). No
+  mis-citations found; nothing to correct in the build plan.
+- **2026-08-11 (slot-24)**: todo 2 done — full 6-step archival ritual on the build plan + this doc. See the ARCHIVED
+  banner for the referrer-fixup summary. Audit doc `defi_adapter_dead_code_audit_2026_07_24.md` left active (its §6
+  governance-params-poller re-verify item is genuinely still open and was never in this plan's scope).

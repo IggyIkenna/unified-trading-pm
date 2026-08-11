@@ -448,8 +448,8 @@ item here.
   doc", explicitly owned by the sibling `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`'s own reconciliation
   todo, not independently actionable here.
 - `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` §6 items 1 and 3 (Jupiter venue registration,
-  onchain_event_poller wiring) — both explicitly citation-only, real execution already `assigned_vm: planning` in the
-  ACTIVE `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; item 2 (governance-params-poller
+  onchain_event_poller wiring) — both explicitly citation-only, real execution already shipped + archived in
+  `plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; item 2 (governance-params-poller
   cross-repo re-verify) remains an unruled, cross-repo big finding, genuinely operator-notify not worker-bounded.
 - `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` item 3 (lending_indices stall
   root-cause diagnosis) — held by the ACTIVE `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s own Deferred section
