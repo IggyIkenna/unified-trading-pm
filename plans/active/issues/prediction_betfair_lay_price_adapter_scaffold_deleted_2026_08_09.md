@@ -375,3 +375,20 @@ concrete reason not to).
     mismatch that got both Tokyo and `europe-west4` 403'd (Belgium/`europe-west1` carries the same mismatch risk despite
     being cheaper). Retagged todo 4 from `BLOCKED-OPERATOR-DECISION` to `OPERATOR-DECIDED`, now AO-dispatchable.
     Provisioning the actual `europe-west2` egress path is not done in this session.
+  - **2026-08-11 (slot-12, infra): egress provisioned and verified; credential gate discovered.**
+    Provisioned a `betfair-session-refresh` VM (e2-micro, `europe-west2-b`, external IP `35.246.114.208`,
+    SA `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`). Verified the London egress works:
+    `POST https://identitysso.betfair.com/api/login` returned HTTP 200 with a Betfair-authored JSON response
+    (`{"status":"FAIL","error":"INVALID_USERNAME_OR_PASSWORD"}`) — NOT the geo-block 403 "Restricted" HTML page
+    that Tokyo and `europe-west4` got. CF-RAY header confirms the request transited Cloudflare's LHR (London Heathrow)
+    edge.
+
+    **However, the `betfair-username`/`betfair-password`/`betfair-app-key` GSM secrets contain PLACEHOLDER values**
+    from plan-6-phase-6, not real Betfair account credentials. The refresh script cannot populate
+    `betfair-session-token` until the operator updates these secrets with actual account credentials.
+
+    **What's done**: egress path provisioned, verified end-to-end (London IP → Betfair API → HTTP 200 response).
+    **What remains**: operator populates real credentials in GSM → re-run the refresh script from this VM
+    (`gcloud compute ssh betfair-session-refresh --zone=europe-west2-b`) → confirm `betfair-session-token` populates
+    → live-verify per the original done-when. Todo 4 stays unchecked pending credential resolution; this is now a
+    credential-blocked item, not a network-blocked one.
