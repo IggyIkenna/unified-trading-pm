@@ -101,6 +101,34 @@ is killed — hence both the spin and the leak.
       own reservations: at the time of measurement it reported `reserved: 0MB` and `running heavy phases: 0` while the
       box was at load 283, because the load came from processes it had never admitted.
 
+## Second site, worse blast radius — the ORCHESTRATOR VM (2026-08-10, slot 3)
+
+This doc's measurements are from the operator's 10-core laptop, where the symptom was false-red quality gates. The same
+leak is also on the **orchestrator VM**, where it does something considerably worse.
+
+Measured there 2026-08-10 (read-only via SSM, then remediated):
+
+- **41 leaked `bats-claim-hb-test-*` sessions** — not 7. Oldest from Aug 9; the count grew 25 → 41 _during_ the session
+  that was diagnosing it, i.e. ~1 new leak every 4 minutes.
+- **Every single one ended in `-longer-suffix`.** That is the tell, and it identifies the defect exactly: the
+  `exact-match target` test creates `${TMUX_SESSION}-longer-suffix` and kills it on the **last line of its own test
+  body**, while `teardown()` only ever killed `${TMUX_SESSION}`. Any assertion failure above that line — which is
+  precisely what a loaded host causes — skips the kill and leaks the session permanently.
+- `/tmp` on that box is an **8 GiB tmpfs** and it reached **100% (15 MiB free)**. The leaked sessions were a contributor
+  alongside a much larger one (an agent's ad-hoc `gsutil ls -r` streaming multi-GiB parquet through `/tmp` — banned, now
+  blocked at the PreToolUse hook).
+- Consequence: `tmux_spawn.spawn` fails with `[Errno 28] No space left on device`, so **every escalation dispatch died
+  and re-queued**. Four dispatches failed that way at 16:41-16:44; the `unified-trading-pm` SIT walls reached 190+
+  attempts on the resulting re-escalation treadmill. This is a fleet-wide CI-recovery outage, not a slow test.
+
+Fixed at source in this session (see the Progress Log): `teardown()` now owns BOTH session names — the property that
+matters is that bats runs teardown unconditionally, including after a failed assertion; every fixture tmux call is
+`timeout`-bounded (portable `timeout`/`gtimeout` fallback); and each test gets its own `TMUX_TMPDIR` socket so a leak
+can never again land on the default socket beside the real `orch-slot-*` sessions. One non-obvious constraint worth
+recording: the isolated socket dir must be SHORT and must **not** be nested under `BATS_TEST_TMPDIR` — a unix socket
+path is capped at ~104 bytes by `sockaddr_un.sun_path`, and on macOS `BATS_TEST_TMPDIR` is already ~90, so the obvious
+nesting fails every session with `error connecting to ... (File name too long)`.
+
 ## Non-goals
 
 Deleting or skipping the tmux tests. They cover the slot-claim heartbeat, which is real multi-agent-safety behaviour;

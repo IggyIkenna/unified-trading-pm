@@ -52,7 +52,7 @@ on any one alone is NOT sufficient.
    `gs://{pid}-events-{env}/events/{service}/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl`. Cloud-agnostic via UTL
    `setup_events()` (GCP path; AWS S3 mirror under `s3://{aws_pid}-events-{env}/...`). Consumer: deployment-UI events
    tab (UEI archived per CLAUDE.md "System-First Architecture"); ad-hoc CLI consumer via UTL helpers.
-2. **VM heartbeat daemon** — `deployment-service/deployment_service/vm/heartbeat_daemon.py` (forked at boot from
+2. **VM heartbeat daemon** — `deployment-service/scripts/vm/heartbeat_daemon.py` (forked at boot from
    `setup-data-pipeline-vm.sh`). Heartbeats every ~60s into the **deployment registry** at
    `gs://deployment-scripts-{pid}/deployments/active/<deployment_id>.json` (live VMs) → archived to
    `deployments/archive/<YYYY-MM-DD>/<deployment_id>.json` on `DEPLOYMENT_COMPLETED` / `DEPLOYMENT_FAILED`. Programmatic
@@ -191,8 +191,9 @@ launches and codified-discipline (alerting rules + correlated-validation) for li
   [`../02-data/honest-absence-downstream-handling`](/codex/02-data/honest-absence-downstream-handling.md) — 1440-NaN
   reference framing + reason taxonomy for `record_empty`.
 - **Code**: `unified-trading-library/events/` (event emission helpers + `setup_events()` cloud-agnostic dispatcher);
-  `deployment-service/deployment_service/vm/heartbeat_cli.py` + `heartbeat_daemon.py` (per-VM heartbeat); deployment-UI
-  events tab + Monitor sub-tabs (`deployment-ui-architecture.md`); alerting-service (heartbeat-rule consumers); UAC
+  `deployment-service/deployment_service/vm/heartbeat_cli.py` + `deployment-service/scripts/vm/heartbeat_daemon.py`
+  (per-VM heartbeat); deployment-UI events tab + Monitor sub-tabs (`deployment-ui-architecture.md`); alerting-service
+  (heartbeat-rule consumers); UAC
   `unified_api_contracts.canonical.crosscutting.{lifecycle_events,live_heartbeat_thresholds,alert_codes}` (closed sets
   for event types + per-archetype thresholds + alert taxonomy).
 

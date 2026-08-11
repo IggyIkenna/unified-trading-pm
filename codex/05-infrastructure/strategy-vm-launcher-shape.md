@@ -35,6 +35,12 @@ related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 
 # Strategy VM launcher shape — paper + live
 
+> **SCOPE (verified 2026-08-11)**: this doc is authoritative for the two CAPITAL-BEARING strategy launchers only —
+> `launch-strategy-paper-vm.sh` and `launch-strategy-live-vm.sh`. Two further `launch-strategy-*-vm.sh` scripts have
+> since been added under `deployment-service/scripts/vm/` (`launch-strategy-backtest-grid-vm.sh`,
+> `launch-strategy-test-vm.sh`); neither touches custody or real capital, and neither is covered here. "Two" below means
+> "the two in scope", not "the only two that exist".
+
 > **Entry-point SSOT** for the two strategy VM launchers added in Phase 1 of
 > `promote_workflow_may23_cli_path_2026_05_10.md`. Full launcher-governance rules:
 > `/codex/05-infrastructure/launcher-script-ssot.md`.

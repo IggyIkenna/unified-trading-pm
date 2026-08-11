@@ -86,11 +86,42 @@ def test_quickmerge_trailer_not_flagged(repo: Path):
     assert "quickmerge" in why
 
 
-def test_carveout_scripts_not_flagged(repo: Path):
-    # scripts/ and .github/ .py are NONSOURCE_DIR → carve-out (no source changed).
+def test_gate_infra_scripts_not_flagged(repo: Path):
+    """The chicken-and-egg subset of scripts/ stays carved out.
+
+    A corrected gate cannot pass through the gate it is fixing, so the gate machinery itself
+    must remain pushable without a trailer.
+    """
+    for path in (
+        "scripts/quality_gates/check_x.py",
+        "scripts/quality-gates-base/step.py",
+        "scripts/hooks/guard.py",
+        "scripts/cicd/promote.py",
+    ):
+        sha = _commit(repo, path, "y = 1\n", f"chore(qg): touch {path}")
+        bad, _ = csq.commit_violates(sha)
+        assert bad is False, path
+
+
+def test_ordinary_scripts_py_is_now_gated_source(repo: Path):
+    """NARROWED 2026-08-10: `scripts/**` is no longer a blanket carve-out.
+
+    D16's blanket carve let market-tick-data-service's restamp backfill script reach
+    live-defi-rollout with a `gsutil ls` call and no quality gate, reddening LDR + a promote PR
+    fleet-wide. Scripts under `scripts/` run against PRODUCTION data, so they are gated source;
+    only the gate machinery itself (above) keeps the exemption.
+    """
     sha = _commit(repo, "scripts/migrate.py", "y = 1\n", "chore: migration script")
+    bad, why = csq.commit_violates(sha)
+    assert bad is True
+    assert "scripts/migrate.py" in why
+
+
+def test_gate_infra_anchor_is_prefix_not_substring(repo: Path):
+    """A nested path must not inherit the exemption by substring match."""
+    sha = _commit(repo, "src/vendor/scripts/cicd/x.py", "y = 1\n", "feat: vendored")
     bad, _ = csq.commit_violates(sha)
-    assert bad is False
+    assert bad is True
 
 
 def test_docs_only_not_flagged(repo: Path):

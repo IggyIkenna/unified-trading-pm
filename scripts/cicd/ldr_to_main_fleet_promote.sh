@@ -569,6 +569,40 @@ process_repo() {
   # gates pass (further down). One ref per repo, reused across ticks.
   # Per-SHA immutable ref: name encodes the validated commit SHA so the ref never needs
   # force-update — a new SHA gets a new ref; the old one is closed+deleted (stale cleanup).
+  # ── Fresh-RED skip: don't mint a promote PR for a tree the LDR monitor just failed ─────────
+  #
+  # ldr_red_promote_pr_waste_2026_08_10. `ldr_ci_status` (written by ldr_ci_monitor.py) is a
+  # MONITOR axis, deliberately decoupled from promotion — and it stays decoupled here in every
+  # case but one. The single case worth skipping is provably-wasted work: the monitor read RED
+  # against EXACTLY the sha we are about to promote. Then the promote PR's own quality-gates-v2
+  # is guaranteed to fail on the same tree, so cutting it buys a full CI run, a red PR, and a
+  # second CRITICAL page for a failure already reported once (measured: market-tick-data-service
+  # 2026-08-10, LDR red 17:19 -> PR #939 red 17:31, same e14f358b tree, two pages).
+  #
+  # WHY THE SHA MATCH IS LOAD-BEARING, not belt-and-braces: a level-only gate is what produced
+  # tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09 — a stale FAILING vetoed PR creation,
+  # and a fresh PR was the only thing that could clear it. Requiring sha equality makes this
+  # SELF-CLEARING by construction: the instant anyone pushes a fix, the tip moves, the shas stop
+  # matching, and promotion resumes on the next tick with no manual unblock. A repo can never be
+  # wedged by a red it has already moved past.
+  #
+  # FAIL-OPEN on every other state — GREEN, UNKNOWN, absent field, or RED against a stale sha all
+  # promote exactly as before. That matters because the monitor is hourly + conditional-dispatch
+  # and fail-opens to UNKNOWN: a dead or lagging monitor must never be able to freeze the fleet's
+  # promotion pipeline. This gate can only ever SKIP work that was already going to fail.
+  LDR_CI_STATUS=$(jq -r --arg r "$REPO" '.repositories[$r].ldr_ci_status // empty' \
+    workspace-manifest.json 2>/dev/null || echo "")
+  LDR_CI_STATUS_SHA=$(jq -r --arg r "$REPO" '.repositories[$r].ldr_ci_status_sha // empty' \
+    workspace-manifest.json 2>/dev/null || echo "")
+  if [ "$LDR_CI_STATUS" = "RED" ] && [ -n "$LDR_CI_STATUS_SHA" ] && [ -n "$LDR_SHA" ] \
+     && [ "$LDR_CI_STATUS_SHA" = "$LDR_SHA" ]; then
+    echo "SKIP $REPO: ldr_ci_status=RED for the exact tip being promoted (${LDR_SHA:0:12}) — a promote PR on this tree is a guaranteed-red CI run + duplicate page. Self-clears the moment the tip moves past it (no manual unblock)."
+    return 0
+  fi
+  if [ "$LDR_CI_STATUS" = "RED" ]; then
+    echo "LDR-RED (stale, promoting anyway) $REPO: ldr_ci_status=RED but against '${LDR_CI_STATUS_SHA:0:12}' (empty = sha not recorded), not the tip ${LDR_SHA:0:12} — the tip has moved past that failure."
+  fi
+
   PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
   MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
     --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
