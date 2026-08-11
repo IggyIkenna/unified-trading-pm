@@ -947,3 +947,17 @@ against the reproduction script.
   exact same already-fully-investigated static-backlog condition, not a new regression. Session cost: doc read + this
   Progress Log append only, no GCS read, no code change, no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with
   this outcome.
+- **2026-08-11 (data_pipeline_failure escalation worker, agt-a45914, slot 5) — SAME escalation_id as the three entries
+  directly above (slot 4, slot 7, slot 2, now slot 5) — a FOURTH duplicate worker dispatch of one escalation event, the
+  same exact-duplicate-escalation_id shape now documented 8+ times.** Read this doc first per the pre-task plan/issue
+  conflict-check rule; the slot-4/slot-7/slot-2 entries directly above already fully investigated this exact
+  escalation_id/reading (8,670/958,967 = 0.9%, "STATIC BACKLOG — only 15 attempted_failed row(s) in the last 1d") and
+  re-verified all seven fix commits ancestor-of-origin minutes ago. Per the same precedent, did not repeat the
+  git-ancestor check or GCS read this session. `AUTHORING_SLOT=dp-fleet-monitor` this dispatch — not a `^[0-9]+$`
+  numbered slot, so per the role file's explicit skip rule the `/api/slots/<N>/message` ping was skipped (the endpoint
+  4xxs on a non-integer path param; the dispatch-time Slack alert already covers the FYI). **Conclusion: no code fix
+  needed** — this is a duplicate dispatch of the exact same already-fully-investigated static-backlog condition, not a
+  new regression; the repeated-dispatch pattern itself is already tracked by
+  `/plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s closed Option A fix (this is
+  checkpoint-write-lag re-fire, not a fresh miss). Session cost: doc read + this Progress Log append only, no GCS read,
+  no code change, no VM launch.
