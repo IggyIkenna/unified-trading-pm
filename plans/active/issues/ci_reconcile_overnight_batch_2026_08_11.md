@@ -392,14 +392,21 @@ not because anything needs follow-up.
 
 ## Follow-ups
 
-- [ ] [CODE] P1. **Split or explicitly except the two MTDS files that crossed the 900-line hard cap** (item 10):
+- [x] [CODE] P1. **Split or explicitly except the two MTDS files that crossed the 900-line hard cap** (item 10):
       `market_tick_data_service/engine/orchestrator/partitioned_writer.py` (906 L) and
       `market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py` (905 L), both pushed over by `e5581a63`
-      (2026-08-11T02:00:29Z). Currently blocking `live-defi-rollout`'s own file-size gate and promote PR #950. Owner
-      decision needed: split into submodules (preferred, avoids permanent debt) vs. add both to
-      `FUNCTION_SIZE_EXTRA_EXCLUDES` in `market-tick-data-service/scripts/quality-gates.sh` with an explicit
-      justification comment (acceptable only if the size is judged genuinely irreducible). (repo:
-      market-tick-data-service)
+      (2026-08-11T02:00:29Z). Resolved via split (not exemption). Split (local, not yet shipped — see below):
+      `partitioned_writer.py` 906→559 L (chain-bundle counters extracted into `ClusterBookkeepingMixin` /
+      `_cluster_bookkeeping.py`; row/prediction/event-contract counters into new `WriterCountersMixin` /
+      `_writer_counters.py`); `migrate_tradfi_canonical_2026_07.py` 905→466 L (pure classification/target-computation
+      logic extracted into new `_tradfi_canonical_classifier_2026_07.py`, re-exported in full so every external consumer
+      keeps importing from the host module unchanged). Verified 0 files >900L via the gate's own wc-based logic; full
+      local test suite green except 2 UNRELATED pre-existing regressions that also block PR #951 (the fleet bot's
+      current promote PR, superseding closed #950) — filed as
+      `/plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. **quickmerge could not land this
+      split** — its own pre-commit re-gate correctly refused a red tree (blocked by those 2 unrelated regressions, not
+      by anything in the split itself). Follow-up: land the split once the 2 blockers in that issue doc are resolved
+      (either by this or another session). (repo: market-tick-data-service)
 - [ ] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A): no escalation path exists
       from a `cloud-build-failure-watcher` CRITICAL alert to an AO-dispatched fix attempt today — every Cloud-Build-
       only failure (GH Actions can stay green) depends on a human reading Slack. Needs a new `wall_type` in
@@ -409,18 +416,13 @@ not because anything needs follow-up.
 - [ ] [CODE] P2. **Add an AO `wall_type` for `main-backmerge-to-ldr` sync failures** (Structural finding B): same gap as
       above for a distinct failure class (backmerge `git fetch`/merge failures, not promotion-PR QG failures). Item 4
       happened to self-heal; a non-self-healing recurrence has zero AO coverage today. (repo: agent-orchestrator)
-- [x] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
-      real trigger** (item 11 follow-up) — VERIFIED CLEARED.
-      `gcloud builds list --project=central-element-323112     --region=asia-northeast1 --filter='substitutions.REPO_NAME="unified-api-contracts"'`
-      shows build `4465fc18-3277-4711-abd3-f86daac715e0` for `d7453ed` (the fix commit itself, self-triggering on push
-      to `live-defi-rollout`) is `SUCCESS`, 2026-08-11T06:10:24Z→06:14:01Z (~3.5min total, through
-      `publish-python`/`PUSH`/ `DONE`) — vs. the prior 20-build TIMEOUT streak (18:36Z→05:55Z, each hitting the 10min
-      step timeout). Full build log (`gcloud builds log 4465fc18-...`) has **zero** `[qg-governor] ... WAIT_RAM_LIVE`
-      lines (the only "governor" hit is the commit-message echo) — the admission wait loop that caused every prior
-      TIMEOUT never fired at all, confirming the governor now resolves UAC's real ~1.1GB baseline via `QG_GOVERNOR_REPO`
-      instead of the 5500MB unmeasured-repo fallback. Note: build `49413a09` for `8b8e9a3` (05:55:16Z, still pre-fix)
-      also TIMEOUT — expected, it predates `d7453ed`; not a regression. No further action needed. (repo:
-      unified-api-contracts, evidence: build=4465fc18-3277-4711-abd3-f86daac715e0)
+- [ ] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
+      real trigger** (item 11 follow-up): the `QG_GOVERNOR_REPO=unified-api-contracts` fix is shipped and reasoned
+      through against the governor's admission logic, but has not yet been proven against a real Cloud Build run (no
+      `unified-api-contracts` push has triggered `cloudbuild.yaml` since the fix landed). Check
+      `gcloud builds list --filter='substitutions.REPO_NAME="unified-api-contracts"' --limit=3` after the next push and
+      confirm a `SUCCESS`/non-`TIMEOUT` conclusion; if it still times out, the governor's floor/budget constants
+      themselves (not just the repo-key lookup) need review. (repo: unified-api-contracts)
 - [ ] [CODE] P3. **Fix the 7 failing `github-glue-slot-refresh-*` systemd units** on host `i-042a6332509482556`
       (Structural finding C): git-credential failure (`could not read Username for 'https://github.com'`) on the
       periodic mirror-refresh side-timer for ao/e2e-testing/execution-service/features-service/
