@@ -10,7 +10,7 @@ summary: >-
   with the real evidence, not just re-flipping it blind — then checks whether any source doc is now fully closed
   (unlikely given each retains other open, non-extracted items) and archives it if so, before archiving the batch plan
   itself.
-status: active
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -44,7 +44,10 @@ superseded_by:
 depends_on: [ao_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 sequential: true
-archive_exempt: true
+resolved_by: >-
+  All 5 todos completed by slots 24 (review, todos 1-3 + 5, 2026-08-10) and 28 + 19 (infra, todo 4 batch10 archival +
+  finalize self-archival, 2026-08-11). Batch10 plan archived; source docs reconciled; hygiene drift resolved; finalize
+  plan self-archived at plans/archive/2026_08/.
 context_scope:
   [
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
@@ -58,6 +61,10 @@ source: >-
 ---
 
 # AO satellite AO batch 10 — finalize
+
+> **ARCHIVED 2026-08-11.** All 5 todos completed. Batch10 plan archived; source docs reconciled; hygiene drift resolved.
+> Executed by slots 24 (review, todos 1-3 + 5, 2026-08-10) and 28 + 19 (infra, todo 4 batch10 archival + finalize
+> self-archival, 2026-08-11). Finalize plan self-archived at `plans/archive/2026_08/`.
 
 > **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until all 6 of that batch's todos are `done`. The batch itself stays

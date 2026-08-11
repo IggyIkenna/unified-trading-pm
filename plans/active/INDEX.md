@@ -848,8 +848,8 @@ by hand._
   TENTH AO-dispatch batch for the `ao` topic tranche — produced by a satellite-batch-extraction pass (mirroring
   `/ag-closeout-audit`'s pattern) over 21 `ao`-owned `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read
   end-to-end but…
-- [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
-  Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
+- [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md)
+  — Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends` until all 6 of that batch's todos are done. Reconciles each verified todo's evidence back into its
   TRUE source doc's…
 - [`ao_satellite_ao_dispatch_batch11_2026_08_09`](./ao_satellite_ao_dispatch_batch11_2026_08_09.md) — ELEVENTH
