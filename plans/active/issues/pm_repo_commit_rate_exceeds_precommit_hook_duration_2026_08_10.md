@@ -348,15 +348,7 @@ Directions, cheapest first — each is a todo below:
       command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
       the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
       key, with a regression test. Repo: unified-trading-pm. SSOT:
-      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`. Measured 2026-08-11 in slot 4: after the quarantine
-      fix above, a peer session sharing this checkout reverted this session's tracked edits again (5 files, `git status`
-      clean, content in neither worktree nor HEAD; recovered from the `pre-reconcile quarantine` stash by path both
-      times). The `.agent-claim` heartbeat is WARN-only by design and did not prevent it. The durable mitigation used
-      here was to stop holding uncommitted work in the shared checkout at all and ship from a private `git worktree` —
-      worth making the documented default for interactive sessions rather than an emergency manoeuvre. **Done when**:
-      either the collision hook escalates past WARN when a second session writes the same checkout, or the
-      shared-checkout ship path is documented as worktree-first with a one-command helper. Repo: unified-trading-pm.
-      SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
       non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
       entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
