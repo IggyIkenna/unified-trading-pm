@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-08-06
 author: agent
-last_updated: 2026-08-08
+last_updated: 2026-08-11
 priority: P3
 parent_epic: orchestrator_master
 source:
@@ -41,6 +41,7 @@ source:
   interactive session 2026-08-06"
 assigned_vm: planning
 execution_scope: orchestrator-agent
+archive_exempt: true # 2026-08-11: flip-only commit — archival follows in separate commit after quickmerge
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
@@ -65,22 +66,24 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
+- [x] ✅ [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
       `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
       refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
       two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
+      filename would have missed this; key it on the `depends_on` relationship, which is the real contract. —
+      unified-trading-pm@<PENDING>
 
-- [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
-      `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
-      frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would have
-      surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same way
-      the orphan count is reported — a non-zero count is review-blocking.
+- [x] ✅ [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in
+      the `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every
+      plan's frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would
+      have surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same
+      way the orphan count is reported — a non-zero count is review-blocking. — unified-trading-pm@<PENDING>
 
-- [ ] [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over `plans/active/`
-      and de-race any other parent found with >1 gated finalize plan, using the same procedure applied here: port any
-      todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated banner. Report
-      the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces.
+- [x] ✅ [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over
+      `plans/active/` and de-race any other parent found with >1 gated finalize plan, using the same procedure applied
+      here: port any todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated
+      banner. Report the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces. —
+      unified-trading-pm@<PENDING>
 
 ## Progress Log
 
@@ -123,3 +126,28 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **2026-08-11 — slot 14 implemented all 3 todos**:
+
+  **Todo 1 (idempotency guard)**: added `_find_duplicate_gate_violations()` to `check_finalize_plan_coverage.py` —
+  detects any parent slug with >1 `gate_on_depends: true` plan gating on it (scoped to `assigned_vm: planning` gaters
+  only, since NA-track plans don't create a dispatch race). The pre-commit `--only` call already invokes this as part of
+  the existing `check_finalize_plan_coverage.py --only` invocation in `run_hygiene_sweep.sh`'s precommit path — any
+  commit staging a new finalize plan that would create a duplicate gate is refused at commit time.
+
+  **Todo 2 (corpus-wide detector)**: wired the duplicate-gate check into `run_hygiene_sweep.sh`'s full sweep body as a
+  hard `run_check` call using the new `--quiet` mode (added to the checker). Same shrinking-ratchet shape as the
+  existing checks: hard-fails only on a NEW duplicate-gate parent, never on the pre-existing mechanical-flag count.
+
+  **Todo 3 (corpus sweep)**: ran the detector over `plans/active/` — **2 mechanical violations found, 0 genuine
+  duplicate-finalize-plan pairs.** Both are legitimate multi-gate patterns:
+  - `sports_taxonomy_p1_capture_and_contracts_2026_08_08` → p2_migration, p3_consumers, fixture_grain_catalogue_build:
+    parallel PHASE plans (not finalize plans) — sequential taxonomy phases doing different work once p1 completes.
+  - `sports_taxonomy_p2_migration_2026_08_08` → p4_backfill + p2_migration_finalize: one phase plan + one finalize plan,
+    not two finalize plans. Neither matches the "two finalize plans racing to archive the same parent" pattern this doc
+    describes. The original `live_event_log_warm_sink_recovery_and_cold_compaction` pair was already de-raced 2026-08-06
+    — that WAS the one-off. Baselines at 2 (the mechanical-flag count); the ratchet catches any NEW genuine duplicate
+    above this.
+
+  Baselines written: `violation_count: 0`, `draft_gate_violation_count: 0`, `duplicate_gate_violation_count: 2`. Checker
+  at baseline (exit 0). All 3 checkboxes flipped.

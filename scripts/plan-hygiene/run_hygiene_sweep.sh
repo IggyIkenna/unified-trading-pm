@@ -471,6 +471,13 @@ run_check "Terminal-status-archived (plan/issue docs -> plans/archive/, ratchet)
 # leaves behind). The 5 current pairs are reconciled by the issue doc's P2 todo; never lower this to
 # advisory to make the sweep pass.
 run_check "Create-only archival guard (archive/active duplicate pairs)" hard python3 "$SCRIPT_DIR/check_create_only_archive_commits.py" --quiet
+# Duplicate-gate detector (2026-08-11, duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) —
+# flags any parent slug with >1 gate_on_depends: true plan in its depends_on (a duplicate finalize-plan
+# race — two plans racing to archive the same parent). Same shrinking-ratchet shape as the checks above
+# (finalize_plan_coverage_baseline.yaml, key duplicate_gate_violation_count): hard-fails only on a NEW
+# duplicate-gate parent, never on the pre-existing mechanical-flag count (phase-gated plans that share a
+# parent are legitimate; the check surfaces them as candidate signals for human review).
+run_check "Duplicate-gate detector (finalize-plan coverage, ratchet)" hard python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --quiet --workspace-root "$(dirname "$PM_DIR")"
 # assigned_vm:NA corpus size ratchet (operator directive 2026-07-27) — the NA backlog (doc count +
 # open-todo count over assigned_vm:NA + status in {active,open}) must not grow unattended. Most NA
 # content is genuinely operator-gated/judgment work and correctly stays NA — the point is not to
