@@ -64,18 +64,25 @@ delivery without it reading as a refusal, and replace it with something faster t
 
 Hey both — wanted to talk through the carve-out properly rather than go back and forth on email.
 
-So, the reason there isn't a standalone repo sitting ready to hand over is a deliberate design decision, and I think
-it's worth explaining because it's actually the thing that's made us fast. We built the strategies to plug into a larger
-platform — the strategy layer is agnostic about which venue, which asset class, which custodian sits underneath it.
-That's why we could go from one venue to four, and from Ethereum to Solana, without rewriting the strategy. The
-trade-off is that the strategy doesn't sit in its own box — it sits in a system. So a carve-out isn't a copy, it's an
-extraction.
+So the reason there isn't a standalone repo sitting ready to hand over is a deliberate design decision, and it's worth
+explaining, because it's the thing that's kept us from being delayed even further — and it's a big part of why I'm
+confident the infrastructure behind these strategies is best in class. We built the strategies to plug into the larger
+platform. The strategy layer is agnostic about which venue, which asset class, which execution algorithm and which
+custodian sits underneath it. That's why we can go from one venue to four, and from Ethereum to Solana, without
+rewriting the entire strategy. The trade-off is that the strategy doesn't currently sit in its own box — it sits in a
+system. So a carve-out isn't a copy. It's an extraction.
 
 [pause]
 
-I've costed it. It's about three concentrated days of engineering, but realistically spread across two to three weeks
-once you account for everything else in flight. And what you'd get at the end of that is something that complements the
-documents we've already sent you rather than replacing them.
+And I think you'd understand — handing over large parts of the wider platform we've been investing in for years isn't
+something I can commit to on a short timeline. That's not me being precious about it. It's that if we're going to do it,
+the version worth having is a considered one, not a rushed extraction.
+
+[pause]
+
+I haven't costed it formally, but it's roughly three concentrated days of engineering — realistically spread across two
+to three weeks once you account for everything else in flight. And what you'd get at the end of it is something that
+complements the documents we've already sent you rather than replacing them.
 
 My honest view is that those three days are better spent getting you to October. So what I'd suggest is: we push through
 and deliver, we go through the whole thing together once you've got capital in it and it's live, and we start the
@@ -103,14 +110,15 @@ Let me know what you think — and if it's easier, just send questions over as t
 
 ## Why each beat is there
 
-| Beat                    | What it is doing                                                                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Agnostic-by-design open | Converts "there's no repo" from a gap into the reason expansion has been cheap. Pre-empts "why isn't it already separable?"               |
-| Costing it out loud     | Three days / two-to-three weeks. Naming a real number reads as candour and makes the deferral a scheduling call rather than a refusal     |
-| October sequencing      | Puts their outcome first. The carve-out is delayed, not declined, and it happens once they have capital live                              |
-| The AI-Q&A route        | Meets them where they are instead of resisting it, and reframes the documents as the efficient artefact rather than the consolation prize |
-| The repo offer          | Answers "give us something tangible" without the extraction work. Operator-ruled 2026-08-11                                               |
-| Open-ended close        | Invites questions, which is the channel we actually want, rather than inviting a decision                                                 |
+| Beat                    | What it is doing                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agnostic-by-design open | Converts "there's no repo" from a gap into the reason we are not further delayed, and into a best-in-class claim. Pre-empts "why isn't it already separable?"                                                                                                                                                    |
+| The commitment line     | Says plainly that large parts of the wider platform are not on the table, without defensiveness — and leaves the door open on timing rather than on principle. **Says "the wider platform", not "the codebase", deliberately: the next beat offers the strategy repository, and "codebase" would contradict it** |
+| Costing it out loud     | Three days / two-to-three weeks. Naming a real number reads as candour and makes the deferral a scheduling call rather than a refusal                                                                                                                                                                            |
+| October sequencing      | Puts their outcome first. The carve-out is delayed, not declined, and it happens once they have capital live                                                                                                                                                                                                     |
+| The AI-Q&A route        | Meets them where they are instead of resisting it, and reframes the documents as the efficient artefact rather than the consolation prize                                                                                                                                                                        |
+| The repo offer          | Answers "give us something tangible" without the extraction work. Operator-ruled 2026-08-11                                                                                                                                                                                                                      |
+| Open-ended close        | Invites questions, which is the channel we actually want, rather than inviting a decision                                                                                                                                                                                                                        |
 
 ## Deliberately absent
 
