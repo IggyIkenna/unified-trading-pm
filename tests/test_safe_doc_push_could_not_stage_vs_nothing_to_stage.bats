@@ -66,20 +66,28 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a genuinely already-landed tracked file (content matches HEAD, no lock) prints the benign nothing-to-stage message but exits 12 (the F8 no-op-at-entry ruling) unless SDP_ALLOW_NOOP=1" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
   git push -q origin HEAD:live-defi-rollout
 
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
+  # The F8 ruling (pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10) makes
+  # already-identical-at-entry exit 12, NOT 0: 0 is indistinguishable from "your edit was
+  # destroyed before this script hashed it" (measured 2026-08-10). The benign "nothing to stage"
+  # wording still prints; only the exit code is loud. SDP_ALLOW_NOOP=1 accepts it as a
+  # deliberate idempotent re-run and exits 0.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
-  [[ "$output" == *"✅"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
+
+  SDP_ALLOW_NOOP=1 PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+  [ "$status" -eq 0 ]
 }
 
 @test "could-not-stage and nothing-to-stage produce distinct exit codes for the same script" {
@@ -90,7 +98,8 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: genuinely already-landed tracked file -- exits 12 by default (no-op at
+  # entry), NOT 0, per the F8 ruling; the exit codes must still be distinct.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +108,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
