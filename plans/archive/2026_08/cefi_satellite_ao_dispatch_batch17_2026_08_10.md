@@ -9,7 +9,7 @@ summary: >-
   closes `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s standing recurrence-watch
   condition (a stale-tarball incident that had already self-resolved by the time it was filed, pending one future
   audit-pass check).
-status: active
+status: archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -18,14 +18,14 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-17, satellite-docs, tardis, zombie-watchdog, ag-closeout-audit]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md,
     /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/archive/2026_08/issues/cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -56,6 +56,14 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 17 — item-level extraction (2026-08-10 ag-closeout-audit)
+
+> **ARCHIVED 2026-08-11** — all 3 todos done and verified against reality by
+> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md` (watchdog relaunch
+> `deployment-service@3d545372` with Tardis-cap self-check live, 21 focused unit tests `deployment-service@0c14f54050`,
+> ASTER/book_snapshot_5 recurrence check confirmed non-recurring). The batch's completion evidence was reconciled into
+> the TRUE source docs (`tardis_concurrency_gate_hardening_2026_08_09.md`,
+> `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`) before this batch archived.
+> Archived by the batch17-finalize plan.
 
 > **Status: DRAFT — awaiting operator review before dispatch** (per `/ag-closeout-audit`'s autonomous-mode safety rail;
 > CLAUDE.md "Plan destination — ASK BEFORE CREATING"). **Conflict-checked 2026-08-10**: grepped all 20 discovered cefi

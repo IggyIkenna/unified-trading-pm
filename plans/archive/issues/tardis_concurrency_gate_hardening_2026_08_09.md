@@ -59,7 +59,7 @@ estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 drift_direction: fix
 depends_on: []
-resolved_by: /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
+resolved_by: /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
 locked_by:
 locked_since:
 supersedes:
@@ -83,7 +83,8 @@ source:
 
 > **ARCHIVED 2026-08-10** — both todos resolved: (1) watchdog VM relaunched with Tardis-cap self-check live
 > (`deployment-service@3d545372`), (2) focused unit test for `_is_tardis_consumer`/`_enforce_tardis_cap` shipped
-> (`deployment-service@0c14f54050`). Superseded by `/plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md`.
+> (`deployment-service@0c14f54050`). Superseded by
+> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_2026_08_10.md`.
 
 # Tardis concurrent-VM cap hardening — 2026-08-09
 

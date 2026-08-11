@@ -62,7 +62,7 @@ estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
-resolved_by: /plans/active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
+resolved_by: /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
 locked_by:
 archived: "2026-08-10"
 depends_on: []
