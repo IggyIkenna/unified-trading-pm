@@ -598,3 +598,19 @@ FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
     denominator growth (new MVP fixtures), not regression.
   - **No new launches** (lock). Armed terminal-state watchdog (`af_standings_watchdog.py`, slot-20) — wakes on
     EXIT_STATUS / VM stop → then launch TEAMS (`--entity TEAMS 2020-06-06 2026-08-10`, on-demand).
+
+- **2026-08-11 (slot 25, data_engineering, ~01:25Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **Fresh census**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452 total** (down from ~976 —
+    INJURIES 334→72 converged). PLAYER_STATS 3→14 is denominator growth (new MVP fixtures), not regression.
+  - **Old STANDINGS VM `af-backfill-20260810-162910` found STALLED**: RUNNING ~16h but ZERO GCS artifacts under its
+    prefix — no run.log, no PROGRESS.json, no exit_code. Census confirms STANDINGS unchanged at 271 (zero progress).
+    Same stall pattern as the two all-entity VMs (`*-154220`, `*-160958`). Stopped 01:28:27Z (TERMINATED).
+  - **Launched fresh STANDINGS VM `af-backfill-20260811-012845`** (on-demand, `e2-standard-8`, `asia-northeast1-c`,
+    `--entity STANDINGS`, 2020-06-06 → 2026-08-10). `VM_TASK=instruments-backfill` (chunked 90-day windows — avoids the
+    memory-accumulation OOM of the single-shot path). Boot confirmed healthy at 01:31Z: `instruments_chunk_loop.sh`
+    - GCS tee + heartbeat daemon all running. API-Football quota healthy: 149,078 remaining.
+  - **Monitor armed** (`b26cxmgvp`) — polls GCS run.log every 60s for `[[VM_PROGRESS]]` / `exit_code=` / errors. Run.log
+    not yet written (VM booting, expected). Serial port confirms chunk loop launched.
+  - **Next**: confirm first progress marker → wait for exit_code=0 → launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS →
+    PLAYER_STATS (serial, singleton lock).
