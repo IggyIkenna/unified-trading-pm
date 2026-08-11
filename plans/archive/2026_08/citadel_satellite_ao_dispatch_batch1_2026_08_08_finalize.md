@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [reconciliation, paper-trading, ao-dispatch, close-out, batch-1, citadel, archival]
 related:
   [
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/epics/batch_live_symmetry_master.md,
@@ -46,7 +46,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -54,6 +54,11 @@ context_scope:
 ---
 
 # Citadel satellite AO batch 1 — finalize
+
+> **ARCHIVED 2026-08-11** — All 3 todos complete (slot 27). P1: source doc reconciled — all 7 batch1 items verified with
+> resolving SHAs. P2: held-back conflict (P2.11.15) re-checked — gate still open in `crypto_alpha_research`, no action
+> needed. P3: both batch1 + this finalize doc archived to `plans/archive/2026_08/` per the 6-step archival ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 > **Machine-gated on `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 7 tasks of that plan are `done`. `sequential: true` because
@@ -87,14 +92,13 @@ context_scope:
       **Done when**: this plan's own Progress Log records the checked status of both the P2.11.15 gate and any resulting
       follow-up action (checkbox flip, new todo filed, or explicitly "still open, no action").
 
-- [ ] [DOC] P3. **Archive batch1 + this finalize plan.** Once the source doc is confirmed reconciled (todo 1) and the
-      held-back conflict is re-checked (todo 2), archive both `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` and
-      this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every referrer (this doc's own
-      `related:`, `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `related:` if it names batch1,
-      `plans/epics/batch_live_symmetry_master.md` if it enumerates satellite batches). **Done when**: both files are in
-      `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
-      `run_hygiene_sweep.sh` is green.
+- [x] ✅ [DOC] P3. **Archive batch1 + this finalize plan.** — unified-trading-pm@<SHA> (slot 27, 2026-08-11). Both files
+      archived to `plans/archive/2026_08/` per the 6-step ritual. Referrers updated in
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` (related: paths + markdown links),
+      `batch_live_symmetry_master.md` (related_plans + section refs),
+      `cross_cutting_consolidated_closeout_2026_07_25.md` (related: paths),
+      `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` (related: path),
+      `fill_completed_event_schema_break_live_defi_2026_08_08.md` (related: + context_scope paths).
 
 ## Progress Log
 
@@ -136,3 +140,11 @@ context_scope:
   not a failure state per the plan's own done-when. **P2.11.18 retrain sub-step**: also remains not executable (still
   coupled to P2.11.15's gate; `crypto_alpha_research` P2 line still open). No new follow-up todo needed — the existing
   `crypto_alpha_research` todo already covers both. **Verdict**: still open, no action.
+- **2026-08-11 (slot 27, P3 — Archive batch1 + this finalize plan)**: archived both
+  `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` + this finalize doc to `plans/archive/2026_08/` per the 6-step
+  archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Referrers updated in 5 active
+  docs: `citadel_paper_batch_live_reconciliation_2026_06_19.md` (related: paths + 3 markdown links),
+  `batch_live_symmetry_master.md` (related_plans + 2 section refs merged into one archived entry),
+  `cross_cutting_consolidated_closeout_2026_07_25.md` (related: paths),
+  `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` (related: path),
+  `fill_completed_event_schema_break_live_defi_2026_08_08.md` (related: + context_scope paths).

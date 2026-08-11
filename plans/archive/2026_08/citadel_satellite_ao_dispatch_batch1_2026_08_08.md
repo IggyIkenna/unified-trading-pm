@@ -45,7 +45,7 @@ tags: [reconciliation, paper-trading, determinism, ao-dispatch, close-out, batch
 related:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/epics/batch_live_symmetry_master.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -94,6 +94,10 @@ source: >-
 ---
 
 # Citadel satellite AO batch 1 — 7 conflict-clear agent-shippable items
+
+> **ARCHIVED 2026-08-11** — All 7 todos complete (verified by multiple slots, 2026-08-08 through 2026-08-11). Archived
+> to `plans/archive/2026_08/` with gated finalize twin (`citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md`,
+> also archived).
 
 > **`status: active` — operator already authorized this split** (see `source:` above); no double-gate per
 > `task_template.md` §4's no-double-gate rule. The finalize plan below ships `active` from the start too —
