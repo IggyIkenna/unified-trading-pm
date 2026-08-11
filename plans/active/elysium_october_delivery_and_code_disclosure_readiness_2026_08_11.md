@@ -22,9 +22,9 @@ tags: [elysium, carve-out, custody, transfers, client-communication, commercial-
 last_updated: "2026-08-11"
 related:
   [
-    /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-voice-note-2026-08-11.md,
+    /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,
     /codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md,
-    /presentations/elysium/carveout-engineering.html,
+    /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -54,9 +54,9 @@ source: >-
 # Elysium October delivery — completion bar, custody completion, disclosure readiness
 
 Everything below follows from four operator decisions taken on 2026-08-11, recorded in
-[the voice-note record](/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-voice-note-2026-08-11.md).
-The decision that generates the most work is the smallest sentence: **the strategy-service repository goes to the
-client, but not until it "does everything we need".** That is currently unfalsifiable, so it is Phase 1.
+[the message record](/codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md). The
+decision that generates the most work is the smallest sentence: **the strategy-service repository goes to the client,
+but not until it "does everything we need".** That is currently unfalsifiable, so it is Phase 1.
 
 **Codex SSOTs this plan is checked against** — read before touching the relevant todos, do not duplicate their content
 here:
@@ -93,11 +93,14 @@ Recorded so no todo below re-derives it, and so a later session can tell what ha
 
 ## Phase 1 — The completion bar (gates the client send; do this first)
 
-- [ ] [OPERATOR] P0. **Define "does everything we need" for strategy-service as a written, falsifiable checklist.** The
-      operator's 2026-08-11 decision sends this repository once complete; until the bar exists the send cannot be
-      scheduled and the voice note's promise has no resolution date. Enumerate per archetype in scope: which decisions
-      it must make, which features it must consume, which instruction types it must emit, and what "correct" means for
-      each. Output is a new codex doc, not a note in this plan.
+- [ ] [OPERATOR] P0. **Define "does everything we need" for strategy-service as a written, falsifiable checklist —
+      scoped to CODE completeness only.** Operator clarified 2026-08-11: the strategy-service _code_ completes this
+      week; the data pipeline and the live/batch deployment continue to October. The bar therefore gates the repository
+      send on code, not on mandate readiness, and the sent message says so explicitly. The operator's 2026-08-11
+      decision sends this repository once complete; until the bar exists the send cannot be scheduled and the voice
+      note's promise has no resolution date. Enumerate per archetype in scope: which decisions it must make, which
+      features it must consume, which instruction types it must emit, and what "correct" means for each. Output is a new
+      codex doc, not a note in this plan.
 - [ ] [AGENT] P0. **Audit strategy-service against the bar once written** and produce a gap list as `- [ ]` todos
       appended to this plan. Do not start closing gaps before the audit — the point of the bar is to stop scope
       drifting.
@@ -152,9 +155,12 @@ Recorded so no todo below re-derives it, and so a later session can tell what ha
 
 ## Phase 3 — Client document set
 
-- [ ] [AGENT] P0. **Fix `platform-architecture.html`: archetype count 8 → 6, venue-adapter count 13 → 20.** Both
-      re-derived 2026-08-11. Republish to artifact `cd44b148-6752-437c-919f-d8b4cef42cba` (favicon 🏛️ — keep stable) and
-      pass the URL or a duplicate artifact is created.
+- [x] ✅ [AGENT] P0. **WITHDRAWN — the premise was wrong.** This todo claimed `platform-architecture.html` carried the
+      8-archetype / 13-venue counts and needed fixing. Cross-check 2026-08-11 found it states **no archetype or venue
+      total at all** — zero `N of M` patterns, zero occurrences of "thirteen", "of 13" or "of 8". Those wrong counts
+      existed only in `carveout-engineering.html` rev 1.0 and were already corrected there. **Nothing to fix.** Recorded
+      rather than deleted because the error was mine and a future session would otherwise re-derive it: I asserted a
+      defect in one document from a measurement taken on another.
 - [x] ✅ [AGENT] P0. **Support period standardised at 30 days everywhere** (operator ruling 2026-08-11, reversing the
       2026-08-09 ruling of 60). `ODUM_SLA_v4_2026-07-24.md` §1 line 88, §3 line 131 and §5 line 220 now all read 30.
       §11's "sixty (60) days' notice" for Option A termination is a **different term** and was deliberately left alone.
@@ -181,7 +187,8 @@ Recorded so no todo below re-derives it, and so a later session can tell what ha
 - [ ] [AGENT] P2. **Correct Exhibit A's non-resolving adapter paths** in the SLA manifest — carried from the previous
       session; real paths already verified and recorded on the issue doc. Wants a wording review before it lands.
 - [ ] [AGENT] P3. **Re-check both HTML documents for the `var()`-in-SVG trap and count drift before any send**, per the
-      [presentation README](/presentations/elysium/README.md) traps list.
+      [presentation authoring notes](/codex/14-customer-journeys/commercial-model/elysium-presentation-authoring-notes.md)
+      traps list.
 
 ## Phase 4 — Make strategy-service actually sendable
 
