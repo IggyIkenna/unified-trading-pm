@@ -619,3 +619,22 @@ spelling variant survives, which is the entire point of the panel". It does not.
   half) was already shipped (slot-11: `ml-service@8af9324`, `features-service@3394de8`). Checkbox stays unflipped per
   prior entry — retrain evidence still pending. This session closes the dispatch with the NaN root-cause fix shipped;
   the retrain is unblocked for the next dispatch.
+
+- **2026-08-11 (slot 10, data_engineering→backend_engineer)** — ML § PATH-PREFIX loader-migration todo: **THIRD
+  premature dispatch** (slots 22 + 15 documented the first two on 2026-08-09). Re-verified live on 2026-08-11, not just
+  re-read from this doc: P2 (`sports_taxonomy_p2_migration_2026_08_08.md`) is STILL 17 open / 0 done — the "Consumer
+  enumeration" P0 gate and the "Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model" re-stamp
+  todo are both still unchecked; MDPS `bucket_assignment_adapter.py:696` still hard-codes
+  `data_type = "odds_horizon_bucket"` (no commit has moved the physical write side — the most recent sports-adapter
+  commits are the arbitrage retirement `5afb72a`/`23a1306` and the horizon-bucket-NAME derivation `3e0fb85`, not a path
+  re-stamp); no `horizon=` GCS path segment exists anywhere in MDPS/features-service/UAC; and the reader-side consumer
+  the loader mirrors (features-service `gcs_reader.read_bucketed_odds`) STILL probes the same `odds_horizon_bucket`
+  canonical + legacy prefixes — its `horizon` param filters the `horizon_name` VALUE, not a `horizon=` path axis. There
+  is still no new canonical shape for the loader to "move onto" — the todo's own text ("must move in the same change as
+  the rename per the codex rename rule") makes it a joint change with P2's re-stamp, which has not landed. Skipped
+  (`reason_code: GATED`, `park_now: true` → re-armed the `auto_unpark__sports_taxonomy_p3_consumers-13983a72aba5`
+  condition) rather than fabricate a speculative path shape nothing writes yet (would silently break
+  `_load_odds_event_teams`' event_id→fixture_id crosswalk) or no-op the todo. **Operator/review note**: this task
+  re-dispatched despite slot-15's durable park — either the unpark condition was cleared or the park is not holding for
+  this task. The slot-15 recommendation still stands: wire `depends_on` + `gate_on_depends` from THIS P3 todo onto P2's
+  re-stamp todo so it stops re-dispatching until the rename lands.
