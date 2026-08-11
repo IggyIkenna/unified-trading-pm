@@ -3,8 +3,8 @@
 # Lifecycle: permanent
 # Delete-when: NA
 #
-# pre-push — THREE chained guards. This file IS the installed hook (install-hooks.sh copies it to
-# every repo's .git/hooks/pre-push), so it must carry both.
+# pre-push — FOUR chained guards. This file IS the installed hook (install-hooks.sh copies it to
+# every repo's .git/hooks/pre-push), so it must carry all of them.
 #
 #   [1] strict-quickmerge (BLOCKS) — CODE reaching live-defi-rollout/staging/main must have gone
 #       through quickmerge (`Quickmerge:` trailer) or be a carve-out.
@@ -38,7 +38,7 @@ set -uo pipefail
 
 REMOTE="${1:-origin}"
 
-# stdin is consumable ONCE — capture it and replay to BOTH guards below.
+# stdin is consumable ONCE — capture it and replay to EVERY guard below.
 STDIN_DATA="$(cat)"
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
@@ -52,6 +52,39 @@ if [ -z "$_ws" ]; then
   while [ "$_d" != "/" ] && [ ! -d "$_d/unified-trading-pm/scripts/cicd" ]; do _d="$(dirname "$_d")"; done
   _ws="$_d"
 fi
+
+# ── [0] branch-deletion guard (BLOCKS) ─────────────────────────────────────────────────────────
+# Defense-in-depth against the "empty-refspec" bug class: when a variable in a
+# `git push origin <var>:<branch>` refspec is unset, the command collapses to
+# `git push origin :<branch>`, which DELETES the remote branch. The GitHub ruleset
+# (protect-live-defi-rollout) is the server-side backstop; this is the client-side
+# guard that catches the bug BEFORE it reaches `git push`.
+#
+# Blocks: any push where the LOCAL side of the refspec is empty/deleted (local_sha
+# is all-zeros) AND the remote ref is a protected branch.
+#
+# Carve-out: `git push --no-verify` skips this guard — same escape hatch as every
+# other guard in this hook. The server-side ruleset still backstops.
+_DELETE_PROTECTED="refs/heads/live-defi-rollout refs/heads/main refs/heads/staging"
+while read -r _lref _lsha _rref _rsha; do
+  [ -z "${_rref:-}" ] && continue
+  # All-zeros local SHA = delete (empty left side of refspec, or `git push -d`).
+  [ "${_lsha:-}" = "0000000000000000000000000000000000000000" ] || continue
+  case " $_DELETE_PROTECTED " in
+    *" $_rref "*) : ;;
+    *) continue ;;
+  esac
+  echo ""
+  echo "  ⛔ pre-push BLOCKED — branch DELETION of ${_rref} is not allowed."
+  echo "     An empty left-hand side of a git-push refspec (e.g."
+  echo "     'git push origin :<branch>') means DELETE the remote branch."
+  echo "     This is often a bug — an unset shell variable collapsing to empty."
+  echo "     The server-side ruleset also blocks this; this hook catches it"
+  echo "     earlier (defense in depth)."
+  echo "     If you genuinely need to delete this branch, use:"
+  echo "       git push --no-verify origin :${_rref##refs/heads/}"
+  exit 1
+done <<<"$STDIN_DATA"
 
 # ── [1] strict-quickmerge guard (BLOCKS) ──────────────────────────────────────────────────────
 _guard="${_ws}/unified-trading-pm/scripts/cicd/check_strict_quickmerge.py"
