@@ -104,6 +104,11 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the push landed (verify_pushed passed) but at least one named file's blob at
+#   origin/$BRANCH does not match its blob at HEAD — a per-file partial-landing despite
+#   the overall push succeeding. Prints the specific path(s) that did not reach the remote.
+#   Added 2026-08-11,
+#   safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md todo "Verify per-file."
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -581,6 +586,7 @@ _sdp_assert_entry_change_landed() {
 _sdp_certify_success() {
   _sdp_guard_already_landed_claim || return 12
   _sdp_assert_entry_change_landed || return 13
+  verify_per_file_on_remote || return 14
   return 0
 }
 
@@ -685,6 +691,47 @@ verify_pushed() {
     return 1
   fi
   return 0
+}
+
+# verify_per_file_on_remote — ground truth for "did every named path actually reach
+# origin/$BRANCH", per-file, independent of verify_pushed's single-commit ancestry check.
+# verify_pushed confirms HEAD is an ancestor of origin/$BRANCH, but that does not guarantee
+# origin/$BRANCH IS HEAD — intervening commits pushed by a concurrent slot can modify a
+# subset of the named files after this script's push landed, and the overall "✅ Pushed"
+# still reports success. Measured 2026-08-10: a multi-file --files invocation landed ONE of
+# two named paths (the untracked CREATE went through, the tracked MODIFY did not) and still
+# exited 0 — per-file partial success inside a single "successful" invocation.
+#
+# For each named file, compares the blob at origin/$BRANCH against the blob at HEAD.
+# A path intentionally deleted (HEAD does not have it, e.g. the source side of a git mv)
+# must also be absent from origin/$BRANCH. Prints every path whose blobs differ and
+# returns 1; returns 0 only when all N match.
+verify_per_file_on_remote() {
+  local _f _head_blob _remote_blob
+  local -a _mismatched=()
+  for _f in "${FILES[@]}"; do
+    _head_blob="$(git rev-parse -q --verify "HEAD:$_f" 2>/dev/null)" || _head_blob=""
+    # Fetch explicitly so the remote-tracking ref is fresh for the comparison — verify_pushed
+    # already ran and passed, but a concurrent push can move origin/$BRANCH between the two
+    # checks. Re-fetching ensures we compare against the CURRENT remote state.
+    git fetch -q origin "$BRANCH" 2>/dev/null || true
+    _remote_blob="$(git rev-parse -q --verify "origin/${BRANCH}:$_f" 2>/dev/null)" || _remote_blob=""
+    if [[ "$_head_blob" == "$_remote_blob" ]]; then
+      continue  # Matches — file reached the remote correctly.
+    fi
+    _mismatched+=("$_f")
+  done
+  [[ ${#_mismatched[@]} -eq 0 ]] && return 0
+  {
+    echo "❌ per-file remote verification failed — these named files did not reach origin/${BRANCH} as committed:"
+    for _f in "${_mismatched[@]}"; do
+      printf '   - %s\n' "$_f"
+    done
+    echo "   verify_pushed passed (HEAD is on origin), but the blob(s) above differ between HEAD and origin/${BRANCH}."
+    echo "   This is a partial landing: the push succeeded but not every named file made it to the remote."
+    echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md."
+  } >&2
+  return 1
 }
 
 # check_orphaned_prek_patches -- immediate safety net for
