@@ -59,8 +59,23 @@ mention", never "raise the baseline").
 
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--tranche <name>] [--quiet]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (round5-cross-cutting-audit 2026-08-08, issue
+ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md Todo 3): additive, OPT-IN narrowing of
+the printed/reported orphan list to a single asset_group's docs -- mirrors
+generate_ag_closeout_audit_candidates.py's already-shipped ``--tranche`` flag (direct precedent, not a
+novel design call). Choices are this script's own COVERED_ASSET_GROUPS vocabulary -- the real
+asset_group enum values this script already keys everything on (e.g. "infrastructure", not
+generate_ag_closeout_audit_candidates.py's CLI-only "infra" alias -- no translation table needed since
+this script never used that alias to begin with). A tranche-scoped run is INFORMATIONAL ONLY: it still
+computes the full-corpus graph/closeout-family (required for correct reachability -- a path can route
+through another tranche's doc), then filters the already-computed violations down to just that
+tranche, and always exits 0. The enforced shrinking-ratchet ONLY fires on a no-flag full-corpus run,
+so ``--tranche`` can never be used to dodge or narrow the actual gate. Not combinable with
+``--update-baseline`` (the baseline is one corpus-wide number; there is no per-tranche baseline).
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -366,6 +381,26 @@ def _run_only(paths: list[str], quiet: bool) -> int:
     return 0 if n == 0 else 1
 
 
+def _parse_tranche_arg() -> str | None | int:
+    """Returns the requested tranche name, None if `--tranche` wasn't passed, or an int
+    (an already-printed exit code) if the flag was passed but malformed/invalid."""
+    if "--tranche" not in sys.argv:
+        return None
+    idx = sys.argv.index("--tranche")
+    if idx + 1 >= len(sys.argv):
+        print("❌ check_ag_closeout_linkage: --tranche requires a value", file=sys.stderr)
+        return 2
+    tranche = sys.argv[idx + 1]
+    if tranche not in COVERED_ASSET_GROUPS:
+        print(
+            f"❌ check_ag_closeout_linkage: --tranche must be one of {', '.join(COVERED_ASSET_GROUPS)}, "
+            f"got {tranche!r}",
+            file=sys.stderr,
+        )
+        return 2
+    return tranche
+
+
 def main() -> int:
     if "--only" in sys.argv:
         idx = sys.argv.index("--only")
@@ -373,6 +408,17 @@ def main() -> int:
 
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
+
+    tranche = _parse_tranche_arg()
+    if isinstance(tranche, int):
+        return tranche
+    if tranche is not None and update:
+        print(
+            "❌ check_ag_closeout_linkage: --tranche is not combinable with --update-baseline "
+            "(the baseline is one corpus-wide number, not per-tranche)",
+            file=sys.stderr,
+        )
+        return 2
 
     files = target_files()
     all_docs, all_bodies = _scan_current()
@@ -392,6 +438,29 @@ def main() -> int:
         )
 
     violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+
+    if tranche is not None:
+        # OPT-IN informational narrowing, never the enforced gate (see module docstring) — filter
+        # the already-computed full-corpus violations down to this tranche's docs rather than
+        # re-deriving membership, so tranche mode can never disagree with full-corpus mode about
+        # what counts as an orphan.
+        violations_by_path = {
+            p: v for p, v in violations_by_path.items() if docspec._as_list(all_docs[p].get("asset_group")) == [tranche]
+        }
+        violations = list(violations_by_path.values())
+        n = len(violations)
+        if not quiet:
+            print(f"AG-closeout linkage check — tranche={tranche} ({len(all_docs)} docs scanned):")
+            print()
+            for v in sorted(violations):
+                print(f"  ORPHAN  {v}")
+            print()
+        print(
+            f"(i) check_ag_closeout_linkage --tranche {tranche}: {n} orphan(s) "
+            "(informational — full-corpus ratchet unaffected)"
+        )
+        return 0
+
     violations = list(violations_by_path.values())
 
     baseline = load_baseline()
