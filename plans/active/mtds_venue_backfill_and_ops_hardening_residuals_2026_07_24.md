@@ -625,7 +625,7 @@ Two genuine hits in this plan:
   `instruments_mtds_subset_consistency_remediation_2026_06_17.md`), not executed this run.
 - **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: this is that future doc-split. Extracted 11 of the
   ~10-12 items the 2026-08-07 entry above named to
-  [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
+  [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
   (+ gated finalize twin): prediction status-bucket fix, DeFi venue-grain adapter alignment, B3 e2e-data canonical copy,
   Extended public backfill, Extended candle sharp-edge hardening, Extended candle path consolidation, sports mvp-column
   fix, SFI hang diagnosis, sfi/sports parallelization, both VM-launcher script fixes, and the UEI ratchet re-baseline.

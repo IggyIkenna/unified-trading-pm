@@ -39,13 +39,9 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md
-  - ../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
   - ../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md
-  - ../active/infra_capture_and_devops_leftovers_2026_07_06.md
-  - ../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md
   - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
   - ../active/instruments_completion_tracker_2026_07_06.md
@@ -452,7 +448,7 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_23 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+_19 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -501,11 +497,6 @@ residuals
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
 finalize (reconcile source docs + archive)
 
-### [`infra_capture_and_devops_leftovers_2026_07_06`](../active/infra_capture_and_devops_leftovers_2026_07_06.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers
-(Stage 5 infra) — AO Plan 6
-
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Instruments <-> MTDS F1-N9 consistency
@@ -526,24 +517,10 @@ inherited single-walk lineage
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
 
-### [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09`](../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
-
-**status**: active · **estimate**: 1.76 cal AI-days (class: infra)
-
-### [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
-
-**status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 11 —
-finalize (reconcile source doc + archive)
-
 ### [`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`](../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md)
 
 **status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Finalize — defi A_TOKEN/DEBT_TOKEN
 instrument_type-alias + oracle_prices validity fix close-out
-
-### [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](../active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
-
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra capture wiring + devops leftovers —
-finalize (reconcile parent checkboxes + archive)
 
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md)
 

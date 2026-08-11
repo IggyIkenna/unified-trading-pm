@@ -20,7 +20,7 @@ summary: >-
   present/`captured`) and `prediction_live_clob_depth_capture_2026_07_24.md` (Kalshi trades-adapter URL fix shipped +
   verified) shows this work already happened elsewhere; the source doc's own checkbox is very likely stale, flagged
   in-place rather than re-dispatched as fresh work.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -32,7 +32,7 @@ tags:
 related:
   [
     /plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
@@ -68,8 +68,17 @@ drift_direction: advance-code
 
 # Cross-cutting satellite AO batch 11 (instruments_master) — bounded-item extraction
 
-> **Status: active.** All 11 todos below are same-priority-independent and touch distinct files/repos — no
-> `sequential`/`gate_on_depends` needed. Independent todos may run concurrently across workers.
+> **🟢 ARCHIVED 2026-08-11 — COMPLETE.** All 11 todos shipped/verified with real evidence (see Progress Log below) — the
+> large majority were STALE-PREMISE confirmations that the described work had already shipped weeks earlier, spot-
+> verified against current HEAD rather than trusted from the commit log. Reconciled against the source doc
+> (`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`, incl. the flagged Kalshi checkbox) by the finalize
+> plan's todo 1; that source doc still has 9 genuinely-gated open items of its own so it does NOT archive. Archived per
+> the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — no codex staleness found
+> in the process (the 3 cited Codex SSOTs already reflect current contracts; every todo here either verified existing
+> behavior or was itself a verification-only confirmation). No untracked deferred items: the two findings surfaced
+> during verification (`sfi_progressive_stats_json_truncation_2026_08_09.md`,
+> `defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`) are already their own tracked docs. Finalize plan
+> `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` archived alongside this doc in the same commit.
 
 ## Todos
 

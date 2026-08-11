@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 11 todos are done. Reconciles the source doc's checkboxes (incl. the flagged
   stale-Kalshi-checkbox re-verification), then archives the batch doc via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-11, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
@@ -49,8 +49,9 @@ context_scope:
 
 # Cross-cutting satellite AO batch 11 — finalize
 
-> **Machine-gated on `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`** (`depends_on` +
-> `gate_on_depends: true`). `sequential: true` because archival (todo 2) must run after reconciliation (todo 1).
+> **🟢 ARCHIVED 2026-08-11 — COMPLETE.** Both todos done: source-doc reconciliation (todo 1, slot 3) + the 6-step
+> archival ritual (todo 2, slot 30) on `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`. This finalize doc
+> archives alongside its target in the same commit, per its own todo 2's done-when clause.
 
 ## Todos
 
@@ -62,13 +63,26 @@ context_scope:
       connectors + a bulk-ingest script — flipped as done. Re-checked remaining open count: **9 open todos remain**
       (genuinely credential/dependency/design-gated) — source doc does NOT reach 0, does NOT archive. Repo:
       unified-trading-pm (docs).
-- [ ] [DOC] P2. Archive `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md` via the standard 6-step ritual once
-      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
-      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
-      and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [DOC] P2. **DONE 2026-08-11 (slot 30).** Archived `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`
+      via the 6-step ritual: (1) no untracked deferred items — the two findings surfaced during its own verification
+      passes are already separate tracked docs (`sfi_progressive_stats_json_truncation_2026_08_09.md`,
+      `defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`); (2) archive banner added to both docs; (3) codex-alignment
+      check — no staleness found, the 3 cited Codex SSOTs already reflect current contracts (every todo was either a
+      verification of already-shipped behavior or itself verification-only); (4) no new contract shipped requiring a
+      CLAUDE.md/codex update; (5) fixed every corpus referrer with an explicit `/plans/active/...` path — 2 hits
+      (`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`'s markdown link,
+      `sfi_progressive_stats_json_truncation_2026_08_09.md`'s `related:` frontmatter) repointed to
+      `/plans/archive/2026_08/`; auto-generated rosters (`plans/active/INDEX.md`, `plans/epics/instruments_master.md`)
+      regenerated via their own scripts rather than hand-edited; (6) `locked_by` confirmed empty on both docs, `git mv`
+      to `plans/archive/2026_08/` for both this doc and its target in one same-commit self-archival (single-repo mode-1,
+      sanctioned per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## Progress Log
 
 - **2026-08-11 (slot 3, backend_engineer)**: todo 1 done — reconciled all 11 batch-11 done-todos + the flagged Kalshi
   checkbox against `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. Source doc has 9 open todos
   remaining (genuinely gated), so it does not archive. Todo 2 (archive batch-11 itself) is now unblocked — next.
+- **2026-08-11 (slot 30, data_engineering)**: todo 2 done — archived
+  `cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`
+  - this finalize twin via the 6-step ritual (see the todo's own note for the per-step detail). Both docs now live at
+    `plans/archive/2026_08/`.

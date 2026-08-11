@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [sfi, sports, json-decode-error, shard-isolation, data-quality]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-09"
@@ -32,8 +32,8 @@ source: >-
   already correctly isolated, not silently swallowed).
 resolved_by:
 locked_by:
-archive_exempt: true  # 2026-08-10 slot-22
-archive_exempt: true  # 2026-08-10 slot-22: two-commit ritual
+archive_exempt: true # 2026-08-10 slot-22
+archive_exempt: true # 2026-08-10 slot-22: two-commit ritual
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -86,8 +86,8 @@ distinct from the current retry-on-`aiohttp.ClientError` path, since a `JSONDeco
 subclass and today gets zero retries before falling through to shard-level failure isolation). Low priority given the
 ~0.4% measured rate and existing honest-failure recording.
 
-- [x] ✅ [CODE] P3. Diagnose why `SoccerFootballInfoAdapter.get_progressive_stats` occasionally receives a truncated JSON
-      body from the SFI API (10/2254 date-completions in `sfi-backfill-20260807-123519`'s run.log,
+- [x] ✅ [CODE] P3. Diagnose why `SoccerFootballInfoAdapter.get_progressive_stats` occasionally receives a truncated
+      JSON body from the SFI API (10/2254 date-completions in `sfi-backfill-20260807-123519`'s run.log,
       `gs://deployment-scripts-central-element-323112/vm-logs/sfi-backfill-20260807-123519/run.log`, error shape
       `Unterminated string starting at: line 1 column N`) and consider adding a targeted retry for
       `json.JSONDecodeError` in `instruments_service/reference_data/adapters/sports/adapters/base.py::_get_with_retry`
