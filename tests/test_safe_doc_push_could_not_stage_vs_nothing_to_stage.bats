@@ -66,7 +66,14 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a tracked file already identical to HEAD at entry no longer short-circuits to success (exit 12)" {
+  # SUPERSEDED ASSERTION (2026-08-11, pm_repo_commit_rate_exceeds_precommit_hook_duration F8,
+  # landed in 91d559ee19). This used to assert exit 0 on the reading that "working-tree content
+  # matches HEAD" means "a peer already landed the identical edit". Measured 2026-08-10 disproved
+  # that: the same state is produced when the caller's edit is REVERTED before the script hashes
+  # it. The run now exits 12 (NOTHING OF YOURS SHIPPED); SDP_ALLOW_NOOP=1 restores idempotence
+  # for callers that genuinely want it. Mirrors the pattern the same commit applied to
+  # test_safe_doc_push_untracked_file_never_false_success.bats.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -75,10 +82,17 @@ setup() {
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
+  [[ "$output" != *"✅ Named files already match HEAD"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
+
+  # The fallback's ORIGINAL intent -- a peer genuinely landed the identical content -- is still
+  # honoured, as an explicit opt-in rather than an inference.
+  SDP_ALLOW_NOOP=1 PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+  [ "$status" -eq 0 ]
   [[ "$output" == *"✅"* ]]
 }
 
@@ -90,7 +104,9 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: tracked file identical to HEAD at entry -- a deliberate no-op. Since the
+  # 2026-08-11 landed-content certification gate (91d559ee19) this exits 12, not 0 -- but it is
+  # still cleanly distinct from a hard staging failure.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +115,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
