@@ -168,9 +168,10 @@ for the compact pointer back to this doc.
 - **na-eligibility-audit 2026-08-08 (Phase 2, defi tranche)**: Todo1+Todo2 clear the whole-doc bar (both `[SCRIPT]`-
   tagged, bounded, sequential, done-when stated) — Todo3 above is already DONE. NOT reclassified: the conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) found a near-verbatim duplicate
-  already live — `plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md` carries an OPEN `[DOC] P2` todo ("Bring
-  lst_rate_honest_coverage_2026_07_21.md under the 1000L hard line cap...") that explicitly cites this doc's own
-  Todo1+Todo2 verbatim as its source. `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (line ~300) independently
+  already live — `plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md` carried an OPEN `[DOC] P2` todo ("Bring
+  lst_rate_honest_coverage_2026_07_21.md under the 1000L hard line cap...") that explicitly cited this doc's own
+  Todo1+Todo2 verbatim as its source — **now DONE (archived 2026-08-11, all 9 todos completed)**.
+  `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (line ~300) independently
   reached the same conclusion a day earlier ("already tracked elsewhere, no new park"). Flipping this doc to
   `assigned_vm: planning` would create a genuine duplicate-dispatch hazard (two AO-dispatchable surfaces claiming the
   same file edit). Left `assigned_vm: NA` — no action needed here; the work already has a live dispatch path via

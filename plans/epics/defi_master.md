@@ -54,7 +54,7 @@ related_plans:
   - ../active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md
-  - ../active/defi_satellite_ao_dispatch_batch10_2026_08_06.md
+  - ../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md
   - ../active/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
@@ -1761,7 +1761,7 @@ forward-write gap close-out
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`defi_satellite_ao_dispatch_batch10_2026_08_06`](../active/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
+### [`defi_satellite_ao_dispatch_batch10_2026_08_06`](../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
 
 **status**: active · **estimate**: 2.88 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 —
 ag-closeout-audit defi tranche orphan extraction (2026-08-06)

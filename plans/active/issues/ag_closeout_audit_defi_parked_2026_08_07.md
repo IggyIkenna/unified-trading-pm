@@ -17,7 +17,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
   ]
 created: 2026-08-07
@@ -38,7 +38,7 @@ context_scope:
     /plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md,
     /plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
     /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
