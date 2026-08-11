@@ -461,6 +461,19 @@ doc for the full history).
   a fresh Part 4 re-check are also still outstanding per slot-13's note. Task released `reason_code=GATED` — re-dispatch
   once the corpus-refresh P1 todo lands.
 
+- **slot-30 2026-08-11 (task re-check, same gates — no change from slot-6)**: re-verified both gates fresh 2026-08-11.
+  (1) **Gate 2 (in-flight defi rebuild) still CLEAR**:
+  `gcloud compute instances list --filter="name~canonical-migration"` shows only the unrelated
+  `canonical-migration-prediction-shape4-merge-20260810-201105` running — no `canonical-migration-defi-rebuild-*`
+  instance. (2) **Gate 1 (corpus freshness) still FAIL**: bounded UTL `list_blobs` probe (Python,
+  `unified_trading_library.cloud_interface.get_storage_client` — no subprocess `gsutil`, no corpus walk) of
+  `market-data-tick-defi-prd-central-element-323112` at the writer-shape prefix
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue={VENUE}/instrument_type=perpetual/data_type={perp_funding|perp_daily_ctx}/`
+  — **0 objects for all 6 `catalog_carry.py` venues (KRAKEN/BINANCE/BYBIT/OKX/BITFINEX/BITGET-FUTURES) × both data_types
+  × 2026-08-08..11**. The P1 corpus-refresh todo above remains gated on its own forward-poll-cron dependency — unchanged
+  since slot-6's check earlier the same day. Delete remains BLOCKED on gate (1); no code shipped, no delete executed.
+  Task released `reason_code=GATED` — re-dispatch once the corpus-refresh P1 todo lands.
+
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
