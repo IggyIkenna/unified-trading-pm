@@ -68,17 +68,29 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Verify every one of the parent plan's 5 `- [x]` todos actually carries checkable evidence, not just
-      a claim.** For each: if it cites a commit sha (the `run_sports_backtest` CLI wiring, the `SportsMatchingEngine`
-      deletion, the `extract_sports_instrument` extractor, the fixture data-source wiring, the hermetic
-      `execution_alpha_bps` test), confirm it's a real ancestor of `execution-service`'s live branch
+- [x] ✅ [REVIEW] P2. **Verify every one of the parent plan's 5 `- [x]` todos actually carries checkable evidence, not
+      just a claim.** For each: if it cites a commit sha (the `run_sports_backtest` CLI wiring, the
+      `SportsMatchingEngine` deletion, the `extract_sports_instrument` extractor, the fixture data-source wiring, the
+      hermetic `execution_alpha_bps` test), confirm it's a real ancestor of `execution-service`'s live branch
       (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`). Specifically confirm: (a) `SportsMatchingEngine`
       is actually deleted (not just unwired) per the 2026-08-08 operator ruling's "no shims" instruction; (b)
       `run_sports_backtest` targets `L0Matcher`, not a resurrected `SportsMatchingEngine`; (c) the hermetic test
       genuinely asserts a non-trivial `execution_alpha_bps` (per `/codex/04-architecture/backtest-groups.md`'s Group-C
       output contract), not just that the CLI runs without erroring. **Done when**: every todo has an
       independently-reverified evidence line, and any todo whose evidence does not hold up is reopened with the
-      discrepancy stated, not silently left `[x]`. Repo: execution-service.
+      discrepancy stated, not silently left `[x]`. Repo: execution-service. **Evidence (slot 9, 2026-08-11)**: All 5
+      parent-plan todos independently reverified. (1) Todo 1 CLI wiring: `execution-service@5e80d437` + `@4ceaec57` both
+      ancestors of `origin/live-defi-rollout`; `run_sports_backtest` present in `backtest_domains.py`. (2) Todo 2
+      fixture data-source: `execution-service@51bee662a` ancestor of LDR. (3) Todo 3 delete `SportsMatchingEngine`:
+      `execution-service@70d18a44` ancestor of LDR; `sports_matching.py` absent from HEAD; `__init__.py` exports
+      cleaned. (4) Todo 4 hermetic test: `execution-service@893355cb` + `@7680d3f0d` both ancestors of LDR; two
+      assertions — `total_execution_alpha_bps != 0.0` AND `entry_slippage == -5.0 bps` (the L0 spread),
+      `entry_fills == 1`, `fill_price > benchmark`. (5) Todo 5 placement: decision documented in parent plan Progress
+      Log (slot 33, 2026-08-11) — stays manually-invoked one-off; no execution-service Group-C verification surface
+      exists for any domain runner. Specific confirmations: (a) `SportsMatchingEngine` DELETED — file gone, init
+      cleaned; (b) `run_sports_backtest` → `BacktestEngine` → `"BET" → BookType.L0_TOB` → `L0Matcher()` dispatch chain,
+      no SportsMatchingEngine reference anywhere in `backtest_domains.py`; (c) hermetic test asserts non-trivial alpha,
+      not just success exit code. Zero discrepancies found — all 5 parent todos carry verified, checkable evidence.
 
 - [ ] [REVIEW] P3. **Resolve the parent plan's one remaining judgment call — todo 5 (docs/BACKTESTS.md placement) — via
       existing-sibling precedent, not fresh judgment.** Check whether `docs/BACKTESTS.md` (or its replacement, if the
