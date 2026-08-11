@@ -320,22 +320,20 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       unchecked. Regression tests: `tests/unit/test_partition_path_is_canonical.py`
       (`test_defi_canonical_stem_per_type_is_clean`, `test_defi_bare_symbol_stem_is_non_canonical_by_id_form`,
       `test_defi_gmx_chainless_perpetual_is_canonical`, `test_is_canonical_instrument_id` DeFi cases).
-- [ ] BLOCKED-UPSTREAM-DESIGN [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence
-      disposition (separate design) — gated on `fail_hard_canonical_enforcement_design_2026_07_20.md`'s own still-open
-      `[DESIGN] P1. Close the three §5 gaps` todo; not independently worker-actionable until that lands. **Re-confirmed
-      2026-08-02 (slot-12)**: `unified_api_contracts/canonical/quarantine.py` (`is_quarantined_instrument_id` /
-      `ResolutionEvidence` / `QUARANTINE_REGISTRY` / `classify_id_form`, `unified-api-contracts@989e9d16`) remains a
-      STANDALONE module — grep across every slot repo found 0 non-test, non-`__init__.py` callers. Wiring it into a
-      write/read guard requires first closing the design doc's §5 gaps (derivative/chain-bundle lane defeats all three
-      write gates; "column == manifest by construction" is TARDIS-only, so the live/on-chain dual-resolver split can
-      route a genuinely-canonical object to `record_failed`; the read-gate three-valued classification assumes a
-      positive on-disk marker the corpus lacks) — that design doc is itself `assigned_vm: NA` /
-      `execution_scope: local-only` (explicit human/design judgment work, not AO-dispatchable), so this item was
-      mis-tagged `[DATA]` (AO-eligible) here. Retagged `BLOCKED-UPSTREAM-DESIGN` so backlog regen stops re-dispatching
-      it to a worker who cannot act on it alone. Re-open for AO dispatch (as a properly scoped sub-todo) only once
-      `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` gap-closing todo is done and defines a
-      concrete, worker-determinable wiring step. (AO dashboard blocked-question BLK-fd7b206d records this retag's
-      rationale.)
+- [ ] [DATA] P2. **UNBLOCKED 2026-08-11** — `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1`
+      gap-closing todo is now done (§5b of that doc), splitting into 3 concrete implementation todos there (row-level
+      bundle column gate; live-lane manifest-key-from-column derivation; `unclassified` temporal read-gate state). This
+      item's quarantine/honest-absence disposition is now worker-determinable: wire
+      `unified_api_contracts/canonical/quarantine.py`'s `is_quarantined_instrument_id`/`ResolutionEvidence`/
+      `QUARANTINE_REGISTRY`/`classify_id_form` (still a standalone module, 0 non-test callers as of 2026-08-02) into a
+      real write/read guard, following the sibling doc's 3 implementation todos as the sequencing (Gap 1/2's write-side
+      fixes land before Gap 3's read-gate `unclassified` state, matching Stage 1 → Stage 3 ordering in that doc's §2).
+      Recommend a quick operator/engineering sanity check on the sibling doc's §5b resolutions before this ships, given
+      the correctness stakes (flagged there, not gating dispatch). Prior text preserved for the audit trail: this item
+      was previously `BLOCKED-UPSTREAM-DESIGN`, gated on the sibling doc's `[DESIGN] P1` todo being open (re-confirmed
+      2026-08-02, slot-12); retagged then because the sibling design doc is itself `assigned_vm: NA` /
+      `execution_scope: local-only`, so dispatching this item as plain `[DATA]` sent workers to a task they couldn't act
+      on alone (AO dashboard blocked-question BLK-fd7b206d records that retag's rationale).
 
 ## 8. Codex SSOTs updated
 
@@ -389,3 +387,7 @@ own tests pass (178 passed across the four canonical-path test modules).
   standalone module both §7 BLOCKED-UPSTREAM-DESIGN dispatches center on), keeping the design-gate doc + the oracle
   itself as the load-bearing reads.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-11** (operator-requested design pass on the sibling doc, via main, part of an AO-dispatch-visibility gate
+  unblocking pass): `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` closed (§5b resolutions to
+  all 3 gaps). Retagged this item from `BLOCKED-UPSTREAM-DESIGN` to `[DATA] P2`, now AO-dispatchable. Not implemented
+  this session.

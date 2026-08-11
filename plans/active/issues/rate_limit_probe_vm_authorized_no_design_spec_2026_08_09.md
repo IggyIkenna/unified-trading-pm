@@ -23,6 +23,7 @@ author: slot-9 (infra)
 source: ["plans/active/infra_capture_and_devops_leftovers_2026_07_06.md"]
 resolved_by:
 locked_by:
+archive_exempt: true
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -78,7 +79,16 @@ STARTED <60s + progress + terminal state).
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Supply the missing rate-limit-probe design spec (target vendor/endpoint, request pattern,
-      disposable-IP VM provisioning mechanism, success/stop criteria, teardown) — see "Recommended decision" above. Once
-      supplied, the parent todo in `infra_capture_and_devops_leftovers_2026_07_06.md` can be re-scoped and dispatched.
-      (repo: unified-trading-pm)
+- [x] ✅ [OPERATOR] P2. **RETIRED 2026-08-11** — operator confirmed the original motivating incident (Tardis
+      rate-limiting) was already solved via a different mechanism: the 1-concurrent-VM hard cap
+      (`tardis-concurrency-guard.sh`, 2026-07-16) plus larger boot disk to fix the burst-write bottleneck
+      (`deployment-service@ac5d1660`, 2026-07-18). No probe design spec is needed — closed the parent todo in
+      `infra_capture_and_devops_leftovers_2026_07_06.md` as won't-do rather than continuing to carry this ask. (repo:
+      unified-trading-pm)
+
+## Progress Log
+
+- **2026-08-11** (operator decision, via main): retired — see the todo above. Marked `archive_exempt: true` rather than
+  running the full corpus-wide archival ritual in the same pass; this doc has ~3 corpus referrers, genuinely
+  0-open-todos/done, intentional terminal state. Revisit for a proper archive (banner + git mv + referrer fix) in a
+  dedicated plan-hygiene pass.

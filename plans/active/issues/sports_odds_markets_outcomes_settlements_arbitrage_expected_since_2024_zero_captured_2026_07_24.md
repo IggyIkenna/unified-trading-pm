@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-07-24
 author: unknown
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: sports_master
 execution_scope: orchestrator-agent
 priority: P1
@@ -241,14 +241,17 @@ one commit that modeled `arbitrage_opportunity` at all treated it as a downstrea
 target. This does not contradict the external-data-always-available rule (that rule protects against descoping a
 genuinely wanted, credential-blocked feature) — it establishes these were never a real capture target to begin with.
 
-- [ ] [CODE] P2. BLOCKED-OPERATOR-DECISION. Execute the FINAL decided fix (retire OR scaffold-with-BLOCKED‑CREDENTIALS,
-      per the operator's answer to the discriminator investigation above) — either wire up + schedule real capture (or
-      scaffold the adapters and mark `BLOCKED‑CREDENTIALS` per the external-data-always-available rule), or
-      retire/adjust `VENUE_DATA_TYPE_CAPABILITIES` for these tuples (repo: unified-api-contracts and/or
-      instruments-service / market-tick-data-service depending on the decision). **Done when**: the expected-universe
-      golden regression (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match the new reality
-      and the honest-coverage denominator reflects it. **Gated on the operator's FINAL decision (not just the DECISION
-      todo's recommendation above) — do NOT touch `VENUE_DATA_TYPE_CAPABILITIES` or the golden regression until then.**
+- [ ] [CODE] P2. **OPERATOR-DECIDED 2026-08-11: RETIRE.** Remove the `markets`/`outcomes`/`settlements`/
+      `arbitrage_opportunity` tuples for ODDS_API/PINNACLE/BETFAIR from `VENUE_DATA_TYPE_CAPABILITIES` (repo:
+      unified-api-contracts and/or instruments-service / market-tick-data-service as needed). Decision confirmed safe
+      2026-08-11 by an independent check of the operator's specific concern (whether `outcomes`/`settlements` are
+      produced some other way) — they are: `/codex/02-data/sports-data-types-catalog.md` § "Retired Data Types" / "ML
+      label lineage" documents the real, already-shipped path (instruments-service `fixtures_outcomes` →
+      features-service `read_fixtures_joined` → ml-service `sports_target_generator.py`; settlement cash-flow grading
+      runs off the same data via the `SPORTS_RESOLUTION` ledger event, see `/codex/02-data/ledger-event-taxonomy.md`).
+      Retiring these registry entries removes no real capability. **Done when**: the expected-universe golden regression
+      (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match and the honest- coverage
+      denominator reflects it.
 
 ### DIAG findings (2026-07-24, slot 5) — corroborating a second, independent investigation
 
@@ -327,11 +330,9 @@ confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
-
-- **2026-08-11 (slot 1): `assigned_vm` corrected `planning` → `NA`.** Every remaining open todo here is operator-gated
-  (BLOCKED-OPERATOR-DECISION — retire-vs-scaffold is an operator call), so AO can see nothing to dispatch — the doc was
-  an `assigned_vm: planning` plan the orchestrator never touches, which is exactly the condition
-  `check_ao_dispatch_visibility_gate.py`'s `max_zero_dispatchable_docs` axis exists to flag. `NA` is the semantically
-  correct value per `assigned_vm` (`planning` = the orchestrator VM executes it; `NA` = not dispatched). NO todo text,
-  marker, or priority was altered — the exclusion markers were re-read and are correct and deliberate, not stale. Flip
-  back to `planning` if and when the gate opens and the work becomes worker-determinable.
+- **2026-08-11** (operator decision, via main, part of an AO-dispatch-visibility gate unblocking pass): operator asked
+  to first check whether `outcomes`/`settlements` are derived some other way before agreeing to retire — dispatched a
+  sub-agent to check; confirmed both already flow through a separate, working pipeline (see todo 3's updated text for
+  citations). Operator then confirmed: retire. Retagged todo 3 from `BLOCKED-OPERATOR-DECISION` to
+  `OPERATOR-DECIDED: RETIRE`, now AO-dispatchable. Implementation (the actual registry edit + golden regression update)
+  not done in this session.
