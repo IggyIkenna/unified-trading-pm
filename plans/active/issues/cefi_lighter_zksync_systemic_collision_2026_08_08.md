@@ -34,6 +34,7 @@ resolved_by:
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
+archive_exempt: true
 code_refs:
   [
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
@@ -261,16 +262,31 @@ pair (2026-07-03 `0G`):
       (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column compare tolerates the
       `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended. **Range-2 apply stays a
       follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run + apply sequence.**
-- [ ] [DATA] P2. **Decide + clear the single remaining LIGHTER-ZKSYNC collision (BTC 2026-05-01) that blocks the Range-2
-      apply: wire `LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` (208,486 rows, 15 cols, schema-newer w/ real `ts_event`) vs
-      canonical `...BTC-USDC@LIN.parquet` (416,972 unique rows, 13 cols, schema-OLDER; SAME timestamp set, 0/208,486
-      wire rows match a canonical row)** — repo: market-tick-data-service. Characterized (slot 18, 2026-08-10) as the
-      plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy call" → default leave-both.
-      Resolution: operator decides prefer-wire / prefer-canonical / leave-both; then re-run the Range-2 apply
-      (04-18..07-24) to 0 unhandled collisions. **Blocked on operator decision (see /blocked).**
+- [x] ✅ [DATA] P2. **Decide + clear the single remaining LIGHTER-ZKSYNC collision (BTC 2026-05-01) that blocks the
+      Range-2 apply: wire `LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` (208,486 rows, 15 cols, schema-newer w/ real
+      `ts_event`) vs canonical `...BTC-USDC@LIN.parquet` (416,972 unique rows, 13 cols, schema-OLDER; SAME timestamp
+      set, 0/208,486 wire rows match a canonical row)** — repo: market-tick-data-service. Characterized (slot 18,
+      2026-08-10) as the plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy call" → default
+      leave-both. Resolution: operator decides prefer-wire / prefer-canonical / leave-both; then re-run the Range-2
+      apply (04-18..07-24) to 0 unhandled collisions. **DECIDED 2026-08-10 (operator, BLK-0a76df10: DIRECTION A —
+      LEAVE-BOTH, disposition=final)** — the pair is a fully-characterized Finding 2/5/8 "two real captures" class;
+      leave-both is the unique lossless resolution (prefer-wire/prefer-canonical both lose data). Range-2 proceeded via
+      date-range split EXCLUDING 2026-05-01 (established single-transitional-day precedent) and **COMPLETED 2026-08-11**
+      — VM `canonical-migration-cefi-late-renames-20260810-235650` EXIT_STATUS=0, Collisions: 0 unhandled, GCS rename
+      stats `{renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`, manifest 26,491,048 → 26,462,389 rows
+      (`instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659`). Consolidator cron resumed + verified ENABLED
+      2026-08-11T00:32Z. BTC 2026-05-01 stays a tracked leave-both residual (both objects preserved, wire non-canonical)
+      — only a future prefer-wire/canonical policy change would revisit it.
 
 ## Progress Log
 
+- **2026-08-11 (slot 6, data_engineering, dispatched on the BTC-05-01 decide+clear todo)** — TASK COMPLETE, no code
+  change needed (the apply used existing shipped scripts excluding 05-01). Decision already recorded (BLK-0a76df10,
+  DIRECTION A LEAVE-BOTH, disposition=final); Range-2 apply COMPLETED by VM
+  `canonical-migration-cefi-late-renames-20260810-235650` (EXIT_STATUS=0, Collisions: 0 unhandled, self-deleted);
+  consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` resumed + verified ENABLED by slot 30.
+  Flipped the BTC-05-01 todo. BTC 05-01 remains a tracked leave-both residual (both objects preserved, wire
+  non-canonical). All 5 todos now closed; doc eligible for archival via the 6-step ritual.
 - **2026-08-10 (slot 20, SHIP RECONCILIATION — the actual landed SHA is `market-tick-data-service@335c94f1`)** — The
   wire-superset content-upgrade fix this doc's flip attests was authored + committed by slot 20 as `13ac6245`, but the
   push was blocked by a pre-existing mtds trunk red (3 stale TradFi casing tests, repo-blocker RB-90251f57). Two things
