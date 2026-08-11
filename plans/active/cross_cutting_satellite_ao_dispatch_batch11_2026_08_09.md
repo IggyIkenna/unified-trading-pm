@@ -259,12 +259,13 @@ drift_direction: advance-code
       change needed — flipping as already-shipped, not re-implementing. The optional pace tighten (0.34s→0.25s) was NOT
       applied (still 0.34s in `soccerfootball_info.py:43`) — left as-is since it's explicitly optional and outside this
       item's done-when.
-- [ ] [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue.** Source: same doc. The
-      lock currently matches `^mtds-prediction-`, so a KALSHI run is blocked by a concurrent POLYMARKET run even though
-      they hit different APIs with no shared rate limit. Make the lock per-venue (`^mtds-prediction-{venue}-`);
-      `--force` is the current bypass and should no longer be needed for this specific case once fixed. Done when: a
-      KALSHI and a POLYMARKET backfill can run concurrently without the singleton lock blocking either. Repo:
-      deployment-service.
+- [x] ✅ [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue — STALE PREMISE,
+      already shipped by slot 28.** Source: same doc. The exact fix described — per-venue singleton lock
+      (`^mtds-prediction-${VENUE_LOWER}-`), `VENUE_LOWER` variable, updated error message, DRY'd VM_NAME — landed at
+      `deployment-service@fce66018` ("fix(scripts): make mtds-prediction singleton lock per-venue", 2026-08-11 00:30
+      UTC) before this task was dispatched to slot 22. Verified against current HEAD: filter reads
+      `name~^mtds-prediction-${VENUE_LOWER}-`, KALSHI and POLYMARKET runs no longer block each other. No code change
+      needed. Repo: deployment-service@fce66018.
 - [ ] [TEST] P3. **Re-baseline the UEI-lifecycle contract-call ratchet for `canonical/crosscutting/honest_coverage.py`
       post-split.** Source: same doc. Commit `27a80d2` ("feat(freshness): feed-SLA Phase 1") split the honest_coverage
       cluster registries out from `honest_coverage.py` (900-line cap), so the UEI-lifecycle contract-call baseline of 27
