@@ -208,7 +208,7 @@ pair (2026-07-03 `0G`):
 - [x] ✅ [DATA] P2. **Root-cause the LIGHTER-ZKSYNC wire/canonical dual-write collision** — market-tick-data-service
       (slot 20, 2026-08-08). Audit script + findings above; determination = (a) self-resolving race, culprit identified
       (`cefi-fwd-20260808-123230`, ETA ~2026-08-12T05:00Z). Zero mutation — audit only, per scope.
-- [ ] [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
+- [x] ✅ [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
       **Original gate (culprit `cefi-fwd-20260808-123230` terminated) is MET — confirmed deleted 2026-08-09T02:13:58Z.**
       **2026-08-10 dry-run VERDICT: still BLOCKED — genuine unhandled collisions persist** (see Progress Log entry):
       `would_rename=3524` but the tool logs `Refusing to proceed to --apply while unhandled collisions exist` (e.g.
@@ -216,7 +216,14 @@ pair (2026-07-03 `0G`):
       collision population is empirically FALSE. Unblock = the BROAD-comparison fix tracked in the new P2 todo below
       (extend `_confirm_would_patch_duplicate`'s exclusion set per Finding 11), then re-run this apply. Sequence once
       the fix lands: confirm fresh spot-check, pause cron, verify PAUSED, run, verify 0 unhandled collisions, resume
-      cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
+      cron, verify ENABLED. (repo: market-tick-data-service, deployment-service) **COMPLETED 2026-08-11 (slot 30)** —
+      Range 2 (2026-05-02..07-24; 05-01 excluded per operator BLK-0a76df10 DIRECTION A LEAVE-BOTH) applied by VM
+      `canonical-migration-cefi-late-renames-20260810-235650` (e2-standard-16, 2026-04-18..2026-07-24, ON_DEMAND).
+      EXIT_STATUS=0; `Collisions: 0 unhandled`; GCS rename stats
+      `{renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`; MANIFEST
+      `{before 26491048 → after 26462389,     instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659, honest_unresolved_rows: 5}`;
+      consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED. All shipped fixes
+      firing on real data: `335c94f1` wire-superset, `a8a29c8a1` dtype-normalize.
 
 - [x] ✅ [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
       `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition), then
@@ -400,17 +407,28 @@ pair (2026-07-03 `0G`):
   (`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1 --project=central-element-323112`) +
   verify ENABLED → flip the apply todo (line 211) → delete scratch `.watch_lz_apply.py` (slot root, untracked) → `/done`
   with task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`.
+- **2026-08-11 (slot 30, data_engineering, dispatched on the Range-2 apply todo)** — **COMPLETED.** Range-2 VM
+  `canonical-migration-cefi-late-renames-20260810-235650` reached its terminal verdict: **`EXIT_STATUS=0`,
+  `Collisions: 0 unhandled`**. Full run:
+  `Outcome breakdown: {already_canonical: 11061, plan: 12957, unresolved_wire: 5, would_rename: 2456, would_upgrade: 10501, would_merge: 0, mislabel_left_raw: 0}`;
+  `GCS rename stats: {renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`; MANIFEST rewritten
+  `{manifest_total_rows_before: 26491048, in_scope_rows: 53026, instrument_ids_relabeled: 28024, honest_unresolved_rows: 5, rows_collapsed_in_dedup: 28659, manifest_total_rows_after: 26462389}`;
+  `DEPLOYMENT_COMPLETED (exit_code=0)`; VM self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`). Both shipped comparison
+  fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) fired on the real population; the BTC 2026-05-01 pair
+  was correctly excluded per operator BLK-0a76df10 (DIRECTION A LEAVE-BOTH). Consolidator cron
+  `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED (full cefi consolidator fleet all ENABLED).
+  Apply todo flipped in this session. **Range-2 `cefi-late-renames` apply for LIGHTER-ZKSYNC is now DONE.**
 
 ## Deferred work after 2026-08-11
 
-| Item                                                                      | State/why deferred                                                                                                                                                                    | Blocked-on                                              |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Range-2 `cefi-late-renames` apply (`2026-05-02..07-24`) — VM `...-235650` | **Cannot be done yet** — VM mid-walk (day=2026-05-29 as of 00:08Z), needs elapsed time for Discovery + apply + manifest rewrite                                                       | VM terminal EXIT_STATUS=0 AND "Collisions: 0 unhandled" |
-| Resume consolidator cron + verify ENABLED                                 | **Not done** — must follow Range-2 success (pause/resume sequence is explicit in the apply todo)                                                                                      | Range-2 apply success                                   |
-| Flip apply todo (line 211) + final Progress Log entry                     | **Not done** — ships as `docs(plans):` safe-doc-push after Range-2 verify                                                                                                             | Range-2 + cron resume                                   |
-| Delete scratch `.watch_lz_apply.py` (slot root)                           | **Not done** — untracked, needed by the live watchdog only until the apply's terminal verdict; deleted before `/done` (dirty gate)                                                    | Apply terminal verdict                                  |
-| `/done` task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`     | **Not done**                                                                                                                                                                          | All of the above                                        |
-| BTC 2026-05-01 leave-both residual (todo at line 255)                     | **Operator-owned** — disposition=final (BLK-0a76df10, DIRECTION A LEAVE-BOTH); 05-01 excluded from Range-2 by design; only a future prefer-wire/canonical policy change would revisit | Operator policy (none pending)                          |
+| Item                                                                      | State/why deferred                                                                                                                                                                    | Blocked-on                     |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Range-2 `cefi-late-renames` apply (`2026-05-02..07-24`) — VM `...-235650` | **DONE 2026-08-11 (slot 30)** — EXIT_STATUS=0, `Collisions: 0 unhandled`; renamed 2043, upgraded 10501, deleted_dup_source 413; manifest rewritten (26,491,048 → 26,462,389 rows)     | None                           |
+| Resume consolidator cron + verify ENABLED                                 | **DONE 2026-08-11** — `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED (cefi fleet all ENABLED)                                                                | None                           |
+| Flip apply todo (line 211) + final Progress Log entry                     | **DONE 2026-08-11** — flipped + logged in this session's `docs(plans):` commit                                                                                                        | None                           |
+| Delete scratch `.watch_lz_apply.py` / `.watch_lz_range2.py` (slot root)   | **DONE 2026-08-11** — slot-30 watchdog `.watch_lz_range2.py` removed before `/done` (dirty gate)                                                                                      | None                           |
+| `/done` task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`     | **DONE 2026-08-11**                                                                                                                                                                   | None                           |
+| BTC 2026-05-01 leave-both residual (todo at line 255)                     | **Operator-owned** — disposition=final (BLK-0a76df10, DIRECTION A LEAVE-BOTH); 05-01 excluded from Range-2 by design; only a future prefer-wire/canonical policy change would revisit | Operator policy (none pending) |
 
-**Recommended NEXT item**: wait on the Range-2 VM terminal verdict, then resume the consolidator cron. No new priority
-derivation needed — the sequence is fixed by the operator's BLK-0a76df10 answer.
+**Recommended NEXT item**: none — the Range-2 apply sequence is complete; the only open LIGHTER-ZKSYNC item is the
+operator-owned BTC 2026-05-01 leave-both residual (no action pending).
