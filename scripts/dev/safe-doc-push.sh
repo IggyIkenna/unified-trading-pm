@@ -1044,6 +1044,18 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# Stage the payload FIRST, before anything that might quarantine or autostash the dirty
+# tree. Once staged, the named files are no longer visible to `git diff --name-only` (the
+# working tree matches the index for them), so the quarantine step below cannot sweep them
+# into a stash that the script then compares against and falsely reports "already matches
+# HEAD." The in-loop `git add` + `reassert_renames` below this block re-stage on every
+# attempt to recover from any reconcile step that runs `git restore --staged .`.
+# ssot: /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md
+#       § "Second symptom, same mechanism: a MODIFICATION dropped, and reported as SUCCESS"
+echo "  staging payload first (before any quarantine or reconcile may touch the tree)"
+git add -- "${FILES[@]}" 2>/dev/null || true
+reassert_renames
+
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
 # --files are passed as protected so the extreme-pile self-arrest never quarantines the very
