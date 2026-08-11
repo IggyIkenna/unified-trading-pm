@@ -3016,6 +3016,33 @@ regression.
 
 ---
 
+## STEP 5.107 / 5.102 — every `pytest.xfail` / unconditional `@pytest.mark.skip` must cite a tracked plan/issue slug
+
+Standing rule (operator finding 2026-08-08, fleet-wide "tests weakened rather than fixed" sweep): **an `xfail` with a
+good reason and no remediation todo is indistinguishable, six months later, from coverage that was never written.** A
+test marked `xfail` (or unconditionally `skip`ped) is disabled coverage; the reason must point at the tracked work that
+will re-enable it.
+
+- **STEP 5.107** (`scripts/quality-gates-base/base-service.sh`) and **STEP 5.102** (`base-library.sh` library-repo
+  parity) run `scripts/quality_gates/check_xfail_skip_tracked.py` against the calling repo's `tests/`. SHRINKING
+  ratchet: `scripts/quality_gates/xfail_skip_tracked_baseline.yaml` (43 pre-existing untracked markers at bootstrap —
+  each must gain a slug or be fixed; never ADD an entry).
+- **What is flagged (reason must cite a tracked slug):** `@pytest.mark.xfail(...)` / `pytest.xfail(...)`, and the
+  UNCONDITIONAL `@pytest.mark.skip(...)` decorator. "Cites a tracked slug" = the reason contains a `plans/` / `issues/`
+  / `codex/` path, a dated `20YY_MM_DD` stamp, or a `.md` doc reference. A slug in the `reason=` kwarg **or** the same /
+  preceding-line `# reason:` comment satisfies the rule (matches the older inline skip-reason rule).
+- **Deliberately exempt (the boundary decision, recorded so it stays greppable):** `@pytest.mark.skipif(condition, ...)`
+  (has a real runtime condition — environment-gated, not weakened coverage; the existing `skipif` rule in `README.md` §
+  D3 already requires a documented reason) and reason-bearing `pytest.skip("<reason>")` calls (pervasive environmental
+  gating — VCR-cassette presence, live-API-key absence, CI smoke tiers). A ZERO-justification `pytest.skip()` / bare
+  `@pytest.mark.skip` with no reason IS flagged. Converting an environmental unconditional skip to
+  `skipif(condition, ...)` (or citing a slug) is the sanctioned fix.
+- **Fix path:** add the tracking citation to the marker's reason, fix the test so it runs, or (for an environmental
+  skip) make it conditional via `skipif`. Re-baseline (`--baseline-write`) only for genuinely pre-existing debt — never
+  to silence a new regression.
+
+---
+
 ## STEP 5.94 + 5.95 — grep-able-rule ratchets (fallback-imports · DTZ · TID251) — SHIPPED 2026-06-10
 
 Three CLAUDE.md rules that previously relied on agent memory are CI-enforced count-ratchets (PM@71a2e103b; plan

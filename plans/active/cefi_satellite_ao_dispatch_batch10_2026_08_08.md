@@ -43,8 +43,8 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
@@ -86,7 +86,7 @@ source: >-
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
@@ -176,7 +176,7 @@ context_scope:
       coercion is fragile. Fixed with explicit `AssetGroup(asset_group)` + `DataType(data_type)` construction, removing
       the `pyright: ignore[reportArgumentType]` suppressions. Both repos `quality-gates.sh` green. Evidence:
       deployment-service@88f8834c, market-tick-data-service@f6b7f8b7.
-- [ ] [SCRIPT] P3. **Fix the confusing `FORCE="${FORCE:-250}"` default** in
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-10 (slot-29)** — **Fix the confusing `FORCE="${FORCE:-250}"` default** in
       `deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` (line ~61) to
       `FORCE="${FORCE:-false}"` — a copy-paste artifact from the adjacent `DRY_RUN` default; harmless today (only the
       literal string `"true"` triggers `VM_FORCE=true` downstream) but reads as a bug. **Safe-idempotent justification
@@ -185,7 +185,9 @@ context_scope:
       `issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (line 718, flagged as an unclaimed candidate in
       the 2026-08-07 na-eligibility-audit entry). **Done when**: the default reads `false`, existing tests (if any
       target this script) still pass, `quality-gates.sh --no-fix` is green, and the source doc's P3 checkbox is flipped
-      citing the commit.
+      citing the commit. **DONE 2026-08-10 (slot-29)**: default now reads `FORCE="${FORCE:-false}"`; QG `--no-fix` green
+      (exit 0, sentinel == shipped SHA); shipped via quickmerge. Evidence: deployment-service@7b4c69d72 (verified
+      ancestor of origin/live-defi-rollout); source doc P3 checkbox flipped in the same commit.
 
 ## Deferred — BLOCKED-OPERATOR-DECISION (conflict, needs explicit ruling)
 

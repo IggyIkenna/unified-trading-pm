@@ -27,6 +27,11 @@
 # that was never committed; against the fix it must exit non-zero and never claim success.
 
 setup() {
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   SCRIPT="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
   REAL_GIT="$(command -v git)"
@@ -89,6 +94,12 @@ EOF
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"✅ Pushed"* ]]
-  run git log --oneline -- new_doc.md
+  # Assert against ORIGIN, not the caller's local log. Isolated mode (the default) commits from a
+  # private worktree and pushes, so the caller's branch legitimately does not contain the commit
+  # until its next pull -- the old local-log assertion silently became a test of in-tree behaviour
+  # that no longer happens, and failed as though the push had not worked. "Did it land on the
+  # branch" is the claim this test actually makes, holds in BOTH modes, and is how the negative
+  # control above already checks the opposite case.
+  run git --git-dir="${WORK}/origin.git" log --oneline live-defi-rollout -- new_doc.md
   [ -n "$output" ]
 }

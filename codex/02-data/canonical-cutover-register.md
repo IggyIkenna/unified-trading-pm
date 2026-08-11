@@ -514,7 +514,7 @@ now split: shapes #3/#3b MIGRATED (4b-i COMPLETE 2026-08-06 — 3,574 legacy obj
 (4b-iii) remains pending. All in `market-data-tick-pred-prd-{pid}`:
 
 - **Shapes #3/#3b** (`data_type=prediction_trades` bundle-per-underlying): 2,477 manifest rows, 348 dates (2025-03-14 →
-  2026-04-14), 14 `underlying` values, 100% `capture_status=captured`. Migration (4b-i) in progress:
+  2026-04-14), 14 `underlying` values, 100% `capture_status=captured`. Migration (4b-i) COMPLETE:
   `market-tick-data-service@e4acf0c4` (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`), **COMPLETE
   2026-08-06 — 3,574 legacy `prediction_trades` objects enriched + deleted across the full 2025-03-14→2026-04-14 range,
   0 legacy objects remain** (final verification re-run over all 348 dates; see

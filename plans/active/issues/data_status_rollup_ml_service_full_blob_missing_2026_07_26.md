@@ -131,9 +131,9 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       `POST /api/data-status/rollup-run?services=ml-service` (authenticated via `unified-trading-sa`'s existing
       `roles/run.invoker` grant on the dedicated rollup service) returned in 27.8s with
       `{"status":"partial","exit_code_live":1}`, and Cloud Logging for that exact window
-      (`resource.labels.service_name=     "uts-prod-data-status-rollup-svc"`, `timestamp>="2026-08-02T21:02:00Z"`)
-      showed the real, LOUD error:
-      `ERROR manifest rollup failed for service=ml-service: Unknown kind 'ml-models-store' for cloud 'gcp'. Valid     kinds: [..., 'ml-store', ...]`.
+      (`resource.labels.service_name= "uts-prod-data-status-rollup-svc"`, `timestamp>="2026-08-02T21:02:00Z"`) showed
+      the real, LOUD error:
+      `ERROR manifest rollup failed for service=ml-service: Unknown kind 'ml-models-store' for cloud 'gcp'. Valid kinds: [..., 'ml-store', ...]`.
       Root cause: `deployment_api/services/data_status_drilldown/_core.py`'s `SERVICE_TO_KIND["ml-service"]` still
       pointed at the legacy `"ml-models-store"` alias, which UTL's `bucket_naming._KIND_ALIASES` REMOVED in the
       2026-07-19 alias sunset (`bucket_naming.py`'s own comment: "ALIAS SUNSET 2026-07-19: all five ml aliases REMOVED —
@@ -157,8 +157,8 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 - [x] ✅ [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
       instruments-service + market-data-processing-service both succeeded same-cycle): `instruments-service`'s manifest
       rollup step now fails every cycle with
-      `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data     type object` (its coverage step
-      still succeeds — a genuine per-service partial failure, correctly isolated, not silent);
+      `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data type object` (its coverage step still
+      succeeds — a genuine per-service partial failure, correctly isolated, not silent);
       `market-data-processing-service`'s manifest AND coverage BOTH now hit the 420s child-process timeout every cycle
       (previously only `market-tick-data-service` was the known/accepted MTDS gap — MDPS timing out is new). Both read
       as data-volume growth outpacing the `_CHILD_RLIMIT_AS_BYTES`/`_CHILD_JOIN_TIMEOUT_S` ceilings set in
@@ -169,8 +169,8 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       honest-failure (not silent-placeholder) path for both. **NEW EVIDENCE (2026-08-02, slot 15)**: while diagnosing
       the ml-service bug above, `gcloud logging read` on `uts-prod-data-status-rollup-svc` for the last ~4h surfaced
       recurring PLATFORM-level (not per-service-child) memory events —
-      `ERROR Memory limit of 32768 MiB exceeded with     ~33000 MiB used` and
-      `the container instance was found to be using too much memory and was terminated ...     likely to cause a new container instance to be used for the next request`,
+      `ERROR Memory limit of 32768 MiB exceeded with ~33000 MiB used` and
+      `the container instance was found to be using too much memory and was terminated ... likely to cause a new container instance to be used for the next request`,
       roughly every 1-2 `*/20` cron cycles (e.g. 18:20, 19:00, 19:40, 20:20 UTC). This means the WHOLE container
       (parent + any in-flight isolated child), not just an individual service's `_CHILD_RLIMIT_AS_BYTES`-capped child,
       is periodically hitting the 32Gi container ceiling and being platform-killed mid-sweep — the per-service child
@@ -184,19 +184,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                                                                                                                                                                                                                                                                                                                      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                                                                                                                                                                                                                                                                                                                      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                                                                                                                                                                                                                                                                                                                      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                                                                                                                                                                                                                                                                                                                      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                                                                                                                                                                                                                                                                                                                      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                                                                                                                                                                                                                                                                                                                      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                                                                                                                                                                                                                                                                                                                      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                                                                                                                                                                                                                                                                                                                      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                                                                                                                                                                                                                                                                                                                      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                                                                                                                                                                                                                                                                                                                      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                                                                                                                                                                                                                                                                                                                      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                                                                                                                                                                                                                                                                                                                      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                                                                                                                                                                                                                                                                                                                      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+          ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+          means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+          accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+          `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+          `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+          `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+          observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+          `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+          AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+          isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+          isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+          "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+          records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under
@@ -287,10 +287,133 @@ worth closing the same way (isolate + surface the real error) rather than leavin
   (mirroring the 2026-08-07 `_SERIAL_DISPATCH_ISOLATED` pattern already used for memory) is a real design call for
   whoever owns this doc's open MemoryError/timeout todo, not something to improvise inline from an adjacent task.
 
+- **2026-08-10 (interactive session, follow-up)**: shipped the timeout fix (`deployment-api@f1b80de071` — per-service
+  `_CHILD_JOIN_TIMEOUT_OVERRIDES_S` for instruments-service 420s→1500s, `_SERIAL_ISOLATED_CATEGORY_TIMEOUT_S` 200s→600s;
+  `deployment-service@34d65fad34` — matching Scheduler `attempt_deadline` 900s→1700s); both platform- level settings
+  (Cloud Run service `--timeout=1700s`, Cloud Scheduler `--attempt-deadline=1700s`) are live via direct `gcloud` calls.
+  BUT the code fix itself is stuck behind a SEPARATE, pre-existing deploy blocker discovered while verifying it reached
+  prod: `uts-prod-data-status-rollup-svc` has failed to redeploy from ANY image (7 consecutive Cloud Build attempts
+  across 4+ commits, starting 2026-08-10T14:58Z, before my change existed) with `HealthCheckContainerError` + zero
+  application log output — filed as its own doc, see
+  `/plans/active/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md`. This
+  doc's own timeout todo is code-complete and platform-config-complete; final live re-verification is gated on that
+  sibling doc's resolution.
+
+- **data_engineering (slot-22) 2026-08-10T20:17Z**: attempted the `[DATA] P1. Once` follow-up (re-trigger the
+  instruments-service rollup under the new 1500s ceiling + confirm the corrected sports coverage via
+  `/api/data-status/manifest`). **Gate verified NOT met — from LIVE infra, not doc checkboxes**:
+  `uts-prod-data-status-rollup-svc` (asia-northeast1) latest-created revision `-00389-w5x` (image `...a89602ad`, created
+  2026-08-10T18:42Z) still fails `HealthCheckContainerError`; serving revision `-00388-mwp` (created 17:45Z) is the
+  sibling-doc-identified OLD-code image. `deployment-api@f1b80de071` (committed 2026-08-10T17:43:55Z) therefore does NOT
+  yet reach the live rollup service, and the sibling deploy-blocker doc's P1 todo is still open — re-triggering now
+  would exercise the OLD 420s-ceiling worker code (a known, already-documented failure) and prove nothing about the fix.
+  Released the task GATED (`reason_code: GATED`); re-dispatch once the sibling blocker resolves.
+
+- **data_engineering (slot-22) 2026-08-10T22:42Z**: gate NOW met at the live level — re-verified from LIVE infra:
+  `uts-prod-data-status-rollup-svc` serves healthy revisions `-00395..-00398` (image `deployment-api:4303a3b`), and that
+  image's tree carries `_CHILD_JOIN_TIMEOUT_OVERRIDES_S = {"instruments-service": 1500}` — `f1b80de071` code reached the
+  live service; the deploy blocker cleared (healthy deploys since 21:53Z). Re-triggered the instruments-service rollup
+  via the live service (`POST /api/data-status/rollup-run?services=instruments-service`; auth = Cloud Run identity token
+  - `X-API-Key` from the `deployment-api-api-key` secret, since the app's `verify_any_auth` rejects a bare identity
+    token as a non-Firebase token). Result:
+    **`{"status":"partial","live_services":["instruments-service"],"exit_code_live":1}` — still FAILING**;
+    `full.json.gz` did not refresh (still `2026-08-05T02:27:27Z`). Root causes from the service's logs (22:42:13Z):
+    **(A)**
+    `manifest rollup failed for service=instruments-service: manifest-cat-instruments--CEFI timed out after 600s` — the
+    `_SERIAL_ISOLATED_CATEGORY_TIMEOUT_S` 200s→600s raise in `f1b80de071` is still insufficient for
+    instruments-service's CEFI manifest (matches the plan's own "raise vs shard is a design call" note); **(B)**
+    `coverage rollup failed ... 403 ... uts-prd-sa ... does not have storage.objects.create access` — the
+    healthy-revision redeploy switched the runtime SA from `unified-trading-sa` (prior working revision `-00388`) to
+    `uts-prd-sa` (`-00395..-00398`), and uts-prd-sa's write to the rollups bucket 403s despite project-level
+    `roles/storage.objectAdmin` (no bucket binding, no deny rule — an IAM nuance the fixer must investigate). The
+    420s→1500s child-join fix DID hold (the run passed the old 420s wall-clock), but the verification's done-when
+    ("confirm it succeeds") is NOT met. Two new follow-up todos added below; this task released GATED pending those
+    fixes.
+- **data_engineering (slot-13) 2026-08-10T23:20Z**: picked up the `[DATA] P2` category-timeout follow-up todo and ran
+  the raise-vs-shard decision with fresh live evidence (NOT box-checked from the plan — re-measured). **Live state**:
+  rollup service healthy (revision `-00398-rxv` serving, image `b60f56b`; a newer `-00399/-00400` deploy rolling in, no
+  auth/health regression observed this pass). Live log re-read (22:42 + 22:53) confirms
+  `manifest-cat-instruments--CEFI timed out after 600s` — the 600s category ceiling is genuinely the binding constraint,
+  and CEFI (85K rows, its SMALLEST category) alone exceeds it live (~3x the laptop's ~200s measurement), exactly
+  matching the plan's own "cost tracks grid size, not row count" note. **Budget math for raise-vs-shard**: the manifest
+  step runs ~5 categories SERIALLY under `_SERIAL_DISPATCH_ISOLATED`, each in its own `run_bounded` child (600s ceiling)
+  inside the per-service child whose join is 1500s (instruments-service override) inside a 1700s Cloud Run request /
+  1700s Scheduler `attemptDeadline` (HTTP cap ~1800s) on a `*/20` (1200s) cadence. A serial sum ≥5×600s cannot fit any
+  of those caps — **a pure "raise" is structurally impossible** (Cloud Run max 3600s + Scheduler cap ~1800s + 20-min
+  cron would overlap every tick and still can't bound sports' 16.4M-row compute). **Only making the sweep FASTER
+  (shard/parallelize/optimize) can satisfy the done-when.** Secondary inefficiency found (not root-cause of this pass):
+  `bounded_subprocess.run_bounded` uses `multiprocessing.spawn` (bounded_subprocess.py:121), so under
+  `_SERIAL_DISPATCH_ISOLATED` each category child does NOT inherit the module-level `_INDEX_CACHE` (the
+  `build_category_in_subprocess` docstring describing fork-cache-inheritance describes the ProcessPool path, not the
+  serial-isolated path) → every category cold-re-reads the full index from GCS. Escalating to /blocked as the plan's own
+  note demands ("design call, not an inline improvise") — the raise-vs-shard decision + the sub-sharding design
+  (per-venue / per-date-range / per-asset-group sub-bucket) is a correctness-sensitive architecture call that should be
+  resolved as a LOCAL decision first, then a properly-scoped todo dispatched against its outcome. No code changed this
+  pass.
+
+- **infra (slot-5) 2026-08-10T23:10Z**: closed the [INFRA] P2 follow-up (rollup-svc coverage write 403). Root cause:
+  `uts-prd-sa` had project-level `roles/storage.objectAdmin` but NO bucket-level binding on
+  `gs://central-element-323112-data-status-rollups`; only `unified-trading-sa` had the bucket-level grant. Uniform
+  bucket-level access (locked 2026-08-04) requires explicit bucket-level bindings. Fix:
+  `gsutil iam ch serviceAccount:uts-prd-sa@...:roles/storage.objectAdmin` — verified via `gsutil iam get`. No code
+  change (pure IAM). Live verification blocked: (1) latest revision -00399 crashes with SIGABRT/6 on every request —
+  rolled back to -00398 (stable, same SA); (2) -00398 produces `Firebase auth: invalid token` warnings from Cloud
+  Scheduler OIDC invocations even though `_rollup.router` is mounted directly on `app` (line 315, before
+  `_authenticated_router`) per the 2026-08-10 OIDC-auth refactor (`34a091d`). The IAM fix is deterministic — once the
+  service auth path is healthy, the coverage write will succeed.
+- **data_engineering (slot-13) 2026-08-10T23:55Z — CONCRETE SCOPING of the main agent's Direction A (sub-shard),
+  delegated to this worker; result: A is correct for CEFI/TRADFI/DEFI but CANNOT satisfy the done-when while SPORTS is
+  in instruments-service's category list.** (1) Sub-shard axis: the per-venue loop
+  (`venue_resolution.py::_build_venue_breakdown`) computes each venue entry independently (only its own rows + the
+  shared `fixture_calendar`/`ref_dates`) then sums totals — splitting `sorted(all_venues)` across bounded `run_bounded`
+  children and merging (dict-union + sum) preserves the honest-coverage category atom EXACTLY (verified by reading
+  `_build_one_venue_entry`/`_build_single_venue_entry`: no cross-venue coupling). (2) Memory: only viable with a
+  column-projected index read — SPORTS full index is 19.5GB/42 cols but the honest-coverage read set
+  (venue/data_type/date/capture_status/service_name/instrument_type) is **1.37GB** (measured live via projected pyarrow
+  read). (3) Live-measured per-category honest-coverage grid sizes: CEFI 27×2×2691=**145K** cells (this is the category
+  already exceeding 600s at 22:42+22:53), TRADFI 8×2×2777=44K, DEFI 145×2×2414=700K, **SPORTS 68×30×4676=9.5M** (~65×
+  CEFI). instruments-service is UNRESTRICTED in `_SERVICE_CATEGORY_RESTRICTIONS` → the rollup manifest step builds all 5
+  including SPORTS. **Conclusion**: 8-way venue sub-sharding brings CEFI/TRADFI/DEFI under budget (~75s/23s/360s), but
+  SPORTS alone needs ~65× the category that already exceeds 600s → ~80 min even at perfect 8-way parallelism, beyond the
+  1500s join / 1700s request / ~1800s Scheduler cap. This is the SAME structural-gap class as the doc's own accepted
+  MTDS gap. **Escalating to main via /blocked with a concrete recommendation**: implement Direction A (venue sub-shard +
+  column-projected read) for the 4 tractable categories AND record SPORTS as an accepted structural rollup gap
+  (mirroring the MTDS precedent), OR decouple instruments-service's SPORTS manifest to a dedicated longer-cadence job.
+  No code changed this pass.
+
 ## Follow-ups
 
 - [ ] [DATA] P3. Live-verify ml-service's full.json.gz actually refreshes on a real */20 uts-prod-data-status-rollup
       cron cycle post-fix (deployment-api@aaa0d1d)
+- [ ] [DATA] P1. Once
+      `/plans/active/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md` is
+      resolved and `deployment-api@f1b80de071` actually reaches the live rollup service, re-trigger the
+      instruments-service rollup and confirm it succeeds within the new 1500s ceiling (previously failed at 420s on 3
+      consecutive live attempts) + the corrected sports coverage becomes visible via `/api/data-status/manifest`.
+- [ ] [DATA] P2. instruments-service rollup manifest step still times out at the CATEGORY level under
+      `deployment-api@f1b80de071`: `manifest-cat-instruments--CEFI timed out after 600s` (the
+      `_SERIAL_ISOLATED_CATEGORY_TIMEOUT_S` 200s→600s raise is insufficient — sports bucket is 16.4M rows / 19.5GB).
+      Decide raise-vs-shard per the plan's own note (design call, not an inline improvise) and fix. Repo:
+      deployment-api. Done when: a live `rollup-run?services=instruments-service` completes the manifest step.
+- [x] ✅ [INFRA] P2. Rollup-svc coverage write 403 (`storage.objects.create` denied for uts-prd-sa on
+      `central-element-323112-data-status-rollups`): **FIXED 2026-08-10 (slot 5)**. Root cause: when the Cloud Run
+      service was redeployed with `uts-prd-sa` as the runtime SA (starting revision -00392), the bucket
+      `gs://central-element-323112-data-status-rollups` had `roles/storage.objectAdmin` ONLY for `unified-trading-sa` at
+      the bucket level. `uts-prd-sa` had project-level `roles/storage.objectAdmin` but the bucket write still 403'd —
+      uniform bucket-level access (locked 2026-08-04) requires explicit bucket-level bindings, and the project-level
+      grant was not sufficient. **Fix**: granted `uts-prd-sa@central-element-323112.iam.gserviceaccount.com`
+      `roles/storage.objectAdmin` on `gs://central-element-323112-data-status-rollups`, mirroring the existing binding
+      for `unified-trading-sa`. IAM binding verified via `gsutil iam get`. No code change needed — pure IAM fix.
+      **Additional finding**: latest revision -00399 (image `321b365f`) crashes with SIGABRT/6 on every request — rolled
+      back to -00398 (image `a6cdf6db`, uts-prd-sa) which is stable but the scheduler's OIDC invocations are producing
+      `Firebase auth: invalid token` warnings in the app logs (tracked separately — may need investigation of whether
+      `verify_any_auth` middleware on `_authenticated_router` is incorrectly intercepting the rollup route despite
+      `_rollup.router` being mounted directly on `app` at line 315 of `main.py`). Live verification (coverage write
+      succeeding on a real `*/20` cron cycle) is gated on the Firebase auth path being healthy; the IAM fix itself is
+      deterministic — `uts-prd-sa` now has the same bucket-level write grant `unified-trading-sa` had when the service
+      was working. Deploy blocker doc
+      `/plans/active/issues/uts_prod_data_status_rollup_svc_container_startup_failure_blocks_deploy_2026_08_10.md` is
+      still open — the -00399 SIGABRT may be a recurrence or a new regression.
 
 > **2026-08-06 archive-candidate audit**: CODE todo's own resolution text says 'Live confirmation (full.json.gz actually
 > refreshing on the next real */20 cron cycle) is a follow-up verification step, not blocking the fix landing' - a

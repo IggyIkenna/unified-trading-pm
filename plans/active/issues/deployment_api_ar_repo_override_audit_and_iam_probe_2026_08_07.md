@@ -27,6 +27,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: infra
+archive_exempt: true
 resolved_by:
 drift_direction: advance-code
 depends_on: []
@@ -57,13 +58,15 @@ context_scope:
       deployment-api@661c080: ALL 13 remaining services with cloudbuild.yaml use _REGISTRY_REPO=unified-trading-system
       but _get_ar_repo_name() fallback returned service-name (a non-existent repo). Fixed by changing the default to
       _CB_REGISTRY_REPO; removed alerting-service override (redundant with new default).
-- [ ] [INFRA] P3. Consider a startup/health-check-time IAM capability probe for deployment-api (analogous to
+- [x] ✅ [INFRA] P3. Consider a startup/health-check-time IAM capability probe for deployment-api (analogous to
       `alerting_service/notifiers/pagerduty.py`'s `lru_cache`-wrapped capability probe fixed earlier in the same
       deploy-chain chase) that verifies `run.developer`-class permissions on its own runtime SA and surfaces a clear
       error/alert BEFORE the first real deploy attempt discovers it via a live 502 — this exact class of "IAM migration
       silently drops a needed role" recurred at least twice in one day (see
       `/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`, same root shape:
-      a migration/extraction event drops something a downstream consumer needed, undetected until first real use).
+      a migration/extraction event drops something a downstream consumer needed, undetected until first real use). —
+      deployment-api@374b6757fc: new module iam_capability_probe.py (lru_cache-wrapped probe + is_available()), wired
+      into lifespan.py startup + health_routes.py detailed health check; tests updated.
 
 ## Progress Log
 

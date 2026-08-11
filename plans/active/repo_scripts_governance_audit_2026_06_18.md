@@ -255,6 +255,23 @@ a verdict). Heaviest:
 
 ## Progress Log
 
+- **2026-08-11 (slot 3, interactive) — D16's `scripts/**` carve SCOPE is SUPERSEDED (operator ruling 2026-08-10).** The
+  Phase-3 D16 todo above records the carve as all-repos blanket `scripts/**`, ratified 2026-08-08. That scope is now
+  NARROWED: the exempt set is exactly `scripts/quality_gates/`, `scripts/quality-gates-base/`, `scripts/hooks/`,
+  `scripts/cicd/` and `scripts/quality-gates*.sh` (`GATE_INFRA_PREFIX` / `GATE_INFRA_FILE_PREFIX` in
+  `check_strict_quickmerge.py`); every other `scripts/**` `.py`/`.ts`/`.tsx` is normal gated source requiring a
+  `Quickmerge:` trailer. Shipped unified-trading-pm@3895be718f (3 new boundary tests; 18/18 green). **The D16 todo
+  itself is NOT reopened** — its all-repos-not-PM-only finding was correct and survives; only the breadth of the path
+  set changed. **Why**: the blanket carve created a live asymmetry — the push guard waved `scripts/**` through while QG
+  STEP 5.105 SCANS `scripts/**`. On 2026-08-10 that let
+  `market-tick-data-service/scripts/restamp_tradfi_cme_future_blank_instrument_id_2026_08_10.py` reach live-defi-rollout
+  ungated carrying a banned subprocess GCS call, reddening LDR and promote PR #939 for the whole fleet. D16's
+  chicken-and-egg rationale ("a corrected gate can't pass through the gate it is fixing") justifies exempting the gate
+  machinery; it never justified exempting production backfill/migration/restamp scripts, which run against PROD data and
+  are production code by consequence. Doc surfaces updated in the same commit: `/codex/08-workflows/ci-cd-flow.md` §
+  "Strict quickmerge" carve-out item 3, `cursor-configs/CLAUDE.md` § "Git discipline" carve #3, and the checker's own
+  module docstring.
+
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged mixed shape. Re-read
   end-to-end; `grep -cE '^- \[ \]'` = 7, down from 8 (today's item-79 operator ruling closed the D16 carve-scope todo,
   already reflected above). Checked the remaining 7 against today's operator-Q&A cheat sheet: none matches. The

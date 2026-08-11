@@ -208,8 +208,9 @@ promoting, confirm scheduled runs actually resume for the re-entered repo
 
 **Never** push CODE directly to `main`/`staging`/LDR — always via `quickmerge` (the only sanctioned path: it runs the
 two-pass QG, stamps the `Quickmerge:` provenance trailer, and the promote bots gate on it). The closed carve-out for
-direct LDR pushes is narrow: `docs(plans):` flips, any repo's `scripts/**` + any `.github/**` (all-repos, not PM-only —
-D16, operator-ruled 2026-08-08; see § "Strict quickmerge" below), dirty-deps, and the FF-pull-in.
+direct LDR pushes is narrow: `docs(plans):` flips, any `.github/**` + the GATE-INFRA subset of any repo's `scripts/`
+only (all-repos, not PM-only — D16, operator-ruled 2026-08-08; **narrowed from blanket `scripts/**` 2026-08-10** — see §
+"Strict quickmerge" below), dirty-deps, and the FF-pull-in.
 
 **Dirty-deps direct push — stamp the trailer, don't just narrate it (ruled 2026-07-29,
 `check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`)**: `check_strict_quickmerge.py`'s provenance check
@@ -858,13 +859,20 @@ early-exits "nothing to commit" on a clean tree — silently piles commits on LD
 
 1. **Dirty-deps** — a dep repo dirty mid-edit → commit+push the dep directly to LDR (never quickmerge with dirty deps).
 2. **FF-pull-in** + the **cross-repo PM plan-flip** (`docs(plans):`).
-3. **Any repo's `scripts/**` + any repo's `.github/**` workflow** change that must reach `main` to unblock the pipeline
-   (the chicken-and-egg — a corrected gate can't pass through the gate it's fixing); operator/admin authority.
-   **All-repos, not PM-only (D16, operator-ruled 2026-08-08)**: `check_strict_quickmerge.py`'s
-   `CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")` is a bare path-prefix match with no
-   repo-awareness — it already carves `scripts/` for EVERY repo's own commit range, not just PM's. This prose used to
-   read "PM `scripts/**`" as if the carve were PM-specific; corrected to match the code's actual (and now formally
-   ratified) all-repos behavior. `repo_scripts_governance_audit_2026_06_18.md` Phase 3 D16 decision.
+3. **Any repo's `.github/**` workflow + the GATE-INFRA subset of any repo's `scripts/`** — change that must reach `main`
+   to unblock the pipeline (the chicken-and-egg — a corrected gate can't pass through the gate it's fixing);
+   operator/admin authority. All-repos, not PM-only (D16, operator-ruled 2026-08-08). **NARROWED 2026-08-10 (operator
+   ruling) — `scripts/**` is NO LONGER a blanket carve.** The exempt set is now exactly `scripts/quality_gates/**`,
+   `scripts/quality-gates-base/**`, `scripts/hooks/**`, `scripts/cicd/**`, and `scripts/quality-gates*.sh`
+   (`GATE_INFRA_PREFIX` / `GATE_INFRA_FILE_PREFIX` in `check_strict_quickmerge.py`); every other `scripts/**`
+   `.py`/`.ts`/`.tsx` is normal gated source needing a `Quickmerge:` trailer. **Why**: the blanket carve created a live
+   asymmetry — the push guard waved `scripts/**` through while QG STEP 5.105 SCANS `scripts/**`. On 2026-08-10 that let
+   market-tick-data-service's `scripts/restamp_tradfi_cme_future_blank_instrument_id_2026_08_10.py` reach LDR ungated
+   with a `gsutil ls` call, reddening LDR **and** promote PR #939 for the whole fleet. Scripts under `scripts/` run
+   against PRODUCTION data (backfills, migrations, restamps) — they are production code by consequence, and D16's
+   chicken-and-egg rationale only ever justified exempting the gate machinery itself. Supersedes the all-repos-blanket
+   scope recorded in `repo_scripts_governance_audit_2026_06_18.md` Phase 3 D16; the all-repos (not PM-only) part is
+   unchanged.
 
 Everything else is HARD-blocked. **Enforcement — the machine guard is LIVE**: quickmerge stamps a
 `Quickmerge: agent|human` lineage trailer on every commit it ships; `scripts/cicd/check_strict_quickmerge.py` flags a

@@ -163,6 +163,37 @@ live in `unified-trading-pm/agents/<role>.md` frontmatter (`/codex/06-coding-sta
 SSOT). A resize/reboot does not touch either file — if models look wrong post-restart, that is a config-drift question,
 not a restart-recovery one; do not conflate the two.
 
+### Step 6 — an escalation is stuck, queued forever, or re-dispatching in a loop
+
+**Read `last_error` FIRST. It names the reason verbatim.** This is one curl and it answers the question; do not start
+from `/api/accounts`, and do not SSM onto the box to hand-query SQLite until it has failed you.
+
+```bash
+curl -s localhost:8765/api/escalations/active | jq -r '.[] | "\(.escalation_id) \(.repo) \(.status) attempts=\(.attempts) \(.last_error // "-")"'
+```
+
+Interpreting it — the four reasons that actually occur, and what each means:
+
+| `last_error`                                | What it means                                                                                         | Real fix                                                                                  |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `repo '<x>' already active on another slot` | The per-repo collision guard. One escalation per repo at a time; the rest of that repo's walls queue. | Nothing — it drains. Only investigate if the HOLDER is itself a zombie (see below).       |
+| `no headroom account (Claude or DeepSeek)`  | Genuinely no usable account in EITHER pool.                                                           | Step 0. Wait for the nearest reset.                                                       |
+| `tmux_spawn.spawn failed: [Errno 28] ...`   | **The host's `/tmp` is full.** Not an account or slot problem at all.                                 | `df -h /tmp`; `tmpfs-disk-cleanup.timer` should be sweeping — check it is enabled/active. |
+| `unresolved after Nmin — re-escalated`      | The watchdog gave the wall to a worker, the wall stayed red, it re-fired.                             | Look at the WALL, not the queue. The queue is behaving correctly.                         |
+
+**Quota is NOT the default explanation here** — sonnet-tier escalation dispatch falls back to DeepSeek
+(`escalation_deepseek_fallback_2026_08_05` in `server/escalation.py`), and `_quota_adaptive_fraction` routes it **100%**
+to DeepSeek when zero Claude accounts are usable. A fully-exhausted Claude pool should therefore keep dispatching. If it
+is not, the reason is in `last_error`, not in `/api/accounts`.
+
+**Zombie holder check.** A `dispatched` row is a spawn RECEIPT, not a booted worker. Cross-check its `escalation_id`
+against `/api/agents`: if the id is absent there, no worker ever registered, and that row may be holding its repo's
+collision-guard slot with nothing behind it. Same shape as an agent row showing `status: active` alongside a terminal
+`exit_reason` (`reaped-stale` / `lifecycle-complete`).
+
+**The state DB is `agent-orchestrator/data/state/state.db`.** Query it read-only (`sqlite3 "file:...state.db?mode=ro"`)
+only after the API has failed you.
+
 ### Real fix vs. not-the-fix
 
 | Symptom                                                                                                        | Real fix                                                                                                                  | NOT the fix                         |
@@ -172,8 +203,27 @@ not a restart-recovery one; do not conflate the two.
 | 0 agents, but ≥1 account shows `status: healthy` with real headroom                                            | genuine bug — read `spawn-failed`/`autospawn_failed` activity rows for the real error (tmux / boot-prompt render failure) | waiting indefinitely                |
 | 0 agents, EVERY account `rate_limited`/`disabled`/negative-balance                                             | wait for the nearest `*_resets_at`                                                                                        | restarting anything                 |
 | A slot's tmux session is dead, queue has claimable work, an account has headroom, but nothing spawns for >2min | check flap backoff (1h after 3 spawns with no task claimed) via the slot's recent activity rows                           | assuming AutoSpawn itself is broken |
+| Escalations queued with huge `attempts` (100+), fleet otherwise healthy                                        | read `last_error` on the row (Step 6) — it names the reason verbatim                                                      | inspecting `/api/accounts` first    |
+| Escalation dispatch failing fleet-wide, accounts + slots both fine                                             | `df -h /tmp` on the AO box — a full tmpfs fails `tmux_spawn` with `[Errno 28]`                                            | restarting the orchestrator         |
 
 ### Verified incident log
+
+- **2026-08-10 — fleet-wide escalation-dispatch failure caused by a FULL `/tmp`, misdiagnosed as a quota outage.** Every
+  Claude account was simultaneously `rate_limited`/`disabled` (nearest reset ~44h out), which made "quota" the obvious
+  and WRONG answer — the diagnosing agent spent ~20 tool calls there. Two facts contradicted it: the DeepSeek pool was
+  healthy ($46.87, `balance_is_available: true`) and `_quota_adaptive_fraction` routes sonnet-tier work 100% to DeepSeek
+  when no Claude account is usable, so dispatch should have continued; and the queue rows' own `last_error` named the
+  real causes verbatim — `repo '<x>' already active on another slot` for the PM SIT walls, and
+  `tmux_spawn.spawn failed: [Errno 28] No space left on device` for four dispatches at 16:41-16:44. Root cause: the AO
+  box's `/tmp` is an **8 GiB tmpfs** and it had filled to 100% (15 MiB free) — an agent's ad-hoc `gsutil ls -r` over a
+  whole prod tick-data bucket streaming multi-GiB parquet through it, plus 41 leaked `bats-claim-hb-test-*` tmux fixture
+  sessions. `tmux_spawn` allocates under `/tmp`, so every escalation dispatch died and re-queued; the PM SIT walls
+  reached 190+ attempts on that treadmill. **Fixes:** `tmpfs-disk-cleanup.timer` (30-min sweep,
+  `scripts/self-hosted-runners/`) since the pre-existing `systemd-tmpfiles-clean` ran only daily; the BATS fixture leak
+  fixed at source; and subprocess `gsutil`/`gcloud storage`/`aws s3` object calls now hard-blocked by the PreToolUse
+  guardrail, forcing UTL `cloud_interface`. **`last_error` is now exposed on `/api/escalations/active`** — it was
+  DB-only at the time, which is why the cheap diagnostic path could not see the answer it already held. Step 6 above
+  exists because of this incident.
 
 - **2026-08-07 — full fleet outage after an AO-box instance-type resize (`m8i.4xlarge`→`m8i.2xlarge`, stop → modify →
   start).** The stop/start killed the VM's tmux server and every live worker process — expected and harmless.

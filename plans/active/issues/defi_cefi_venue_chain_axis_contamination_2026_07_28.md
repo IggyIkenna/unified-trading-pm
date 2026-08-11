@@ -47,7 +47,7 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-08-06"
+last_updated: "2026-08-10"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -276,36 +276,60 @@ in this read-only audit pass (time-bounded scope).
       raw-capture fix (`cefi_tardis_derivative_ticker_historical_gap-002`), and cron-host VM launch is operator-gated.
       **Gate**: can ship any time post the raw-capture fix landing (the cron is only meaningful once raw flows; until
       then it honest-skips).
-- [ ] [DATA] P1. **NEW 2026-08-04 (operator ruling, interactive session) — supersedes the "no-still-authoritative,
-      permanent" framing on the P2(b) checkbox above.** Operator directive: a live-reader dependency is not a reason to
-      leave non-canonical/mis-keyed data permanently in place — "live can be reformatted too… batch/live symmetry means
-      these bad names shouldn't exist." Concrete, correctly-SEQUENCED path (do not skip ahead — each step is gated on
-      the one before it actually landing, not just being started): 1. **Gated on the P1 todo directly above landing**
-      (corpus re-run/schedule confirmed fresh — i.e. `CanonicalPerpFundingProvider.funding_window()` returns non-empty
-      CURRENT observations for all 6 `catalog_carry.py` venues, not just historically-backfilled ones). Only once the
-      live-critical corpus is genuinely current does deleting the stale DeFi-bucket duplicate become safe — deleting
-      first would still break the live CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION path (the P2(b) investigation's finding
-      stands: no fresher alternative exists to repoint to today). 2. **The 35 corrupted MANIFEST rows**
-      (`venue=BITGET`/etc, `chain=FUTURES` — the `migration_orphan_sweep.py` splitter-bug artifact, splitter itself
-      already fixed `instruments-service@f651ff8b` 2026-07-25) are a SEPARATE, lower-risk question from the physical GCS
-      duplicate: per this doc's own root-cause trace, the live reader (`canonical_perp_funding_provider.py`) globs raw
-      GCS objects directly, not the manifest, and the underlying GCS objects are correctly named
-      (`venue=BITGET-FUTURES`, unsplit) — only the MANIFEST registration is corrupted. **Before assuming this
-      manifest-only fix is safe, verify that claim directly** (grep+read `canonical_perp_funding_provider.py`'s actual
-      glob/read path — confirm it truly never consults the manifest for this data_type) — do not proceed on the doc's
-      characterization alone. If confirmed, this manifest-row fix (re-key to the correct
-      `venue=BITGET-FUTURES`/`chain=""` twin, or drop if a correct twin already exists) can happen independently of step
-      1, with NO live-reader risk. 3. **Physical GCS duplicate cleanup** (the real CeFi Tardis objects sitting in the
-      wrong, DeFi, bucket) — once step 1 confirms the live path no longer needs this exact stale copy, re-run the
-      standard 5-part delete-safety proof fresh (do not reuse the old one — Part 4 "no live reader" was FALSE at the
-      time it was written; it must genuinely re-verify clean this time) before any delete. 4. **HYPERLIQUID residual
-      `asset_group=defi` manifest rows** — root cause still open
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-10 (slot-2) — step-2 verified-resolved (the independently-actionable piece);
+      steps 1/3/4 remain gated (step 3 → follow-up todo below; step 1 + step 4 → tracked in their own docs).** (a)
+      Reader claim CONFIRMED by direct code read: `canonical_perp_funding_provider.py` reads raw GCS objects only
+      (`list_blobs` on `raw_tick_data/by_date/day=…/` + `download_bytes` + `pd.read_parquet`), never `_index/` or the
+      availability manifest — a manifest-row fix has zero live-reader risk, exactly as this doc asserted. (b) The 35
+      corrupted MANIFEST rows (`venue=BITGET`/etc, `chain=FUTURES`) are **already absent** from the live defi index —
+      fresh direct read (2026-08-10T18:08Z, 135,368,465 rows): **0** `chain=FUTURES`, **0** `source LIKE '%tardis%'` /
+      `pipeline_mode=batch_tardis`, **0** `venue LIKE '%-FUTURES%'`, every row `asset_group=defi`; the cefi index
+      (26,182,681 rows) also **0** non-blank `chain` (the UTL@7684a102 heal + relabel held); the in-flight
+      `canonical-migration-defi-rebuild-20260810-204358` per_vm shard is clean too → the clean state is durable, not a
+      transient merge artifact. Nothing to re-key or drop → **no code change needed for step 2**. The physical mis-filed
+      CeFi-Tardis objects (~35 across 2026-05-16..22, correctly named `venue={…}-FUTURES` unsplit, correct cefi-bucket
+      twins verified) remain — that is step 3, gated on corpus-freshness + a fresh 5-part delete-safety proof. Original
+      ruling (kept for record): **NEW 2026-08-04 (operator ruling, interactive session — source:
+      /plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md) — supersedes the
+      "no-still-authoritative, permanent" framing on the P2(b) checkbox above.** Operator directive: a live-reader
+      dependency is not a reason to leave non-canonical/mis-keyed data permanently in place — "live can be reformatted
+      too… batch/live symmetry means these bad names shouldn't exist." Concrete, correctly-SEQUENCED path (do not skip
+      ahead — each step is gated on the one before it actually landing, not just being started): 1. **Gated on the P1
+      todo directly above landing** (corpus re-run/schedule confirmed fresh — i.e.
+      `CanonicalPerpFundingProvider.funding_window()` returns non-empty CURRENT observations for all 6
+      `catalog_carry.py` venues, not just historically-backfilled ones). Only once the live-critical corpus is genuinely
+      current does deleting the stale DeFi-bucket duplicate become safe — deleting first would still break the live
+      CARRY_BASIS_PERP/CARRY_FUNDING_DISPERSION path (the P2(b) investigation's finding stands: no fresher alternative
+      exists to repoint to today). 2. **The 35 corrupted MANIFEST rows** (`venue=BITGET`/etc, `chain=FUTURES` — the
+      `migration_orphan_sweep.py` splitter-bug artifact, splitter itself already fixed `instruments-service@f651ff8b`
+      2026-07-25) are a SEPARATE, lower-risk question from the physical GCS duplicate: per this doc's own root-cause
+      trace, the live reader (`canonical_perp_funding_provider.py`) globs raw GCS objects directly, not the manifest,
+      and the underlying GCS objects are correctly named (`venue=BITGET-FUTURES`, unsplit) — only the MANIFEST
+      registration is corrupted. **Before assuming this manifest-only fix is safe, verify that claim directly**
+      (grep+read `canonical_perp_funding_provider.py`'s actual glob/read path — confirm it truly never consults the
+      manifest for this data_type) — do not proceed on the doc's characterization alone. If confirmed, this manifest-row
+      fix (re-key to the correct `venue=BITGET-FUTURES`/`chain=""` twin, or drop if a correct twin already exists) can
+      happen independently of step 1, with NO live-reader risk. 3. **Physical GCS duplicate cleanup** (the real CeFi
+      Tardis objects sitting in the wrong, DeFi, bucket) — once step 1 confirms the live path no longer needs this exact
+      stale copy, re-run the standard 5-part delete-safety proof fresh (do not reuse the old one — Part 4 "no live
+      reader" was FALSE at the time it was written; it must genuinely re-verify clean this time) before any delete. 4.
+      **HYPERLIQUID residual `asset_group=defi` manifest rows** — root cause still open
       (`defi_hyperliquid_residual_manifest_rows_2026_08_04.md`) — must be root-caused before it can be purged; do not
       blind-delete an unexplained residual. **Sequencing note**: do NOT run any new manifest-CAS-rewrite or GCS-delete
       script against `market-data-tick-defi-prd-central-element-323112` concurrently with the in-flight
       `purge_gas_fees_legacy_venue_prefixes_2026_08_04.py --apply` run (same bucket, same manifest index, same
       consolidator cron paused for that run's duration) — sequence AFTER it completes and the cron is resumed +
       verified, to avoid CAS contention / cron-pause confusion between two concurrent prod-mutating operations.
+- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling
+      above).** The ~35 real CeFi-Tardis `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
+      (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16..22/ pipeline_mode=batch_tardis/asset_group=cefi/venue={BINANCE,BITFINEX,BITGET,BYBIT,KRAKEN,OKX}-FUTURES|DERIBIT/…`,
+      verified present 2026-08-10, correct cefi-bucket twins verified at the matching prefix) are still there. Gated on
+      step 1 of that ruling landing (corpus re-run/schedule confirmed fresh — i.e.
+      `CanonicalPerpFundingProvider. funding_window()` returns non-empty CURRENT observations for all 6
+      `catalog_carry.py` venues) AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first
+      time — must genuinely re-verify clean this run) before any delete. Do NOT run concurrently with an in-flight
+      defi-bucket rebuild/consolidator-CAS rewrite. **Repo: unified-trading-library / market-tick-data-service** (UTL
+      `gcs_delete_object`, never subprocess).
 - [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
@@ -367,6 +391,58 @@ in this read-only audit pass (time-bounded scope).
 Progress Log entries 2026-07-30 through 2026-08-10 moved **verbatim** — nothing summarized, rewritten, or dropped — to
 `/plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` (line-cap remediation — see that
 doc for the full history).
+
+- **slot-8 2026-08-10 (task -014 re-check before any delete)**: re-verified both -014 gates — **both still unmet, the
+  physical GCS delete remains correctly blocked**. (1) **Step-1 corpus-freshness gate FAIL**: bounded list-only probe
+  (UTL `get_storage_client`, never a subprocess, never a corpus walk) of the DeFi tick-data bucket
+  `market-data-tick-defi-prd-central-element-323112` — the exact bucket `CanonicalPerpFundingProvider` reads — for
+  `data_type=perp_funding|perp_daily_ctx` across **2026-08-01→08-10**: **0 objects for all 6 `catalog_carry.py` venues**
+  (`KRAKEN/BINANCE/BYBIT/OKX/BITFINEX/BITGET-FUTURES`). `funding_window()` returns empty for current days; the corpus is
+  NOT fresh. (2) **In-flight defi-bucket rebuild CONFLICT**: `canonical-migration-defi-rebuild- 20260810-204358` is
+  **RUNNING** (GCE instance list, 2026-08-10) — the -014 todo explicitly forbids running any GCS-delete / manifest-CAS
+  rewrite concurrently with a defi-bucket rebuild. Mis-filed objects still present: **98 objects** (7 venues × 7 days
+  2026-05-16..22 × 2 data_types) at
+  `raw_tick_data/by_date/day=…/pipeline_mode=batch_tardis/asset_group=cefi/venue={*-FUTURES|DERIBIT}/…` in the DeFi
+  bucket, with cefi-bucket twins verified at the matching prefix (14/14 per venue). No code shipped; deletion not
+  executed. Task released via `/skip-current-task` `reason_code=GATED` — re-dispatch when step-1 lands (forward-poll
+  cron gap closed + corpus recompute current) AND the in-flight defi rebuild completes.
+
+- **slot-2 2026-08-10 (task -016 re-check, same gates, ADDITIONAL FINDING — Part 1 twin claim DISPROVED)**: re-verified
+  both gates — **still unmet, same state as slot-8 above**. (1) Corpus freshness: 0 `perp_funding`/`perp_daily_ctx`
+  objects for all 6 venues on 2026-08-08..10. (2) `canonical-migration-defi-rebuild-20260810-204358` still RUNNING. (3)
+  **NEW — prior "cefi-bucket twins verified (14/14 per venue)" claim DISPROVED on closer inspection.** Fresh bounded
+  probe (UTL `list_blobs`, single-date single-venue, not a corpus walk): the cefi bucket
+  (`market-data-tick-cefi-prd-central-element-323112`) DOES have objects for
+  `venue={BINANCE,BYBIT,OKX,KRAKEN,BITFINEX, BITGET}-FUTURES|DERIBIT` under `pipeline_mode=batch_tardis`, but with
+  **different data_types** — `derivative_ticker`, `trades`, `liquidations`, `book_snapshot_5` (the raw Tardis captures).
+  **0 objects for `data_type=perp_funding` or `data_type=perp_daily_ctx`** in the cefi bucket — these data_types exist
+  ONLY in the DeFi bucket. The prior "twin" claim likely matched at the venue prefix level without verifying
+  `data_type=` sub-prefix. **Part 1 of the 5-part delete-safety proof FAILS**: the DeFi-bucket
+  `perp_funding`/`perp_daily_ctx` copies are NOT duplicates — they are the ONLY copy of this derived data. Disposition:
+  `no-still-authoritative` (these objects are the SSOT for `CanonicalPerpFundingProvider`, confirmed by prior code
+  read). Soft-delete retention 604800s confirmed. Task skipped `reason_code=GATED` — re-dispatch only after (a) step-1
+  corpus-freshness gate clears, (b) defi rebuild completes, AND (c) the Part 1 twin claim is independently re-verified
+  with data_type-level precision.
+
+- **slot-13 2026-08-10 (task -017 re-check, same gates; CORRECTION to slot-2's twin DISPROVAL)**: Both gates re-verified
+  fresh 2026-08-10T23:05Z — **still unmet**. (1) Corpus freshness FAIL: bounded UTL list-only probe of
+  `market-data-tick-defi-prd-central-element-323112` — **0** `perp_funding`/`perp_daily_ctx` objects for all 6
+  `catalog_carry.py` venues on 2026-08-07..10 (`funding_window()` empty for current days; step-1 not landed). (2)
+  In-flight defi rebuild `canonical-migration-defi-rebuild-20260810-204358` **still RUNNING** (gcloud instances list
+  2026-08-10) — any GCS-delete/manifest-CAS rewrite remains forbidden concurrently. (3) **Part 1 twin claim re-verified
+  at data_type precision: slot-2's "0 perp_funding/perp_daily_ctx in the cefi bucket" is CONTRADICTED.** Bounded probe
+  of `market-data-tick-cefi-prd-central-element-323112` at the matching prefix
+  (`day=2026-05-16|2026-05-22/ pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES|OKX-FUTURES/instrument_type=perpetual/ data_type=perp_funding|perp_daily_ctx/`)
+  finds **1 object each** — e.g.
+  `.../venue=BINANCE-FUTURES/.../data_type=perp_funding/cefi_BINANCE-FUTURES_2026-05-16.parquet` (size 6202) + its
+  `perp_daily_ctx` sibling, matching the DeFi-bucket shape (14 objects/day under `asset_group=cefi` there, both
+  data_types). Sizes differ from the DeFi copies (e.g. DeFi perp_funding BINANCE-FUTURES 2026-05-16 = 5945) — so **Part
+  2 CONTENT equivalence still NOT verified** (twins may be row-identical or not); full per-venue/day coverage not
+  enumerated this pass (2 venues × 2 days probed). Disposition: delete remains BLOCKED on gates (1)+(2); when they
+  clear, Part 2 content-verify must still run AND Part 4 must genuinely re-verify clean —
+  `CanonicalPerpFundingProvider._read_parquets_for_day` globs `raw_tick_data/by_date/day=.../` filtering only on the
+  `data_type=` path segment (no asset_group/venue allowlist), so it reads these DeFi-bucket copies today. Task
+  re-skipped `reason_code=GATED`.
 
 ## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
 
@@ -547,7 +623,25 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
   (`--force --force-download --data-types derivative_ticker`); MTDS running 12:34:45Z; writes confirmed
   (BINANCE-FUTURES/BITGET-FUTURES day=2026-06-05 at 12:35:57Z); VM RUNNING at T+14min. ~18-24h remaining.
 
+- **slot-19 2026-08-11 (task -018 re-check, same gates)**: Both gates re-verified fresh 2026-08-11T00:21Z — **still
+  unmet**. (1) Corpus freshness FAIL: bounded UTL list-only probe of `market-data-tick-defi-prd-central-element-323112`
+  — **0** `perp_funding`/`perp_daily_ctx` objects for all 6 `catalog_carry.py` venues
+  (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`BYBIT-FUTURES`/`OKX-FUTURES`/`BITFINEX-FUTURES`/ `BITGET-FUTURES`) on
+  2026-08-08..11 (`funding_window()` empty for current days; step-1 not landed). (2) In-flight defi rebuild CLEAR:
+  `canonical-migration-defi-rebuild-20260810-204358` no longer in GCE instance list (only
+  `canonical-migration-prediction-shape4-merge-20260810-201105` still RUNNING — unrelated prediction VM). AWS also
+  clean. Task re-skipped `reason_code=GATED` — re-dispatch when step-1 corpus-freshness gate clears.
+
+- **slot-19 2026-08-11 (re-check, same gates — fresh verification 2026-08-11T08:01Z)**: Both gates re-verified fresh —
+  **still unmet, deletion remains correctly blocked**. (1) Corpus freshness FAIL: bounded UTL list-only probe of
+  `market-data-tick-defi-prd-central-element-323112` — **0** `perp_funding`/`perp_daily_ctx` objects on 2026-08-05..11
+  for any venue, incl. all 6 `catalog_carry.py` venues (`KRAKEN-FUTURES`/`BINANCE-FUTURES`/`BYBIT-FUTURES`/
+  `OKX-FUTURES`/`BITFINEX-FUTURES`/`BITGET-FUTURES`) — `funding_window()` empty for current days; step-1 not landed. (2)
+  In-flight defi rebuild CLEAR: `canonical-migration-defi-rebuild-20260810-204358` absent from GCE instance list
+  (unrelated `canonical-migration-prediction-shape4-merge-20260810-201105` + backfill/cefi-queue VMs still RUNNING); AWS
+  clean. Task re-skipped `reason_code=GATED` — re-dispatch when step-1 corpus-freshness gate clears.
+
 ## Deferred after 2026-08-09
 
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
-  (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`.
+  (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`).

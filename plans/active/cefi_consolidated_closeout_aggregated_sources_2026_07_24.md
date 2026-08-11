@@ -374,7 +374,7 @@ context_scope:
     - NEW todo. **[SCRIPT] P1.** Implement R1 bounded-concurrent `_run_date_as_subprocess` dispatch.
     - NEW todo. **[DATA] P0.** Real-VM re-measure of end-to-end per-instrument-day rate after the read-path fix.
     - +6 more P2 — see file for the rest.
-  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
     - 1. **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write using the sink PREFIX
          mechanism, NOT the partition dict.
     - 2. **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail — `partitioned_writer.py:291-293`
@@ -800,15 +800,18 @@ here is NOT dispatch, per this doc's own standing convention.
 - [`cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`](/plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md)
   — 2 open items, both explicit design/redesign decisions for features-service's loader (classified 2026-08-06,
   orphaned_never_touched, not AO-eligible).
-- [`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`](/plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md)
+- [`cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`](/plans/archive/2026_08/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md)
   — 9 of 10 todos done+verified; sole open `[DATA] P3` Follow-ups item (fetch_l2_book / book_snapshot_5 case-sensitivity
-  audit) extracted into `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 1 (classified 2026-08-07).
+  audit) extracted into
+  [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
+  todo 1 (classified 2026-08-07).
 - [`cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`](/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md)
   — 2 open items, both blocked on an `[OPERATOR]` decision among 3 named options (classified 2026-08-06,
   orphaned_never_touched, not AO-eligible).
 - [`features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`](/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md)
   — `[SCRIPT] P2` done-when half-2 (real-VM-launch observation of `LC_TARBALL_FRESHNESS` auto-republish) extracted into
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 3 (classified 2026-08-07).
+  [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
+  todo 3 (classified 2026-08-07).
 - [`mtds_cefi_docker_image_stale_5mo_2026_07_30.md`](/plans/archive/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md)
   — both todos fully claimed by `cefi_satellite_ao_dispatch_batch6_2026_08_02.md`'s open `[OPS] P2` todo
   (archivable_after_planned_work, classified 2026-08-07).
@@ -821,12 +824,15 @@ here is NOT dispatch, per this doc's own standing convention.
 `check_ag_closeout_linkage.py` flagged these cefi-tagged docs as having no graph/mention path to the cefi closeout
 family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27, dispatch agt-dab448).
 
-- [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/active/issues/ag_closeout_audit_cefi_parked_2026_08_10.md) —
-  parked findings from the 2026-08-10 audit run; 0 parked findings, 1 orphaned doc extracted into batch18.
-- [`cefi_satellite_ao_dispatch_batch18_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md) —
-  batch18 draft (status: draft, single-item extraction from `mdps_manifest_staleness_check_inverted_2026_08_10.md`).
-- [`cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md`](/plans/active/cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md)
-  — paired finalize plan (status: active, gate_on_depends: true).
+- [`ag_closeout_audit_cefi_parked_2026_08_10_r2.md`](/plans/archive/2026_08/issues/ag_closeout_audit_cefi_parked_2026_08_10_r2.md)
+  — parked findings from the 2026-08-10 audit run (Round 2, slot 27); 0 parked findings, 1 orphaned doc extracted into
+  batch18. Resolved + archived. Round 1 at
+  [`ag_closeout_audit_cefi_parked_2026_08_10.md`](/plans/archive/2026_08/issues/ag_closeout_audit_cefi_parked_2026_08_10.md).
+- [`cefi_satellite_ao_dispatch_batch18_2026_08_10.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch18_2026_08_10.md)
+  — batch18 draft, completed + archived — root cause diagnosed (NOT inverted comparison; transient GCS/parse error), fix
+  shipped at `unified-trading-library@26294ddf71`.
+- [`cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md)
+  — paired finalize plan, completed + archived — closeout linkage verified (0 cefi orphans).
 
 ## Todos
 

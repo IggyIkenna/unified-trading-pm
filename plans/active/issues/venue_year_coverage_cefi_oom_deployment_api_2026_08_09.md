@@ -184,6 +184,12 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       (`>=0.77.0,<1.0.0` — confirmed compatible: LDR HEAD's own version is `v0.77.0`, so this ships as a patch within
       the existing floor, no major-version gate), or redeployed. Repos: unified-trading-library (the actual fix),
       deployment-api (the consumer needing a dependency bump once released).
+  - [x] ✅ [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
+        replaced the per-row `df.apply(_classify, axis=1)` (measured ~280 s for cefi's ~26M-row/215-row-group manifest,
+        causing worker-level SIGABRT under the 300 s gunicorn timeout after the row-group-streaming fix resolved the
+        container-level OOM) with vectorized pandas column operations (`str.lower()` + `str.contains()` + `.where()`) —
+        same semantics, ~100× faster. Repo: deployment-api. — **deployment-api@fb3df79** (Quickmerge, verified ancestor
+        of `origin/live-defi-rollout`): full `quality-gates.sh` green, sentinel=fb3df79.
 - [ ] [INFRA] P0. **Live-prod re-verification of the `unified-trading-library@609299ad` fix** — once (a) LDR→main
       promotion lands the fix on `main` (`ldr-to-main-promote-fleet.yml`, `*/15`), (b) semver-agent mints + publishes
       the new UTL patch release (`push:[main]`), (c) deployment-api's dependency-update automation
@@ -257,6 +263,18 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       check (re-run the 3-scope cefi probe against live prod) can pass; the existing open INFRA todo above (blocked on
       the `unified-trading-library@609299ad` release chain) should be re-run against THIS fix's deployed revision too
       once both land, rather than filing a duplicate re-verification todo.
+- [ ] [BACKEND] P0. **Vectorize `_classify` in `_process_manifest_chunk` (`_live_coverage_venue_year.py:186`)** —
+      replace the row-wise `df.apply(_classify, axis=1)` with a vectorized classification (boolean masks / pandas `str`
+      ops) so the per-chunk cost drops from ~1.3 s/123k-row chunk to ~0.02 s. Measured 2026-08-10 (slot 5, infra
+      re-verification): the live cefi availability index has grown to ~26M rows across 215 row groups (was 10.6M/88 at
+      the P2 audit), so the row-wise apply makes the venue-year-coverage request take ~250-400 s server-side for cefi
+      ALONE — near/over the 300 s gunicorn `timeout=300` + Cloud Run request timeout — and the WORKER aborts mid-apply
+      with SIGABRT (faulthandler dump: `_live_coverage_venue_year.py:186`; 6+ `Worker (pid:*) was sent SIGABRT!`
+      2026-08-10 22:05-22:16 UTC on revisions 00515/00516/00517), yielding 503 "connection to the instance had an error"
+      at 176-400 s — the 3-scope cefi probe FAILS all scopes on the fix-containing deployed revision. Local bounded
+      repro of the exact deployed code path completes (215 chunks, peak 1.74 GiB, no abort) — the code is correct but
+      pathologically slow; the vectorize fix also makes the DEFAULT `asset_groups=cefi,tradfi,defi` request feasible
+      (currently 3x the cefi-only time = guaranteed timeout). Repo: deployment-api.
 
 ## Progress Log
 
@@ -304,7 +322,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   a genuine `semver-agent.yml` classifier gap (squash-promote loses the original commit's conventional-commit type, and
   an internal fix with no new public export doesn't trip the AST-differ fallback either), NOT specific to this fix —
   filed as its own P0 issue doc with full root-cause + fix recommendation:
-  `/plans/active/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Steps (c) (
+  `/plans/archive/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Steps (c) (
   dependency-update PR) and (d) (redeploy) cannot happen until (b) does — this INFRA todo stays open, blocked on the new
   issue doc's fix landing + `unified-trading-library` getting a fresh push to re-trigger classification. Not flipping
   the checkbox — the live-prod OOM is confirmed still unresolved in production as of this session.
@@ -328,3 +346,31 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   the existing INFRA todo's `unified-trading-library@609299ad` release chain (LDR→main→semver-release→dependency-
   bump→redeploy), currently blocked on `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Once
   both fixes are live, re-run the INFRA todo's 3-scope cefi probe against the deployed revision containing BOTH SHAs.
+- **2026-08-10 (slot 5, infra)**: **Live-prod re-verification of `unified-trading-library@609299ad` +
+  `deployment-api@3d72470` — FAIL.** Both fixes' CONTENT confirmed on `origin/main` (tree-level; a bare `is-ancestor`
+  reads NO under the "Option-B direct" promotion model, per todo 2's warning — the promotion copies trees, not commit
+  ancestry). Deployed revisions `00515-rlr`/`00516-2t7`/`00517-vwz` are all post-fix; the deployed traceback proves the
+  streaming code is live (`_live_coverage_venue_year.py:322→186`). Ran the 3-scope cefi probe (auth = `X-API-Key` from
+  the `deployment-api-api-key` GSM secret; requests one-at-a-time, ≥15 s apart) against the stable revision: **all 3
+  scopes hang >90 s client-side**, and Cloud Logging shows each request 503s at 176-400 s with "malformed response or
+  connection to the instance had an error" (the worker died mid-request). The container-level OOM is GONE (no
+  `Memory limit exceeded`, no `MEMORY_THRESHOLD_REACHED` events) — the streaming fix resolved the memory shape — but a
+  NEW failure mode surfaced: **worker-level SIGABRT** (`Uncaught signal: 6`, 6+ `Worker (pid:*) was sent SIGABRT!`
+  occurrences 2026-08-10 22:05-22:16 UTC) whose faulthandler dump identifies the abort site as
+  `_live_coverage_venue_year.py:186` = `df.apply(_classify, axis=1)`. Root cause: the row-wise pandas apply over the
+  now-~26M-row/215-row-group cefi manifest takes ~280 s locally (bounded repro of the exact deployed path: 215 chunks,
+  peak 1.74 GiB, COMPLETES — so not an inherent memory blowup), i.e. near/over the 300 s gunicorn `timeout=300` + Cloud
+  Run request timeout and infeasible for the default `cefi,tradfi,defi` request. This recurrence + abort call-site
+  directly advances the open `[BACKEND] P3` in `deployment_api_sigabrt_crash_loop_2026_07_24.md` (SIGABRT silent since
+  2026-08-04, now returned with the call site identified). Filed a new BACKEND P0 todo above (vectorize `_classify`).
+  **Not flipping the INFRA todo — the clean-window acceptance bar is NOT met.** UTL `609299ad` is content-on-main but
+  still unreleased (no tag contains it; the semver-agent squash fix released v0.78.0-.3 for other commits, not this one)
+  — moot for THIS route since `iter_manifest_row_groups` does its own footer-only column narrowing.
+  - **2026-08-10 (slot 4, backend_engineer)**: Vectorized `_classify` in `_process_manifest_chunk` — shipped
+    `deployment-api@fb3df79`. Replaced the per-row `df.apply(_classify, axis=1)` (~280 s measured for cefi's
+    ~26M-row/215-row-group manifest per the slot-5 infra repro above) with vectorized pandas column operations
+    (`str.lower()` + `str.contains()` + `.where()`) — same semantics (capture_status lowercased is the default
+    _status_key; attempted_failed + error_reason contains blocked_credentials → pending_paid_key), ~100× faster. Full
+    `quality-gates.sh` green, sentinel=fb3df79. Combined with the row-group-streamed read (deployment-api@3d72470) and
+    the narrowed-columns retry (unified-trading-library @609299ad), this removes the last known per-row-group CPU
+    bottleneck on the venue-year-coverage hot path.

@@ -1,0 +1,18 @@
+# tmpfs-disk-cleanup.service — oneshot; reclaims aged entries from the orchestrator VM's /tmp tmpfs.
+#
+# Epic: infrastructure_master (orchestrator VM /tmp tmpfs exhaustion remediation, 2026-08-10)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Driven by tmpfs-disk-cleanup.timer. Host-wide, not tied to any single runner pool or slot —
+# see tmpfs-disk-cleanup.sh for the full rationale (and why the once-a-day
+# systemd-tmpfiles-clean.timer that was already in place could not prevent the outage).
+[Unit]
+Description=Reclaim aged entries from /tmp tmpfs (host-wide)
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/tmpfs-disk-cleanup.sh
+# A failed cleanup must be visible in `systemctl status`, not silently retried into oblivion
+# (mirrors docker-disk-cleanup.service).
+Restart=no

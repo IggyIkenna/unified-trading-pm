@@ -25,8 +25,8 @@ related:
     plans/epics/global_ledger_pnl_attribution_master.md,
     plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
     plans/active/crypto_alpha_research_2026_07_24.md,
-    plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
-    plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
+    plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
@@ -151,7 +151,7 @@ are identified (2) and the ledger exists (3).
 > paper-run handoff P1.6, BTC-trend feature corpus recompute P2.11.16, TSMOM_BTC_CTA capability-manifest wiring
 > P2.11.20, the intraday mean-reversion ML feature P2.11.18 [scope-trimmed — its retrain sub-step stays here, see
 > below], and the UI run-selector bug P2.14) moved verbatim to
-> [`plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+> [`plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
 > — operator-authorized extraction, per that plan's own `source:` for the authorization. See that plan (+ its finalize
 > twin, `citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md`) for the live dispatchable todos. The canonical
 > `- [ ]` checkboxes for these items (Phase 2 / Phase 11 below) are converted to non-ingestable pointer lines in the
@@ -226,7 +226,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 ## Phase 2 — Per-trade identity in execution events (G2)
 
 > **EXTRACTED 2026-08-08**: both items below moved verbatim to
-> [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+> [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
 > — see register § A above for the extraction note. Non-checkbox digest lines only below (`task_template.md` finding H)
 > — the live dispatchable todos are in the satellite doc.
 
@@ -853,7 +853,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   `assigned_vm: planning` plan in `parent_epic: batch_live_symmetry_master` plus corpus-wide fingerprint greps per
   candidate. **Result: 7 of the 8 named items extracted** (P2.1, P2.2, P1.6, P2.11.16, P2.11.20, P2.11.18 [scope-trimmed
   — its retrain sub-step stays here], P2.14) to
-  [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
+  [`citadel_satellite_ao_dispatch_batch1_2026_08_08.md`](/plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
   (+ gated finalize twin). **1 held back on a genuine conflict**: P2.11.15 ("cs-leg longer-horizon TARGET retrain in
   `_panel.py`") near-verbatim-duplicates `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo
   (line 536) — left unchanged here, not extracted, per the conflict-check protocol's "verbatim/near-verbatim duplicate

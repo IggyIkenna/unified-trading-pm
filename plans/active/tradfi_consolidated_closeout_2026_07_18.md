@@ -697,7 +697,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers
     - **[DECISION] P2.** Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
       findings
-  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
     - **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write via the sink PREFIX mechanism
     - **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail (`partitioned_writer.py:291-293`)
     - **[DOCS] P2.** instruments-service + market-tick-data-service: correct three in-repo comments asserting hive

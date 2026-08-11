@@ -439,6 +439,23 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       roles (`backend_engineer`, `infra`, `quant_dev`, `ui_developer`, `data_engineering`, `review`), and
       `main`/`worker`. **Done when**: each role file is either confirmed clean or amended, with the list of amended
       files recorded here.
+- [x] ✅ [DATA] P1. **MECHANISM SHIPPED — `cursor-configs/hooks/batching-nudge.py`, a PostToolUse hook that nudges
+      IN-LOOP — unified-trading-pm@19dc43ec69.** Fires at the 3rd consecutive round-tripped same-tool call, then every
+      5th, with tool-specific advice (`&&` for Bash, `replace_all` for Edit) and the do-NOT-batch carve-out
+      (result-dependent calls, and any check authorising a destructive act, stay sequential). 15 tests. **The design
+      constraint that makes it safe**: four Reads batched into ONE message emit the same PostToolUse sequence as four
+      Reads across four turns, so a naive same-tool counter would fire HARDEST at correct behaviour and train agents out
+      of it. Separated by LATENCY — a gap under `SAME_MESSAGE_WINDOW_SECONDS` (2s) is treated as evidence of correct
+      batching and does NOT advance the counter (measured median inter-turn gap: 10.5s). Three of the 15 tests exist
+      only to pin that. **Propagation verified on origin**: hook file tracked at mode 100755, `PostToolUse` registered
+      in the tracked `cursor-configs/settings.json`, and the `.claude/settings.json` symlink is created by
+      `link-claude-skills.sh` which `quality-gates.sh` itself invokes — so any slot/machine that pulls LDR and has
+      bootstrapped picks it up. Real AO workers included: `tmux_spawn.spawn()` launches an INTERACTIVE `claude`, not
+      `claude -p` (the documented hook-skipping path). **Sessions must RESTART** — hooks load at session start, so a tab
+      that pulls mid-session has correct files and zero nudges. **Live evidence it works**: it nudged THIS session 43+
+      times, correctly, against an agent that wrote it and was actively trying to comply. That is the strongest
+      available argument that a written rule was never going to move this number — and a caution that a nudge alone may
+      not either.
 - [ ] [DATA] P1. **Re-measure the collapsible-call share — and treat a flat result as evidence that a RULE is not
       enough, because a rule was already tried.** Upgraded from P2 on 2026-08-10: the sub-agent rules file has carried a
       batching directive since ~2026-08-05 (issue doc
@@ -459,6 +476,53 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       recorded below.** If the multipliers converge into a narrow band per tier, record it; if they stay divergent, open
       an issue doc rather than averaging the spread into a single misleading number. **Done when**: the re-run output is
       recorded here with an explicit converged/not-converged verdict.
+
+### Anthropic Wallet Reconciliation (operator ask 2026-08-11)
+
+Operator ask, interactive session 2026-08-11: _"track our Anthropic usage in tokens converted to $ against our actual $
+spend on the weekly limits, from Wednesday"_ — i.e. the subscription-side analogue of the DeepSeek Wallet Reconciliation
+panel (`server/state_store/slots.py::compute_deepseek_wallet_reconciliation` + `dashboard/src/DeepSeekWalletPanel.tsx`),
+which answers "where did the money go" for a metered wallet and surfaces the unattributed remainder as an explicit
+`residual_usd` instead of folding it into whichever bucket is biggest.
+
+- [ ] [BACKEND] P1. **Persist an operator-recorded real-charges ledger per Anthropic account — the analogue of
+      `DeepSeekTopupRow`.** That row type exists precisely because DeepSeek publishes no spend-history API; Anthropic
+      publishes none either, so "what we actually paid" has to be a recorded fact, not derived from a plan-price
+      constant. Must carry the subscription charge for the period PLUS the `extra_usage` credits the TUI-capture todo
+      above obtains, with CURRENCY recorded (the laptop account's live payload is GBP, not USD — £150.78 this month,
+      measured 2026-08-10). **Done when**: the ledger persists real charges with period + currency, never edits a prior
+      entry (audit trail, same contract as `record_deepseek_topup`), and a test proves a window carrying overage is not
+      priced at bare subscription cost.
+- [ ] [BACKEND] P1. **`compute_anthropic_wallet_reconciliation()` — per account, per weekly window: paid $, consumed $,
+      residual.** Mirrors the DeepSeek reconciliation's shape, including the worker / orchestrator (slot 0) / review
+      split taken from the `is_review_slot` value SNAPSHOTTED on each row at sweep time rather than re-derived from
+      today's config (see `orm.py::DeepSeekMessageUsageRow.is_review_slot` for why a query-time membership check
+      retroactively relabels an entire historical sum). Consumed $ = list-priced value from `model_pricing.py` converted
+      by that account's MEASURED multiplier, never a hardcoded one. `residual_usd` must be None whenever the multiplier
+      or the paid-charges row is missing — never a number computed against an unset baseline, same contract the DeepSeek
+      view already holds. **Done when**: the endpoint returns a per-account, per-window breakdown and tests cover the
+      missing-multiplier and missing-payment cases.
+- [ ] [BACKEND] P1. **Store each weekly window's OPEN and CLOSE meter readings so a past window stays reconcilable after
+      the meter rolls.** The meter-history sampler records `weekly_pct` over time, but a reconciliation needs the pair
+      anchored to the Wednesday reset (`weekly_resets_at`); without a stored boundary pair a closed window cannot be
+      reconstructed. This is the same defect measured on the DeepSeek side on 2026-08-11 — no balance history is
+      persisted anywhere (`account_usage_history` has no balance column, `account_usage` holds only the CURRENT
+      reading), which is why the DeepSeek wallet view can only ever be lifetime and a "last 24 hours" residual is not
+      computable at all today. Do not repeat it here. **Done when**: every closed weekly window since the Wednesday
+      resets has a stored (open, close) reading per account, and the reconciliation can be recomputed for any past
+      window.
+- [ ] [UI] P2. **`AnthropicWalletPanel.tsx` beside `DeepSeekWalletPanel.tsx` — per-account weekly-window table.** Same
+      structure as the DeepSeek panel (pure exported formatters, vitest-covered; the React shell owns only fetch/poll
+      state and the latest-request-id guard against a slow poll clobbering a fresher write). Shows paid $ / consumed $ /
+      residual / implied multiplier per account per window, with the spend BASIS labelled — a subscription dollar and a
+      metered dollar are not the same unit. **Done when**: the panel renders live data and a cited playwright regression
+      spec passes; `[UI]` + `pw:L2 ✓` required per `/codex/06-coding-standards/ui-testing-layers.md`.
+- [ ] [DATA] P1. **Report the reconciliation for the first full post-Wednesday-reset window and state a residual
+      target.** This is the acceptance measurement for the four todos above. With the two RESERVED AO-exclusive accounts
+      the denominator is exact by construction, so an unexplained residual on those two is a real attribution defect,
+      not laptop contamination. **Done when**: the first closed window's per-account residual is recorded here with an
+      explicit within-target / not verdict, and any gap is either root-caused or opened as an issue doc rather than
+      averaged away.
 
 ## Progress Log
 
@@ -630,6 +694,32 @@ because the calibration code is a strict superset of a tree that already went gr
 **Recommended NEXT item**: land the calibration code the moment the peer's refactor clears. The two Wednesday-gated
 measurements have ~2 days of slack, so this is not urgent — but it is the only thing standing between a green gate and a
 shipped calibration path.
+
+### Session lessons 2026-08-10/11 — shipping through a shared, actively-mutated checkout
+
+- **A backup taken from a checkout another process is mutating is NOT a backup.** Three "wipes" this session were one
+  cause: a peer session running `pull --rebase --autostash` + `safe-doc-push` reconcile quarantines the shared
+  checkout's dirty state into stashes (`stash@{0}: safety-snapshot: pre-reconcile quarantine (15 autostash entries)` —
+  it contained the missing files). Worse, TWO of my three backups were taken AFTER that reverting had begun, so
+  restoring from them silently RE-INTRODUCED the reverts. Only backup #1 held the settings registration / CLAUDE.md rule
+  / SSOT fix; only backup #3 held the later lint fix. The ship set had to be reconstructed PER FILE from whichever
+  snapshot held the good version, verified by grepping content markers. **Verify markers before trusting any restore.**
+- **`git stash list` is the first thing to check when a file "vanishes"** in this workspace, not the last. The stash
+  message literally says "quarantine". Checking it the first time would have saved most of the night.
+- **The window is the enemy, not the race.** edit -> ~10-min gate -> commit loses to a peer reconciling every ~5 min, no
+  matter how correct each step is. The fix is an isolated CLONE (own `.git`, on LDR), not a worktree — PM's full gate
+  cannot run in a worktree at all (`unified_api_contracts` absent; symlinking `.venv` does NOT fix it).
+- **Four independent PRE-EXISTING blockers sat between a green tree and a PM commit**, none caused by this work:
+  VERSION_SPLIT (manifest cache claiming an unminted tag), the QG worktree self-audit, the duration meta-gate under host
+  load, and two codex docs tipping past 90 days at midnight. Each is filed with its own issue doc.
+- **`quality-gates.sh` is NOT a superset of the commit hooks.** QG lints only `server/`-equivalent paths; the pre-commit
+  hook also lints staged `tests/` and `scripts/` and `cursor-configs/`. A fully green gate then failed the commit twice
+  on ruff findings the gate never looked at. Filed.
+- **A truncated read is not evidence of absence** — cost a wrong "fix" that broke a WORKING pointer
+  (`setup-workspace-config-symlink.sh` does exist; `ls | head -15` had cut off before it). This is now a CLAUDE.md rule.
+- **Verify a "shipped" claim by ARTIFACT, not by the script's success line.** A failed quickmerge left the test file
+  staged and the implementation gone — invisible from a commit message. Two other slots caught a false "landed" claim in
+  minutes using per-artifact checks on origin (`git cat-file -e origin/<b>:<path>`, grep the registration).
 
 ### Session lessons (carry these, they cost real time)
 

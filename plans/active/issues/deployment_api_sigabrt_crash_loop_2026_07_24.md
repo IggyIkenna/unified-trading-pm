@@ -844,11 +844,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       surface a `memory-profile data_status.<handler>`/`memory-profile prediction_catalogue.<handler>` line if one of
       these 3 dominates — read those before guessing a fix, per this doc's own discipline. (repo: deployment-api)
 
-- [ ] [BACKEND] P3. **NEW, 2026-08-08 (slot 12, review) — per `[REVIEW] P1` above (WORKER crash confirmed): investigate
-      WHY gunicorn WORKERs call `abort()`.** All confirmed SIGABRTs were WORKERs (age 1–67 at crash time). SIGABRT
-      silent since `2026-08-04T05:57:56Z` (4+ days). Deferred pending recurrence: if it returns on a
-      `e8ce86a`+`785405d`-carrying revision, the faulthandler dump WILL appear in Cloud Logging (stdout blackout fixed
-      by `e8ce86a`'s JSON formatter) — read it to identify the `abort()` call site. (repo: deployment-api)
+- [x] ✅ [BACKEND] P3. **RESOLVED 2026-08-11 (slot 25, data_engineering→backend_engineer) — investigated, root cause
+      identified, fix shipped.** SIGABRT recurred 2026-08-10 22:05-22:16 UTC (Progress Log entry above: 6+
+      `Worker (pid:*) was sent SIGABRT!` on revisions 00515/00516/00517). Faulthandler dump reached Cloud Logging and
+      identified the abort call site: `_live_coverage_venue_year.py:186` = `df.apply(_classify, axis=1)` in
+      `_process_manifest_chunk` — the row-wise pandas apply over cefi's ~26M-row/215-row-group manifest took ~280 s,
+      near/over gunicorn's 300 s `timeout=300` + Cloud Run request timeout, causing the WORKER to SIGABRT mid-apply.
+      Root cause fully investigated + documented in
+      `/plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` (Progress Log entries 2026-08-10
+      slots 5 + 4). Fix shipped **`deployment-api@fb3df79`** (Quickmerge, verified ancestor of
+      `origin/live-defi-rollout`): vectorized `_classify` with pandas column operations (`str.lower()` +
+      `str.contains()` + `.where()`) — same semantics, ~100× faster, no per-row apply call. (repo: deployment-api)
 
 ## Progress Log
 
@@ -856,32 +862,20 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 > to `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1063/1000
 > lines after the `e8ce86a`-rollout-refutation write-up). New entries append below this note.
 
-- **2026-07-31 (slot 8, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-023` (blackout
-  bootstrap/fd-wiring todo). 4 canary `gcloud run deploy --command/--args` overrides refuted both named candidates,
-  found the real cause (`_Default` sink excludes `severity<=DEBUG`; Cloud Run stamps DEFAULT on plain-text stdout).
-  Shipped `deployment-api@e8ce86a`; full detail on the flipped checkbox above. Filed a `[REVIEW]` follow-up.
+- **2026-08-11 (slot 25, data_engineering→backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-032` (the
+  `[BACKEND] P3` "investigate WHY gunicorn WORKERs call abort()" todo). Investigation complete — not a new diagnosis, a
+  cross-doc reconciliation close-out. The 2026-08-10 Progress Log entry above (slot 5, infra) already established the
+  core facts: SIGABRT recurred 22:05-22:16 UTC, faulthandler dump identified `_live_coverage_venue_year.py:186` =
+  `df.apply(_classify, axis=1)`, and slot 4 (backend_engineer) shipped the vectorize fix `deployment-api@fb3df79`
+  (verified ancestor of `origin/live-defi-rollout` via `merge-base --is-ancestor`). The source file
+  (`_live_coverage_venue_year.py:177-184`) now uses vectorized `str.lower()` + `str.contains()` + `.where()` — no
+  per-row `df.apply()` call remains. Flipped the checkbox with evidence. No code shipped this entry (the fix was already
+  shipped by slot 4). (repo: deployment-api)
 
-- **2026-07-31 (slot 6, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-026` (diagnose why `e8ce86a`
-  "blocks its own rollout"). Refuted the `e8ce86a`-specific framing with evidence: two FRESH cold-start revisions from
-  an unrelated concurrent investigation (`00394-yoh`/`00395-san`, tagged `iam-fix-verify`/`-retest`), byte-identical to
-  warm `00374-4pd` in image + env/secrets/SA, still failed the SAME STARTUP TCP probe signature; independently
-  reproduced by re-tagging `e8ce86a`-era `00389-d9d` (already `Ready=True` once) — 6/6 fresh retries then failed too.
-  Cold startup is broken platform-side for ANY image right now; only the one instance warm since `18:39:05Z` works.
-  Flipped on the refuted branch, filed `[INFRA] P0` follow-up (prod risk: `minScale=1`, no recovery path if the warm
-  instance is ever replaced). Verified prod safe throughout. No code shipped — infra/IAM-scoped.
-
-- **2026-07-31 22:00-22:20Z (slot 14, infra)** — Dispatched `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
-  cold-container todo). Found + fixed a real IAM gap (runtime SA's project roles were stripped 19:32Z, matching the
-  `iam-fix` window; separately, the SA's OWN SA-level policy — who may mint tokens as it — was completely empty; granted
-  the Cloud Run Service Agent `serviceAccountTokenCreator` on it). Neither fix changed the symptom: 3 retests over
-  ~20min all failed at 31.3-31.4s, deterministic to the ms. Built a scoped diagnostic log sink bypassing the project's
-  `_Default` severity exclusion for just this service, and proved the failing container emits ZERO log output ever (not
-  even gunicorn's own `on_starting` line) while a concurrent different canary logs fine in the same window — narrows the
-  fault to the container-exec layer, upstream of gunicorn/Python, specific to this heavy resource profile. Also did a
-  4th-pass line-cap remediation (doc was at 1001/1000 lines) extracting 6 more fully- resolved checklist entries to the
-  same archive file. IAM ruled out; filed a narrower `[INFRA]` follow-up (test a lighter resource profile / gen2, or
-  escalate to Google Cloud Support). Left the IAM grant + diagnostic sink live for the next investigator. Production
-  safe throughout (`00374-4pd` still serving 200s). No code shipped — pure infra/IAM investigation + doc reconciliation.
+> **2026-08-11 line-cap remediation (6th pass)**: the three 2026-07-31 Progress Log entries (slots 8, 6, and 14 —
+> blackout bootstrap/diagnosis, `e8ce86a` rollout-refutation, and the IAM-gap investigation) extracted verbatim to
+> `/plans/archive/2026_07/deployment_api_sigabrt_crash_loop_progress_log_history_2026_07_31.md` (doc was at 1013/1000
+> lines after the slot-25 close-out write-up).
 
 - **2026-07-31T22:57Z (slot 7, infra)** — Resumed `deployment_api_sigabrt_crash_loop-027` (the `[INFRA] P0`
   cold-container todo, both it and its slot-14 narrower follow-up). Found the platform-side cold-start failure has
@@ -989,3 +983,9 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   instead — filed a `[BACKEND] P2` follow-up. No code shipped (one live read-only monitoring GET).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **2026-08-10 (slot 5, infra)**: SIGABRT RECURRED — 6+ `Worker (pid:*) was sent SIGABRT!` 22:05-22:16 UTC (revisions
+  00515/00516/00517) during venue-year-coverage cefi requests; faulthandler dump reached Cloud Logging and identifies
+  the abort call site: `_live_coverage_venue_year.py:186` = `df.apply(_classify, axis=1)` in `_process_manifest_chunk` —
+  answers this doc's open `[BACKEND] P3` for this recurrence (evidence + vectorize fix in
+  `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`; bounded local repro completes at 1.74 GiB peak, so
+  slowness/churn not raw memory; older silent-window recurrences share the data-status-burst trigger).

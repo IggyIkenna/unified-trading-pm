@@ -228,6 +228,18 @@ def _iter_repo_docs(workspace_root: Path) -> list[Path]:
     for repo_dir in sorted(workspace_root.iterdir()):
         if not repo_dir.is_dir() or repo_dir.name in _EXCLUDED_REPOS:
             continue
+        # Exclude PM by IDENTITY as well as by name. `_EXCLUDED_REPOS` matches the string
+        # "unified-trading-pm", which silently stops working the moment PM is checked out
+        # under any other directory name — exactly what `git worktree add <path>` does, and
+        # what `safe-doc-push.sh` / `quickmerge --isolated` do on every run. PM then audits
+        # its OWN docs as if they were a sibling repo: measured 2026-08-10, a gate run from
+        # a worktree reported 14 phantom "NEW codex-SSOT drift" docs (README.md,
+        # docs/BOOTSTRAP-FROM-SCRATCH.md, …) and offered `--update-baseline` as the remedy,
+        # which would have written those phantoms into the shared ratchet permanently.
+        # Unlike a foreign scratch clone, PM knows its own path, so name-matching is not
+        # "the only signal available" here.
+        if repo_dir.resolve() == PM.resolve():
+            continue
         if _is_scratch_clone(repo_dir.name):
             continue
         readme = repo_dir / "README.md"

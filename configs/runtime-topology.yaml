@@ -7,7 +7,7 @@
 # At deployment time, the deployment system reads CLOUD_PROVIDER to select
 # the correct transport per edge. Services never see cloud-specific transports.
 
-version: 7
+version: 8
 ssot:
   purpose: Runtime interaction topology and deployment transport policy
   owner: unified-trading-pm
@@ -16,6 +16,10 @@ ssot:
   decisions_doc: unified-trading-pm/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md
   isolation_sla_doc: unified-trading-pm/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md
   schema_changelog:
+    v7_to_v8:
+      - Added archetype_deployment_profile_mapping (reverse-index: deployment_profile → archetypes).
+      - Populated from the 2026-08-10 per-family latency-category audit decision artifact.
+      - New top-level section adjacent to deployment_profiles; does not modify existing keys.
     v6_to_v7:
       - Added isolation_policies (per-service shared|isolated choice with allowed overrides).
       - Added sla_tiers (premium|standard|basic with cost_multiplier and required isolation).
@@ -52,6 +56,136 @@ deployment_profiles:
   co_located_vm:
     description: Bundled services on one VM for low-latency handoff
     allowed_transports: [gcs, pubsub, s3, sqs, in_memory]
+
+# ---------------------------------------------------------------------------
+# Archetype → deployment-profile mapping (reverse-index)
+# ---------------------------------------------------------------------------
+# Maps each deployment_profile back to the StrategyArchetype values that
+# require it — the deployment-side half of the archetype↔deployment link.
+# The archetype-side half is ARCHETYPE_TO_DEPLOYMENT_PROFILE in
+# unified_api_contracts/internal/architecture_v2/enums.py.
+#
+# Populated 2026-08-10 from the per-family latency-category audit decision
+# artifact at /codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md.
+# Rationale for new section (not retrofitting co_location_rules or
+# deployment_profiles): co_location_rules enumerates SERVICE GROUPS that
+# share a VM; deployment_profiles defines profile CAPABILITIES. Neither
+# models the archetype→profile relationship. A dedicated section makes the
+# join table explicit, is machine-readable for deployment-service's
+# derivation logic, and stays in sync with the UAC enum via the audit trail.
+# ---------------------------------------------------------------------------
+archetype_deployment_profile_mapping:
+  description: >-
+    Reverse-index: deployment_profile → set of StrategyArchetype values requiring it, with the per-family
+    latency-category rationale. Consumers (deployment-service) compute the required deployment set as the UNION of
+    profiles demanded by the currently-active archetype set.
+  ssot_archetype_side: unified_api_contracts/internal/architecture_v2/enums.py::ARCHETYPE_TO_DEPLOYMENT_PROFILE
+  decision_artifact: /codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md
+  co_located_vm:
+    reason: >-
+      Low-latency families — ms-realm inter-leg execution gap per the 2026-08-10 operator ruling. These archetypes
+      execute multi-leg trades where the lag-leg must follow the lead-leg at ms timing; co-located VM provides in_memory
+      transport between strategy/execution/MTDH.
+    min_sla_tier: premium
+    families:
+      market_making:
+        reason: "<100ms total E2E; sub-ms shadow book + delta-proxy fast path"
+        archetypes:
+          - MARKET_MAKING_CONTINUOUS
+          - MARKET_MAKING_EVENT_SETTLED
+          - MARKET_MAKING_PASSIVE_SPREAD
+          - MARKET_MAKING_INVENTORY_SKEW
+          - MARKET_MAKING_ML_LEAN
+          - MARKET_MAKING_QUEUE_MICROSTRUCTURE
+          - MARKET_MAKING_PREDICTION
+          - DEFI_LP_CONCENTRATED
+          - DEFI_LP_POOL
+          - DEFI_LP_VAULT
+      arbitrage_structural:
+        reason: "<200-300ms total E2E; cross-exchange two-legs-two-venues gap"
+        archetypes:
+          - ARBITRAGE_PRICE_DISPERSION
+          - ARBITRAGE_SPORTS_DUTCHING
+          - LIQUIDATION_CAPTURE
+          - ARBITRAGE_MEV_SANDWICH
+          - ARBITRAGE_MEV_JIT_LIQUIDITY
+          - ARBITRAGE_MEV_BACKRUN
+          - ARBITRAGE_MEV_LIQUIDATION_BUNDLE
+          - ARBITRAGE_CROSS_DOMAIN_EVENT
+      carry_and_yield_basis:
+        reason: >-
+          Multi-leg basis/staking-basis variants — spot-leg/perp-hedge-leg gap must be ms-realm (<500ms operating
+          target). Two single-sided yield/staking archetypes are Medium→distributed (excluded here).
+        archetypes:
+          - CARRY_BASIS_DATED
+          - CARRY_BASIS_DATED_INV
+          - CARRY_BASIS_PERP
+          - CARRY_BASIS_PERP_INV
+          - CARRY_FUNDING_DISPERSION
+          - CARRY_STAKED_BASIS
+          - CARRY_STAKED_BASIS_DATED
+          - CARRY_RECURSIVE_STAKED
+          - CARRY_RECURSIVE_BORROW_LENDING_ONLY
+      ml_directional:
+        reason: "<200ms total E2E; greenfield — no prior latency doc existed"
+        archetypes:
+          - ML_DIRECTIONAL_CONTINUOUS
+          - ML_DIRECTIONAL_EVENT_SETTLED
+      rules_directional:
+        reason: "<200ms total E2E; rule evaluator fires directly off features (no model-inference leg)"
+        archetypes:
+          - RULES_DIRECTIONAL_CONTINUOUS
+          - RULES_DIRECTIONAL_EVENT_SETTLED
+          - TSMOM_BTC_CTA
+      stat_arb_pairs:
+        reason: "<200-300ms total E2E; cross-venue / leader-lagger pairs at ms-realm"
+        archetypes:
+          - STAT_ARB_PAIRS_FIXED
+          - STAT_ARB_CROSS_SECTIONAL
+  distributed:
+    reason: >-
+      Medium/High-latency families — seconds-to-minutes decision cycles; standard Cloud Run / standalone VM deployment
+      is sufficient.
+    min_sla_tier: standard
+    families:
+      vol_trading:
+        reason: "<15s total E2E (archived Volatility Arb row); intra-family fast subset edge case deferred"
+        archetypes:
+          - VOL_TRADING_OPTIONS
+          - VOL_ARB_RV_IV
+          - VOL_SPREAD_STRUCTURES
+          - VOL_CARRY
+          - VOL_OVERLAY_COVERED_CALLS
+          - VOL_OVERLAY_PROTECTIVE_PUT
+          - VOL_STRADDLE
+          - VOL_SYNTHETIC_DELTA
+          - VOL_MARKET_MAKING
+          - VOL_ML_LEAN
+          - VOL_0DTE_GAMMA_SCALPING
+          - VOL_0DTE_PIN_RISK
+          - VOL_TERM_STRUCTURE_ARB
+          - VOL_TERM_STRUCTURE_SLOPE
+          - VOL_DISPERSION
+          - VOL_VARIANCE_SWAP
+          - VOL_LEAPS_CONVEXITY
+          - VOL_CROSS_ASSET_SPREAD
+          - VOL_RATIO_SPREAD
+      event_driven:
+        reason: "Seconds-scale decision; pre-positioned + time-bounded; Momentum closest analog"
+        archetypes:
+          - EVENT_DRIVEN
+      carry_and_yield_single_sided:
+        reason: "Single-sided yield/staking — seconds-scale decision, no multi-leg inter-leg gap"
+        archetypes:
+          - YIELD_ROTATION_LENDING
+          - YIELD_STAKING_SIMPLE
+      portfolio:
+        reason: "60s latency_budget_ms + 10s Alpha thesis; Yield Optimization analog"
+        archetypes:
+          - PORTFOLIO_MULTI_STRATEGY
+          - PORTFOLIO_RISK_PARITY
+          - PORTFOLIO_FACTOR_ALLOCATION
+          - PORTFOLIO_TACTICAL_OVERLAY
 
 # ---------------------------------------------------------------------------
 # Defaults

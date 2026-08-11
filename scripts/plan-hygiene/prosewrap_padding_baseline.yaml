@@ -1,5 +1,5 @@
 # Baseline for check_prosewrap_padding.sh — prettier proseWrap continuation-padding corruption
-# (see plans/active/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the
+# (see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the
 # root cause + repro recipe, and
 # plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md for the corpus-wide
 # remediation backlog this baseline tracks down over time).
@@ -10,4 +10,4 @@
 # an existing one grew further under repeated prettier passes), fix it, don't raise the number.
 # LOWER it (re-run `check_prosewrap_padding.sh --update-baseline`) as flagged lines get hand-
 # repaired. NEVER hand-raise it.
-violation_count: 4472
+violation_count: 3655

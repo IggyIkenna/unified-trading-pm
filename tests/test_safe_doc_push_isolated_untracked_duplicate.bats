@@ -27,6 +27,11 @@
 # untested, and this comment exists so nobody reads a green run as covering it.
 
 setup() {
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
   REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   SCRIPT="${REPO_ROOT}/scripts/dev/safe-doc-push.sh"
 
@@ -87,4 +92,77 @@ setup() {
   [ -f sharedplan.md ]
   run git ls-files -- sharedplan.md
   [ "$output" = "sharedplan.md" ]
+}
+
+# ── The re-wrap gap (2026-08-11) ────────────────────────────────────────────────────────────────
+# The reconciler above keyed on BYTE-identity. prek runs prettier inside the isolated worktree, so
+# for a prose `.md` the landed blob is RE-WRAPPED and byte-identity never holds — the check was a
+# no-op on exactly the file class it was written for. Measured 3 times in one session, each a pure
+# re-wrap with zero word-level difference, each costing a conflicted pull (and once a failed
+# quality gate via the conflict-marker check).
+#
+# The end-to-end path cannot reproduce this deterministically (it needs prettier to fire inside the
+# child), so these run the REAL `_sdp_same_content` extracted from the live script — a replica here
+# would drift from what ships.
+
+_extract_same_content() {
+  sed -n '/^_sdp_same_content()/,/^}/p' "$SCRIPT"
+}
+
+@test "same words re-wrapped is recognised as the SAME content" {
+  cd "${WORK}/.tabs/29/unified-trading-pm"
+  # Committed: one long line. Working copy: identical words, wrapped. Exactly what prettier does.
+  printf 'the quick brown fox jumps over the lazy dog and keeps going for a while\n' > wrap.md
+  git add wrap.md && git commit -q -m "landed, one line"
+  printf 'the quick brown fox jumps over\nthe lazy dog and keeps going\nfor a while\n' > wrap.md
+
+  eval "$(_extract_same_content)"
+  run _sdp_same_content wrap.md "HEAD:wrap.md"
+  [ "$status" -eq 0 ]
+}
+
+@test "a REAL word change is NOT treated as the same content" {
+  cd "${WORK}/.tabs/29/unified-trading-pm"
+  printf 'alpha beta gamma\n' > real.md
+  git add real.md && git commit -q -m "landed"
+  printf 'alpha BETA gamma\n' > real.md
+
+  eval "$(_extract_same_content)"
+  run _sdp_same_content real.md "HEAD:real.md"
+  [ "$status" -ne 0 ]
+}
+
+@test "non-markdown is refused even when only whitespace differs — indentation is semantic in code" {
+  cd "${WORK}/.tabs/29/unified-trading-pm"
+  printf 'if true; then\n  echo hi\nfi\n' > script.sh
+  git add script.sh && git commit -q -m "landed"
+  printf 'if true; then\n        echo hi\nfi\n' > script.sh
+
+  eval "$(_extract_same_content)"
+  run _sdp_same_content script.sh "HEAD:script.sh"
+  [ "$status" -ne 0 ]
+}
+
+@test "a tracked doc whose content already landed is synced, not left to conflict" {
+  # The other half of the gap: two of the three measured hits were TRACKED files, which the
+  # untracked-only reconciler never looked at. Left alone, the next pull's autostash pop conflicts
+  # on the caller's own doc.
+  cd "${WORK}/.tabs/29/unified-trading-pm"
+  printf 'shipped words here\n' > tracked.md
+  git add tracked.md && git commit -q -m "tracked doc"
+  git push -q origin HEAD:live-defi-rollout
+  git fetch -q origin
+  # Caller still holds the pre-formatter wrapping of the same words.
+  printf 'shipped\nwords\nhere\n' > tracked.md
+
+  FILES=(tracked.md)
+  BRANCH=live-defi-rollout
+  eval "$(_extract_same_content)"
+  eval "$(sed -n '/^_sdp_reconcile_caller_duplicates()/,/^}/p' "$SCRIPT")"
+  run _sdp_reconcile_caller_duplicates
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"synced"* ]]
+  # Working copy now matches what landed, so the next pull cannot conflict on it.
+  run git diff --quiet -- tracked.md
+  [ "$status" -eq 0 ]
 }

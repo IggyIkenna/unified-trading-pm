@@ -120,21 +120,40 @@ CLI wiring, same shape as the 3 domains that already have it.
       branch needed** — CatalogManager is a domain-agnostic Nautilus `ParquetDataCatalog` wrapper; the sports
       synthetic-tick shape is the same QuoteTick shape CeFi registers (verified by write+read-back in
       `tests/unit/test_sports_fixture_source.py`). 5 new unit tests; QG full green on 3d3069cd; shipped as 51bee662a.
-- [ ] [DESIGN] P3. **RESOLVED by the 2026-08-08 OPERATOR RULING banner above — option (a), delete it.** Resolve the
+- [x] ✅ [DESIGN] P3. Deleted `SportsMatchingEngine` per operator ruling at
+      `/plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` L54 (2026-08-08): option (a). Resolve the
       `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
       `tests/`, always fills at requested odds with no rejection/queue model, i.e. Group-B-shaped behavior sitting in
       the matching-engine module). ~~Either: (a) delete it as unused dead code once confirmed truly orphaned, or (b) if
       it was meant to replace `L0Matcher` for sports specifically, explain why and wire it in instead of `L0Matcher`.~~
       Ruled: confirmed dead code, delete it (no shims) rather than wiring it — do not re-litigate. Do this BEFORE
-      building the CLI below so the harness targets the right matcher (`L0Matcher`).
-- [ ] [SCRIPT] P3. Add a hermetic test asserting `run_sports_backtest` produces a non-trivial `execution_alpha_bps` (per
-      `backtest-groups.md`'s Group-C output contract) against the fixture data, proving the harness actually measures
-      something (not just that it runs).
-- [ ] [DESIGN] P3. Once the harness runs, decide whether it belongs in the routine backtest-groups verification surface
-      (`docs/BACKTESTS.md` — currently DEAD per the sibling investigation's finding that its documented sports
+      building the CLI below so the harness targets the right matcher (`L0Matcher`). — execution-service@70d18a44
+- [x] ✅ [SCRIPT] P3. Add a hermetic test asserting `run_sports_backtest` produces a non-trivial `execution_alpha_bps`
+      (per `backtest-groups.md`'s Group-C output contract) against the fixture data, proving the harness actually
+      measures something (not just that it runs). — execution-service@7680d3f0d (main commit 893355cb + refactor
+      7680d3f0d). `tests/unit/cli/test_sports_backtest_exec_alpha.py` runs the FULL harness hermetically (fixture
+      config + registered catalog + `run_sports_backtest`) and asserts
+      `execution_alpha.summary.total_execution_alpha_bps` is non-zero AND that the measured entry slippage equals the
+      fixture's one-sided L0 spread (-5.0bps; entry fill 2.001 vs benchmark 2.0). Completing the run path this test
+      surfaced required wiring the L0_TOB sports path the earlier todos left half-done: validation acceptance of sports
+      L0_TOB, sports instrument creation from config + native-Equity catalog registration (no GCS instrument-definitions
+      load), QuoteTick+TradeTick data loading from the local catalog, the Nautilus L0_TOB→L1_MBP venue map, fixture L0
+      quote-burst + trade ticks, `InstructionDrivenV3Config.instruction_data` Any-typed (Nautilus msgspec rejects
+      `object`), and a pre-existing multi-arg `log.debug` bug fix in `enter_position`. QG full green (sentinel 447fef0a
+      → pushed 7680d3f0d).
+- [x] ✅ [DESIGN] P3. Once the harness runs, decide whether it belongs in the routine backtest-groups verification
+      surface (`docs/BACKTESTS.md` — currently DEAD per the sibling investigation's finding that its documented sports
       invocation was deleted at `strategy-service@fe2e0c7a`) or stays a manually-invoked one-off given sports is
-      intentionally backtest-only / not on the live-mode critical path.
+      intentionally backtest-only / not on the live-mode critical path. — **Decision (2026-08-11, slot 33): stays a
+      manually-invoked one-off.** (1) The only `docs/BACKTESTS.md` is in strategy-service and documents Group-B strategy
+      backtests — the wrong surface for a Group-C execution-alpha harness (different concern, different service). (2)
+      There is no execution-service Group-C verification surface for the other 3 domain runners either — their
+      verification is via hermetic unit tests, which sports already has (`test_sports_backtest_exec_alpha.py`, shipped
+      as todo 4). Creating one just for sports would be asymmetric. (3) Sports is intentionally backtest-only, not on
+      the live-mode critical path — the harness is a research/analysis tool, not a deployment gate. Precedent confirmed
+      via grep: no execution-service `docs/BACKTESTS.md` exists; no other `run_<domain>_backtest` appears in any
+      routine-verification surface.
 
 ## Open questions for operator sign-off before implementation dispatches
 
@@ -152,6 +171,25 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Progress Log
 
+- **2026-08-10 (slot 19, backend_engineer)**: Todo 4 shipped — `execution-service@7680d3f0d` (main commit 893355cb +
+  QG-size refactor 7680d3f0d). Added the hermetic Group-C exec-alpha test
+  (`tests/unit/cli/test_sports_backtest_exec_alpha.py`) proving `run_sports_backtest` produces a non-trivial
+  `execution_alpha_bps` against the fixture: `total_execution_alpha_bps == -5.0` (entry fill 2.001 vs benchmark 2.0 —
+  the one-sided L0 spread), `num_entries == 1`, `fills == 1`. Writing a runnable hermetic test exposed that the harness
+  (todos 1-3) was reachable but NOT runnable end-to-end: it routed through the generic cefi/tradfi Nautilus path, which
+  rejected the sports L0_TOB microstructure at validation, required GCS instrument definitions for registration, had no
+  QuoteTick data-loading path, and the V3 strategy needed TradeTicks (not just quotes) to fire instructions. Wired the
+  L0_TOB run path: `BacktestValidator` accepts sports/prediction L0_TOB (delegates to instruction-stream validation);
+  `_setup_catalog_and_instrument` builds the sports instrument from config and `InstrumentFactory` registers it via a
+  native-Equity fallback (`SportsMarketInstrument` isn't Arrow-serializable); `DataLoader._build_l0_tob_data_configs`
+  builds QuoteTick+TradeTick `BacktestDataConfig`s from the local catalog; `get_book_type_from_config` accepts L0_TOB
+  for sports and `NodeBuilder._resolve_book_type` maps L0_TOB→L1_MBP for Nautilus (its BookType has no L0_TOB);
+  `NodeBuilder.extract_all_venues_from_instruments` falls back to the singular `venue.name`; the fixture emits a 3-quote
+  L0 burst + trade ticks per fixture tick and quotes the offer `spread_bps` above the benchmark mid (so fills deviate
+  from benchmark); `InstructionDrivenV3Config.instruction_data` retyped `dict[str, dict[str, Any]]` (Nautilus' msgspec
+  dec_hook rejects `object`); fixed a pre-existing multi-arg `log.debug` in `enter_position`.
+  `_resolve_and_prepare_catalog_path` now honours an explicit `data_catalog.trades_path` for `data_source: local`
+  (hermetic local-catalog reads). QG full green (sentinel `447fef0a`; pushed as `7680d3f0d`).
 - **2026-08-10 (slot 19, backend_engineer)**: Todo 2 shipped — `execution-service@51bee662a`. Ported the Group-B fixture
   (`strategy-service@9a7de7f8`'s `premier_league_arb_sample.py`, 3 synthetic EPL ticks) into
   `execution_service/data/fixtures/sports_odds/` (byte-compatible — port, not import, per the T4 no-service↔service-dep
@@ -206,3 +244,15 @@ CLI wiring, same shape as the 3 domains that already have it.
   left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain runners'
   CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired finalize
   sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+- **2026-08-10 (slot 4, backend_engineer)**: Todo 3 shipped — deleted `SportsMatchingEngine`
+  (`execution_service/matching_engine/sports_matching.py`, 468 lines, zero callers anywhere in execution-service or
+  tests) and removed its re-exports from `matching_engine/__init__.py` (BetOrder, BetStatus, MarketType, OpenBet,
+  PortfolioSummary, SettlementResult, SportsMatchingEngine — all had zero importers from this package; real consumers
+  import the distinct UAC types of the same names). Operator ruling 2026-08-08 option (a): delete rather than wire.
+  execution-service@70d18a44.
+- **2026-08-11 (slot 33, backend_engineer)**: Todo 5 resolved — DESIGN decision: `run_sports_backtest` stays a
+  manually-invoked one-off. Precedent investigation: (1) the only `docs/BACKTESTS.md` is in strategy-service and
+  documents Group-B strategy backtests — wrong surface for a Group-C execution-alpha harness; (2) no execution-service
+  Group-C verification surface exists for the other 3 domain runners either — their verification is via hermetic unit
+  tests, which sports already has (`test_sports_backtest_exec_alpha.py`); (3) sports is backtest-only, not on the live
+  critical path. All 5 todos now complete; plan ready for archival per finalize sibling.

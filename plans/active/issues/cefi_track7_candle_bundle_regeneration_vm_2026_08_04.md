@@ -259,3 +259,24 @@ relaunch todo added above for once it reaches a terminal state.
 - **context-scout 2026-08-09**: refreshed context_scope (6 entries) -- added the cross-cutting
   `mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md` issue (the root-cause fix that explains why 2 prior
   relaunches never fixed the BYBIT cells, per the 2026-08-08 slot-26 finding above).
+- **data_engineering (slot 15) 2026-08-10T19:34Z**: Re-checked terminal-state gate for todo 2. VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING) — run.log
+  actively logging POLARS AGGREGATED at `2026-08-10T19:29:27Z` (seconds before this check). Now at `Date: 2024-02-06`
+  (up from `2024-01-28` at slot 18's check ~2h earlier — 9 days advanced, ~13 min/day, consistent with the documented
+  ~12-15 min/day rate). `Force: False` confirmed (VM predates the `market-data-processing-service@e9f9819`
+  force-forwarding fix). ~700 days remaining to `2026-01-01` at the observed rate ≈ ~175h of continuous uptime. All 3
+  VM-delete guardrail signals confirm alive (heartbeat signals seconds-old, run.log actively writing, not a
+  `canonical-migration-` prefix). Todo 2 remains gated — releasing back to the queue with `reason_code: GATED` per
+  worker.md § 4c; not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 13) 2026-08-10T23:12Z**: Re-checked terminal-state gate for todo 2 (the `-018` re-dispatch of
+  slot-15's same check). VM `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe`
+  status=RUNNING, created 2026-08-08T08:57Z) — run.log actively logging `POLARS AGGREGATED` at `2026-08-10T23:11:14Z`
+  (seconds before this check), heartbeat file present, not a `canonical-migration-` prefix. Terminal state NOT reached —
+  todo 2 remains gated on it. Releasing back to the queue with `reason_code: GATED` (fleet cooldown will re-dispatch
+  after the ~3h window); not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 24) 2026-08-11T03:35Z**: Re-checked terminal-state gate for todo 2. VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (live `gcloud compute instances list`, created
+  2026-08-08T01:57Z-07:00) — run.log 244MB, last_modified `2026-08-11T03:34:55Z` (seconds before this check, actively
+  logging — alive, not stale). Terminal state NOT reached — todo 2 remains gated on it. Releasing back to the queue with
+  `reason_code: GATED` (fleet cooldown); not busy-waiting on a week-scale external condition (~175h ETA at the
+  documented ~13 min/day rate).

@@ -250,11 +250,332 @@ depends_on: []
           improve as season-scoped caching reduces redundant API calls for later seasons.
         - **No code shipped** — pure monitoring.
 
-## Deferred work after 2026-08-10 ~16:29Z
+      - **2026-08-10 (slot 28, data_engineering, ~16:50Z–~17:00Z)** — Continued monitoring STANDINGS VM:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-02-05` → `2021-02-08` (pre-compact around 16:29Z) → `2021-02-11` (~17:00Z). Monotonic, forward progress.
+          ~248/2258 days done (~11.0%). Pace ~1.4 dates/min confirmed from launch (~16:33Z). ETA at current pace: ~24h
+          remaining → ~2026-08-11 17:00Z. Standings is season-scoped (not per-date) — pace is per-season-start-date, ETA
+          may be conservative.
+        - No `exit_code=` yet. VM healthy — PIPELINE_HEARTBEAT emitting every 60s. No code shipped — pure monitoring.
+        - Session compacted ~17:00Z.
+
+      - **2026-08-10 (slot 28, data_engineering, ~19:25Z–~19:30Z)** — Brief STANDINGS VM check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-02-11` (~17:00Z) → `2021-02-17` (~19:25Z). Monotonic, forward progress. ~256/2258 days done (~11.3%).
+          Heartbeat alive at `19:24:51Z`. No `exit_code=` yet. VM RUNNING per `gcloud compute instances list`.
+        - **Pace slowdown**: ~6 season-start-dates in ~2.5h (~0.04 dates/min) vs earlier ~1.4 dates/min. Expected —
+          Standings is season-scoped (not per-date), and later years contain more active leagues per season-start-date
+          (more API calls per chunk). The initial ~1.4 dates/min estimate from sparse 2020 seasons is not representative
+          of the full run. ETA cannot be reliably estimated from current pace — season density varies non-linearly.
+          INJURIES (per-date entity) took ~5.5h for the full range; STANDINGS may take longer.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:00Z–~20:18Z)** — STANDINGS VM checks (post-compact resume):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-02-17` (~19:25Z) → `2021-04-08` (~20:18Z). Monotonic, forward progress. ~308/2258 days done (~13.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - **Pace remains slow**: ~52 calendar days advanced since ~17:00Z (~3.3h) → ~16 dates/h. At this rate ETA to
+          completion (2026-08-10 range end) is >100h. STANDINGS is season-scoped (not per-date), so "dates" are
+          season-start-epochs — each league-season requires an API call, and later years have many more active leagues
+          than 2020. The pace will decelerate further as the loop enters denser 2022-2026 seasons. No reliable ETA
+          possible; this VM may run for multiple days.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:09Z)** — STANDINGS VM check (pre-compact):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-04-08` (~20:18Z prior session) → `2021-04-17` (~20:09Z). Monotonic, forward progress. 316 progress
+          markers written. Heartbeat alive at `20:06:51Z`, run.log modified `20:09:12Z`. No `exit_code=` yet. VM
+          confirmed RUNNING.
+        - Pace ~9 season-start-dates since last check. Season density continues to increase — pace per calendar-date is
+          non-linear and expected to keep decelerating as the loop enters 2022+ where more leagues are active per
+          season.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:15Z)** — STANDINGS VM check (pre-compact):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-04-17` (~20:09Z) → `2021-04-22` (~20:10Z) → `2021-04-28` (~20:15Z). Monotonic, forward progress.
+          Heartbeat alive at `20:14:51Z`. No `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~11 season-start-dates since ~20:09Z (~6 min). Season density continues to increase — each season-start
+          date now covers more active leagues, so pace per calendar-date continues to decelerate.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:17Z–~20:20Z)** — STANDINGS VM checks (pre-compact):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-04-28` (~20:15Z) → `2021-05-01` (~20:17Z) → `2021-05-04` (~20:20Z). Monotonic, forward progress. 333
+          total `[[VM_PROGRESS]]` markers written. Heartbeat alive at `20:16:51Z`. No `exit_code=` yet. VM confirmed
+          RUNNING.
+        - Pace ~6 season-start-dates since ~20:15Z (~5 min). Season density continues to increase — each season-start
+          date now covers more active leagues, pace per calendar-date decelerating as expected into 2022+ seasons.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:38Z)** — STANDINGS VM heartbeat check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-05-04` (~20:20Z) → `2021-05-30` (~20:38Z). Monotonic, forward progress. Heartbeat alive, no `exit_code=`
+          yet. VM confirmed RUNNING.
+        - Pace ~26 season-start-dates in ~18 min (~1.4 dates/min). Still in 2021 seasons. Non-linear density curve
+          continues — later years will be denser. Run now ~4h old.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:42Z–~20:45Z)** — STANDINGS VM continued monitoring:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-05-31` (earlier check) → `2021-06-01` (GCS tee, ~20:42Z). Monotonic, forward progress. Heartbeat alive
+          at ~20:43Z. No `exit_code=` yet. VM confirmed RUNNING.
+        - Stall watchdog reported progress resumed: `2021-05-30` → `2021-06-01` — no stall, normal progression through
+          2021 season-start dates. Pace continues at ~1-2 season-start-dates/min. Run now ~4.2h old.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:50Z)** — Pre-compact check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-06-01` (~20:45Z) → `2021-06-07` (GCS tee, ~20:50Z). Monotonic, forward progress. No `exit_code=` yet.
+          Heartbeat alive. Queue unchanged.
+        - No code shipped — pre-compact ritual.
+
+      - **2026-08-10 (slot 28, data_engineering, ~20:51Z–~21:00Z)** — Post-compact + pre-compact sessions:
+        - VM progressed from `2021-06-07` (~20:50Z) → `2021-06-17` (multiple checks across compact+resume cycles) →
+          `2021-06-20` (~21:00Z). Monotonic, forward progress. VM RUNNING in `asia-northeast1-c`. No `exit_code=` yet.
+          Heartbeat alive.
+        - Pace remains ~1-2 season-start-dates/min, non-linear deceleration into denser 2022+ seasons as expected. Run
+          now ~4.5h old. No reliable ETA — STANDINGS is season-scoped, pace depends on league density per season.
+        - No code shipped — pure monitoring across multiple compact+resume cycles.
+        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
+
+      - **2026-08-10 (slot 28, data_engineering, ~21:07Z)** — Pre-compact check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-06-17` (~20:51Z) → `2021-07-11` (~21:07Z). Monotonic, forward progress. ~396/2258 days done (~17.5%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~94 season-start-dates in ~16 min (~6 dates/min burst) — faster than prior trend. Still in 2021 seasons;
+          non-linear deceleration expected into denser 2022+ seasons.
+        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
+
+      - **2026-08-10 (slot 28, data_engineering, ~21:11Z–~21:14Z)** — Post-compact monitoring + pre-compact:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-11` (~21:07Z) → `2021-07-14` (~21:11Z). Monotonic, forward progress. ~399/2258 days done (~17.7%).
+          Heartbeat alive at `21:11:10Z`, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~3 season-start-dates in ~4 min — steady, consistent with prior trend. Still in 2021 seasons; non-linear
+          deceleration expected into denser 2022+ seasons. Run now ~4.6h old.
+        - No code shipped — pure monitoring across compact+resume cycles.
+        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
+
+      - **2026-08-10 (slot 28, data_engineering, ~21:17Z)** — Post-compact resume + pre-compact:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-20` (prior monitor event ~21:14Z) → `2021-07-24` (~21:17Z). Monotonic, forward progress. ~405/2258
+          days done (~17.9%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~4 season-start-dates in ~3 min — steady, consistent. Run ~4.7h old. Still in 2021 seasons.
+        - No code shipped — pure monitoring. Tree clean, `ahead=0`.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-26` (monitor event ~21:17Z) → `2021-07-30`. Monotonic, forward progress. ~409/2258 days done
+          (~18.1%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~4 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
+          denser 2022+ seasons. Run now ~5h+ old.
+        - No code shipped — pure monitoring. `/pre-compact` executed.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued monitoring:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-30` (prior session) → `2021-08-05`. Monotonic, forward progress. ~414/2258 days done (~18.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~6 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
+          denser 2022+ seasons. Run now ~5h+ old.
+        - No code shipped — pure monitoring. `/pre-compact` executing.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-08-05` (prior session) → `2021-08-08`. Monotonic, forward progress. ~417/2258 days done (~18.5%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~3 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
+          denser 2022+ seasons. Run now ~5.5h+ old.
+        - No code shipped — pure monitoring. `/pre-compact` executing.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-08-08` (prior session) → `2021-08-13` → `2021-08-16`. Monotonic, forward progress. ~425/2258 days done
+          (~18.8%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING via `gcloud compute instances list`.
+        - Pace ~8 season-start-dates since prior checks. Still in Aug 2021 — the season-scoped loop is navigating
+          league-season boundaries, pace varies with league density. Run now ~6h+ old.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-08-16` (prior session) → `2021-08-19` → `2021-08-22` → `2021-08-25`. Monotonic, forward progress.
+          ~434/2258 days done (~19.2%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING via
+          `gcloud compute instances list`.
+        - Pace: ~9 season-start-dates across this session's checks. Season-scoped navigation — pace varies with league
+          density per season-start-date. Now at Aug 2021, heading into denser 2022+ league seasons. Run now ~7h+ old. No
+          stall — monotonic marker confirmed at each check (21:19Z, 21:37Z, 22:01Z).
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-08-25` (prior session) → `2021-08-30` → `2021-09-03` → `2021-09-10`. Monotonic, forward progress.
+          ~457/2258 days done (~20.2%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING via
+          `gcloud compute instances list`.
+        - Pace: ~23 season-start-dates across the summarized session. Steady forward progress — season-scoped
+          navigation, pace varies with league density. Now entering Sep 2021. Run now ~8h+ old. No stall detected.
+        - No code shipped — pure monitoring across compact+resume cycles.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-09-10` (prior session) → `2021-09-19`. Monotonic, forward progress. ~466/2258 days done (~20.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING via `gcloud compute instances list`.
+        - Pace: +9 season-start-dates this session. Steady forward progress — season-scoped navigation. Run now ~9h+
+          old. No stall detected.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-09-19` (prior session) → `2021-10-27` → `2021-10-30` → `2021-11-04`. Monotonic, forward progress.
+          ~508/2258 days done (~22.5%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: ~42 season-start-dates from the summarized session chain. Steady forward progress — season-scoped
+          navigation with non-linear pace as league density increases into 2022+ seasons. Run now ~11h+ old. No stall.
+        - No code shipped — pure monitoring across compact+resume cycles.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-04` → `2021-11-07`. Small 3-day tick, monotonic forward progress. ~511/2258 days (~22.6%). Heartbeat
+          alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: STANDINGS is season-scoped — per-date % understates real progress as each season-start-date covers an
+          entire season's standings. Later seasons (2022+) are denser.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-07` → `2021-11-13` → `2021-11-17` → `2021-11-20`. Cumulative ~4-season-start-date advance across
+          multiple monitoring ticks. Monotonic, forward progress. ~524/2258 days (~23.2%). Heartbeat alive, no
+          `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: season-scoped — each completed season-start-date covers an entire season's standings. Progress remains
+          steady with no stalls.
+        - No code shipped — pure monitoring across compact+resume cycles.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress (pre-compact):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-20` → `2021-11-26`. Cumulative ~6-season-start-date advance. Monotonic, forward progress. ~526/2258
+          days (~23.3%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: steady forward progress continues — season-scoped, each completed date covers an entire season's
+          standings.
+        - No code shipped — pure monitoring (pre-compact ritual).
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued progress (pre-compact):
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-26` → `2021-11-27`. +1 season-start-date. Monotonic, forward progress. ~527/2258 days (~23.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace: slow but steady — STANDINGS is season-scoped, each completed date covers an entire season.
+        - No code shipped — pure monitoring (pre-compact ritual).
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-27` → `2021-11-28`. +1 season-start-date. Monotonic, forward progress. ~528/2258 days (~23.4%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Rightsizing check executed: `e2-standard-8` oversized for API-rate-limit-bound workload but restart would lose
+          state + risk all-entity stall bug. ~$0.27/hr × ~6h ≈ $1.62 so far. Keep, do not downsize. Future: consider
+          smaller default for API-Football launcher.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-11-28` → `2021-12-02`. +4 season-start-dates. Monotonic, forward progress. ~531/2258 days (~23.5%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, pre-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-12-02` → `2021-12-12`. +10 season-start-dates. Monotonic, forward progress. ~554/2258 days (~24.5%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, pre-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-12-12` → `2021-12-18`. +6 season-start-dates. Monotonic, forward progress. ~560/2258 days (~24.8%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-12-18` → `2021-12-24`. +6 season-start-dates. Monotonic, forward progress. ~566/2258 days (~25.1%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-12-24` → `2021-12-30`. +6 season-start-dates. Monotonic, forward progress. ~572/2258 days (~25.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, pre-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-12-30` → `2022-01-05`. +6 season-start-dates. Monotonic, forward progress. ~578/2258 days (~25.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-01-05` → `2022-01-08`. +3 season-start-dates. Monotonic, forward progress. ~581/2258 days (~25.7%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-01-08` → `2022-01-21`. +13 season-start-dates. Monotonic, forward progress. ~594/2258 days (~26.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, pre-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-01-21` → `2022-01-28`. +7 season-start-dates. Monotonic, forward progress. ~601/2258 days (~26.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-01-28` → `2022-02-05`. +8 season-start-dates. Monotonic, forward progress. ~609/2258 days (~27.0%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, pre-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-02-05` → `2022-02-08`. +3 season-start-dates. Monotonic, forward progress. ~612/2258 days (~27.1%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, post-compact monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-02-08` → `2022-02-14`. +6 season-start-dates. Monotonic, forward progress. ~618/2258 days (~27.4%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-02-14` → `2022-02-27`. +13 season-start-dates. Monotonic, forward progress. ~622/2258 days (~27.5%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-10 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-02-27` → `2022-03-07`. +8 season-start-dates. Monotonic, forward progress. ~630/2258 days (~27.9%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-11 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-03-07` → `2022-03-10`. +3 season-start-dates. Monotonic, forward progress. ~633/2258 days (~28.0%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-11 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-03-10` → `2022-03-15`. +5 season-start-dates. Monotonic, forward progress. ~638/2258 days (~28.3%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
+
+      - **2026-08-11 (slot 28, data_engineering, monitoring tick)** — STANDINGS VM continued progress:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2022-03-15` → `2022-03-23`. +8 season-start-dates. Monotonic, forward progress. ~646/2258 days (~28.6%).
+          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - No code shipped — pure monitoring.
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2020-06-18`, ~1.4 dates/min, ETA ~27h      | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2022-03-23`, ~646/2258 days (~28.6%)       | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
@@ -262,7 +583,103 @@ depends_on: []
 | **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging       | All per-entity VMs exit_code=0     |
 | **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                | Re-census confirms ~0 needed       |
 | **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
-| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                  | After each VM >30min or terminates |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | STANDINGS checked ✅ keep; TEAMS+ pending            | After each VM >30min or terminates |
 
-**Recommended NEXT item**: Wait for STANDINGS VM `af-backfill-20260810-162910` boot + first progress. When complete:
-launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
+**Recommended NEXT item**: STANDINGS VM at `2022-03-23` (~28.6%). Monitor for `exit_code=0`; then launch TEAMS →
+FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
+
+- **2026-08-11 (slot 20, data_engineering, ~00:35Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260810-162910` RUNNING + healthy**: `last_completed_date=2022-04-22` (PROGRESS.json
+    updated 00:30Z; run.log age ~1.4 min — no stall). ~31% through 2020-06-06→2026-08-10. Singleton lock held → serial
+    next: TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS.
+  - **Fresh census** (`census_all_af_entities_completion_2026_08_03.py`): PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271
+    · TEAMS 95 (grand 452; consolidated-index lag vs slot-25 snapshot — INJURIES 334→72 converged). PLAYER_STATS 3→14 is
+    denominator growth (new MVP fixtures), not regression.
+  - **No new launches** (lock). Armed terminal-state watchdog (`af_standings_watchdog.py`, slot-20) — wakes on
+    EXIT_STATUS / VM stop → then launch TEAMS (`--entity TEAMS 2020-06-06 2026-08-10`, on-demand).
+
+- **2026-08-11 (slot 25, data_engineering, ~01:25Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **Fresh census**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452 total** (down from ~976 —
+    INJURIES 334→72 converged). PLAYER_STATS 3→14 is denominator growth (new MVP fixtures), not regression.
+  - **Old STANDINGS VM `af-backfill-20260810-162910` found STALLED**: RUNNING ~16h but ZERO GCS artifacts under its
+    prefix — no run.log, no PROGRESS.json, no exit_code. Census confirms STANDINGS unchanged at 271 (zero progress).
+    Same stall pattern as the two all-entity VMs (`*-154220`, `*-160958`). Stopped 01:28:27Z (TERMINATED).
+  - **Launched fresh STANDINGS VM `af-backfill-20260811-012845`** (on-demand, `e2-standard-8`, `asia-northeast1-c`,
+    `--entity STANDINGS`, 2020-06-06 → 2026-08-10). `VM_TASK=instruments-backfill` (chunked 90-day windows — avoids the
+    memory-accumulation OOM of the single-shot path). Boot confirmed healthy at 01:31Z: `instruments_chunk_loop.sh`
+    - GCS tee + heartbeat daemon all running. API-Football quota healthy: 149,078 remaining.
+  - **Monitor armed** (`b26cxmgvp`) — polls GCS run.log every 60s for `[[VM_PROGRESS]]` / `exit_code=` / errors. Run.log
+    not yet written (VM booting, expected). Serial port confirms chunk loop launched.
+  - **Next**: confirm first progress marker → wait for exit_code=0 → launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS →
+    PLAYER_STATS (serial, singleton lock).
+
+- **2026-08-11 (slot 14, data_engineering, ~03:35Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`); STANDINGS VM mid-flight:
+  - **STANDINGS VM `af-backfill-20260811-012845` (slot 25's fresh launch) confirmed HEALTHY + progressing**:
+    `last_completed_date=2020-11-13` (~23.5% of the 2020-06-06→2026-08-10 range) as of 03:30Z. Chunked 90-day mode
+    (`VM_TASK=instruments-backfill`) has already crossed the chunk-1 boundary — per-VM shard
+    `af-backfill-20260811-012845-c2.parquet` (53,690 entries, 767 new) — proving the chunk-loop fix works vs the
+    single-shot stall that killed `af-backfill-20260810-162910`. run.log 750KB actively written, PIPELINE_HEARTBEAT live
+    (03:30:12Z), rate budget 110 req/min. ETA ~24-60h (STANDINGS is season-scoped; pace decelerates into denser 2022+
+    seasons — do not trust the early-dense 2020 pace).
+  - **Fresh census (03:31Z)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452** (matches slot 20/25);
+    plus widening census (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`): FIXTURE_STATS 132 ·
+    FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** across 6 entities (FIXTURE_EVENTS DONE; FIXTURES = the
+    schedule spine). INJURIES 334→72 converged; PLAYER_STATS 3→14 is denominator growth, not regression.
+  - **Singleton**: exactly one `af-backfill-*` RUNNING (the STANDINGS VM) — lock held, API quota healthy (149,078
+    remaining at slot-25 check). Prior terminated: `-154220`, `-160958`, `-162910`.
+  - **Fleet safety net (verified in code)**: `af-backfill-` registered in `vm_prefix_registry.py` (heartbeat/zombie
+    detection) + `launcher_registry.py` (relaunch launcher = `launch-api-football-backfill-vm.sh`), covered by
+    `exit_code_fleet_monitor`; `VM_SHUTDOWN_ON_COMPLETION=true` → VM self-terminates on exit. On-demand provisioning (no
+    SPOT preemption risk).
+  - **No serial-chain automator exists** (slot 20's `af_standings_watchdog.py` was never committed) — the next-entity
+    launch is a per-slot manual step. **Next worker**: on STANDINGS exit_code=0 → launch TEAMS
+    (`--entity TEAMS 2020-06-06 2026-08-10`, on-demand) → then FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS, all
+    serial under the singleton lock. After all entities converge, re-run BOTH census scripts → confirm ~0 → unpark
+    `auto_unpark__sports_af_full_entity_completion-9798da269f23` and flip this checkbox + close this doc.
+  - **Checkbox NOT flipped this session** — done-when (census ~0) is multi-day away (STANDINGS VM ETA 24-60h); task
+    remains in-flight for the next slot. No code shipped (pure operations + monitoring).
+
+- **2026-08-11 (slot 21, data_engineering, ~04:30Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2021-01-19`
+    (04:22Z), monotonic; run.log 1MB actively written (last_modified 04:22:28Z); per-VM shard `c3.parquet` (36,049
+    entries, 767 new) — chunked `instruments-backfill` path still working; PIPELINE_HEARTBEAT emitting. Singleton lock
+    held (only af-backfill-* RUNNING; prior `-154220`/`-160958`/`-162910` TERMINATED).
+  - **Fresh census (04:25Z, both scripts)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452**;
+    FIXTURE_STATS 132 · FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** (byte-for-byte match with slot
+    14/25). STANDINGS unchanged at 271 — VM mid-flight (~2021-01-19 of the 2020-06-06→2026-08-10 range).
+  - **Chain automator shipped + launched**: the prior slot-21 session committed
+    `deployment-service/scripts/vm/run-af-residual-completion-chain.sh` (a38c2a5c) but the push was lost (ahead=1 vs
+    origin). This session ships it (Pass-1 QG → quickmerge --agent) and **launches it in the background**: it
+    resume-waits on the STANDINGS VM, then auto-launches TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serially
+    under the singleton lock (on-demand). Removes the per-slot manual next-entity launch step.
+  - **Durability caveat**: the chain is a session-bound background process — it dies if the slot session tears down. It
+    is resume-aware + idempotent; the next worker should re-launch it
+    (`bash deployment-service/scripts/vm/run-af-residual-completion-chain.sh --start-date 2020-06-06 --end-date 2026-08-10`).
+    The STANDINGS VM itself is independent (GCE on-demand, `VM_SHUTDOWN_ON_COMPLETION=true` → self-terminates on exit).
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS ETA 24-60h). Task remains in-flight
+    for the next slot.
+
+- **2026-08-11 (slot 27, data_engineering, ~05:48Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2021-05-11`
+    (PROGRESS.json, 05:47Z), monotonic; run.log 1.57MB actively written (last_modified 05:46:31Z); per-VM shard
+    `c4.parquet` (52,156 entries, 767 new) in `deployment-scripts-central-element-323112` bucket; watchdog trace shows
+    steady log growth every ~60s — no stall. VM RUNNING since 01:31Z (~4.25h), ~15.3% through range. Rate budget 110
+    req/min. Chunked 90-day mode working correctly (c1→c2→c3→c4 progression confirmed). ETA ~28-30h to completion.
+  - **Fresh census (05:40Z)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452**; FIXTURE_STATS 132 ·
+    FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** (byte-for-byte match with prior slots). STANDINGS
+    unchanged at 271 — VM mid-flight at 2021-05-11.
+  - **Bucket resolution**: VM artifacts (run.log, PROGRESS.json, WATCHDOG_TRACE) are in
+    `deployment-scripts-central-element-323112/vm-logs/af-backfill-20260811-012845/` — NOT in
+    `instruments-store-sports-prd`. Per-VM manifest shards go to
+    `instruments-store-sports-prd/_index/per_vm/af-backfill-20260811-012845-c4.parquet`.
+  - **Chain automator**: slot 21's script (`run-af-residual-completion-chain.sh`) never landed (push lost); not present
+    in origin. Next worker should either re-create it or manually manage the serial chain.
+  - **Terminal-state watchdog armed** (`run_in_background`, 5-min poll, 30-min stall detection) — watches run.log for
+    EXIT_STATUS. On STANDINGS exit_code=0: launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS (serial,
+    singleton lock, on-demand). On stall >30min: diagnose, stop VM if confirmed, re-launch.
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away. Task remains in-flight for the next slot.

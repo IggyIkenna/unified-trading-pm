@@ -90,8 +90,8 @@ evening. Investigated 2026-08-07 as part of a broader data-pipeline-alerts Slack
   `ERROR Email fallback ALSO failed for CRITICAL event CONSOLIDATOR_DOWN — undelivered`. No Slack post for the
   `CONSOLIDATOR_DOWN` event itself was found in the same window (only an unrelated `ALERT_DISPATCH_FAILED` for a
   concurrently-processed DP_FLEET_MONITOR_* message — see
-  `/plans/active/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md`). This means
-  CONSOLIDATOR_DOWN currently has **zero successful delivery channel** for the duration of the rebuild.
+  `/plans/archive/2026_08/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md`). This
+  means CONSOLIDATOR_DOWN currently has **zero successful delivery channel** for the duration of the rebuild.
 
 ## Why this is filed as "known issue," not "fix now"
 

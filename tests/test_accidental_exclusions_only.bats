@@ -22,7 +22,9 @@ setup() {
   CHECK="${REPO_ROOT}/scripts/plan-hygiene/check_accidental_exclusions_only.sh"
   AO_PY="$(dirname "$REPO_ROOT")/agent-orchestrator/.venv/bin/python3"
   # A real AO-dispatched plan with open todos and no pre-existing accidental exclusion.
-  SRC="${REPO_ROOT}/plans/active/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md"
+  # (2026-08-10: prior fixture alerting_..._finalize_2026_08_09.md was archived — repointed to
+  # anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md, same assigned_vm: planning profile.)
+  SRC="${REPO_ROOT}/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md"
   # UNIQUE per test, not a fixed path (2026-08-10). The probe has to live under plans/active/
   # for the corpus-relative check to treat it as a plan, so it cannot move to a tmpdir — but a
   # single shared filename means the 6 tests in this file race each other the moment bats runs

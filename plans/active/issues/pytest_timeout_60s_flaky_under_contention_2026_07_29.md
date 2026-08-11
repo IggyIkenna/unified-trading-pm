@@ -944,3 +944,34 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   notable improvement over prior passes' consistent `checks`-slice ratchet failures. Zero `Timeout (>150s)` recurrence
   anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via skip-current-task with
   `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-9 2026-08-10 ~20:20Z (twenty-fifth pass, same task)**: spot-checked 4 representative repos
+  (unified-api-contracts, instruments-service, features-service, unified-trading-pm) latest 2 `quality-gates-v2` runs
+  each (runs ~19:22Z–20:14Z 2026-08-10). unified-api-contracts/instruments-service/features-service: 6/6
+  `conclusion=success`. unified-trading-pm: 1 success (`31423817156`), 1 failure (`31428081882`) — job-level check
+  confirms `QG slice (checks): failure`, `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero
+  pytest-timeout recurrence anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via
+  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-4 2026-08-11 (twenty-sixth pass, same task)**: surveyed latest 3 `quality-gates-v2` runs across all 10 tracked
+  repos (runs spanning ~22:01Z 2026-08-10–00:21Z 2026-08-11, all post-dating slot-9's pass). 9 service repos: 27/27
+  terminal runs `conclusion=success` (unified-api-contracts `31445759723`/`31445502540`/`31445441444`;
+  instruments-service `31441440749`/`31438869818`/`31438830061`; features-service
+  `31441434305`/`31439216268`/`31438623782`; market-data-processing-service `31437402442`/`31436535717`/`31436500544`;
+  unified-trading-api `31437425376`/`31436551988`/`31436514921`; deployment-service
+  `31445737619`/`31445477586`/`31445456433`; ml-service `31437408630`/`31436549274`/`31436503265`; client-reporting-api
+  `31437372273`/`31436574870`/`31436514656`; market-tick-data-service `31445493116`/`31445450938`/`31445427353` — the
+  latter 3 non-terminal (queued/in_progress) at survey time, not failures). unified-trading-pm: 1 success
+  (`31445506920`) + 2 failures (`31441638726` promote-PR, `31441459455` LDR) — job-level check of both confirms
+  `QG slice (checks): failure`, `QG slice (tests): success` — same known ratchet class this doc has repeatedly ruled
+  out, not the tracked flake. Zero `Timeout (>150s)` recurrence anywhere. Window NOT yet closed (day ~5-6 of ~14, closes
+  ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per
+  slot-32's fix.
+- **slot-26 2026-08-11 ~03:30Z (twenty-seventh pass, same task)**: surveyed last 5 `quality-gates-v2` runs across all 10
+  tracked repos (runs spanning ~21:16Z 2026-08-10–02:43Z 2026-08-11). 45 runs across 9 service repos. 5 failures across
+  5 repos: instruments-service `31433123760` (5 failed, `AssertionError: assert 'continuous_future' == 'FUTURE'`, not
+  timeout), MDPS `31433128155` (2 failed, same case-sensitivity class), MTDS `31435532344` (3 failed, same
+  `continuous_future`/`combo` case-sensitivity), deployment-service `31453209112` (`checks`-slice failure, not the
+  tracked flake), unified-trading-pm `31441459455`/`31437432141` (both `checks`-slice, known ratchet class). The 3
+  tests-slice failures are all `continuous_future`/`combo` AssertionError — tradfi canonical-naming migration, not
+  scheduling contention. Remaining 40 runs all `conclusion=success`. Zero `Timeout (>150s)` recurrence anywhere. Window
+  NOT yet closed (day ~6 of ~14, closes ~2026-08-20); releasing via skip-current-task with `reason_code: "GATED"`,
+  `estimated_unblock_minutes: 180` per slot-32's fix.

@@ -42,7 +42,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
-    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
     /codex/04-architecture/custody-providers.md,
     e2e-testing/scripts/defi/,
     e2e-testing/scripts/defi/funding_reversion_crossvenue_book.py,

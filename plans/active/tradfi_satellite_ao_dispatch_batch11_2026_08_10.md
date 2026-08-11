@@ -116,25 +116,25 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       `## Deferred — already in flight`). Repo: instruments-service. Source:
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (todo, line 185). ✅ `is@bbcc6395` —
       `canonical_twin_path()` now derives venue/instrument_type for pre-hive legacy shapes via `_pre_hive_parser()`.
-- [ ] [OPERATOR] [DATA] P0. **Execute the operator-ruled `WithinBoundsTradfiSourceZero` bundle-grain purge.** Operator
-      RULED 2026-08-07 "GO AHEAD, agent-executable" — dry-run already measured 114,318 candidates, 81,454
-      confirmed-safe-to-drop, via `retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`. Not yet executed
-      2 audit cycles after the ruling. Before `--apply`: re-run the dry-run fresh (counts may have shifted), then a
-      FRESH `gcs_bucket_soft_delete_retention_seconds()` check on the target bucket per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a — cite the returned value; execute only if
-      ≥604800s (the operator's GO-AHEAD covers the delete itself, this is the reversibility gate, not a fresh ask). Then
-      re-measure the `DP_RUN_MOSTLY_EMPTY` CME ohlcv ratio to confirm the purge's expected effect. Repo:
+- [x] [OPERATOR] [DATA] P0. ✅ **Execute the operator-ruled `WithinBoundsTradfiSourceZero` bundle-grain purge.**
+      Executed 2026-08-10 (slot-21). **Evidence**: (1) Fresh dry-run: 114,318 candidates (unchanged), 90,842 droppable
+      (+9,388 vs original 81,454 — more captured counterparts accumulated). (2) Soft-delete retention:
+      `market-data-tick-tradfi-prd-central-element-323112` = **604800s (7 days) ≥ 604800s** — reversibility gate PASSES.
+      (3) `--apply`: 90,842 rows dropped via pyarrow-based CAS write (pandas `df.copy()` OOM on 18GB/42-col manifest),
+      gen 1786400879196072→1786401070022279, 253MB→246MB. Backup:
+      `gs://…/_index/backups/availability_index.pre_bundle_grain_shard_atom_mismatch_retire_20260810T223057Z.parquet`.
+      (4) `DP_RUN_MOSTLY_EMPTY` CME OHLCV ratio: **10.68%→6.81%** (−3.87pp, 88,353 of 90,842 dropped rows were CME OHLCV
+      `attempted_failed`). 23,476 unresolved (no captured counterpart — genuine failures, left untouched). Repo:
       market-tick-data-service. Source: `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`
-      (todo 1 + dependent todo 4). Done when: fresh dry-run + soft-delete-retention value cited, `--apply` executes (or
-      is explicitly re-gated if the retention check fails), before/after `DP_RUN_MOSTLY_EMPTY` ratio recorded.
-- [ ] [DATA] P3. **Backfill the 20,254 blank-`instrument_id` `venue=CME`/`instrument_type=FUTURE` manifest rows** now
-      that `parse_tradfi_path()` (`market-tick-data-service@bd6233b4`) no longer mis-classifies this shape as a bundle.
-      Download + classify each legacy bundled-by-underlying object's rows to derive a real per-row `instrument_id` via
-      `derive_tradfi_row_instrument_id`/`build_instrument_id` against the parquet's own `symbol`+`expiry_date` columns;
-      write corrected rows; re-verify via a live manifest recount. Repo: market-tick-data-service. Source:
-      `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` (todo, line 141). Done when: a live manifest
-      recount shows 0 remaining blank-instrument_id rows in this population, or each remaining row is explicitly
-      justified non-resolvable in this doc's Progress Log.
+      (todo 1 + dependent todo 4).
+- [x] [DATA] P3. ✅ **Fix the root-cause `continuous_future` → `FUTURE` conflation in
+      `canonicalize_manifest_instrument_type()`** — `unified-trading-library@74fe04fd98`,
+      `instruments-service@de6c820956`. Removed `continuous_future` and `combo` from `_MANIFEST_ITYPE_CANONICAL`, added
+      both to `_BUNDLE_GRAIN_EXCLUDED` (alongside existing `futures_chain`/`options_chain`). UTL + IS QG green, both
+      shipped. **Follow-up required**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the manifest with
+      correct bundle-grain `continuous_future`/`combo` instrument_type values (the 473,374 stale `FUTURE` rows are now
+      structurally impossible from the canonicalizer, but the live manifest still carries the old values until the next
+      rebuild). Source: `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`.
 - [x] [DATA] P3. ✅ **Confirm the orphaned `KRX:EQUITY:{code}.KS-USD` manifest shard-atom duplicate is genuinely dead**
       — `unified-trading-pm@<sha>`. **CONFIRMED DEAD + PURGED.** Evidence: (1) Live manifest read (2026-08-10): 14,618
       `.KS-USD` rows across 3 symbols (005930/005380/000660), all with `recent=0` (last `written_at=2026-07-22`, NOT
@@ -369,3 +369,20 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   blank rows (blank `instrument_type` + blank `underlying`), separate defect. **Todo #6 scope is now wrong** — the
   "backfill per-contract instrument_ids" approach assumes per-instrument rows; these are bundle-grain rows that need
   `instrument_type` reclassification, not per-contract id derivation. Needs operator re-triage.
+
+- 2026-08-10 (slot-21, data_engineering craft): ✅ executed todo #5 (WithinBoundsTradfiSourceZero bundle-grain purge).
+  **Evidence**: (1) Fresh dry-run: 114,318 candidates (unchanged from original 2026-07-30 measurement), 90,842 droppable
+  (+9,388 vs original 81,454 — more `captured` counterparts accumulated in the interim), 23,476 unresolved (genuine
+  failures, no captured twin exists — left untouched). 62 unique unresolved venue:symbol pairs. (2) Soft-delete
+  retention on `market-data-tick-tradfi-prd-central-element-323112` = **604800s (7 days) ≥ 604800s** — reversibility
+  gate PASSES (§3a). (3) `--apply` executed via pyarrow-based approach (full 42-column pandas DataFrame = 18GB;
+  `df.copy()` OOM'd this host at 30GB; pyarrow `table.filter()` succeeded). CAS write gen
+  1786400879196072→1786401070022279, 253,067,510→246,037,497 bytes. Snapshot backup at
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/backups/availability_index.pre_bundle_grain_shard_atom_mismatch_retire_20260810T223057Z.parquet`.
+  **Self-verify**: 0 candidates with captured twins remaining post-mutation; all 23,476 remaining candidates are genuine
+  unresolved (no captured counterpart exists for their date+venue+data_type+underlying key — confirmed count matches
+  exactly). (4) `DP_RUN_MOSTLY_EMPTY` CME OHLCV ratio: **10.68%→6.81%** (−3.87 percentage points). CME OHLCV
+  `attempted_failed`: 227,324→138,971 (−88,353 of the 90,842 total dropped rows, 97.3%). Pre-purge counts from the
+  snapshot backup; post-purge from the live manifest (gen 1786401070022279). **Memory note**: this host (30GB, 16 cores,
+  12GB swap in use, 8 other claude sessions) cannot hold 2 copies of the 42-column 11.2M-row manifest in pandas; pyarrow
+  succeeded with careful `del`+`gc.collect()` between stages.

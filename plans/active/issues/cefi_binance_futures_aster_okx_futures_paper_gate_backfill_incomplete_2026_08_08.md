@@ -431,3 +431,16 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   the durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
   exact bug class (now 17 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
   25, 18 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-10 (slot 6, data_engineering craft, 18th stale re-dispatch of the same already-parked task)**: Same pattern
+  again — `/boot` returned `already_in_progress: true` / `dispatch_reason: "resume"`; gate re-verified independently:
+  `gcloud compute instances list --filter="name~cefi-queue-heavy"` shows the SAME instance
+  (`cefi-queue-heavy-binancefutu-x17-20260809-083733`, still `RUNNING`, created 2026-08-09T01:37Z) — unchanged since
+  slot 18's check (~2 days with no termination); the gate condition (aggregate backfill reaches these 3 venues' full
+  chronological range) remains unmet. Also confirmed via `GET /api/backlog/parked` that this task is NO LONGER in the
+  parked set at all (not just bounce-resumed) — the durable park has fully fallen off, so re-arming it is the point of
+  `park_now: true` this turn. Declining to redo the venue-scoped completeness check for the same stale-baseline reason
+  given 17 times above. Re-`skip-current-task`ing with `reason_code: "PARKED"` + `park_now: true` to reinforce the
+  durable park. No new cross-reference filed — `backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
+  exact bug class (now 18 touches post-park: slot 19 park -> slots 29, 20, 4, 9, 31, 16, 13, 32, 5, 27, 2, 28, 17, 15,
+  25, 18, 6 all bypassing the park). No code/report changes; this Progress Log entry is the only change this turn.

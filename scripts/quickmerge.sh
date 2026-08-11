@@ -257,6 +257,12 @@ NOTES
     another session's partial work.
   - If quickmerge fails and you fix the underlying issue: just re-run quickmerge. Do not run
     quality-gates.sh by hand first — quickmerge already runs it.
+  - EXIT 10 is the one exception to that "just re-run" advice: the push landed, but a --files
+    path that had a real diff at entry is still byte-identical to the pre-run HEAD, so your
+    change is not in what shipped. Read the printed diagnosis first — it says whether your
+    content is intact on disk (re-run is safe) or was reverted mid-run (recover from the named
+    stash ref FIRST, or the re-run ships the reverted content). Never cite the printed SHA as
+    evidence for those paths. EXIT 11 is a defect in this script itself, not in your invocation.
 
 SSOT: unified-trading-pm/scripts/quickmerge.sh — /codex/08-workflows/ci-cd-flow.md
 QM_USAGE
@@ -535,6 +541,75 @@ _qm_content_vanished() {
   return 1
 }
 
+# ── WHAT WAS IN HEAD WHEN WE STARTED (F8, 2026-08-11) ──────────────────────────────────────
+# _QM_ENTRY_FINGERPRINT above only answers "is your file still what you handed me", and until
+# this was added NOTHING CALLED IT -- the detection existed as dead code while the losses it was
+# written for kept happening. It also cannot see the more common shape: a commit that simply
+# dropped a named file leaves the worktree untouched (nothing was reverted on disk, the file
+# just never got committed), so the fingerprint matches and the run reports SHIPPED anyway.
+# Measured 2026-08-10: a `--files` run pushed a commit containing NEITHER named file, both left
+# dirty on disk, post-push ancestry verified, exit 0.
+#
+# HEAD's blob per named path AT ENTRY makes it decidable: had a real diff at entry and HEAD's
+# blob for that path is STILL the entry one after the push => none of your work is in what
+# shipped. Deliberately not "HEAD must equal your entry blob" -- the prek hook chain rewrites
+# files legitimately (prosewrap/prettier), so a landed change routinely differs from what you
+# handed over; "still identical to the PRE-RUN HEAD" is immune to that.
+_qm_head_blob() { git rev-parse -q --verify "HEAD:$1" 2>/dev/null || echo ABSENT; }
+_QM_ENTRY_HEAD_BLOBS=""
+if [ -n "$FILES_ARG" ]; then
+  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
+  for _qm_f in $FILES_ARG; do
+    _QM_ENTRY_HEAD_BLOBS="${_QM_ENTRY_HEAD_BLOBS}$(_qm_head_blob "$_qm_f")  ${_qm_f}
+"
+  done
+fi
+# Field lookup into either fingerprint ($1 path, $2 fingerprint text). Paths cannot contain
+# spaces -- --files is a space-separated list, so a spaced path is unrepresentable here anyway.
+_qm_blob_of() { printf '%s\n' "$2" | awk -v f="$1" '$2 == f { print $1; exit }'; }
+
+# _qm_assert_entry_change_landed -- post-push ground truth, run right after the ancestry gate.
+# Ancestry proves a commit reached the branch; this proves YOUR change is in it. Non-fatal for
+# unnamed work (that is wip_guard_report's job) -- scoped strictly to --files.
+_qm_assert_entry_change_landed() {
+  [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
+  local stuck="" disk entry_head now_head
+  # shellcheck disable=SC2086
+  for _qm_f in $FILES_ARG; do
+    disk="$(_qm_blob_of "$_qm_f" "$_QM_ENTRY_FINGERPRINT")"
+    entry_head="$(_qm_blob_of "$_qm_f" "$_QM_ENTRY_HEAD_BLOBS")"
+    # Absent/unhashable at entry = a staged deletion or a rename's source half; "your change
+    # landed" is not expressible as a blob move for those, so they are not asserted.
+    case "$disk" in ABSENT | MISSING | "") continue ;; esac
+    [ "$disk" = "$entry_head" ] && continue # nothing of ours to land for this path
+    now_head="$(_qm_head_blob "$_qm_f")"
+    [ "$now_head" = "$entry_head" ] && stuck="${stuck} ${_qm_f}"
+  done
+  [ -z "$stuck" ] && return 0
+  {
+    echo
+    echo "[$REPO_NAME] 🛑 THE PUSH LANDED BUT YOUR CHANGE DID NOT."
+    echo "   These --files had a real diff when this run started, and HEAD's content for them is"
+    echo "   STILL byte-identical to what it was before the run, so ${_QM_PUSHED_SHA:0:9} contains"
+    echo "   none of your work on them:"
+    for _qm_f in $stuck; do echo "     $_qm_f"; done
+    echo
+    if _qm_content_vanished; then
+      echo "   Your files are unchanged on disk since you handed them over, so this is the"
+      echo "   DROPPED-FROM-THE-COMMIT shape (a peer's bare commit or a reconcile took the index"
+      echo "   out from under the staging step), not a revert -- re-running should land them."
+      echo "   Confirm first:  git diff HEAD --$stuck"
+    else
+      echo "   ...and the on-disk content ALSO moved during the run (detail above; note the prek"
+      echo "   hook chain reformats files legitimately, so check the diff before assuming loss)."
+      echo "   If it is a revert, recover from the stash BEFORE re-running."
+    fi
+    echo "   Do NOT cite ${_QM_PUSHED_SHA:0:10} as evidence for these paths -- it does not carry them."
+    echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
+  } >&2
+  return 1
+}
+
 # ── isolation execution ──────────────────────────────────────────────────────────────────
 # Re-exec THIS script inside a throwaway worktree at the CURRENT HEAD, with the caller's named
 # files copied in. Only the working directory changes; the script, its stages and its gates are
@@ -547,19 +622,57 @@ _qm_content_vanished() {
 #     caller running a locally-fixed script would silently get the committed version instead.
 _QM_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 _QM_ISO_ROOT=""
+_QM_ISO_WT=""
 _qm_cleanup_isolation() {
   [ -n "$_QM_ISO_ROOT" ] || return 0
-  git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  # Remove the RECORDED path, not a re-derived one -- the re-derivation stopped matching the
+  # moment the worktree gained a "/.tabs/<N>/" segment (see below).
+  if [ -n "$_QM_ISO_WT" ]; then
+    git worktree remove --force "$_QM_ISO_WT" 2>/dev/null || true
+  else
+    git worktree remove --force "$_QM_ISO_ROOT/$(basename "$(pwd)")" 2>/dev/null || true
+  fi
   git worktree prune 2>/dev/null || true
 }
 
 if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; then
   _qm_repo_name="$(basename "$(pwd)")"
   _qm_iso_parent="${TMPDIR:-/tmp}/qm-iso-$$"
-  _qm_iso_wt="$_qm_iso_parent/$_qm_repo_name"
   _qm_caller_repo="$(pwd)"
+  # Preserve the CALLER's slot identity (2026-08-10). Attribution is
+  # `ikennaigboaka [slot-<N>·<host>]`, derived from the PATH; a TMPDIR worktree has no
+  # `.tabs/<N>/` segment, so every isolated commit resolved to `[main·<host>]`. Mirrors
+  # safe-doc-push.sh: shape the path so derivation is right by construction (git resolves the
+  # author BEFORE hooks run, so a hook-only fix always costs a retry), plus a config pre-stamp.
+  _qm_slot_seg=""
+  _qm_identity_lib="$WORKSPACE_ROOT/unified-trading-pm/scripts/hooks/slot-identity-lib.sh"
+  [ -f "$_qm_identity_lib" ] || _qm_identity_lib="$(dirname "$_QM_SELF")/hooks/slot-identity-lib.sh"
+  if [ -f "$_qm_identity_lib" ]; then
+    # shellcheck disable=SC1090
+    . "$_qm_identity_lib"
+    slot_identity_resolve "$_qm_caller_repo" 2>/dev/null || true
+    if [[ "${SLOT_ID_LABEL:-main}" =~ ^slot-([0-9]+)$ ]]; then
+      _qm_slot_seg="/.tabs/${BASH_REMATCH[1]}"
+    fi
+  fi
+  _qm_iso_wt="$_qm_iso_parent${_qm_slot_seg}/$_qm_repo_name"
+  # Siblings must sit next to the WORKTREE, not at $_qm_iso_parent. quality-gates.sh derives
+  # WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/..", so adding the slot segment moved
+  # the worktree a level deeper and stranded the sibling symlinks one level up -- the re-gate
+  # then died with `ModuleNotFoundError: No module named 'unified_api_contracts'`. Caught by
+  # the gate on the very first ship attempt; it is the same drift this whole change is about.
+  _qm_iso_sibdir="$(dirname "$_qm_iso_wt")"
+  mkdir -p "$_qm_iso_sibdir" 2>/dev/null || true
   if git worktree add --detach -q "$_qm_iso_wt" HEAD 2>/dev/null; then
     _QM_ISO_ROOT="$_qm_iso_parent"
+    _QM_ISO_WT="$_qm_iso_wt"
+    if [ -n "${SLOT_ID_EXPECTED_NAME:-}" ] && [ -n "${SLOT_ID_CANON_EMAIL:-}" ]; then
+      git -C "$_qm_iso_wt" config extensions.worktreeConfig true 2>/dev/null || true
+      git -C "$_qm_iso_wt" config --worktree user.name "$SLOT_ID_EXPECTED_NAME" 2>/dev/null \
+        || git -C "$_qm_iso_wt" config user.name "$SLOT_ID_EXPECTED_NAME"
+      git -C "$_qm_iso_wt" config --worktree user.email "$SLOT_ID_CANON_EMAIL" 2>/dev/null \
+        || git -C "$_qm_iso_wt" config user.email "$SLOT_ID_CANON_EMAIL"
+    fi
     trap _qm_cleanup_isolation EXIT
     # ---- make the worktree a COMPLETE MINIATURE WORKSPACE -------------------------------
     # quality-gates.sh computes WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/.." and is
@@ -573,7 +686,7 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       [ -e "$_qm_sib/.git" ] || continue
       _qm_sib_name="$(basename "$_qm_sib")"
       [ "$_qm_sib_name" = "$_qm_repo_name" ] && continue   # the worktree IS this repo
-      [ -e "$_qm_iso_parent/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_parent/$_qm_sib_name" 2>/dev/null
+      [ -e "$_qm_iso_sibdir/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_sibdir/$_qm_sib_name" 2>/dev/null
     done
 
     # ---- private, CACHED venv -- never the caller's -------------------------------------
@@ -1062,6 +1175,17 @@ else
       echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
+      # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
+      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
+      if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
+        # ARGUMENT ORDER IS ($protected_paths, $branch) -- fixed 2026-08-10. Passing only the
+        # branch put it in $1 where the function reads PROTECTED PATHS, so $protected became
+        # "origin/live-defi-rollout", matching no path: the caller's --files were NEVER protected.
+        # The guard then quarantined the work being shipped and quickmerge printed "No changes to
+        # commit" and exited 0. Measured four times in one session; reads like a peer revert.
+        # Sibling autostash_guard_quarantine_stale_pop 65 lines below passes both args.
+        autostash_guard_bound_backlog "$FILES_ARG" "${_QM_REMOTE_REF}" || true
+      fi
       # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
       # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
       # "working-tree overlap" and a RECOVERY line telling the agent to `git stash push -- <file>`,
@@ -1114,6 +1238,12 @@ else
         # anything) and guarantees the index holds only what this run explicitly re-adds,
         # regardless of what the pop just restaged.
         git restore --staged . 2>/dev/null || true
+        # autostash chain-breaker (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md):
+        # if the pop restored stale content that reverts origin, quarantine it NOW so the next
+        # cycle does NOT re-stash it.
+        if declare -F autostash_guard_quarantine_stale_pop >/dev/null 2>&1; then
+          autostash_guard_quarantine_stale_pop "${FILES_ARG:-}" "${_QM_REMOTE_REF}" || true
+        fi
       else
         # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
         # line so an agent self-serves recovery without an operator paste. Capture the conflicting
@@ -1803,6 +1933,19 @@ if [ "$NO_PR" != "true" ]; then
     _UNPUSHED=$(git rev-list --count origin/live-defi-rollout..HEAD 2>/dev/null || echo 0)
     if [ "${_UNPUSHED:-0}" != "0" ]; then
       echo "[$REPO_NAME] clean tree with ${_UNPUSHED} unpushed commit(s) ahead of origin/live-defi-rollout — shipping the committed work"
+    elif [ -n "$FILES_ARG" ]; then
+      # HARD FAIL, not exit 0. You NAMED files and there is nothing to commit -- almost never
+      # "already landed", it is your work taken out from under you between invocation and staging.
+      # Catch-all for the silent-success family measured 2026-08-10 (guard quarantine, STAGE-5
+      # stash-then-fatal, peer checkout): each ended here, exited 0, and left the NEXT ship looking
+      # complete while carrying a fraction of the change. Gated on --files. Never soften to exit 0.
+      echo "[$REPO_NAME] ❌ NOTHING TO COMMIT, but --files named: $FILES_ARG" >&2
+      echo "   Named files are not dirty. They were almost certainly PARKED, not lost." >&2
+      echo "   Do NOT re-run blindly -- a retry can add a stash entry and make this fire sooner." >&2
+      echo "     git stash list | head" >&2
+      echo "     git checkout 'stash@{N}' -- $FILES_ARG   # never a blind pop; may hold a peer's WIP" >&2
+      echo "   SSOT: /codex/12-agent-workflow/ship-tooling-silent-success.md" >&2
+      exit 12
     else
       echo "[$REPO_NAME] No changes to commit"
       exit 0
@@ -2107,9 +2250,26 @@ git fetch origin main --quiet
 # copied into this worktree as uncommitted modifications, and moving HEAD underneath them risks
 # a checkout conflict against files we are about to commit. Being behind origin is handled
 # downstream anyway, by the existing push-retry rebase.
+# True when $BRANCH is checked out by SOME OTHER worktree of this clone -- exactly when
+# `git checkout $BRANCH` dies with "already used by worktree at ...".
+_qm_branch_held_elsewhere() {
+  local here
+  here="$(git rev-parse --show-toplevel 2>/dev/null)"
+  git worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/$BRANCH" -v here="$here" '
+    /^worktree / { wt = substr($0, 10) }
+    /^branch /   { if (substr($0, 8) == b && wt != here) { found = 1 } }
+    END          { exit(found ? 0 : 1) }
+  '
+}
+
 _qm_checkout_ship_branch() {
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
-    echo "[$REPO_NAME] isolation: staying on detached HEAD (the shared clone holds $BRANCH); will push HEAD:$BRANCH"
+  # Stay detached in quickmerge's OWN isolation, and equally whenever the branch is simply held
+  # by another worktree. The isolation-only condition was too narrow (2026-08-10): running
+  # --no-isolated from a private worktree of the same clone -- the sane way to work when a
+  # shared slot checkout keeps reverting you -- died on the very collision this prevents. The
+  # predicate that matters is "can the branch be checked out here", not "which mode am I in".
+  if [ -n "${QM_IN_ISOLATION:-}" ] || _qm_branch_held_elsewhere; then
+    echo "[$REPO_NAME] staying on detached HEAD ($BRANCH is held by another worktree); will push HEAD:$BRANCH"
     return 0
   fi
   if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
@@ -2693,7 +2853,7 @@ while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
   # no local branch for `-u` to bind and `git push -u origin $BRANCH` would push the SHARED
   # clone's stale refs/heads/$BRANCH instead of the commit we just made. Push the explicit
   # refspec, exactly as safe-doc-push.sh does.
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
+  if [ -n "${QM_IN_ISOLATION:-}" ] || _qm_branch_held_elsewhere; then
     _qm_push_err=$(git push origin "HEAD:refs/heads/$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
   else
     _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
@@ -2731,6 +2891,13 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# Ancestry proves A commit landed. It does not prove YOURS is in it -- measured 2026-08-10, a
+# scoped run passed this exact gate having pushed a commit with neither named file. Exit 10 is
+# the fleet-wide "your edits are not where you think they are, recover before re-running" code
+# (CLAUDE.md git-discipline; safe-doc-push.sh has used it since 2026-08-10, quickmerge had no
+# path to it at all). Deliberately AFTER the push: the commit is real and public, so the honest
+# outcome is a loud non-zero on a landed push, never a silent SHIPPED line.
+_qm_assert_entry_change_landed || exit 10
 # The SHA to put in the plan checkbox. Stated explicitly because the SHA a worker sees at
 # `git commit` time is NOT the one that lands: every push here rebases first, which rewrites
 # it. Citing the pre-rebase SHA is the single most common source of a FALSE

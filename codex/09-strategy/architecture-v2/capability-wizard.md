@@ -123,6 +123,19 @@ The capability wizard is three artifacts over one data model:
 
 Open work: wizard stepper stage, registry backfills, Wave-2 enhancements (operator sign-off pending).
 
+### Collateral down-sizing param (`margin_buffer_pct`)
+
+Shipped 2026-07, per `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` Phase A. The
+`USDC_MARGIN_BUFFERED` branch in `_derive_structure()` (`staked_basis.py:344`) sizes the staked leg to
+`f = 1 - margin_buffer_pct`, leaving the remainder as stable margin at the perp venue (full contract at
+`/codex/04-architecture/token-wrapping-and-collateral.md` § "USDC Margin Buffer").
+
+Param-schema locations in `strategy_service/engine/strategies/v2/param_schema.py`:
+
+- `PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS_PERP"]` → `margin_buffer_pct` (line 144, default `"0.20"`, units
+  `fraction`, `min="0" max="1"`, source `staked_basis.py:219,328`)
+- `PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS_DATED"]` → `margin_buffer_pct` (line 198, same schema)
+
 ## How to run / view
 
 - **Wizard UI**: `cd unified-trading-system-ui && pnpm install && NEXT_PUBLIC_MOCK_API=true pnpm dev` →

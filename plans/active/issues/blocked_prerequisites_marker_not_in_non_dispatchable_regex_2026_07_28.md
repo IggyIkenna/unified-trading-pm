@@ -112,7 +112,7 @@ calls `_is_non_dispatchable()` at line 1393) keeps re-deriving it as an open, di
 - `plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md` (3)
 - `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (2 — **fixed in this same session**, see
   below)
-- `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` (1)
+- `plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` (1)
 - `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` (1)
 - Several more with 0 counts in the narrower `- [ ].*BLOCKED-PREREQ` grep (string appears in prose/Progress Log/already-
   checked items, not a live open checkbox) — `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`,

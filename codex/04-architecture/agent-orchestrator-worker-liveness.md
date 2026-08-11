@@ -4,7 +4,7 @@ title: Agent Orchestrator — Worker Liveness Watchdog
 summary:
   WorkerLivenessWatchdog — 60s daemon that KILLS tmux sessions invisible to AutoSpawn on 3 triggers (stuck-at-prompt
   180s / heartbeat-silent 900s / context-full immediate); usage-cap context-preserving failover; anti-thrash 5-min
-  cooldown + 20/day cap; AutoSpawn respawns within 60s.
+  cooldown + 50/day cap; AutoSpawn respawns within 60s.
 status: current
 nature: ssot
 asset_group: [meta]

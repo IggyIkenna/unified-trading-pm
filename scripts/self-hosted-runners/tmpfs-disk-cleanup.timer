@@ -1,0 +1,30 @@
+# tmpfs-disk-cleanup.timer — run the /tmp tmpfs reclaim every 30 minutes.
+#
+# Epic: infrastructure_master (orchestrator VM /tmp tmpfs exhaustion remediation, 2026-08-10)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Cadence rationale — why 30m and not the 6h its docker-disk-cleanup sibling uses, or the 24h
+# systemd-tmpfiles-clean already ran at: the two differ in FILL RATE relative to capacity. Docker
+# reclaims against a 678 GB root disk; this reclaims an 8 GiB **tmpfs**, measured on 2026-08-10
+# absorbing ~1 new mktemp dir every 1.3s plus multi-GiB parquet streamed through it by a single
+# `gsutil ls -r`. It went 0 -> 100% inside one working day, and a full /tmp is not cosmetic there:
+# tmux_spawn allocates under /tmp, so every escalation dispatch failed with [Errno 28] and the
+# PM SIT walls hit 190+ re-dispatch attempts. 30m bounds worst-case residency to a fraction of the
+# observed fill time while staying trivially cheap (one find over a single directory level).
+#
+# This does NOT replace /etc/tmpfiles.d/tmp-aggressive-cleanup.conf (`D /tmp 1777 root root 1d`) —
+# both run; that one is the slow floor, this is the fast sweep.
+#
+# Persistent=true so a rebooted VM reclaims promptly rather than waiting out the interval. Note a
+# tmpfs is empty after reboot, so this matters for the resume-after-a-long-stop case, not boot.
+[Unit]
+Description=Periodic /tmp tmpfs reclaim (host-wide)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Persistent=true
+Unit=tmpfs-disk-cleanup.service
+
+[Install]
+WantedBy=timers.target

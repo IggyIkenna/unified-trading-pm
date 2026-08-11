@@ -41,7 +41,7 @@ referenced_by:
     /codex/08-workflows/t1-batch-dag.md,
     /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     /codex/09-strategy/operational/cli-promote-paths.md,
-    /plans/active/multi_leg_execution_systems_execution_2026_08_10.md,
+    /plans/archive/2026_08/multi_leg_execution_systems_execution_2026_08_10.md,
   ]
 owner:
 last_reviewed: 2026-06-22
@@ -274,7 +274,7 @@ risk, so an **unhedged position** (the exact failure multi-leg execution exists 
 results. A _parallel_ leader/hedge model inside the benchmark engine is equally a violation — a second implementation of
 safety-critical sequencing semantics that diverges from the live executor and breaks `paper(W) == batch-rerun(W)` (audit
 verdict 2026-08-10: option (a), route benchmark settlement through the real sequencing; (b) REJECTED; SSOT
-`/plans/active/multi_leg_execution_systems_execution_2026_08_10.md`).
+`/plans/archive/2026_08/multi_leg_execution_systems_execution_2026_08_10.md`).
 
 **The mechanism (strategy-service `engine/backtest/benchmark_fills.py`).** `BenchmarkFillEngine.settle()` →
 `compute_benchmark_fill` → `_compute_atomic_fill` (`:546`) branches on `execution_mode`:

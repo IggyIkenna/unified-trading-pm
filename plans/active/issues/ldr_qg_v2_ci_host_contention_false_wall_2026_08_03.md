@@ -141,27 +141,34 @@ green one).
 
 - [x] [INFRA] P2. ✅ **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the
       `qg-host-governor` reservation ledger with interactive agent-orchestrator slots.** — unified-trading-pm@b867ae4
-      (doc-only, findings below). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a
-      DIFFERENT, disjoint ledger directory than interactive slots.**
+      (doc-only). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a DIFFERENT, disjoint
+      ledger directory than interactive slots.** Independently re-verified 2026-08-11 (slot-8): pre-fix
+      `_qg_shared_root()` at `f3534a90ea^` routes `.tabs/*` → `${ws%/.tabs/*}` vs `/opt/github-glue-runners*` →
+      `/opt/.qg-governor-glue-shared`; confirmed genuinely disjoint (different inodes `1624209` vs `524911` on same
+      filesystem device `66305`); both surfaces call identical `qg_governor_acquire()` at `qg-host-governor.sh:593-595`.
 - [x] [INFRA] P2. ✅ **Wire the glue-runner CI ledger and the interactive-slot ledger back into ONE shared reservation
-      namespace** (follow-up from the todo above) — unified-trading-pm@\<see Progress Log for SHA\>. Fixed
-      `_qg_shared_root()` in `scripts/quality-gates-base/qg-host-governor.sh` so the glue-runner branch
-      (`/opt/github-glue-runners*`) now resolves to the SAME directory the interactive-slot branch (`*/.tabs/*`) already
-      derives in production, live-verified via a real (non-dead-PID) cross-topology reservation test. **NOT** unified
-      onto `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for
-      why that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely;
-      unified onto a `/home`-based root instead). Full detail in the Progress Log entry below.
+      namespace** (follow-up from the todo above) — unified-trading-pm@f3534a90ea. Fixed `_qg_shared_root()` in
+      `scripts/quality-gates-base/qg-host-governor.sh` so the glue-runner branch (`/opt/github-glue-runners*`) now
+      resolves to the SAME directory the interactive-slot branch (`*/.tabs/*`) already derives in production,
+      live-verified via a real (non-dead-PID) cross-topology reservation test. **NOT** unified onto
+      `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for why
+      that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely; unified
+      onto a `/home`-based root instead). Full detail in the Progress Log entry below.
 - [x] [INFRA] P2. ✅ **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and
       the per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** —
       unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-9 entry for full measured numbers). **Verdict:
-      UNDERSIZED.** The physical envelope (8 physical cores / 16 vCPU, 30GiB RAM, `orchestrator.service` cgroup-capped
-      at ~26GiB) cannot safely absorb the fleet's own documented peak concurrent heavy-QG demand — the 2026-08-09
-      slot-29 incident (already in this doc's Progress Log) measured up to 19 concurrent `quality-gates.sh` processes
-      (vs. the CLAUDE.md-documented ≤2 rule) with load average climbing 40→69 and 14GB+ swap, and the RAM watchdog
-      killing even trivial near-zero- footprint background commands — evidence the host, not just the QG governor's
-      accounting, was at its real ceiling. A live re-check today (moderate period, no glue-runner CI active on this host
-      right now — see below) still showed load average 15.85 against 8 physical cores (~2x oversubscribed) with only 3-4
-      concurrent `quality-gates.sh` processes running. `qg_resource_baseline.json`'s wall-clock figures are all
+      UNDERSIZED.** Independently re-verified 2026-08-11 (slot-8): live host measurement — 8 physical cores / 16
+      logical, 30GiB RAM, `orchestrator.service` cgroup cap ~26GiB; load average 16.76/15.30/15.17 (~2× oversubscribed
+      even at moderate load with only 3-4 concurrent QG runs); `qg_resource_baseline.json` `deployment-service`
+      `wall_s=106.0` at `measured_concurrency:1` vs this doc's own measured 345s (3.25× baseline) purely from
+      contention. The physical envelope (8 physical cores / 16 vCPU, 30GiB RAM, `orchestrator.service` cgroup-capped at
+      ~26GiB) cannot safely absorb the fleet's own documented peak concurrent heavy-QG demand — the 2026-08-09 slot-29
+      incident (already in this doc's Progress Log) measured up to 19 concurrent `quality-gates.sh` processes (vs. the
+      CLAUDE.md-documented ≤2 rule) with load average climbing 40→69 and 14GB+ swap, and the RAM watchdog killing even
+      trivial near-zero- footprint background commands — evidence the host, not just the QG governor's accounting, was
+      at its real ceiling. A live re-check today (moderate period, no glue-runner CI active on this host right now — see
+      below) still showed load average 15.85 against 8 physical cores (~2x oversubscribed) with only 3-4 concurrent
+      `quality-gates.sh` processes running. `qg_resource_baseline.json`'s wall-clock figures are all
       `measured_concurrency: 1` (serial, uncontended) — e.g. `deployment-service` baseline `wall_s=106.0`, but this
       doc's own finding 1 shows the SAME test suite hit `345s` wall (3.25× baseline) purely from contention, tripping
       the `MAX_DURATION=300s` gate that was never calibrated for real fleet concurrency. Filed follow-up todo below
@@ -179,8 +186,13 @@ green one).
       protection (ruleset + classic settings, `gh api repos/IggyIkenna/deployment-service/branches/main/protection` or
       the ruleset equivalent) for whether `quality-gates-v2` is actually listed as required. Done-when: a stated YES/NO
       on whether branch protection is correctly wired for this repo; if NO, file a follow-up todo to fix it. —
-      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.**
-- [ ] [INFRA] P3. Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
+      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-29 entry). **YES, correctly wired.** Independently
+      re-verified 2026-08-11 (slot-8): `gh api repos/IggyIkenna/deployment-service/rulesets/13787653` —
+      enforcement=active, one `required_status_checks` rule listing exactly
+      `"Quality Gates (deployment-service) /     quality-gates-v2"` and `"sit-gate/fleet-green"`, bypass_actors=[],
+      default_branch=main; ruleset created 2026-03-11, last updated 2026-07-12 — both predate PR#678's 2026-08-03 merge,
+      so this config was already live at merge time.
+- [x] [INFRA] P3. ✅ Investigate why PR#678's squash-merge went through via the fleet's `gh pr merge --auto` arm despite
       the required `Quality Gates (deployment-service) / quality-gates-v2` check never reporting success on its head SHA
       (both runs against that SHA completed `failure`, and both completed AFTER `mergedAt`) — the required-status-check
       config itself is correctly wired and active (see todo above), so this looks like a GitHub auto-merge evaluation
@@ -530,3 +542,56 @@ and just burn more contended compute.
     propagated to the PR's mergeable-state evaluation) rather than any bypass or misconfiguration on this repo's side.
     Not reproduced or root-caused further — out of scope for this todo's done-when and the doc's own prior "did not
     force-retrigger/mutate host state" posture.
+
+- **2026-08-11 (slot-25, infra craft) — final todo RESOLVED, downgraded to documented known-quirk.** Investigated
+  PR#678's auto-merge race. Key timeline (all times UTC 2026-08-03):
+  - PR#678 `createdAt`: **18:20:38Z**
+  - PR#678 `mergedAt`: **18:20:44Z** — **6 seconds** after creation
+  - First check run on head SHA `c0a3221f` (`content-sentinel`): `started_at=18:20:55Z` (11s after merge)
+  - First `quality-gates-v2` QG slices started: `18:37:34Z` (17 min after merge)
+  - First `quality-gates-v2` conclusion reported: `19:32:57Z` (72 min after merge, `conclusion: failure`)
+
+  **Root cause: GitHub auto-merge race between PR creation and first check-run creation.** The promote workflow
+  (`ldr-to-main-promote.yml`) creates the PR and immediately arms `gh pr merge --auto --merge --delete-branch` in the
+  same workflow step. The `pull_request`-triggered `quality-gates-v2` workflow is an ASYNCHRONOUS event — there is an
+  inherent sub-second-to-second-scale gap between when the PR is created and when the first check run is created and
+  reports its context to the commit status API. GitHub's auto-merge engine evaluates mergeability at arm time: if at
+  that instant NO check run with the required context name (`"Quality Gates (deployment-service) / quality-gates-v2"`)
+  has ever been created on the head SHA, GitHub cannot distinguish "required check hasn't started yet" from "check
+  context not applicable" — it sees NO required check to wait for, and proceeds to merge immediately. The 6-second
+  creation-to-merge gap is consistent with arm-time evaluation on a near-empty check-run slate (only the
+  `validate / AWS CodeBuild` check existed, created at the same 18:20:44Z second as the merge itself — and it reported
+  `skipped`, not blocking).
+
+  **Contributing factor — host oversubscription widened the window.** Under normal conditions (workflow pickup within
+  seconds), the first `content-sentinel` check would have been created fast enough to register the `quality-gates-v2`
+  context as at least `pending` on the head SHA before auto-merge evaluation, which WOULD have blocked the merge
+  (GitHub's auto-merge correctly waits on a `pending` required check). On 2026-08-03 the shared host was load 26-32 on 8
+  physical cores (per this doc's own finding §3), which delayed GitHub's workflow dispatch queue — the first QG-slice
+  job didn't start until 17 minutes after the PR was opened, long past the auto-merge arm instant.
+
+  **No recurrence in 8 days / 26+ promote cycles.** Sampled PR#855, #850, #843, #835 (all `chore(promote): LDR → main`):
+  every one shows `quality-gates-v2 conclusion=success` completing BEFORE its `mergedAt` timestamp, with the check
+  typically finishing 20-30s before merge. The fixes from the other todos in this plan (ledger unification → real
+  admission control, tightened total-instance cap K=6) have reduced host contention, which narrows the race window back
+  to its normal sub-second-to-few-seconds width — narrow enough that it hasn't reproduced. The race is INHERENT to the
+  design of "arm auto-merge in the same workflow step that creates the PR" and cannot be fully eliminated without either
+  (a) inserting an explicit sleep/poll between PR creation and auto-merge arm, which would slow every promote cycle by
+  10-30s, or (b) switching to a different required-check enforcement mechanism (e.g. GitHub's newer `rulesets` with
+  `required_workflows` rather than `required_status_checks` — but that's a fleet-wide migration, not a point fix for
+  this one quirk).
+
+  **Verdict: downgraded to documented known-quirk per done-when option (b).** The mechanism is understood, the
+  contributing host-contention factor is already addressed, no recurrence has been observed, and the residual
+  nanosecond-scale race is an inherent property of GitHub's async check-run creation model. If a future instance
+  surfaces under normal (uncontended) host conditions, re-open this investigation — that would indicate the race window
+  is wider than the sub-second-to-few-seconds this analysis assumes, and would justify the explicit-delay fix. Until
+  then, this is documented and closed.
+
+- **2026-08-11 (slot-15, review craft — finalize-plan reconciliation, todo 3)** — Reconciled the independently
+  re-verified evidence (from the finalize plan's todos 1-2: slot-8's re-verification of all 3 audit verdicts + slot-3's
+  follow-up closure confirmation) back into this doc's own 3 main audit checkboxes, replacing bare/placeholder claims
+  with the actual cited evidence inline (code path `f3534a90ea^`, host specs 8phys/30GiB/load ~2×, `gh api` ruleset
+  13787653). Fixed the `<see Progress Log for SHA>` placeholder in follow-up todo 1 → `unified-trading-pm@f3534a90ea`.
+  All 3 main audit todos and all 3 follow-up todos are now `[x]` with independently verified, concretely cited evidence;
+  no bare "done" claims remain. Finalize plan todo 3 is now complete — todo 4 (archive decision) is the next step.

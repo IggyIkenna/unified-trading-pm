@@ -87,7 +87,47 @@ if [ -f "${CLAIM_FILE}" ] && command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-# --- Signal 2: live /proc/<pid>/cwd scan for another `claude` process under this slot dir ---
+# --- Signal 2: live cwd scan for another `claude` process under this slot dir ---
+#
+# PORTABLE across Linux (/proc) and macOS/BSD (no /proc at all -- confirmed
+# 2026-08-11: this operator's own laptop, the host where the incident this
+# hook exists to catch actually happened, has no /proc whatsoever). Before
+# this fix, every /proc/<pid>/... read below silently failed on macOS
+# (`[ -r ... ]` false, `awk` reading a nonexistent file returns empty), so
+# signal 2 was a structural no-op on the one platform this exact collision
+# was measured on -- it never actually looked for a peer process, it just
+# always concluded there wasn't one. This is a DETECTION fix only: it makes
+# an existing WARN-only signal actually fire where it silently couldn't
+# before. It does not change the non-blocking exit-0-always contract, and a
+# false positive here costs one extra warning line, never a refusal.
+_ppid_of() { # <pid> -> ppid on stdout, empty on failure. /proc first (fast,
+             # Linux), `ps` fallback (works on both, needed on macOS).
+  local pid="$1" v
+  if [ -r "/proc/${pid}/status" ]; then
+    v="$(awk '/^PPid:/{print $2}' "/proc/${pid}/status" 2>/dev/null || true)"
+    [ -n "${v}" ] && { printf '%s' "${v}"; return 0; }
+  fi
+  v="$(ps -o ppid= -p "${pid}" 2>/dev/null | tr -d ' ')"
+  [ -n "${v}" ] && printf '%s' "${v}"
+}
+_cwd_of() { # <pid> -> resolved absolute cwd on stdout, empty on failure.
+            # /proc first (Linux); lsof fallback (macOS/BSD -- no /proc cwd
+            # link exists there at all, so this is the ONLY way to ask a
+            # macOS host "what directory is this OTHER process running in").
+  local pid="$1" cwd_link="/proc/$1/cwd" v
+  if [ -r "${cwd_link}" ]; then
+    v="$(readlink -f "${cwd_link}" 2>/dev/null || true)"
+    [ -n "${v}" ] && { printf '%s' "${v}"; return 0; }
+  fi
+  if command -v lsof >/dev/null 2>&1; then
+    # `lsof -a -d cwd -p <pid> -Fn` emits a field-per-line format; the path
+    # line is prefixed with 'n'. Same-user processes need no elevated
+    # privileges to query on macOS.
+    v="$(lsof -a -d cwd -p "${pid}" -Fn 2>/dev/null | awk '/^n/{sub(/^n/,""); print; exit}')"
+    [ -n "${v}" ] && printf '%s' "${v}"
+  fi
+}
+
 if command -v pgrep >/dev/null 2>&1; then
   # Ancestor PIDs of THIS hook invocation (the CLI process that spawned it,
   # its own parent, etc.) must never be reported as "another" process.
@@ -96,7 +136,7 @@ if command -v pgrep >/dev/null 2>&1; then
   _hops=0
   while [ "${_walk_pid}" != "0" ] && [ "${_walk_pid}" != "1" ] && [ "${_hops}" -lt 10 ]; do
     ancestors="${ancestors}${_walk_pid} "
-    _next="$(awk '/^PPid:/{print $2}' "/proc/${_walk_pid}/status" 2>/dev/null || true)"
+    _next="$(_ppid_of "${_walk_pid}")"
     [ -z "${_next}" ] && break
     _walk_pid="${_next}"
     _hops=$((_hops + 1))
@@ -106,9 +146,7 @@ if command -v pgrep >/dev/null 2>&1; then
   foreign_count=0
   for pid in $(pgrep -f claude 2>/dev/null || true); do
     case "${ancestors}" in *" ${pid} "*) continue ;; esac
-    cwd_link="/proc/${pid}/cwd"
-    [ -r "${cwd_link}" ] || continue
-    resolved="$(readlink -f "${cwd_link}" 2>/dev/null || true)"
+    resolved="$(_cwd_of "${pid}")"
     [ -z "${resolved}" ] && continue
     case "${resolved}" in
       "${SLOT_DIR_REAL}"|"${SLOT_DIR_REAL}"/*) foreign_count=$((foreign_count + 1)) ;;

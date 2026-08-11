@@ -26,7 +26,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md,
@@ -282,41 +282,41 @@ item here.
       non-canonical originals are purged with the cited soft-delete value ≥604800s.
 
       **2026-08-09 (slot 16) — sub-item (3) CLOSED (no real cohort exists); sub-items (1)-(2) script written +
-                                                          dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
-                                                          `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
-                                                          instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
-                                                          fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
-                                                          OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
-                                                          `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
-                                                          `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
-                                                          `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
-                                                          the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
-                                                          live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
-                                                          sub-item is closed on a negative finding, not deferred.
-                                                          (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
-                                                          (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
-                                                          two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
-                                                          registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
-                                                          `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
-                                                          (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
-                                                          pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
-                                                          transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
-                                                          `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
-                                                          `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
-                                                          only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
-                                                          (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
-                                                          2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
-                                                          pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
-                                                          worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
-                                                          the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
-                                                          not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
-                                                          (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
-                                                          across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
-                                                          heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
-                                                          `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
-                                                          backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
-                                                          twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
-                                                          already closed, no further action needed there).
+                                                                                                                                                                                                                                                                                                  dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
+                                                                                                                                                                                                                                                                                                  `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
+                                                                                                                                                                                                                                                                                                  instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
+                                                                                                                                                                                                                                                                                                  fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
+                                                                                                                                                                                                                                                                                                  OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
+                                                                                                                                                                                                                                                                                                  `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
+                                                                                                                                                                                                                                                                                                  `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
+                                                                                                                                                                                                                                                                                                  `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
+                                                                                                                                                                                                                                                                                                  the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
+                                                                                                                                                                                                                                                                                                  live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
+                                                                                                                                                                                                                                                                                                  sub-item is closed on a negative finding, not deferred.
+                                                                                                                                                                                                                                                                                                  (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
+                                                                                                                                                                                                                                                                                                  (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
+                                                                                                                                                                                                                                                                                                  two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
+                                                                                                                                                                                                                                                                                                  registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
+                                                                                                                                                                                                                                                                                                  `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
+                                                                                                                                                                                                                                                                                                  (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
+                                                                                                                                                                                                                                                                                                  pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
+                                                                                                                                                                                                                                                                                                  transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
+                                                                                                                                                                                                                                                                                                  `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
+                                                                                                                                                                                                                                                                                                  `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
+                                                                                                                                                                                                                                                                                                  only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
+                                                                                                                                                                                                                                                                                                  (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
+                                                                                                                                                                                                                                                                                                  2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
+                                                                                                                                                                                                                                                                                                  pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
+                                                                                                                                                                                                                                                                                                  worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
+                                                                                                                                                                                                                                                                                                  the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
+                                                                                                                                                                                                                                                                                                  not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
+                                                                                                                                                                                                                                                                                                  (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
+                                                                                                                                                                                                                                                                                                  across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
+                                                                                                                                                                                                                                                                                                  heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
+                                                                                                                                                                                                                                                                                                  `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
+                                                                                                                                                                                                                                                                                                  backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
+                                                                                                                                                                                                                                                                                                  twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
+                                                                                                                                                                                                                                                                                                  already closed, no further action needed there).
 
 - [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
@@ -441,16 +441,17 @@ item here.
   outside this run's 18-doc scope, not extracted here.
 - `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` — a dispatch-tracking narrative doc
   (status table + prose), 0 real `- [ ]` checkboxes to extract.
-- `plans/active/issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — sole open item (Todo 5, "append F10 to
-  the reconciliation register") is already an open citation-anchor todo inside the ACTIVE
-  `defi_satellite_ao_dispatch_batch10_2026_08_06.md` — conflict, not re-drafted.
+- `/plans/archive/issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — citation-anchor (Todo 5, "append F10
+  to the reconciliation register") closed by `defi_satellite_ao_dispatch_batch10_2026_08_06.md` item 7 on 2026-08-11;
+  doc resolved + archived.
 - `plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` — sole open item is "archive this scoping
   doc", explicitly owned by the sibling `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`'s own reconciliation
   todo, not independently actionable here.
 - `plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md` §6 items 1 and 3 (Jupiter venue registration,
   onchain_event_poller wiring) — both explicitly citation-only, real execution already `assigned_vm: planning` in the
-  ACTIVE `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; item 2 (governance-params-poller
-  cross-repo re-verify) remains an unruled, cross-repo big finding, genuinely operator-notify not worker-bounded.
+  `plans/archive/2026_08/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` (now archived); item 2
+  (governance-params-poller cross-repo re-verify) remains an unruled, cross-repo big finding, genuinely operator-notify
+  not worker-bounded.
 - `plans/active/issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` item 3 (lending_indices stall
   root-cause diagnosis) — held by the ACTIVE `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s own Deferred section
   (conflict-parked pending a park-text reconciliation neither sibling batch has done yet) — dropped per the conflict-
@@ -615,4 +616,380 @@ item here.
   ruling is the whole family settled, not a single VM. "proceed now" text seen on slot 3 is confirmed a kicker
   frozen-pane artifact (identical `input_snippet` on worker_kicked events for slots 3 AND 20, per main-agent
   BLK-e59287f4), NOT an operator directive — the operator has sent zero messages to slot 3; the ruling is
-  disposition-final.
+  disposition-final. **2026-08-10T~19:55Z (slot 3) — rebuild VM DELETED mid-run + clean reconciliation (BLK-74d8766b /
+  BLK-13334ded / BLK-13334ded main-guidance)**: the `canonical-migration-defi-rebuild-20260810-180141` VM was
+  **externally deleted** at 19:41:19Z + 19:43:32Z UTC, NOT a clean terminal and NOT a preemption. GCP Cloud Audit
+  attributes the delete to a **Claude Code agent on the OPERATOR'S MAC**
+  (`agent-name/claude-code_2-1-226_agent command/gcloud.compute.instances.delete client-os/MACOSX from-script/True`,
+  principal `ikenna@odum-research.com`, delete op 100%) — a REPEAT of the
+  `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md` P0 HARD-RULE violation pattern, filed as
+  `issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md` (assigned_vm: planning, 3 todos: alert
+  on non-SA delete of canonical-migration-* VMs, require intent marker for operator-principal deletes, resolve operator
+  attribution). **Reconciliation (BLK-74d8766b directive #3, ACCEPTED CLEAN by main)**: the deleted rebuild's partial
+  per-VM shard carries ONLY `SUSHISWAP_V3` (canonical venue, 66,387 captured) — **zero bare `SUSHISWAP` rows were
+  re-registered**; main index still holds the untouched **607,404 bare `SUSHISWAP` captured rows** (this migration's
+  target); `SUSHISWAP_V2` `empty_confirmed` 34,788 unchanged. The re-registration hazard is **DISCHARGED** — the rebuild
+  does NOT need re-launching to protect the index. **SUSHISWAP --apply REMAINS GATED** per BLK-6c04234a: operator
+  attribution of the delete (BLK-13334ded, `operator_pending`) + consolidator settle + full drain gate. The watcher is
+  re-armed to catch any rebuild relaunch. **2026-08-10T20:04Z (slot 3) — REBUILD RELAUNCHED as
+  `canonical-migration-defi-rebuild-20260810-204358`** (resumed 2025-11-28→2026-12-31, same window as the deleted
+  `-180141`, RUNNING + healthy 20:19Z, ~167% CPU / 2GB RSS): the defi-rebuild job was re-launched after the mid-run
+  delete, so the operator's ORIGINAL wait condition (rebuild terminal + consolidator settle + full drain) is genuinely
+  back in effect and the SUSHISWAP `--apply` stays gated on it. Watcher re-armed (background task `btmsjp1fc`) tracking
+  the full `canonical-migration-defi-rebuild-` family; fires at terminal. Launcher category for the SUSHISWAP apply is
+  `deployment-service@e67c9692` (`defi-sushiswap-retire`, shipped + verified on LDR this session); prep docs
+  `unified-trading-pm@089a09bbad` (issue doc + clean-reconciliation Progress Log). BLK-13334ded (delete-intent
+  attribution) remains `operator_pending` — the relaunch confirms the rebuild continues regardless, so the delete did
+  not derail the migration's gating dependency.
+
+- 2026-08-10 (slot 3, data_engineering worker; /pre-compact): **Hold continues — rebuild `-204358` still RUNNING**
+  (verified 20:32Z; watcher PID 1840594 alive, `btmsjp1fc.output` heartbeats 20:20Z/20:25Z/20:30Z on 300s cadence, next
+  tick ~20:35Z). Repeated "proceed now" / "send a /heartbeat" messages are the confirmed kicker frozen-pane artifact
+  (BLK-e59287f4 — identical text on slots 3 AND 20) and are **NOT** an operator override of BLK-6c04234a
+  (disposition-final); no operator message has reached this slot since the gating ruling. NO migration activity run.
+  **Watcher re-arm recipe for a fresh session** (if this session dies and `/tmp` is wiped): re-create
+  `/tmp/watch_rebuild_terminal.sh` with the content below, `chmod +x`, launch as a background task
+  (`bash /tmp/watch_rebuild_terminal.sh`). Terminal = exit 0 when NO `canonical-migration-defi-rebuild-` instance is
+  RUNNING and NONE PENDING → then verify PROGRESS reached 2026-12-31 → drain → `--apply` (day-batched `--limit-days`).
+  Full script:
+  ```bash
+  #!/usr/bin/env bash
+  # Family-wide watcher for the canonical-migration-defi-rebuild job (relaunched as -204358, 2025-11-28..2026-12-31).
+  # Terminal = NO defi-rebuild instance RUNNING (all shards done) AND the main instance's PROGRESS.json reached 2026-12-31.
+  # SILENT except on terminal / active-instance lines / relaunch-rearm.
+  ZONE="asia-northeast1-c"
+  while true; do
+    RUNNING=$(gcloud compute instances list \
+        --filter="name~'canonical-migration-defi-rebuild-' AND status=RUNNING" \
+        --format="value(name)" 2>/dev/null | sort)
+    if [ -z "$RUNNING" ]; then
+      PENDING=$(gcloud compute instances list \
+          --filter="name~'canonical-migration-defi-rebuild-'" \
+          --format="value(name,status)" 2>/dev/null | grep -v TERMINATED | head -3)
+      if [ -z "$PENDING" ]; then
+        echo "TERMINAL: no defi-rebuild instance running at $(date -u +%Y-%m-%dT%H:%M:%SZ) -- VERIFY PROGRESS reached 2026-12-31 before drain+launch"
+        exit 0
+      fi
+      echo "waiting: no RUNNING, still-provisioning: $PENDING"
+      sleep 120
+      continue
+    fi
+    echo "active defi-rebuild instances: $(echo "$RUNNING" | tr '\n' ' ') at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    sleep 300
+  done
+  ```
+  Lesson (measurement trap): watcher output-file mtime lagging the live clock by ≤ the 300s sleep interval is NOT death
+  evidence — confirm via `ps -p <pid>` (STAT `S` = alive, still looping) before re-arming; only re-arm if the file stops
+  advancing AND `ps` shows the process gone. **Third /pre-compact re-check (2026-08-10, slot 3): no state change** —
+  rebuild `-204358` still RUNNING at 20:41Z, watcher alive (PID 1840594, 20:58 elapsed, ticks through 20:35:52Z), git
+  ahead=0 / porcelain clean, secret-scan clean. The recipe above remains the complete re-arm source; NO migration
+  activity run. **Fourth /pre-compact re-check (2026-08-10, slot 3, post-`/compact`): no state change** — rebuild
+  `-204358` still RUNNING at 20:45Z (live gcloud check), watcher alive (PID 1840594, ~25 min elapsed, ticks through
+  20:41:04Z), git ahead=0 / porcelain empty, secret-scan clean, dangling `/tmp` refs confirmed self-contained (the
+  `/tmp/watch_rebuild_terminal.sh` reference at line 650 is recoverable — full script embedded inline above). NO
+  migration activity run; still on gated hold. **Fifth /pre-compact re-check (2026-08-10, slot 3): no state change** —
+  rebuild `-204358` still RUNNING at 20:46Z (watcher tick 20:46:15Z + live gcloud agree), watcher alive (PID 1840594,
+  ~27 min elapsed), git ahead=0 / porcelain empty, no fresh secrets (only safe-doc-push transients + AO ff-pull cron
+  token file). NO migration activity run; hold continues. **Sixth /pre-compact re-check (2026-08-10, slot 3): no state
+  change** — rebuild `-204358` still RUNNING at 20:51Z (watcher tick 20:51:27Z), watcher alive (PID 1840594, ~32 min
+  elapsed), git ahead=0 / porcelain empty, secret-scan clean (only safe-doc-push `_sdp_*`/`tmp*.prompt` transients + AO
+  ff-pull cron token file, all system-owned/regenerable), dangling `/tmp` refs unchanged and self-contained (plan lines
+  650-651 embed the full watcher script). NO migration activity run; hold continues per BLK-6c04234a. **Seventh
+  /pre-compact re-check (2026-08-10, slot 3, post-`/compact`): no state change** — rebuild `-204358` still RUNNING at
+  20:56Z (watcher tick 20:56:38Z + direct gcloud 20:59Z agree), watcher alive (PID 1840594, ~41 min elapsed), git
+  ahead=0 / porcelain empty, secret-scan clean (only safe-doc-push `_sdp_*` transients — incl. a peer-session push
+  attempt's zero-byte error files + 101-byte `_sdp_push_err` at 20:58Z — and `/tmp/pw_2710_head/` +
+  `/tmp/regen-ldr-plans-q1dncvnv/` foreign-session worktrees whose `github_pat_`/`AKIA` matches are prose/script-name
+  substrings in committed docs, no live values), dangling `/tmp` refs unchanged and self-contained (plan lines 650-651
+  embed the full watcher script). NO migration activity run; hold continues per BLK-6c04234a. **Eighth /pre-compact
+  re-check (2026-08-10, slot 3, post-`/compact`): no state change** — rebuild `-204358` still RUNNING at 21:01Z (watcher
+  tick 21:01:57Z + direct gcloud agree), watcher alive (PID 1840594, ~47 min elapsed), git ahead=0 / porcelain empty,
+  fresh secret-scan clean (the only NEW `/tmp` token-pattern matches are `AKIA` as a substring of the
+  `SLOVAKIA_SUPER_LIGA` league code in `/tmp/baseline_prosewrap.txt` + `/tmp/ao_log.txt` prose dumps — false positives,
+  no live values; plus a peer session's 21:04-21:05Z `_sdp_*` transients incl. 101-byte `_sdp_push_err` + 258-byte
+  `_sdp_rebase_err` — safe-doc-push error-capture bookkeeping, not mine), dangling `/tmp` refs unchanged and
+  self-contained (plan lines 650-651 embed the full watcher script). NO migration activity run; hold continues per
+  BLK-6c04234a. **Post-push prek-orphaned-patch event (2026-08-10, slot 3, exit-9 follow-up)**: this ritual's
+  safe-doc-push push landed (`403c0f8db5`) but exited 9 on two orphaned prek patches
+  (`/home/ubuntu/.cache/prek/patches/1786396089176-583299.patch` = 3 frontmatter fields on
+  `deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`; `1786396156606-647721.patch` =
+  doc-archival edit on `backfill_smoke_write_path_canonical_audit_2026_07_20.md`). Both are a PEER session's parked
+  in-flight edits (my prek run stashed their unstaged work); neither content is in the committed tree (patch-1 fields
+  absent per grep, patch-2 file still at active path). No action taken — on a shared checkout I must neither `git apply`
+  (foreign files) nor delete (peer's only copy); the peer is actively running and tracks this recurrence class via
+  incident doc `safe_doc_push_prek_patch_not_restored_on_retry_success` (stash@0 = their second-recurrence WIP). Do not
+  delete these patches or re-run safe-doc-push expecting exit 0 while they sit.
+
+**Ninth /pre-compact re-check (2026-08-10, slot 3, post-`/compact`): no state change** — rebuild `-204358` still RUNNING
+at 21:14Z (watcher tick 21:12:21Z + direct gcloud 21:14:31Z agree, RUNNING instance count = 1), watcher alive (PID
+1840594, ~60 min elapsed), git ahead=0 / porcelain empty, fresh secret-scan clean (only foreign-worktree doc matches —
+`pmgate_ci.*/`, `ao_clone_check/`, `pw_2710_head/` — script-name/doc-content substrings, no live values), dangling
+`/tmp` refs unchanged and self-contained (plan lines 650-651 embed the full watcher script; the live watcher still holds
+the file). NO migration activity run; hold continues per BLK-6c04234a. The two orphaned prek patches (`…-583299`,
+`…-647721`) remain untouched at `/home/ubuntu/.cache/prek/patches/` per the event note above — peer-owned, do not
+apply/delete.
+
+**Post-push prek-orphaned-patch event 2 (2026-08-10, slot 3, exit-9 follow-up)**: this ritual's safe-doc-push push
+landed (`5988a04104`) but exited 9 on THREE orphaned prek patches, all identical (`1786396575675-1137739.patch` =
+`1786396598129-1172608.patch` = `1786396603103-1179699.patch`) — one single-line edit on
+`plans/active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md` resolving the `unified-trading-pm@<SHA>`
+placeholder → `unified-trading-pm@a5161236d0` on its Archive-todo line. Same recurrence class as the 8th-ritual pair
+(peer WIP stashed by my prek run, restore never ran). NOT mine — this session never edits that file; its HEAD is
+`a5161236d0` (peer:
+`docs(plans): repoint referrers + complete archival of backfill_smoke_write_path_canonical_audit_2026_07_20`), so the
+archival work the todo references is ALREADY COMPLETE in the committed tree — the patch is only the cosmetic
+placeholder-fill its owner may or may not apply. Post-push tree clean (ahead=0, porcelain empty); the fill-in is NOT in
+the tree but its subject is resolved. No action — same shared-checkout rule: neither `git apply` (foreign file, active
+peer) nor delete (their only copy); the 3 identical copies are prek re-stashing the same WIP across retry attempts
+during this run's 41s governor wait + autostash-chain quarantine. Do not re-run safe-doc-push expecting exit 0 while any
+of these sit.
+
+**Tenth /pre-compact re-check (2026-08-10, slot 3, post-`/heartbeat`): no state change** — rebuild `-204358` still
+RUNNING at 21:22Z (watcher tick 21:22:45Z + direct gcloud 21:24Z agree, RUNNING instance count = 1), watcher alive (PID
+1840594, ~2 h elapsed), git ahead=0 / porcelain empty. NO migration activity run; hold continues per BLK-6c04234a. NEW
+this tick — first successful worker heartbeat: `POST http://localhost:8765/api/slots/3/heartbeat` (this session is ON
+the AO VM, so `localhost:8765` works directly, no SSM needed) with body
+`{"message": ..., "context_used_pct": null, "in_flight_files": [{repo, path, intent}]}`. Two hard-won API gotchas to
+record (Step-6 lessons, re-checked against `agent-orchestrator/server/models/worker_api.py` + `routes/slots_worker.py`):
+(1) `InFlightFile` REQUIRES a `repo` field ("dir name relative to .tabs/<N>/") — omitting it 422s with `Field required`;
+path-only is not enough. (2) `context_used_pct` must be `null` when not reporting a measurement, NOT `0` — a placeholder
+0 FABRICATES a compaction event (model docstring: 2026-08-10 incident, every slot-3 compaction row landed at 0, inflated
+`compactions_last_hour` → premature recycles). Response was `ok:true, status:working, dispatch_reason:resume, new_task`
+= this same task, `messages:[]` (no operator directives), `watchdog_kills:[]`, `backlog_queued:481`. Prek-orphaned
+patches (5 total: `…-583299`, `…-647721`, `…-1137739`/`…-1172608`/`…-1179699`) remain untouched — peer-owned, do not
+apply/delete.
+
+**Eleventh /pre-compact re-check (2026-08-10, slot 3): gate still holds; stale-remote-ref false alarm resolved (nothing
+lost)** — rebuild `-204358` still RUNNING at 21:29Z (watcher tick 21:27:57Z + direct gcloud 21:29Z agree, RUNNING count
+= 1), watcher alive (PID 1840594, ~1h10m elapsed). NO migration activity run; hold per BLK-6c04234a. NEW this tick — a
+false `ahead=1` scare: local HEAD `01e9a18297` (tenth ritual) initially appeared 1 ahead of a STALE
+`origin/live-defi-rollout` remote-tracking ref (`094844835b`); the reflog shows a peer session's
+`fetch --tags --force … forced-update` had rewritten the ref after my push. A fresh `git fetch` proved `01e9a18297` IS
+on origin (position 4 in the linear history) — the true remote head had advanced 6 commits past it (peer STANDINGS
+progress `9a3c73fee9` + main→LDR backmerge `46a9295d79` + peer `perf(qg)` `3a7e5b14eb`). Resolved with
+`git pull --ff-only` → local HEAD = `3a7e5b14eb`, `ahead=0`, porcelain empty. Step-6 lesson: on a SHARED/multi-session
+checkout a `rev-list --count origin/<branch>..HEAD` reading can be STALE — always `git fetch` FIRST, then trust the
+count; a "pushed-then-lost" alarm is far more likely a stale remote-tracking ref than a real lost commit. Also: stash
+list grew 20→39 (peer sessions parking more — untouched, do not pop/drop).
+
+**Twelfth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h13m; stale-ref discipline validated; two new
+measurement lessons** — rebuild `-204358` still RUNNING at 21:33Z (watcher tick 21:33:10Z + direct gcloud 21:33Z agree,
+RUNNING count = 1), watcher alive (PID 1840594, ~1h13m elapsed). NO migration activity run; hold per BLK-6c04234a.
+Pre-ritual `git fetch` FIRST (the 11th ritual's lesson) held up: this tick clean — ahead=0, behind=0, porcelain empty,
+HEAD = `c3abffc27d` (11th entry; peers landed `909921485f` "-014 gate re-check" + `3a7e5b14eb` `perf(qg)` on origin
+since — FF-only pull reconciled). New Step-6 lessons: (1) the Bash tool's cwd PERSISTS across calls — a `cd` in one call
+makes the next call's `git` fail "not a git repository"; re-`cd` or use absolute paths in compound commands on this
+shared VM. (2) `git fetch` warned "too many unreachable loose objects" + a `.git/gc.log` — benign on this shared
+checkout, do NOT run `git prune` (shared `.git`, could affect peer sessions). Also: stash list stable at 39 (untouched);
+the only scratchpad-dangling reference found is PRE-EXISTING in an archived slot-9 issue
+(`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md:176` → slot-9 cc-tmpdir CSV) —
+peer/archived, not edited. Push outcome: safe-doc-push landed `648fa7fe0e` (attempt 1/6, `✅ Pushed` → origin) but
+exited 9 on an ORPHANED PREK PATCH warning. Inspected `…-2241660.patch` (`git apply --stat`): it is a PEER's edit to
+`scripts/vm/launch-mdps-sharded-backfill.sh` (cefi/defi → e2-highmem-8 memory mitigation, incident cite DP-VM-002,
+escalation agt-b947d5), NOT my content. My tree clean (`status --porcelain` empty, ahead=0), my entry IS in the pushed
+commit. Per the orphaned-patch runbook: patch NOT applied (foreign content — applying would inject a peer's WIP into the
+shared tree) and NOT deleted (may be the peer's only copy) — left in place, peer-owned, same handling as the 5 earlier
+orphaned patches.
+
+**Thirteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h21m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at 21:38Z (watcher tick 21:38:22Z + direct gcloud 21:41Z agree), watcher PID 1840594 alive,
+~1h21m elapsed. NO migration activity run; hold per BLK-6c04234a. Git clean — ahead=0, behind=0, porcelain empty, HEAD
+`bb0237b9e6` (slot-cron FF pull). Step-1 audit: stash stable 39 (untouched); only scratchpad-dangling ref = PRE-EXISTING
+archived slot-9 issue (`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md:176` → slot-9
+cc-tmpdir CSV), peer/archived not edited; scratchpad (`b14rzupc1`/`bofvjpmbu` 0-byte, `bzfjsl9tk` large) regenerable
+drops. No chat-only findings, no new lessons; nothing to finish/ship.
+
+**Fourteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h25m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at 21:44Z (watcher tick 21:43:33Z + direct gcloud 21:44Z agree, RUNNING count = 1), watcher
+alive (PID 1840594, ~1h25m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: porcelain empty, HEAD
+`20672d1ffc`, behind=1 → FF-pulled origin (peer landed
+`plans/active/issues/tradfi_manifest_casing_tests_red_trunk_2026_08_10.md`) → ahead=0/behind=0. Step-1 audit: stash
+stable at 39 (untouched); dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9 issue ref + pre-existing
+refs in other plans' docs (peer-owned, not edited); scratchpad new task outputs (`bavelm4ut` 21:45 = this turn's own git
+output, `btmsjp1fc` = live watcher, both regenerable) — deliberate drops. No chat-only findings, no new lessons this
+tick (prior rituals' Step-6 lessons already journaled). Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Fifteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h28m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at 21:47Z (direct gcloud 21:47Z, RUNNING count = 1; watcher tick 21:43:33Z, watcher PID 1840594
+alive, ~1h28m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: porcelain empty, HEAD `6427102b28`,
+behind=1 → FF-pulled origin (`502b9f355e` — slot-22 flipped item 6 in the cross_cutting batch11 plan: STALE-PREMISE
+verification-only, peer-owned, NOT my defi_satellite plan — truncated stat filename was ambiguous) → ahead=0/behind=0,
+HEAD `502b9f355e`. Step-1 audit: stash stable at 39 (untouched); dangling-ref grep re-confirms only the PRE-EXISTING
+archived slot-9 issue ref (peer-owned, not edited) — the plan's `/tmp/watch_rebuild_terminal.sh` refs are intentional +
+recoverable (full script embedded inline at line 688); scratchpad new task outputs (`bzfjsl9tk` 21:27 = /tmp dir
+listing, `b4ckei64i` 21:47 = transient 0-byte already gone, `btmsjp1fc` = live watcher, all regenerable) — deliberate
+drops; secret-scan output `bypmnajbx` re-reviewed, no token-shaped file in scratchpad (matches are foreign-session prose
+refs already triaged). No chat-only findings, no new lessons this tick (prior rituals' Step-6 lessons already
+journaled). Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Sixteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h30m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at ~21:52Z (direct gcloud 21:51Z, RUNNING count = 1; watcher tick 21:48:45Z, watcher PID 1840594
+alive, ~1h30m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: porcelain empty, HEAD `e8863da1a8`,
+behind=2 → FF-pulled origin (`c328a59f20` + `85f126a7b8` — peer `docs(plans):` sports frontmatter dedup + defi audit §6
+Jupiter closeout, neither touches my plan) → ahead=0/behind=0, HEAD `85f126a7b8`. Step-1 audit: stash 40→39
+(foreign-session managed, not touched); dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9 issue ref +
+my plan's intentional/recoverable `/tmp/watch_rebuild_terminal.sh` refs (embedded inline at line 688); scratchpad new
+task outputs (`b9kaquv47` 21:51 = transient 0-byte already gone, `bbtvh446j` 19:48 = stale pre-launch watcher output
+pre-dating `-204358` launch, `btmsjp1fc` = live watcher, all regenerable) — deliberate drops. No chat-only findings, no
+new lessons this tick (prior rituals' Step-6 lessons already journaled). Nothing to finish/ship: no uncommitted work of
+mine on disk.
+
+**Seventeenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h36m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at ~21:57Z (direct gcloud 21:56Z, RUNNING count = 1; watcher tick 21:53:57Z, watcher PID 1840594
+alive, ~1h36m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: porcelain empty, HEAD `7b58218d38`,
+ahead=0/behind=0 (post-fetch). Step-1 audit: dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9 issue
+ref + my plan's intentional/recoverable `/tmp/watch_rebuild_terminal.sh` refs (embedded inline at line 688); scratchpad
+new task outputs (`bikgq74g4` + `bp9burubj` 21:56 = transient 0-byte this-turn check outputs, `btmsjp1fc` = live
+watcher, `bypmnajbx` = secret scan already triaged clean) — deliberate drops. No chat-only findings, no new lessons this
+tick (prior rituals' Step-6 lessons already journaled). Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Eighteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h41m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at ~22:02Z (direct gcloud confirms RUNNING; watcher last tick 21:59:09Z, watcher PID 1840594
+alive, ~1h41m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: this turn began behind=2 (peer issue-doc
+Progress Log commits `8ac1ed2dc8` + `c5070a06dd`, neither touches my plan) → ff-pulled to `8ac1ed2dc8`,
+ahead=0/behind=0, porcelain empty. Step-1 audit: dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9
+issue ref + my plan's intentional/recoverable `/tmp/watch_rebuild_terminal.sh` ref (embedded inline at line 688);
+scratchpad (`bbw10tkac` 21:59 = 17th ritual's safe-doc-push log, known exit-9, already triaged; `bnhtzauee` 22:01 =
+transient 0-byte this-turn check output; `bfjpzshm8` 20:59 = regenerable scratchpad listing dump; `btmsjp1fc` = live
+watcher; `bypmnajbx` = secret scan already triaged clean) — deliberate drops. Prek patches: only the known foreign
+`1786399150749-3708276.patch` (17th-ritual exit-9, already triaged as foreign-session) + peer sessions' stashes — none
+mine, left untouched. No chat-only findings, no new lessons this tick (prior rituals' Step-6 lessons already journaled).
+Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Nineteenth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h46m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at ~22:06Z (direct gcloud confirms RUNNING; watcher last tick 22:04:22Z, watcher PID 1840594
+alive, ~1h46m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: this turn began behind=2 (peer commits
+`d7d6b4976e` slot-18 GATED re-check on cefi deribit futures_chain + `8b4c16dfcf` slot-16 bucket_iam finalize re-verify,
+neither touches my plan) → ff-pulled, ahead=0/behind=0, porcelain empty. Step-1 audit: dangling-ref grep re-confirms
+only the PRE-EXISTING archived slot-9 issue ref + my plan's intentional/recoverable `/tmp/watch_rebuild_terminal.sh` ref
+(embedded inline at line 688); scratchpad (`b48c679im` 22:06 = transient 0-byte this-turn check output; `btmsjp1fc` =
+live watcher, script recoverable; rest = already-triaged drops from prior rituals) — deliberate drops. Prek patches
+(`1786396156606-647721.patch` slot-peer issue-archive, `1786396089176-583299.patch` slot-peer execution_scope add) +
+earlier stashes — all foreign-session, none mine, left untouched. No chat-only findings, no new lessons this tick (prior
+rituals' Step-6 lessons already journaled). Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Twentieth /pre-compact re-check (2026-08-10, slot 3): gate holds at ~1h49m; tree clean; no new findings** — rebuild
+`-204358` still RUNNING at 22:09:31Z (direct gcloud confirms RUNNING; watcher last tick 22:09:33Z, watcher PID 1840594
+alive, ~1h49m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: this turn began behind=2 (peer commits
+`f62e9891a7` plan-commit-sha-evidence issue doc (fabricated sha citation) + `102e087c4e` docs-reconcile P3 flip vs
+widened backtick checker (baseline ratchet 24→23), neither touches my plan) → ff-pulled, ahead=0/behind=0, porcelain
+empty. Step-1 audit: dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9 issue ref + my plan's
+intentional/recoverable `/tmp/watch_rebuild_terminal.sh` ref (embedded inline at line 688); scratchpad (`bctp0x8oi`
+22:09 = transient 0-byte this-turn check output; `btmsjp1fc` = live watcher, script recoverable; `bbw10tkac` 21:59 =
+17th-ritual safe-doc-push output incl. orphaned-patch warning, `bzfjsl9tk`/`bfjpzshm8` = prior-ritual
+directory/scratchpad listings — all deliberate drops); no token-shaped files (prior secret scan clean). Prek patches +
+stashes — all foreign-session, none mine, left untouched. No chat-only findings, no new lessons this tick (prior
+rituals' Step-6 lessons already journaled). Nothing to finish/ship: no uncommitted work of mine on disk.
+
+**Twenty-first→Twenty-seventh /pre-compact re-checks (2026-08-10, slot 3) — CONSOLIDATED 2026-08-10 after the plan hit
+the 1000-line hard cap (gate-hold ticks compressed; durable facts preserved)** — rebuild `-204358` RUNNING continuously
+22:13Z→22:36Z (created 2026-08-10T20:01:23Z; watcher PID 1840594 alive throughout, ~5-min ticks). NO migration activity
+run across all seven; hold per BLK-6c04234a. Git each tick: fetch first → clean ff-only reconciliations → ahead=0/
+behind=0, porcelain empty; peer-commit drift absorbed (24th `7c2647a1ea`+`60ee614856` tradfi casing-test archival,
+`market-tick-data-service@5f037099`; 25th `21a0dc6017` Jupiter WS cassette flip, `unified-api-contracts@87001509fe`;
+26th `c4ecfb008d` dashboard-e2e-harness issue + `3cc48f5116` STANDINGS VM progress + `46134cc401` venue-year-coverage
+cefi SIGABRT; 27th `9eba60666f` sports DP-VM upstream-fixtures-gap issue + `b56f849270` slot-26's
+`defi_satellite_ao_dispatch_batch11_2026_08_10.md` flip) — all unrelated to this task; my `…_2026_08_09.md` untouched by
+the pulls. HEAD trajectory over the seven: `5be4001624`→`d669898f16`→`60ee614856`→`21a0dc6017`→`c4ecfb008d`→
+`b56f849270`. Step-1 audits each tick: dangling-ref grep unchanged (only PRE-EXISTING journal refs + my plan's
+intentional/recoverable `/tmp/watch_rebuild_terminal.sh` ref at line 688); scratchpad transients all dropped
+(`bs38g3jj1`/`bdp5qznr9`/`bkj8vk5dd`/`bv8wqddy3`/`buk82hdxa`/`bwuqpq95u`/`b4moym4cw`/`b9f6uoib8`/`bcjnbr2er`/
+`bkwpdbxqt`/`b44qi5q60`/`bwfsfv3o4`/`b93iz4ige` — 0-byte this-turn check outputs; `btmsjp1fc` live watcher regenerable,
+script embedded at line 688; `bypmnajbx` = prior secret-scan LOG, not live); no token-shaped files. gc warning surfaced
+every fetch — not mine to prune on a shared `.git`. No chat-only findings, no new lessons, nothing shipped to flip,
+nothing uncommitted across all seven ticks. **LESSON (2026-08-10): gate-hold ritual entries creep the plan toward the
+1000-line hard cap — when appending a new entry, consolidate prior gate-hold ticks instead of appending verbatim.**
+
+**Twenty-eighth…Thirtieth /pre-compact re-checks (2026-08-10, slot 3, condensed for cap): gate held ~2h40m→2h50m; tree
+clean; behind-N reconciled (ff-only, my plan untouched)** — rebuild `-204358` still RUNNING ~22:41-22:52Z (watcher PID
+1840594 alive, healthy ~5-min cadence). NO migration; hold per BLK-6c04234a. Git each turn: behind=2/1/5 peer commits in
+OTHER files (`60385b91a6`, `8efa12285f`+`481ffe62d7`, `3746a521f3`+`3ee4ac6304`+3 — slot-7 flips / STANDINGS / zksync
+citation), ff-only pull → ahead=0/behind=0, porcelain empty. Step-1 audit clean (dangling refs = pre-existing + line-688
+watcher ref); scratchpad drops `bh4e6gdgp`/`bv7vsbyp2`/`b5n8lf02k`/`bmoglni8x`; secrets clean. **Lesson (29th):
+transient ahead=1 right after fetch on a busy shared checkout = peer-push race — verify via reflog +
+`merge-base --is-ancestor` before treating as a lost commit, never force-push.**
+
+**Thirty-first…Thirty-fifth /pre-compact re-checks (2026-08-10, slot 3, condensed 39→5 lines for cap): gate held
+~3h→3h23m; tree clean throughout** — rebuild `-204358` RUNNING through ~23:22Z (watcher PID 1840594 alive, healthy
+~5-min cadence, ticks 31-36); NO migration; hold per BLK-6c04234a. Each turn: behind-N peer commits (slot-7 flips /
+STANDINGS / batch9, all in OTHER files) reconciled via ff-only pull → ahead=0/behind=0, porcelain empty, my plan
+untouched; Step-1 audit clean (dangling refs = pre-existing + recoverable line-688 watcher ref); scratchpad drops
+`b7l4qtoc9`/`bht5r7aeu`/`blan3jzha`/`b2a5qcva7`/`biwl9bixy`/`bfip9b1gp`; secret scan clean; no chat-only findings.
+
+**Thirty-sixth /pre-compact re-check (2026-08-10, slot 3): gate holds ~3h32m; 35th push landed + reconciled** — pushed
+`unified-trading-pm@b38582ceb5` (attempt 4/6, 3 reconcile-retries; exit-9 orphaned-prek-patch
+`1786404679413-660590.patch` = PEER edit `sports_af_completion_pass_2026_08_10.md` 8+/2−, PRESERVED in patch +
+`stash@{0}`, not applied/deleted); ff-pull peer `8a561c3ed0` (cross_cutting flip) → ahead=0/behind=0, porcelain empty.
+Rebuild `-204358` RUNNING (tick 38 @23:33:01Z); NO migration; hold BLK-6c04234a. Audit: dangling-refs unchanged;
+`b5u9dl9cf` drop; secrets clean.
+
+**Thirty-seventh /pre-compact re-check (2026-08-10, slot 3): rebuild `-204358` reached TERMINAL (watcher fired
+23:43:37Z) — but the FULL DRAIN gate (BLK-6c04234a) is NOT yet satisfiable, `--apply` stays gated** — watcher
+`btmsjp1fc` tick 40 TERMINAL @23:43:37Z (no defi-rebuild instance RUNNING/PENDING). Verified terminal via
+`deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-rebuild-20260810-204358/`:
+`EXIT_STATUS`=`0`, `run.log` final line `[[VM_PROGRESS]] last_completed_date=2026-12-31 monotonic=true` (chunk 5 scanned
+2026-11-23..2026-12-31; the 0-shard future windows are expected — today is 2026-08-10), `LAUNCH_PARAMS.json` confirms
+`RESUME_MODE=full` 2025-11-28→2026-12-31. BUT full drain per BLK-6c04234a is NOT met: ~164 `mdps-defi-*` VMs are RUNNING
+(MDPS batch candle-aggregation backfills, 2022/2023/2026 defi, run.log `availability_index` hits confirm they ARE defi
+manifest writers feeding the every-minute consolidator) + `uts-prod-manifest-consolidator-market-data-defi-cron` is
+still ENABLED (every-minute, NOT paused). Per BLK-6c04234a's "no in-flight defi manifest writer AND the every-minute
+consolidator paused" — launching `--apply` now would race 164 concurrent defi manifest writers, exactly what the ruling
+forbids. NO migration launched. Next gate = mdps-defi fleet drain (no RUNNING) + consolidator settle → then the recipe
+(drain → fresh retention cite → day-batched `--apply`). Re-arm recipe: family watcher is done (exited 0); new condition
+is `mdps-defi-*` fleet terminal — re-create watcher script scoped to `mdps-defi-` prefix (same shape as line-688
+script). **Lessons (37th window, measurement traps — cost ~20 tool calls to discover):** (1) `gsutil`/`gcloud storage`
+CLI is HOOK-BANNED for GCS object ops even for READS — use UTL `cloud_interface`
+(`get_storage_client().bucket(b).list_blobs( prefix=...)`, `gcs_describe_object`, `gcs_read_object_range`,
+`resolve_bucket_name`). (2) VM terminal evidence (`run.log`, `EXIT_STATUS`, `PROGRESS.json`, `LAUNCH_PARAMS.json`) lives
+in the **`deployment-scripts-{pid}` bucket** under `vm-logs/{vm}/`, NOT the per-asset-group tick bucket
+(`market-data-tick-defi-prd-{pid}`) — reading the wrong bucket returns "no blobs" and is a FALSE "no progress" signal
+(the defi tick bucket holds only data, no vm-logs). (3) Watcher "no instance running" ≠ done — ALWAYS verify
+`EXIT_STATUS`=`0` + the final `[[VM_PROGRESS]] last_completed_date=<END_DATE>` marker in run.log (the mid-run-delete
+incident proved absence ≠ completion). (4) `mdps-defi-*` VMs ARE defi manifest writers (run.log `availability_index`
+hits) — they count against the full-drain gate, not just the canonical-migration-defi-rebuild family.
+
+**Thirty-eighth /pre-compact re-check (2026-08-11, slot 3): no state change — rebuild terminal stands, full drain still
+NOT met; `--apply` stays gated** — mdps-fleet watcher `bihvw0oqv` still ticking (~160 `mdps-defi-*` RUNNING, no terminal
+— fleet drain is the outstanding gate per BLK-6c04234a); consolidator
+`uts-prod-manifest-consolidator-market-data-defi-cron` still ENABLED. NO migration activity. Git: ahead=0/behind=0,
+porcelain empty, HEAD `fbb595dc62` (37th lessons push). Audit clean: dangling refs = pre-existing + recoverable line-688
+watcher ref; scratchpad drops `btmsjp1fc` (retired rebuild watcher, done) + live `bihvw0oqv` (regenerable, recipe in
+37th entry); secrets clean. No chat-only findings; no new lessons (35th-ritual condense is the recurring cap-pressure
+lesson, already recorded).
+
+**Thirty-ninth /pre-compact re-check (2026-08-11, slot 3): no state change — fleet still draining, `--apply` stays
+gated** — mdps-fleet watcher `bihvw0oqv` still ticking (last tick 00:07:08Z, no TERMINAL); fresh count 155 `mdps-defi-*`
+RUNNING (down from ~164 at 38th — fleet IS draining, not yet empty); consolidator
+`uts-prod-manifest-consolidator-market-data-defi-cron` unchanged ENABLED per 38th (job not re-located this tick under
+central-element-323112/europe-west1 — re-verify at gate time). Rebuild `-204358` terminal stands. NO migration. Git:
+ahead=0/behind=0, porcelain empty, HEAD `bb1d532e1c` (38th push; ff-pulled peer tradfi_smoke issue doc). Audit clean:
+dangling refs = pre-existing + recoverable line-688 watcher ref; scratchpad drops `/tmp/pw_read_progress.py` (purpose
+fulfilled — terminal evidence already committed) + live `bihvw0oqv` (regenerable, recipe in 37th entry, line-688 shape);
+secrets clean; no chat-only findings; no new lessons.
+
+**Fortieth /pre-compact re-check (2026-08-11, slot 3): no state change — fleet still draining, `--apply` stays gated** —
+mdps-fleet watcher `bihvw0oqv` still ticking (last tick 00:07:08Z); fresh count 152 `mdps-defi-*` RUNNING (down from 155
+at 39th — draining, not empty); consolidator `uts-prod-manifest-consolidator-market-data-defi-cron` unchanged ENABLED
+(re-verify at gate time). Rebuild `-204358` terminal stands. NO migration. Git: ahead=0/behind=0, porcelain empty, HEAD
+`cfb4b6613e` (39th push). Audit clean: dangling refs = pre-existing + recoverable line-688 watcher ref; scratchpad drops
+`pw_*`/`defi_docs`/`grace_defi*` prose dumps (unreferenced) + `/tmp/pw_read_progress.py` (purpose fulfilled) + live
+`bihvw0oqv` (regenerable); `ffpulltokens.M8PY67` = slot ff-pull cron's ACTIVE automation token (mode 600, ref
+`slot-cron-ff-pull.sh`) — intentionally NOT touched; 40 parked stashes foreign. No chat-only findings; no new lessons.
+⚠️ Plan now ~993/1000 — next tick MUST condense 35th-38th-era journal entries (recurring cap-pressure rule).
+
+## Deferred work after 2026-08-10
+
+| Item                                                         | State / why deferred                                                                                                                                                                                                                                                                                                                                                          | Blocked-on                                                                                                              |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| SUSHISWAP `--apply` migration (this todo)                    | **Cannot be done yet** — rebuild `-204358` REACHED TERMINAL (verified 23:43Z, EXIT_STATUS=0 + run.log 2026-12-31 marker), but full drain per BLK-6c04234a NOT met: ~152 `mdps-defi-*` defi-manifest-writer VMs still RUNNING + `uts-prod-manifest-consolidator-market-data-defi-cron` still ENABLED — must drain (no RUNNING mdps-defi) + pause consolidator before `--apply` | mdps-defi fleet drain + consolidator settle/pause; operator delete-intent attribution BLK-13334ded (`operator_pending`) |
+| Operator attribution of the `-180141` delete                 | **Operator-owned** — BLK-13334ded pending: did a Claude Code session on the operator's Mac deliberately delete the rebuild VM to unblock SUSHISWAP?                                                                                                                                                                                                                           | Human operator decision (issue doc `claude_code_agent_deletes_active_canonical_migration_vm_2026_08_10.md` todos 1-3)   |
+| Alert/guard for non-SA delete of `canonical-migration-*` VMs | **Not done** — filed as issue-doc todo (P0), not this task's scope                                                                                                                                                                                                                                                                                                            | AO/deployment-service dispatch                                                                                          |
+| Intent-marker for operator-principal VM deletes              | **Not done** — filed as issue-doc todo (P0)                                                                                                                                                                                                                                                                                                                                   | AO/deployment-service dispatch                                                                                          |
+
+**Recommended next item when resumed**: rebuild `-204358` terminal is DONE (verified) — the remaining gate is the FULL
+DRAIN: wait for the ~152 `mdps-defi-*` fleet to reach terminal (no RUNNING; arm a `mdps-defi-`-scoped watcher, same
+shape as the retired line-688 script) AND the every-minute consolidator
+(`uts-prod-manifest-consolidator-market-data-defi-cron`) to settle, then pause it; then fresh
+`gcs_bucket_soft_delete_retention_seconds()` ≥604800s cite → `defi-sushiswap-retire --apply` (day-batched via
+`--limit-days` per the 9.4× scope) → verify canonical twins + manifest retirement → flip checkbox → `/done`. The
+migration launcher (`deployment-service@e67c9692`) and all prep are already shipped.

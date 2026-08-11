@@ -33,7 +33,7 @@ scope: [engineer, admin]
 tags: [monitoring, alerting, data-pipeline, observability, escalation, dp-fetch-009, dedup, orchestrator-capacity]
 related:
   [
-    /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
+    /plans/archive/2026_08/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -53,7 +53,7 @@ depends_on: []
 locked_by:
 context_scope:
   [
-    /plans/active/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
+    /plans/archive/2026_08/issues/cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md,
     /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

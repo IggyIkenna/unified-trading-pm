@@ -13,13 +13,13 @@
   `/codex/05-infrastructure/per-tab-worktrees.md`.
 - **Agent memory is BANNED (HARD RULE)**: never write to `memory/` or `MEMORY.md` — it's per-cwd, not inherited, and
   causes drift. Session findings go to the plan's Progress Log only.
-- **Before any task (HARD RULE)**: grep `plans/active/`+`issues/` for conflicts first (0 hits ≠ clear). **Grep-then-
-  READ**: 0 hits ≠ missing (runtime-resolved) — read the consumer; uncertain → ASK. Never `python3 <<EOF` for file
-  analysis (backtrack risk) — use `rg`/`grep`.
-- **Batch independent tool calls into ONE turn** (same response) — never fire single-lookup Reads/Greps/Bash calls one
-  per turn when they have no dependency on each other; also compound `&&`/`;` Bash and prefer `replace_all` over serial
-  Edits. Measured: only ~11% of fleet turns batch >1 call, and 57.3% of calls sit in collapsible same-tool chains, each
-  re-sending the full cache-read context. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+- **Before any task (HARD RULE)**: grep `plans/active/`+`issues/` for conflicts first (0 hits ≠ clear). **CLAIM ≤
+  MEASUREMENT**: 0 hits ≠ missing (runtime-resolved) — read the consumer; a PROXY (line count, exit 0, green test) ≠ the
+  property — measure or say you didn't; uncertain → ASK. SSOT:
+  `/codex/12-agent-workflow/measurement-claims-discipline.md`. Never `python3 <<EOF` for file analysis — use `rg`.
+- **Batch independent tool calls into ONE turn** (same response) — never fire single-lookup Reads/Greps/Bash one per
+  turn when they have no dependency; compound `&&`/`;` Bash; prefer `replace_all` over serial Edits. Measured: ~11% of
+  turns batch >1, 57.3% of calls collapsible. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
 
 ## Quality gates / tests — the ONLY way to run them
 

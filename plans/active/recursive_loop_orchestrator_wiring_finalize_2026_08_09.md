@@ -64,7 +64,7 @@ context_scope:
       described but never actually written as a checkbox. Repo: unified-trading-pm. Done-when: the follow-up either
       doesn't apply (a poller was found and wired) or exists as a real tracked `- [ ]` todo. — unified-trading-pm.
       Independently re-verified 2026-08-09 (slot 29, review): the parent plan's todo 6 outcome is
-      `(b) no suitable     poller exists` (confirmed via the parent plan's own Progress Log + Todos section —
+      `(b) no suitable poller exists` (confirmed via the parent plan's own Progress Log + Todos section —
       `HealthFactorMonitor` has zero production callers, no Cloud-Scheduler endpoint exists); the required follow-up
       `[DESIGN]` todo IS a real trackable `- [ ]` checkbox in this same file (todo 4 below, "Decide + scope the RIGHT
       mechanism..."), not prose-only — confirmed via direct grep of the live file content, not a trust of the prior
@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -275,25 +275,46 @@ context_scope:
       pushes both key conventions, rebalance routes to `place_order` / NOT-WIRED without connector, app startup binds +
       tears down); full `quality-gates.sh` green (286s) on the committed HEAD.
 
-- [ ] [BACKEND] P2. Wire production fetch readers into `PerpHedgeFetchProvider` — `fetch_aave_data` → AAVEConnector
+- [x] ✅ [BACKEND] P2. Wire production fetch readers into `PerpHedgeFetchProvider` — `fetch_aave_data` → AAVEConnector
       `getUserAccountData` (keys `total_collateral_eth`/`total_debt_eth`), `fetch_exchange_rate` → LST protocol
       connector `get_exchange_rate`, `fetch_current_perp_size`/`fetch_available_margin`/`fetch_initial_margin_estimate`
       → `HyperliquidConnector` live position + clearinghouseState margin reads. Repo: execution-service. Done-when:
       provider returns real callables (no more `PerpHedgeFetchNotWiredError`); unit tests with mock RPC/HL responses;
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. — execution-service@8b96f87b0f. `PerpHedgeFetchProvider` now accepts `AAVEConnector`,
+      `HyperliquidConnector`, and an LST exchange-rate callable at construction time; `build_fetch_callables()` returns
+      real async callables delegating to connector read methods (NOT-WIRED stubs when a connector is None — honest,
+      never fabricated). `PerpHedgeFetchCallables` callables are now `Callable[[], Awaitable[X]]` (async, matching the
+      already-async dispatch_* pattern); `PerpHedgeMonitor` awaits them in `_tick()`. `app.py` instantiates
+      `AAVEConnector` + `LidoConnector` (LST exchange rate) and passes them + the wired `HyperliquidConnector` into
+      `PerpHedgeFetchProvider`. 7 new `TestPerpHedgeFetchProvider` tests with mock connectors (aave delegates,
+      exchange-rate delegates, perp-size delegates, available-margin delegates, initial-margin = equity −
+      available_margin, partial-wiring mix, NOT-WIRED when no connectors); 3 updated test files for async fetch
+      callables. Full `quality-gates.sh` green (201s) on the committed HEAD.
 
-- [ ] [BACKEND] P3. Wire USDC margin topup path: `hyperliquid_bridge.deposit_usdc_to_hyperliquid` for `TREASURY_HOT`
+- [x] ✅ [BACKEND] P3. Wire USDC margin topup path: `hyperliquid_bridge.deposit_usdc_to_hyperliquid` for `TREASURY_HOT`
       source (testnet/early-mainnet — COPPER_MPC/CEFFU_MPC remain gated per Group F item 19). Repo: execution-service.
       Done-when: topup instruction routes to a deposit building the correct approve+sendDeposit calls; unit tests with
       mock Arbitrum RPC; `quality-gates.sh` green. **LOW-CONFIDENCE bridge address noted** (`hyperliquid_bridge.py:17`
       `_HL_ARBITRUM_BRIDGE` — verify against current HL docs before mainnet). Wallet private-key custody
       (`CLOUD_KMS_ENCRYPTED` per defi-execution credential convention) stays a human-only hard-stop; this todo wires the
-      code path only.
+      code path only. — execution-service@fcafdbae4c. Added `build_hyperliquid_bridge_deposit` to
+      `defi_execution/wiring/hyperliquid_wiring.py` (reuses todo-12's `_resolve_credentials` for the treasury-hot wallet
+      creds from `hyperliquid-trade-key`, resolves the Arbitrum RPC via the injected `rpc_url` else the
+      `rpc_url__arbitrum__<provider>` secret convention; honest NOT-WIRED when creds/RPC absent) and bound it as
+      `RecursiveLoopOrchestrator(bridge_deposit=...)` at `app.py` startup so a TREASURY_HOT top-up instruction routes to
+      `deposit_usdc_to_hyperliquid` building the approve+sendDeposit deposit. 5 new tests: builder
+      wired/secret-missing/rpc-unavailable/not-json + an end-to-end `margin_topup`→approve+sendDeposit against a mock
+      Arbitrum RPC (web3 sys.modules mock) + app-startup orchestrator-binding assertion. Full `quality-gates.sh` green
+      (216s) on the committed HEAD.
 
-- [ ] [DESIGN] P3. Scoped follow-up plan for Bybit (secondary venue, 50% counterparty cap). Nothing exists today — HMAC
-      auth, USDC margin, new connector + bridge + instruction mapping, `depends_on`/`gate_on_depends` on the HL path's
-      instruction-mapping pattern from todo 11. Repo: execution-service. Done-when: a properly-scoped implementation
-      plan (same shape as todos 11–14) filed; gated on HL path being green.
+- [x] ✅ [DESIGN] P3. Scoped follow-up plan for Bybit (secondary venue, 50% counterparty cap). Nothing exists today —
+      HMAC auth, USDC margin, new connector + bridge + instruction mapping, `depends_on`/`gate_on_depends` on the HL
+      path's instruction-mapping pattern from todo 11. Repo: execution-service. Done-when: a properly-scoped
+      implementation plan (same shape as todos 11–14) filed; gated on HL path being green. — unified-trading-pm@<SHA>.
+      Filed `/plans/active/bybit_perp_hedge_execution_plan_2026_08_10.md`: 7 todos covering BybitPerpHedgeConnector
+      adapter (wrapping existing BybitCCXTAdapter), PerpHedgeConsumer _rebalance_guard extension, credential
+      hot-reloader + wiring module, app.py startup/shutdown binding, fetch-reader wiring, USDC topup honest interim
+      stub, and USDC deposit-automation follow-up. Gated on this parent plan (`depends_on` + `gate_on_depends: true`).
 
 ## Progress Log
 
@@ -453,3 +474,23 @@ context_scope:
   orchestrator stays connector-less (honest NOT-WIRED, never fabricated execution). 18 wiring tests green (incl. app
   startup binds + tears down); full `quality-gates.sh` green (286s) on the committed HEAD. `close()` in the todo text
   maps to the connector's `disconnect()` (the BaseConnector abstract lifecycle method).
+- **2026-08-10 (slot 22, backend_engineer)**: Todo 14 shipped — `execution-service@fcafdbae4c`. Wired the USDC margin
+  top-up path: `build_hyperliquid_bridge_deposit` in `wiring/hyperliquid_wiring.py` binds the treasury-hot wallet
+  credentials (reusing todo-12's `_resolve_credentials` / `hyperliquid-trade-key` blob) + an Arbitrum RPC URL (injected
+  `rpc_url`, else the `rpc_url__arbitrum__<provider>` secret convention) into `deposit_usdc_to_hyperliquid`;
+  `app.py._start_perp_hedge_monitors` binds it as `RecursiveLoopOrchestrator(bridge_deposit=...)` so a TREASURY_HOT
+  top-up routes to the real approve+sendDeposit deposit. Missing creds/RPC → honest NOT-WIRED (never a fabricated
+  deposit; wallet custody stays a human-only hard-stop). 5 new tests (builder wired / secret-missing / rpc-unavailable /
+  not-json + an end-to-end `margin_topup`→approve+sendDeposit against a mock Arbitrum RPC + app-startup
+  orchestrator-binding assertion). Full `quality-gates.sh` green (216s) on the committed HEAD, verified as an ancestor
+  of `origin/live-defi-rollout`.
+  - **2026-08-10 (slot 13, backend_engineer)**: Todo 15 shipped — filed
+    `/plans/active/bybit_perp_hedge_execution_plan_2026_08_10.md` (7 todos, `depends_on` + `gate_on_depends: true` on
+    this plan). Scoped from code evidence: `BybitCCXTAdapter` (`bybit_ccxt.py`) already has live
+    `place_order()`/`get_positions()`/`get_account_state()` via CCXT with HMAC key+secret auth — the plan wraps it with
+    a thin `BybitPerpHedgeConnector` adapter rather than building a native connector from scratch (P3 secondary venue;
+    the adapter IS the seam). Todos cover: connector adapter (todo 1), `PerpHedgeConsumer._rebalance_guard()` extension
+    (todo 2), credential hot-reloader + wiring module mirroring `hyperliquid_wiring.py` (todo 3), `app.py`
+    startup/shutdown binding (todo 4), fetch-reader wiring into `PerpHedgeFetchProvider` (todo 5), USDC topup honest
+    interim stub (todo 6), USDC deposit-automation follow-up plan (todo 7). All 14 prior todos were already `[x]` — this
+    was the last open item.

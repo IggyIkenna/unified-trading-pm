@@ -116,3 +116,10 @@ drift_direction: advance-docs
   Live re-verification found the plan's premise half-stale: the resolve_bucket_name() bypass is still real (21 files),
   but the "two-point AWS-lane breakage" it named alongside it had already been fixed 2026-08-07 in a different issue doc
   — recorded accordingly rather than duplicating closed work.
+- **2026-08-11 (plan_reconciler agt-24f6e5)**: Reconciliation pass. Todo 2 (AR/ECR vulnerability scan) — confirmed still
+  genuinely open: corpus-wide grep finds no evidence of investigation beyond this doc and its source. Todo 3 (VM origin
+  correction) — target issue doc `deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md` is
+  archived+resolved at `plans/archive/issues/`; SOFT-evidence of moot-ness (archived=closed, content reads accurate on
+  spot-check) but no HARD verification of whether the claimed misattribution was corrected before archival. Source doc
+  (`artifact_pipeline_observability_2026_07_17.md`) is grace-blocked this run — cannot flip its corresponding checkbox.
+  Full findings: `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`.

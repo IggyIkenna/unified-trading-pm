@@ -40,7 +40,7 @@ codex_ssots:
 related_plans:
   - ../active/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
-  - ../active/ao_satellite_ao_dispatch_batch10_2026_08_09.md
+  - ../archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch12_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
@@ -454,7 +454,7 @@ capability — revert false-done claims + patch small fixes
 **status**: active · **estimate**: 0.16 cal AI-days (class: refactor) **title**: audit-false-done 14 false-done rows +
 1,013 unresolved plan_refs — finalize
 
-### [`ao_satellite_ao_dispatch_batch10_2026_08_09`](../active/ao_satellite_ao_dispatch_batch10_2026_08_09.md)
+### [`ao_satellite_ao_dispatch_batch10_2026_08_09`](../archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO satellite AO batch 10 — 6 bounded items
 extracted from 3 non-qualifying `ao`-tranche NA docs

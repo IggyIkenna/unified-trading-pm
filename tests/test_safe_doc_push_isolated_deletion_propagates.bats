@@ -43,6 +43,11 @@ _run_iso_copy_decision() {
 }
 
 setup() {
+  # Tests must NOT take a host-wide lock. push-host-governor.sh hands out K=8 tokens PER HOST,
+  # shared with real safe-doc-push runs, so under `bats -j` these contended with each other AND
+  # with a peer session's genuine push — exit codes became a function of unrelated fleet
+  # activity. One run green, the next red, the failure moving between tests.
+  export PUSH_GOV_DISABLE=true
     TEST_ROOT="$(mktemp -d)"
     export TEST_ROOT
     BRANCH="live-defi-rollout"

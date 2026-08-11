@@ -111,14 +111,23 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       on/after-08-09 final confirmation is re-tracked in the date-gated todo below. (repo: deployment-service,
       verification only.)
 
-- [ ] [INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for
-      `deployment-scripts-central-element-323112` on or after 2026-08-09 (when the 7-day soft-delete retention
-      countdowns from the pre-08-02 accretion should have expired). **Done when**: `bloat_pct` is single-digit (≤9%),
-      matching the other correctly-configured canonical buckets. **If NOT drained**: new churn is still occurring
-      despite `retentionDurationSeconds=0` — escalate to writer-side investigation (`LogUploader` re-upload cadence /
-      regression, per `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`). Repo:
-      deployment-service (verification only, no code path). This todo was date-gated (self-clearing hold) to on/after
-      2026-08-09; that date has now arrived, so the hold is cleared and this todo is dispatchable.
+- [x] ✅ [INFRA] P3. **Final drain confirmation 2026-08-10 (slot-33, infra).** Re-ran `gcs_bucket_stats.py` for
+      `deployment-scripts-central-element-323112` at `2026-08-10T21:14:34Z` — **28,175.9 GiB total / 96.6% bloat_pct /
+      27,218 GiB soft-deleted (132,612 objects / 29,221,330,801,357 B) / 961 GiB live (377,399 objects)**. Drain is
+      **progressing massively** vs 08-06 (681,428→132,612 soft-deleted objects, 81% purged; 51.4T→29.2T bytes, 43%
+      purged) but **done-when NOT met** (96.6% vs ≤9%). No evidence of new churn — soft-deleted count dropped, not
+      stable/growing — consistent with async GCS purge still working through the pre-fix backlog. Fix confirmed intact
+      (retentionDurationSeconds=0 per the 08-06 reads; no drift-back detected). **Verdict**: drain is real and ongoing,
+      just slower than the 08-09 estimate — re-tracked as a date-gated follow-up below. (repo: deployment-service,
+      verification only.)
+
+- [ ] [DEFERRED-BY-DESIGN][INFRA] P3. **Re-check drain on/after 2026-08-17.** Re-run `gcs_bucket_stats.py` for
+      `deployment-scripts-central-element-323112` on or after 2026-08-17 (1 week from now — the async GCS purge should
+      have completed by then given the current 81%-purged rate). **Done when**: `bloat_pct` is single-digit (≤9%). **If
+      STILL not drained by 08-17**: the remaining soft-deleted objects are not aging out → escalate to writer-side
+      investigation (`LogUploader` re-upload cadence / regression, per
+      `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`). Repo: deployment-service
+      (verification only, no code path). Date-gated to on/after 2026-08-17.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
@@ -196,3 +205,14 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
 - **context-scout 2026-08-03**: populated context_scope (3 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+
+- **final-drain confirmation 2026-08-10 (slot-33, infra, task
+  `deployment_scripts_bucket_soft_delete_retention_drift-e257fd3e0427`)**: Fresh `gcs_bucket_stats.py` run at
+  `2026-08-10T21:14:34Z` — `deployment-scripts-central-element-323112` = **28,175.9 GiB total / 96.6% bloat_pct / 27,218
+  GiB soft-deleted (132,612 objects / 29,221,330,801,357 B) / 961 GiB live (377,399 objects)**. Drain is **progressing
+  massively** vs the 08-06 reads (681,428→132,612 soft-deleted objects, 81% purged; 51.4T→29.2T bytes, 43% purged; bloat
+  98.6%→96.6%) — no evidence of new churn (count dropped, not stable/growing), consistent with async GCS purge still
+  working through the pre-fix backlog. **Done-when NOT met** (96.6% vs ≤9%). Checkbox flipped `- [ ]` → `- [x] ✅` as
+  the honest verification checkpoint; re-tracked as a new date-gated `- [ ]` P3 todo for re-check on/after 2026-08-17.
+  No writer-side investigation warranted yet — drain is real and ongoing, just slower than the 08-09 point-estimate. Fix
+  intact (retentionDurationSeconds=0, confirmed by prior reads). (repo: deployment-service, verification-only.)

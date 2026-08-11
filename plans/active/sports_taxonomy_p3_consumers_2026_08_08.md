@@ -604,3 +604,59 @@ spelling variant survives, which is the entire point of the panel". It does not.
   - `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`, flip this checkbox with evidence
     (coverage delta 0.0% → 5.7%/17.2%/15.6% non-null already measured; perf delta pending), and `/done`
     (`sports_taxonomy_p3_consumers-cf4d5df0dd61`). Prior entry above (efca9c56bc) carries the tarball sha + VM names.
+
+- **2026-08-10 (slot 26, data_engineering→backend_engineer)** — ML § T-2h/T-6h MODEL-horizons todo: 5th-attempt VMs
+  terminal. **4 of 5 FAILED identically** (2a/2b/2c/2d, ~4h runtime, TERMINATED 20:46Z):
+  `ValueError: Input X contains NaN` in `SklearnTrainer.train()` at `model_trainer_factory.py:258` — the sklearn
+  `HuberRegressor` (ensemble weight=0.15) rejects NaN natively. CatBoost/XGBoost/LightGBM all trained fine (they
+  tolerate NaN). Root cause: heterogeneous per-date feature concatenation produces all-NaN columns when a feature family
+  only exists for some dates; the earlier CatBoost NaN fix (`9b68494b76`) only covered NaN in TARGETS, not features.
+  **Fix shipped: `ml-service@f0e0a61981`** — `SklearnTrainer._drop_all_nan_columns()` drops columns where every training
+  value is NaN (lossless — zero signal) before `model.fit()`, aligns `x_val`. 3 regression tests. QG green, quickmerge
+  landed on LDR, ancestry verified. **model_2e** (T-2h, 2019-2025 range) still RUNNING, still in feature-loading phase
+  (hasn't reached training yet — will hit same NaN if it does). **Retrain must be re-launched** on a fresh tarball
+  carrying this fix to produce the measured coverage + performance delta. Horizon-declaration code (the checkbox's code
+  half) was already shipped (slot-11: `ml-service@8af9324`, `features-service@3394de8`). Checkbox stays unflipped per
+  prior entry — retrain evidence still pending. This session closes the dispatch with the NaN root-cause fix shipped;
+  the retrain is unblocked for the next dispatch.
+
+- **2026-08-11 (slot 10, data_engineering→backend_engineer)** — ML § PATH-PREFIX loader-migration todo: **THIRD
+  premature dispatch** (slots 22 + 15 documented the first two on 2026-08-09). Re-verified live on 2026-08-11, not just
+  re-read from this doc: P2 (`sports_taxonomy_p2_migration_2026_08_08.md`) is STILL 17 open / 0 done — the "Consumer
+  enumeration" P0 gate and the "Move `odds_horizon_bucket` (135,980 shards) onto the `odds` + `horizon` model" re-stamp
+  todo are both still unchecked; MDPS `bucket_assignment_adapter.py:696` still hard-codes
+  `data_type = "odds_horizon_bucket"` (no commit has moved the physical write side — the most recent sports-adapter
+  commits are the arbitrage retirement `5afb72a`/`23a1306` and the horizon-bucket-NAME derivation `3e0fb85`, not a path
+  re-stamp); no `horizon=` GCS path segment exists anywhere in MDPS/features-service/UAC; and the reader-side consumer
+  the loader mirrors (features-service `gcs_reader.read_bucketed_odds`) STILL probes the same `odds_horizon_bucket`
+  canonical + legacy prefixes — its `horizon` param filters the `horizon_name` VALUE, not a `horizon=` path axis. There
+  is still no new canonical shape for the loader to "move onto" — the todo's own text ("must move in the same change as
+  the rename per the codex rename rule") makes it a joint change with P2's re-stamp, which has not landed. Skipped
+  (`reason_code: GATED`, `park_now: true` → re-armed the `auto_unpark__sports_taxonomy_p3_consumers-13983a72aba5`
+  condition) rather than fabricate a speculative path shape nothing writes yet (would silently break
+  `_load_odds_event_teams`' event_id→fixture_id crosswalk) or no-op the todo. **Operator/review note**: this task
+  re-dispatched despite slot-15's durable park — either the unpark condition was cleared or the park is not holding for
+  this task. The slot-15 recommendation still stands: wire `depends_on` + `gate_on_depends` from THIS P3 todo onto P2's
+  re-stamp todo so it stops re-dispatching until the rename lands.
+
+- **2026-08-11 (slot 30, backend_engineer)** — ML § PATH-PREFIX loader-migration todo: **FOURTH premature dispatch**
+  (slots 22, 15, 10 prior). Re-verified live, not re-read from the doc: P2
+  (`sports_taxonomy_p2_migration_2026_08_08.md`) is STILL 17 open / 0 done — the "Consumer enumeration" P0 gate and the
+  `odds_horizon_bucket`→`odds`+`horizon` re-stamp todo are both still `- [ ]`; MDPS
+  `bucket_assignment_adapter.py:687/696` STILL registers + writes `data_type = "odds_horizon_bucket"`; zero `horizon=`
+  GCS path segment anywhere in MDPS/features-service/UAC; ml-service `sports_feature_loader.py:35-37`
+  `_ODDS_BUCKETED_PREFIXES` is byte-identical to the todo's description. No new canonical shape exists to move onto —
+  the todo's own text ("must move in the same change as the rename") makes it a joint change with P2's re-stamp. Skipped
+  again (`reason_code: GATED`, `park_now: true`). **Root-cause finding on the repeated re-dispatch (NEW this dispatch —
+  neither prior note had it)**: the durable park is structurally NOT landing. The skip response returned
+  `auto_parked_condition: null`, and `GET /api/backlog/{id}/blockers` shows only the transient fleet cooldown — no
+  `auto_unpark__...` prereq — with the live backlog row at `priority: 20`.
+  `agent-orchestrator/data/config/backlog.yaml`'s entry for this task is regen-clean (`priority: 20`,
+  `priority_override: false`, `prereqs.prerequisites: []`) — the documented `backlog_regen_drops_handtuned_prereqs` gap
+  applies to this content-derived task even after the `@8dd5763` fix — while `auto_park.manual_park`'s idempotency guard
+  (`existing.parked_condition is not None`) makes every subsequent `park_now: true` skip a silent no-op against the
+  stale DB cooldown marker. Net: the park can never take, so the task re-dispatches to a fresh worker on every
+  regen/reload cycle. **Needs a server-side fix** (manual_park must rewrite the yaml park even when a stale
+  `parked_condition` exists, or regen must preserve the hand-tuned park) — out of scope for this worker task. Until
+  then, recommend: (a) an operator marks this task parked/done until P2's re-stamp lands, or (b) this todo moves INTO
+  the P2 plan alongside the re-stamp, which its own text already makes the correct home.

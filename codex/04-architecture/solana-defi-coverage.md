@@ -25,7 +25,7 @@ authoritative_for:
 referenced_by:
   [/codex/04-architecture/drift-v2-data-sources.md, /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
-last_reviewed: 2026-08-24
+last_reviewed: 2026-08-10
 code_refs:
 type: architecture
 ---
@@ -146,11 +146,11 @@ derives `tick_size = Decimal(str(bin_step)) / Decimal("10000")`. For example, `b
 
 ### Spot AMM/CLOB + Oracle (Plan C)
 
-| data_type        | Purpose                        | Sources                                 |
-| ---------------- | ------------------------------ | --------------------------------------- |
-| `spot_trades`    | Swap/trade events              | REST APIs (backfill deferred to MTDS)   |
-| `oracle_prices`  | Oracle price ticks (Pyth feed) | Pyth Hermes batch + PythNet live        |
-| `pool_liquidity` | AMM pool liquidity snapshots   | Meteora/Lifinity REST APIs (MTDS scope) |
+| data_type        | Purpose                        | Sources                                                                                                                       |
+| ---------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `dex_pool_swaps` | Swap/trade events              | Jupiter live connector SHIPPED 2026-08-08 (`market-tick-data-service@9e9c9817`); other venues' REST backfill deferred to MTDS |
+| `oracle_prices`  | Oracle price ticks (Pyth feed) | Pyth Hermes batch + PythNet live                                                                                              |
+| `pool_liquidity` | AMM pool liquidity snapshots   | Meteora/Lifinity REST APIs (MTDS scope)                                                                                       |
 
 ## Architecture Notes
 
@@ -177,7 +177,10 @@ Market data capture is MTDS responsibility:
 
 - METEORA: Meteora API for pool/swap data (batch + live); wired via backfill script skeleton
 - PHOENIX: Phoenix API for CLOB market/trade data; wired via backfill script skeleton
-- JUPITER: Swap route history via Jupiter API (batch + live)
+- JUPITER: Swap route history via Jupiter quote API — **live connector SHIPPED 2026-08-08**
+  (`live/connectors/jupiter_solana_ws.py`, `market-tick-data-service@9e9c9817`), registered as
+  `WS_FEED_CONNECTOR_FACTORIES["JUPITER-SOLANA"]`, `instrument_type=SPOT_PAIR`, `data_type=dex_pool_swaps`; batch
+  capture still deferred
 - LIFINITY: Lifinity pool metrics REST; batch only
 - PYTH: Hermes batch endpoint (`/v2/updates/price/latest`) for historical; PythNet live WebSocket for live
 
@@ -245,8 +248,9 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 | `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue) | API / SDK                          |
 
 > **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist nowhere
-> in code. Of this family only `restaking_rewards` is real. | `lst_rates` | Exchange rate (underlying SOL per receipt
-> token) | Stake pool state accounts |
+> in code. Of this family only `restaking_rewards` is real.
+>
+> | `lst_rates` | Exchange rate (underlying SOL per receipt token) | Stake pool state accounts |
 
 ### Jito Restaking (already shipped — Plan A)
 
@@ -321,6 +325,8 @@ market data capture. (MANGO/ZETA/FLASH removed 2026-07-15 — no longer applicab
 MTDS spot/oracle source wiring is **NOT IN PLAN C**. The backfill script skeleton
 (`instruments-service/scripts/backfill_solana_dex_swaps_2026_05_13.py`) is a dry-run skeleton — APPLY mode raises a
 warning until MTDS pipeline wiring is complete. Successor: MTDS Solana AMM/oracle pipeline wiring plan (not yet filed).
+JUPITER's live connector IS shipped (see "MTDS role" above, `market-tick-data-service@9e9c9817`) — this deferral applies
+to the batch/backfill path and to the remaining Plan C venues.
 
 ### MTDS Solana restaking source wiring (Plan E — restaking layer)
 

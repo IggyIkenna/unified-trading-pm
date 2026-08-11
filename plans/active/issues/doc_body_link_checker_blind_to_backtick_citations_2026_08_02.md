@@ -125,8 +125,11 @@ corpus actually uses was never brought into the checker's purview.
       entries, +17 net new vs. the pre-existing 11 markdown-link entries) per this item's own instruction; the
       individual unresolved citations are unfixed debt now tracked in the baseline, not silently swept. 7 new unit tests
       added covering resolve/broken/non-codex-scope/fence-exclusion/glob-safety.
-- [ ] [DOCS] P3. Regardless of which script fix is chosen: once shipped, re-run `/docs-reconcile`'s Phase 0/1 against
-      the newly-widened checker to catch whatever real breakage the wider scan surfaces.
+- [x] ✅ [DOCS] P3. Regardless of which script fix is chosen: once shipped, re-run `/docs-reconcile`'s Phase 0/1 against
+      the newly-widened checker to catch whatever real breakage the wider scan surfaces. — Re-ran 2026-08-10 (slot-23
+      infra): full-corpus Phase 0 green (2045 docs, zero NEW broken inline links); the 24-entry baseline triaged — 1
+      stale dropped (`--update-baseline`, 24→23), ~10 placeholder/illustrative noise (the P1 placeholder-exclusion
+      path), 13 genuine dead refs already tracked in `docs_reconcile_remaining_broken_links_2026_08_02.md`.
 
 ## Progress Log
 
@@ -177,3 +180,16 @@ corpus actually uses was never brought into the checker's purview.
   widened checker) is left open — different `[TAG]`/craft, out of this task's scope.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-10 (slot-23, infra worker)**: `[DOCS] P3` executed — re-ran `/docs-reconcile` Phase 0/1 against the
+  P2-widened checker. Phase 0: full-corpus `check_doc_body_links.py` green (2045 docs, zero NEW broken inline links
+  beyond the ratchet). Phase 1.5 triage of the 24-entry `doc_body_link_baseline.yaml`: 1 entry STALE (the
+  `sports-canonical-league-cup-registry` citation was removed from
+  `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — registry work now tracked as plan
+  todos, lines 206/468) → dropped via `--update-baseline` (ratchet 24→23); ~10 entries are angle-bracket/ellipsis
+  placeholders or audit self-classified FALSE-POSITIVEs (honest noise, the P1 placeholder-exclusion path); the remaining
+  13 genuine dead references (`/codex/04-architecture/README.md` ×4 +
+  `/codex/04-architecture/batch-live-architecture.md`, `/codex/06-coding-standards/README.md` ×3,
+  `/codex/06-coding-standards/ui-testing-layers.md`, `/codex/09-strategy/architecture-v2/README.md`,
+  `/codex/14-customer-journeys/shared-core/strategy-version-governance.md`, `/codex/README.md`, `mega_audit` R14) are
+  ALREADY open todos in `docs_reconcile_remaining_broken_links_2026_08_02.md` — no new findings to file. Confirms the
+  widened scan surfaces no NEW breakage beyond what P2 baselined + tracked.

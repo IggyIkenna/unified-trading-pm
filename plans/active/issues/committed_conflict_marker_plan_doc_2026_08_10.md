@@ -5,7 +5,7 @@ title:
   fire; concurrent same-file Progress-Log appends were the root cause
 summary: >-
   slot 31's commit unified-trading-pm@505bfe3ced (flip audit-plan todo 3) reached live-defi-rollout with committed
-  conflict-marker debris in `plans/active/multi_leg_execution_systems_audit_2026_08_10.md`: an orphaned mid-doc
+  conflict-marker debris in `plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md`: an orphaned mid-doc
   `=======` line + a trailing conflict-close marker line, a dropped todo-4 Progress-Log line ("live Pub/Sub leg."), and
   a garbled duplicate "Prediction-arb engines specifically" tail. Repaired inline by slot 18 (git-history ground truth)
   in the commit that ships that audit's todo 5. A conflict-marker gate EXISTS (`check_conflict_markers.sh`, wired into
@@ -23,9 +23,10 @@ scope: [engineer, admin]
 tags: [plan-hygiene, conflict-marker, concurrency, plan-authoring, shared-branch, hygiene-gate]
 related:
   [
-    /plans/active/multi_leg_execution_systems_audit_2026_08_10.md,
-    /plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
+    /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
+    /plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md,
     /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-10
 author: claude-code (slot 18, tradfi data_engineering, multi_leg_execution_systems_audit todo 5)
@@ -52,7 +53,7 @@ context_scope:
   [
     /scripts/plan-hygiene/check_conflict_markers.sh,
     /scripts/plan-hygiene/run_hygiene_sweep.sh,
-    /plans/active/multi_leg_execution_systems_audit_2026_08_10.md,
+    /plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md,
   ]
 ---
 
@@ -66,7 +67,7 @@ context_scope:
 ## What I found
 
 **Slot 31's commit `505bfe3ced` (flip audit-plan todo 3) shipped committed conflict-marker debris to
-`live-defi-rollout`** in `plans/active/multi_leg_execution_systems_audit_2026_08_10.md`:
+`live-defi-rollout`** in `plans/archive/2026_08/multi_leg_execution_systems_audit_2026_08_10.md`:
 
 1. An orphaned `=======` line (line ~238) inserted mid-Progress-Log, replacing the todo-4 entry's dropped final line
    ("live Pub/Sub leg.") — the parent commit (`1c3fe0f816`) shows the todo-4 entry correctly ended "...recommendation,

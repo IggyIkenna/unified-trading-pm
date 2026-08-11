@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [tardis, vm-launcher, concurrency, name-pattern, guard, tradfi, databento]
 related:
   [
-    /plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
+    /plans/archive/issues/tardis_concurrency_gate_hardening_2026_08_09.md,
     /plans/active/issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]

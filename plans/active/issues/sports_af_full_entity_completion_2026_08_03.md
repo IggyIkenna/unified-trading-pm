@@ -1015,3 +1015,35 @@ are genuinely in scope for the operator's "no exceptions" directive.
   stale-baseline reasoning slot 25's re-census (above) and the sibling paper-gate doc both applied. Declining to run the
   census this turn; skipping with `reason_code: GATED` + `park_now: true` so it stops re-dispatching to fresh workers
   until the INJURIES backfill terminates. No code/report changes; this Progress Log entry is the only change this turn.
+- **2026-08-11 (slot 19, `sports_af_full_entity_completion-9798da269f23` re-dispatch of the final re-census todo)**:
+  done-when STILL unmet — `af-backfill-20260810-162910` (STANDINGS all-383 completion pass, 2020-06-06→2026-08-10) is
+  RUNNING and GENUINELY progressing (PROGRESS.json `last_completed_date=2022-03-13` monotonic, updated 00:01:13Z live;
+  run.log tail shows active per-fixture STANDINGS work + fresh PIPELINE_HEARTBEAT — not a stale heartbeat). The two
+  other today VMs (`-154220`/`-160958`) are TERMINATED with no EXIT_STATUS blob (preempted/killed, not clean
+  completions). Running the 8-entity census now would capture a mid-backfill snapshot of STANDINGS (residual 271 at
+  slot-25 census), not the terminal convergence check — same rule-4a/slot-18/25 stale-baseline reasoning. Skipping
+  `reason_code: GATED` + `park_now: true`. **Unpark**: when `af-backfill-20260810-162910` terminates (running
+  `af-backfill-*` count == 0), re-run both census scripts + confirm all 8 entities stable ~0 / honest-absence floors,
+  then close this doc + notify operator. No code changes; Progress Log entry only.
+- **2026-08-11 (slot 23, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet — slot-19
+  VM `af-backfill-20260810-162910` TERMINATED, but its STANDINGS all-383 scope was RELAUNCHED as
+  `af-backfill-20260811-012845` (2020-06-06→2026-08-10, e2-standard-8 asia-northeast1-c), RUNNING + GENUINELY
+  progressing (PROGRESS.json `last_completed_date=2020-11-14` monotonic @2026-08-11T03:30:54Z; WATCHDOG_TRACE size
+  688k→754k, iter=115). Only `-012845` running (GCP); AWS none. Census now = mid-backfill STANDINGS snapshot (residual
+  271), not terminal convergence — same rule-4a/slot-18/19/25 stale-baseline reasoning. Skipping `reason_code: GATED` +
+  `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8
+  entities stable ~0 / honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11 (slot 17, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  `af-backfill-20260811-012845` (STANDINGS all-383, 2020-06-06→2026-08-10) is RUNNING (GCP asia-northeast1-c). The two
+  other today VMs (`-154220`/`-160958`) are TERMINATED; `-162910` TERMINATED per slot-23. Only `-012845` running (GCP);
+  AWS none. Census now = mid-backfill STANDINGS snapshot (residual 271 at slot-25 census), not terminal convergence —
+  same rule-4a/slot-18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`. **Unpark**:
+  when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
+  honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11 (slot 24, `sports_af_full_entity_completion-9798da269f23` re-dispatch, resumed mid-edit after OOM
+  kill)**: done-when STILL unmet — `af-backfill-20260811-012845` (STANDINGS all-383, 2020-06-06→2026-08-10,
+  e2-standard-8 asia-northeast1-c) still RUNNING (`gcloud` confirmed, status unchanged since prior tick). Only `-012845`
+  running among `af-backfill-*` (GCP); AWS none. Census now = mid-backfill STANDINGS snapshot, not terminal convergence
+  — same rule-4a/slot-17/18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`.
+  **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
+  honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.

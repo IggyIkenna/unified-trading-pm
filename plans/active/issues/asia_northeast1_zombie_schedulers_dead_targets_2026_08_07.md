@@ -37,7 +37,7 @@ tags: [cloud-scheduler, cloud-run, zombie, dead-target, infra-health-audit, gcp,
 related:
   [
     /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
-    /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
@@ -62,7 +62,7 @@ source:
 context_scope:
   [
     /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
-    /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
   ]
 ---
 

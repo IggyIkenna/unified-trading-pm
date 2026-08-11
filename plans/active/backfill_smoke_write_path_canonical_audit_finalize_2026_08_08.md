@@ -19,13 +19,13 @@ scope: [engineer, admin]
 tags: [data-correctness, canonical, gcs-paths, ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
+    /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -46,12 +46,13 @@ source: >-
   /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md §1(b).
 context_scope:
   [
-    /plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
+    /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md,
     /codex/02-data/non-canonical-path-inventory.md,
     instruments-service/instruments_service/engine/orchestrator/writers.py,
   ]
 locked_by:
 locked_since:
+archive_exempt: true
 supersedes:
 superseded_by:
 ---
@@ -87,12 +88,12 @@ superseded_by:
       `market-tick-data-service@a36d3cf1` (`instrument_availability_paths.py`) and `instruments-service@37d48151`
       (`DEFI_INSTRUMENTS.md` + `repair_tradfi_instrument_type_counts_2026_07_17.py`). Both QG-green, quickmerged,
       ancestry-verified on `origin/live-defi-rollout`.
-- [ ] [DOC] P3. **Archive `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`** via the standard 6-step
-      ritual once todo 1 confirms zero open items remain in its body (Todos 1/2/4/5/6 are already `[x]`; todo 3 is the
-      only remaining item, gated on the above): migrate any still-open follow-up to a tracked todo → add the archive
-      banner → grep the corpus for every referrer of this doc's filename and repoint each to the archived path → clear
-      `locked_by` (already empty) → move to `plans/archive/2026_08/issues/`. **Done when**: the doc is archived, every
-      corpus referrer resolves, and `check_reference_paths.py` has not regressed.
+- [x] ✅ [DOC] P3. **Archive `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`** —
+      unified-trading-pm@<SHA> ritual once todo 1 confirms zero open items remain in its body (Todos 1/2/4/5/6 are
+      already `[x]`; todo 3 is the only remaining item, gated on the above): migrate any still-open follow-up to a
+      tracked todo → add the archive banner → grep the corpus for every referrer of this doc's filename and repoint each
+      to the archived path → clear `locked_by` (already empty) → move to `plans/archive/2026_08/issues/`. **Done when**:
+      the doc is archived, every corpus referrer resolves, and `check_reference_paths.py` has not regressed.
 
 ## Codex SSOTs
 
@@ -116,3 +117,11 @@ superseded_by:
   correction to all 3 locations across `instruments-service@37d48151` and `market-tick-data-service@a36d3cf1` (both
   QG-green, ancestry-verified on origin). Todo 2 (archive) is now unblocked by `sequential: true` — next boot cycle
   should pick it up.
+
+- **2026-08-10 (slot 7, data_engineering task `backfill_smoke_write_path_canonical_audit_finalize-002`)** — Todo 2 DONE.
+  Archived `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md` via the standard 6-step ritual: confirmed
+  zero open todos (all 6 `[x]`), no deferred work to migrate, no new codex contracts, added archive banner +
+  `superseded_by`/`archived_to` frontmatter, repointed 8 full-path corpus referrers (`/plans/active/issues/` →
+  `/plans/archive/2026_08/issues/`), `git mv` to `plans/archive/2026_08/issues/`. Plan fully complete — both todos done,
+  no `locked_by`. Set `archive_exempt: true` as the sanctioned bridge per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.

@@ -4029,6 +4029,43 @@ else
     log_success "STEP 5.106: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.107: every pytest.xfail / unconditional @pytest.mark.skip must cite a tracked slug ─
+#
+# Standing rule (operator finding 2026-08-08, fleet-wide "tests weakened rather
+# than fixed" sweep): an xfail with a good reason and no remediation todo is
+# indistinguishable, six months later, from coverage that was never written.
+# This AST check requires every ``pytest.xfail(...)`` / ``@pytest.mark.xfail`` /
+# unconditional ``@pytest.mark.skip`` reason to cite a tracked plan/issue slug
+# (a plans/… / issues/… / codex/… path, a dated 20YY_MM_DD stamp, or a ``.md``
+# doc reference). ``@pytest.mark.skipif`` (has a condition — env-gated) and
+# reason-bearing ``pytest.skip("…")`` calls (environmental gating) are exempt by
+# design — boundary documented in the checker docstring.
+# SHRINKING ratchet: xfail_skip_tracked_baseline.yaml (43 entries at bootstrap —
+# the pre-existing untracked markers; each must gain a slug or be fixed, never
+# ADD a new entry). Runs against THIS repo's tests/ only.
+_XST_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_xfail_skip_tracked.py"
+if [ -f "$_XST_CHECKER" ]; then
+    _XST_REPO=$(basename "$PROJECT_ROOT")
+    _XST_WS="$REPO_ROOT"
+    _XST_LOG="${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log.$$"
+    if $PYTHON_CMD "$_XST_CHECKER" \
+            --workspace-root "$_XST_WS" --scope "$_XST_REPO" >"$_XST_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_XST_LOG" 2>/dev/null; then
+            log_warn "STEP 5.107: $(grep -c '^\[WARN\]' "$_XST_LOG") baselined untracked xfail/skip marker(s) (pending_removal — must cite a tracked slug or be fixed); 0 new"
+        else
+            log_success "STEP 5.107: no untracked xfail/skip markers (every xfail/skip cites a tracked plan/issue slug)"
+        fi
+    else
+        log_fail "STEP 5.107: NEW untracked xfail/skip marker — every pytest.xfail / unconditional @pytest.mark.skip reason must cite a tracked plan/issue slug (operator finding 2026-08-08; xfail_skip_tracked_baseline.yaml is a SHRINKING ratchet, never grow it):"
+        cat "$_XST_LOG"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_xfail_skip_tracked.py --workspace-root $_XST_WS --scope $_XST_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_XST_LOG" 2>/dev/null
+else
+    log_success "STEP 5.107: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call
@@ -4302,8 +4339,24 @@ DUR_CPU=$(awk 'NR==2 { t=0; for (i=1;i<=NF;i++) { split($i,p,"m"); sub(/s$/,"",p
 rm -f "$_qg_cpu_file"
 # Fall back to wall if CPU accounting is unavailable: a silent 0 would disable the cap entirely,
 # which is worse than the contention false-positive it replaces.
+# CORRECTED SAME DAY (2026-08-10): bill min(CPU, wall-net), never CPU outright.
+#   CPU < wall-net ⇒ the gate sat DESCHEDULED (peer load, I/O, lock waits). Bill CPU — the
+#                    contention-invariant figure this whole block exists to provide.
+#   CPU > wall-net ⇒ genuine PARALLELISM. `bats -j N` accrues up to N CPU-seconds per wall
+#                    second, so billing CPU charges the gate N× for being parallelised and
+#                    punishes the single biggest speedup in the suite. Measured on PM: bats is
+#                    ~617s CPU but ~115-200s wall at -j 5..8 (the comment at the BATS block
+#                    records serial 663s vs -j 8 115s). Pure-CPU billing therefore made a 600s
+#                    cap UNPASSABLE on a quiet host — the first version of this block shipped
+#                    that regression, and its own author's next gate run is what surfaced it.
+# min() is the combinator that satisfies both: it can only ever LOWER the billed figure below
+# wall, so it never manufactures a failure that wall-clock billing would not also have produced.
 if [ -n "${DUR_CPU:-}" ] && [ "${DUR_CPU:-0}" -gt 0 ] 2>/dev/null; then
-    DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU"
+    if [ "$DUR_CPU" -lt "$DUR_BILLABLE" ]; then
+        DUR_BILLABLE=$DUR_CPU; _qg_dur_basis="CPU (below wall — descheduled)"
+    else
+        _qg_dur_basis="wall-net (${DUR_CPU}s CPU across parallel workers)"
+    fi
 else
     _qg_dur_basis="wall(CPU unavailable)"
 fi

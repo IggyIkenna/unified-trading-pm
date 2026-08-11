@@ -68,21 +68,62 @@ attempts and several hours to land on a shared dev-host checkout. Root causes, a
    compounding the diagnosis. Fixed with `sed -E` (POSIX-portable) in `setup.sh` and
    `quality-gates-base/base-library.sh`.
 
-## 1. QG per-repo + host-wide concurrency caps
+## 1. QG concurrency is RESOURCE-based, not a fixed count (default since 2026-08-10)
 
-`qg-host-governor.sh`'s `qg_governor_acquire_total_instance()` (called by every repo's `quality-gates.sh` via
-`base-service.sh`/`base-library.sh`, right after sourcing the governor) now composes TWO caps, not one:
+**Read this before quoting any cap number.** `QG_GOVERNOR_MODE` defaults to `reservation`; the fixed-count caps that
+used to be the whole of this section are now the LEGACY `token` path, reachable only by setting
+`QG_GOVERNOR_MODE=token`. Quoting "PM ≤ 4, others ≤ 1, host ≤ 6" as current is wrong on any un-overridden host.
 
-- **Per-repo sub-cap**: PM (`unified-trading-pm`) ≤ 4 concurrent QG runs host-wide; every OTHER (service) repo ≤ 1 —
+**How admission actually works.** `qg-host-governor.sh`'s `_qg_try_reserve` sweeps dead PIDs, reads the host-shared
+ledger, decides and reserves — all under ONE flock, so N simultaneous acquirers serialize and can never over-admit. The
+decision is `_qg_admit_check`, a pure function (every input explicit, so every branch is unit-testable), evaluated in
+this order:
+
+| Clause          | Condition                  | Decision                                             |
+| --------------- | -------------------------- | ---------------------------------------------------- |
+| host pressure   | `avail < 20% of MemTotal`  | `WAIT_HOST_PRESSURE` (catches non-QG load)           |
+| oversize        | `this_peak > budget`       | `SOLO_ADMIT` if nothing running, else `SOLO_WAIT`    |
+| RAM reservation | `reserved + this > budget` | `WAIT_RAM_RESERVATION` (the 6×UTL stacking cap)      |
+| RAM live        | `avail < this + floor`     | `WAIT_RAM_LIVE` (external pressure + climb headroom) |
+| CPU             | `running + 1 > slots`      | `WAIT_CPU`                                           |
+| —               | else                       | `ADMIT`                                              |
+
+- `this_peak` = **this repo's MEASURED peak RSS** from `scripts/dev/qg_resource_baseline.json` (`max(local, vm)`,
+  conservative + host-portable). An unmeasured repo takes `QG_UNMEASURED_PEAK_MB` (default 5500 = treat as heaviest;
+  never a low guess that would under-reserve).
+- `budget` = `QG_MEM_SAFETY_FRAC` (0.70) × MemTotal · `slots` = `QG_CPU_FRAC` (0.80) × physical cores, min 1 · `floor` =
+  max(MemTotal/10, 2048) MB.
+- `QG_MEM_CAP` is set to 1.2 × the baseline peak as a per-run cgroup cap, so a run that outgrows its baseline is
+  OOM-killed in its OWN scope rather than taking the host down.
+
+The practical rule for an agent is unchanged and simpler than any number: **just invoke `quality-gates.sh` normally — it
+queues.** Do not hand-tune concurrency, and never bulk-kill a peer's `pytest`/QG to make room.
+
+Evidence behind the default flip (deferred six times by successive audits as "operator-aware, not an autonomous flip"):
+Phase 3c cutover PM@6e818079a, Phase 4 abort-monitor + trap-release PM@aca6a2fcf, Phase 5 fleet rollout via
+`bootstrap_vm.sh` AO@91808dfeb5, live on the orchestrator VM since 2026-07-22, a 93-minute soak (42 runs, maxconc=3, 0
+OOM), cross-host tests at 16/24/61/96/128 GB, and independent re-verification 2026-08-10 (all 8 governor suites green; 6
+simultaneous acquirers on one heavy repo admit exactly 3).
+
+### 1a. The legacy `token` path (only when `QG_GOVERNOR_MODE=token`)
+
+Composed two fixed caps, both still in the code as the fallback:
+
+- **Per-repo sub-cap** (`QG_REPO_INSTANCE_CAP`): PM ≤ 4 concurrent QG runs host-wide; every OTHER (service) repo ≤ 1 —
   never two concurrent QG runs on the SAME service repo on one host, since those virtually always collide on the same
-  git ref. Override: `QG_REPO_INSTANCE_CAP`.
-- **Host-wide flat cap**: ≤ 6 concurrent QG runs total, regardless of repo mix (was 4, floored on physical cores; raised
-  to 6 alongside the new per-repo dimension since the two now compose instead of one flat number doing both jobs).
-  Override: `QG_TOTAL_INSTANCE_CAP`.
+  git ref.
+- **Host-wide flat cap** (`QG_TOTAL_INSTANCE_CAP`): `max(6, floor(physical_cores × 0.75))`. **6 is the FLOOR, not the
+  value** — a 10-core Mac resolves to **7**, not 6; an 8-core host to 6. Quoting a flat "≤ 6" understates it on any host
+  with more than 8 cores.
+- **Heavy-phase token** (`QG_HOST_CONCURRENCY`): `K = max(2, floor(physical_cores / 4))` — 2 on a 10-core Mac.
 
-Admission requires BOTH caps to have room, checked together each cycle (never hold one while blocked on the other — that
-would let a repo's own slot sit idle mid-wait, starving same-repo peers for no reason). A cycle that acquires the repo
-token but not the global one releases the repo token immediately and retries both from scratch next tick.
+Admission required BOTH caps to have room, checked together each cycle (never hold one while blocked on the other — that
+would let a repo's own slot sit idle mid-wait, starving same-repo peers for no reason).
+
+**Why the flip mattered on laptops.** Hosts already overridden to reservation (the AO VM, CI glue-runners — set durably
+by `bootstrap_vm.sh`/`.env.local`) were unaffected. Un-bootstrapped operator laptops silently ran the fixed-K bucket:
+measured K=2 on a 24 GB / 10-core Mac that the ledger admits **8** concurrent service-repo runs on — a 4× throughput
+loss purely from an unset env var.
 
 **Implementation trap already hit and fixed while building this**: the first version's acquire helper captured its
 result via `$(...)` command substitution — which forks a subshell, and an `flock` held on an FD opened inside that
@@ -109,6 +150,51 @@ every commit attempt, and hard-fail (`QUICKMERGE_BLOCKED ...` / a non-zero exit 
 than silently proceeding when a genuine unresolvable conflict is hit. **HARD RULE: an agent must never work around one
 of these structured failures by dropping to a raw, unscoped `git commit`/ `git push` — that bypasses every governance
 mechanism in this doc**, including section 4 below (which now catches exactly that bypass at commit time).
+
+### 3a. `ahead=0` and a clean tree do NOT mean your work landed
+
+Both states are equally consistent with the work having been **destroyed**. Four measured instances on 2026-08-10, on
+one host in about an hour (SSOT:
+`/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, finding F8):
+
+1. A staged, passing comment edit was dropped by quickmerge's reconcile — the run reported SUCCESS and pushed the OTHER
+   named files; the edit survived in neither worktree nor HEAD.
+2. A scoped `--files` run pushed a commit containing NEITHER named file — only a peer's untracked test file — while both
+   named files stayed dirty on disk. Post-push ancestry verified. Exit 0.
+3. A todo written and pushed; afterwards CLEAN with `ahead=0`, present in neither worktree nor HEAD, unrecoverable from
+   any of four live stashes.
+4. The same todo again: `safe-doc-push.sh` exited **0** reporting
+   `✅ Named files already match HEAD (a concurrent session landed identical content)`. It had not landed — the edit was
+   reverted BEFORE the script hashed the file, so "matches HEAD" was true for the opposite reason to the one reported.
+
+**Two distinct failure modes, only one of which any revert-detection can see.** "Your file was reverted on disk" is
+detectable by fingerprinting at entry. "Your file never got committed" leaves the worktree untouched, so a fingerprint
+check passes and the run reports success. Instance 2 is the second shape; it is invisible by construction to every check
+that looks only at the working tree.
+
+**What the ship scripts now assert** (`_qm_assert_entry_change_landed` / `_sdp_certify_success`): record HEAD's blob per
+named path AT ENTRY; after the push, any path that had a real diff at entry whose HEAD blob is STILL the entry one
+carries none of your work.
+
+- Deliberately NOT "HEAD must equal your entry blob": the prek hook chain rewrites files legitimately (prosewrap,
+  prettier, autofixers), so a landed change routinely differs from what you handed over. "Still identical to the PRE-RUN
+  HEAD" is the precise statement of "nothing of yours landed", and is immune to that.
+- Exit codes: **quickmerge 10** · **safe-doc-push 12** (every named file was already identical to HEAD at entry, so the
+  run had nothing of yours to ship and cannot certify what is in HEAD is what you intended — `SDP_ALLOW_NOOP=1` accepts
+  it as a deliberate idempotent re-run) · **safe-doc-push 13** (push landed, your change absent). All mean RECOVER from
+  the printed ref, never a plain re-run.
+- Instance 4's shape is the reason 12 exists as a refusal rather than a smarter heuristic: "a peer landed your content"
+  and "your content was destroyed" are indistinguishable from inside the process, so it resolves to neither and prints
+  the `git log -1 -- <path>` command that tells them apart. A heuristic that can be wrong in the destructive direction
+  is what produced the incident.
+
+**Agent-side rules that follow from this**: verify content is in HEAD (`git show HEAD:<file>`), never that the tree is
+clean; and Write + `git add` in ONE step on a shared checkout — every one of the four losses happened in the window
+between writing the file and staging it. `_qm_unstage_foreign_paths` (@bde0cc4a) does NOT cover this class: it stops
+FOREIGN work being committed under your message, not YOUR work being reverted. Separate failure modes.
+
+Regression tests: `tests/test_quickmerge_landed_content_assertion.bats`,
+`tests/test_safe_doc_push_landed_content_certification.bats`.
 
 ## 4. Commit-time Quickmerge provenance (new — catches what push-time enforcement misses)
 

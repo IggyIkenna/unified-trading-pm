@@ -254,6 +254,20 @@ class FileScan:
     count: int
 
 
+#: Marks a leftover checkout artifact from a history-rewrite operation (e.g.
+#: ``execution-service.stale-pre-history-rewrite-20260805T112453Z``) — a real ``.git``
+#: dir sitting in the workspace root but NOT a live sibling repo. Confirmed 2026-08-11:
+#: an ungated ``--regenerate-baseline`` run picked up ~15 of these dead directories as
+#: "present repos", adding hundreds of baseline entries for code that no active CI
+#: checkout will ever contain — poisoning the baseline for anyone who runs regenerate
+#: without diffing the result first. SSOT: /codex/ci-reconcile hardening pass 2026-08-11.
+_STALE_REWRITE_MARKER: Final[str] = ".stale-pre-history-rewrite-"
+
+
+def _is_stale_rewrite_dir(name: str) -> bool:
+    return _STALE_REWRITE_MARKER in name
+
+
 def present_repo_names(workspace_root: Path) -> frozenset[str]:
     """Top-level dir names under ``workspace_root`` that are actual repo checkouts (have ``.git``).
 
@@ -269,6 +283,8 @@ def present_repo_names(workspace_root: Path) -> frozenset[str]:
         if not child.is_dir():
             continue
         if child.name in EXCLUDE_DIR_NAMES or child.name.startswith("."):
+            continue
+        if _is_stale_rewrite_dir(child.name):
             continue
         if not (child / ".git").exists():
             continue
@@ -289,6 +305,8 @@ def scan_workspace(workspace_root: Path) -> list[FileScan]:
         if not child.is_dir():
             continue
         if child.name in EXCLUDE_DIR_NAMES or child.name.startswith("."):
+            continue
+        if _is_stale_rewrite_dir(child.name):
             continue
         if not (child / ".git").exists():
             continue

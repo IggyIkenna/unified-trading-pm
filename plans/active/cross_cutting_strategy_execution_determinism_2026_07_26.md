@@ -19,11 +19,11 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
-    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
-    /plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
+    /plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md,
     /plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
@@ -65,13 +65,13 @@ context_scope:
 ## Sources (moved verbatim from the parent's Track 24)
 
 - [carry_staked_basis_funding_scan_experiment_2026_06_16.md](/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
-- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/active/carry_strategy_ensemble_productionization_2026_07_24.md)
+- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md)
 - [cross_venue_funding_reversion_research_2026_07_24.md](/plans/active/cross_venue_funding_reversion_research_2026_07_24.md)
   (the carry_staked_basis family — combines DeFi LST staking with CeFi perp funding across venues; open: live/broad-
   universe coverage-completion work)
 - [citadel_paper_batch_live_reconciliation_2026_06_19.md](/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md)
 - [issues/batch_live_reconciliation_service_audit_2026_05_27.md](/plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md)
-- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
+- [issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md](/plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md)
   (the paper==batch-rerun==live determinism-spine family — finishing the ε=0 proof machinery + BLRS audit remediation +
   the 4-AG smoke-harness discrepancy set)
 - [defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md](/plans/active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
@@ -99,6 +99,13 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
       plan-destination question (dispatch batch = `planning` or `NA`?) is answered by the standing "Plan destination —
       ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly overrides. No live operator input
       required to apply the default.
+- [ ] [DIAG] P2. **Multi-leg basis/arb paper fill-rate figures in promotion/sizing decisions (migrated 2026-08-10 from
+      `plans/archive/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`, which was closed + archived once its
+      execution plan shipped)** — confirm whether any CARRY_STAKED_BASIS / CARRY_BASIS_PERP paper run's fill-rate or
+      slippage figures were cited in an actual promotion/sizing decision (vs. only the directional P&L signal); if so,
+      flag that decision for a re-check, since the pre-2026-08-10 flat-loop fill model overstated hedge fill-rate by
+      ~9pp (characterized by the execution plan's paper analysis) and paper/batch now settle LEADER_HEDGE via real
+      leader/hedge/unwind sequencing. Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -119,7 +126,7 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   over 8 source plans (this doc's own todo is a future triage pass, not itself code work), so no source-code path
   applies; existing plan/issue/codex links remain the minimal correct set.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc's own
-  round5-cross-cutting-audit entry (2026-08-08) already resolved the plan-destination question the sole todo
-  raises, citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the
-  operator explicitly overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults
-  NA -- not re-litigating an already-resolved-today question.
+  round5-cross-cutting-audit entry (2026-08-08) already resolved the plan-destination question the sole todo raises,
+  citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly
+  overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults NA -- not re-litigating an
+  already-resolved-today question.

@@ -165,3 +165,42 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   with the documented ~12 min/day rate). ~704 days remaining to `2026-01-01` ≈ ~141 hours of continuous uptime. Todo 2
   remains gated — releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a
   month-scale external condition.
+- **data_engineering (slot 23) 2026-08-10T20:40Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING), run.log
+  actively progressing at `2026-08-10T20:38:38Z` (this check's own timestamp, ~3.3h after slot 18's check). Now at
+  `Date: 2024-02-10` (up from `2024-01-28` at slot 18's check — ~13 days processed in ~3.3h ≈ ~15 min/day, consistent
+  with the documented ~12-15 min/day rate; `Force: False` confirmed in run.log, as expected for this pre-fix VM). ~690
+  days remaining to `2026-01-01` ≈ ~140 hours of continuous uptime. Todo 2 remains gated — releasing back to the queue
+  with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a month-scale external condition.
+- **data_engineering (slot 24) 2026-08-11T00:27Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
+  `asia-northeast1-c`). All 3 liveness signals confirm alive, not stalled: run.log (`SIZE=235380054`) actively written
+  through `2026-08-11T00:24:40Z` (this check's own timestamp — POLARS AGGREGATED lines through 00:24:37Z), heartbeat
+  blob last_modified `2026-08-11T00:25:50Z`, and now on `Date: 2024-02-24` (up from `2024-02-10` at slot 23's check
+  ~3.8h earlier — ~14 days processed in ~3.8h ≈ ~16 min/day, consistent with the documented ~12-15 min/day rate;
+  `Force: False` confirmed, as expected for this pre-fix VM). ~676 days remaining to `2026-01-01` ≈ ~170 hours of
+  continuous uptime. Todo 2 remains gated — releasing back to the queue with `reason_code: GATED` per worker.md § 4c;
+  not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 7) 2026-08-11T04:04Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
+  `asia-northeast1-c`). Liveness signals confirm alive, not stalled: run.log (`SIZE=245559611`) last_modified
+  `2026-08-11T03:59:30Z`, POLARS AGGREGATED lines through `2026-08-11T04:01:29Z` (this check's own timestamp), and now
+  on `Date: 2024-03-08` (up from `2024-02-24` at slot 24's check ~3.5h earlier — ~13 days processed in ~3.5h ≈ ~16
+  min/day, consistent with the documented ~12-15 min/day rate; `Force: False` confirmed, as expected for this pre-fix
+  VM). ~663 days remaining to `2026-01-01` ≈ ~175 hours of continuous uptime. Todo 2 remains gated — releasing back to
+  the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 20) 2026-08-11T05:22Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
+  `asia-northeast1-c`, created 2026-08-08T08:57Z). Liveness signals confirm alive, not stalled: run.log
+  (`SIZE=249935400`, ~250MB) last_modified `2026-08-11T05:21:24Z` (this check's own timestamp), POLARS AGGREGATED lines
+  through `2026-08-11T05:21:21Z` — seconds before this check, so actively progressing, not stale. Terminal state NOT
+  reached — todo 2 remains gated on it. Releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not
+  busy-waiting on a week-scale external condition.
+- **data_engineering (slot 20) 2026-08-11T05:42Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
+  `asia-northeast1-c`, created 2026-08-08T08:57Z). Liveness signals confirm alive, not stalled: run.log
+  (`SIZE=250890352`, ~250MB) actively written with POLARS AGGREGATED lines through `2026-08-11T05:41:50Z` (this check at
+  05:42:38Z — ~1 min earlier, so actively progressing, not stale); heartbeat blob content timestamp `1786426942`
+  (~2026-08-11T05:42:22Z) confirms the sidecar is alive. Terminal state NOT reached — todo 2 remains gated on it.
+  Releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a week-scale external
+  condition.

@@ -18,9 +18,10 @@
 #
 # WHY #3 EXISTS (added 2026-07-23, see
 # /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md): unlike CLAUDE.md and
-# skills/, cursor-configs/settings.json is GITIGNORED (personal model/effortLevel drift used to jam
+# skills/, cursor-configs/settings.json WAS gitignored when this was written (personal model/effort drift jammed
 # slot-cron-ff-pull's dirty-check — see .gitignore) — so it never arrives via `git pull` and must be
-# manually re-seeded per clone. This script does NOT invent or copy that content across clones (there
+# manually re-seeded per clone. NO LONGER TRUE: it was RE-TRACKED 2026-07-23, so it DOES arrive via
+# `git pull` — which is what lets a team-policy hook registered there reach every slot and machine. This script does NOT invent or copy that content across clones (there
 # is no single git-tracked source of truth to copy from); it only links `.claude/settings.json` to
 # `cursor-configs/settings.json` WHEN that file already exists in THIS root's own PM clone, and skips
 # cleanly (non-blocking) otherwise. Before this fix, NO root on the human-planning VM had this
@@ -152,7 +153,19 @@ fi
 # `precompact-block-auto.sh` auto-compact kill, so stripping it here is what actually re-enables
 # auto-compact on a machine that still carries the old registration.
 _local_settings="${WORKSPACE_ROOT}/.claude/settings.local.json"
-if [ -f "$_local_settings" ] && command -v jq >/dev/null 2>&1; then
+# GUARD (2026-08-11): refuse to rewrite through a symlink. `echo > "$_local_settings"` follows a
+# symlink, so where settings.local.json points AT the team SSOT, this block's jq
+# `del(.hooks.UserPromptSubmit)` strips that hook FROM THE GIT-TRACKED TEAM FILE and jq's
+# pretty-printer reformats the rest — leaving the clone permanently dirty with a diff no agent
+# recognises as its own, so nobody ever commits or reverts it. Measured on this host: `.tabs/3` and
+# `.tabs/6` had both symptoms and had been running without context-threshold-nudge.sh; `.tabs/1`
+# carried the same symlink un-fired. This matters more under bypassPermissions, where
+# `permissions.deny` is discarded and hooks are the ONLY surviving guardrail
+# (see agent-orchestrator/scripts/hooks/block_destructive_commands.py header).
+# settings.local.json must be a REAL per-clone file — it is personal, gitignored state.
+if [ -L "$_local_settings" ]; then
+    echo "[link-claude-skills] ${_local_settings} is a SYMLINK → $(readlink "$_local_settings") — refusing to rewrite through it (would corrupt the team SSOT). Remove it: settings.local.json must be a real per-clone file." >&2
+elif [ -f "$_local_settings" ] && command -v jq >/dev/null 2>&1; then
     _cleaned="$(jq '
       if .hooks then
         .hooks |= (

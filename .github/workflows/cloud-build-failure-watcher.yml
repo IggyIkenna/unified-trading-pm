@@ -141,15 +141,31 @@ jobs:
           # regional pool (router-triggered image builds) and global, then filter
           # locally by createTime + status — server-side create_time filters proved
           # flaky across regions, so the time window is enforced in python below.
+          #
+          # LIMIT RAISED 30 -> 150 (2026-08-10, cloud_build_failure_watcher_limit_30_coverage_gap
+          # _silently_drops_failures_under_load_2026_08_10.md): a fixed --limit=30 silently drops
+          # builds OLDER than the fetch window whenever fleet-wide Cloud Build volume exceeds ~30
+          # builds within LOOKBACK_MINUTES — the python cutoff filter below only ever sees what
+          # gcloud actually returned, so a build that fell off the --limit=30 page is
+          # indistinguishable from "did not fail." MEASURED live 2026-08-10: at normal fleet
+          # load, the oldest of the top-30 most-recent builds (both pools) was only ~55 MINUTES
+          # old — meaning a --limit=30 fetch could not reliably see even one full 20-minute
+          # lookback window, let alone the 20-minute window used here. Root-caused via a real
+          # miss: a deployment-api Cloud Build failed at 15:20:28Z, squarely inside the
+          # 15:23:06Z tick's own declared [15:03,15:23] lookback, and that tick's own gcloud
+          # fetch never returned it — confirmed via the job log ("No failed Cloud Builds ... All
+          # clear"). 150 is not a permanent fix for further fleet growth — see the
+          # OLDEST-fetched-build self-check below, which now makes a recurrence of THIS class
+          # LOUD instead of silent.
           gcloud builds list \
             --project="$GCP_PROJECT" \
             --region="$CLOUD_BUILD_REGION" \
-            --limit=30 \
+            --limit=150 \
             --format=json > /tmp/cb_builds_regional.json \
             || echo "[]" > /tmp/cb_builds_regional.json
           gcloud builds list \
             --project="$GCP_PROJECT" \
-            --limit=30 \
+            --limit=150 \
             --format=json > /tmp/cb_builds_global.json \
             || echo "[]" > /tmp/cb_builds_global.json
 
@@ -171,7 +187,11 @@ jobs:
           cutoff = datetime.now(timezone.utc) - lookback
 
           builds: dict[str, dict] = {}
-          for path in ("/tmp/cb_builds_regional.json", "/tmp/cb_builds_global.json"):
+          per_pool_oldest: dict[str, datetime] = {}  # pool label -> oldest createTime FETCHED
+          for label, path in (
+              ("regional", "/tmp/cb_builds_regional.json"),
+              ("global", "/tmp/cb_builds_global.json"),
+          ):
               try:
                   with open(path, encoding="utf-8") as fh:
                       payload = json.load(fh)
@@ -182,6 +202,24 @@ jobs:
               for build in payload:
                   if isinstance(build, dict) and build.get("id"):
                       builds.setdefault(str(build["id"]), build)
+                  ts_raw = str((build or {}).get("createTime", ""))
+                  try:
+                      ts = datetime.strptime(ts_raw[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+                  except ValueError:
+                      continue
+                  if label not in per_pool_oldest or ts < per_pool_oldest[label]:
+                      per_pool_oldest[label] = ts
+
+          # COVERAGE-GAP self-check (2026-08-10, cloud_build_failure_watcher_limit_30_coverage_gap
+          # _silently_drops_failures_under_load_2026_08_10.md): if a pool's OLDEST fetched build is
+          # still NEWER than the declared lookback cutoff, the --limit fetch may not have reached
+          # far enough back to see everything in-window — a real failure just outside the fetched
+          # page would be silently invisible to the filter below, indistinguishable from
+          # "genuinely no failures." Surface this LOUDLY (as its own alertable finding) rather than
+          # let a future volume spike quietly repeat the exact miss this fix was written for.
+          coverage_gap_pools = sorted(
+              label for label, oldest in per_pool_oldest.items() if oldest > cutoff
+          )
 
           failed: list[tuple[bool, str]] = []  # (is_silent_rejection, message_line)
           for build in builds.values():
@@ -267,21 +305,39 @@ jobs:
           if len(failed) > MAX_LINES:
               lines.append(f"... +{len(failed) - MAX_LINES} more failed build(s) this tick")
 
+          if coverage_gap_pools:
+              gap_desc = ", ".join(
+                  f"{label} (oldest fetched build is only {int((datetime.now(timezone.utc) - per_pool_oldest[label]).total_seconds() // 60)}m old)"
+                  for label in coverage_gap_pools
+              )
+              lines.append(
+                  f":warning: COVERAGE GAP: the {gap_desc} fetch did not reach back the full "
+                  f"{int(lookback.total_seconds() // 60)}m lookback — fleet build volume may have "
+                  "pushed an older failing build off the page; treat this tick's result as "
+                  "INCOMPLETE, not a confirmed all-clear. See "
+                  "cloud_build_failure_watcher_limit_30_coverage_gap_silently_drops_failures_under_load_2026_08_10.md"
+              )
+
           report = ""
           dedup_key = ""
-          if failed:
+          alertable = bool(failed) or bool(coverage_gap_pools)
+          if alertable:
+              count_desc = f"{len(failed)} failed" if failed else "0 failed (but see coverage gap)"
               header = (
-                  f":building_construction: *cloud-build-failure-watcher: {len(failed)} failed "
+                  f":building_construction: *cloud-build-failure-watcher: {count_desc} "
                   f"Cloud Build(s)* in the last {int(lookback.total_seconds() // 60)}m "
                   f"({silent_count} silent config-rejection(s)) — project "
                   f"{os.environ.get('GCP_PROJECT', 'central-element-323112')}"
               )
               report = header + "\n" + "\n".join(lines)
               print(report)
-              # CONTENT dedup_key: the sorted SET of failing build IDs. The carrier suppresses a
-              # repeat of the SAME failure-set within its cooldown → the boundary-overlap re-detect
-              # posts once (transition-based), while a NEW failing build (different set) re-arms it.
-              digest = hashlib.sha256("\n".join(sorted(failed_ids)).encode()).hexdigest()[:16]
+              # CONTENT dedup_key: the sorted SET of failing build IDs (+ the coverage-gap pool
+              # names, so a gap alone still gets its own stable, re-arming dedup identity distinct
+              # from any concurrent real-failure dedup_key). The carrier suppresses a repeat of the
+              # SAME set within its cooldown -> the boundary-overlap re-detect posts once
+              # (transition-based), while a NEW failing build or a NEW gap re-arms it.
+              digest_input = "\n".join(sorted(failed_ids)) + "\n" + "\n".join(coverage_gap_pools)
+              digest = hashlib.sha256(digest_input.encode()).hexdigest()[:16]
               dedup_key = f"cloud-build-fail:{digest}"
           else:
               print(
@@ -295,10 +351,10 @@ jobs:
           # failure set) are NOT recoveries — the latter is still red, just a new dedup_key, and
           # the existing `notify` job (gated on alert==true) already re-pages it correctly.
           prev_alert = os.environ.get("PREV_ALERT", "false") == "true"
-          recovered = prev_alert and not failed
+          recovered = prev_alert and not alertable
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f"alert={'true' if failed else 'false'}\n")
+              fh.write(f"alert={'true' if alertable else 'false'}\n")
               fh.write(f"count={len(failed)}\n")
               fh.write(f"silent={silent_count}\n")
               fh.write(f"dedup_key={dedup_key}\n")
@@ -316,7 +372,7 @@ jobs:
 
           bucket = os.environ.get("CICD_EVENTS_BUCKET", "")
           if bucket:
-              state = json.dumps({"alert": bool(failed), "silent_count": silent_count})
+              state = json.dumps({"alert": alertable, "silent_count": silent_count})
               proc = subprocess.run(
                   ["gsutil", "cp", "-", f"gs://{bucket}/cicd/watchers/cloud-build-failure-watcher/state.json"],
                   input=state.encode(),

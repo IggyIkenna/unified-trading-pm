@@ -75,6 +75,22 @@ Each overlaps execution re-detects the same preempted/drained VMs and re-emits t
   5-min tick.
 - The overlap ALSO races the GCS census blob (multiple executors read-modify-write `exit-code-fleet-census.json`).
 
+## SIBLING FINDING — heartbeat-watcher is the SAME overlap class (2026-08-11, reconciler slot-20)
+
+`uts-prod-dp-heartbeat-watcher` (same family, same `data_pipeline_fleet_monitor_scheduler.tf`) is now confirmed the
+identical structural problem: its sweep takes **> 900s** (measured `vsm6k` ran 936s and was killed at the 900s task
+timeout, `status=False`), while its cron fires every 5 min. It was the LAST of the three monitors that never got the
+growth-past-ceiling timeout bump (exit-code 300→900 2026-07-29, meta 300→900 2026-08-09; heartbeat sat at 300s), so
+every `*/5` run timed out and the freshness sentinel `vm-census/heartbeat-last-run.json` went stale ~18h (05:45Z →
+23:45Z, verified 2026-08-10), which is exactly why `DP_CRON_DID_NOT_FIRE` for `dp-heartbeat-monitor` fired (208
+msgs/24h).
+
+- **Shipped this sweep (partial)**: timeout bumped 300→900 live (`gcloud run jobs update --task-timeout=900`, 2026-08-10
+  ~23:47Z) + terraform backport `deployment-service@e9c656f8ba`. **Necessary but NOT sufficient** — the 900s run still
+  times out, proving heartbeat is I/O-bound like exit-code (per-VM GCS reads), and now overlaps ~3x instead of ~1x. The
+  REAL fix is the same parallelization below; extend its scope to heartbeat's `sweep()` in `heartbeat_stall_watcher.py`
+  as well as exit-code's.
+
 ## Fix (deferred — needs its own focused pass, NOT rushable this sweep)
 
 Parallelize the per-VM I/O in `sweep()` with a `ThreadPoolExecutor` over the independent GCS reads (the fleet is

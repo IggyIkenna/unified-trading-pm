@@ -193,7 +193,8 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       when**: each pair is either merged into one doc or split onto distinct slugs, both sides' findings are preserved
       (neither run's findings may be dropped on the grounds that the other exists), referrers are repointed, and all 3
       stems come off `ALLOWED_DUPLICATE_STEMS` leaving only `INDEX.md`.
-- [ ] [SCRIPT] P2. **Land the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink** in
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-10 — `unified-trading-pm@843df70447` (LDR, post-push ancestry verified; whole-tree
+      re-gate green). Land the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink** in
       `scripts/plan-hygiene/check_create_only_archive_commits.py` (drop `plan_reconciler_findings_2026_08_06.md`,
       `plan_reconciler_findings_tradfi_2026_08_09.md`, `ao_satellite_ao_dispatch_batch2_2026_07_30.md`,
       `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — all four pairs reconciled in
@@ -203,11 +204,11 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       in a shared checkout that tree carries other sessions' in-flight work: (1) the QG duration budget, twice, under 12
       concurrent QG runs / load 38; (2) a peer's UNCOMMITTED `cursor-configs/CLAUDE.md` edit pushing it 3 B over the
       40,960 B cap while `HEAD` sat comfortably under at 40,804 B; (3) the unresolvable-sha regression filed as a
-      recurrence on `/plans/active/issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`. **Deferring
-      is safe**: with the stale entries still listed the guard merely over-exempts four pairs that no longer exist, so
-      it cannot miss a NEW duplicate — the failure mode is a stale allowlist, not a blind gate. **Done when**: the
-      shrink is on origin and the guard's list is the 3 `ag_closeout` stems + `INDEX.md`. **Blocked-on**: (3) above
-      being fixed by its owner, or a quiet host.
+      recurrence on `/plans/active/issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`. None of the
+      three recurred on this landing: the whole-tree re-gate passed within the duration budget, no peer
+      `cursor-configs/CLAUDE.md` cap breach, and the unresolvable-sha recurrence was fixed by its owner. **Done when**:
+      the shrink is on origin and the guard's list is the 3 `ag_closeout` stems + `INDEX.md`. ✅ **DONE — verified on
+      origin**: guard reports `no create-only archive/active duplicate pairs at HEAD` with the shrunk list.
 
 ## Progress Log
 
@@ -283,3 +284,57 @@ mirrored-path assumption was blind to the majority of the corpus. Re-running the
 The archival tool now REFUSES to `git mv` onto an existing destination and reports an identical-vs-diverged verdict
 instead — before hardening it raised `CalledProcessError` mid-run, having already written `status: resolved` into the
 source doc (that partial write was reverted, not committed).
+
+## Second symptom, same mechanism: a MODIFICATION dropped, and reported as SUCCESS (2026-08-10, slot 1)
+
+The create-only archival above is the benign face of this. The severe one, reproduced twice identically later the same
+day while pushing the data-pipeline alert-storm plan:
+
+```
+✓ current dirty tree quarantined; the next pull will start clean (no new autostash entry).
+── attempt 1/6 ──
+  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD
+✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success.
+DOCPUSH_EXIT=0
+```
+
+Origin had **zero** of the commit's content; the local file had all of it (450 lines, 6 distinct markers verified via
+`git show origin/…:<path> | grep -c`). The ordering is the bug: the run **quarantines the dirty tree FIRST**, then looks
+for changes to stage — and finds none, because it just stashed them. It then reaches the "concurrent session landed
+identical content" branch, which is a REASONABLE inference from a clean tree matching HEAD, and exits 0.
+
+**Why this outranks the create-only symptom.** A red result makes you look; a false green makes you stop looking.
+Nothing downstream distinguishes "pushed" from "silently pushed nothing" — exit code, summary line, and the absence of
+any warning all say success. It was caught only because this session had adopted the habit of verifying every claimed
+sha against origin (after an earlier false `features-service@305d897a` claim in the same batch).
+
+**Second-order cost, measured the same night.** Because the push kept "succeeding", the edits stayed UNCOMMITTED in a
+shared 4-slot checkout across several pull cycles — and were then silently reverted by a peer operation: an appended
+section to THIS doc went from 323 lines back to 286, and 286 is what the working tree, HEAD **and the autostash all
+showed, so there was no artifact left to recover from**. It was only rewritable because the author still had the text
+in-session. A false-success push is therefore not merely "no-op" — it strands work in the one place this workspace
+guarantees is unsafe.
+
+Also note the two symptoms compose: a multi-file `--files` push in the same session landed ONE of two named paths (the
+untracked CREATE went through, the tracked MODIFY did not) and still exited 0 — per-file partial success inside a single
+"successful" invocation.
+
+- [x] ✅ [SCRIPT] P0. Never report success on a no-op push. — unified-trading-pm@91d559ee19 +
+      unified-trading-pm@8e05ddfd9a. `_sdp_guard_already_landed_claim` (exit 12 on noop-at-entry, distinguish "peer
+      landed it first" from "edit destroyed before hash") + `_sdp_assert_entry_change_landed` (exit 13 on
+      change-not-landed) + per-file entry HEAD-blob snapshot (`_SDP_ENTRY_HEAD_BLOBS`) so post-push blob comparison
+      answers "did YOUR change reach the branch" rather than "is your file still what you handed me." Regression:
+      `tests/test_safe_doc_push_landed_content_certification.bats` +
+      `tests/test_safe_doc_push_untracked_file_never_false_success.bats`.
+- [x] ✅ [SCRIPT] P0. Do not quarantine before staging. — unified-trading-pm@8e05ddfd9a. The autostash backlog
+      self-arrest (`autostash_guard_bound_backlog`) now receives the caller's `--files` as a protected list and skips
+      them in the extreme-pile quarantine; both call sites (safe-doc-push.sh, quickmerge.sh) pass their `--files`.
+      Dogfooded live slot-9: the guard had quarantined the caller's OWN plan-flip edit, then the ship falsely reported
+      "named files already match HEAD." Regression: `tests/test_autostash_guard_protects_caller_files.bats` (8/8 green).
+- [x] ✅ [SCRIPT] P1. Verify per-file: a `--files` invocation naming N paths must confirm all N reached the remote and
+      fail naming the specific paths that did not. — unified-trading-pm@de262ff375. `verify_pushed_per_file` walks the
+      FILES list and asserts each path's intended state against `origin/$BRANCH`: a deletion at entry must be ABSENT on
+      origin; a create/modify must resolve to the blob HEAD carries. Routed through `_sdp_certify_success` (the SINGLE
+      gate every success path passes through) so no code path can bypass it. Exit 14 on partial landing with the
+      specific failing paths named. Regression: `tests/test_safe_doc_push_per_file_remote_verification.bats` (3/3
+      green).

@@ -20,6 +20,19 @@ env:
   SERVICE_NAME: "{{SERVICE_NAME}}"
   GH_ORG: ${{ github.repository_owner }}
 
+# Adopted INTO the template from strategy-service's copy (2026-08-10). Measured before touching
+# the rollout: 5 of the 6 glue repos carrying this workflow matched the template byte-for-byte at
+# 84 lines, but strategy-service had drifted AHEAD at 88 with this block. A rollout of the
+# template as it stood would therefore have SILENTLY STRIPPED it — a regression shipped inside an
+# unrelated one-line fix, which is exactly the failure mode the "never hand-edit a per-repo copy"
+# rule exists to prevent, reached from the other direction (the TEMPLATE was the stale side).
+# Superseded runs on the same ref are worth cancelling here and the sibling
+# .github/workflows/rules-alignment-agent.yml already uses the identical group, so this is the
+# convention rather than a new opinion. The template is now a SUPERSET of every live copy.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plan-alignment:
     name: Plan Alignment Check — {{SERVICE_NAME}}
@@ -45,7 +58,25 @@ jobs:
 
       - name: Install Claude Code CLI
         if: env.ANTHROPIC_API_KEY != ''
-        run: npm install -g @anthropic-ai/claude-code
+        # Tolerate a ROOT-owned pre-existing global install (2026-08-10). Self-hosted runners
+        # already carry @anthropic-ai/claude-code installed as root; the runner user (ubuntu)
+        # cannot replace it, so a bare `npm install -g` dies renaming into
+        # /usr/local/lib/node_modules and exits 243. That red-lined the Plan Alignment Check on
+        # every promote branch it ran on -- measured live across execution-service (x2),
+        # strategy-service, and market-tick-data-service PR #939, all the same EACCES.
+        # Prefer a fresh install; ACCEPT a working pre-existing CLI rather than failing a check
+        # on a host-permissions detail; still fail CLOSED when no usable CLI exists at all, so
+        # this can never silently green a run that never had the agent available.
+        run: |
+          if npm install -g @anthropic-ai/claude-code --quiet 2>/tmp/npm-claude-code.err; then
+            echo "installed @anthropic-ai/claude-code"
+          elif command -v claude >/dev/null 2>&1; then
+            echo "::warning::npm global install failed ($(tail -n1 /tmp/npm-claude-code.err)) - using pre-installed $(claude --version 2>/dev/null || echo claude)"
+          else
+            echo "::error::claude CLI unavailable AND npm global install failed"
+            cat /tmp/npm-claude-code.err
+            exit 1
+          fi
 
       - name: Run plan alignment agent
         if: env.ANTHROPIC_API_KEY != ''

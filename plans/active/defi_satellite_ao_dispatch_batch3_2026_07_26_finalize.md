@@ -167,8 +167,9 @@ context_scope:
     delete-vs-re-leg strategy-domain ruling still unruled (batch5-finalize: STILL BLOCKED).
   - `defi_morpho_lending_indices_never_wired_2026_07_12.md` — `status: open`; time-gated on
     `defi_onchain_v10_universe_v2_seed_or_backfill_progressed`, still not confirmed complete.
-  - `defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — `status: open`; `[DECISION]` remediation ruling (accept
-    legacy artifact vs targeted manifest correction) still open.
+  - `/plans/archive/issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — `status: resolved` + archived
+    2026-08-11; both open items resolved (todo 4 DECISION via `unified-api-contracts@8c506575`, todo 5 register-append
+    via batch10 item 7).
   - `defi_upstream_instruments_catalog_stale_2026_07_15.md` — `status: open`; `[DESIGN] P3` retry-sweep-signal mechanism
     ownership still unruled (batch5-finalize: STILL BLOCKED).
   - `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` — `status: open`; generator-vs-committed

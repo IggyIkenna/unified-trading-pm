@@ -17,12 +17,12 @@ tags: [cefi, ao-dispatch, close-out, batch-10, finalize, iterative-drain]
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-10"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,9 +62,10 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 6 source docs' checkboxes.** Batch 10's 6 todos draw from 6 distinct source docs —
-      for each landed todo, flip/append the corresponding checkbox/status text in its named source doc citing the
-      shipping commit: (1) `issues/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C); (2)
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-10 (slot-17).** Reconcile all 6 source docs' checkboxes. Batch 10's 6 todos draw
+      from 6 distinct source docs — for each landed todo, flip/append the corresponding checkbox/status text in its
+      named source doc citing the shipping commit: (1)
+      `issues/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C); (2)
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Finding 8/10, append investigation result
       to Findings — do not flip a checkbox that doesn't exist for an audit-only item); (3)
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` (Relaunch todo); (4)
@@ -108,6 +109,25 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-10 (slot-17, todo 1)** — reconciled all 6 source docs' checkboxes for batch10's 6 landed todos; **every
+  cited commit verified as an ancestor of `origin/live-defi-rollout` before citing**. Per-doc outcome + remaining-open
+  count: (1) `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` — Phase C already `[x]`
+  DONE-BY-FAIT-ACCOMPLI (flip `aba237f1b9`, slot-8 2026-08-08); **2 open** remain (Phase D/E VM-scale rebuild items).
+  (2) `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` — Finding 11 (2026-08-09) already appended
+  (`b8336a6b24`); audit-only item, no checkbox exists to flip; **1 open** remains (operator question on the 1292
+  collisions). (3) `cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` — Relaunch todo already `[x]`
+  (`0273bc1e08`/`aa51d8d3f5`, evidence `market-data-processing-service@e9f9819` verified) + "2026-08-08 84-cell audit"
+  appended; **2 open** remain (2025-11-01/2026-01-01 raw-gap investigation; per-day relaunch gated on
+  `mdps-backfill-cefi-20260808-095136` terminal state). (4) `coverage_floor_new_backfill_gaps_found_2026_07_27.md`
+  (archived resolved, **0 open**; deregistration `unified-api-contracts@56db28e6` verified) + duplicate
+  `coverage_floor_registries_no_cross_propagation_2026_07_17.md` kept in sync with a RESOLVED 2026-08-10 note on its
+  `[x]` BINANCE-DELIVERY checkbox; **2 open** remain there (both unrelated P3 items). (5)
+  `tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md` — **both P3 follow-up checkboxes FLIPPED this
+  run**: heartbeat status field (`deployment-service@88f8834c`) + `_publish_boundary_event` exception
+  (`market-tick-data-service@f6b7f8b7`); **0 open** remain. (6)
+  `cefi_residual_followups_after_honest_done_2026_07_17.md` — line-718 P3 already `[x]` (`6ae449bbb3`,
+  `deployment-service@7b4c69d72` verified); **5 open** remain (all other independent P0-P2 items). See also the
+  `## Todos` flip above; source-doc edits shipped via `safe-doc-push.sh`.
 - **2026-08-08** — drafted by the `/ag-closeout-audit` cefi run (slot 8, dispatch agt-6bc9c4) alongside batch10;
   authored `status: active` per the 2026-07-30 no-double-gate ruling, machine-held by `gate_on_depends: true` until
   batch10's todos are done.

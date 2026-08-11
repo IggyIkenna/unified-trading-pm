@@ -385,17 +385,19 @@ def load_manifest(path: Path) -> dict:
         return json.load(fh)
 
 
-def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[dict], dict[str, str]]:
+def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[dict], dict[str, str], dict[str, str]]:
     """Read each repo's LDR level + detect transitions vs the persisted ldr_ci_status.
 
     Returns:
-        (transitions, new_levels) — transitions is the list of notify-worthy flips;
+        (transitions, new_levels, new_shas) — transitions is the list of notify-worthy flips;
         new_levels maps repo -> level for every repo whose level is NOT UNKNOWN (UNKNOWN
-        reads are fail-open and never overwrite a known persisted level).
+        reads are fail-open and never overwrite a known persisted level); new_shas maps the
+        SAME repos to the LDR sha each level was read against (see the write below).
     """
     manifest_repos = manifest["repositories"]
     transitions: list[dict] = []
     new_levels: dict[str, str] = {}
+    new_shas: dict[str, str] = {}
     for repo in repos:
         if repo not in manifest_repos:
             continue  # not in the manifest registry — skip (fail-open)
@@ -406,6 +408,15 @@ def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[d
             # never pages. Leave the persisted value as-is.
             continue
         new_levels[repo] = level
+        # Persist WHICH sha the level was read against (ldr_red_promote_pr_waste_2026_08_10).
+        # A bare GREEN/RED is not actionable by a consumer that must decide about a SPECIFIC
+        # tree: ldr_to_main_fleet_promote.sh skips cutting a promote PR only when the red level
+        # AND this sha both match the tip it is about to promote, so a stale RED (tip has since
+        # moved past the failure) can never wedge promotion. Without the sha there is no way to
+        # tell "red, and it's THIS tree" from "red, about something already superseded" — and
+        # gating on the weaker signal is exactly what caused the unrecoverable deadlock in
+        # tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.
+        new_shas[repo] = sha
         if notify_worthy(prev, level):
             # Attribution is only fetched for a RED transition (a handful per tick at most), so
             # the extra compare/commits gh calls never approach the unconditional-dispatch cost.
@@ -421,16 +432,29 @@ def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[d
                     "attribution": attribution,
                 }
             )
-    return transitions, new_levels
+    return transitions, new_levels, new_shas
 
 
-def apply_levels(manifest: dict, new_levels: dict[str, str]) -> bool:
-    """Write the dedicated ldr_ci_status field. Returns True if anything changed."""
+def apply_levels(manifest: dict, new_levels: dict[str, str], new_shas: dict[str, str] | None = None) -> bool:
+    """Write the dedicated ldr_ci_status field (+ its sha). Returns True if anything changed.
+
+    ``ldr_ci_status_sha`` is written whenever the level is, so the pair is always consistent —
+    a consumer must never see a fresh level next to a stale sha, which would let it match a RED
+    against the wrong tree. ``new_shas`` is optional so an existing caller that only has levels
+    keeps working; it then simply leaves the sha untouched.
+    """
     manifest_repos = manifest["repositories"]
     changed = False
     for repo, level in new_levels.items():
+        sha = (new_shas or {}).get(repo) or ""
         if manifest_repos[repo].get("ldr_ci_status") != level:
             manifest_repos[repo]["ldr_ci_status"] = level
+            changed = True
+        # Written even when the LEVEL is unchanged: a repo that stays RED across two different
+        # tips must advance its sha, else the promoter would keep matching the stale one and
+        # skip promoting a tree the monitor has not actually judged.
+        if sha and manifest_repos[repo].get("ldr_ci_status_sha") != sha:
+            manifest_repos[repo]["ldr_ci_status_sha"] = sha
             changed = True
     return changed
 
@@ -518,9 +542,9 @@ def main() -> int:
         write_github_output(False, "INFO", "LDR monitor: manifest unreadable (fail-open, no alert).", [])
         return 0
 
-    transitions, new_levels = evaluate_fleet(manifest, repos, args.limit)
+    transitions, new_levels, new_shas = evaluate_fleet(manifest, repos, args.limit)
 
-    if apply_levels(manifest, new_levels):
+    if apply_levels(manifest, new_levels, new_shas):
         try:
             with open(manifest_path, "w", encoding="utf-8") as fh:
                 # Canonical manifest form (see check_workspace_manifest_canonical.py).

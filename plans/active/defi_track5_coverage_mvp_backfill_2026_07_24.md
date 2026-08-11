@@ -190,3 +190,11 @@ the parent plan's Track 7 culled-venue ruling.
   `defi_consolidated_closeout_2026_07_18.md` Track 5. Explicit `depends_on`+`gate_on_depends: true` on the parent,
   personally confirmed still open (14 items, same-batch read). 4 open todos; whole-doc KEEP-NA on the gate citation. Doc
   stays `assigned_vm: NA`.
+- **batch10 source-doc reconciliation 2026-08-11 (slot-31, `defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`
+  (archived 2026-08-11) todo 1)**: Todo 1's milestone progress recorded here for citation parity with
+  `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 (2026-08-07, slot-7/12): VM `mtds-perp-funding-backfill`
+  launched SPOT (asia-northeast1-c), 1824 rows for 2023-11-05 at T+5min; prerequisite
+  `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` flipped `true` 2026-08-07T16:44Z (set_by=slot-7) on first
+  real progress; other MVP data_types already complete (dex_pool_state 08-05, lending_indices 07-30, lst_rates 07-26,
+  oracle_prices 08-03), dex_pool_swaps mid-flight (`mtds-dex-swaps-backfill`, 63k+ rows/shard). Todo 1's
+  backfill-to-100% not yet reached — checkbox stays `[ ]` (genuine remaining work, not orphaned).

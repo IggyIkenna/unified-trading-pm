@@ -1,69 +1,36 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
       "Bash",
-      "Git",
-      "Grep",
-      "Global",
       "Read",
       "Write",
       "Edit",
+      "NotebookEdit",
+      "Grep",
+      "Glob",
       "WebFetch",
-      "mcp__claude_ai_Context7__resolve-library-id",
-      "mcp__claude_ai_Context7__query-docs",
-      "mcp__playwright__run",
-      "mcp__playwright__get-test-info",
-      "mcp__playwright__get-test-results",
-      "mcp__playwright__get-test-logs",
-      "mcp__playwright__get-test-attachments",
-      "mcp__playwright__get-test-screenshots",
-      "mcp__playwright__get-test-videos",
-      "mcp__playwright__get-test-traces",
-      "mcp__playwright__get-test-coverage",
-      "mcp__playwright__get-test-har",
-      "mcp__playwright__get-test-metadata",
-      "mcp__playwright__get-test-status",
-      "mcp__playwright__get-test-errors",
-      "mcp__playwright__get-test-warnings",
-      "Monitor",
-      "Workflow",
+      "WebSearch",
       "Agent",
+      "Skill",
+      "Workflow",
+      "Monitor",
       "ScheduleWakeup",
       "TaskOutput",
       "TaskStop",
       "SendMessage",
       "TodoWrite",
-      "mcp__playwright__browser_navigate",
-      "mcp__playwright__browser_close",
-      "mcp__playwright__browser_snapshot",
-      "mcp__playwright__browser_evaluate",
-      "mcp__playwright__browser_take_screenshot",
-      "WebSearch",
-      "Skill(artifact-design)",
-      "Skill(artifact-design:*)",
-      "mcp__playwright__browser_console_messages",
-      "mcp__playwright__browser_click",
-      "mcp__playwright__browser_run_code_unsafe",
-      "Skill(schedule)",
-      "Skill(schedule:*)",
-      "mcp__playwright__browser_wait_for",
-      "mcp__playwright__browser_network_requests",
-      "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_tabs",
-      "mcp__dune__searchTablesByContractAddress",
-      "mcp__dune__createAndExecuteQuery",
-      "mcp__dune__executeQueryById",
-      "mcp__playwright__browser_find",
-      "mcp__playwright__browser_type",
-      "Skill(update-config)",
-      "Skill(update-config:*)"
+      "ListAgents",
+      "mcp__playwright",
+      "mcp__dune",
+      "mcp__claude_ai_Context7"
     ],
     "deny": [],
     "ask": [],
     "defaultMode": "bypassPermissions"
   },
   "enabledPlugins": {
-    "pyright-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": false
   },
   "skipDangerousModePermissionPrompt": true,
   "switchModelsOnFlag": true,
@@ -95,6 +62,17 @@
           {
             "type": "command",
             "command": "bash $CLAUDE_PROJECT_DIR/unified-trading-pm/cursor-configs/hooks/context-threshold-nudge.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read|Grep|Glob|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/unified-trading-pm/cursor-configs/hooks/batching-nudge.py"
           }
         ]
       }

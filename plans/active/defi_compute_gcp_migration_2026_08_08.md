@@ -30,7 +30,7 @@ related:
     /plans/epics/infrastructure_master.md,
     /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
     /codex/04-architecture/cloud-agnostic-migration.md,
     /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
     /codex/04-architecture/seamless-cloud-switch.md,
@@ -289,28 +289,28 @@ them).
       the manifest, not a producer of it.
 
       The REAL GCP-side equivalent of the AWS `uts-prod-manifest-consolidator-*` Batch definitions already exists,
-                                      confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
-                                      (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
-                                      `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
-                                      Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
-                                      running the **identical entrypoint** the AWS side runs: sample-verified
-                                      `uts-prod-manifest-consolidator-market-data-defi`'s container args =
-                                      `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
-                                      matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
-                                      runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
-                                      `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
-                                      being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
-                                      bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
-                                      broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
-                                      a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
-                                      uncovered scope.
+                                          confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
+                                          (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
+                                          `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
+                                          Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
+                                          running the **identical entrypoint** the AWS side runs: sample-verified
+                                          `uts-prod-manifest-consolidator-market-data-defi`'s container args =
+                                          `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
+                                          matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
+                                          runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
+                                          `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
+                                          being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
+                                          bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
+                                          broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
+                                          a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
+                                          uncovered scope.
 
-                                      **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
-                                      (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
-                                      `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
-                                      authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
-                                      established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
-                                      Repo: unified-trading-pm (doc-only finding).
+                                          **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
+                                          (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
+                                          `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
+                                          authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
+                                          established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
+                                          Repo: unified-trading-pm (doc-only finding).
 
 - [x] ✅ [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
       `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or

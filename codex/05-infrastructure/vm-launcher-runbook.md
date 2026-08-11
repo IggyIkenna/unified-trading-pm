@@ -649,6 +649,32 @@ closeouts), never as a standing runbook-level expectation. A launcher whose typi
 no sharded/parallel variant is a gap — file it against the owning consolidated-closeout plan (see
 `data_pipeline_e2e_milestones_gate_2026_07_24.md` §6 for the per-AG audit todos this rule was written to satisfy).
 
+## Concurrent VMs Sharing a GCS Bucket (HARD RULE, measured 2026-08-10)
+
+**Before launching a VM, check whether another VM is already actively writing to the SAME target bucket**
+(`gcloud compute instances list --filter="name~<prefix>"` + a quick `run.log` tail for each hit) — concurrent GCS I/O
+against a shared bucket is not free, and the cost lands asymmetrically, not evenly across the fleet.
+
+Real measurement (`defi_rebuild_vm_oom_root_cause_and_relaunch_carveout_2026_08_10`, follow-up I/O-contention test): a
+long-running incumbent VM (24 workers, already mid-run against `market-data-tick-defi-prd-*`) held **~227 shards/sec
+solo vs. ~209 shards/sec once two more VMs joined the same bucket** — an ~8% dip, within normal noise. The two NEW
+8-worker VMs, by contrast, measured **~1,054 shards/sec running solo** (identical settings, isolated same-bucket run)
+**vs. only ~120-151 shards/sec running concurrently** with the incumbent + each other — a **~7-9x throughput drop**,
+almost certainly GCS per-prefix/API-QPS smoothing under contention.
+
+**Practical rule**: an already-running VM is largely insulated from a newcomer joining its bucket, but each newcomer
+absorbs nearly all the contention cost. Horizontal parallel-shard scaling ("N VMs = N x speedup, same total cost") does
+**NOT** hold once those VMs share a bucket — a launch plan built on that assumption needs re-costing before you trust
+its ETA.
+
+**If launching alongside a co-tenant is unavoidable** (e.g. genuinely separate, non-urgent work), measure the ACTUAL
+marginal impact rather than assuming either "no effect" or "linear slowdown": read each VM's own
+`date=X: N shards scanned` log-timestamp cadence directly
+(`gsutil cat gs://deployment-scripts-.../vm-logs/<vm>/run.log`) for a same-session, low-lag throughput signal. BigQuery
+`deployment_operational_data.resource_samples` (`net_recv_rate_bytes_sec` / `io_write_rate_bytes_sec`) carries the same
+telemetry but with meaningful ingestion lag (tens of minutes observed) — fine for a post-hoc audit, not for a
+same-session live read.
+
 ## Common Failure Patterns (All Launchers)
 
 | Failure                                                          | Diagnosis                                                                               | Fix                                                                                     |

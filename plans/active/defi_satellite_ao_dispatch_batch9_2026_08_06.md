@@ -105,16 +105,14 @@ over all pending draft batches) that independently spot-verified every todo belo
       A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL NOT silently dropped — all adapters use canonical
       `InstrumentType.X` enum constants (cited: `compound_v3.py:114`, `aave_v3.py:314`, `yearn.py:133`,
       `balancer.py:142`, `aave_oracle.py:142`). `quality-gates.sh` green.
-- [ ] [DOC] P3. **Document the shipped collateral down-sizing contract** (USDC-collateral margin-buffer down-size branch
-      in strategy-service's `staked_basis.py` + `margin_buffer_pct`) in `codex/04-architecture/` and the wizard
-      param-schema (`param_schema.py`'s `PARAM_SCHEMA_REGISTRY`) in
-      `/codex/09-strategy/architecture-v2/capability-wizard.md`, and add a `setup_events()` pytest fixture to
-      `strategy-service/tests/unit/engine/strategies/v2/test_batch_harness.py` so
-      `TestMultipleTicksCarryForward::test_position_state_survives_across_ticks` (currently fails standalone with "Event
-      logging not initialized") passes in isolation. Repo: strategy-service, unified-trading-pm. Source:
-      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`. Done when: both codex docs cite the
-      down-size/buffer contract and the param-schema location with file:line code_refs, and the named test passes both
-      standalone and inside the full QG suite.
+- [x] ✅ [DOC] P3. **Document the shipped collateral down-sizing contract** — unified-trading-pm@946bcead07 +
+      strategy-service@3ae05318. (1) `/codex/04-architecture/token-wrapping-and-collateral.md` § "USDC Margin Buffer"
+      documents the `_derive_structure()` three-outcome contract (`LST_AS_MARGIN` / `USDC_MARGIN_BUFFERED` / reject)
+      with `margin_buffer_pct` default `0.20`, citing `staked_basis.py:238,344` + `param_schema.py:144,198`. (2)
+      `/codex/09-strategy/architecture-v2/capability-wizard.md` § "Collateral down-sizing param" cites both
+      `PARAM_SCHEMA_REGISTRY` entries with exact line numbers. (3) `setup_events()` fixture was already shipped at
+      `strategy-service@3ae05318` (confirmed on origin/LDR, test passes standalone). Repo: strategy-service,
+      unified-trading-pm.
 - [x] ✅ [DIAG] P1. **Root-cause the VM-boot `gsutil` hang** that has stalled 15 launch attempts of the gas_fees
       legacy-venue manifest purge (12,425 orphaned rows; GCS objects already 100% deleted) — serial-console + gsutil
       credential-refresh investigation, replacing the `gsutil -q cp` marker-write with `gcloud storage cp` if no clean
@@ -166,12 +164,22 @@ over all pending draft batches) that independently spot-verified every todo belo
       `tests/unit/cli/handlers/test_paper_run_cli_flags.py` cover flag-set (== hand-built `_curtailment_reason_for_spec`
       semantics) and flag-unset (→ `None`, byte-identical). `quality-gates.sh --no-fix` green (5746 passed), landed on
       LDR.
-- [ ] [AUDIT] P3. **Classify every `_dex_pools_parsers.py` venue-parser** as Messari-daily-shape (emits
+- [x] ✅ [AUDIT] P3. **Classify every `_dex_pools_parsers.py` venue-parser** as Messari-daily-shape (emits
       `tvl_usd`/`volume_usd`/`fees_usd`/`fee_rate_bps`) vs legacy-cumulative-shape like `_parse_balancer` (emits
       `swap_volume`/`swap_fees`/`total_shares`, no delta computed). Repo: market-tick-data-service. Source:
       `defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md`. Done when: every parser in that file has a
       written classification and any additional venues beyond Balancer sharing the legacy cumulative shape are listed
-      with evidence (sample column names/values), or the audit confirms Balancer is the only affected venue.
+      with evidence (sample column names/values), or the audit confirms Balancer is the only affected venue. — **DONE
+      (2026-08-11, slot 31)** — classification written in source doc's item-4 checkbox + Progress Log (2026-08-07
+      sub-agent dispatch, shipped `market-tick-data-service@2f7d7840`, verified on origin/LDR); independently
+      re-verified against the live `_dex_pools_parsers.py` + `_dex_pools_subgraph._query_and_parse` fallbacks dict: all
+      7 parsers classified; Balancer was the ONLY live legacy-cumulative-shape venue (now fixed to Messari-daily shape,
+      emits `tvl_usd`/`volume_usd`/`fees_usd`/`fee_rate_bps` with day-over-day cumulative→daily delta); no other live
+      venue shares that shape (`_parse_uniswap_v3`/`_parse_uniswap_v2`/`_parse_messari_dex`/`_parse_sushiswap_custom`/
+      `_parse_camelot_v3` all emit canonical `tvl_usd`/`volume_usd`/`fees_usd` from genuinely-daily subgraph fields;
+      `_parse_uniswap_v2`'s `fees_usd=0.0` is by-design/documented); one LATENT finding `_parse_curve` (naming-mismatch
+      variant, dead code — unreferenced in the fallback-cascade table) already tracked as the source doc's P3 `[SCRIPT]`
+      dead-code-deletion todo.
 - [x] ✅ [DIAG] P2. **Research a per-call HTTP-status-equivalent** for (a) the Aave/Alchemy RPC batch client used by
       `_aave_oracle_collection.py` and (b) the Chainlink/Pyth on-chain legs of `oracle_prices_handler.py` — read-only
       research, no code change; if not obtainable for a family, propose the alternative signal (e.g. RPC-level error
@@ -623,3 +631,18 @@ remaining items besides the over-cap-gated one above).
   `test_aavev3_ethereum_dts_share_reserve_universe` to drop the now-empty `rewards` leg of the shared-reserve-universe
   assertion. `unified-api-contracts` full `quality-gates.sh` green post-removal (0 failures). Shipped:
   unified-api-contracts@9e44d861.
+- **2026-08-11 (slot 31, data_engineering, task `defi_satellite_ao_dispatch_batch9-005`, todo 8 [AUDIT] P3)**: flipped
+  this todo — audit classification written in source doc
+  `defi_balancer_dex_pool_state_writer_schema_mismatch_2026_08_04.md` (item-4 [AUDIT] checkbox DONE + full per-parser
+  breakdown in its Progress Log, shipped 2026-08-07 at `market-tick-data-service@2f7d7840`), independently re-verified
+  against the live file (`market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_parsers.py`) +
+  `_dex_pools_subgraph._query_and_parse` fallbacks dict: all 7 parsers classified; Balancer was the ONLY live
+  legacy-cumulative-shape venue (now fixed to Messari-daily shape, emits `tvl_usd`/`volume_usd`/`fees_usd`/
+  `fee_rate_bps` with day-over-day cumulative→daily delta); no other live venue shares that shape —
+  `_parse_uniswap_v3`/`_parse_uniswap_v2`/`_parse_messari_dex`/`_parse_sushiswap_custom`/`_parse_camelot_v3` all emit
+  canonical `tvl_usd`/`volume_usd`/`fees_usd` from genuinely-daily subgraph fields (`_parse_uniswap_v2`'s `fees_usd=0.0`
+  is by-design/documented); one LATENT finding `_parse_curve` (naming-mismatch variant `daily_volume_usd`/
+  `daily_total_revenue_usd`, no `fee_rate_bps`) is DEAD CODE — unreferenced in the fallback-cascade table (only a
+  class-attribute binding + direct unit tests), already tracked as the source doc's P3 `[SCRIPT]` dead-code-deletion
+  todo. No code shipped this dispatch (audit-only closure; classification + writer fix already at
+  `market-tick-data-service@2f7d7840` on origin/LDR).

@@ -676,13 +676,13 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   clean + `verify_cefi_canonical_4surface_2026_07_20.py` + archival) — bounded and worker-determinable, not a judgment
   call. Conflict-check: (a) grepped `plans/active/` for other `parent_epic: cefi_master` `assigned_vm: planning` docs —
   none cover the residual-rename resume sequence itself; (b)
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` cite this doc only for the SEPARATE Finding
-  8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently dispatched as its own batch10 `[DATA] P2`
-  todo, read-only, does not touch the 2,962-object safe-residual rename) — no overlap with this doc's own P1 todo;
-  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a "safe residual" text grep) is an
-  unrelated F1-N9 consistency-remediation doc, no shared scope; (c) `cefi_consolidated_closeout_2026_07_18.md` does not
-  reference this doc's resume-migration item. Clear. Companion finalize plan:
-  `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
+  [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)/`batch10_2026_08_08.md`
+  cite this doc only for the SEPARATE Finding 8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently
+  dispatched as its own batch10 `[DATA] P2` todo, read-only, does not touch the 2,962-object safe-residual rename) — no
+  overlap with this doc's own P1 todo; `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a
+  "safe residual" text grep) is an unrelated F1-N9 consistency-remediation doc, no shared scope; (c)
+  `cefi_consolidated_closeout_2026_07_18.md` does not reference this doc's resume-migration item. Clear. Companion
+  finalize plan: `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
 - **2026-08-08 (slot 16)**: the sole open todo (`re-run verify + archive`) was dispatched to the backlog despite being
   gated by prose only ("once the 2 blockers above resolve") — no machine-readable `depends_on` existed, so the
   dispatcher offered it as ready. Both blocker issue docs
@@ -726,3 +726,22 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   confirmed live), but the todo remains gated on blocker 1's Range-2 apply. **Next dispatch**: re-check blocker 1's
   Range-2 apply todo / the fwd VM's terminal state; once BOTH blockers are resolved, run the verify → clean-PASS →
   archive sequence.
+- **2026-08-10T19:20Z (slot 25, data_engineering, dispatched on the sole open P2 todo — "re-run verify + archive")**:
+  blocker state re-checked. **Blocker 2 (pre-2025-11 duplicate residual): confirmed still RESOLVED** — doc remains
+  archived at `plans/archive/2026_08/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`, no active copy.
+  **Blocker 1 (LIGHTER-ZKSYNC collision): still OPEN**, and its gating has shifted since slot-13's 12:25Z entry — per
+  the LIGHTER-ZKSYNC issue doc's own 2026-08-10 16:19Z dry-run verdict (slot-6), the Range-2 apply's gate is NO LONGER a
+  forward-backfill VM wait: the culprit `cefi-fwd-20260808-123230` was already terminated 2026-08-09, and the fresh
+  venue-scoped dry-run over 2026-04-18..2026-07-24 STILL reported unhandled collisions (`would_rename=3524`, "Refusing
+  to proceed to --apply while unhandled collisions exist") under the strict `_confirm_would_patch_duplicate` compare.
+  The actual gate-clearing work is that issue's todo 3 — extend `_confirm_would_patch_duplicate` with the casefold-aware
+  `instrument_type` check (Finding 11 BROAD definition) — still `[ ]`, and the Range-2 apply todo (its todo 2) still
+  `[ ]` behind it. Also noted (for accuracy vs slot-13's framing): the sibling forward-cron VM
+  `cefi-fwd-daily-cron-20260809-110236` it cited as "the gating VM" is now TERMINATED (stopped 2026-08-10T13:34Z by
+  `unified-trading-sa`, per `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`), but per the LIGHTER-ZKSYNC
+  doc's dry-run this does NOT change blocker 1's state — the collision population persists independent of any VM until
+  the BROAD-comparison fix lands and a full-population dry-run confirms 0 STOP-ON-SURPRISE. Verdict unchanged: 1 of 2
+  blockers cleared; re-running `verify_cefi_canonical_4surface_2026_07_20.py` now would reproduce `OVERALL: FAIL` on the
+  still-present LIGHTER-ZKSYNC wire-form population. No work done on the todo itself. Skipping (`reason_code=GATED`,
+  `estimated_unblock_minutes=180`). **Next dispatch**: re-check the LIGHTER-ZKSYNC issue's todo 3 (BROAD-comparison
+  fix) + todo 2 (Range-2 apply) checkbox state — once both are `[x]`, run the verify → clean-PASS → archive sequence.

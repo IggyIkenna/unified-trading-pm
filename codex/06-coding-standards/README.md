@@ -628,6 +628,10 @@ Run per service: `pytest tests/unit/ -v --timeout=30`
 - `tests/unit/test_schema_robustness.py` exists (Layer 1 — Schema Robustness): required field missing →
   `ValidationError`; optional field absent → passes; wrong type → fails.
 - No `pytest.skip()` without documented reason in `skipif` condition.
+- No `pytest.xfail(...)` / unconditional `@pytest.mark.skip(...)` whose reason does NOT cite a tracked plan/issue slug
+  (a `plans/`/`issues/`/`codex/` path, a dated `20YY_MM_DD` stamp, or a `.md` reference) — an xfail with a good reason
+  and no remediation todo is indistinguishable from coverage never written. QG STEP 5.107 / 5.102
+  (`check_xfail_skip_tracked.py`, baseline `xfail_skip_tracked_baseline.yaml`).
 - Integration tests (Layer 1.5) in `tests/integration/` pass: `pytest tests/integration/ -v --timeout=30`. Test naming:
   `test_<component>_integration.py`. No live external calls — all external deps mocked. No live cloud resources.
 

@@ -73,19 +73,20 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket.** Source:
-      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. `_run_coverage_status` calls
-      `get_write_bucket_name("instruments", "prediction")` which raises `BucketNamingError` (the per-asset_group
-      instruments-store dict has no PREDICTION entry; prediction resolves via the FLAT
-      `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
-      `_get_instruments_bucket_for_asset_group` (the same resolver the write path already uses) so prediction status
-      renders. Display-only gap — the backfill WRITE path already works. Done when:
-      `--operation status --asset-group     prediction` runs without raising and renders coverage. Repo:
-      instruments-service.
+- [x] ✅ [CODE] P3. **`--operation status --asset-group prediction` can't read the flat-kind bucket — STALE PREMISE on
+      the named path + ADJACENT FIX in `_run_reprocess_shards`.** Source:
+      `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`. The named `_run_coverage_status` status-path bug
+      was already fixed at `instruments-service@086eeffe` (2026-08-03 — 6 days before this plan was authored): line 79
+      already routes through `get_instruments_bucket_for_asset_group`, the prediction-aware resolver. The ADJACENT
+      same-class bug in `_run_reprocess_shards` (line 295, still used
+      `get_write_bucket_name("instruments", asset_group)` — same BucketNamingError for prediction) was fixed in this
+      same commit. Done when: `--operation status --asset-group prediction` AND
+      `--operation reprocess-shards --asset-group prediction` both resolve the flat bucket. Repo:
+      instruments-service@c8e3686ca4.
 - [x] ✅ [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain — STALE
       PREMISE, already shipped (verification only).** Source: same doc. This exact fix landed on
       `instruments-service@6b7fbadf`/`ec73983e` (2026-08-05,
-      `fix(defi): align multi-chain adapter venue property to     PROTOCOL-CHAIN grain`, 42 adapter files + 49 test
+      `fix(defi): align multi-chain adapter venue property to PROTOCOL-CHAIN grain`, 42 adapter files + 49 test
       assertions) — **four days before this batch-11 doc was authored (2026-08-09)** — so the source doc's checkbox was
       already stale at extraction time. Verified live against current HEAD, not just the commit log: every multi-chain
       DeFi adapter's `venue` property returns the combined form (e.g.
@@ -141,7 +142,7 @@ drift_direction: advance-code
       (`--asset-group cefi --mode incremental`, promoted 431,777-row catalogue, 200 distinct EXTENDED-STARKNET
       instruments now resolve for the `ALL` symbol sentinel with correct per-instrument lifecycle windows) → (3)
       launched `scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
-      (`VENUES=EXTENDED-STARKNET SHARD_DAYS=60     CUTOFF_DATE=2026-08-08 SYMBOLS=ALL`) — 13 SPOT VMs sharding
+      (`VENUES=EXTENDED-STARKNET SHARD_DAYS=60 CUTOFF_DATE=2026-08-08 SYMBOLS=ALL`) — 13 SPOT VMs sharding
       2024-10-01→2026-08-08 (the venue's real `_VENUE_LAUNCH`/UAC capability floor; the plan's own 2024-07-26 predates
       the funding/trades floor and applies only to the OHLCV candle path, which was already fully `captured` with zero
       `expected_unattempted` before this run — verified, no gap). All 13 VMs confirmed RUNNING then completed +
@@ -168,22 +169,38 @@ drift_direction: advance-code
       `tests/unit/test_extended_candles.py`, locking in the startTime-bound + capped-limit + loud-warning behavior for
       both the within-cap and oversized-window cases. Repo: market-tick-data-service@f8d9033b5. Evidence: QG green
       (sentinel-verified on HEAD), 6/6 tests in `test_extended_candles.py` pass, landed on `live-defi-rollout`.
-- [ ] [CODE] P3. **Align/consolidate the two parallel Extended candle paths.** Source: same doc. The live path is
-      `adapters/_umi_extended.py`; `market_interface/adapters/onchain_perps/extended_adapter.py::ExtendedAdapter` is a
-      separate, tested-but-unused parallel impl that still carries the global `EXTENDED_DEPLOY_DATE` pre-launch floor
-      (vs the live path's per-instrument genesis). Decide: wire `ExtendedAdapter` as canonical (making its
-      `_check_pre_launch` per-instrument first) OR delete it (confirm zero live importers first — a grep-then-READ
-      check, not an assumption). Parallel-paths anti-pattern per the Delete-Deprecated-Code HARD RULE. Done when: only
-      one Extended candle path remains live, QG green. Repo: mtds.
-- [ ] [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs `is_mvp()` canonical strings).**
-      Source: same doc. `prod/catalog.parquet`'s `league_id` holds NUMERIC provider IDs (`'10'`/`'100'`) while
-      `is_mvp()`'s sports MVP rule keys canonical strings — so no sports league ever tags `mvp=True` in the catalogue.
-      Map the provider `league_id` → canonical league_id (UAC `league_data`/`provider_league_ids`) before the `is_mvp()`
-      check in `build_instrument_catalogue.py`. **Check against the v10 94-football-league MVP set**
-      (`/codex/02-data/mvp-scope-canonical.md`, `_mvp_football_league_ids()`), NOT the doc's own stale 4-league pre-v10
-      reference. Low-risk display/classification fix (the MVP tag is unused downstream today). Done when: a fresh
-      catalogue build tags at least one MVP-qualifying league `mvp=True`. Repo: instruments-service
-      (`build_instrument_catalogue.py`).
+- [x] ✅ [CODE] P3. **Align/consolidate the two parallel Extended candle paths — STALE PREMISE, already shipped
+      (verification only).** Source: same doc. The parallel `ExtendedAdapter`
+      (`market_interface/adapters/onchain_perps/extended_adapter.py`) was already DELETED at
+      `market-tick-data-service@f6bda91b` (2026-06-24 — six weeks before this batch-11 doc was authored 2026-08-09):
+      `refactor(market-interface): delete unused ExtendedAdapter/Starknet parallel path` removed `extended_adapter.py`,
+      `clients/extended_base_client.py`, the sole integration test (`integration/test_extended_starknet_adapter.py`),
+      and the `__init__` re-exports — the commit message explicitly names `adapters/_umi_extended.py` via
+      `umi_tick_provider._route_extended` as the canonical EXTENDED-STARKNET path. Verified against current HEAD, not
+      just the commit log: (1) zero references to `extended_adapter`/`ExtendedAdapter`/`extended_base_client` anywhere
+      in the tree (`rg` exit 1); (2) `onchain_perps/__init__.py` re-exports only Aster/Hyperliquid/Base,
+      `clients/__init__.py` has no extended_base_client; (3) the global `EXTENDED_DEPLOY_DATE` floor is gone — zero
+      matches — the live path `_umi_extended.py` uses per-instrument/venue-aware handling (`_EXTENDED_FUNDING_START_MS`
+      aligned to the UAC `coverage_start`, live symbol resolution from `/info/markets`); (4) exactly ONE candle-fetch
+      path remains live: `fetch_extended_candles` in `_umi_extended.py`, routed through
+      `umi_tick_provider._route_extended` (line 592) → `_fetch_extended_candles`, with current unit coverage
+      (`test_extended_candles.py`, `test_umi_extended_book_gate.py`, `test_umi_tick_provider_coverage.py`). Repo:
+      market-tick-data-service (verified, no change needed) @f6bda91b.
+- [x] ✅ [DATA] P3. **Sports catalogue `mvp` column is 100% False (numeric league IDs vs `is_mvp()` canonical strings) —
+      STALE PREMISE, ALREADY WORKING (verified 2026-08-10, slot 24).** No code change needed in
+      `build_instrument_catalogue.py` — the numeric→canonical mapping is moot because the catalogue `league_id` is
+      ALREADY canonical end-to-end. Measured evidence (read-only, against the LIVE prod catalogue
+      `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt 2026-08-10 10:52Z): (1)
+      **0 numeric `league_id` rows** (532,868 rows, all canonical strings like `ALLSVENSKAN`/`EPL`); (2) all 96 v10 MVP
+      football leagues (`_mvp_football_league_ids()`) present in the catalogue are tagged `mvp=True` — **0 false
+      negatives**; 272,006 rows `mvp=True` today, and recomputing with the CURRENT UAC `is_mvp` yields 267,893
+      `mvp=True` — the done-condition ("a fresh build tags ≥1 MVP-qualifying league `mvp=True`") is met by the live
+      catalogue. The ONLY anomaly is a STALE false positive: `SEGUNDA_DIVISION` (4,113 rows, a non-canonical alias of
+      the Spanish second tier) is tagged `mvp=True` — current `is_mvp` returns False for it, so a rebuild with current
+      code drops it (cosmetic; the MVP tag is unused downstream today). Original premise (numeric provider IDs → no
+      league ever tagged True) reflects the 2026-06-19 catalogue verify; superseded by the later canonicalization of the
+      sports by_date source (`sports_reference/by_date/.../league=<canonical>` paths + the MTDS odds adapter
+      `_canonical_league_id`). Repo: instruments-service (`build_instrument_catalogue.py`).
 - [x] ✅ [SCRIPT] P2. **Diagnose the SFI backfill mid-processing hang + add a request timeout + per-date isolation —
       STALE PREMISE, already shipped (verification via 3 real production runs).** Source: same doc. The described
       2026-06-19 hang was already root-caused and fixed well before this batch was authored (2026-07-24 source doc /
@@ -242,12 +259,13 @@ drift_direction: advance-code
       change needed — flipping as already-shipped, not re-implementing. The optional pace tighten (0.34s→0.25s) was NOT
       applied (still 0.34s in `soccerfootball_info.py:43`) — left as-is since it's explicitly optional and outside this
       item's done-when.
-- [ ] [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue.** Source: same doc. The
-      lock currently matches `^mtds-prediction-`, so a KALSHI run is blocked by a concurrent POLYMARKET run even though
-      they hit different APIs with no shared rate limit. Make the lock per-venue (`^mtds-prediction-{venue}-`);
-      `--force` is the current bypass and should no longer be needed for this specific case once fixed. Done when: a
-      KALSHI and a POLYMARKET backfill can run concurrently without the singleton lock blocking either. Repo:
-      deployment-service.
+- [x] ✅ [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue — STALE PREMISE,
+      already shipped by slot 28.** Source: same doc. The exact fix described — per-venue singleton lock
+      (`^mtds-prediction-${VENUE_LOWER}-`), `VENUE_LOWER` variable, updated error message, DRY'd VM_NAME — landed at
+      `deployment-service@fce66018` ("fix(scripts): make mtds-prediction singleton lock per-venue", 2026-08-11 00:30
+      UTC) before this task was dispatched to slot 22. Verified against current HEAD: filter reads
+      `name~^mtds-prediction-${VENUE_LOWER}-`, KALSHI and POLYMARKET runs no longer block each other. No code change
+      needed. Repo: deployment-service@fce66018.
 - [ ] [TEST] P3. **Re-baseline the UEI-lifecycle contract-call ratchet for `canonical/crosscutting/honest_coverage.py`
       post-split.** Source: same doc. Commit `27a80d2` ("feat(freshness): feed-SLA Phase 1") split the honest_coverage
       cluster registries out from `honest_coverage.py` (900-line cap), so the UEI-lifecycle contract-call baseline of 27
@@ -309,3 +327,35 @@ drift_direction: advance-code
   deliberately NOT extracted despite being named in the source doc's own audit list — on full read it is a
   multi-service, one-commit closed-set schema extension (UAC + MTDS + features-service + every OHLCV write-callsite),
   too broad a blast radius for a single bounded AO todo; left as-is in the source doc.
+- **2026-08-10**: Prediction flat-kind bucket item (P3, todo 1) flipped — STALE PREMISE on the named code path
+  (`_run_coverage_status` was already fixed at `instruments-service@086eeffe`, 2026-08-03, 6 days before this plan was
+  authored) + ADJACENT FIX for the same-class bug in `_run_reprocess_shards` (line 295 still used
+  `get_write_bucket_name("instruments", asset_group)` — same `BucketNamingError` for prediction). Route both through
+  `_get_instruments_bucket_for_asset_group`, the prediction-aware flat-kind resolver. Repo:
+  instruments-service@c8e3686ca4.
+- **2026-08-10**: Extended candle parallel-path todo (P3, todo 6) flipped — STALE PREMISE, the parallel
+  `ExtendedAdapter`/Starknet path was already deleted at `market-tick-data-service@f6bda91b` (2026-06-24, six weeks
+  before this batch was authored): `refactor(market-interface): delete unused ExtendedAdapter/Starknet parallel path`
+  removed `extended_adapter.py` + `clients/extended_base_client.py` + the integration test + the `__init__` re-exports,
+  keeping `_umi_extended.py` (via `umi_tick_provider._route_extended`) as the single canonical EXTENDED-STARKNET path.
+  Verified against current HEAD: zero `extended_adapter`/`ExtendedAdapter`/`extended_base_client` references anywhere,
+  the global `EXTENDED_DEPLOY_DATE` floor is gone (live path uses per-instrument/venue-aware handling aligned to UAC
+  coverage_start), and exactly one candle-fetch path remains (`fetch_extended_candles` in `_umi_extended.py`). No code
+  change needed.
+- **2026-08-10 (slot 24, data_engineering, task `cross_cutting_satellite_ao_dispatch_batch11-0d6336a233f8`)**: sports
+  catalogue `mvp` todo (P3, todo 7) flipped — **STALE PREMISE, already working**. Read-only verification against the
+  LIVE prod sports catalogue (`instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`, rebuilt
+  2026-08-10 10:52Z): 0 numeric `league_id` rows (all canonical), all 96 v10 MVP football leagues present tagged
+  `mvp=True` (0 false negatives), 272,006 rows `mvp=True`; recomputing with current UAC `is_mvp` yields 267,893
+  `mvp=True` — done-condition met. The numeric-ID premise reflects the 2026-06-19 catalogue verify; the sports by_date
+  source + MTDS odds adapter have since canonicalized league_id end-to-end. No code change needed. One stale false
+  positive observed (`SEGUNDA_DIVISION`, 4,113 rows — a non-canonical Spanish-second-tier alias tagged `mvp=True` by the
+  build's UAC version; current `is_mvp` returns False, so the next catalogue rebuild drops it; cosmetic, MVP tag unused
+  downstream). Source checkbox in `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` stays open for the
+  batch-11 finalize twin to reconcile.
+- **2026-08-10 (slot 24)**: recovery note — the safe-doc-push prek-patch orphan incident
+  (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) manifested on this commit's push: a retried
+  commit stashed unstaged foreign WIP into `~/.cache/prek/patches/` and the restore step never ran. Restored via
+  `git apply`, then verified the content had ALREADY landed on origin via its owners (cefi batch9 LC_TARBALL flip @
+  `43ec2ec651`, sports_af monitoring tick @ `395b50bc83`) — resolved all conflicts to origin, no duplicate commit. No
+  impact on this task's mvp flip (`8a561c3ed0`).

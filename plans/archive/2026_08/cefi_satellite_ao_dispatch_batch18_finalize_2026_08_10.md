@@ -1,0 +1,73 @@
+---
+doc_type: plan
+title: CeFi satellite AO batch 18 finalize — reconcile + archive
+summary: >-
+  Finalize plan for `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. Gated behind batch18's sole todo completing
+  (`gate_on_depends: true`). On completion: reconcile the source issue doc's checkbox, verify linkage, archive if fully
+  resolved.
+status: completed
+nature: process
+asset_group: [cefi]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: [cefi, ao-dispatch, close-out, batch-18, finalize, ag-closeout-audit]
+related:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md,
+    /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
+created: "2026-08-10"
+last_updated: "2026-08-10"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P3
+estimate_class: infra
+estimate_baseline_ai_days: 0.05
+estimate_calibrated_ai_days: 0.04
+assigned_role: data_engineering
+effort: low
+sequential: true
+drift_direction: none
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: [cefi_satellite_ao_dispatch_batch18_2026_08_10]
+gate_on_depends: true
+source: >-
+  `/ag-closeout-audit cefi` run 2026-08-10 — paired with `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`, per
+  `task_template.md` §4's finalize-plan-coverage rule and the 2026-07-30 finding (finalize plans ship `status: active`,
+  not draft — `gate_on_depends: true` already machine-holds every todo until the batch's own todos are done).
+context_scope:
+  [
+    /plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md,
+    /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
+  ]
+---
+
+# CeFi satellite AO batch 18 finalize — reconcile + archive
+
+> Gated behind `cefi_satellite_ao_dispatch_batch18_2026_08_10` completing (`gate_on_depends: true`).
+
+## Todos
+
+- [x] ✅ [DOC] P3. **Reconcile source issue doc.** Verified `mdps_manifest_staleness_check_inverted_2026_08_10.md`'s
+      sole todo is correctly checked off with fix evidence (`unified-trading-library@26294ddf71`), and the doc's
+      `status:     resolved` reflects the actual resolution. Root cause: NOT inverted comparison — transient GCS/parse
+      error in fast-path `_read_consolidated_if_fresh()` caused slow path to raise `ManifestConsolidatorStaleError` with
+      misleading message. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1. —
+      `unified-trading-pm@5f012d2842` (archival) + stale active copy removed this commit.
+
+- [x] ✅ [DOC] P3. **Archive source issue doc.** Investigation resolved the root cause (transient GCS/parse error, NOT
+      inverted comparison), fix shipped. Archived to `plans/archive/2026_08/issues/` per canonical archival discipline
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). 5 referrers updated. Stale active copy
+      removed this commit. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. — `unified-trading-pm@5f012d2842`
+      (archival).
+
+- [x] ✅ [DOC] P3. **Verify closeout linkage.** `check_ag_closeout_linkage.py --tranche cefi` → 0 cefi orphans (756 docs
+      scanned, baseline 0). Linkage green. Source:
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`. — `unified-trading-pm@<sha>` (this
+      commit).

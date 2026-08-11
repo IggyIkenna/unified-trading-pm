@@ -21,7 +21,10 @@
 # Scripts under test are invoked with PM_ROOT / WORKSPACE_ROOT overridden.
 
 setup_fake_workspace() {
-    FAKE_WORKSPACE="$BATS_TMPDIR/workspace"
+    # UNIQUE per test. Was one fixed path shared by every test in every file using this helper,
+    # so under `bats -j` concurrent tests built and tore down the SAME directory: one test's
+    # teardown deleting the tree another was mid-assertion on.
+    FAKE_WORKSPACE="${BATS_TEST_TMPDIR:-$BATS_TMPDIR}/workspace.$$.${BATS_TEST_NUMBER:-0}"
     FAKE_PM="$FAKE_WORKSPACE/unified-trading-pm"
     FAKE_CURSOR_RULES="$FAKE_WORKSPACE/.cursor/rules"
     FAKE_CURSOR_CONFIGS="$FAKE_WORKSPACE/.cursor/workspace-configs"

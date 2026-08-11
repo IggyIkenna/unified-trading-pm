@@ -10,14 +10,21 @@
 # Run: bats tests/test_tab_worktrees.bats
 # Run all: bats tests/
 
-SETUP="unified-trading-pm/scripts/dev/setup-tab-worktrees.sh"
-TEARDOWN="unified-trading-pm/scripts/dev/teardown-tab-worktrees.sh"
-REBASE="unified-trading-pm/scripts/dev/slot-master-rebase.sh"
 
 # Resolve paths relative to the workspace root, so this test passes whether
 # invoked from PM root or workspace root.
 setup() {
-    cd "$(git rev-parse --show-toplevel)/.." || cd ..
+    # ABSOLUTE, derived from this file's own location. The paths were workspace-root-relative,
+    # so every invocation depended on the cd below landing exactly right — and
+    # `git rev-parse --show-toplevel` returning empty (a subprocess, run alongside ~200 other
+    # tests spawning git) silently falls through to `cd ..` from wherever bats started. Passed
+    # 5/5 serially, failed ~1 in 3 parallel, surfacing as a bug in the rollup script.
+    _TAB_PM_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
+    SETUP="${_TAB_PM_ROOT}/scripts/dev/setup-tab-worktrees.sh"
+    TEARDOWN="${_TAB_PM_ROOT}/scripts/dev/teardown-tab-worktrees.sh"
+    REBASE="${_TAB_PM_ROOT}/scripts/dev/slot-master-rebase.sh"
+    ROLLUP="${_TAB_PM_ROOT}/scripts/agents/rollup_resolved_pings.py"
+    cd "${_TAB_PM_ROOT}/.." || cd ..
 }
 
 # ── Bash syntax + help text ───────────────────────────────────────────────────
@@ -115,7 +122,6 @@ setup() {
 # ── rollup_resolved_pings.py tests ───────────────────────────────────────────
 # These tests verify the read-time rollup helper without touching real ping files.
 
-ROLLUP="unified-trading-pm/scripts/agents/rollup_resolved_pings.py"
 
 @test "rollup_resolved_pings.py has valid python3 syntax" {
     run python3 -m py_compile "$ROLLUP"

@@ -64,19 +64,11 @@ PM_DIR = Path(__file__).resolve().parents[2]
 # plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md § "Full sweep".
 ALLOWED_DUPLICATE_STEMS: frozenset[str] = frozenset(
     {
-        # Both LOCKED (`locked_by: plan_reconciler`) in the active copy yet archived anyway.
-        # Deleting the active copy would silently complete a human-only unlock -- operator-gated.
-        "plan_reconciler_findings_2026_08_06.md",
-        "plan_reconciler_findings_tradfi_2026_08_09.md",
         # Active copy is a NEWER, independently-authored /ag-closeout-audit report written at a slug
         # that had already been archived; neither side is a stale copy of the other.
         "ag_closeout_audit_cefi_parked_2026_08_10.md",
         "ag_closeout_audit_prediction_parked_2026_08_10.md",
         "ag_closeout_audit_tradfi_parked_2026_08_10.md",
-        # Active copy carries unique content the archive lacks (verification notes / frontmatter);
-        # needs a content merge, not a delete.
-        "ao_satellite_ao_dispatch_batch2_2026_07_30.md",
-        "infra_satellite_ao_dispatch_batch7_2026_08_04.md",
         # An archived snapshot of the generated active-plan index; both copies are intentional.
         "INDEX.md",
     }

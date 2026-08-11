@@ -99,8 +99,42 @@ last_updated: 2026-06-27
 > `scripts/recovery/ _durable_state.py` (998→895); awaiting a re-gate + a real sha. A checkbox goes `[x]` only when the
 > sha RESOLVES — see this session's own correction of a false `305d897a` claim in
 > `/plans/active/issues/features_sports_compute_features_hard_fail_missing_upstream_today_2026_08_10.md`.
+>
+> **⚠️ CORRECTION (2026-08-10, data-pipeline-alerts reconciler slot-20): the "code complete" claim above is now FALSE —
+> the code is LOST, not awaiting a re-gate.** Verified 2026-08-10T23:44Z: `scripts/recovery/_durable_state.py` (and the
+> sibling extractions `_captured_reader.py`/`_classify.py`) exist on NO branch, NO stash, NO reflog entry in
+> `deployment-service`; `git log --all -- scripts/recovery/_durable_state.py` is empty and the working tree is clean.
+> The authored fix lived only in an uncommitted worktree that was lost (never committed before the session ended). The
+> live `tempfile.gettempdir()` budget bug is STILL PRESENT at `scripts/recovery/relaunch_backfill_vm.py:399-400` —
+> `_MAX_RELAUNCHES_PER_DAY=2` is still a no-op in production, and the `DP_VM_PREEMPTED_NO_RELAUNCH` storm this todo was
+> built to stop is STILL FIRING (724 messages in the 24h to 2026-08-10T23:34Z). This todo must be RE-AUTHORED from
+> scratch, not "picked up where the code left off".
+>
+> **⚠️⚠️ COUNTER-CORRECTION (2026-08-11T06:2xZ, slot 1 — the authoring slot). DO NOT RE-AUTHOR. The code is NOT lost.**
+> All four modules exist RIGHT NOW, uncommitted, in slot 1's working tree: `scripts/recovery/_durable_state.py` (138 L),
+> `_captured_reader.py` (205 L), `_classify.py` (565 L), `_attempted_failed_index.py` (176 L), alongside 8 modified
+> files. The slot-20 check was CORRECT FROM WHERE IT LOOKED and the inference was reasonable — but each slot is a
+> SEPARATE clone with its own working tree, so uncommitted work in slot 1 is invisible from slot 20, from `--all`, from
+> the reflog, and from origin. "Not on any branch/stash/reflog" proves it is unshipped, NOT that it does not exist.
+> **This is the single most expensive failure mode in this batch** and it has now bitten three distinct ways in one
+> session: (1) `safe-doc-push` exited 0 having pushed nothing, (2) a peer operation silently reverted an uncommitted
+> append (323 L → 286 L, with no artifact left to recover from), and (3) this — a peer correctly observing absence and
+> reasonably concluding loss, nearly triggering a full re-author of a day's work.
+> **Also corrected: the "bug STILL PRESENT at :399-400" claim.** `tempfile.gettempdir()` at lines 80 and 401 is the
+> deliberate LOCAL-ONLY fallback (`_default_budget_dir()` / `_default_preemption_budget_dir()`), used only when a caller
+> passes an explicit `budget_dir` — i.e. unit tests. Production passes nothing and goes through
+> `_ShardedState(..., local_only=False)` against GCS. Presence of the symbol is not presence of the bug; that read was
+> grep-then-conclude rather than grep-then-READ.
+> **RESOLVED 2026-08-11 — shipped at `deployment-service@0c38c00d`.** All four modules are now ON ORIGIN (verified by
+> name: `_durable_state.py`, `_captured_reader.py`, `_classify.py`, `_attempted_failed_index.py`), with the race-free
+> `_ShardedState` wiring and the windowed-ratio fix present. Final gate: 3,317 passed / 0 failed, sentinel == HEAD.
+> Nothing to re-author. Original status line follows for provenance:
+> Status at the time of writing: the tree is fast-forwarded clean onto the current HEAD and the full gate is RUNNING.
+> **If slot 1 dies before that gate + `quickmerge` complete, THEN the work is genuinely lost and re-authoring is
+> correct** — the record below will carry a resolving sha the moment it lands.
 
-- [ ] [SCRIPT] P1. Durable, race-free relaunch state — replaced the `tempfile.gettempdir()` budget with
+- [x] ✅ [SCRIPT] P1. **SHIPPED — deployment-service@0c38c00d.** Durable, race-free relaunch state — replaced the
+      `tempfile.gettempdir()` budget with
       one-object-per-fact GCS state in `deployment-scripts-<project>`; `DP_VM_PREEMPTED_NO_RELAUNCH` now pages at most
       once per VM via an ATOMIC create-if-absent claim (`if_generation_match=0`), and the repeat sweep returns
       `SUPPRESSED` BEFORE re-running the launcher (stopping the wasted relaunches, not just the page). Budget counts
@@ -152,8 +186,28 @@ last_updated: 2026-06-27
       `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
       the VM's ACTUAL launcher binding (`mdps-*` binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis
       references); exempt cron/launcher HOST VMs from the capture-based `GONE_NO_CAPTURE` population.
-- [ ] [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable (agent-orchestrator) — it has no timer and no
-      server module today, which is why this storm sat unattended. Includes confirming AO's SA has
+- [x] ✅ [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable — **already shipped upstream by a peer while
+      this session worked** (agent-orchestrator slot-18): the `data_pipeline_alerts_reconciler` AgentKind, the
+      `plan_health` mode + prompt-template mapping, and `install-data-pipeline-alerts-reconciler-timer.sh` were all on
+      origin by the time this slot went to push, so this session's independently-written versions were DISCARDED as
+      duplicates rather than merged (verified line-by-line first: zero unique content). What was genuinely unique — the
+      tests — was rebased onto the peer's implementation and shipped, and one of them was rewritten after it failed: it
+      asserted server-side smart-tier forcing, which upstream DELIBERATELY omits for this mode (tier comes from the role
+      file's frontmatter, same as its `ci_reconcile` sibling). The test now pins that real contract instead of "fixing"
+      upstream to match an assumption. **Bug found and fixed in the peer's shipped code while adding those tests**: the
+      `--window 6hour` guard built an ISO-8601 string PREFIX (`f"{date}T{(hour//6)*6:02d}"`) and matched with
+      `startswith`, but a 6-hour bucket spans SIX clock hours and a prefix can only match one. Measured against the real
+      predicate with the guard firing at 09:30: a prior run at 06:15 blocked, but 07:15 / 08:15 / 09:15 / 10:15 / 11:15
+      all came back UNBLOCKED — so the 60-minute timer would have dispatched up to FIVE duplicate reconcilers per
+      bucket, each burning a Max-plan slot, the exact opposite of the "at most one success per 6h bucket" the installer
+      advertises. Replaced with a real timestamp comparison (`day`/`hour` keep prefix semantics byte-for-byte).
+      Evidence: **agent-orchestrator@0eb0da5**, `AO_QG_EXIT=0`, **3,364 passed / 0 failed**; the parametrized negative
+      control fails on hours 7-11 against the pre-fix code and passes on all six after (verified by running the new
+      tests against a clean copy of the old implementation). NOTE: the earlier AO gate reporting 9 failures was HOST
+      CONTENTION, not this change — the same tests passed on a stashed-clean tree, and the full suite ran 3,363 passed /
+      0 failed in 264s once the host was quiet vs 776s under load 283. The timer INSTALLER remains deliberately un-run —
+      see the cross-cloud WIF todo below; ship the code, hold the installer. Superseded original text: it has no timer
+      and no server module today, which is why this storm sat unattended. Includes confirming AO's SA has
       `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN`.
 - [ ] [DATA] P1. Determine which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and
       whether the 2026-08-02 ruling is inflating them. Read-only analysis; the operator's hypothesis (a 200-with-zero-
@@ -172,20 +226,47 @@ last_updated: 2026-06-27
       `mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27`). So this is NOT a missing registration, and
       shipping one would have been a no-op. **What it actually is: a recent BACKFILL WAVE over 2020-2026 historical
       liquidations failed schema validation across every major perp venue.** The "150k in the last 24h" figure measured
-      manifest WRITE time (the backfill's run time), not data date — that was misread as onset. **NEXT STEP**: diff what
-      the `liq_agg` writer emits against what the `liq_agg_{tf}` SchemaContract demands (`_candle_contracts.py`,
-      `liq_shape=True`, `ohlcv_core=False`) — the failure is at `candle_write_mixin.py:~650`
-      (`ParquetSchemaEnforcer.validate_dataframe`, OUTPUT-side validation before upload), not on the input ticks.
-      Operator has approved FULL remediation (fix + re-drive the ~150k cells). Superseded framing follows for provenance
-      only — **LIVE REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to 150,182
-      rows, essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver fleet-wide.
-      No commits touched the schema/writer files in that window, which points at an UPSTREAM venue payload-shape change
-      our schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this corrupts coverage
+      manifest WRITE time (the backfill's run time), not data date — that was misread as onset. **✅ ROOT CAUSE FOUND +
+      PROVEN 2026-08-10 (second pass).** Not a regression at all: `liq_agg` has NEVER been able to write. The
+      `liq_agg_{tf}` contract (`liq_shape=True`) demands `liquidation_count int64 NOT NULL` +
+      `liquidation_notional_usd float64 NOT NULL`; `CefiLiquidationsAdapter` satisfies NEITHER — it builds
+      `liq_count_arr` as `np.int32` (the write seam coerces `trade_count` int32→int64 but not `liquidation_count`), and
+      `CandleOutput`'s field was spelled `liquidation_notional` (no `_usd`) and was never populated by any adapter,
+      while the strict writer matches contract columns BY NAME. Proven by running the REAL validator
+      (`unified_api_contracts.internal.schemas._validation.validate_dataframe`, the one
+      `canonical_writer.py:499 _utl_write_chunk` calls under `strict=True` — NOT the `candle_write_mixin.py:~650`
+      `ParquetSchemaEnforcer` pre-flight, which is a different schema source and was a wrong pointer in the earlier
+      framing) over four candidate frame shapes: current shape → exactly 2 violations
+      (`missing_column liquidation_notional_usd`, `wrong_dtype liquidation_count int32≠int64`); +notional +int64 → 0
+      violations; extra OHLCV columns are tolerated. Corroborating measurements: (a) all 4,491 MDPS `captured`
+      liquidation rows have a BLANK `instrument_id` (day/venue aggregate rows, `instrument_count` up to 190,080) — so NO
+      per-instrument `liq_agg` shard has ever been captured; (b) 150,181 of the 150,182 failures have `written_at` in
+      2026-08, confirming one backfill wave over six years of data dates; (c) the manifest's own `margin_type` column is
+      EMPTY on every failing row, so the `@LIN`/`@INV` instrument_id suffix is the only usable margin discriminator
+      (143,082 LIN · 5,522 INV · 1,578 neither). Notional arithmetic is fixed by `MarginType`'s own docstring + real
+      tick files: linear `amount` is BASE units → `Σ(price×amount)`; inverse `amount` is USD-denominated contracts →
+      `Σ(amount)`. Operator approved FULL remediation (fix + re-drive the ~150k cells); the ~1% unresolved-margin ids
+      fail honestly rather than get a fabricated notional. Superseded framing follows for provenance only — **LIVE
+      REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to 150,182 rows,
+      essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver fleet-wide. No
+      commits touched the schema/writer files in that window, which points at an UPSTREAM venue payload-shape change our
+      schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this corrupts coverage
       silently. Evidence: DuckDB query over
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, discriminated by
       `service_name` + `error_reason`. Prior doc
       `/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
       at exactly 1 row as of 2026-08-02, which is what dates the onset.
+- [ ] [DATA] P2. Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
+      an `@INV` suffix (`BINANCE-FUTURES:PERPETUAL:IP-USDC`, `BYBIT:PERPETUAL:XRPUSD`, `BYBIT:FUTURE:BTC-20250926`, …)
+      from instruments-service reference data — the proper SSOT — instead of string heuristics. Surfaced by the liq_agg
+      fix: the notional formula BRANCHES on margin type, so an unresolvable id must fail honestly rather than take a
+      guessed branch (a wrong notional is worse than a failed shard). Until this lands, ~1% of liquidation shards stay
+      `attempted_failed` with a precise unresolved-margin reason. Cross-links the same reference-data gap as
+      `/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`.
+- [ ] [SCRIPT] P3. The write seam (`canonical_writer_shaping._inject_schema_contract_columns`) coerces ONLY
+      `trade_count` int32→int64 against contract dtypes. `liquidation_count` had the identical int32 defect and was
+      invisible for the life of the pipeline. Either widen the coercion to every contract-declared int64 column or
+      assert at the seam that adapter dtypes match the contract, so the next adapter cannot reintroduce this class.
 - [ ] [SCRIPT] P1. Audit `UNCLASSIFIED_ADAPTER_ERROR` rows — 51% of the `trades` cell and 14% of `derivative_ticker`.
       The UAC enum's OWN docstring says any production occurrence is "a bug in the calling adapter", so half the trades
       cell is a self-declared bug nobody has been reading.
@@ -310,3 +391,132 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   instead. Flipping the default (operator decision, previously deferred six times) takes this host from K=2 to **8 CPU
   slots / 17.2 GB RAM budget**, verified by `--status` and by slots 1+2 resolving to the identical shared ledger. codex
   §5 has been corrected to say `K` is a token-mode backstop only.
+
+- **2026-08-10 (post-compaction, slot 1) — liquidations P0 root cause CLOSED (diagnosis → proven cause).** The reversed
+  diagnosis resolved on the second pass, and the answer was neither of the two earlier hypotheses (not a missing
+  SchemaContract registration, not an upstream venue payload change). `liq_agg` has never been writable: the contract
+  asks for two columns the adapter cannot supply. Method that settled it, recorded because the earlier passes each
+  failed on a _pointer_ rather than on reasoning: I stopped reading call sites and ran the REAL validator over four
+  candidate frame shapes, which returned the exact violation list instead of a plausible story. That also corrected an
+  inherited wrong pointer — the manifest's `SCHEMA_VALIDATION_FAILED` rows come from the strict UTL writer
+  (`canonical_writer.py:499`), NOT from the `candle_write_mixin.py:~650` `ParquetSchemaEnforcer` pre-flight the previous
+  framing named; the two use DIFFERENT schema sources, so a fix aimed at the pre-flight would have changed nothing.
+  Three measurements then bounded the blast radius and the fix's shape: the 4,491 "captured" rows are
+  blank-instrument_id aggregates (so nothing has ever succeeded), `written_at` puts 150,181 of 150,182 failures in
+  2026-08 (one wave, six years of data), and the manifest `margin_type` is empty on every failing row (so the
+  `@LIN`/`@INV` suffix, not the manifest, must carry the linear-vs-inverse branch). **Also corrected**: PM's local
+  checkout was 111 commits behind with my previous session's edits sitting dirty on top; every one of those files was
+  already on origin in prettier-normalised form (verified file-by-file before discarding), so the apparent "unshipped
+  work" was a stale-checkout artifact, not lost work.
+
+- **2026-08-10 (slot 2, escalation agt-b947d5) — `mdps-cefi-2021-20260810-052119` DP-VM-002 VERIFIED as the
+  already-fixed POLARS-AGGREGATED false-positive class; root causes all shipped.** The VM (SPOT, e2-standard-8, cefi
+  2021 full-year MDPS backfill) did real work — run.log shows `POLARS AGGREGATED` candle writes, `PROGRESS.json` has
+  `last_completed_date=2021-01-01` — then died mid-run at 07:14:52 (mem 83.2% vs 85% watchdog, backpressure at 77.1%;
+  SPOT with `instanceTerminationAction=DELETE`), stranding its per-VM manifest shard (`_index/per_vm/` has NO
+  `...-052119.parquet`). Pre-fix `_PROGRESS_RE` didn't match `POLARS AGGREGATED` → SILENT → false GONE_NO_CAPTURE
+  CRITICAL page. Root causes + fix SHAs, all on `origin/live-defi-rollout`: (1) detector false-page →
+  `deployment-service@2f077c97` (POLARS AGGREGATED → PROGRESS → EXPECTED_NO_CAPTURE; re-ran the shipped classifier on
+  the real run.log → now EXPECTED_NO_CAPTURE, no page); (2) OOM on undersized machine → `deployment-service@5597e398`
+  (cefi/defi → e2-highmem-8); (3) stranded shard on preemption → `unified-trading-library@3b006d9f` (preemption-safe
+  per-VM drain). **Data safety verified**: availability index for cefi shows 118,549 `captured` MDPS rows for 2021
+  (13,225 `attempted_failed`) + `processed_candles/by_date/day=2021-01-01/` present in GCS — the VM's death lost
+  nothing; sibling VMs cover the range. **Remaining systemic issue (not this finding)**: the live fleet storm (~1000+
+  SPOT mdps VMs, still spawning every ~15s, launcher `launch-mdps-sharded-backfill.sh` has no singleton guard) is the
+  exit-code monitor's relaunch-budget bug — this plan's todo #1 (durable race-free relaunch state) is code-complete but
+  unshipped; sibling escalation `agt-c06379` (deployment-service) is dispatched on it. This finding needs no MTDS code
+  change — the MTDS side was already correct.
+
+## Liquidations re-drive — operator decision recorded 2026-08-11
+
+**There is nothing to migrate, delete, or overwrite.** Schema validation raises at `canonical_writer.py:537`, while
+`finalize_local()` (539) and `_upload_local_to_gcs` (553) come AFTER it — so every one of the 150,182 failed cells wrote
+NO parquet. There is no corrupt data on GCS; the manifest rows are honest `attempted_failed` markers doing exactly their
+job. (Established from the writer's control flow, NOT from a corpus walk — single-walk discipline; a scoped prefix probe
+on a few known-failed shard-days would confirm it empirically if ever needed.)
+
+**It is therefore a re-DERIVE, not a re-FETCH.** The raw liquidation ticks are intact (704,780 `captured` rows written
+by market-tick-data-service), so the work is pure recompute off existing GCS objects: no Tardis API cost, no vendor rate
+limits, and the hard 1-concurrent-Tardis-VM cap does NOT apply. Launcher already exists:
+`deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh` (the `mdps-*` family — which, per this plan's own
+alert-accuracy finding, has ZERO Tardis references, consistent with MDPS reading from MTDS rather than the vendor).
+
+**Operator ruling (2026-08-11): CANARY FIRST, then full.** The canary must cover at least one `@LIN` and one `@INV`
+instrument so BOTH notional branches execute against real data — every number this produces is new data that did not
+exist before, and a swapped linear/inverse branch would be silently plausible rather than loudly broken. Verify the
+manifest rows flip to `captured` AND spot-check written `liquidation_notional_usd` values before the full run.
+
+**Hard prerequisite: the fix must be DEPLOYED first.** `market-data-processing-service@6c2c4b6e` is on
+`live-defi-rollout` only. MDPS VMs deploy from a tarball built off promoted code, so a re-drive launched before
+promotion+deploy would re-derive all 150k cells and fail them identically — burning the VM and rewriting the same 150k
+rows. Promotion is HEALTHY, not stalled (operator ruling: check, nudge only if genuinely stalled): this repo uses
+Option-B DIRECT promotion, so the absence of `chore(promote)` PRs is expected rather than a stall, and main advanced
+three times in the two hours around the ship (20:19 / 21:33 / 22:01 UTC). The commit's 21:26 UTC commit-object time
+predates the 22:01 sweep, but its PUSH landed after it (the object was created before the re-gate + retry loop), so the
+NEXT cycle takes it. No manual dispatch — `ldr-to-main-promote-fleet.yml` is a shared single-concurrency slot and ad-hoc
+dispatches measurably starved it for 2+ hours on 2026-08-07.
+
+- [ ] [OPERATOR] P1. Canary re-drive: after `6c2c4b6e` promotes + deploys, run a scoped
+      `launch-mdps-sharded-backfill.sh` slice covering one `@LIN` and one `@INV` cefi perpetual across a few days, then
+      verify (a) those manifest rows flip `attempted_failed` → `captured` and (b) the written `liquidation_notional_usd`
+      values are plausible for both margin types. Progress must be measured as the count of TARGET artifacts created
+      (entity-scoped, `time_created`), never activity — an entity-agnostic check can pass for hours while the target
+      entity writes zero rows.
+- [ ] [OPERATOR] P1. Full re-drive of the remaining ~150k cells once the canary verifies. Expect ~1,578 (≈1%) to REMAIN
+      `attempted_failed` by design — the unresolved-margin-type ids that raise `MalformedTickFieldError` rather than
+      take a guessed branch; they clear only when the instruments-service reference-data todo lands.
+
+## Deferred work after 2026-08-11
+
+| item | state / why deferred | blocked-on |
+| --- | --- | --- |
+| ~~**deployment-service ship**~~ | ✅ **SHIPPED `0c38c00d`** (3,317 passed). Superseded row: 12 files, tree fast-forwarded clean (16 commits, no conflicts), gate re-running at pre-compact. Previously gated GREEN at `d85832ba` (3,287 passed, tests genuinely ran) BEFORE the 16-commit pull, so the code is sound; it needs one clean gate on the current HEAD then `quickmerge`. Four prior gate attempts died to environment, not code: import-pattern deep-import (fixed), ruff I001 (fixed), file-size cap 972>960 (fixed by extraction), and TWO kills — one governor RAM-watchdog while I foolishly ran it beside AO's re-gate, one session teardown. | nobody — pick it up, gate ALONE |
+| **PM batching checker** (`scripts/finops/check_tool_call_batching.py`) | **Not done.** Untracked in the PM repo (NOT scratchpad — it survives). Lint-clean, runs, carries its lifecycle marker, measured 44.9% collapsible vs the 57.3% baseline. Needs a PM full gate (it is a script, not a doc) then quickmerge. | nobody — gate AFTER deployment-service, never beside it |
+| **Liquidations re-drive** (~150k cells) | **Cannot be done yet.** Needs `market-data-processing-service@6c2c4b6e` to promote LDR→main and deploy; promotion is healthy (Option-B direct, no PR by design), the commit simply pushed after the last sweep. | elapsed time — the standing `*/15` promoter |
+| **Canary + full re-drive execution** | **Operator-owned.** VM launch + cost decision under launch gating. Operator ruled 2026-08-11: canary first covering one `@LIN` AND one `@INV`, verify, then full. | operator |
+| **Cross-cloud WIF for the AO VM** | **Operator-owned.** AO VM has NO GCP identity (AWS EC2, no ADC/SA key/WIF pool). Blocks installing the data-pipeline-alerts-reconciler timer — code shipped, installer deliberately held. | operator |
+| **#9 chain relabel migration · #13 date sharding · #15 rightsizing · #11 empty instrument_id · #18 shellcheck flake** | **Not done.** All scoped, none started. | nobody |
+| **New findings from this session** (Tardis-403 classification · adapter-error fix · pytest-timeout-vs-admission · content-sentinel skip · stale governor token · safe-doc-push P0s) | **Not done.** All filed as `- [ ]` todos in this plan / the safe-doc-push issue. | nobody |
+
+**Recommended NEXT item: finish the deployment-service gate and ship it.** It is the only remaining code from this
+batch, the code is already proven green on a pre-pull tree, and every failure so far was environmental. Gate it ALONE —
+running it beside another gate is what killed it once already.
+
+## Lessons from the 2026-08-10/11 continuation — each cost real time
+
+8. **Uncommitted work in a shared checkout is invisible, revertible, and looks LOST to everyone else.** This is the
+   single most expensive class in the batch and it bit THREE distinct ways in one session: (a) `safe-doc-push` exited 0
+   having pushed nothing, twice identically, because it quarantines the dirty tree BEFORE staging and then reads the
+   resulting clean tree as "a concurrent session already landed it"; (b) a peer operation silently reverted an
+   uncommitted append (323 L → 286 L) with no artifact left in the worktree, HEAD, or the autostash — it survived only
+   because the author still had the text in-session; (c) a peer agent checked from its OWN slot, correctly found the
+   modules on no branch/stash/reflog, reasonably concluded the work was lost, and wrote "must be RE-AUTHORED from
+   scratch" into this plan. **"Not on any ref" proves UNSHIPPED, never NON-EXISTENT** — each slot is a separate clone.
+   The mitigation is not vigilance, it is shipping sooner: commit at every shippable unit, and never let a ship script's
+   exit code stand in for a verified `origin` read.
+9. **Absence of test output means different things in a SERVICE repo and a LIBRARY repo.** `base-service.sh` streams
+   pytest; `base-library.sh` CAPTURES it into `$_pytest_out` and echoes only on failure, so a passing library gate
+   legitimately renders as `── TESTS ──` → `✅ Tests PASSED` with no collection line and no dots. I read that as a
+   skipped-test run, escalated a P2 finding to P1 on a second occurrence that never happened, and burned a 15-minute
+   forced re-gate. Verify a skip by the explicit skip LINE, a moved test COUNT, or fresh `coverage.xml`/`.coverage`
+   mtimes — never by the absence of dots.
+10. **The gate and the pre-commit hook enforce DIFFERENT rule sets.** A `quality-gates.sh`-green tree was still rejected
+    at commit by ruff's hook config (SIM108, ternary-over-if/else). Gate-green is necessary, not sufficient — expect a
+    second, narrower lint pass at commit time.
+11. **A green gate can mean "tests skipped" (service repos).** `SHA sentinel NOT refreshed (content-sentinel HIT → tests
+    skipped)` is logged mid-run while the SUMMARY still prints `ALL QUALITY GATES PASSED`, and `.qg_last_passed_sha ==
+    HEAD` still reads TRUE from an earlier full run. Caught on MDPS; forcing `QG_SENTINEL_DISABLE=true` moved the count
+    2,399 → 2,415, proving the new tests had never run.
+12. **Deleting a peer's superseded helper can break tests that arrive LATER.** Removing `_probe_gcs_budget_client` was
+    right (its read-modify-write budget loses updates under overlapping executions), but a subsequent 16-commit pull
+    brought an autouse fixture still patching it — 64 setup errors, one cause. The fix is not a shim: the determinism
+    that fixture bought is now STRUCTURAL (`budget_dir` ⇒ `local_only=True`), and the comment left in its place says so
+    to stop anyone re-adding the patch.
+13. **Re-gate after every pull; a gate result describes the tree it ran on.** MDPS went green, then a main→LDR backmerge
+    landed 2 TradFi canon tests that a UTL ruling (`74fe04fd`, `continuous_future` no longer → `FUTURE`, after a census
+    found 473,374 bundle-grain rows misclassified) had made stale. Proven not-mine by stashing and re-running on a clean
+    tree before touching it.
+14. **Host contention manufactures FALSE RED gates, and the governor cannot see the cause.** ~7 of 10 cores were burned
+    by spinning BATS tmux fixtures the governor never admitted; it reported `reserved: 0MB, running heavy phases: 0` at
+    load 283. AO failed 9 tests under load and passed 3,364/0 on a quiet host (264s vs 776s). Always re-run a suspicious
+    red on a quiet host, and prove not-mine by stashing.

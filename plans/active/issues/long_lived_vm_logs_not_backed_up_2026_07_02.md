@@ -94,9 +94,11 @@ EXEMPT reasons accordingly.
       deployment-service@cebb2425 (lc_aws_log_upload_continuous_block added to aws_ec2_launch_lib.sh;
       launch-central-brain-aws.sh + launch-orchestrator-worker-vm.sh wired; launch-orchestrator-worker-vm.sh removed
       from EXEMPT, lc_aws_log_upload_continuous_block added to STREAMER_TOKENS)
-- [ ] [SCRIPT] P3. Once shipped, replace the misleading Tier-3 EXEMPT reasons in `test_vm_launcher_scripts.py`
+- [x] ✅ [SCRIPT] P3. Once shipped, replace the misleading Tier-3 EXEMPT reasons in `test_vm_launcher_scripts.py`
       (durable-log coverage guard) with the streamer wiring, or a correct "long-lived continuous-tail (not EXIT_STATUS)"
-      rationale.
+      rationale. — deployment-service@a2f5ee2a (mechanism 5 documented in class docstring; EXEMPT comment reframed to
+      require a durable-log path OUTSIDE the streamers; launch-dashboard-vm.sh given honest COS-auto-logging rationale;
+      Tier-3 launchers already covered by STREAMER_TOKENS guard — verified 0 guard offenders at origin HEAD)
 
 > **Decision (operator, 2026-07-02):** not needed right now. Captured here so the parent plan can archive without losing
 > the finding. Revive by scheduling these todos.
@@ -134,3 +136,13 @@ EXEMPT reasons accordingly.
   superseded one.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+- **2026-08-11 (slot-31 worker, task `long_lived_vm_logs_not_backed_up-003`)**: P3 completed. The code change was
+  already shipped by `deployment-service@a2f5ee2a` (slot-19, 2026-08-11) but the checkbox had not been flipped. Verified
+  at origin HEAD: (1) mechanism 5 (`lc_log_upload_continuous_block` / `lc_aws_log_upload_continuous_block`) documented
+  in the `TestDurableLogStreamerCoverage` class docstring; (2) EXEMPT comment reframed to require a durable-log path
+  OUTSIDE the streamers; (3) `launch-dashboard-vm.sh`'s misleading "container logging, no startup-script run.log" reason
+  replaced with the honest COS-auto-logging (Docker stdout → Cloud Logging) rationale; (4) Tier-3 launchers
+  (`launch-planning-vm.sh`, `launch-central-brain-aws.sh`, `launch-orchestrator-worker-vm.sh`) are covered by the
+  STREAMER_TOKENS guard (wired continuous-tail streamers), no longer EXEMPT. Guard logic re-verified locally: 0
+  offenders across all 174 GCP launchers. Flipped checkbox with evidence.

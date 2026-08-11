@@ -256,9 +256,9 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       inside `measure_honest_coverage._compute_coverage` for cefi, ZERO manifest mutation (Layer-1 keeps the unfiltered
       df so stray_tuples stay visible); 11 new + 21 existing tests green.
   - **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Fix
-        `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude synthetic pre-launch
-        placeholder funding rows before deriving `available_from_datetime`. See the batch doc for the full scoped
-        todo; do not duplicate-dispatch from here.
+    `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude synthetic pre-launch placeholder
+    funding rows before deriving `available_from_datetime`. See the batch doc for the full scoped todo; do not
+    duplicate-dispatch from here.
   - [ ] [DATA] P1. Reconcile ASTER's `trades` genesis cross-registry contradiction (2021-08-30 in
         `expected_start_dates.yaml` vs. 2023-07-22 everywhere else) — see GAP 4 in
         `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. Do before any pre-funding-genesis trades
@@ -388,10 +388,9 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s own Phase C todo list — that plan, not this checkbox,
       is where tradfi Layer-1 certification now lives. Leaving unchecked: the item's own Gate ("Certify per-AG Layer-1")
       is worded all-5-AG and tradfi is not yet certified.
-- **[REVIEW] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Reconcile
-      ASTER's two disagreeing missing-date counts (manifest cell-presence view says 0 missing; live turbo API says
-      11 missing/1,071 expected for the same venue+window). See the batch doc for the full scoped todo; do not
-      duplicate-dispatch from here.
+- **[REVIEW] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Reconcile ASTER's
+  two disagreeing missing-date counts (manifest cell-presence view says 0 missing; live turbo API says 11 missing/1,071
+  expected for the same venue+window). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [x] ✅ [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6). **DONE —
       reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own
       todo `[x]`, CLOSED 2026-07-06 task 008).** Phase 1 `build_expected` consolidation flipped in
@@ -429,12 +428,12 @@ reconciling + signing off, not redoing.)_
       unchecked.) > **[⚠️ CORRECTION 2026-07-21, plan-reconcile]**: the "G4 ... fully SIGNED OFF" claim above is
       STALE. > `instruments_foundation_completeness_2026_06_24.md:520-527` ran a later verify-rerun (2026-07-13/14,
       finding > 105) and reversed it: gate G4 enforces Layer-1 AND Layer-2 per operator ruling C4(a) (cited in
-      `instruments_foundation_completeness_2026_06_24.md:520-527`, referenced above) and CANNOT close
-      until D2 > (`cefi_layer1_denominator_gaps`) lands — cefi Layer-1 was measured INCOMPLETE (72.60-73.61%) at that
-      time. > `instruments_foundation_completeness` is the actual gate-owning plan; treat **G4 as OPEN pending D2**
-      unless the > operator has re-ruled since. This tracker's own Stage 2b ("cefi gate-authority fix" / D2 item) is
-      still `[ ]` > unchecked, which is internally consistent with G4 still being open — the stale claim was this one
-      bullet. > **[NOTE 2026-07-28, reconciled]**: Stage 2b above is now `[x]` (D2 landed,
+      `instruments_foundation_completeness_2026_06_24.md:520-527`, referenced above) and CANNOT close until D2 >
+      (`cefi_layer1_denominator_gaps`) lands — cefi Layer-1 was measured INCOMPLETE (72.60-73.61%) at that time. >
+      `instruments_foundation_completeness` is the actual gate-owning plan; treat **G4 as OPEN pending D2** unless the >
+      operator has re-ruled since. This tracker's own Stage 2b ("cefi gate-authority fix" / D2 item) is still `[ ]` >
+      unchecked, which is internally consistent with G4 still being open — the stale claim was this one bullet. >
+      **[NOTE 2026-07-28, reconciled]**: Stage 2b above is now `[x]` (D2 landed,
       `cefi_layer1_denominator_gaps_2026_07_03.md` resolved) — the internal-consistency condition this correction relied
       on has changed. Whether G4 itself is now signable is a fresh re-verify against
       `instruments_foundation_completeness_2026_06_24.md` (owned by this tracker's sibling
@@ -471,11 +470,10 @@ reconciling + signing off, not redoing.)_
       per the digest's literal wording — the NASDAQ/NYSE mis-class SPOT_PAIR (318 rows) and 12 cefi-singles EQUITY rows
       mentioned in the sibling gate-execution doc's fuller list were NOT part of what this item asked/approved, left
       untouched pending a separate explicit ask.
-- **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Add a
-      build-time exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` for
-      `venue=ICE`/`venue=CBOE`-options/the 2 VIX-cash `INDEX` ids — makes an already-executed one-off purge
-      permanent. See the batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo:
-      instruments-service.
+- **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Add a build-time
+  exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` for
+  `venue=ICE`/`venue=CBOE`-options/the 2 VIX-cash `INDEX` ids — makes an already-executed one-off purge permanent. See
+  the batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo: instruments-service.
 - [x] ✅ [DESIGN] P1. defi completeness **oracle** design. **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
       2026-07-06).** Design SSOT landed at `/codex/02-data/defi-completeness-oracle.md` (`unified-trading-pm@650c2b881`)
@@ -528,10 +526,10 @@ reconciling + signing off, not redoing.)_
       today's UTC date; registered in the VM-prefix registry (`deribit-opts-fwd-` → `VmPrefixSpec`, EPHEMERAL_BATCH,
       distinct from the historical `opt-deribit-` Tardis batch prefix).
 - **[SCRIPT] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Systemic
-      unregistered-handler audit, widen-scope-to-adapter-factory-layer remainder (the original operations-dispatcher
-      scope already shipped `market-tick-data-service@015abaf5`/`@efd658c8`; the RENZO/RADIANT/EULER_V2
-      adapter-factory-layer gap, tracked in `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`, is what
-      remains open). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+  unregistered-handler audit, widen-scope-to-adapter-factory-layer remainder (the original operations-dispatcher scope
+  already shipped `market-tick-data-service@015abaf5`/`@efd658c8`; the RENZO/RADIANT/EULER_V2 adapter-factory-layer gap,
+  tracked in `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`, is what remains open). See the batch doc
+  for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_live_clob_depth_capture_2026_07_24`, successor
       to `prediction_venue_perps_and_live_clob_depth_2026_06_20` which was split + archived 2026-07-24; live=0 today)
 
@@ -546,7 +544,7 @@ reconciling + signing off, not redoing.)_
       slot-9).** Gate satisfied via "discrepancy filed" (the item's own stated acceptance path): ran what exists live
       in-cloud and surfaced 4 discrepancies (tradfi runner catalogue-404/BLOCKED-PLAN2; prediction runner
       `BucketNamingError`; `run_live_verify_cefi.py`/`run_live_verify_defi.py` don't exist) at
-      `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` with actionable P2 fix todos. No
+      `plans/archive/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` with actionable P2 fix todos. No
       data-correctness impact (Layer-1 certifications use a different, unaffected code path).
 - [x] ✅ [DATA] P2. v9 `schema_version` tail re-stamp (quiet window, post fleet-drain). **DONE — reconciled 2026-07-28
       against `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` (resolved, own todo `[x]`, GATE MET

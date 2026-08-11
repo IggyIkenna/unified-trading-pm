@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                                                      (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                                                      retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                                                      before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                                                      and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                                                      `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                                                      behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                                                      `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                                                      only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                                                      both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                                                      redundant, so both mechanisms are now kept.
+          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+          redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -285,9 +285,9 @@ mitigations, cheapest first:
   `rules-directional.md`)**: the safety net fired again on this slot's plan-flip `safe-doc-push.sh` push (`31c1441801`),
   which succeeded but exited 9. Orphaned patches `1786377397449-1118243.patch` + `1786377409239-1124521.patch` diff
   UNRELATED files this session never touched — `unified_api_contracts/registry/venue_mapping.py` (a reformat-only diff,
-  path does not even exist in the PM tree), `plans/active/multi_leg_execution_systems_execution_2026_08_10.md` (a
-  `[x] ✅` todo flip citing `execution-service@0a2f6018`), and `scripts/quality_gates/adapter_contract_baseline.yaml` (a
-  `multi_leg_orchestrator.py` baseline-entry removal) — all belonging to a concurrent session's
+  path does not even exist in the PM tree), `plans/archive/2026_08/multi_leg_execution_systems_execution_2026_08_10.md`
+  (a `[x] ✅` todo flip citing `execution-service@0a2f6018`), and `scripts/quality_gates/adapter_contract_baseline.yaml`
+  (a `multi_leg_orchestrator.py` baseline-entry removal) — all belonging to a concurrent session's
   `multi_leg_execution_systems` work. `git status --porcelain` clean before and after; this run's own two pushes
   verified on origin (`a7bc00e23c` + `31c1441801` both `merge-base --is-ancestor`-confirmed). Did NOT apply the patches
   or touch the foreign files — wrong task/repo scope, live owner is the concurrent `multi_leg_execution_systems`
@@ -301,3 +301,52 @@ mitigations, cheapest first:
   `merge-base --is-ancestor`-confirmed). Did NOT apply the patch or touch the foreign file — wrong task/repo scope; a
   live owner owns the CICD catalog. Left both patch files in place for that owner to recover; noting per this doc's
   established practice.
+- **2026-08-10 (slot 20, data_engineering, `ao_scheduled_job_reserve_and_staggering-52320045f29c` — hit the safety net
+  live on this slot's plan-flip `safe-doc-push.sh` pushes)**: the AO re-check flip push (`5764c92d74`, this session) +
+  the prior tradfi Progress-Log push (`89883c5134`, same slot, earlier this turn) each succeeded but the second exited 9
+  with orphaned patches `1786395907436-436886.patch` (21:05:07Z) + `1786396043359-534313.patch` (21:07:23Z), both
+  predating this run's start (21:08:43Z). The patches diff UNRELATED files this session never touched —
+  `plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md` (3 frontmatter
+  fields `execution_scope`/`drift_direction`/`depends_on` — the file's own commit `7db6b99818` landed 20:47Z without
+  them) and `plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md` (a
+  `status: open -> resolved` + archived_to/date flip whose target path does not exist in the tree).
+  `git status --porcelain` clean before and after; this run's own flip verified on origin (`5764c92d74` merge-base
+  --is-ancestor-confirmed). Consistent with the prior recurrences: leftover stashes from concurrent sessions sharing
+  this host's `~/.cache/prek/patches/` cache dir, not a defect in this run's own commit. Did NOT apply either patch or
+  touch the foreign files — wrong task/repo scope; live owners own both docs. Left both patch files in place for their
+  owners to recover; noting per this doc's established practice.
+- **2026-08-10 (slot 17, infra, `safe_doc_push_isolation_drops_rename_deletions-31ac2d38e7b3` — hit the safety net live
+  again on the ratchet-shrink plan-flip push)**: the flip push (`1bb78ec45f`) succeeded but exited 9 with orphaned
+  patches `1786391164239-3935678.patch`, `1786391181663-3954088.patch`, `1786391184224-3956108.patch` (byte-identical
+  dupes), diffing an UNRELATED file this session never touched —
+  `plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` (a `[SCRIPT] P1`
+  todo flip to `[x] ✅` citing `unified-trading-pm@7861143b97` + a slot-9 Progress Log entry). The cited code commit
+  `7861143b97` IS on origin, but origin's copy of that doc still shows the todo `- [ ]` with no slot-9 Progress Log
+  entry — so slot-9's plan-flip half of its Commit+Push+Flip is stranded in these patches (git apply --check: applies
+  cleanly, content genuinely absent from the tree; disk == origin). `git status --porcelain` clean before and after;
+  this run's own flip verified on origin (`1bb78ec45f` merge-base --is-ancestor-confirmed). Did NOT apply the patch or
+  touch the foreign file — wrong task/repo scope (this session is the ratchet shrink, not slot-9's autostash-CHAIN
+  work); a live owner (slot-9) owns that doc. Left the three patch files in place for that owner to recover; noting per
+  this doc's established practice.
+- **2026-08-10 (slot 22, data_engineering, `cefi_satellite_ao_dispatch_batch17-a5733ae46d26` — hit the safety net live
+  on the batch17 todo-3 + source-doc todo-2 flip push)**: the flip push (`7d72b97723`) succeeded but exited 9 with an
+  orphaned patch `~/.cache/prek/patches/1786404679413-660590.patch`, diffing an UNRELATED file this session never
+  touched — `plans/active/issues/sports_af_completion_pass_2026_08_10.md` (8 insertions / 2 deletions, a concurrent
+  session's stranded sports-AG WIP). `git status --porcelain` clean before and after; this run's own flip verified on
+  origin (`7d72b97723` merge-base --is-ancestor-confirmed). Consistent with the prior recurrences: a leftover patch from
+  a DIFFERENT concurrent process/session sharing this host's `~/.cache/prek/patches/` cache dir, not a defect in this
+  run's own commit. Did NOT apply the patch or touch the foreign sports file — wrong task/repo scope (this session is
+  cefi batch17, not the sports_af_completion_pass owner). Left the patch file in place for that owner to recover; noting
+  per this doc's established practice.
+- **2026-08-11 (slot 6, tradfi honest-coverage smoke-harness task `honest_coverage_smoke_harness_4ag_verify-06809dbd31f9`
+  — hit the safety net live on the tradfi data-gap issue-doc push)**: the push (`d2e62d8643`,
+  `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md`) succeeded but exited 9 with THREE orphaned
+  patches (`1786406839214-3692985.patch`, `1786406844379-3704481.patch`, `1786406849227-3714702.patch`, byte-identical
+  per `git apply --stat`), diffing UNRELATED files this session never touched — 8 files: the
+  `*satellite_ao_dispatch_batch{17,11,2}_finalize` plans, `ml_service_full_blob_missing`, vm-tarball-staleness, the
+  canonical-path-migration design, and this tracking doc itself (+20 lines). `git status --porcelain` clean before and
+  after; this run's own push verified on origin (`d2e62d8643` `merge-base --is-ancestor`-confirmed). Consistent with the
+  prior recurrences: leftover stashes from concurrent sessions sharing this host's `~/.cache/prek/patches/` cache dir,
+  not a defect in this run's own commit. Did NOT apply the patches or touch the foreign files — wrong task/repo scope
+  (this session is the tradfi smoke-harness task, not the satellite/ml-service owners). Left all three patch files in
+  place for their owners to recover; noting per this doc's established practice.

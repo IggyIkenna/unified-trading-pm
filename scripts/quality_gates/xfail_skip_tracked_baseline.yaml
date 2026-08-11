@@ -1,0 +1,384 @@
+doc: Known xfail/skip markers whose reason does NOT cite a tracked plan/issue slug.
+why:
+  Every pytest.xfail / unconditional @pytest.mark.skip must cite a tracked plan/issue slug in its reason — an xfail with
+  a good reason and no remediation todo is indistinguishable, six months later, from coverage that was never written.
+  These are the CURRENT violations, tolerated as WARNINGS; they must shrink to zero (each entry is removed the moment
+  its marker cites a real slug or the test is fixed to run). Never ADD a new entry.
+status_explanation: pending_removal = known violation, must be fixed, tolerated as a warning.
+default_successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+entries:
+  - repo: deployment-api
+    file: tests/unit/test_data_status_turbo.py
+    kind: skip
+    line: 130
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Requires full PathCombinatorics mock wiring — deferred to
+      integration tests'"
+  - repo: execution-service
+    file: tests/defi_execution/unit/test_recursive_loop_orchestrator.py
+    kind: skip
+    line: 249
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Requires Tenderly fork + live Aave V3 RPC
+      (BLOCKED-CREDENTIALS)'"
+  - repo: execution-service
+    file: tests/integration/test_batch_live_symmetry.py
+    kind: skip
+    line: 174
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Backtest comparison requires actual backtest execution
+      (slow)'"
+  - repo: execution-service
+    file: tests/integration/test_column_fix.py
+    kind: skip
+    line: 30
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'requires live GCS with real bucket config — enable
+      manually in GCS environments'"
+  - repo: execution-service
+    file: tests/smoke/test_shard_combinatorics.py
+    kind: xfail
+    line: 350
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Backtest raised exception (may be expected): {?}'"
+  - repo: execution-service
+    file: tests/unit/test_twap_timing.py
+    kind: skip
+    line: 188
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Actor.log is a C-extension getset_descriptor; cannot be
+      mocked without NautilusTrader kernel'"
+  - repo: execution-service
+    file: tests/unit/test_twap_timing.py
+    kind: skip
+    line: 211
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Actor.log is a C-extension getset_descriptor; cannot be
+      mocked without NautilusTrader kernel'"
+  - repo: features-service
+    file: tests/onchain/unit/test_calculator_pure_methods.py
+    kind: skip
+    line: 596
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet: "skip — reason does not cite a tracked plan/issue slug: 'complex GCP project deps'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 127
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 137
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 147
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 157
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 167
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 177
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/reference_data/integration/test_vcr_reference_data.py
+    kind: xfail
+    line: 187
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Cassette stubs not yet recorded — future providers'"
+  - repo: instruments-service
+    file: tests/unit/test_kalshi_perp_adapter.py
+    kind: skip
+    line: 325
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'adapter disabled pending margin-API repoint (Phase 2) —
+      re-enable against demo host'"
+  - repo: instruments-service
+    file: tests/unit/test_polymarket_perp_adapter.py
+    kind: skip
+    line: 304
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'adapter disabled pending Phase-3 repoint — re-enable
+      against confirmed Polymarket perps API'"
+  - repo: market-data-processing-service
+    file: tests/unit/test_orchestration_base.py
+    kind: skip
+    line: 171
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet: "skip — reason does not cite a tracked plan/issue slug: 'OSError mock setup requires filesystem fixture'"
+  - repo: market-tick-data-service
+    file: tests/integration/test_macro_adapters_integration.py
+    kind: skip
+    line: 54
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Live network call — Baker Hughes returns 403 in CI; run
+      manually with credentials'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/integration/test_vcr_ac_schema_validation.py
+    kind: skip
+    line: 181
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'KuCoin cassette not recorded; mocks/ dir absent from UAC
+      kucoin/'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/integration/test_vcr_ac_schema_validation.py
+    kind: skip
+    line: 212
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'MEXC cassette not recorded; mocks/ dir absent from UAC
+      mexc/'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/integration/test_vcr_ac_schema_validation.py
+    kind: skip
+    line: 608
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Massive (ex-Polygon.io) cassette stub not yet recorded;
+      mocks/ dir absent from UAC massive/'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_cefi_ccxt_boost.py
+    kind: skip
+    line: 719
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'OSError propagates through async_wrapper; fetch_markets
+      raises not returns empty'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_cefi_ccxt_boost.py
+    kind: skip
+    line: 730
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'download_market_data raises ValueError for missing
+      pool_address; not a silent return'"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_g9_regression_canonicalisation.py
+    kind: skip
+    line: 242
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'symbol_for_row was removed from
+      migrate_defi_full_v9_canonical.py; behaviour folded into write_defi_rows"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_g9_regression_canonicalisation.py
+    kind: skip
+    line: 262
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'symbol_for_row was removed from
+      migrate_defi_full_v9_canonical.py; behaviour folded into write_defi_rows"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_g9_regression_canonicalisation.py
+    kind: skip
+    line: 394
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'symbol_for_row was removed from
+      migrate_defi_full_v9_canonical.py; behaviour folded into write_defi_rows"
+  - repo: market-tick-data-service
+    file: tests/market_interface/unit/test_g9_regression_canonicalisation.py
+    kind: skip
+    line: 447
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: '_safe_classify now logs a warning instead of emitting
+      UNPARSEABLE_DATABENTO_SYMBOL event; event was remo"
+  - repo: market-tick-data-service
+    file: tests/unit/test_pipeline_e2e_prediction_canonical.py
+    kind: skip
+    line: 365
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Pre-existing flaky failure (manifest-dependent) — pending
+      fix per CI baseline'"
+  - repo: strategy-service
+    file: tests/integration/test_liquidation_proximity_circuit_tenderly.py
+    kind: skip
+    line: 73
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'requires Tenderly fork credentials — run manually with
+      TENDERLY_FORK_RPC_URL set'"
+  - repo: strategy-service
+    file: tests/risk/integration/test_pre_trade_check_integration.py
+    kind: skip
+    line: 267
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'max_open_orders not yet in PreTradeCheckEngine — add when
+      GH-BACKLOG lands'"
+  - repo: system-integration-tests
+    file: tests/unit/test_registry_alignment.py
+    kind: xfail
+    line: 8
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Pre-existing UTL import cascade error: importing
+      unified_trading_library.config_interface triggers clou"
+  - repo: unified-api-contracts
+    file: tests/internal/unit/test_derivation.py
+    kind: skip
+    line: 303
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      'skip — reason does not cite a tracked plan/issue slug: "TODO G1.10 — prospect-dart persona doesn''t exist until
+      G1.10 questionnaire ships"'
+  - repo: unified-api-contracts
+    file: tests/internal/unit/test_derivation.py
+    kind: skip
+    line: 323
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      'skip — reason does not cite a tracked plan/issue slug: "TODO G1.10 — prospect-reg persona doesn''t exist until
+      G1.10 questionnaire ships"'
+  - repo: unified-api-contracts
+    file: tests/internal/unit/test_prediction_market_taxonomy.py
+    kind: xfail
+    line: 514
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'KNOWN FALSE-POSITIVE: `house-` prefix in SLUG_PREFIX_MAP
+      catches `house-price-above-500k` (real-estate "
+  - repo: unified-api-contracts
+    file: tests/internal/unit/test_prediction_market_taxonomy.py
+    kind: xfail
+    line: 534
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'KNOWN FALSE-POSITIVE: `fed-` prefix in SLUG_PREFIX_MAP
+      catches `fed-ex-delivery-2026` (FedEx package de"
+  - repo: unified-api-contracts
+    file: tests/internal/unit/test_prediction_market_taxonomy.py
+    kind: xfail
+    line: 554
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'KNOWN FALSE-POSITIVE: `fear-` prefix in SLUG_PREFIX_MAP
+      catches `fear-factor-reboot` (TV show) and misc"
+  - repo: unified-api-contracts
+    file: tests/test_every_venue_endpoint.py
+    kind: xfail
+    line: 75
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Some venues (fix, prime_broker) are protocol contracts
+      without example data'"
+  - repo: unified-api-contracts
+    file: tests/test_shard_axis_matrix_consistency.py
+    kind: xfail
+    line: 159
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "xfail — reason does not cite a tracked plan/issue slug: 'Known drift: canonical_question_group is in
+      SHARD_AXIS_MATRIX for prediction entries but is NOT a UTL m"
+  - repo: unified-trading-library
+    file: tests/config_interface/unit/test_config_interface_template.py
+    kind: skip
+    line: 21
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'Template: copy to service and set CONFIG_MODULE to real
+      config module'"
+  - repo: unified-trading-library
+    file: tests/unit/test_domain_clients.py
+    kind: skip
+    line: 635
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'download_from_gcs_streaming not implemented in
+      _BucketDownloader'"
+  - repo: unified-trading-library
+    file: tests/unit/test_domain_clients.py
+    kind: skip
+    line: 651
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'download_from_gcs_streaming not implemented in
+      _BucketDownloader'"
+  - repo: unified-trading-library
+    file: tests/unit/test_domain_clients.py
+    kind: skip
+    line: 678
+    status: pending_removal
+    successor: cite a tracked plan/issue slug in the xfail/skip reason, or fix the test so it runs
+    snippet:
+      "skip — reason does not cite a tracked plan/issue slug: 'download_from_gcs_streaming not implemented in
+      _BucketDownloader'"

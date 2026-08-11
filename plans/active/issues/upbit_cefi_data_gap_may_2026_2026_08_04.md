@@ -23,7 +23,7 @@ created: "2026-08-04"
 author: slot-6 (data_engineering)
 source:
   - cefi_consolidated_native_ao_extract_2026_07_25.md (Todo 6 — UPBIT live-wiring confirm)
-assigned_vm: planning
+assigned_vm: NA
 parent_epic: cefi_master
 resolved_by:
 locked_by:
@@ -192,3 +192,11 @@ and complementary: slot-15 identified the transition trigger (SPOT preemption), 
 **[OPERATOR] action**: obtain Tardis full-access API key and create the secret.
 
 - **context-scout 2026-08-06**: populated context_scope (4 entries).
+
+- **2026-08-11 (slot 1): `assigned_vm` corrected `planning` → `NA`.** Every remaining open todo here is operator-gated
+  (BLOCKED-CREDENTIALS — operator-gated on a Tardis full-access key), so AO can see nothing to dispatch — the doc was an
+  `assigned_vm: planning` plan the orchestrator never touches, which is exactly the condition
+  `check_ao_dispatch_visibility_gate.py`'s `max_zero_dispatchable_docs` axis exists to flag. `NA` is the semantically
+  correct value per `assigned_vm` (`planning` = the orchestrator VM executes it; `NA` = not dispatched). NO todo text,
+  marker, or priority was altered — the exclusion markers were re-read and are correct and deliberate, not stale. Flip
+  back to `planning` if and when the gate opens and the work becomes worker-determinable.

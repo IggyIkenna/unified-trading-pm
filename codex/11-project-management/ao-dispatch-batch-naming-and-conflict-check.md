@@ -97,9 +97,10 @@ prose:
    `assigned_vm: planning` plan's own open todos in the same `parent_epic`; (b) any sibling batch/finalize doc already
    drafted or activated in the SAME audit run (a batch1 and a batch2 drafted minutes apart can overlap); (c) the
    tranche's own `{tranche}_consolidated_closeout_*.md` — its "aggregated source docs" section is a digest, not a
-   dispatch claim, but its own Track content can still duplicate a candidate; (d) any `status: draft`
-   `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER `/ag-closeout-audit` or
-   `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
+   dispatch claim, but its own Track content can still duplicate a candidate; (d) any `status: draft` (legacy
+   pre-2026-07-30 drafts — the no-double-gate ruling requires `status: active`, but older runs may still have draft
+   artifacts on disk) `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER `/ag-closeout-audit`
+   or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
    `Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before finalizing a RECLASSIFY or
    drafting a new extraction.
 3. **Verdict**: **zero or milestone-only overlap** → clear, proceed. **Verbatim or near-verbatim duplicate claim** →

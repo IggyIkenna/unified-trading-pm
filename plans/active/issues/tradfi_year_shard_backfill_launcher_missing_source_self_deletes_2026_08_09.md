@@ -285,9 +285,9 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       (hard-fail-before-any-write), and CEFI/BTC/ETH rows were never on a broken path in the first place. No code change
       needed (pure investigation, confirming no remediation is required). Repo: deployment-service +
       market-tick-data-service (manifest cross-check) — investigated only, no code shipped.
-- [ ] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch** (or document why it's intentionally scoped
-      only to the generic fallback) — currently silently ignored for every `mtds-backfill`-routed launch, including this
-      one. Repo: deployment-service, `scripts/vm/setup-data-pipeline-vm.sh`.
+- [x] ✅ [CODE] P3. **Wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch** — deployment-service@1dbd6026 (slot-21,
+      2026-08-10, one-line addition after `VM_FORCE` flag). Verified landed on `origin/live-defi-rollout`. Repo:
+      deployment-service, `scripts/vm/setup-data-pipeline-vm.sh`.
 
 ## Progress Log
 

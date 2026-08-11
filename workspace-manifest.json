@@ -80,7 +80,7 @@
     "system-integration-tests": "0.15.1",
     "unified-api-contracts": "0.114.0",
     "unified-trading-library": "0.78.4",
-    "unified-trading-pm": "1.2.741",
+    "unified-trading-pm": "1.2.740",
     "market-data-processing-service": "0.29.0",
     "e2e-testing": "0.41.3",
     "agent-orchestrator": "0.100.3",
@@ -88,7 +88,7 @@
     "trading-agent-service": "0.12.11",
     "strategy-service": "0.56.2",
     "ml-service": "0.58.3",
-    "alerting-service": "0.61.6",
+    "alerting-service": "0.61.4",
     "unified-trading-api": "0.4.1",
     "client-reporting-api": "0.32.0"
   },
@@ -1284,7 +1284,7 @@
       "type": "devops",
       "arch_tier": "devops",
       "status": "active",
-      "version": "1.2.724",
+      "version": "1.2.740",
       "description": "Project management SSOT — workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
       "dependencies": [],
       "completion_path": "all",
@@ -2219,8 +2219,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.78.4",
-      "published_at": "2026-08-11T03:51:33Z",
+      "version": "0.78.4.dev1+gdd1c86bf4",
+      "published_at": "2026-08-10T22:02:55Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {

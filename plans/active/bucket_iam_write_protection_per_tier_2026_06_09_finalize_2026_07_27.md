@@ -97,3 +97,9 @@ context_scope:
   flagging to the operator for the actual unlock decision") is recorded but the operator's final decision has not
   landed. No new action available until the operator answers `BLK-df57c9fc`; releasing via `/skip-current-task` with
   `reason_code: GATED` so the fleet cooldown arms.
+- **slot-16 2026-08-10 (re-verification pass)**: re-verified `bucket_iam_write_protection_per_tier_2026_06_09.md` is
+  still 100% `[x]` done (26 `[x]`, zero `- [ ]`) and still carries `locked_by: live-defi-rollout`
+  (`locked_since: 2026-06-09`). Re-checked `BLK-df57c9fc` via `/api/state` blocked_queue — still `answered_at: null`,
+  `authority: operator_pending`, created 2026-08-10T01:39:38Z; main's interim "do NOT unlock" answer recorded, no
+  operator final decision. No new action available until the operator answers `BLK-df57c9fc`; releasing via
+  `/skip-current-task` with `reason_code: GATED` so the fleet cooldown arms.

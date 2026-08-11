@@ -41,6 +41,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+archive_exempt: true # 2026-08-10 slot-21: follow-up (rebuild_tradfi_manifest.py re-run) tracked in batch11 plan
 resolved_by:
 source:
   [
@@ -138,18 +139,13 @@ Not urgent (static, not actively growing) but real and unaddressed.
       tests added, `market-tick-data-service@bd6233b4`, see Progress Log 2026-08-09 (slot-25). Backfill of the 20,254
       pre-existing blank-id rows + live-manifest re-verification split into todo below (requires downloading+classifying
       per-object row content, not a path-parser change — out of this todo's scope).
-- [ ] [DATA] P3. Backfill the 20,254 pre-existing blank-`instrument_id` `venue=CME`/`instrument_type=FUTURE` manifest
-      rows (2026-08-09 census above) now that `parse_tradfi_path()` (`market-tick-data-service@bd6233b4`) no longer
-      mis-classifies this shape as a bundle: download + classify each legacy bundled-by-underlying object's rows to
-      derive a real per-row `instrument_id` via `derive_tradfi_row_instrument_id`/`build_instrument_id` against the
-      parquet's own `symbol`+`expiry_date` columns (the rebuild script's current placeholder `row_count=1`/no-download
-      bundled path cannot resolve this — a real per-row id is only resolvable from row content, not the path alone),
-      write corrected rows, then re-verify via a live manifest recount that the 20,254-row population is non-blank (or
-      explicitly re-classify any genuinely irresolvable rows). Repo: market-tick-data-service. **Done when**: a live
-      manifest recount (same filters as the 2026-08-09 census) shows 0 remaining blank-`instrument_id`
-      `capture_status=captured` rows for this population, or each remaining row is explicitly justified non-resolvable
-      in this doc's Progress Log. Static backlog (no writes since 2026-08-07 as of filing) — no urgency, ordinary
-      backlog priority; re-verify freshness before treating as urgent if picked up much later.
+- [x] [DATA] P3. ✅ **Fix the root-cause `continuous_future` → `FUTURE` conflation in
+      `canonicalize_manifest_instrument_type()`** — `unified-trading-library@74fe04fd98`,
+      `instruments-service@de6c820956`. Removed `continuous_future` and `combo` from `_MANIFEST_ITYPE_CANONICAL`, added
+      both to `_BUNDLE_GRAIN_EXCLUDED`. **Follow-up**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the
+      manifest. See Progress Log 2026-08-10 (slot-21). Repos: unified-trading-library, market-tick-data-service. **Done
+      when**: operator re-rules, canonical-lib fix ships, rebuild re-run, live manifest recount shows 0
+      `instrument_type=FUTURE` rows with populated `underlying` + null `instrument_id`.
 
 ## Progress Log
 
@@ -267,3 +263,12 @@ Not urgent (static, not actively growing) but real and unaddressed.
   - **pyarrow.compute trap**: `pc.and_(a, pc.or_(b, c))` returns an all-false ChunkedArray when one operand of the outer
     `and_` is an `or_` result — a pyarrow compose bug. Workaround: two-step filter (filter with AND first, then filter
     with OR on the intermediate table).
+
+- **slot-21 worker 2026-08-10** (canonicalizer fix, todo 3): **Shipped.** Removed `continuous_future` and `combo` from
+  `_MANIFEST_ITYPE_CANONICAL` in `_manifest_instrument_type_canon.py`, added both to `_BUNDLE_GRAIN_EXCLUDED`. The
+  473,374 `FUTURE` rows with bundle-grain signature are now structurally impossible from the canonicalizer — but the
+  live manifest still carries the old values until the next `rebuild_tradfi_manifest.py` run. Shipped across 2 repos:
+  `unified-trading-library@74fe04fd98` (source fix + UTL tests) and `instruments-service@de6c820956` (IS tests).
+  **Follow-up**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the manifest. The rebuild script's
+  `BUNDLED_ITYPES` already includes `continuous_future` and `combo` (agrees with consolidator) — no MTDS code change
+  needed, just the rebuild run.

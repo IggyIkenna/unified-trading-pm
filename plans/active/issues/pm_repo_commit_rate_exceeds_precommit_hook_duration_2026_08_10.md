@@ -241,6 +241,122 @@ Directions, cheapest first — each is a todo below:
       re-stage the named files and retry — rather than exiting 6 with "Do NOT re-run this script". **Done when**: a
       simulated autofix-only prek failure re-stages and retries to success, a genuine content rejection still exits 6
       with the hook's remedy line, and both are covered by tests. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **The silent-revert class also hits `quickmerge.sh`, and safe-doc-push's own "already landed"
+      heuristic converts it into a FALSE SUCCESS.** DONE 2026-08-11 — unified-trading-pm@91d559ee19. **Root cause was
+      not a missing check but a one-argument call-site bug.** `autostash_guard_bound_backlog` (tree-wip-guard.sh) takes
+      ($1 protected paths, $2 remote ref); `quickmerge.sh` passed ONLY the remote ref, landing it in the PROTECTED slot.
+      `protected` was therefore a branch name matching no path, so once the stash list crossed the guard's >=10
+      extreme-backlog trigger it quarantined and `git checkout <branch> --`'d the caller's OWN `--files` — precisely
+      what that function's own header says must NEVER happen. Reproduced live TWICE on 2026-08-11 while shipping this
+      fix (43 autostash entries on the host, so the trigger was permanently armed): a run naming 5 files had all 5
+      reverted mid-flight and carried on. `safe-doc-push.sh`'s call site always passed both args correctly, which is
+      exactly why only quickmerge ever exhibited the loss. Shipped: **(a)** the call-site fix; **(b)**
+      `_qm_assert_entry_change_landed` — HEAD's blob per named path recorded AT ENTRY, and after the push any path that
+      had a real diff at entry whose HEAD blob is still the entry one exits **10** instead of printing a SHIPPED line
+      (this also gives `_qm_content_vanished` its first call site — it was DEAD CODE from the day it was written, which
+      is why the losses it was built for kept happening silently); **(c)** safe-doc-push's `_sdp_certify_success` gating
+      ALL THREE success paths — exit **12** when every named file was already identical to HEAD at entry (the instance-4
+      shape: undecidable from inside the process, so it refuses and prints the `git log -1 -- <path>` command that
+      resolves it, rather than guessing; `SDP_ALLOW_NOOP=1` opts back into the old semantics) and exit **13** when the
+      push landed without the change. The assertion is "moved off the PRE-RUN HEAD blob", NOT "equals your entry blob",
+      so hook reflow (prosewrap/prettier) is not a false positive. Tests:
+      `tests/test_autostash_guard_protects_caller_files.bats` (5 — incl. a CALL-SITE test on the argument ORDER, the
+      only shape that would have caught this; the behavioural tests stayed green throughout),
+      `tests/test_quickmerge_landed_content_assertion.bats` (7),
+      `tests/test_safe_doc_push_landed_content_certification.bats` (5). Also repaired
+      `tests/test_safe_doc_push_untracked_file_never_false_success.bats`, whose `.git/index.lock` premise went inert
+      when isolated-worktree mode became the default (a linked worktree has its own index): failing at HEAD, passing at
+      HEAD under `SDP_ISOLATED=0` — the mechanism had gone stale, not the fix. Codex SSOT:
+      `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` § 3a. **Original text:** four measured
+      instances 2026-08-10, two of which destroyed this very todo. The sibling todo below covers safe-doc-push's exit-5
+      path only; these are different. (1) A comment edit to `scripts/quality-gates-base/qg-host-governor.sh`, staged and
+      passing, was silently dropped by quickmerge's autostash/`_qm_restage_target_files` reconcile — the run reported
+      SUCCESS and pushed a commit with the OTHER named files but not that one; the edit survived in neither worktree nor
+      HEAD (re-applied by hand, shipped as unified-trading-pm@7a6f9a47). Nothing warned. (2) A scoped `--files` run
+      pushed a commit containing NEITHER named file — only a peer's untracked test file — while both named files stayed
+      dirty on disk (agent-orchestrator@62649fb). (3) This todo, attempt 1: written, pushed, and afterwards CLEAN with
+      `ahead=0`, present in neither worktree nor HEAD; unrecoverable from all 4 live stashes (incl. two
+      `safety-snapshot: pre-reconcile quarantine`), checked individually. (4) This todo, attempt 2 — THE WORST SHAPE:
+      `safe-doc-push.sh` exited **0** reporting
+      `✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success.` It had
+      not landed; the edit was reverted BEFORE the script hashed the file, so "matches HEAD" was true for the wrong
+      reason. That heuristic cannot distinguish "someone else already pushed your content" from "your content was
+      destroyed" — and resolves both to success. An autonomous run would record a green push and move on. **Why
+      `_qm_unstage_foreign_paths()` (@bde0cc4a) does not cover this**: it stops FOREIGN work being committed under your
+      message; it does nothing about YOUR work being reverted. Separate failure modes, only one fixed. Fix shape: hash
+      the named files at ENTRY; before reporting success, require that HEAD contains THAT hash's content — not merely
+      that the worktree matches HEAD. On mismatch, fail loudly naming a recovery ref. **Done when**: an induced run
+      whose named file is reverted mid-flight exits non-zero naming the recovery ref instead of reporting "already match
+      HEAD", and a test covers both branches. Repo: unified-trading-pm.
+- [ ] [INFRA] P1. **quickmerge's `--isolated` does not protect its INPUTS.** Isolation re-execs inside a throwaway
+      worktree, but STAGE 0.4's reconcile (and the autostash guard it calls) runs against the CALLER's checkout first —
+      so the named files can be quarantined and reverted BEFORE isolation ever copies them in. That is how the loss
+      above happened on an isolated run. The call-site fix closes the specific quarantine path, but the ordering is
+      still wrong in principle: any future reconcile step added ahead of isolation reintroduces it. **Done when**:
+      isolation snapshots the caller's `--files` content BEFORE any reconcile touches the caller's tree, and a
+      regression test proves an isolated run ships the caller's content even when the caller's tree is reverted mid-run.
+      Repo: unified-trading-pm.
+- [ ] [INFRA] P1. **A ship script cannot run from an arbitrary worktree — two separate directory-name assumptions.**
+      Measured 2026-08-11 while shipping the fix above from a private worktree (the only way to hold uncommitted work on
+      a checkout a peer session keeps reverting): STAGE 2 resolved `pre-flight-audit.sh` via
+      `WORKSPACE_ROOT=$(dirname $PWD)` and looked for it under `<parent>/unified-trading-pm/...`, failing unless the
+      worktree directory is literally named `unified-trading-pm`; then STAGE 1.5's dependency alignment failed because
+      the parent held no sibling repos (`aligned: true` in the real checkout, FAILED in the worktree). Both were worked
+      around by hand — naming the worktree `unified-trading-pm` and symlinking 30 siblings into its parent. This is the
+      same class as F7 (resolve from git, not from the directory name), one level up. **Done when**: quickmerge resolves
+      the workspace root without depending on the checkout's directory name, or fails with a diagnosis naming the
+      assumption instead of a missing-file error. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Two interactive sessions in ONE slot checkout destroyed uncommitted work twice in 30 minutes.**
+      DONE 2026-08-11 — unified-trading-pm@83debfb40a. **The framing in this todo was wrong, and the correction is the
+      main finding.** It said the `.agent-claim` heartbeat "is WARN-only by design and did not prevent it". The measured
+      truth: `cursor-configs/hooks/session-start-collision-check.sh`'s live-process signal read ONLY `/proc/<pid>/cwd`
+      and `/proc/<pid>/status`, and **macOS has no `/proc` at all** — so on the exact host class where the incident
+      happened the scan was a silent structural no-op, counting zero foreign sessions no matter how many were live. Not
+      "warned but too weakly": it could never fire. Proved by direct reproduction — a simulated peer process (renamed
+      argv0, real cwd under a fake slot) produced ZERO warning from the unpatched hook and the correct warning after the
+      fix, on identical input. Shipped: a `/proc`-first, `ps`/`lsof`-fallback path, portable across Linux and macOS,
+      leaving the non-blocking contract untouched (`tests/test_session_start_collision_check.bats`, 10/10). Also shipped
+      `scripts/dev/ship-from-worktree.sh` (`setup`/`cleanup`), which formalises the private-linked-worktree pattern that
+      is the only thing that actually stopped the loss — leaf name derived via `git rev-parse --show-toplevel` rather
+      than hardcoded, so it survives the sibling P1 on quickmerge's directory-name assumptions
+      (`tests/test_ship_from_worktree.bats`, 16/16; dogfooded against the real slot-4 checkout, with isolation proven by
+      the edit being visible in the worktree and absent from the slot tree). **Trap found while building it**: the
+      worktree recipe circulated in this session (including in the sub-agent brief) symlinks the throwaway worktree's
+      `.venv` at the operator's LIVE venv — a `uv sync --frozen` through that symlink can PRUNE packages out of the real
+      environment (measured 2026-08-10; `scripts/quickmerge.sh` already used a shared venv cache for this reason). The
+      helper uses the shared cache (`QM_ISO_VENV_CACHE`). Live venv verified undamaged after the fact: 388 packages
+      before and after a full QG run through such a symlink, imports OK. Codex SSOT:
+      `/codex/05-infrastructure/per-tab-worktrees.md`.
+- [ ] [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** Now that the hook
+      actually runs on macOS (above), the policy question is live and unanswered — it was previously moot because the
+      detection never fired here. Options, per the sub-agent that measured it: **(A) [RECOMMENDED]** keep `SessionStart`
+      WARN-only and strengthen the message to name `scripts/dev/ship-from-worktree.sh` as the concrete next action — a
+      true block is not even mechanically available at the `SessionStart` hook event, which is documented non-blocking
+      regardless of exit code; **(B)** add a narrower `PreToolUse` guard on the actually-risky commands (`git commit` /
+      `quickmerge.sh` / `safe-doc-push.sh`) that re-checks liveness at the moment of mutation rather than only at
+      session start, with a clean opt-out for anything run from a `ship-from-worktree.sh` worktree — cost is that a
+      mid-task block is far more expensive per false positive than a skippable warning, and it would add friction for a
+      read-only second session's first commit and during AO worker handoff. **Done when**: the operator picks A or B (or
+      Other) and the choice is implemented + tested. Repo: unified-trading-pm.
+- [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
+      2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
+      — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
+      contain the literal pattern, so the check also self-matches. The watcher waited on an unrelated slot's process and
+      its result said nothing about the run it was meant to track. Structurally the same class as this todo's own
+      subject: two sessions sharing observable host state with no scoping key. Any liveness/collision check needs a
+      scoping key (PID ownership via `$$`/ancestry, a file-based own-task handle, or a unique marker), not a
+      command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
+      the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
+      key, with a regression test. Repo: unified-trading-pm. SSOT:
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`. Measured 2026-08-11 in slot 4: after the quarantine
+      fix above, a peer session sharing this checkout reverted this session's tracked edits again (5 files, `git status`
+      clean, content in neither worktree nor HEAD; recovered from the `pre-reconcile quarantine` stash by path both
+      times). The `.agent-claim` heartbeat is WARN-only by design and did not prevent it. The durable mitigation used
+      here was to stop holding uncommitted work in the shared checkout at all and ship from a private `git worktree` —
+      worth making the documented default for interactive sessions rather than an emergency manoeuvre. **Done when**:
+      either the collision hook escalates past WARN when a second session writes the same checkout, or the
+      shared-checkout ship path is documented as worktree-first with a one-command helper. Repo: unified-trading-pm.
+      SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 - [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
       non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
       entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
@@ -334,6 +450,29 @@ Directions, cheapest first — each is a todo below:
       stale duplicate rather than a conflict. Evidence: unified-trading-pm@f71c12e40a;
       `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` 2/2, A/B against the call-site-removed build fails at
       the `git pull --ff-only` assertion — the peer's exact symptom. Repo: unified-trading-pm.
+
+- [x] [INFRA] P2. **The byte-identity condition in `_sdp_reconcile_caller_duplicates` almost never held for prose
+      docs.** ✅ Fixed. The reconciler removed a caller-side leftover only when it was **byte-identical** to the landed
+      blob — but prek runs prettier INSIDE the isolated worktree, so for any prose-wrapped `.md` the landed blob is
+      re-wrapped and byte-identity never holds. It was a no-op on precisely the file class it was written for. Measured
+      3 hits in one session (`plan_alignment_npm_global_eacces_…`, `sit_gate_treadmill_…`, `codex_freshness_ratchet_…`),
+      every one a pure re-wrap with ZERO word-level difference; each cost a conflicted pull and once failed an unrelated
+      quality gate via the conflict-marker check. Same wrong-property mistake
+      `/codex/12-agent-workflow/measurement-claims-discipline.md` names — byte-identity standing in for "same content",
+      broken by a formatter that does not change the content. Fix: new `_sdp_same_content()` compares with every
+      whitespace run collapsed (same words, same order = same content, differently wrapped), scoped to `.md` ONLY — for
+      code, whitespace is semantic and byte-identity stays the sole test. **Also closed the other half**: two of the
+      three hits were TRACKED files, which the untracked-only loop never looked at; a tracked, locally-modified,
+      content-equivalent doc named in THIS push's `--files` is now synced to the landed version instead of being left to
+      conflict on the next pull. The loud-warning path for a REAL content delta is unchanged. Coverage:
+      `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` 6/6 — re-wrap recognised, a real word change refused,
+      non-`.md` refused on whitespace, and the tracked-sync path asserted. **Caught by its own test**: the first cut
+      made byte-identical files `continue` early, silently disabling the ORIGINAL untracked-duplicate removal; test 1
+      failed and named it. Evidence: unified-trading-pm@54f9102183. Repo: unified-trading-pm. **Recovery note worth
+      keeping**: this very todo was parked mid-session by quickmerge's own `safety-snapshot: pre-reconcile quarantine`
+      when the autostash chain hit 65 entries — it announced the quarantine loudly and named the stash, so the text was
+      recoverable in full from `stash@{0}` rather than lost. That mechanism worked; the standing hazard it points at is
+      the 65-deep autostash pile itself.
 
 - [x] [INFRA] P1. **The host gate silently disarmed the isolation regression test.** ✅ Done —
       `tests/test_safe_doc_push_isolated_identity_preserved.bats` exports `ORCHESTRATOR_VM_ID=planning` to pin the host

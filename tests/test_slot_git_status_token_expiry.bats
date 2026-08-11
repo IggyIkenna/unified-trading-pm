@@ -19,6 +19,12 @@
 REPORTER="unified-trading-pm/scripts/dev/slot-git-status-report.sh"
 
 setup_file() {
+    # ORDER-DEPENDENT by design: these walk a state machine across shared file-scoped state
+    # ("a second consecutive run does not re-fire", "a re-mint clears it"), so each test's
+    # premise is the previous one's outcome. Under `bats -j` they interleaved and produced a
+    # SHIFTING set of 2-3 failures — the most expensive kind, because it reads as a real
+    # intermittent bug in the expiry watchdog. Parallelism ACROSS files is unaffected.
+    export BATS_NO_PARALLELIZE_WITHIN_FILE=true
     WS_ROOT="$(git rev-parse --show-toplevel)/.."
     REPORTER_ABS="$(cd "${WS_ROOT}/$(dirname "${REPORTER}")" && pwd)/$(basename "${REPORTER}")"
     echo "${REPORTER_ABS}" > "${BATS_FILE_TMPDIR}/reporter_abs"

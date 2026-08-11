@@ -29,10 +29,54 @@ setup() {
     # Unique per-test session name so parallel bats runs never collide with each other
     # or with a real orch-slot-* session on the host.
     TMUX_SESSION="bats-claim-hb-test-$$-${RANDOM}"
+    # DEDICATED tmux socket per test (pm_bats_tmux_fixture_leak_wedges_shared_host_2026_08_10):
+    # these fixtures used to run on the user's DEFAULT socket, right alongside the real
+    # orch-slot-* sessions, so a leaked fixture session was indistinguishable from live fleet
+    # state and simply accumulated. 41 were found on the orchestrator VM on 2026-08-10 (oldest
+    # 29h) helping fill its 8 GiB /tmp tmpfs to 100%, at which point tmux_spawn.spawn started
+    # failing with [Errno 28] and EVERY escalation dispatch died and re-queued.
+    # Exported, not passed as `tmux -L`: the script under test is invoked as a subprocess by
+    # _heartbeat and inherits this, so both sides resolve the SAME socket without production
+    # code needing a test-only socket flag.
+    #
+    # SHORT path, deliberately NOT nested under BATS_TEST_TMPDIR (which is the obvious choice and
+    # is wrong): a unix socket path is capped at ~104 bytes by sockaddr_un.sun_path, and on macOS
+    # BATS_TEST_TMPDIR is already ~90 (`/var/folders/<...>/bats-run-XXXXXX/test/N`) before tmux
+    # appends its own `tmux-<uid>/default`. Nesting there fails every session with
+    # "error connecting to ... (File name too long)". The dir holds one socket, is torn down
+    # below, and any survivor is swept by tmpfs-disk-cleanup.timer.
+    export TMUX_TMPDIR="${TMPDIR:-/tmp}/bth.$$.${RANDOM}"
+    mkdir -p "${TMUX_TMPDIR}"
+}
+
+# Every fixture tmux call is timeout-bounded. On a loaded shared host the tmux server can stop
+# responding and the client spins instead of returning — measured 2026-08-10 with 8 clients at
+# 75-94% CPU each (~7 of the box's 10 cores), which is what made this suite able to wedge the
+# whole host. A bounded call FAILS THE TEST rather than hanging the runner.
+# `timeout` is GNU coreutils; macOS ships it only as `gtimeout` (same portability shape as
+# _stat_mtime_epoch below), and a host with neither still runs, just unbounded.
+_tmux() {
+    if command -v timeout >/dev/null 2>&1; then
+        timeout 10 tmux "$@"
+    elif command -v gtimeout >/dev/null 2>&1; then
+        gtimeout 10 tmux "$@"
+    else
+        tmux "$@"
+    fi
 }
 
 teardown() {
-    tmux kill-session -t "=${TMUX_SESSION}" 2>/dev/null || true
+    # BOTH session names, and in teardown rather than at the end of a test body. The
+    # "-longer-suffix" session used to be killed on the LAST LINE of its own @test, so any
+    # earlier assertion failure leaked it permanently — and every one of the 41 sessions found
+    # leaked on the orchestrator VM was a `*-longer-suffix`. bats runs teardown unconditionally,
+    # including after a failed assertion, which is the property that fixes this.
+    _tmux kill-session -t "=${TMUX_SESSION}" 2>/dev/null || true
+    _tmux kill-session -t "=${TMUX_SESSION}-longer-suffix" 2>/dev/null || true
+    # Belt-and-braces: the socket is per-test, so killing the server releases every session on it
+    # wholesale — a session name this teardown forgot cannot outlive the test.
+    _tmux kill-server 2>/dev/null || true
+    [ -n "${TMUX_TMPDIR:-}" ] && rm -rf "${TMUX_TMPDIR}" 2>/dev/null || true
 }
 
 # Portable mtime-as-epoch-seconds (2026-08-09: `stat -c %Y` is GNU-only and fails with
@@ -65,7 +109,7 @@ _heartbeat() {
 }
 
 @test "claim present, tmux session alive -> mtime advances" {
-    tmux new-session -d -s "${TMUX_SESSION}" 2>/dev/null
+    _tmux new-session -d -s "${TMUX_SESSION}" 2>/dev/null
     _write_claim "${TMUX_SESSION}"
     # Force an old mtime so a later touch is unambiguously detectable.
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
@@ -106,7 +150,7 @@ _heartbeat() {
     # satisfied by a live session actually named "orch-slot-10" (bare -t prefix-matches;
     # exact_target()'s "=" form must not).
     LONG_SESSION="${TMUX_SESSION}-longer-suffix"
-    tmux new-session -d -s "${LONG_SESSION}" 2>/dev/null
+    _tmux new-session -d -s "${LONG_SESSION}" 2>/dev/null
     _write_claim "${TMUX_SESSION}"
     touch -t 202001010000 "${SLOT_DIR}.agent-claim"
     before=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
@@ -116,6 +160,6 @@ _heartbeat() {
     [[ "$output" == *"[claim-heartbeat:stale]"* ]]
     after=$(_stat_mtime_epoch "${SLOT_DIR}.agent-claim")
     [ "${after}" -eq "${before}" ]
-
-    tmux kill-session -t "=${LONG_SESSION}" 2>/dev/null || true
+    # NOTE: no kill here — teardown() owns it now. An in-body kill is skipped whenever an
+    # assertion above fails, which is exactly how this session leaked 41 times on the AO VM.
 }

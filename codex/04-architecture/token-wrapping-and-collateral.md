@@ -252,6 +252,30 @@ Perp margin must match the venue requirement:
 
 ---
 
+### USDC Margin Buffer (`margin_buffer_pct`) — shipped 2026-07
+
+For `CARRY_STAKED_BASIS_PERP` and `CARRY_STAKED_BASIS_DATED` (RECURSIVE_STAKED_CARRY_BASIS_PERP), the
+`_derive_structure()` function (`staked_basis.py:344`) resolves the perp-margin structure from
+`VENUE_COLLATERAL_MATRIX`:
+
+| Outcome                | Condition                    | `f` (staked fraction)   | Margin token       |
+| ---------------------- | ---------------------------- | ----------------------- | ------------------ |
+| `LST_AS_MARGIN`        | LST accepted as cross-margin | 1.0                     | LST                |
+| `USDC_MARGIN_BUFFERED` | LST not accepted, stable is  | `1 - margin_buffer_pct` | Stable (USDC/USDT) |
+| (reject)               | Neither accepted             | —                       | —                  |
+
+The **`margin_buffer_pct`** parameter (default `0.20` at `staked_basis.py:238`) down-sizes the staked leg so a fraction
+of equity stays as stable margin headroom at the perp venue. With the default 20% buffer on a $100K allocation: $80K is
+deposited to the staking/lending leg and $20K stays as USDC perp margin. The perp short notional is clamped by the
+venue's credit on its margin token (the STABLE collateral row haircut).
+
+The parameter is user-overridable per strategy slot via `param_schema.py`'s `PARAM_SCHEMA_REGISTRY`
+(`CARRY_STAKED_BASIS_PERP` at line 144 and `CARRY_STAKED_BASIS_DATED` at line 198 — both carry
+`source="staked_basis.py:219,328"`). The `LST_AS_MARGIN` path forces `margin_buffer_pct` to 0 (the LST itself is the
+margin), ignoring the user-set value.
+
+SPLIT_STAKE was deleted 2026-05-05 (see `MarginStructure` docstring, `staked_basis.py`).
+
 ## Extending the Registries
 
 ### Add a new token wrapping rule

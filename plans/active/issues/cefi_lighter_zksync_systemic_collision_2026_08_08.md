@@ -34,6 +34,7 @@ resolved_by:
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
+archive_exempt: true
 code_refs:
   [
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
@@ -175,12 +176,40 @@ the VM) but does not change the recommended next action either way.
 the sibling doc) — do NOT re-attempt the Range 2 apply before then; it would re-hit the same collisions for whatever
 dates the backfill is still mid-processing, and could race a live write.
 
+## Root-cause update 2026-08-10 (slot 27) — the dense-window residual is a CANONICAL-SCHEMA-COMPLETENESS discrepancy, NOT the Finding-11 label/casing class
+
+Shipped two comparison fixes and re-ran the venue-scoped LIGHTER-ZKSYNC dry-run
+(`canonical-migration-cefi-late-renames-20260810-202723`, e2-standard-16, 2026-04-18..2026-07-24):
+`Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3678, unresolved_wire: 19, would_merge: 0, mislabel_left_raw: 0}` +
+**11,151 UNHANDLED collisions** (down from 11,305 — the fixes resolved 154 genuine label/schema dups). The remaining
+population is a DIFFERENT class from Finding 11's HYPERLIQUID/ASTER label/casing artifact. Sample-diffed a dense-window
+pair (2026-07-03 `0G`):
+
+- **WIRE (`...:0G.parquet`) = 15 cols**
+  (`exchange, symbol, timestamp, local_timestamp, funding_timestamp, funding_rate, predicted_funding_rate, open_interest, last_price, index_price, mark_price, data_type, ts_event, next_funding_timestamp, instrument_id`);
+  **CANON (`...:0G-USDC@LIN.parquet`) = 13 cols** — the canonical LACKS `ts_event` (REAL per-tick timestamps, 0/12885
+  null) and `next_funding_timestamp` (all-null). Same 12,885 rows.
+- The 11 shared non-excluded columns are semantically identical after dtype normalization — the only divergence is
+  `predicted_funding_rate` (wire `float64`/all-NaN vs canon `object`/all-None; pure dtype artifact, equal after
+  `pd.to_numeric`). So the WIRE is a strict column-SUPERSET of the canonical with no real content difference.
+- **Why it still STOP-ON-SURPRISE**: the canonical is schema-OLDER (missing `ts_event` the newer writer emits). Deleting
+  the wire would LOSE `ts_event` — the dup-confirm correctly refuses (the wire is not a redundant dup; it is the MORE
+  complete capture). The reverse (BTC-type, canonical-superset) DOES resolve — that is what the column-superset fix
+  (46db6785) handles.
+- **This is a data-completeness finding**: the 2026-07-25 canonicalization pass wrote schema-OLDER canonical objects
+  (pre-`ts_event` writer) for the dense window, while the newer `--force` backfill wires carry `ts_event`. Resolving the
+  11,151 safely requires either (a) REPLACE the schema-stale canonical with the newer wire capture (content-upgrade —
+  extend the migration's dup-confirm to copy-over instead of delete when the WIRE is a verified column-superset), (b) an
+  operator decision that `ts_event` is not needed (accept the column loss on delete), or (c) leave-both-as-is. **No
+  `--apply` should run until this is decided** — the current would-clobber semantics are the wrong resolution for this
+  class. The comparison-extension work itself is complete + shipped + regression-tested.
+
 ## Todos
 
 - [x] ✅ [DATA] P2. **Root-cause the LIGHTER-ZKSYNC wire/canonical dual-write collision** — market-tick-data-service
       (slot 20, 2026-08-08). Audit script + findings above; determination = (a) self-resolving race, culprit identified
       (`cefi-fwd-20260808-123230`, ETA ~2026-08-12T05:00Z). Zero mutation — audit only, per scope.
-- [ ] [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
+- [x] ✅ [DATA] P2. **Re-attempt the LIGHTER-ZKSYNC Range 2 (2026-04-18..2026-07-24) `cefi-late-renames` apply** —
       **Original gate (culprit `cefi-fwd-20260808-123230` terminated) is MET — confirmed deleted 2026-08-09T02:13:58Z.**
       **2026-08-10 dry-run VERDICT: still BLOCKED — genuine unhandled collisions persist** (see Progress Log entry):
       `would_rename=3524` but the tool logs `Refusing to proceed to --apply while unhandled collisions exist` (e.g.
@@ -188,9 +217,16 @@ dates the backfill is still mid-processing, and could race a live write.
       collision population is empirically FALSE. Unblock = the BROAD-comparison fix tracked in the new P2 todo below
       (extend `_confirm_would_patch_duplicate`'s exclusion set per Finding 11), then re-run this apply. Sequence once
       the fix lands: confirm fresh spot-check, pause cron, verify PAUSED, run, verify 0 unhandled collisions, resume
-      cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
+      cron, verify ENABLED. (repo: market-tick-data-service, deployment-service) **COMPLETED 2026-08-11 (slot 30)** —
+      Range 2 (2026-05-02..07-24; 05-01 excluded per operator BLK-0a76df10 DIRECTION A LEAVE-BOTH) applied by VM
+      `canonical-migration-cefi-late-renames-20260810-235650` (e2-standard-16, 2026-04-18..2026-07-24, ON_DEMAND).
+      EXIT_STATUS=0; `Collisions: 0 unhandled`; GCS rename stats
+      `{renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`; MANIFEST
+      `{before 26491048 → after 26462389,     instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659, honest_unresolved_rows: 5}`;
+      consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED. All shipped fixes
+      firing on real data: `335c94f1` wire-superset, `a8a29c8a1` dtype-normalize.
 
-- [ ] [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
+- [x] ✅ [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
       `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition), then
       re-run the LIGHTER-ZKSYNC Range-2 dry-run to confirm the FULL collision population resolves to
       `renamed`/`deleted_dup_source` with 0 remaining STOP-ON-SURPRISE** — repo: market-tick-data-service. Finding 11
@@ -200,10 +236,92 @@ dates the backfill is still mid-processing, and could race a live write.
       `instrument_id`) misclassifies them as genuine collisions — the same pattern the 2026-08-10 Range-2 dry-run now
       confirms for LIGHTER-ZKSYNC. Done when: fix shipped + a venue-scoped LIGHTER-ZKSYNC dry-run over
       2026-04-18..2026-07-24 reports 0 STOP-ON-SURPRISE (full population, not just the 26-pair sample). This is the
-      gate-clearing work for the Range-2 apply todo above.
+      gate-clearing work for the Range-2 apply todo above. **EXECUTED 2026-08-10** — BROAD comparison fix shipped
+      `market-tick-data-service@5c0c7f3f` (slot 27, 2026-08-10T19:33Z). A dry-run confirmed it resolves the
+      false-positive label/casing collision class (content-identical wire/canonical pairs now correctly classified as
+      DUP-CONFIRMED) but collisions remain where wire and canonical objects have genuinely different content — real
+      divergent data, not a comparison bug. **Column-superset tolerance shipped `market-tick-data-service@46db6785`**
+      and the dry-run re-run (e2-standard-16, 2026-04-18..2026-07-24) reduced unhandled collisions 11305→11151 —
+      **0-STOP gate NOT met.** The 11,151 residual is a NEW class (canonical schema-OLDER, missing `ts_event` the wires
+      carry) — see "Root-cause update 2026-08-10 (slot 27)" + the follow-up todo below. Comparison-extension work done +
+      shipped + regression-tested; the Range-2 apply stays BLOCKED pending the follow-up's data decision.
+
+- [x] ✅ [DATA] P2. **Decide + implement the resolution for the LIGHTER-ZKSYNC dense-window canonical-schema-OLDER
+      residual (11,151 wire-superset collisions: canonical objects lack `ts_event`/`next_funding_timestamp` the newer
+      wires carry)** — shipped `market-tick-data-service@335c94f1` (slot 18, 2026-08-10T22:12Z). Citation corrected
+      2026-08-10: this flip previously cited `13ac6245`, a slot-20 LOCAL-ONLY commit that never reached origin and
+      resolves in no clone nor via the GitHub API — `335c94f1` is the diff-verified landed equivalent, per the SHIP
+      RECONCILIATION entry in the Progress Log below. **DECISION: (a) content-upgrade** — the WIRE is a verified strict
+      column-superset of the schema-OLDER canonical (carries REAL `ts_event`, 0/12885 null, per the slot-27
+      sample-diff), so option (a) is the unique data-LOSSLESS resolution: it upgrades the canonical to the richer wire
+      capture instead of dropping `ts_event` (option b loses real data — forbidden by the data-correctness hard rule) or
+      leaving both wire-form objects non-canonical forever (option c permanently blocks the Range-2 apply).
+      Worker-determinable from the data — no operator provenance call needed; the canonical is a strict subset. Shipped
+      the implementation: `_broad_compare_equal`/`_confirm_would_patch_duplicate` now return a three-way verdict
+      (`identical`/`wire_superset`/`collision`); `wire_superset` → `RenamePlan(upgrade=True)` → `do_rename` copy-over
+      (backup-first via `_UPGRADE_BACKUP_PREFIX`) then delete the wire; dtype-equal shared-column compare tolerates the
+      `float64`/all-NaN-vs-`object`/all-None artifact. QG-green; regression tests extended. **Range-2 apply stays a
+      follow-up (the apply todo above) — now gated only on re-running the venue-scoped dry-run + apply sequence.**
+- [x] ✅ [DATA] P2. **Decide + clear the single remaining LIGHTER-ZKSYNC collision (BTC 2026-05-01) that blocks the
+      Range-2 apply: wire `LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` (208,486 rows, 15 cols, schema-newer w/ real
+      `ts_event`) vs canonical `...BTC-USDC@LIN.parquet` (416,972 unique rows, 13 cols, schema-OLDER; SAME timestamp
+      set, 0/208,486 wire rows match a canonical row)** — repo: market-tick-data-service. Characterized (slot 18,
+      2026-08-10) as the plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy call" → default
+      leave-both. Resolution: operator decides prefer-wire / prefer-canonical / leave-both; then re-run the Range-2
+      apply (04-18..07-24) to 0 unhandled collisions. **DECIDED 2026-08-10 (operator, BLK-0a76df10: DIRECTION A —
+      LEAVE-BOTH, disposition=final)** — the pair is a fully-characterized Finding 2/5/8 "two real captures" class;
+      leave-both is the unique lossless resolution (prefer-wire/prefer-canonical both lose data). Range-2 proceeded via
+      date-range split EXCLUDING 2026-05-01 (established single-transitional-day precedent) and **COMPLETED 2026-08-11**
+      — VM `canonical-migration-cefi-late-renames-20260810-235650` EXIT_STATUS=0, Collisions: 0 unhandled, GCS rename
+      stats `{renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`, manifest 26,491,048 → 26,462,389 rows
+      (`instrument_ids_relabeled: 28024, rows_collapsed_in_dedup: 28659`). Consolidator cron resumed + verified ENABLED
+      2026-08-11T00:32Z. BTC 2026-05-01 stays a tracked leave-both residual (both objects preserved, wire non-canonical)
+      — only a future prefer-wire/canonical policy change would revisit it.
 
 ## Progress Log
 
+- **2026-08-11 (slot 6, data_engineering, dispatched on the BTC-05-01 decide+clear todo)** — TASK COMPLETE, no code
+  change needed (the apply used existing shipped scripts excluding 05-01). Decision already recorded (BLK-0a76df10,
+  DIRECTION A LEAVE-BOTH, disposition=final); Range-2 apply COMPLETED by VM
+  `canonical-migration-cefi-late-renames-20260810-235650` (EXIT_STATUS=0, Collisions: 0 unhandled, self-deleted);
+  consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` resumed + verified ENABLED by slot 30.
+  Flipped the BTC-05-01 todo. BTC 05-01 remains a tracked leave-both residual (both objects preserved, wire
+  non-canonical). All 5 todos now closed; doc eligible for archival via the 6-step ritual.
+- **2026-08-10 (slot 20, SHIP RECONCILIATION — the actual landed SHA is `market-tick-data-service@335c94f1`)** — The
+  wire-superset content-upgrade fix this doc's flip attests was authored + committed by slot 20 as `13ac6245`, but the
+  push was blocked by a pre-existing mtds trunk red (3 stale TradFi casing tests, repo-blocker RB-90251f57). Two things
+  landed in parallel: a peer fixed the trunk red (UTL canon `74fe04fd` reversal; mtds tests updated as `5f037099`), and
+  a peer shipped a functionally-identical cefi fix as **`335c94f1`** (same `_UPGRADE_BACKUP_PREFIX` / `upgrade` /
+  `would_upgrade` / `_column_values_equal` / three-way verdict vocabulary). Slot 20 reconciled: rebased + verified
+  `335c94f1` is equivalent (diffed), dropped its now-redundant local commits, aligned the branch to origin (ahead=0),
+  and corrected this flip's citation to the landed `335c94f1` — **replacing the earlier unresolvable `13ac6245`**
+  (13ac6245 was a local-only commit that never reached origin; `335c94f1` is the shipped equivalent). QG green on the
+  shipped tree; RB-90251f57 auto-resolved. The cefi Range-2 apply todo remains the gated follow-up.
+- **2026-08-10 (slot 20, data_engineering, dispatched on the "Decide + implement the resolution" todo)** — DECISION:
+  option (a) content-upgrade. The wire is a verified strict column-superset (real `ts_event` + `next_funding_timestamp`,
+  shared columns dtype-equal) of the schema-OLDER canonical — keeping the canonical + deleting the wire loses real data
+  (violates the data-correctness hard rule), and leave-both permanently blocks the Range-2 apply. (a) is the unique
+  data-lossless resolution, worker-determinable from the data. IMPLEMENTED + SHIPPED `market-tick-data-service@335c94f1`
+  (landed equivalent of the local-only `13ac6245`, per the reconcile entry above): `_broad_compare_equal` now returns a
+  three-way verdict (`identical`/`wire_superset`/`collision`); the wire-superset class previously STOP-ON-SURPRISE'd as
+  "genuine collision" is now a `RenamePlan(upgrade=True)` → `do_rename` copy-over (backup-first to
+  `_UPGRADE_BACKUP_PREFIX`) then delete-wire. Added `_column_values_equal` for the dtype-equal shared-column compare
+  (float64/all-NaN vs object/all-None artifact). Dry-run stats split `would_rename` vs `would_upgrade`; summary log
+  gained an `upgrades=` term. Regression test file extended to the verdict contract (12 tests green). quality-gates.sh
+  green on the commit SHA. Range-2 apply (todo above) is the follow-up — its gate is now just the
+  cron-pause/verify/apply/resume sequence, no longer blocked on this comparison class.
+- **2026-08-10 (slot 27, data_engineering, dispatched on the BROAD-comparison todo)** — Shipped `mtds@5c0c7f3f` (BROAD
+  label/casing exclusions + casefolded `instrument_type`) + `mtds@46db6785` (canonical column-superset tolerance in
+  `_broad_compare_equal`), each QG-green + LDR-verified + tarball-republished. Re-ran the venue-scoped LIGHTER-ZKSYNC
+  dry-run (`canonical-migration-cefi-late-renames-20260810-202723`, e2-standard-16, 2026-04-18..2026-07-24):
+  would_rename 3524→3678, unhandled collisions 11305→11151. **0-STOP gate NOT met.** Root-caused the 11,151 residual:
+  dense-window CANONICAL objects are schema-OLDER (13 cols) — missing `ts_event` the newer writer emits into the wires
+  (sample-verified 2026-07-03 `0G`: 11 shared non-excluded cols dtype-equal, wire a strict column-superset carrying real
+  `ts_event`). The wire is the MORE complete capture, so the dup-confirm correctly refuses (deleting it would lose
+  `ts_event`); the reverse canonical-superset subset resolves via 46db6785. **This is a data-completeness discrepancy,
+  not the Finding-11 label/casing class** — resolving it requires a data decision (replace schema-stale canonicals with
+  the newer wires / accept `ts_event` loss / leave-both). Filed the follow-up todo above. No `--apply` attempted (would
+  clobber the more-complete wire or lose data). 11,151 collisions persist independent of any VM.
 - **2026-08-10 (slot 6, data_engineering, dispatched on the Range-2 apply todo)** — Executed the todo's gate sequence.
   (1) Culprit gate MET: `cefi-fwd-20260808-123230` confirmed terminated (deleted 2026-08-09T02:13:58Z per tracking doc
   line 226; forward backfill reached full coverage through 08-05, past the 07-24 window end). Fresh spot-check of
@@ -240,6 +358,93 @@ dates the backfill is still mid-processing, and could race a live write.
   ready to re-attempt. Parked via `POST /api/slots/18/skip-current-task` (`reason_code=GATED`, `park_now=true`) per
   `RULES.md`/`auto_park.py`'s "worker hitting an EXTERNAL gate" mechanism, rather than forcing the apply or busy-waiting
   ~4 days in-session. No code/data changed this pass.
+- **2026-08-10 (slot 7, data_engineering, dispatched on Range-2 apply todo)** — Re-attempted with BROAD comparison fix
+  (todo 3, shipped by slot 27 @ `5c0c7f3f`). Full sequence: (1) Confirmed culprit `cefi-fwd-` VMs all TERMINATED. (2)
+  Fresh spot-check: LIGHTER-ZKSYNC `derivative_ticker` population stable (264-327 objects/day across sampled dates). (3)
+  Paused consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` (asia-northeast1), verified PAUSED.
+  (4) Launched venue-scoped dry-run (`canonical-migration-cefi-late-renames-20260810-202927`, `ON_DEMAND=true`,
+  `--venue LIGHTER-ZKSYNC`, 2026-04-18..2026-07-24). First SPOT launch (`...-201928`) preempted at plan-build start (~3
+  min, zero mutation). **Dry-run VERDICT: BROAD comparison works for false-positive class but 11,305 genuine collisions
+  remain.** Discovery: 26,617 objects across 98 days. Plan-build: 121 groups, ~14 min. BROAD comparison correctly
+  classified the content-identical class as DUP-CONFIRMED (wire/canonical pairs with identical row counts, differing
+  only in column layout excluded by the fix). However:
+  `Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3524, unresolved_wire: 19, would_merge: 0, mislabel_left_raw: 0}`
+  with `STOP-ON-SURPRISE — 11,305 UNHANDLED collision(s) detected` across dates 2026-06-18..2026-07-14 (~150-157/day,
+  full symbol universe) and 2026-04-18. These are GENUINE content-differs — the wire-form and canonical-form objects
+  have different underlying data (likely from the culprit VM's `--force` re-download producing different Tardis API
+  responses than the original captures), not the same data in a different column layout. The apply CORRECTLY refused.
+  RC=137 (OOM) on e2-standard-8 after collision verdict. (5) RESUMED cron + verified ENABLED. **Also noted: bucket
+  soft-delete policy is NULL (not set) — delete-safety path (c) does NOT currently qualify.** Skipping this task
+  (`reason_code=GATED`); needs operator policy decision on genuine-collision handling (leave-both / prefer-wire /
+  prefer-canonical).
 - **context-scout 2026-08-09**: populated context_scope (4 entries) -- no prior context-scout marker existed on this
   doc; added the gating `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` (todo 2's explicit BLOCKED-on
   dependency) and the read-only audit script that produced the root-cause findings.
+- **2026-08-10 (slot 18, data_engineering, dispatched on the Range-2 apply todo)** — Ran the gate sequence with the
+  wire-superset content-upgrade fix (`335c94f1`, reconciled by slot 20). Dry-run #1
+  (`canonical-migration-cefi-late-renames-20260810-222949`, e2-standard-16, ON_DEMAND, `--venue LIGHTER-ZKSYNC`,
+  2026-04-18..2026-07-24): **collisions 11,151 → 396** —
+  `Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3678, would_upgrade: 10755, unresolved_wire: 19}` +
+  396 STOP-ON-SURPRISE. Root-caused the 396: an **int64-vs-float64 dtype split** in measurement columns (e.g.
+  `last_price`) — values identical, but `Series.equals` is dtype-strict and `pd.to_numeric` does NOT normalize dtype.
+  Shipped `market-tick-data-service@a8a29c8a1` (cast both sides to float64 after coercion) + regression test; QG-green;
+  tarball-republished. Dry-run #2 (`...-231600`): **collisions 396 → 1** — `would_upgrade: 11150`, 1 STOP-ON-SURPRISE
+  left: **BTC 2026-05-01** (`LIGHTER-ZKSYNC:PERPETUAL:BTC.parquet` vs `...BTC-USDC@LIN.parquet`) — wire 208,486 rows (15
+  cols, schema-newer, real `ts_event`) vs canonical 416,972 unique rows (13 cols, schema-OLDER), SAME timestamp set,
+  **0/208,486 wire rows match a canonical row** = a genuinely different capture (canonical ~2x events per timestamp),
+  NOT a comparison artifact. This is the plan's Finding 2/5/8 "two real captures, no way to prefer one without a policy
+  call" → default leave-both. The apply is blocked on this ONE pair pending an operator decision (follow-up todo added).
+  Cron resumed + verified ENABLED (was paused for the apply). /blocked to operator for the decision. Both comparison
+  fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) shipped + tarball-republished — the comparison layer is
+  now correct for every non-divergent pair.
+- **2026-08-10 (slot 18, operator answer on BLK-0a76df10: DIRECTION A — LEAVE-BOTH, disposition=final)** — The BTC
+  2026-05-01 pair is a fully-characterized Finding 2/5/8 "two real captures" class; leave-both is the unique lossless
+  resolution (prefer-wire/prefer-canonical both lose data). **Range-2 apply proceeds via date-range split EXCLUDING
+  2026-05-01** (established single-transitional-day precedent): apply `2026-04-18..04-30` + `2026-05-02..07-24` as two
+  ranges; 05-01 stays a tracked leave-both residual (both objects, wire non-canonical). **Range 1 (2026-04-18..04-30)
+  APPLIED — `canonical-migration-cefi-late-renames-20260810-234720`, EXIT_STATUS=0**:
+  `Outcome breakdown {already_canonical: 571, plan: 1737, would_rename: 1218, would_upgrade: 519}` +
+  `Collisions: 0 unhandled`; `GCS rename stats` executed;
+  `MANIFEST {manifest_total_rows_before: 26495621, in_scope_rows: 6965, instrument_ids_relabeled: 4469, rows_collapsed_in_dedup: 4573}`;
+  VM self-deleted on completion. **Range 2 (2026-05-02..07-24) IN FLIGHT —
+  `canonical-migration-cefi-late-renames-20260810-235650`** (cron paused). After Range-2: resume cron + verify ENABLED,
+  then flip the apply todo + final verify.
+- **2026-08-11 (slot 18, PRE-COMPACT CHECKPOINT — Range-2 apply still running, resume-state)** — VM
+  `canonical-migration-cefi-late-renames-20260810-235650` mid-Discovery-walk: as of 2026-08-11T00:08:33Z run.log 3,951
+  lines, actively processing `day=2026-05-29` (~1/3 through the 05-02..07-24 window), emitting `[DUP-CONFIRMED]`
+  (content-identical → delete stale wire-form source) and `[WIRE-SUPERSET]` (wire schema-newer → UPGRADE canonical
+  backup-first, delete wire) — BOTH shipped fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) firing on real
+  data. **No STOP-ON-SURPRISE / "Refusing to proceed" lines yet; `EXIT_STATUS` object not yet present** (terminal
+  verdict pending). Cron `uts-prod-manifest-consolidator-market-data-cefi-cron` still PAUSED (asia-northeast1,
+  central-element-323112) per the apply sequence. Re-check WITHOUT the session scratch script (one-shot UTL read):
+  `deployment-service/.venv/bin/python -c "from unified_trading_library.cloud_interface import get_storage_client; c=get_storage_client(); print(c.download_bytes('deployment-scripts-central-element-323112','vm-logs/canonical-migration-cefi-late-renames-20260810-235650/EXIT_STATUS').decode())"`
+  then read `vm-logs/<vm>/run.log` tail for `Collisions: 0 unhandled` / `GCS rename stats` / `MANIFEST {`. On
+  EXIT_STATUS=0 + 0-unhandled: resume the cron
+  (`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1 --project=central-element-323112`) +
+  verify ENABLED → flip the apply todo (line 211) → delete scratch `.watch_lz_apply.py` (slot root, untracked) → `/done`
+  with task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`.
+- **2026-08-11 (slot 30, data_engineering, dispatched on the Range-2 apply todo)** — **COMPLETED.** Range-2 VM
+  `canonical-migration-cefi-late-renames-20260810-235650` reached its terminal verdict: **`EXIT_STATUS=0`,
+  `Collisions: 0 unhandled`**. Full run:
+  `Outcome breakdown: {already_canonical: 11061, plan: 12957, unresolved_wire: 5, would_rename: 2456, would_upgrade: 10501, would_merge: 0, mislabel_left_raw: 0}`;
+  `GCS rename stats: {renamed: 2043, upgraded: 10501, deleted_dup_source: 413}`; MANIFEST rewritten
+  `{manifest_total_rows_before: 26491048, in_scope_rows: 53026, instrument_ids_relabeled: 28024, honest_unresolved_rows: 5, rows_collapsed_in_dedup: 28659, manifest_total_rows_after: 26462389}`;
+  `DEPLOYMENT_COMPLETED (exit_code=0)`; VM self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`). Both shipped comparison
+  fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) fired on the real population; the BTC 2026-05-01 pair
+  was correctly excluded per operator BLK-0a76df10 (DIRECTION A LEAVE-BOTH). Consolidator cron
+  `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED (full cefi consolidator fleet all ENABLED).
+  Apply todo flipped in this session. **Range-2 `cefi-late-renames` apply for LIGHTER-ZKSYNC is now DONE.**
+
+## Deferred work after 2026-08-11
+
+| Item                                                                      | State/why deferred                                                                                                                                                                    | Blocked-on                     |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Range-2 `cefi-late-renames` apply (`2026-05-02..07-24`) — VM `...-235650` | **DONE 2026-08-11 (slot 30)** — EXIT_STATUS=0, `Collisions: 0 unhandled`; renamed 2043, upgraded 10501, deleted_dup_source 413; manifest rewritten (26,491,048 → 26,462,389 rows)     | None                           |
+| Resume consolidator cron + verify ENABLED                                 | **DONE 2026-08-11** — `uts-prod-manifest-consolidator-market-data-cefi-cron` verified ENABLED (cefi fleet all ENABLED)                                                                | None                           |
+| Flip apply todo (line 211) + final Progress Log entry                     | **DONE 2026-08-11** — flipped + logged in this session's `docs(plans):` commit                                                                                                        | None                           |
+| Delete scratch `.watch_lz_apply.py` / `.watch_lz_range2.py` (slot root)   | **DONE 2026-08-11** — slot-30 watchdog `.watch_lz_range2.py` removed before `/done` (dirty gate)                                                                                      | None                           |
+| `/done` task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`     | **DONE 2026-08-11**                                                                                                                                                                   | None                           |
+| BTC 2026-05-01 leave-both residual (todo at line 255)                     | **Operator-owned** — disposition=final (BLK-0a76df10, DIRECTION A LEAVE-BOTH); 05-01 excluded from Range-2 by design; only a future prefer-wire/canonical policy change would revisit | Operator policy (none pending) |
+
+**Recommended NEXT item**: none — the Range-2 apply sequence is complete; the only open LIGHTER-ZKSYNC item is the
+operator-owned BTC 2026-05-01 leave-both residual (no action pending).

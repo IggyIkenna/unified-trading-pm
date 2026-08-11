@@ -147,10 +147,22 @@ log()      { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
 log_quiet(){ [[ "${QUIET}" -eq 0 ]] && log "$@" || true; }
 
 # Acquire lock (skip silently if another instance is running).
-exec 9>"${LOCK_FILE}"
-if ! flock -n 9 2>/dev/null; then
-    log_quiet "another instance is holding ${LOCK_FILE}; exiting."
-    exit 0
+#
+# SLOT_CRON_FF_PULL_LIB_ONLY=1 skips the lock entirely, for tests that SOURCE this file to unit-
+# test its helpers. Every function the tests need is defined below this point, so any usable
+# prefix necessarily includes this block — and at source time the lock is normally already held
+# by the real */5 cron, so sourcing hit `exit 0` before defining anything. That made two unit
+# tests fail depending on whether a cron tick happened to be in flight: green on a quiet machine,
+# red on a busy one, and never pointing at the lock as the reason.
+#
+# This does NOT weaken the guard for real runs: lib-only mode is opt-in via an env var that
+# nothing but the test harness sets, and it skips only the lock, never any logic under test.
+if [[ "${SLOT_CRON_FF_PULL_LIB_ONLY:-0}" != "1" ]]; then
+    exec 9>"${LOCK_FILE}"
+    if ! flock -n 9 2>/dev/null; then
+        log_quiet "another instance is holding ${LOCK_FILE}; exiting."
+        exit 0
+    fi
 fi
 
 # Cron-liveness result file (fleet_git_health_orchestrator_2026_06_10.md Phase 3).
@@ -625,16 +637,40 @@ ff_one() {
     # gospel. _record_repo_dirty_state persists this tick's dirty/clean observation for
     # THIS repo so the NEXT sweep's read sees it (merged into the result file by
     # _write_ff_result at sweep end, never written mid-sweep — see that function).
+    # COLLISION-DEFERRAL (2026-08-10 fleet-drift RCA). Confirmed tracked dirt no longer
+    # returns here. It sets _dirt_confirmed and FALLS THROUGH to Step 5.5, where
+    # origin/<int_branch> is resolved and the incoming changed-file set is knowable, so the
+    # skip is gated on an ACTUAL collision (dirty ∩ incoming) rather than on the mere
+    # presence of tracked dirt.
+    #
+    # WHY: "any tracked dirt ⇒ skip" is the same over-broad guess the untracked-dirt comment
+    # below was written to kill, and it caused an identical outage one class down. Measured
+    # 2026-08-10: one stale `.github/workflows/semver-agent.yml` (a never-committed rollout
+    # artifact, superseded upstream by the unified-trading-ci thin-caller dedup) sat in 15
+    # slot-2 repos. No incoming commit touched that path, so no FF was ever at risk — yet
+    # every repo was skipped on every 5-minute tick for THREE DAYS, reaching 206 / 113 / 109
+    # commits behind. Self-sustaining for the reason documented above: a clone that cannot
+    # FF never stops being dirty.
+    #
+    # Worse, it was INVISIBLE. ff-starvation-detect.sh only pages on `collision AND
+    # (behind>=N OR age>H)`, so non-colliding tracked dirt starved the clone while the
+    # watchdog stayed silent BY CONSTRUCTION — actor and detector disagreed on the skip
+    # rule. Aligning the actor to the detector's (git-accurate) collision model closes the
+    # gap from both ends; the detector's new cause-agnostic behind-backstop covers whatever
+    # neither model anticipates.
+    #
+    # Safety is unchanged and doubly held: we skip on a real collision, AND `git merge
+    # --ff-only` independently refuses if a dirty tracked file would be clobbered
+    # ([skip:ff-failed]). Git stays the authority; we stop pre-emptively guessing.
+    local _dirt_confirmed=0
     _tracked_dirt="$(_filter_nonblank_porcelain "$(git status --porcelain --untracked-files=no 2>/dev/null)")"
     if [[ -n "${_tracked_dirt}" ]]; then
         local _prev_repo_dirty_ticks
         _prev_repo_dirty_ticks="$(_read_repo_dirty_ticks "${FF_RESULT_FILE}" "${repo_key}")"
         if [[ "${_prev_repo_dirty_ticks:-0}" -ge 1 ]]; then
-            log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes (confirmed, this repo's own dirty_consecutive_ticks>=2)"
-            _ff_record "skip:dirty"
+            _dirt_confirmed=1
             _record_repo_dirty_state "${repo_key}" "dirty"
-            popd >/dev/null
-            return 0
+            # fall through — Step 5.5 decides on collision, not on dirt alone.
         else
             log "[dirty:unconfirmed] ${repo_name} (${branch}) — uncommitted changes on a single tick; not yet confirmed, FF proceeds this tick"
             _ff_record "dirty:unconfirmed"
@@ -741,8 +777,33 @@ ff_one() {
         return 0
     fi
 
-    # Step 6: clean fast-forward (merge_base == local_sha, remote ahead).
+    # Step 5.5 — confirmed-tracked-dirt COLLISION gate (deferred from the dirt gate above,
+    # where origin/<int_branch> was not yet resolved). Skip ONLY if a dirty tracked path is
+    # actually in the incoming diff; otherwise the FF cannot touch it, so proceed. Mirrors
+    # ff-starvation-detect.sh's `collision = dirty ∩ incoming` definition so the actor and
+    # the detector cannot silently drift apart again (they did — see the RCA comment above).
     behind=$(git rev-list --count "HEAD..origin/${int_branch}")
+    if [[ "${_dirt_confirmed}" -eq 1 ]]; then
+        local _incoming _dirty_paths _colliding
+        _incoming="$(git diff --name-only "HEAD..origin/${int_branch}" 2>/dev/null || echo "")"
+        # Porcelain v1: "XY PATH", or "R  old -> new" for renames (take the destination).
+        _dirty_paths="$(printf '%s\n' "${_tracked_dirt}" | while IFS= read -r _l; do
+            [[ -z "${_l}" ]] && continue
+            _p="${_l:3}"; _p="${_p##* -> }"; _p="${_p%\"}"; _p="${_p#\"}"
+            printf '%s\n' "${_p}"
+        done)"
+        _colliding="$(printf '%s\n' "${_dirty_paths}" \
+            | grep -Fxf <(printf '%s\n' "${_incoming}") 2>/dev/null || true)"
+        if [[ -n "${_colliding}" ]]; then
+            log "[skip:dirty-collision] ${repo_name} (${branch} → ${int_branch}) — behind ${behind}; dirty tracked file(s) collide with incoming: $(printf '%s' "${_colliding}" | tr '\n' ' ')"
+            _ff_record "skip:dirty"
+            popd >/dev/null
+            return 0
+        fi
+        log "[dirty-nocollide] ${repo_name} (${branch} → ${int_branch}) — behind ${behind}; tracked dirt present but NOT in the incoming diff; FF proceeds (git rejects a real collision)"
+    fi
+
+    # Step 6: clean fast-forward (merge_base == local_sha, remote ahead).
     if [[ "${DRY_RUN}" -eq 1 ]]; then
         log "[dry-run:ff] ${repo_name} (${branch} → ${int_branch}) — would FF by ${behind} commit(s) to ${remote_sha:0:8}"
     else
@@ -816,6 +877,14 @@ prefetch_main_clones() {
     done
     log_quiet "prefetch: ${fetched} fetched, ${failed} failed"
 }
+
+# === END OF FUNCTION DEFINITIONS — tests source everything ABOVE this marker ===
+# tests/test_slot_cron_ff_pull_dirty_gate.bats extracts the prefix of this file to unit-test the
+# helpers without running the script. It used to do that with a hardcoded FN_DEFS_END_LINE=712.
+# The file grew to >1000 lines, so that cut landed MID-FUNCTION: the extracted prefix stopped
+# parsing, `source` failed, and all 6 tests in that file failed with errors that read as though
+# the dirty-gate logic itself was broken. Keep this a MARKER, never a line number — and keep it
+# immediately after the last function definition, before any top-level execution.
 
 # Resolve starting slot dir.
 cwd="$(pwd)"

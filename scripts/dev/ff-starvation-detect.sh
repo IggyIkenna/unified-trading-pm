@@ -39,7 +39,24 @@
 # Env-var defaults:
 #   FF_STARVE_COMMIT_THRESHOLD  default 25  (behind-count gate)
 #   FF_STARVE_AGE_HOURS         default 6   (oldest-colliding-file age gate, hours)
+#   FF_BEHIND_BACKSTOP_COMMITS  default 75  (cause-agnostic backstop, behind-count)
+#   FF_BEHIND_BACKSTOP_HOURS    default 6   (cause-agnostic backstop, oldest-unpulled-commit age)
 #   INTEGRATION_BRANCH          default live-defi-rollout
+#
+# TWO independent verdicts (2026-08-10):
+#   1. STARVATION — modelled cause: a dirty∩incoming collision is blocking the FF.
+#   2. FF-BEHIND BACKSTOP — CAUSE-AGNOSTIC. A clone that CAN fast-forward, is far behind, and
+#      has stayed that way, pages regardless of WHY. Every other signal in this fleet is keyed
+#      to a cause someone already modelled, so an UNmodelled cause drifts silently forever.
+#      Two such causes were measured in one session on 2026-08-10:
+#        (a) non-colliding tracked dirt — the actor skipped it, verdict 1 stayed silent by
+#            construction (it requires a collision); 15 repos hit 206/113/109 behind over
+#            three days. Fixed at the actor, but only because a human happened to look.
+#        (b) STILL UNEXPLAINED — once those repos were clean, three consecutive sweeps still
+#            did not FF them; they had to be fast-forwarded by hand. No modelled verdict
+#            covers that, and this backstop is what would have caught it.
+#      Deliberately NOT gated on dirty/collision/clean: the point is to fire without a theory.
+#      Threshold sits above verdict 1's so it is a backstop, not a duplicate page.
 #
 # Codex SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Step 7 — troubleshooting"
 
@@ -47,6 +64,8 @@ set -uo pipefail   # NOT set -e: a single failing git call must not abort detect
 
 THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD:-25}"
 AGE_HOURS="${FF_STARVE_AGE_HOURS:-6}"
+BACKSTOP_COMMITS="${FF_BEHIND_BACKSTOP_COMMITS:-75}"
+BACKSTOP_HOURS="${FF_BEHIND_BACKSTOP_HOURS:-6}"
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-live-defi-rollout}"
 SLOT_ID=""
 REPO_DIR=""
@@ -122,6 +141,34 @@ behind="$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)"
 # by slot-cron-ff-pull.sh's [skip:diverged]/[skip:ahead] — not starvation.
 merge_base="$(git merge-base HEAD "${remote_ref}" 2>/dev/null || echo "")"
 [[ -n "${merge_base}" && "${merge_base}" == "${local_sha}" ]] || exit 0
+
+# ── VERDICT 2: cause-agnostic FF-BEHIND BACKSTOP ──────────────────────────────
+# Runs BEFORE the clean-tree exit below — which is precisely where a clean-but-massively-
+# behind clone used to leave silently. Age proxy = committer date of the OLDEST unpulled
+# commit ("how long have we been missing commits"), which needs no dirty file to measure
+# and therefore works for clean clones too.
+if [[ "${behind}" -ge "${BACKSTOP_COMMITS}" ]]; then
+    oldest_ct="$(git log --format=%ct "HEAD..${remote_ref}" 2>/dev/null | tail -1)"
+    now_bs="$(now_epoch)"
+    if [[ -n "${oldest_ct}" && "${now_bs}" -gt 0 ]]; then
+        lag_h=$(( (now_bs - oldest_ct) / 3600 ))
+        if [[ "${lag_h}" -ge "${BACKSTOP_HOURS}" ]]; then
+            bs_dirty="$(git status --porcelain 2>/dev/null | head -c1)"
+            cat <<EOF
+FF-BEHIND BACKSTOP — ${SLOT_ID:+slot ${SLOT_ID} / }${REPO_NAME}
+behind: ${behind} commits (fast-forwardable) | oldest unpulled commit: ${lag_h}h old
+tree: $([[ -n "${bs_dirty}" ]] && echo "dirty" || echo "CLEAN — nothing is blocking this; the cause is NOT modelled")
+cause: UNKNOWN by design — this verdict is cause-agnostic and fires on lag alone.
+why it matters: this clone is running an ${lag_h}h-stale base. Agents on it re-implement
+  fixes already upstream and produce conflicting work; a green CI here proves nothing.
+remediation: cd <repo> && git merge --ff-only ${remote_ref}
+  If that succeeds, the puller was starving it — check this repo's verdict in
+  /tmp/slot-cron-ff-pull.log and treat a silent skip as a puller defect, not as noise.
+EOF
+            exit 0
+        fi
+    fi
+fi
 
 porcelain="$(git status --porcelain 2>/dev/null || echo "")"
 [[ -n "${porcelain}" ]] || exit 0   # clean → FF would succeed → not starved.

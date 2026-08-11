@@ -15,12 +15,15 @@ tags: [testing, quality-gates, conventions, refactor]
 related:
   [
     /codex/06-coding-standards/integration-testing-layers.md,
-    README.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-03-27
-authoritative_for: [test-file conventions (no-_extended rule + singleton-conftest-fixture rule)]
+authoritative_for:
+  [
+    test-file conventions (no-_extended rule + singleton-conftest-fixture rule),
+    extract-the-real-function test pattern for shell scripts and workflows,
+  ]
 referenced_by:
   [
     /codex/02-data/vcr-cassette-ownership.md,
@@ -138,6 +141,46 @@ Reference implementation: `execution-service/tests/unit/custody/test_local_key_p
 committed `f1dee093` 2026-05-15).
 
 ---
+
+## Extract-the-real-function test pattern (shell scripts + workflows)
+
+**When testing a bash function inside a ship script or a workflow YAML, EXTRACT the real function body out of the file
+under test and run THAT. Never re-type the logic into the test.**
+
+```bash
+# In the test: pull the shipping function out and define it here.
+eval "$(sed -n '/^_sdp_same_content()/,/^}/p' "$SCRIPT")"
+run _sdp_same_content wrap.md "HEAD:wrap.md"
+```
+
+Why this and not a replica:
+
+- **A replica drifts silently.** It keeps passing after the shipping function changes, because it is testing a copy. The
+  test then certifies logic that is no longer in the product — the same dead-code shape as a unit test that hand-builds
+  an input production never produces (see `/codex/12-agent-workflow/measurement-claims-discipline.md`, "a test passes ≠
+  the production path is covered").
+- **Extraction arms the test for free.** Against a build where the function does not exist (or was renamed), `sed`
+  returns nothing, the `eval` defines nothing, and the test fails to resolve. You get "would this fail against the old
+  code?" without constructing an A/B build — which is the property most regression tests quietly lack.
+- **Shell scripts usually cannot be sourced.** Ship scripts run work at load time (arg parsing, `set -e`, git calls), so
+  `source`-ing them to reach one function has side effects. Extraction takes the function without the file's `main`.
+
+Pair it with a **structural** assertion, because extraction alone cannot see a function that is defined but never
+called:
+
+```bash
+grep -q 'DUR_CPU" -lt "\$DUR_BILLABLE' <<<"$BLOCK"   # the semantics must still be present
+grep -q '_sdp_same_content "$f"' "$SCRIPT"            # ...and still CALLED from the live path
+```
+
+Established practice before it was written down: 7 tests already extract mechanically and 18 argue the rationale in
+their own headers (measured 2026-08-11) — e.g. `scripts/quality-gates-base/tests/test-sit-fleet-green-auto-retrigger.sh`
+(workflow function), `scripts/quality-gates-base/tests/test-qg-duration-billing-basis.sh` (an inline `if` block,
+extracted by its guard line), `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` (ship-script function). This
+section exists so the 19th author does not re-derive it.
+
+**Not for Python.** If the unit is importable, import and call it — extraction is the workaround for units that are not
+addressable any other way, not a general preference.
 
 ## Two-pass model — when tests run
 

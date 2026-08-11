@@ -9,13 +9,20 @@ strict-quickmerge): CODE reaches `live-defi-rollout`/`staging`/`main` ONLY via
 `quickmerge --agent --files`. A direct `git push` of code dodges the dep gates and silently
 piles behind main with no staging PR. This guard catches the bypass: quickmerge stamps a
 `Quickmerge:` trailer on its commits; a commit that changes SOURCE (`*.py`/`*.ts`/`*.tsx`
-outside scripts/tests/.github) without that trailer, and is not a carve-out, is a violation.
+outside tests/.github and outside the gate-infra subset of scripts/) without that trailer, and
+is not a carve-out, is a violation.
 
 **Closed carve-out set** (the only sanctioned direct pushes — allowed without the trailer):
   - docs / plans / codex / markdown / config: `*.md`, `*.mdc`, `plans/**`, `codex/**`, `docs/**`,
     `*.yaml|yml|json|toml` (non-source)
-  - CI/infra: `.github/**`, `scripts/**`  (PM scripts + any repo's workflow files — the
-    chicken-and-egg: a corrected gate can't pass through the gate it is fixing)
+  - CI/infra: `.github/**` (any repo's workflow files) + the GATE-INFRA subset of `scripts/`
+    only — `scripts/quality_gates/**`, `scripts/quality-gates-base/**`, `scripts/hooks/**`,
+    `scripts/cicd/**`, `scripts/quality-gates*.sh`. This is the chicken-and-egg case the carve
+    exists for: a corrected gate can't pass through the gate it is fixing.
+    NARROWED 2026-08-10 (operator ruling) from D16's blanket `scripts/**`, which let a
+    production backfill script reach live-defi-rollout ungated and redden the fleet's promote
+    gate — see GATE_INFRA_PREFIX below for the full incident rationale. Everything else under
+    `scripts/` is production code by consequence and is gated like any other source.
   - merge/reconcile commits + `[skip ci]` automation (ci_status / manifest writes) + bot authors
     (this covers `_backmerge` merges too — e.g. "Merge remote-tracking branch 'origin/main' into
     _backmerge" is a genuine 2-parent merge commit and needs no separate special-casing; see
@@ -49,9 +56,37 @@ from typing import cast
 _SKIP_CI_RE = re.compile(r"\[(?:skip[ _-]?ci|ci[ _-]?skip)\]", re.IGNORECASE)
 
 SOURCE_EXT = (".py", ".ts", ".tsx")
-CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")
+CARVE_PREFIX = (".github/", "plans/", "codex/", "docs/")
 CARVE_EXT = (".md", ".mdc", ".yaml", ".yml", ".json", ".toml", ".txt", ".cfg", ".ini", ".lock")
-NONSOURCE_DIR = ("scripts/", "tests/", "test/", ".github/")
+NONSOURCE_DIR = ("tests/", "test/", ".github/")
+
+# The CHICKEN-AND-EGG subset of `scripts/` — the only part still carved out (operator ruling
+# 2026-08-10, NARROWING D16's blanket all-repos `scripts/**` carve of 2026-08-08).
+#
+# WHY THE BLANKET CARVE WAS WRONG: D16's stated rationale is real but narrow — "a corrected gate
+# can't pass through the gate it is fixing". That justifies exempting the gate machinery itself.
+# It does NOT justify exempting every `scripts/*.py`, and the asymmetry it created was
+# load-bearing in two same-day incidents on 2026-08-10:
+#   1. market-tick-data-service `scripts/restamp_tradfi_cme_future_blank_instrument_id_...py`
+#      reached live-defi-rollout with a `gsutil ls` call and NO quality gate, then reddened
+#      LDR + a promote PR for the whole fleet via QG STEP 5.105.
+#   2. The push guard exempted `scripts/**` while QG STEP 5.105 SCANS `scripts/**`. One surface
+#      waved the path through; the other policed it. Files that are structurally allowed to skip
+#      the gate still break the gate for everyone else.
+# Scripts under `scripts/` run against PRODUCTION data (backfills, migrations, restamps) — they
+# are production code by consequence, whatever directory they live in.
+#
+# Anything matched here stays exempt; every other `scripts/**` `.py`/`.ts`/`.tsx` is now normal
+# gated source and needs a `Quickmerge:` trailer like any other code.
+GATE_INFRA_PREFIX = (
+    "scripts/quality_gates/",  # the ratchet checkers themselves
+    "scripts/quality-gates-base/",  # base-service.sh + its step library
+    "scripts/hooks/",  # pre-push / commit-msg guards, incl. THIS check's own hook
+    "scripts/cicd/",  # this file, quickmerge provenance, promote-gate machinery
+)
+# Bare-file forms that carry no directory of their own (`scripts/quality-gates.sh`, and any
+# `scripts/quality-gates*.sh` variant) — same chicken-and-egg argument.
+GATE_INFRA_FILE_PREFIX = ("scripts/quality-gates",)
 # Promoted projections (provenance_gate_backmerge_already_promoted_2026_06_24): a commit on the
 # integration branch that is ALSO reachable from one of these arrived via a BACKMERGE of
 # already-promoted content — a `promote(staging->main)` squash drift-ticked back to LDR, or a
@@ -83,14 +118,26 @@ def _on_promoted_tip(sha: str) -> bool:
     )
 
 
+def _is_gate_infra(path: str) -> bool:
+    """True for the chicken-and-egg `scripts/` subset that stays carved out.
+
+    Anchored with ``startswith`` (not the substring test ``NONSOURCE_DIR`` uses): a repo-relative
+    path is what git hands us, so a real `scripts/cicd/x.py` matches while an unrelated
+    `src/vendor/scripts/cicd/x.py` does not silently inherit the exemption.
+    """
+    return path.startswith(GATE_INFRA_PREFIX) or path.startswith(GATE_INFRA_FILE_PREFIX)
+
+
 def _is_source(path: str) -> bool:
     if not path.endswith(SOURCE_EXT):
+        return False
+    if _is_gate_infra(path):
         return False
     return not any(seg in path for seg in NONSOURCE_DIR)
 
 
 def _is_carveout_file(path: str) -> bool:
-    return path.startswith(CARVE_PREFIX) or path.endswith(CARVE_EXT)
+    return path.startswith(CARVE_PREFIX) or path.endswith(CARVE_EXT) or _is_gate_infra(path)
 
 
 def _has_skip_ci_literal(sha: str) -> tuple[bool, str]:
