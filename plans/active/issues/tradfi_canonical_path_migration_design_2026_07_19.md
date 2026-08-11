@@ -388,7 +388,7 @@ removal + casing normalization remain before backfill-resume.
       canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
       in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
       and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Some tradfi combo/futures_chain parquet files are unreadable via a standard
       path-based read (`pq.read_table(gcs_path)` / `pd.read_parquet(gcs_path)`) — real, confirmed, but NOT live-blocking
       (MTDS's own `reader.py::_read_parquet_bytes` reads via an in-memory buffer, a different pyarrow code path that is
       unaffected — spot-checked, works fine on the same files).**
@@ -399,9 +399,35 @@ removal + casing normalization remain before backfill-resume.
       logical type per row group differs by encoding choice). Confirmed on 3 separate combo/futures_chain files
       (`day=2020-01-06`, SP500/GOLD, both combo and futures_chain instrument_type) — likely systemic wherever a shard
       was written across multiple streaming-writer flushes. Real risk: any AD HOC script/analysis using a direct
-      path-based read (not the live reader's buffer-based path) will hard-fail on these files. Scope not yet measured
-      (how many historical files affected); root cause not yet traced to a specific writer flush-boundary condition.
-      Repo: market-tick-data-service.
+      path-based read (not the live reader's buffer-based path) will hard-fail on these files. — **ROOT-CAUSED + FIXED
+      2026-08-11 (slot 22, data_engineering).** Actual defect location is a repo layer up from this todo's original
+      "Repo: market-tick-data-service" guess — `unified-trading-library@48335915`
+      (`unified_trading_library/io/streaming_writer.py::StreamingParquetWriter`), the shared writer MTDS's
+      `PartitionedTickWriter`/`CoalescedFlushMixin` calls once per `COALESCE_FLUSH_ROWS=100_000` rows. Root cause:
+      `pq.ParquetWriter(...)` was opened with no `use_dictionary` kwarg, so pyarrow auto-decides PLAIN vs dictionary
+      PHYSICAL encoding per `write_table()` call (row group) based on that chunk's own cardinality — the pre-existing
+      dictionary-strip in `write_chunk()` only normalizes Arrow's LOGICAL `DictionaryType` (e.g. a pandas `category`
+      column) and cannot touch this physical-layer decision, so two chunks with different cardinality can land
+      different physical encodings for the same column in the same file. Fix: `use_dictionary=False` on the writer —
+      forces PLAIN for every row group in every file, closing the failure class for ALL future writes across every
+      asset_group through this shared writer (not tradfi-only). New regression test
+      (`TestCrossRowGroupEncodingConsistency`) writes 2 chunks with differing cardinality, asserts no row group carries
+      `PLAIN_DICTIONARY`, and asserts a path-based `pq.read_table()` succeeds. QG-green (174s, full suite). Scope
+      measurement (how many historical files are affected) is genuinely out of scope for this fix — it requires
+      physically opening parquet footer metadata across a large corpus (not derivable from the availability manifest,
+      which doesn't track physical encoding), which is VM-scale work, not a same-turn addition; filed as a separate
+      follow-up below rather than an unbounded ad hoc scan on this shared host.
+- [ ] [DATA] P3. **(NEW 2026-08-11) Measure historical scope of the cross-row-group PLAIN/dictionary encoding mismatch**
+      now fixed at the writer (see the P2 todo above, `unified-trading-library@48335915`) — how many EXISTING
+      combo/futures_chain parquet objects have row groups that disagree on physical encoding for `instrument_type` (or
+      any other column) and will still hard-fail a path-based `pq.read_table()`/`pd.read_parquet()` read. Not
+      derivable from the availability manifest (physical parquet encoding isn't a manifest field) — needs a dedicated
+      per-file parquet-footer-metadata scan (`pq.ParquetFile(path).metadata.row_group(i).column(j).encodings`,
+      comparing across row groups) across the tradfi combo/futures_chain corpus. VM-scale (hundreds of thousands of
+      objects potentially) — dispatch to a dedicated backfill/analysis VM per the heavy-I/O rule, never run directly on
+      this shared host. No live-blocking symptom (the production reader path is unaffected), so this is a
+      historical-debt inventory only, not an active-incident chase. Repo: market-tick-data-service (or a scratchpad
+      script per script-homes.md, whichever repo owns the corpus-scan tooling by the time this is picked up).
 - [x] ✅ [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
       currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own
       work.** Confirmed live via quickmerge's isolated-worktree re-gate (pulls fresh from origin, so this is a real
@@ -526,3 +552,17 @@ removal + casing normalization remain before backfill-resume.
 
   **Migration scope:** ~92K `futures_chain/` short-code objects (35 roots with existing display-name equivalents) +
   ~1,598 `combo/` objects (11 roots) → content-based rename to display-name paths. Filed as follow-up P2 todo above.
+
+- **2026-08-11 (slot 22, data_engineering) — cross-row-group encoding mismatch ROOT-CAUSED + FIXED** (closed the P2
+  todo above). Traced to `unified-trading-library`'s `StreamingParquetWriter` (NOT market-tick-data-service, this
+  todo's original repo guess — MTDS's `PartitionedTickWriter`/`CoalescedFlushMixin` just calls into the shared
+  writer once per `COALESCE_FLUSH_ROWS=100_000` rows, producing the multi-row-group files where the mismatch shows
+  up). `pq.ParquetWriter(...)` was opened with no `use_dictionary` kwarg, so pyarrow independently auto-decides
+  PLAIN vs dictionary PHYSICAL encoding per `write_table()` call (row group) from that chunk's own cardinality — the
+  pre-existing in-writer dictionary-strip only normalizes Arrow's LOGICAL `DictionaryType` and is blind to this.
+  Fix: `use_dictionary=False` forces PLAIN for every row group in every file — closes the failure class for every
+  asset_group through this shared writer, not just tradfi. Shipped `unified-trading-library@48335915` with a new
+  regression test (`TestCrossRowGroupEncodingConsistency`, writes 2 differing-cardinality chunks, asserts no row
+  group is `PLAIN_DICTIONARY`-encoded + a path-based `pq.read_table()` succeeds). QG-green, 174s full suite. Historical
+  scope (how many existing files still carry the mismatch) is out of scope for this fix — filed as a separate P3
+  follow-up todo (VM-scale parquet-footer scan, not derivable from the manifest).
