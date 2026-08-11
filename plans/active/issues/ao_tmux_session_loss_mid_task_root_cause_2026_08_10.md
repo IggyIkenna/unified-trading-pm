@@ -247,13 +247,33 @@ memory and that's what kills sessions" as-is.
       `with read_only_session_scope()` block and inside a conditional, which would have broken agent-reaping
       (`UnboundLocalError` whenever the fleet had zero worker sessions) — caught by the pre-existing pruner test suite,
       not by inspection.
-- [ ] [INFRA] P2. **Confirm or rule out the concurrent git-fsck/gc burst as a resource-contention trigger.** ~20+
-      concurrent `git fsck --connectivity-only`/`gc.pruneExpire never` commands across unrelated repo checkouts landed
-      in the same ~10s window as the live-caught tmux-server death (16:14:38-51 UTC) — coincidental timing only,
-      `resource-watchdog` reported calm conditions (`pressure=normal cgroup_mem=5GB`) throughout, so this is NOT yet a
-      confirmed cause. **Done when**: identify what schedules this git-maintenance sweep (cron? a scheduled job?) and
-      check whether its timing correlates with a sample of OTHER known death timestamps, not just this one instance —
-      one coincidence is not a pattern. Repo: agent-orchestrator.
+- [ ] [INFRA] P1. **UPGRADED lead 2026-08-11 — named the specific cron jobs; now the leading hypothesis, not yet proven
+      causal.** The newly-shipped alert (previous todo) immediately caught the tmux server dying and recovering THREE
+      times in ~13 minutes while writing this doc — 16:55:28 (21 slots), 17:02:05 (19 slots), 17:07:34 (25 slots), each
+      recovering in ~85-90s. Checked all three against the VM's `crontab -l`: TWO all-slot, all-repo git-housekeeping
+      cron jobs run on a staggered 5-minute cadence — `slot-cron-ff-pull.sh --all-slots` at `:00,:05,:10,...` and
+      `slot-git-status-report.sh` (offset 2min later "after slot-cron-ff-pull's :05 boundary" per its own header
+      comment) at `:02,:07,:12,...`. 16:55:28 lands within 28s of the ff-pull grid; 17:02:05 and 17:07:34 land within
+      2-5s of the git-status-report grid — 3/3 deaths today align with one or the other, not random.
+      `slot-git-status-report.sh` itself never touches tmux (pure `git status`/`git rev-list`/`curl`), but walks EVERY
+      repo under EVERY slot (1132 directories at maxdepth 2 under `.tabs/`) — a burst of many hundreds of git subprocess
+      forks in a tight window. This also explains the operator's independent observation that a dying session's apparent
+      lifetime is "~3 min, seems random, but they definitely start and run real work first" (confirmed separately:
+      credits burned on BOTH DeepSeek and Anthropic around these deaths, live catches showed active
+      work/429-retry-loops, not stuck-at-boot) — if the ACTUAL trigger is a fixed 5-minute-grid cron tick rather than a
+      fixed per-session duration, a worker starting at a random offset into that cycle would show an observed lifetime
+      uniformly distributed across the cycle, averaging ~2.5min — matching "~3 min" closely without needing per-session
+      variance as an explanation. Checked PID/FD-exhaustion as the mechanism connecting the cron burst to the tmux
+      death, but only post-recovery snapshots were available (pid_max=4194304, ubuntu nproc limit=115876, TasksMax=76478
+      — all far from any current ceiling) — does NOT rule out a TRANSIENT spike during the actual burst, which this pass
+      had no visibility into. **Done when**: (a) pull a larger sample (50-100+) of `tmux_server_died` timestamps from
+      `state.db` and check statistically what fraction land within ~60s of either cron grid vs. a null/random-timing
+      expectation (attempted this pass, blocked on a wrong DB path —
+      `/home/ubuntu/agent-orchestrator/data/state/state.db` 404s, needs the correct path, not yet found); (b) if
+      confirmed, capture PID/thread/FD counts DURING a live burst (not after) to nail the actual resource-exhaustion
+      mechanism, or rule it out in favour of something else these two scripts share (e.g. shell fork storm starving the
+      tmux server of scheduler time even without hitting a hard ceiling). Repo: agent-orchestrator, unified-trading-pm
+      (the two cron scripts live there).
 - [ ] [INFRA] P3. **Wire `resource-watchdog`'s existing tick log into future death correlation.** Discovered live
       2026-08-11 — a previously-undocumented-in-this-doc systemd service already logging periodic
       `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
