@@ -1,0 +1,2237 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Unified Trading System \u2014 Workspace Manifest v2",
+  "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
+  "lastUpdated": "2026-05-20",
+  "notes": "Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Workspace clone alignment \u2014 repositories not present under workspace root marked status=archived (rollout/run-all-setup no longer warn on missing dirs). topologicalOrder rebuilt for active repos only; added fund-administration-service + unified-trading-api + user-management-ui to topo levels; workspace_infrastructure.setup_repos=[unified-trading-pm] (codex optional clone). | Updated 2026-03-24: Archive-only sweep \u2014 legacy split UIs, standalone APIs (incl. config/trading-analytics/ml-* -api), npm UI-kit/workspace repos, experimental services, and scratch/root data trees exist only under workspace-root archive/ (see archive/README.md). Manifest repositories = active surface only. | Prior: Archived odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api; removed from manifest. | Prior: Active surface: unified-trading-system-ui + deployment-ui + unified-trading-api + auth-api + deployment-api + domain APIs (see ui-api-mapping). | Prior: 2026-03-13 ci_status sweep \u2014 promoted 4 BASELINE_RECORDED\u2192VALIDATED; 15 FAILING. 2026-03-10 unified-admin-ui (npm monorepo) packa...",
+  "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
+  "doc_standards": {
+    "service-canonical": {
+      "required": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/CONFIGURATION.md",
+        "docs/GCS_PATHS.md",
+        "docs/DEPLOYMENT_GUIDE.md",
+        "docs/TESTING.md",
+        "docs/SCHEMA_VALIDATION.md",
+        "QUALITY_GATE_BYPASS_AUDIT.md"
+      ],
+      "optional_dir": "specs/"
+    },
+    "library-canonical": {
+      "required": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/CONFIGURATION.md",
+        "docs/TESTING.md",
+        "QUALITY_GATE_BYPASS_AUDIT.md"
+      ],
+      "optional_dir": "specs/"
+    },
+    "ui-canonical": {
+      "required": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DEPLOYMENT_GUIDE.md",
+        "docs/TESTING.md"
+      ],
+      "optional_dir": "specs/"
+    },
+    "infrastructure-canonical": {
+      "required": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DEPLOYMENT_GUIDE.md",
+        "QUALITY_GATE_BYPASS_AUDIT.md"
+      ],
+      "optional_dir": "specs/"
+    },
+    "api-canonical": {
+      "required": [
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/DEPLOYMENT_GUIDE.md",
+        "docs/TESTING.md",
+        "QUALITY_GATE_BYPASS_AUDIT.md"
+      ],
+      "optional_dir": "specs/"
+    }
+  },
+  "versions_policy": {
+    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release \u2014 it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
+    "bump_authority": "GitHub Action (version-bump.yml) on merge to main only. Conventional commit prefix determines bump type.",
+    "local_bumps": "FORBIDDEN on branches. Only the GitHub Action bumps versions. Manual bumps cause double-bump (local + CI = skipped semver).",
+    "pre_stable_convention": "0.MINOR.PATCH \u2014 minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
+    "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
+  },
+  "versions": {
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
+    "batch-live-reconciliation-service": "0.49.3",
+    "deployment-api": "0.78.0",
+    "deployment-service": "0.125.4",
+    "deployment-ui": "0.1.0",
+    "execution-service": "0.60.0",
+    "features-service": "0.81.3",
+    "fund-administration-service": "0.9.32",
+    "ibkr-gateway-infra": "0.0.74",
+    "instruments-service": "0.101.4",
+    "market-tick-data-service": "0.125.0",
+    "system-integration-tests": "0.15.1",
+    "unified-api-contracts": "0.112.0",
+    "unified-trading-library": "0.78.3",
+    "unified-trading-pm": "1.2.740",
+    "market-data-processing-service": "0.29.0",
+    "e2e-testing": "0.41.1",
+    "agent-orchestrator": "0.100.3",
+    "greeks-service": "0.18.19",
+    "trading-agent-service": "0.12.11",
+    "strategy-service": "0.56.1",
+    "ml-service": "0.58.3",
+    "alerting-service": "0.61.4",
+    "unified-trading-api": "0.4.1",
+    "client-reporting-api": "0.32.0"
+  },
+  "repositories": {
+    "alerting-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "github_url": "https://github.com/IggyIkenna/alerting-service",
+      "codex_sections": [
+        "03-observability"
+      ],
+      "version": "0.60.0",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 87,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "infrastructure",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "ci_failure_reason": null,
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "alerting",
+        "cross-domain",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "warn_file_count": 0,
+        "large_file_count": 1,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "batch-live-reconciliation-service": {
+      "promotion_model": "ldr_main",
+      "type": "batch-service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "04-architecture",
+        "06-coding-standards"
+      ],
+      "version": "0.49.0",
+      "version_source": "git-tag",
+      "status": "active",
+      "cluster": "batch-services",
+      "notes": "Nightly T+1 orchestrator: replays ML\u2192strategy\u2192execution pipeline vs live events, attributes deviations per stage, writes recon reports to GCS.",
+      "github_url": "https://github.com/IggyIkenna/batch-live-reconciliation-service",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      },
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "analytics",
+        "cefi",
+        "standard"
+      ],
+      "coverage_pct": 80,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "large_file_count": 0,
+        "qg_red_reason": null
+      }
+    },
+    "client-reporting-api": {
+      "promotion_model": "ldr_main",
+      "type": "api-service",
+      "arch_tier": "api",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "04-architecture"
+      ],
+      "version": "0.32.0",
+      "version_source": "git-tag",
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": [
+        "unified-trading-system-ui"
+      ],
+      "proxies_service": "strategy-service",
+      "proxies_service_note": "Reads from strategy-service/strategy_service/pnl/ sub-package (merged from pnl-attribution-service 2026-05-19 per strategy_repo_consolidation_2026_05_19).",
+      "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients. Standalone client-reporting-ui archived under workspace-root archive/; reporting surfaces use unified-trading-system-ui.",
+      "github_url": "https://github.com/IggyIkenna/client-reporting-api",
+      "completion_path": "cefi",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 18,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "api",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api",
+      "tags": [
+        "analytics",
+        "cefi",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 4,
+        "large_file_count": 0,
+        "qg_red_reason": null
+      }
+    },
+    "deployment-api": {
+      "promotion_model": "ldr_main",
+      "auto_build_on_quickmerge": true,
+      "type": "api-service",
+      "arch_tier": "devops",
+      "status": "active",
+      "version": "0.68.0",
+      "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "deployment-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "cefi",
+      "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 71,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "doc_standard": "api-canonical",
+      "version_source": "git-tag",
+      "codex_sections": [
+        "05-infrastructure"
+      ],
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/deployment-api",
+      "semver_rules_ref": "api",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "api",
+      "serves_ui": [
+        "deployment-ui"
+      ],
+      "tags": [
+        "cefi",
+        "deployment",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "warn_file_count": 17
+      }
+    },
+    "deployment-service": {
+      "promotion_model": "ldr_main",
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "status": "active",
+      "version": "0.116.0",
+      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "cefi",
+      "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
+      "ci_status": "MAIN_GREEN",
+      "github_url": "https://github.com/IggyIkenna/deployment-service",
+      "coverage_pct": 81,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "doc_standard": "infrastructure-canonical",
+      "version_source": "git-tag",
+      "codex_sections": [
+        "05-infrastructure"
+      ],
+      "semver_rules_ref": "infra",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "deployment",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 9,
+        "large_file_count": 6,
+        "qg_red_reason": null
+      }
+    },
+    "execution-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "folder_name": "execution-service",
+      "github_url": "https://github.com/IggyIkenna/execution-service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.46.0",
+      "version_source": "git-tag",
+      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 26,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "Now includes sports execution functionality (merged from sports-execution-service 2026-03-01). Supports bet placement via USEI adapters.",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "cache",
+          "config_store"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "ci_failure_reason": null,
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "execution",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "warn_file_count": 22,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "features-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.75.0",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.167,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 70,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      },
+      "github_url": "https://github.com/IggyIkenna/features-service",
+      "completion_path": "cross-cutting",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "defi",
+        "tradfi",
+        "sports",
+        "prediction",
+        "feature-computation",
+        "consolidation",
+        "standard"
+      ],
+      "consolidates": [
+        "features-calendar-service",
+        "features-commodity-service",
+        "features-cross-instrument-service",
+        "features-delta-one-service",
+        "features-multi-timeframe-service",
+        "features-onchain-service",
+        "features-sports-service",
+        "features-volatility-service"
+      ],
+      "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
+      "codebase_health": {
+        "qg_red_reason": null,
+        "large_file_count": 2,
+        "coverage_pct": 86.65,
+        "warn_file_count": 16
+      },
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "fund-administration-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "folder_name": "fund-administration-service",
+      "github_url": "https://github.com/IggyIkenna/fund-administration-service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.9.32",
+      "version_source": "git-tag",
+      "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 84,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "New repo 2026-04-20 \u2014 Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "cache",
+          "config_store"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "im",
+        "fund-admin",
+        "subscription-redemption"
+      ],
+      "codebase_health": {
+        "warn_file_count": 0,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      },
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "greeks-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "04-architecture"
+      ],
+      "version": "0.18.13",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.167,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "notes": "PricingLedger greeks + carry-rate writer. Subscribes to MTDS mark_update; consumes IS InstrumentRecord; writes option_delta/gamma/theta/vega/rho + funding/lending/borrow/staking/dividend/rebase to PricingLedger MARK_UPDATE rows. Two modes: live (streaming) + batch (backfill). Stubbed 2026-05-23 (greeks-service@b9dbade, 15 files); worktree model wired. Folded under mtds_mdps_master epic. Plan: pricing_ledger_carry_rates_mtds_2026_06_01. (Re-added 2026-05-23 after stale-commit 54cd3245e clobbered the original 1b7dca671 registration.)",
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "data_sink"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/greeks-service",
+      "completion_path": "cross-cutting",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "defi",
+        "tradfi",
+        "pricing-ledger",
+        "greeks",
+        "carry-rates"
+      ],
+      "codebase_health": {
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "warn_file_count": 0
+      },
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "ibkr-gateway-infra": {
+      "promotion_model": "ldr_main",
+      "type": "infrastructure",
+      "arch_tier": "infrastructure",
+      "doc_standard": "infrastructure-canonical",
+      "codex_sections": [
+        "05-infrastructure"
+      ],
+      "version": "0.0.74",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "status": "active",
+      "completion_path": "tradfi",
+      "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": [
+        "terraform-validate"
+      ],
+      "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
+      "semver_rules_ref": "infra",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "infrastructure",
+      "tags": [
+        "standard",
+        "tradfi"
+      ],
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "warn_file_count": 0,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      },
+      "breaking_scan_dir": "ibkr_gateway_client"
+    },
+    "instruments-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 53,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "Now includes sports reference data functionality (merged from sports-reference-data-service 2026-03-01).",
+      "status": "active",
+      "service_declaration": {
+        "mode": "batch",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus"
+        ],
+        "protocol_default_set": "gcp_batch"
+      },
+      "github_url": "https://github.com/IggyIkenna/instruments-service",
+      "completion_path": "core",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cross-domain",
+        "data-ingestion",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "large_file_count": 8,
+        "qg_red_reason": null,
+        "coverage_pct": 91.04,
+        "warn_file_count": 11
+      }
+    },
+    "market-data-processing-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.1.0",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 39,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "Now includes sports odds processing functionality (merged from sports-odds-processing-service 2026-03-01). QG passing 2026-03-11.",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/market-data-processing-service",
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "data-ingestion",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 5,
+        "qg_red_reason": null,
+        "large_file_count": 7
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "market-tick-data-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.103.0",
+      "version_source": "git-tag",
+      "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 73,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "data-ingestion",
+        "standard"
+      ],
+      "ldr_ci_status": "RED",
+      "codebase_health": {
+        "warn_file_count": 47,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "ml-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.52.0",
+      "version_source": "git-tag",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 0,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/ml-service",
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "ml",
+        "consolidation-target"
+      ],
+      "consolidates": [
+        "ml-training-service",
+        "ml-inference-service"
+      ],
+      "consolidation_status": "skeleton",
+      "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
+      "created": "2026-05-19",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 6,
+        "large_file_count": 0,
+        "qg_red_reason": null
+      },
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "strategy-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.51.0",
+      "version_source": "git-tag",
+      "deployment_note": "One instance per client (separately managed accounts)",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.4.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 72,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "notes": "Now includes sports strategy functionality (merged from sports-strategy-service 2026-03-01). Supports arbitrage + ML strategy modes for sports.",
+      "status": "active",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "data_source",
+          "data_sink",
+          "event_bus",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "github_url": "https://github.com/IggyIkenna/strategy-service",
+      "completion_path": "cefi",
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "cefi",
+        "execution",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "large_file_count": 5,
+        "warn_file_count": 10
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "system-integration-tests": {
+      "promotion_model": "ldr_main",
+      "type": "test-harness",
+      "arch_tier": "integration",
+      "status": "scaffolded",
+      "version": "0.15.0",
+      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports \u2014 HTTP/GCS/PubSub only.",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "market-data-processing-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "features-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "strategy-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "deployment-api",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "instruments-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "alerting-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "client-reporting-api",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "completion_path": "cefi",
+      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 \u2014 coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 3,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "doc_standard": "test-canonical",
+      "version_source": "git-tag",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "github_url": "https://github.com/IggyIkenna/system-integration-tests",
+      "semver_rules_ref": "infra",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "test",
+      "tags": [
+        "cefi",
+        "monitoring",
+        "standard"
+      ],
+      "ldr_ci_status": "GREEN",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "large_file_count": 0,
+        "warn_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      }
+    },
+    "trading-agent-service": {
+      "promotion_model": "ldr_main",
+      "type": "service",
+      "arch_tier": "service",
+      "doc_standard": "service-canonical",
+      "codex_sections": [
+        "01-domain",
+        "02-data",
+        "03-observability",
+        "04-architecture"
+      ],
+      "version": "0.12.11",
+      "version_source": "git-tag",
+      "completion_path": "tradfi",
+      "notes": "Autonomous 7-loop micro-loop trading agent supervisor for TradFi commodity options/futures. Subscribes to CommoditySignal, ranks strategies via StrategySpec catalog in ConfigStore, routes through PreTradeCheckEngine to execution-service. Blockers: ibkr-config-in-ucc (L3 end-to-end), risk-circuit-breaker (PnLMonitor hook).",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.42,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "github_url": "https://github.com/IggyIkenna/trading-agent-service",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 50,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "status": "scaffolded",
+      "service_declaration": {
+        "mode": "live",
+        "capabilities_needed": [
+          "event_bus",
+          "data_source",
+          "data_sink",
+          "cache"
+        ],
+        "protocol_default_set": "gcp_live"
+      },
+      "semver_rules_ref": "service",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "service",
+      "tags": [
+        "execution",
+        "standard",
+        "tradfi"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "qg_red_reason": null,
+        "large_file_count": 0
+      },
+      "cascade_invalidated_by": "unified-trading-library=0.72.0"
+    },
+    "unified-api-contracts": {
+      "promotion_model": "ldr_main",
+      "type": "library",
+      "arch_tier": "0",
+      "arch_tier_sub": "L2a",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "version": "0.95.0",
+      "version_source": "git-tag",
+      "dependencies": [],
+      "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
+      "cloud_build_trigger": "unified-api-contracts-build",
+      "status": "active",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 85,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "infra_primitives": [
+        "normalization functions",
+        "CanonicalTrade",
+        "CanonicalOrderBook",
+        "CanonicalFill"
+      ],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t0",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 0,
+      "role": "contracts",
+      "tags": [
+        "contracts",
+        "critical",
+        "cross-domain"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "warn_file_count": 37,
+        "large_file_count": 27,
+        "coverage_pct": null,
+        "qg_red_reason": null
+      }
+    },
+    "unified-trading-library": {
+      "promotion_model": "ldr_main",
+      "type": "library",
+      "arch_tier": "1",
+      "doc_standard": "library-canonical",
+      "codex_sections": [
+        "05-infrastructure",
+        "06-coding-standards"
+      ],
+      "version": "0.74.0",
+      "version_source": "git-tag",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-library",
+      "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
+      "cloud_build_trigger": "unified-trading-library-build",
+      "status": "active",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 78,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "integration",
+      "skipped_gates": [],
+      "infra_primitives": [
+        "UnifiedCloudService",
+        "CloudStorageService",
+        "CloudPubSubService"
+      ],
+      "completion_path": "core",
+      "semver_rules_ref": "library-t1",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 1,
+      "role": "library",
+      "tags": [
+        "contracts",
+        "critical",
+        "cross-domain"
+      ],
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 22,
+        "qg_red_reason": null,
+        "large_file_count": 7
+      }
+    },
+    "unified-trading-pm": {
+      "type": "devops",
+      "arch_tier": "devops",
+      "status": "active",
+      "version": "1.2.740",
+      "description": "Project management SSOT \u2014 workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": 93,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "none",
+      "skipped_gates": [],
+      "doc_standard": "infrastructure-canonical",
+      "version_source": "git-tag",
+      "codex_sections": [],
+      "github_url": "https://github.com/IggyIkenna/unified-trading-pm",
+      "semver_rules_ref": "infra",
+      "sit_level": "abbreviated",
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "infrastructure",
+      "tags": [
+        "config",
+        "cross-domain",
+        "standard"
+      ],
+      "ldr_ci_status": "RED",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "qg_red_reason": "qg",
+        "large_file_count": 0
+      }
+    },
+    "unified-trading-api": {
+      "promotion_model": "ldr_main",
+      "auto_build_on_quickmerge": true,
+      "github_url": "https://github.com/IggyIkenna/unified-trading-api",
+      "type": "api",
+      "arch_tier": "api",
+      "tier": 3,
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.20,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "MAIN_GREEN",
+      "version": "0.4.0",
+      "version_source": "git-tag",
+      "status": "active",
+      "cluster": "api-services",
+      "serves_ui": [
+        "unified-trading-system-ui"
+      ],
+      "notes": "Consolidated FastAPI gateway serving all domain data for the Unified Trading System UI.",
+      "tags": [
+        "gateway",
+        "trading",
+        "api"
+      ],
+      "coverage_pct": 77,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "semver_policy": "agent",
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "large_file_count": 0,
+        "warn_file_count": 5,
+        "coverage_pct": 80.97,
+        "qg_red_reason": null
+      },
+      "ldr_ci_status": "GREEN"
+    },
+    "unified-trading-system-ui": {
+      "promotion_model": "ldr_main",
+      "auto_build_on_quickmerge": true,
+      "type": "ui",
+      "arch_tier": "ui",
+      "ui_type": "trading",
+      "doc_standard": "ui-canonical",
+      "codex_sections": [
+        "06-coding-standards"
+      ],
+      "version": "0.1.0",
+      "version_source": "package.json",
+      "dependencies": [],
+      "ci_status": "SIT_VALIDATED",
+      "coverage_pct": "N/A",
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "testing_level": "unit",
+      "skipped_gates": [],
+      "status": "active",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-system-ui",
+      "completion_path": "cefi",
+      "semver_rules_ref": "ui",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": 3,
+      "role": "ui",
+      "notes": "Canonical Next.js trading UI. Legacy split UIs archived under workspace-root archive/.",
+      "tags": [
+        "cross-domain",
+        "trading",
+        "standard"
+      ],
+      "codebase_health": {
+        "warn_file_count": 38,
+        "large_file_count": 34,
+        "coverage_pct": 51.39,
+        "qg_red_reason": null
+      },
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "none"
+    },
+    "deployment-ui": {
+      "promotion_model": "ldr_main",
+      "auto_build_on_quickmerge": true,
+      "type": "ui",
+      "arch_tier": "T3",
+      "version": "0.1.0",
+      "dependencies": [],
+      "ci_status": "FEATURE_GREEN",
+      "testing_level": "unit",
+      "status": "active",
+      "tier": 3,
+      "role": "Deployment management UI",
+      "tags": [
+        "ui",
+        "deployment",
+        "infrastructure"
+      ],
+      "coverage_pct": 70,
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "skipped_gates": [],
+      "semver_policy": "agent",
+      "ldr_ci_status": "GREEN",
+      "codebase_health": {
+        "warn_file_count": 6,
+        "large_file_count": 16,
+        "coverage_pct": 73.53,
+        "qg_red_reason": null
+      },
+      "breaking_scan_dir": "none"
+    },
+    "e2e-testing": {
+      "promotion_model": "ldr_main",
+      "type": "test-harness",
+      "arch_tier": "integration",
+      "status": "active",
+      "version": "0.41.0",
+      "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments \u2192 market data \u2192 features \u2192 strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
+      "dependencies": [
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "execution-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
+        },
+        {
+          "name": "strategy-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": false
+        }
+      ],
+      "completion_path": "infrastructure",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 \u2014 absorbed into strategy-service dep.",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "e2e",
+      "skipped_gates": [],
+      "doc_standard": "test-canonical",
+      "version_source": "git-tag",
+      "codex_sections": [
+        "06-coding-standards",
+        "08-workflows"
+      ],
+      "github_url": "https://github.com/IggyIkenna/e2e-testing",
+      "semver_rules_ref": "infra",
+      "sit_level": "standard",
+      "semver_policy": "agent",
+      "tier": null,
+      "role": "test",
+      "tags": [
+        "e2e",
+        "testing",
+        "cross-domain"
+      ],
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "warn_file_count": 0,
+        "large_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": null
+      },
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "tests"
+    },
+    "agent-orchestrator": {
+      "promotion_model": "ldr_terminal",
+      "type": "tool",
+      "tier": 0,
+      "arch_tier": "external",
+      "doc_standard": "service-canonical",
+      "github_url": "https://github.com/IggyIkenna/agent-orchestrator",
+      "upstream_url": null,
+      "integration_branch": "live-defi-rollout",
+      "ci_trigger_branch": "live-defi-rollout",
+      "codex_sections": [],
+      "version": "0.100.0",
+      "version_source": "git-tag",
+      "status": "active",
+      "notes": "Canonical orchestrator \u2014 IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart). promotion_model=ldr_terminal (2026-08-05): the live orchestrator.service and the dashboard SPA (deploy-dashboard.yml) BOTH deploy directly from live-defi-rollout \u2014 `main` is never consumed by anything for this repo, so it is deliberately EXCLUDED from LDR->main promotion (no quality-gates-v2 promote-PR spend, no risk of blocking behind a main merge conflict \u2014 see agent_orchestrator_ldr_terminal_promotion_2026_08_05 for the incident this fixes). `main` is a frozen historical ref; do not re-add ldr_main without also reverting the dashboard trigger. A `main` slot base reads as diverged \u2014 2026-05-24 incident.",
+      "ci_status": "MAIN_GREEN",
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [],
+      "tags": [
+        "infrastructure",
+        "monitoring",
+        "supporting"
+      ],
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "cascade_invalidated_by": "unified-api-contracts=0.95.0",
+      "codebase_health": {
+        "coverage_pct": null,
+        "warn_file_count": 5,
+        "large_file_count": 19,
+        "qg_red_reason": null
+      },
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "server"
+    },
+    "unified-trading-ci": {
+      "type": "infrastructure",
+      "arch_tier": "devops",
+      "status": "active",
+      "version_source": "none",
+      "promotion_model": "single_branch",
+      "integration_branch": "main",
+      "description": "Shared reusable GitHub Actions workflows (python-quality-gates-v2.yml, image-build-validate.yml, notify-slack.yml, setup-python-tools, setup-agent-tools) that every other repo's quality-gates-v2.yml calls via uses:. Extracted from unified-trading-pm 2026-08-06 so that repo's visibility can never again break fleet-wide CI.",
+      "dependencies": [],
+      "completion_path": "all",
+      "notes": "Single-branch repo (main only) \u2014 no LDR/staging promotion tiers, nothing here is a Python package to version/publish. See shared_ci_workflow_repo_extraction_2026_08_06.md. `integration_branch: main` (2026-08-07, unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md) overrides setup-tab-worktrees.sh's live-defi-rollout default so slot worktrees stop landing on the retired `live-defi-rollout` branch for this repo; `promotion_model: single_branch` exempts it from promotion_lag_monitor.py's LDR<->main lag check (there is no promotion pipeline to lag on).",
+      "ci_status": null,
+      "coverage_pct": null,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [],
+      "doc_standard": "infrastructure-canonical",
+      "github_url": "https://github.com/IggyIkenna/unified-trading-ci",
+      "codex_sections": [],
+      "tier": 0,
+      "role": "infrastructure",
+      "tags": [
+        "ci-cd",
+        "github-actions",
+        "infrastructure",
+        "cross-domain"
+      ]
+    }
+  },
+  "topologicalOrder": {
+    "description": "Order for cascading quickmerge / run-all-setup.sh. Only repos present in the active workspace clone set (see repository status=active). Archived libraries not checked out locally are omitted from levels.",
+    "levels": [
+      {
+        "level": 0,
+        "description": "Project management + shared CI workflow host \u2014 manifest, templates, scripts, cursor rules, reusable GitHub Actions workflows.",
+        "repos": [
+          "unified-trading-pm",
+          "unified-trading-ci"
+        ]
+      },
+      {
+        "level": 1,
+        "description": "Foundation contracts (Tier 0) \u2014 present clone set.",
+        "repos": [
+          "unified-api-contracts"
+        ]
+      },
+      {
+        "level": 2,
+        "description": "Trading library (Tier 1) \u2014 depends on UAC.",
+        "repos": [
+          "unified-trading-library"
+        ]
+      },
+      {
+        "level": 3,
+        "description": "Instrument registry \u2014 depends on UAC + UTL.",
+        "repos": [
+          "instruments-service"
+        ]
+      },
+      {
+        "level": 4,
+        "description": "Core services (batch + live) \u2014 parallel within tier.",
+        "repos": [
+          "alerting-service",
+          "execution-service",
+          "features-service",
+          "fund-administration-service",
+          "greeks-service",
+          "market-data-processing-service",
+          "market-tick-data-service",
+          "ml-service",
+          "strategy-service",
+          "trading-agent-service"
+        ]
+      },
+      {
+        "level": 5,
+        "description": "Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.)",
+        "repos": [
+          "client-reporting-api",
+          "unified-trading-api"
+        ]
+      },
+      {
+        "level": 6,
+        "description": "Deployment + batch reconciliation (orchestration).",
+        "repos": [
+          "batch-live-reconciliation-service",
+          "deployment-api",
+          "deployment-service"
+        ]
+      },
+      {
+        "level": 7,
+        "description": "UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*).",
+        "repos": [
+          "deployment-ui",
+          "unified-trading-system-ui"
+        ]
+      },
+      {
+        "level": 8,
+        "description": "IaC + post-deploy validation (last).",
+        "repos": [
+          "agent-orchestrator",
+          "e2e-testing",
+          "ibkr-gateway-infra",
+          "system-integration-tests"
+        ]
+      }
+    ]
+  },
+  "tier_rules": {
+    "0": {
+      "allowed_from": [],
+      "description": "Pure leaf \u2014 contract packages (e.g. UAC). No inter-library deps."
+    },
+    "1": {
+      "allowed_from": [
+        "0"
+      ],
+      "description": "Trading library tier (UTL) \u2014 imports Tier 0 contracts only."
+    },
+    "2": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "Reserved \u2014 legacy split interface repos removed; consume cloud/config via UTL."
+    },
+    "3": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "Reserved \u2014 legacy domain-client split removed; use UTL storage helpers."
+    },
+    "service": {
+      "allowed_from": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "description": "Services \u2014 import from all library tiers. Never import from another service repo."
+    },
+    "api": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "API gateway services (FastAPI) \u2014 HTTP boundary; deps: UTL + UAC."
+    },
+    "ui": {
+      "allowed_from": [],
+      "description": "TypeScript UIs \u2014 call API services via HTTP/SSE only. Never import Python libraries."
+    },
+    "infrastructure": {
+      "allowed_from": [],
+      "description": "Infrastructure repos \u2014 IaC (Terraform), scripts. Python repos use minimal deps."
+    },
+    "devops": {
+      "allowed_from": [
+        "0",
+        "1"
+      ],
+      "description": "DevOps/deployment \u2014 deployment-service, deployment-api. Imports UTL + UAC."
+    },
+    "integration": {
+      "allowed_from": [],
+      "description": "Integration test harness \u2014 system-integration-tests. HTTP/GCS/PubSub only, no service imports."
+    }
+  },
+  "futureRepos": {
+    "description": "Repos planned but not yet production-ready (v0.1.0 scaffolds exist in workspace)",
+    "repos": [
+      {
+        "name": "sports-reference-data-service",
+        "status": "merged-into-instruments-service",
+        "notes": "Archived 2026-03-01: merged into instruments-service. Original: Phase 3 Batch A.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-odds-data-service",
+        "status": "merged-into-features-sports-service",
+        "notes": "Archived 2026-03-01: merged into features-sports-service (API clients) and market-data-processing-service (odds processing). Original: Phase 3 Batch B.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-odds-processing-service",
+        "status": "merged-into-market-data-processing-service",
+        "notes": "Archived 2026-03-01: merged into market-data-processing-service. Original: Phase 3 Batch B.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-strategy-service",
+        "status": "merged-into-strategy-service",
+        "notes": "Archived 2026-03-01: merged into strategy-service. Original: Phase 3 Batch D.",
+        "completion_path": "sports"
+      },
+      {
+        "name": "sports-execution-service",
+        "status": "merged-into-execution-service",
+        "notes": "Archived 2026-03-01: merged into execution-service. Original: Phase 3 Batch E.",
+        "completion_path": "sports"
+      }
+    ]
+  },
+  "removedEntries": {
+    "corporate-actions": "Not a standalone repo. It is an operational mode within instruments-service (reference data attributed to instruments).",
+    "unified-trading-deployment-v2": "Superseded by unified-trading-deployment-v3. Exists on GitHub but ignored.",
+    "client-reporting-ui": {
+      "reason": "Archived",
+      "removedDate": "2026-03-24"
+    },
+    "features-calendar-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-commodity-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-cross-instrument-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-delta-one-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-multi-timeframe-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-onchain-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-sports-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "features-volatility-service": {
+      "reason": "Consolidated into features-service",
+      "former_status": "consolidated-into-features-service",
+      "github": "archived",
+      "archived_into": "features-service"
+    },
+    "ml-inference-service": {
+      "reason": "Consolidated into ml-service",
+      "former_status": "consolidated-into-ml-service",
+      "github": "archived",
+      "archived_into": "ml-service"
+    },
+    "ml-training-service": {
+      "reason": "Consolidated into ml-service",
+      "former_status": "consolidated-into-ml-service",
+      "github": "archived",
+      "archived_into": "ml-service"
+    },
+    "pnl-attribution-service": {
+      "reason": "Consolidated into strategy-service",
+      "former_status": "archived",
+      "github": "archived",
+      "archived_into": "strategy-service"
+    },
+    "position-balance-monitor-service": {
+      "reason": "Consolidated into strategy-service",
+      "former_status": "archived",
+      "github": "archived",
+      "archived_into": "strategy-service"
+    },
+    "risk-and-exposure-service": {
+      "reason": "Consolidated into strategy-service",
+      "former_status": "archived",
+      "github": "archived",
+      "archived_into": "strategy-service"
+    },
+    "user-management-ui": {
+      "reason": "Archived",
+      "former_status": "archived",
+      "github": "archived"
+    }
+  },
+  "publishingOrder": {
+    "description": "Order for publishing packages to Artifact Registry",
+    "steps": [
+      {
+        "step": 1,
+        "packages": [
+          "unified-api-contracts"
+        ],
+        "reason": "Foundation packages with no dependencies (Tier 0)"
+      },
+      {
+        "step": 2,
+        "packages": [
+          "unified-trading-library"
+        ],
+        "reason": "Tier 1 packages. UCI depends on UEI. UTL depends on T0 libs."
+      },
+      {
+        "step": 6,
+        "packages": [
+          "All services"
+        ],
+        "reason": "Can be published once all libraries are available"
+      }
+    ]
+  },
+  "deployment_topology": {
+    "description": "L0 DAG \u2014 cloud provider, protocol defaults, messaging topology, colocation groups. Libraries own infra decisions; services declare mode + capabilities only.",
+    "cloud_provider_env_var": "CLOUD_PROVIDER",
+    "service_mode_env_var": "SERVICE_MODE",
+    "environments": {
+      "local": {
+        "cloud_provider": "local",
+        "note": "CI, dev/test \u2014 no cloud SDKs required"
+      },
+      "dev": {
+        "cloud_provider": "gcp",
+        "note": "Development GCP project"
+      },
+      "staging": {
+        "cloud_provider": "gcp",
+        "note": "Staging GCP project"
+      },
+      "prod": {
+        "cloud_provider": "gcp",
+        "note": "Production \u2014 primary cloud"
+      },
+      "prod_aws": {
+        "cloud_provider": "aws",
+        "note": "AWS migration target"
+      }
+    },
+    "protocol_defaults": {
+      "gcp_live": {
+        "data_sink_backend": "bigquery",
+        "event_bus_backend": "pubsub",
+        "cache_backend": "redis",
+        "config_store_backend": "secretmanager"
+      },
+      "gcp_batch": {
+        "data_sink_backend": "gcs",
+        "event_bus_backend": "pubsub",
+        "cache_backend": "local",
+        "config_store_backend": "secretmanager"
+      },
+      "aws_live": {
+        "data_sink_backend": "athena",
+        "event_bus_backend": "sqs",
+        "cache_backend": "elasticache",
+        "config_store_backend": "ssm"
+      },
+      "aws_batch": {
+        "data_sink_backend": "s3",
+        "event_bus_backend": "sqs",
+        "cache_backend": "local",
+        "config_store_backend": "ssm"
+      },
+      "local_any": {
+        "data_sink_backend": "local",
+        "event_bus_backend": "local",
+        "cache_backend": "local",
+        "config_store_backend": "local"
+      }
+    },
+    "messaging_topology": {
+      "default": "pubsub",
+      "alternatives": [
+        "redis",
+        "sqs"
+      ],
+      "colocation_transport": "shared_memory",
+      "note": "pubsub/sqs for async fan-out across service boundaries; redis for low-latency point-to-point; shared_memory for zero-copy within a colocated group"
+    },
+    "colocation_groups": [
+      {
+        "group_id": "execution-core",
+        "services": [
+          "execution-service",
+          "strategy-service"
+        ],
+        "transport": "shared_memory",
+        "note": "Latency-critical path; must deploy together on same host; no network hop between them. strategy-service supersedes risk-and-exposure-service in this group as of 2026-05-19 (risk sub-package merged into strategy_service/risk/ per strategy_repo_consolidation_2026_05_19)."
+      }
+    ],
+    "infra_authority": {
+      "decision_owner": "libraries",
+      "enforcement": [
+        "quality-gates STEP 5.10",
+        "quality-gates STEP 5.11",
+        "quality-gates STEP 5.12"
+      ],
+      "note": "Libraries (UCI T0, UTL T1, protocol router) own all infra decisions. Service source files must NEVER contain: gcs, s3, bigquery, pubsub, sqs, redis, bucket, dataset, topic, cloudtarget, upload_to_gcs, StandardizedDomainCloudService. Those belong only in UCI providers and deployment config."
+    }
+  },
+  "completion_paths": {
+    "_description": "Which repos are required for each vertical completion milestone. Unblocked = can be done now; blocked = needs another path's completion first.",
+    "cefi": {
+      "label": "CeFi / TradFi Commercialisation",
+      "milestone": "Batch85 + Live90",
+      "description": "Minimum set for commercial CeFi trading: crypto spot+perp (Binance, OKX, Bybit, Hyperliquid) + traditional equities (IBKR).",
+      "required_libraries": [
+        "unified-api-contracts (CeFi venues: Binance, OKX, Bybit, Hyperliquid, Coinbase, IBKR, Deribit, Kalshi)",
+        "unified-trading-library"
+      ],
+      "required_services": [
+        "instruments-service",
+        "market-tick-data-service",
+        "market-data-processing-service",
+        "features-service",
+        "ml-service",
+        "strategy-service (+ live mode seams; subsumes risk/position/pnl sub-packages 2026-05-19)",
+        "execution-service",
+        "alerting-service"
+      ],
+      "required_api_services": [
+        "unified-trading-api",
+        "deployment-api",
+        "client-reporting-api"
+      ],
+      "required_uis": [
+        "unified-trading-system-ui",
+        "deployment-ui"
+      ],
+      "not_required": [
+        "Legacy split UIs, standalone APIs, npm UI-kit/workspace repos, experimental services, and scratch data trees \u2014 archived under workspace-root archive/ only (see archive/README.md). Not part of the active 1 UI + consolidated API surface."
+      ]
+    },
+    "defi": {
+      "label": "DeFi Extension",
+      "milestone": "Post-CeFi",
+      "description": "Adds on-chain protocol support (Uniswap, Aave, Curve, Hyperliquid DEX). Requires CeFi path complete first.",
+      "additional_libraries": [
+        "unified-api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"
+      ],
+      "additional_services": [
+        "features-service"
+      ],
+      "requires_cefi_path": true
+    },
+    "sports": {
+      "label": "Sports Betting Vertical",
+      "milestone": "Post-commercialisation",
+      "description": "Sports betting as a separate vertical. Does NOT require DeFi. Can be done in parallel with CeFi post-commercialisation.",
+      "additional_libraries": [
+        "unified-api-contracts (sports: api_football, FootyStats, soccer-football-info, Betfair, Pinnacle, Open Meteo)"
+      ],
+      "additional_services": [
+        "features-service",
+        "instruments-service (sports reference data module, merged from sports-reference-data-service)",
+        "market-data-processing-service (sports odds processing module, merged from sports-odds-processing-service)",
+        "strategy-service (sports strategy module, merged from sports-strategy-service)",
+        "execution-service (sports execution module, merged from sports-execution-service)"
+      ],
+      "reuses_from_cefi": [
+        "unified-trading-library",
+        "ml-service",
+        "strategy-service (sports strategy module + pnl sub-package, absorbed pnl-attribution-service 2026-05-19)"
+      ],
+      "requires_cefi_path": false,
+      "note": "Sports services consolidated 2026-03-01: sports-reference-data-service merged into instruments-service, sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. features-sports-service and unified-sports-execution-interface remain standalone. Can develop sports ML pipeline in parallel with CeFi. Only needs USEI v1.0.0 for live execution."
+    }
+  },
+  "staging_versions": {
+    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
+    "unified-trading-pm": "1.2.509",
+    "strategy-service": "0.47.0",
+    "alerting-service": "0.57.0",
+    "execution-service": "0.38.0",
+    "market-data-processing-service": "0.22.0",
+    "market-tick-data-service": "0.92.0",
+    "unified-trading-api": "0.2.19",
+    "batch-live-reconciliation-service": "0.49.0",
+    "client-reporting-api": "0.32.0",
+    "deployment-api": "0.8.0",
+    "fund-administration-service": "0.9.32",
+    "greeks-service": "0.17.2",
+    "ml-service": "0.50.0",
+    "trading-agent-service": "0.12.11",
+    "instruments-service": "0.90.0",
+    "deployment-service": "0.83.0",
+    "features-service": "0.66.0",
+    "unified-trading-library": "0.43.0",
+    "unified-api-contracts": "0.72.0",
+    "agent-orchestrator": "0.20.0",
+    "ibkr-gateway-infra": "0.0.75"
+  },
+  "active_feature_branch": "live-defi-rollout",
+  "staging_status": {
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "SIT passed \u2014 validated + unlocked",
+    "lock_version": null,
+    "pending_repos": [],
+    "sit_retry_count": 0,
+    "locked_alert_sent": false,
+    "breaking_pending": []
+  },
+  "staging_commits": {
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "deployment-service": {
+      "branch": "staging",
+      "sha": "a8c6aebf6a1450deb65f70b1e9f52ffac242f057",
+      "version": "0.83.0"
+    },
+    "unified-api-contracts": {
+      "branch": "staging",
+      "sha": "3cd3e250701d176b9248a9d563176b2164a214f3",
+      "version": "0.68.0"
+    },
+    "alerting-service": {
+      "branch": "staging",
+      "sha": "8c62007d38e6945ba902ad087d870500a0afa637",
+      "version": "0.57.0"
+    },
+    "unified-trading-library": {
+      "branch": "staging",
+      "sha": "3df05de2a55df1093fa737a6fe01aebb943599e3",
+      "version": "0.43.0"
+    },
+    "greeks-service": {
+      "branch": "staging",
+      "sha": "c606e95cf53766aff3febb768ec7f6126ff2efb4",
+      "version": "0.17.2"
+    },
+    "agent-orchestrator": {
+      "branch": "staging",
+      "sha": "65251de60fd908a3cf1cba09ca608be51c13d6e1",
+      "version": "0.20.0"
+    },
+    "batch-live-reconciliation-service": {
+      "branch": "staging",
+      "sha": "056cfc08fd9ce9d8c34b5e8a1c1418426f668ae3",
+      "version": "0.49.0"
+    },
+    "trading-agent-service": {
+      "branch": "staging",
+      "sha": "2213494f2c94761715012b1e348c274357f3b4c2",
+      "version": "0.12.10"
+    },
+    "instruments-service": {
+      "branch": "staging",
+      "sha": "06ccb8f70e6495f6131f0c9ad76aa04418e85ff8",
+      "version": "0.90.0"
+    },
+    "market-tick-data-service": {
+      "branch": "staging",
+      "sha": "937efd23eaeda13674a721bfa08026b700513020",
+      "version": "0.92.0"
+    },
+    "fund-administration-service": {
+      "branch": "staging",
+      "sha": "a03cc6e884f310b677498001a29b3205813f2dca",
+      "version": "0.9.30"
+    },
+    "client-reporting-api": {
+      "branch": "staging",
+      "sha": "048055e389a171598380293ff085914d0362aa3f",
+      "version": "0.32.0"
+    },
+    "execution-service": {
+      "version": "0.38.0",
+      "sha": "b503d9dab05d6a173bec26f7f5b4dea6ae485283",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "branch": "staging",
+      "sha": "9909cedc2f20807a8f339339e2d83c5e5c43a8be",
+      "version": "0.8.0"
+    },
+    "ibkr-gateway-infra": {
+      "branch": "staging",
+      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+      "version": "0.0.75"
+    }
+  },
+  "main_commits": {
+    "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
+    "history": [
+      {
+        "promoted_at": "2026-06-30T06:53:38.897019Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.74",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-30T05:28:44.011253Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.73",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-30T04:29:38.400104Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.72",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-30T01:18:55.620795Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.71",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-30T00:09:52.718681Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.70",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      }
+    ]
+  },
+  "workspace_infrastructure": {
+    "setup_repos": [
+      "unified-trading-pm"
+    ]
+  },
+  "promotion_failures": {},
+  "promotion_quarantine": {},
+  "staging_dormant_mode": true,
+  "_sit_cross_repo_validated_repos_note": "WS-L SIT-rehome (Option B+ safe interim, 2026-06-27): the repos whose public surface the cross-repo SIT suite (system-integration-tests/scripts/run_cross_repo_invariants.sh REQUIRED_SIBLINGS) ACTUALLY validates. The LDR->main fleet promoter trusts ci_status SIT_VALIDATED + sit_validated_tree ONLY for these repos; a breaking change in any OTHER ldr_main repo stays conservatively BLOCKED (no false cross-repo guarantee). MUST stay in sync with REQUIRED_SIBLINGS (the suite asserts this). Expanding coverage = add the repo here + add its cross-repo invariant to the suite.",
+  "sit_cross_repo_validated_repos": [
+    "agent-orchestrator",
+    "alerting-service",
+    "batch-live-reconciliation-service",
+    "client-reporting-api",
+    "deployment-api",
+    "deployment-service",
+    "deployment-ui",
+    "execution-service",
+    "features-service",
+    "fund-administration-service",
+    "greeks-service",
+    "instruments-service",
+    "market-data-processing-service",
+    "market-tick-data-service",
+    "ml-service",
+    "strategy-service",
+    "trading-agent-service",
+    "unified-api-contracts",
+    "unified-trading-api",
+    "unified-trading-library",
+    "unified-trading-system-ui"
+  ],
+  "published_packages": {
+    "unified-trading-library": {
+      "version": "0.78.4.dev1+gdd1c86bf4",
+      "published_at": "2026-08-10T22:02:55Z",
+      "registry": "artifact-registry"
+    },
+    "unified-api-contracts": {
+      "version": "0.113.0",
+      "published_at": "2026-08-10T23:36:46Z",
+      "registry": "artifact-registry"
+    },
+    "instruments-service": {
+      "version": "0.101.5.dev1+g0fde4a90d",
+      "published_at": "2026-08-10T22:02:40Z",
+      "registry": "artifact-registry"
+    }
+  }
+}
