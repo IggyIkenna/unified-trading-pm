@@ -306,15 +306,57 @@ Directions, cheapest first — each is a todo below:
       same class as F7 (resolve from git, not from the directory name), one level up. **Done when**: quickmerge resolves
       the workspace root without depending on the checkout's directory name, or fails with a diagnosis naming the
       assumption instead of a missing-file error. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **Two interactive sessions in ONE slot checkout destroyed uncommitted work twice in 30 minutes.**
-      Measured 2026-08-11 in slot 4: after the quarantine fix above, a peer session sharing this checkout reverted this
-      session's tracked edits again (5 files, `git status` clean, content in neither worktree nor HEAD; recovered from
-      the `pre-reconcile quarantine` stash by path both times). The `.agent-claim` heartbeat is WARN-only by design and
-      did not prevent it. The durable mitigation used here was to stop holding uncommitted work in the shared checkout
-      at all and ship from a private `git worktree` — worth making the documented default for interactive sessions
-      rather than an emergency manoeuvre. **Done when**: either the collision hook escalates past WARN when a second
-      session writes the same checkout, or the shared-checkout ship path is documented as worktree-first with a
-      one-command helper. Repo: unified-trading-pm. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
+- [x] ✅ [INFRA] P1. **Two interactive sessions in ONE slot checkout destroyed uncommitted work twice in 30 minutes.**
+      DONE 2026-08-11 — unified-trading-pm@83debfb40a. **The framing in this todo was wrong, and the correction is the
+      main finding.** It said the `.agent-claim` heartbeat "is WARN-only by design and did not prevent it". The measured
+      truth: `cursor-configs/hooks/session-start-collision-check.sh`'s live-process signal read ONLY `/proc/<pid>/cwd`
+      and `/proc/<pid>/status`, and **macOS has no `/proc` at all** — so on the exact host class where the incident
+      happened the scan was a silent structural no-op, counting zero foreign sessions no matter how many were live. Not
+      "warned but too weakly": it could never fire. Proved by direct reproduction — a simulated peer process (renamed
+      argv0, real cwd under a fake slot) produced ZERO warning from the unpatched hook and the correct warning after the
+      fix, on identical input. Shipped: a `/proc`-first, `ps`/`lsof`-fallback path, portable across Linux and macOS,
+      leaving the non-blocking contract untouched (`tests/test_session_start_collision_check.bats`, 10/10). Also shipped
+      `scripts/dev/ship-from-worktree.sh` (`setup`/`cleanup`), which formalises the private-linked-worktree pattern that
+      is the only thing that actually stopped the loss — leaf name derived via `git rev-parse --show-toplevel` rather
+      than hardcoded, so it survives the sibling P1 on quickmerge's directory-name assumptions
+      (`tests/test_ship_from_worktree.bats`, 16/16; dogfooded against the real slot-4 checkout, with isolation proven by
+      the edit being visible in the worktree and absent from the slot tree). **Trap found while building it**: the
+      worktree recipe circulated in this session (including in the sub-agent brief) symlinks the throwaway worktree's
+      `.venv` at the operator's LIVE venv — a `uv sync --frozen` through that symlink can PRUNE packages out of the real
+      environment (measured 2026-08-10; `scripts/quickmerge.sh` already used a shared venv cache for this reason). The
+      helper uses the shared cache (`QM_ISO_VENV_CACHE`). Live venv verified undamaged after the fact: 388 packages
+      before and after a full QG run through such a symlink, imports OK. Codex SSOT:
+      `/codex/05-infrastructure/per-tab-worktrees.md`.
+- [ ] [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** Now that the hook
+      actually runs on macOS (above), the policy question is live and unanswered — it was previously moot because the
+      detection never fired here. Options, per the sub-agent that measured it: **(A) [RECOMMENDED]** keep `SessionStart`
+      WARN-only and strengthen the message to name `scripts/dev/ship-from-worktree.sh` as the concrete next action — a
+      true block is not even mechanically available at the `SessionStart` hook event, which is documented non-blocking
+      regardless of exit code; **(B)** add a narrower `PreToolUse` guard on the actually-risky commands (`git commit` /
+      `quickmerge.sh` / `safe-doc-push.sh`) that re-checks liveness at the moment of mutation rather than only at
+      session start, with a clean opt-out for anything run from a `ship-from-worktree.sh` worktree — cost is that a
+      mid-task block is far more expensive per false positive than a skippable warning, and it would add friction for a
+      read-only second session's first commit and during AO worker handoff. **Done when**: the operator picks A or B (or
+      Other) and the choice is implemented + tested. Repo: unified-trading-pm.
+- [ ] [INFRA] P2. **A liveness check built on `pgrep` substring matching is unsound on this shared host.** Measured
+      2026-08-11: a watcher using `pgrep -f "quality-gates.sh --no-fix" | head -1` matched an ARBITRARY FOREIGN process
+      — this host runs several concurrent QG invocations across slots, and the zsh `eval` wrappers' own command lines
+      contain the literal pattern, so the check also self-matches. The watcher waited on an unrelated slot's process and
+      its result said nothing about the run it was meant to track. Structurally the same class as this todo's own
+      subject: two sessions sharing observable host state with no scoping key. Any liveness/collision check needs a
+      scoping key (PID ownership via `$$`/ancestry, a file-based own-task handle, or a unique marker), not a
+      command-line pattern — the collision hook already gets this partly right via ancestor-exclusion. **Done when**:
+      the workspace's liveness-check helpers are audited for pattern-only matching and the unsound ones carry a scoping
+      key, with a regression test. Repo: unified-trading-pm. SSOT:
+      `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`. Measured 2026-08-11 in slot 4: after the quarantine
+      fix above, a peer session sharing this checkout reverted this session's tracked edits again (5 files, `git status`
+      clean, content in neither worktree nor HEAD; recovered from the `pre-reconcile quarantine` stash by path both
+      times). The `.agent-claim` heartbeat is WARN-only by design and did not prevent it. The durable mitigation used
+      here was to stop holding uncommitted work in the shared checkout at all and ship from a private `git worktree` —
+      worth making the documented default for interactive sessions rather than an emergency manoeuvre. **Done when**:
+      either the collision hook escalates past WARN when a second session writes the same checkout, or the
+      shared-checkout ship path is documented as worktree-first with a one-command helper. Repo: unified-trading-pm.
+      SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 - [ ] [INFRA] P0. **Stop `safe-doc-push.sh` exiting 5 with the caller's edits silently reverted.** Before any
       non-success exit, compare the named files on disk against the content the script was invoked with (hash them at
       entry); if they no longer match, do not print "transient, not a defect — re-run" — print the recovering
