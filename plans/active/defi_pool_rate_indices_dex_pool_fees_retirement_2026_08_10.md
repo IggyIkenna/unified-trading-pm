@@ -85,12 +85,28 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                      "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                      fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                      DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                      `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                      streaming footprint regardless of corpus size.
+                          "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                          fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                          DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                          `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                          streaming footprint regardless of corpus size.
 
+- [ ] [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes** (blocks
+      the retirement todo below — main-agent-added 2026-08-11 per
+      `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`, BLK-e7fe6971 answered A). Confirm
+      the rebuild VM's actual deployed code content (`cloudbuild`/tarball manifest `commit_sha`) to rule in/out a stale
+      pre-N6a snapshot. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
+      recurrence investigation). Read `rebuild_defi_manifest.py`'s top-level `main()`/index-write path — if upsert, any
+      pre-existing uppercase rows that survived the 2026-08-05 fold would pass through untouched rather than being
+      reintroduced by the rebuild. (repo: market-tick-data-service)
+- [ ] [DATA] P1. **Sample the 7,930,863 uppercase rows' underlying GCS objects directly**
+      (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether this is a
+      manifest-column-only artifact (as the 2026-08-05 fold assumed) or genuinely reflects physical objects at an
+      uppercase path — the latter needs the Part-5 "legacy COPIED not MOVED" migration treatment
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5), not a manifest-only patch. Once (1)-(3)
+      above are understood, re-evaluate whether the retirement todo below is safe to attempt (also still gated on
+      slot-31's separate wrapped-id content-verify blocker). (repo: market-tick-data-service)
 - [ ] [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
       `captured` rows in `dex_pool_swaps` via the proven reversible `capture_status: captured→attempted_failed`
       pattern.** Mirror `retire_dex_pools_legacy_captured_rows_2026_08_05.py` /
