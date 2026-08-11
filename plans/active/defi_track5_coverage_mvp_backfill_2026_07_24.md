@@ -191,7 +191,7 @@ the parent plan's Track 7 culled-venue ruling.
   personally confirmed still open (14 items, same-batch read). 4 open todos; whole-doc KEEP-NA on the gate citation. Doc
   stays `assigned_vm: NA`.
 - **batch10 source-doc reconciliation 2026-08-11 (slot-31, `defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`
-  todo 1)**: Todo 1's milestone progress recorded here for citation parity with
+  (archived 2026-08-11) todo 1)**: Todo 1's milestone progress recorded here for citation parity with
   `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 (2026-08-07, slot-7/12): VM `mtds-perp-funding-backfill`
   launched SPOT (asia-northeast1-c), 1824 rows for 2023-11-05 at T+5min; prerequisite
   `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` flipped `true` 2026-08-07T16:44Z (set_by=slot-7) on first

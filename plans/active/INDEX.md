@@ -208,13 +208,12 @@ by hand._
 - [`defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10`](./defi_pool_rate_indices_dex_pool_fees_retirement_finalize_2026_08_10.md)
   — Gated finalize companion (operator ruling 2026-07-24) for the POOL/rate_indices/dex_pool_fees retirement plan. This
   is a batch-style extraction from `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos section —…
-- [`defi_satellite_ao_dispatch_batch10_2026_08_06`](./defi_satellite_ao_dispatch_batch10_2026_08_06.md) — Tenth
-  AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`
-  (2026-08-06, slot 9). Phase 0 discovered 11 real covering docs via `generate_ag_closeout_audit_candidates.py
-  --tranche…
-- [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](./defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
-  — Gated closeout for defi_satellite_ao_dispatch_batch10_2026_08_06.md — machine-held via depends_on + gate_on_depends:
-  true until every one of that plan's 9 todos is done. Mirrors batch1-9-finalize: reconcile each of the source docs…
+- [`defi_satellite_ao_dispatch_batch10_2026_08_06`](../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md)
+  — Tenth AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` running `/ag-closeout-audit defi`
+  (2026-08-06, slot 9). **ARCHIVED 2026-08-11** — all 9 todos done; reconciled via finalize plan.
+- [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
+  — Gated closeout — **ARCHIVED 2026-08-11** — all 3 todos done (source-doc reconciliation, 27-Deferred re-check,
+  archival of batch10).
 - [`defi_satellite_ao_dispatch_batch11_2026_08_09`](./defi_satellite_ao_dispatch_batch11_2026_08_09.md) —
   Satellite-batch extraction mirroring /ag-closeout-audit's pattern, produced from a targeted read of 14 defi plan/issue
   docs that a same-day RECLASSIFY sweep found did NOT qualify for a whole-doc `assigned_vm` flip (each still carries…

@@ -18,7 +18,7 @@ summary: >-
   operator ruling or elapsed time. 3 additional docs surfaced a probable frontmatter-mistag during Phase 1 (2 already
   known from batch9's own report; 1 newly confirmed this run) — reported below, not retagged (out of defi's sole
   ownership per the concurrent-sharded-worker safety rule).
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -29,7 +29,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -45,7 +45,7 @@ estimate_calibrated_ai_days: 2.88
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
@@ -66,6 +66,9 @@ assigned_role: data_engineering
 sequential: false
 drift_direction: advance-code
 ---
+
+> **ARCHIVED 2026-08-11** — all 9 todos done; reconciled via finalize plan (also archived 2026-08-11). See the finalize
+> plan's Progress Log for per-todo completion evidence and the 27-Deferred-item re-check verdicts.
 
 # DeFi satellite AO batch 10 — 2026-08-06
 

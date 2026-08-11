@@ -55,7 +55,7 @@ related_plans:
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20_finalize_2026_07_27.md
   - ../active/defi_satellite_ao_dispatch_batch10_2026_08_06.md
-  - ../active/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
+  - ../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md
   - ../active/defi_satellite_ao_dispatch_batch2_2026_07_26.md
@@ -624,10 +624,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                                                                                                                                                                                                                  gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                                                                                                                                                                                                                  ```
+                                                                                                                                                                                                                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                                                                                                                                                                                                      ```
 
-                                                                                                                                                                                                                                  [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                                                                                                                                                                                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1171,16 +1171,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                                                                                                                                                                                                                  `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                                                                                                                                                                                                                  (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                                                                                                                                                                                                                  VM ran current code without a refresh.
+                                                                                                                                                                                                                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                                                                                                                                                                                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                                                                                                                                                                                                      VM ran current code without a refresh.
 
-                                                                                                                                                                                                                                  Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                                                                                                                                                                                                                  (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                                                                                                                                                                                                                  `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                                                                                                                                                                                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                                                                                                                                                                                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                                                                                                                                                                                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                                                                                                                                                                                                                  Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                                                                                                                                                                                                                  (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                                                                                                                                                                                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                                                                                                                                                                                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1766,10 +1766,10 @@ forward-write gap close-out
 **status**: active · **estimate**: 2.88 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 —
 ag-closeout-audit defi tranche orphan extraction (2026-08-06)
 
-### [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](../active/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
+### [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](../archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
 
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 — finalize
-(reconcile 9 source docs + archive)
+**status**: complete · **estimate**: 0.48 cal AI-days (class: infra) **title**: DeFi satellite AO batch 10 — finalize
+(archived 2026-08-11) (reconcile 9 source docs + archive)
 
 ### [`defi_satellite_ao_dispatch_batch11_2026_08_09`](../active/defi_satellite_ao_dispatch_batch11_2026_08_09.md)
 
