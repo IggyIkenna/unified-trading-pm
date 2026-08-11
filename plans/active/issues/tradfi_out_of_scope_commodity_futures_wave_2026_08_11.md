@@ -99,9 +99,42 @@ for what this session was doing; flagging for whoever picks this up).
 
 ## Action items
 
-- [ ] [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the known
-      `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
+- [x] ✅ [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the
+      known `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
       AO-dispatched todo that shouldn't have targeted these roots, or another automation path. Repo: deployment-service.
+      — completed 2026-08-11 (slot-31, no code shipped — pure documentation-linkage; identical root cause independently
+      documented already, this todo cross-links it). **IDENTIFIED — not a mystery/second automation path.** The launch
+      source is the SAME live mechanism `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` todo 10 already
+      root-caused: a **HOST cron (`0 */3 * * *`) on the monitor host** running `wave_launcher.py` from a live git
+      checkout (self-updates via `git pull` each tick) — NOT the Terraform-managed Cloud Scheduler job
+      `uts-prod-tradfi-wave-launcher-cron` (confirmed still `state: PAUSED`, `userUpdateTime: 2026-06-24`, unchanged) /
+      Cloud Run Job `uts-prod-tradfi-wave-launcher` (dormant `:latest` image, no execution since June). No second
+      scheduler, no manual `gcloud run jobs execute`, no AO-dispatched todo — searched `plans/active/` +
+      `terraform/gcp/wave_launcher_scheduler.tf` (single Scheduler resource defined) for any alternate trigger; none
+      found. **Why the 2026-08-10 scope-fix didn't stop these 7**: `deployment-service@48f55e934b` (landed
+      2026-08-10T17:33:42Z, BEFORE all 7 VMs' 2026-08-11 03:02–06:07Z launch timestamps) correctly changed
+      `wave_launcher.py::_cme_root_universe()` to consult
+      `unified_api_contracts…mvp_scope.MVP_SCOPE["tradfi"].underliers` instead of a hardcoded root list — but
+      `MVP_SCOPE["tradfi"].underliers`
+      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py:704-712`) itself STILL
+      lists `GC/SI/PL/PA/NG/CL/HG` as in-scope FUTURE-cell underliers, per the older 2026-06-24 "commodity roots backing
+      a Binance tradfi-perp" decision — it was never narrowed to reflect the 2026-08-09 scope ruling
+      (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` line 108-109: FX/commodity futures "entirely out of
+      this scope... being killed" until November). So the host cron IS now correctly consulting the SSOT the fix pointed
+      it at — the SSOT itself is stale, not the consulting code. **This is an ongoing, self-perpetuating violation**:
+      every future 3-hourly tick will keep re-launching/replacing these same 7 commodity roots until
+      `MVP_SCOPE["tradfi"].underliers` is narrowed. See new P0 follow-up todo below. Repo: deployment-service (launch
+      mechanism), unified-api-contracts (stale SSOT — the actual fix surface).
+- [ ] [DATA] P0. **Narrow `MVP_SCOPE["tradfi"].underliers`** (unified-api-contracts,
+      `unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py:704-712`) to drop `GC/SI/PL/PA/NG/CL/HG` per the
+      2026-08-09 scope ruling (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`: commodity futures "entirely
+      out of scope" until November) — this is the ACTUAL fix `wave_launcher.py@48f55e934b` was supposed to enable but
+      didn't, because it consults this SSOT and the SSOT was never updated. Without this, the host cron will keep
+      relaunching commodity-root VMs every 3 hours indefinitely, regardless of any kill decision on the
+      currently-alive 7. Coordinate with the operator's BLK-3412aed6 kill/no-kill answer first (if "no-kill for
+      sunk-cost", the underliers narrowing should still land to stop FUTURE relaunches — only the currently-alive 7 are
+      exempted). Verify no other consumer of `MVP_SCOPE["tradfi"].underliers` (e.g. catalogue MVP-tagging, completeness
+      denominators) regresses from the narrowing — cite in the commit. Repo: unified-api-contracts.
 - [x] ✅ [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data
       writes) on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
       sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill. — completed 2026-08-11 (slot-26):
@@ -131,3 +164,11 @@ for what this session was doing; flagging for whoever picks this up).
     relaunched" commodity language vs. the sunk-cost + November-needed canonical data is the operator's judgment call.
     No VMs touched. P1 (launch-source identification) remains open and is the critical follow-up — the source is still
     unidentified (known cron confirmed PAUSED), so the wave could recur independently of this decision.
+- **2026-08-11, slot-31 (dispatched P1 — launch-source identification)**: Identified — the live host cron already
+  root-caused in `tradfi_satellite_ao_dispatch_batch11_2026_08_10.md` todo 10 (not a new mechanism); grepped
+  `plans/active/` + `terraform/gcp/` for any second scheduler/trigger, found none. Root cause of why the 7 commodity VMs
+  launched DESPITE the 2026-08-10 17:33 scope-fix (`deployment-service@48f55e934b`): the fix correctly points
+  `wave_launcher.py` at `MVP_SCOPE["tradfi"].underliers`, but that SSOT itself still lists GC/SI/PL/PA/NG/CL/HG as
+  in-scope (stale vs the 2026-08-09 ruling — never narrowed). Filed new P0 todo to narrow the SSOT — that's the actual
+  remaining fix; without it the host cron will keep relaunching commodity roots every 3h regardless of the BLK-3412aed6
+  kill/no-kill answer on the currently-alive 7. No code changed this session (investigation + doc only).
