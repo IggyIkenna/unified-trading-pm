@@ -99,18 +99,55 @@ for what this session was doing; flagging for whoever picks this up).
 
 ## Action items
 
-- [ ] [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the known
-      `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
+- [x] ✅ [INFRA] P1. Identify the launch source for the 7 out-of-scope commodity VMs (CL/GC×2/HG/NG/PA/PL) given the
+      known `wave_launcher.py` cron is confirmed paused — check for a second scheduler job, a manual dispatch, an
       AO-dispatched todo that shouldn't have targeted these roots, or another automation path. Repo: deployment-service.
+      — deployment-service@N/A (findings-only, no code change) + evidence below.
 - [x] ✅ [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data
       writes) on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
       sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill. — completed 2026-08-11 (slot-26):
       all 7 VMs ALIVE+progressing; determination + kill/no-kill routed via BLK-3412aed6.
+- [ ] [INFRA] P1. Remove CL, GC, HG, NG, PA, PL, SI from `MVP_SCOPE["tradfi"].underliers` in
+      `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` to match the Aug 9 scope
+      ruling (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` — commodities "entirely out of this scope...
+      killed, not resumed"). Bump `MVP_SCOPE_CONFIG_VERSION` from 24 → 25 + update the version-history block in
+      `mvp_scope.py`. Repo: unified-api-contracts.
 
 ## Progress Log
 
 - **2026-08-11**: filed after discovering this live during an unrelated kill-execution attempt (see Observation above).
   Not investigated further this session.
+- **2026-08-11 ~09:30Z, slot-31 (dispatched P1 — launch-source identification)**: Investigation complete. **Launch
+  source identified: HOST CRON on the monitor host running `wave_launcher.py`** (NOT the paused Cloud Scheduler job
+  `uts-prod-tradfi-wave-launcher-cron` — confirmed PAUSED since 2026-06-24, `userUpdateTime: 2026-06-24T22:44:03Z`; the
+  Cloud Run Job `uts-prod-tradfi-wave-launcher` last executed 2026-06-25, zero executions since). The host cron fires at
+  `0 */3 * * *` — confirmed by the sentinel blob
+  `gs://deployment-scripts-central-element-323112/vm-census/wave-launcher-last-run.json`:
+  `{"source": "wave_launcher", "ts": "2026-08-11T09:00:20.553422+00:00"}` — matching the 3h-spaced audit-log patterns at
+  ~03:02, ~06:06, and ~09:02 UTC today (the ~2 min gap = manifest load + candidate computation).
+
+  **Root cause of WHY commodities pass the scope filter**: `MVP_SCOPE["tradfi"].underliers` in
+  `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py:707-735` STILL includes all 7
+  commodity roots (`CL`, `GC`, `HG`, `NG`, `PA`, `PL`, `SI`) from v19 (2026-07-21, "Binance tradfi-perp basis-arb
+  reference legs"). The Aug 9 scope ruling (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) removed these
+  from scope ("entirely out of this scope... killed, not resumed") but `MVP_SCOPE` was NEVER UPDATED.
+  `wave_launcher.py`'s `_cme_root_universe()` correctly reads from `MVP_SCOPE["tradfi"].underliers` — it's functioning
+  as designed; the configuration is stale.
+
+  **Dispatch chain (verified end-to-end)**: host cron → `wave_launcher.py` → `load_manifest()` →
+  `compute_dispatch_candidates()` → `_cme_root_universe()` returns commodity roots (still in MVP_SCOPE) →
+  `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <root> --year <year> --force` → VM created. The single-root VM naming
+  pattern (`tradfi-bf-cme-ohlcv-1m-cl-2020-...`, no `g0N-` bundle prefix) confirms they came through
+  `wave_launcher.py`'s `--only-root` dispatch path, not a manual launch.
+
+  **Additional finding**: A third wave launched at ~09:02 UTC TODAY (CL-2021, NG-2020, HG-2020 — 3 more VMs discovered
+  in audit logs during this investigation) while this slot was mid-investigation. The host cron continues to re-launch
+  commodity VMs every 3 hours as long as gap cells exist in the manifest.
+
+  **Fix required**: Remove `CL`, `GC`, `HG`, `NG`, `PA`, `PL`, `SI` from `MVP_SCOPE["tradfi"].underliers` in
+  `unified-api-contracts` to match the Aug 9 scope ruling. This is a separate code-change task (not part of this
+  identification-only P1).
+
 - **2026-08-11 ~09:00Z, slot-26 (dispatched P2 — 3-signal staleness check)**: Completed the 3-signal staleness check on
   all 7 out-of-scope commodity VMs (cl-2020, gc-2020, gc-2021, hg-2021, ng-2021, pa-2020, pl-2020) at ~2026-08-11T08:57Z
   (read-only via UTL `cloud_interface`; no VMs touched, nothing written). **Determination: ALL 7 GENUINELY ALIVE +
