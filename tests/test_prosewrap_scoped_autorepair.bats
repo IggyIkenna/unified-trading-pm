@@ -150,3 +150,31 @@ EOF
   run bash -c "printf '' | python3 '$FIX' --scoped"
   [ "$status" -eq 0 ]
 }
+
+@test "a failing sort (locale regression) hard-fails instead of silently false-flagging" {
+  cd "$PM"
+  # Simulate the 2026-08-09 "sort: Illegal byte sequence" crash (prosewrap_padding_precommit_
+  # gate_locale_false_positive_2026_08_09.md) with a fake `sort` that always fails. A silent
+  # regression would let --only continue with a truncated/empty comparison set and false-flag
+  # byte-identical HEAD content as a NEW violation; the guard must instead abort with a loud
+  # error and a non-zero exit.
+  fakebin="${WORK}/fakebin"
+  mkdir -p "$fakebin"
+  cat > "$fakebin/sort" <<'EOF'
+#!/usr/bin/env bash
+echo "sort: string comparison failed: Illegal byte sequence" >&2
+exit 1
+EOF
+  chmod +x "$fakebin/sort"
+
+  cat > plans/active/fixture.md <<'EOF'
+# fixture
+
+- [ ] 1. a todo
+                      brand new over-indented line introduced by this commit
+EOF
+
+  run env PATH="$fakebin:$PATH" bash "$CHECK" --only plans/active/fixture.md
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"sort -u"*"failed"* ]]
+}

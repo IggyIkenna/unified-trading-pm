@@ -66,17 +66,30 @@ set -uo pipefail
 # Force byte-wise (locale-independent) collation for every sort/comm call below. Under a
 # UTF-8-aware locale, sort/comm invoke strcoll() on multibyte content; a locale/glibc
 # combination that trips on that content fails with "sort: string comparison failed:
-# Illegal byte sequence" and — because the callers below don't check sort's exit code —
-# the failure is silent, degrading into a truncated/empty comparison set that false-flags
-# byte-identical HEAD content as a NEW violation. LC_ALL=C makes sort/comm compare raw
-# bytes, which is also strictly correct here since these comparisons only need exact-match
-# set membership, never locale-aware ordering.
+# Illegal byte sequence" and — unless caught — the failure degrades into a truncated/empty
+# comparison set that false-flags byte-identical HEAD content as a NEW violation.
+# LC_ALL=C makes sort/comm compare raw bytes, which is also strictly correct here since
+# these comparisons only need exact-match set membership, never locale-aware ordering.
+# Every `sort -u` pipeline in --only mode below ALSO checks its exit code explicitly via
+# _sort_failure, so a future locale/encoding regression hard-fails instead of silently
+# re-opening this false-positive class.
 export LC_ALL=C
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BASELINE_PATH="$SCRIPT_DIR/prosewrap_padding_baseline.yaml"
 
 INDENT_THRESHOLD=14
+
+# Loud-fail helper for the `sort -u` pipelines in --only mode below. sort can fail with
+# "string comparison failed: Illegal byte sequence" on multibyte UTF-8 content under a locale
+# whose strcoll() can't handle it (the 2026-08-09 root cause LC_ALL=C above prevents today).
+# If that ever regresses, the failure must be a HARD error — never a silent truncated
+# comparison set that reads every byte-identical HEAD line as a brand-new violation.
+_sort_failure() {
+  local rc=$?
+  echo "check_prosewrap_padding: a 'sort -u' comparison pipeline failed (exit ${rc}) — locale/encoding regression. Aborting rather than risk a false positive." >&2
+  exit 1
+}
 
 # Shared detector — reads from the file given as $1, or from stdin if called with no args (used
 # for `git show HEAD:<path>` content, which has no filesystem path of its own). Prints
@@ -162,8 +175,8 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    cur_backtick="$({ _detect_hits "$f" | grep ':backtick-padding:' || true; } | sed -E 's/^[0-9]+://' | sort -u)" || _sort_failure
+    head_backtick="$( { printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' || true; } | sed -E 's/^[0-9]+://' | sort -u)" || _sort_failure
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -179,8 +192,8 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    cur_overindent="$({ _detect_hits "$f" | grep ':over-indent(' || true; } | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)" || _sort_failure
+    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)" || _sort_failure
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
