@@ -37,7 +37,7 @@ summary: >-
   described (a deadlock).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos:
   [

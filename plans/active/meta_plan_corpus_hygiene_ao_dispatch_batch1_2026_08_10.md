@@ -131,7 +131,7 @@ Two independent causes, both now fixed:
       `check_frontmatter_schema` 2013 docs zero violations (3 targets live in `plans/active/`; the 4th
       `shared_ci_workflow_repo_extraction_2026_08_06` is archived under `plans/archive/2026_08/` but was still retagged
       to `[ci]` for corpus orthogonality).
-- [ ] [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
+- [x] ✅ [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
       `/plans/active/issues/`): `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` → `[ci]` or
       `[infrastructure]` (audit recommended `ci`, `infrastructure` defensible — pick by content);
       `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` → `[ci]`;
@@ -139,7 +139,7 @@ Two independent causes, both now fixed:
       that audit named (`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,
       `alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`) were verified 2026-08-10 as already
       archived under `/plans/archive/2026_08/issues/` — out of scope, no action. **Done when**: all 3 carry a single
-      real tranche tag.
+      real tranche tag. — unified-trading-pm@<this-commit> (see Progress Log).
 - [ ] [DOCS] P3. **Retag the 12 outstanding `cross_cutting_parked_2026_08_08` findings** (its findings 1-9 and 11-13;
       finding 10 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` was already fixed to
       `[infrastructure]` by the `ao` tranche's 2026-08-10 run — skip it). Read that parked doc's findings section for
@@ -278,10 +278,10 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
       **Done when**: the skill emits per-todo verdicts and names the extraction path.
 
       **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
-                          open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
-                          extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
-                          extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
-                          Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
+                              open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+                              extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+                              extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+                              Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
@@ -361,3 +361,21 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   `/plans/archive/2026_08/issues/ag_closeout_all_vs_sharded_mutual_blindness_2026_08_10.md`.
 
   No code shipped (read-only diagnostic). Plan flip only — unified-trading-pm@<this-commit>.
+
+- **2026-08-11 (slot 10, infra, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-194d27b88f8d`) — todo 3 (retag the 3
+  surviving `cross-cutting` 2026-08-07 findings) executed.** Re-verified current `asset_group` + `locked_by` on all 3
+  targets before editing (per this plan's own scope-discipline rule), plus the 2 out-of-scope targets' archived state —
+  all confirmed as this plan's authoring-time notes described.
+  - `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`: `[cross-cutting]` → `[ci]`. Content is
+    a flaky CI test (order-dependent `pytest-socket` failure in `deployment-api`'s test suite, root-caused and fixed via
+    the test itself, not library code) — the doc's own `tags:` list leads with `ci`, and the audit's own recommendation
+    was `ci`. The remaining open `[BACKEND] P3` sub-issue (dedup the two `unified_trading_library` event-global-state
+    stores) is a separate, still-open library-design question, not itself grounds to prefer `infrastructure` over `ci`
+    for THIS doc's primary content.
+  - `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`: `[cross-cutting]` → `[ci]` (per plan
+    instruction, no judgment call — LDR→main promotion-pipeline provenance-marker computation is CI/CD machinery).
+  - `qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`: verified ALREADY `[infrastructure]` (corrected
+    2026-08-07 by a prior `ag-closeout-audit infra-tranche` run per its own frontmatter comment) — no edit needed, this
+    target was already at its correct final state before this todo started.
+  - Both edited docs verified locked-free (`locked_by:` empty) before editing. `check_frontmatter_schema.py` clean on
+    all 3 targets (0 violations). Shipped: unified-trading-pm@<this-commit>.

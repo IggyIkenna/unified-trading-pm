@@ -33,12 +33,12 @@ summary: >-
 status: open
 resolved_by: deployment-api@fa17399671
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [deployment-api, unified-trading-library]
 scope: [engineer, admin]
 tags: [ci, flaky-test, pytest-socket, gce-metadata, events, global-state, unified-trading-library]
-related: []
+related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-08-06
 author: interactive session (operator-triggered CI audit)
 last_updated: 2026-08-06
