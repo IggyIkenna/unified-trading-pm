@@ -175,12 +175,19 @@ not lost if the bound expires unanswered.
       rows to the 14-day trailing window (NaT rows treated as recent, conservative); `check_high_attempted_failed`
       accepts injectable `now=` for deterministic testing; 3 existing tests updated + 3 new trailing-window tests added;
       QG green.
-- [ ] [DIAG] P3. If the operator wants the residual trickle root-caused before deciding: pull Cloud Logging /
-      Tardis-side request logs for the exact process that produced the 2026-07-29 09:00 UTC
-      `Tardis HTTP 403 code=274 concurrent-IP-lock` COINBASE-FUTURES rows (the VM-creation audit-log trace in this doc
-      ruled out `canonical-migration-cefi-fts-*`; no other candidate launch was found in that window — may need broader
-      time range or non-GCE-launch source, e.g. a manually-run local/interactive session). Repo:
-      market-tick-data-service.
+- [x] [DIAG] P3. ✅ 2026-08-11 (slot 3, data_engineering) — bounded Cloud Logging pull complete; root cause of the
+      residual trickle remains UNCONFIRMED (honest outcome, not a false-positive close — see Progress Log entry).
+      Broadened the VM-creation audit-log trace from the original 04:00-10:00 UTC window to the full day and to
+      07:00-11:00 UTC, and searched Cloud Logging text/json payloads directly for the literal error string — found and
+      ruled out one new candidate (`batch-live-smoke-matrix-daily`, a real GCE VM firing at exactly 09:00 UTC daily) via
+      code trace: no live `WSFeedConnector` is registered for venue `COINBASE-FUTURES` (only `COINBASE-SPOT` /
+      `COINBASE-CDE` exist), so that cell resolves `live=blocked-not-registered` and the smoke matrix never attempts a
+      network call for it; its only Tardis-touching connector (`tardis_machine_ws.py`) is opt-in-only
+      (`--live-source tardis-machine` / `VM_LIVE_SOURCE`, neither set by this scheduler) and targets the FREE
+      real-time `stream-normalized` endpoint via a local sidecar, not the billed historical `replay-normalized`
+      endpoint where `code=274 concurrent-IP-lock` is documented to occur. No other VM-creation candidate exists in the
+      window. No Cloud Logging text-payload hit for `concurrent-IP-lock`/`code=274`/`Tardis HTTP 403` in
+      2026-07-29T08:45-09:15Z across any resource type. Repo: market-tick-data-service.
 
 ## Progress log
 
@@ -247,3 +254,42 @@ not lost if the bound expires unanswered.
   Shipped: `deployment-service@96271280`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate -- the shipped fix
   landed in `meta_watchers.py`, already covered.
+- **2026-08-11 (data_engineering worker, slot 3) — todo 2 DIAG follow-up, bounded root-cause pull.** Project
+  `central-element-323112` (matches the manifest's bucket name). Two Cloud Logging queries: (1) full-day
+  `compute.instances.insert` for 2026-07-29 (100-row cap, most recent-first — covers 21:03Z onward), and (2) a narrow
+  `07:00-11:00Z` window (uncapped by the 100-row limit) specifically bracketing the 09:00Z error timestamp. Query (2)
+  reproduced the 3 `canonical-migration-cefi-fts-{bitget-futures,okx-swap,binance-futures}` VMs already ruled out
+  (09:04-09:06Z) plus a full roster of unrelated scheduled backfill/smoke VMs (`tradfi-bf-*`, `footystats-fwd-*`,
+  `mtds-smoke-*`) — and one VM the original investigation's `cefi`/`tardis`-name-pattern search would not have
+  surfaced: `batch-live-smoke-matrix-daily`, created 09:00:03-09:00:17Z by `uts-prod-batch-sa` (terraform:
+  `deployment-service/terraform/gcp/batch_live_smoke_matrix_scheduler.tf`, `schedule = "0 9 * * *"` — a Cloud Scheduler
+  job that boots an ephemeral e2-small VM running
+  `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py --live-window 8` across all 5 asset groups with
+  network on). The exact-time coincidence made this a real candidate, so traced it in code rather than
+  timing-coincidence alone: `market-tick-data-service/market_tick_data_service/live/connector_registry.py` +
+  `live/connectors/__init__.py` show NO `WSFeedConnector` registered for venue `COINBASE-FUTURES` (only
+  `COINBASE-SPOT` via `coinbase_spot_ws.py` and `COINBASE-CDE` via `coinbase_cde_ws.py` are registered, and
+  `_normalize_venue_for_match`'s chain-suffix stripping only strips EVM/L2 chain segments, not `-FUTURES`, so it
+  doesn't fold into either) — so per the smoke matrix's own documented verdict taxonomy this cell resolves
+  `live=blocked-not-registered` and the harness never attempts a network call for it at all. Separately, the only
+  Tardis-touching live connector in the codebase, `live/connectors/tardis_machine_ws.py`, is explicitly opt-in
+  (selected only via `--live-source tardis-machine` / `VM_LIVE_SOURCE=tardis-machine`, neither of which the scheduler's
+  launch command sets) and, per its own module docstring, targets tardis-machine's FREE real-time
+  `stream-normalized` endpoint through a local sidecar (`ws://localhost:8002/...`) — a materially different code path
+  from the billed historical `replay-normalized` REST API that the concurrency guard
+  (`tardis-concurrency-guard.sh` / `tardis_concurrency_lease.py`) exists to protect and where the documented
+  `code=274 concurrent-IP-lock` class of errors occurs. Ruled out on both grounds (unregistered venue + wrong Tardis
+  endpoint class even if it were reached). Also ran a direct Cloud Logging content search —
+  `textPayload:"concurrent-IP-lock" OR textPayload:"code=274" OR jsonPayload.message:"concurrent-IP-lock" OR "Tardis
+  HTTP 403"` across ALL resource types for `2026-07-29T08:45:00Z`-`09:15:00Z` — zero hits; the error is visible only in
+  the manifest's `error_reason` column (written by the Tardis client's own error classifier), not mirrored to Cloud
+  Logging text/json payloads, so this class of lookup cannot independently corroborate a timestamp-to-process match
+  beyond the VM-creation audit trail already checked. **Net result: root cause of the small residual trickle remains
+  UNCONFIRMED** — the bounded investigation ruled out every GCE-launched candidate in the window (both the original
+  3 `canonical-migration-cefi-fts-*` VMs and this newly-identified `batch-live-smoke-matrix-daily` VM), leaving the
+  todo's own "non-GCE-launch source, e.g. a manually-run local/interactive session" hypothesis as the remaining
+  possibility — which is inherently outside Cloud Logging's audit trail by construction (no GCP API call is made to
+  launch a local process) and cannot be further narrowed by this tooling. No code changed (nothing to fix — this is a
+  closed-scope diagnostic pull, not a root-cause-and-fix task); the operator's A/B/C policy decision on the parent
+  todo already shipped independently (option A, `deployment-service@96271280`) and does not depend on this residual
+  trickle being root-caused further per the doc's own "Why it matters" framing.
