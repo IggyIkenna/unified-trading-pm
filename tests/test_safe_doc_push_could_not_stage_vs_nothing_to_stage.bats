@@ -66,7 +66,7 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 12 (F8: never certify a no-op)" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -75,11 +75,15 @@ setup() {
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  # F8 (2026-08-11, 91d559ee19): "already byte-identical to HEAD at entry" must NOT resolve to a
+  # silent 0 -- it is either "a peer landed it first" or "your edit was destroyed first", and from
+  # inside the process they are indistinguishable, so the script exits 12 with a tell-them-apart
+  # command rather than certifying a no-op push as a landed one.
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
-  [[ "$output" == *"✅"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
 }
 
 @test "could-not-stage and nothing-to-stage produce distinct exit codes for the same script" {
@@ -90,7 +94,8 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: genuinely already-landed tracked file -- exits 12 (F8 no-op guard, distinct
+  # from both success 0 and the stage-failure 8).
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +104,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }

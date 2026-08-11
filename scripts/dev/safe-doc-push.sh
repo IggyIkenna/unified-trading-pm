@@ -1044,10 +1044,35 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (P0 -- "do not quarantine before
+# staging"): stage the caller's named files FIRST, before any quarantine step, so the payload
+# can never be swept into the stash it is about to be compared against. Staging is what makes
+# them invisible to `git diff --name-only` -- exactly how autostash_guard_bound_backlog below
+# enumerates the dirty tree for its extreme-backlog self-arrest. The 2026-08-10 false-success
+# (a no-op push reported as landed, exit 0) ran the quarantine FIRST: an extreme autostash pile
+# stashed the caller's own uncommitted edit, then staging found "nothing to stage", and
+# "already matches HEAD" resolved to the wrong cause. The guard's protected-set check is belt;
+# this ordering is suspenders -- a staged payload is structurally unquotable, not merely listed
+# as protected.
+if [[ "$committed" == false ]]; then
+  if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_preadd_err; then
+    # Pre-staging is a no-op safety net, not the shipping step -- the retry loop below re-stages
+    # with full index.lock handling and verify_committed. If it failed (usually lock contention),
+    # the guard's protected-set check remains the only protection; warn and continue rather than
+    # abort a shippable run.
+    if grep -qi "index.lock" /tmp/_sdp_preadd_err 2>/dev/null; then
+      echo "  ⚠ could not pre-stage payload (index.lock) -- backlog-quarantine protected-set is the only protection this run" >&2
+    else
+      echo "  ⚠ could not pre-stage payload before backlog quarantine:" >&2
+      cat /tmp/_sdp_preadd_err >&2
+    fi
+  fi
+fi
+
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
-# --files are passed as protected so the extreme-pile self-arrest never quarantines the very
-# work this run is shipping (dogfooded live 2026-08-10 slot-9).
+# --files are staged above (and passed as protected) so the extreme-pile self-arrest never
+# quarantines the very work this run is shipping (dogfooded live 2026-08-10 slot-9).
 if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
   autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
 fi
