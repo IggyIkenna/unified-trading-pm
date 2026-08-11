@@ -63,11 +63,16 @@ source: >-
   verdicts in the run's Workflow journal (wf_bb32d4e6-6be) — not duplicated here, this doc extracts only the
   conflict-cleared, AO-eligible outcome.
 assigned_role: data_engineering
+effort: high
 sequential: false
 drift_direction: advance-code
 ---
 
 # DeFi satellite AO batch 10 — 2026-08-06
+
+> **ARCHIVED 2026-08-11** — all 9 todos completed, reconciled via
+> [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`](/plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md).
+> Original path: `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md`.
 
 **status: active — operator-approved 2026-08-07, flipped from `draft`**, per this skill's autonomous-mode safety rail
 (`cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Modes"). Drafted autonomously by the scheduled

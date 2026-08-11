@@ -27,7 +27,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,

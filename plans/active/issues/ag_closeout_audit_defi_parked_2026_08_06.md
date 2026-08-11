@@ -38,7 +38,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md,
     /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
@@ -58,6 +58,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.16
 assigned_role: data_engineering
+effort: high
 drift_direction: none
 source: >-
   Scheduled `ag_closeout_auditor` one-shot dispatch (tranche=defi, slot 12, 2026-08-06) — POST /api/plan-health/dispatch
@@ -70,7 +71,7 @@ context_scope:
   [
     /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md,
-    /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
