@@ -16,7 +16,7 @@ related:
   [
     /codex/09-strategy/architecture-v2/block-list.md,
     /codex/09-strategy/architecture-v2/restriction-policy.md,
-    README.md,
+    /codex/09-strategy/architecture-v2/README.md,
     /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
   ]
 created: 2026-04-20
