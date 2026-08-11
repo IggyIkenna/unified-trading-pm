@@ -247,33 +247,63 @@ memory and that's what kills sessions" as-is.
       `with read_only_session_scope()` block and inside a conditional, which would have broken agent-reaping
       (`UnboundLocalError` whenever the fleet had zero worker sessions) — caught by the pre-existing pruner test suite,
       not by inspection.
-- [ ] [INFRA] P1. **UPGRADED lead 2026-08-11 — named the specific cron jobs; now the leading hypothesis, not yet proven
-      causal.** The newly-shipped alert (previous todo) immediately caught the tmux server dying and recovering THREE
-      times in ~13 minutes while writing this doc — 16:55:28 (21 slots), 17:02:05 (19 slots), 17:07:34 (25 slots), each
-      recovering in ~85-90s. Checked all three against the VM's `crontab -l`: TWO all-slot, all-repo git-housekeeping
-      cron jobs run on a staggered 5-minute cadence — `slot-cron-ff-pull.sh --all-slots` at `:00,:05,:10,...` and
-      `slot-git-status-report.sh` (offset 2min later "after slot-cron-ff-pull's :05 boundary" per its own header
-      comment) at `:02,:07,:12,...`. 16:55:28 lands within 28s of the ff-pull grid; 17:02:05 and 17:07:34 land within
-      2-5s of the git-status-report grid — 3/3 deaths today align with one or the other, not random.
-      `slot-git-status-report.sh` itself never touches tmux (pure `git status`/`git rev-list`/`curl`), but walks EVERY
-      repo under EVERY slot (1132 directories at maxdepth 2 under `.tabs/`) — a burst of many hundreds of git subprocess
-      forks in a tight window. This also explains the operator's independent observation that a dying session's apparent
-      lifetime is "~3 min, seems random, but they definitely start and run real work first" (confirmed separately:
-      credits burned on BOTH DeepSeek and Anthropic around these deaths, live catches showed active
-      work/429-retry-loops, not stuck-at-boot) — if the ACTUAL trigger is a fixed 5-minute-grid cron tick rather than a
-      fixed per-session duration, a worker starting at a random offset into that cycle would show an observed lifetime
-      uniformly distributed across the cycle, averaging ~2.5min — matching "~3 min" closely without needing per-session
-      variance as an explanation. Checked PID/FD-exhaustion as the mechanism connecting the cron burst to the tmux
-      death, but only post-recovery snapshots were available (pid_max=4194304, ubuntu nproc limit=115876, TasksMax=76478
-      — all far from any current ceiling) — does NOT rule out a TRANSIENT spike during the actual burst, which this pass
-      had no visibility into. **Done when**: (a) pull a larger sample (50-100+) of `tmux_server_died` timestamps from
-      `state.db` and check statistically what fraction land within ~60s of either cron grid vs. a null/random-timing
-      expectation (attempted this pass, blocked on a wrong DB path —
-      `/home/ubuntu/agent-orchestrator/data/state/state.db` 404s, needs the correct path, not yet found); (b) if
-      confirmed, capture PID/thread/FD counts DURING a live burst (not after) to nail the actual resource-exhaustion
-      mechanism, or rule it out in favour of something else these two scripts share (e.g. shell fork storm starving the
-      tmux server of scheduler time even without hitting a hard ceiling). Repo: agent-orchestrator, unified-trading-pm
-      (the two cron scripts live there).
+- [x] [INFRA] P1. ~~Cron-alignment hypothesis~~ — **STATISTICALLY REFUTED 2026-08-11 with the full sample; correct DB
+      path found.** The real path is `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`
+      (the earlier `/home/ubuntu/agent-orchestrator/...` 404 was a stale prefix — the actual clone lives one level
+      deeper, under `unified-trading-system-repos/`; confirmed live via `-wal` mtime + growing size, the other 3
+      candidate `*.db` files found nearby are all 0 bytes). Queried every `tmux_session_lost` burst-minute (≥4 distinct
+      slots dying in the same minute) since 2026-06-27: **436 qualifying bursts total.** Grouping by `minute % 5` (the
+      cron grid's period) gives `{0:73, 1:89, 2:87, 3:100, 4:87}` — essentially **uniform** (expected ~87.2/bucket if
+      random; the largest bucket, offset 3 with 100, isn't even a cron-grid offset). Pre-2026-08-11-only slice:
+      `{0:61, 1:68, 2:65, 3:77, 4:68}` — same shape. The original "3/3 today land on the grid" claim was a small-sample
+      coincidence (n=3 is trivially likely to hit 2-of-5 minute-offsets by chance ~65% of the time); at n=436 there is
+      no enrichment on either `slot-cron-ff-pull.sh`'s or `slot-git-status-report.sh`'s grid. **Retracting this as the
+      leading hypothesis** — the two cron jobs are not implicated by this data. Repo: agent-orchestrator.
+- [x] [INFRA] P0. ~~Scale of the outage was badly underestimated~~ — **MAJOR FINDING 2026-08-11, same query pass.** The
+      doc's framing ("3 known deaths", isolated incidents) reflected only what the brand-new alert (shipped ~16:42) had
+      caught in its first ~13 minutes. The full `tmux_session_lost` history tells a very different story: this fleet has
+      had **hundreds of ≥4-slot simultaneous-loss bursts since 2026-06-27** (routine baseline: a handful of 4-15-slot
+      bursts per day), and starting **2026-08-11 00:37 UTC — the same window the operator began using
+      `alphavoltratrading@gmail.com` in production** — burst SIZE and FREQUENCY both stepped up sharply: 20-29 of the
+      fleet's 34 configured slots losing their session simultaneously, recurring every 5-10 minutes **near-continuously
+      for ~9 hours** (00:37-09:36), a quiet gap, then resuming 15:59-17:08 (the window the alert caught). This is not 3
+      isolated incidents — it is the fleet spending large fractions of today in a degraded/wedged state at real
+      production load. **Escalate**: this materially changes priority — the underlying mechanism (still open, see below)
+      needs to be found, not just alerted on. Repo: agent-orchestrator.
+- [x] [INFRA] P1. ~~Detection has a real coverage gap~~ — **FOUND + FIXED 2026-08-11, same pass (ships with this
+      commit).** `TmuxPruner.prune_once()`'s fleet-liveness check (`_check_tmux_server_liveness`, shipped as
+      `agent-orchestrator@d1e62b7317`) only ran ONCE, at the very top of the tick — before the per-slot
+      `has_session()`/`_confirm_session_dead()` sweep that follows it, which is sequential across every candidate slot
+      and (per the function's own docstring) can take "up to 2s each" plus a debounce re-check. On a large fleet this
+      sweep can span many seconds. Pulled exact-microsecond timestamps for two representative bursts (2026-08-11 02:01,
+      29 slots; 2026-08-09 08:32, 20 slots): both show **strictly ascending slot-ID order** with per-slot gaps of
+      ~0.1-0.7s, spanning 3.3s and 14.3s respectively — a sequential scan discovering absence slot-by-slot, not one
+      simultaneous instant. Cross-checking the shipped alert's own catch window (16:55-17:08) found 5 large
+      `tmux_session_lost` bursts (19-25 slots each) but only 3 `tmux_server_died` alerts — meaning at least 2 of those
+      bursts had the server confirmed UP at the up-front check, then losing 19+ sessions during the sweep that followed,
+      with no re-check afterward to catch a mid-sweep death. **Fix**: added a second `_check_tmux_server_liveness()`
+      call after the sweep completes, before the write pass (mirrors the existing dedup-latched
+      fire-on-change/RESOLVED-bookend shape, so calling it twice per tick is safe — pages once per real transition
+      regardless of how many times it's invoked while the state is unchanged). New regression test
+      (`test_prune_once_catches_a_server_death_that_happens_mid_sweep`) simulates `tmux_server_running()` returning True
+      then False within one tick and asserts the alert now fires. This closes the KNOWN gap but does not explain WHY the
+      server dies — that mechanism is still open below. Repo: agent-orchestrator.
+- [ ] [INFRA] P1. **Root mechanism still open — cron ruled out, resource pressure and the per-slot check's own
+      reliability under load are the two live candidates.** Two competing explanations remain, not yet disambiguated:
+      (a) the tmux SERVER process genuinely dies/restarts under real resource pressure that scales with production load
+      (explains the 08-11 00:37 step-change coinciding with live trading starting, and is now confirmed real via the
+      shipped `tmux_server_running()` alert catching 3 genuine `tmux list-sessions`-fails-with-server-gone instances);
+      (b) some/most of the OTHER large `tmux_session_lost` bursts are an artifact of the per-slot `has_session()` sweep
+      itself becoming unreliable/slow under load (CPU/subprocess-spawn contention from a much busier fleet), reporting
+      false "session gone" for panes that are actually still alive, without the server itself ever going down — the
+      now-fixed detection gap above could not distinguish these until this fix ships and accumulates more paired
+      samples. The abandoned cron-alignment hypothesis at least correctly identified the RIGHT class of cause (something
+      tied to fleet-wide load), just not the right trigger. **Done when**: (a) with the detection-gap fix live, collect
+      a larger paired sample of `tmux_server_died` vs. large `tmux_session_lost` bursts to see if the gap between them
+      closes (supports mechanism (a) more cleanly) or stays open (points at (b)); (b) capture the tmux server's own
+      PID/FD/thread count and `has_session()` call latency DURING an active burst (not post-recovery) — still not done,
+      needs a live burst to sample against, paused per operator instruction pending resumed production dispatch. Repo:
+      agent-orchestrator.
 - [ ] [INFRA] P3. **Wire `resource-watchdog`'s existing tick log into future death correlation.** Discovered live
       2026-08-11 — a previously-undocumented-in-this-doc systemd service already logging periodic
       `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
