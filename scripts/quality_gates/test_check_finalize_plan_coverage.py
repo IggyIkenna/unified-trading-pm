@@ -128,3 +128,47 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-parent create-time idempotency guard ──────────────────────────────
+
+
+def test_check_parent_passes_when_ungated(tmp_path: Path) -> None:
+    _active_dir(tmp_path)  # empty corpus, nothing gates anything
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "some_new_parent_2026_08_11"])
+    assert rc == 0
+
+
+def test_check_parent_fails_when_already_gated_regardless_of_filename_shape(tmp_path: Path) -> None:
+    """The two colliding real-world docs differed only by a redundant date suffix —
+    the guard must key on depends_on, not on any expected filename pattern."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_05.md")
+    _write_plan(
+        active / "parent_plan_2026_08_05_finalize_weird_suffix.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "parent_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_check_parent_does_not_mutate_baseline_or_write_files(tmp_path: Path) -> None:
+    """--check-parent is a pure read — no baseline read/write side effects."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_05.md")
+    baseline_path = tmp_path / "baseline.yaml"
+
+    rc = main(
+        [
+            "--workspace-root",
+            str(tmp_path),
+            "--check-parent",
+            "parent_plan_2026_08_05",
+            "--baseline-path",
+            str(baseline_path),
+        ]
+    )
+    assert rc == 0
+    assert not baseline_path.exists()

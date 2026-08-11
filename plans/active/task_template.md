@@ -493,27 +493,33 @@ version.
   operator DIRECTLY asks for Fable (it is for the hardest / longest-running interactive work — overkill for routine
   dispatch). Effort: Haiku has NO effort levels (thinking on/off only); sonnet/opus/fable support `--effort` low→max.
   _[ROLLING OUT: fable spawn + per-model effort.]_
-- **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** Alongside any
-  `assigned_vm: planning` plan, author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` +
-  `gate_on_depends: true` + `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into
-  its TRUE source doc(s) — either the plan's own checkboxes if self-contained, or every named source doc's corresponding
-  checkbox if the plan was a batch-style extraction from other docs (do not trust a source doc's own copy of the
-  evidence line — re-verify the cited commit exists); (2) re-check any deferred/excluded-at-authoring-time follow-up
-  item to see whether its gate (a sibling todo landing, a human/operator decision) has since cleared, and spin it into a
-  new tracked todo/plan if so; (3) run the standard 6-step archival ritual on the now-fully-done plan, including the
-  corpus-wide referrer-path fixup; **(4) for a batch-style extraction plan, also check each SOURCE doc touched by (1) —
-  if reconciling its checkbox(es) back left it with zero open todos, that source doc is now ALSO an archival candidate
-  and needs the same 6-step ritual, not just its own checkbox flip.** Gap found + fixed 2026-07-26
-  (`autonomous_session_operator_decisions_2026_07_25.md` entry #17): a finalize plan that only closes ITS OWN plan while
-  leaving a now-fully-done source doc live and un-archived caused a real `run_hygiene_sweep.sh --ci` hard-fail (10
-  violations, baseline 0, auto-remediated via PR #1545) — the omission is in this rule, not any one AG's plans. This is
-  what closes the loop — without it, a batch extraction plan ships its own todos but leaves every source doc's checkbox
-  stale and the plan itself never archives. Precedent: `sports_closeout_batch1_ao_ready_2026_07_24.md` /
-  `sports_closeout_batch1_finalize_2026_07_24.md`, `sports_satellite_ao_dispatch_batch2_2026_07_24.md` /
-  `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`. Skip only for a plan that IS ITSELF already a finalize
-  plan (no infinite regress) or a genuinely single-todo plan where archival is trivial enough to fold into that one
-  todo's own done-when. Enforced (ratchet-mode, warn-only, wired into `quality-gates.sh`) by
-  `scripts/quality_gates/check_finalize_plan_coverage.py`.
+- **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** **Before authoring one, check
+  it's not already covered** — run
+  `python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <plan-slug>` (bare slug, the parent's
+  filename stem, no `.md`); exit 0 means safe to create, exit 1 prints the existing covering plan's path — add your fix
+  as a todo there instead of authoring a duplicate. This create-time guard exists because two responders can each
+  independently conclude "no finalize plan exists yet" and both write one on the same day
+  (`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`) — the check re-derives coverage from the CURRENT
+  corpus by the `depends_on` relationship, not by guessing a filename. Alongside any `assigned_vm: planning` plan,
+  author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` + `gate_on_depends: true` +
+  `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into its TRUE source doc(s) —
+  either the plan's own checkboxes if self-contained, or every named source doc's corresponding checkbox if the plan was
+  a batch-style extraction from other docs (do not trust a source doc's own copy of the evidence line — re-verify the
+  cited commit exists); (2) re-check any deferred/excluded-at-authoring-time follow-up item to see whether its gate (a
+  sibling todo landing, a human/operator decision) has since cleared, and spin it into a new tracked todo/plan if so;
+  (3) run the standard 6-step archival ritual on the now-fully-done plan, including the corpus-wide referrer-path fixup;
+  **(4) for a batch-style extraction plan, also check each SOURCE doc touched by (1) — if reconciling its checkbox(es)
+  back left it with zero open todos, that source doc is now ALSO an archival candidate and needs the same 6-step ritual,
+  not just its own checkbox flip.** Gap found + fixed 2026-07-26 (`autonomous_session_operator_decisions_2026_07_25.md`
+  entry #17): a finalize plan that only closes ITS OWN plan while leaving a now-fully-done source doc live and
+  un-archived caused a real `run_hygiene_sweep.sh --ci` hard-fail (10 violations, baseline 0, auto-remediated via PR
+  #1545) — the omission is in this rule, not any one AG's plans. This is what closes the loop — without it, a batch
+  extraction plan ships its own todos but leaves every source doc's checkbox stale and the plan itself never archives.
+  Precedent: `sports_closeout_batch1_ao_ready_2026_07_24.md` / `sports_closeout_batch1_finalize_2026_07_24.md`,
+  `sports_satellite_ao_dispatch_batch2_2026_07_24.md` / `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`.
+  Skip only for a plan that IS ITSELF already a finalize plan (no infinite regress) or a genuinely single-todo plan
+  where archival is trivial enough to fold into that one todo's own done-when. Enforced (ratchet-mode, warn-only, wired
+  into `quality-gates.sh`) by `scripts/quality_gates/check_finalize_plan_coverage.py`.
 - **Finalize-plan todos: give the "reconcile source docs" todo and the "archive this plan" todo DIFFERENT `[TAG] P<n>.`
   prefixes (found 2026-07-31, `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`).** Both
   `batch2_finalize`/`batch3_finalize` authored these as `[DOC] P1` for BOTH todos — harmless until the self-archival
