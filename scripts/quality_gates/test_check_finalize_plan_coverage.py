@@ -110,6 +110,60 @@ def test_only_with_multiple_paths_reports_every_violation_among_them(tmp_path: P
     assert rc == 1
 
 
+# ── --only duplicate-gate-at-creation idempotency guard ──────────────────────
+# duplicate_finalize_plans_created_for_one_parent_2026_08_06.md todo 1: refuse a
+# NEW finalize plan whose depends_on collides with an already-live finalize plan
+# for the same parent, keyed on the depends_on relationship, not filename shape.
+
+
+def test_only_fails_on_duplicate_gate_for_same_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    # Second finalize plan for the SAME parent — differs only by a redundant date
+    # suffix, mirroring the live incident's colliding filenames.
+    duplicate = _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(duplicate)])
+    assert rc == 1
+
+
+def test_only_ignores_duplicate_gate_when_existing_is_superseded(tmp_path: Path) -> None:
+    """A de-raced pair (loser superseded) is not a live collision — the survivor
+    remains the sole gate, so authoring/editing either side must pass."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_loser.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true\nstatus: superseded",
+    )
+    survivor = _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(survivor)])
+    assert rc == 0
+
+
+def test_only_passes_for_the_sole_finalize_plan_of_a_parent(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    finalize = _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(finalize)])
+    assert rc == 0
+
+
 # ── default (no --only) mode stays corpus-wide + baseline-ratchet ────────────
 
 
