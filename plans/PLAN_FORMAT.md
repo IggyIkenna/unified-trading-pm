@@ -540,6 +540,59 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+
+### 8d. Prod DATA-mutation evidence — operational mutation claims cite a VERIFIED artifact (HARD RULE — codified 2026-08-11)
+
+> **Why:** the recurring "I ran the script, trust me" class — an agent flips a todo to `- [x]` claiming a completed
+> OPERATIONAL mutation of prod data (restamped N rows, backfilled M shards, renamed/deleted K GCS objects, removed a
+> resource from tofu/terraform state) from its own self-report, with no cited log path / manifest-delta / operation id a
+> reviewer can independently resolve. Review flagged this same pattern three independent times (tofu-state ops, `do_rename`
+> GCS renames, prediction restamp row counts — see `/plans/active/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`).
+> "The code is correct" (verifiable from the commit) is not the same as "it ran and produced the claimed effect" (currently
+> unverifiable). This rule makes the operational-outcome check structural — same principle as § 8b's Cloud Build gate, but
+> for data mutations instead of infra builds.
+
+Any `- [x]` todo whose completion asserts a **prod DATA-mutation outcome** — a measured operational result (restamp/backfill
+row·shard·object counts, manifest backstamps, GCS object renames/deletes, terraform/tofu state ops) — MUST cite on the
+checkbox line or its continuation lines an `Evidence:` ref carrying at least one **recognized mutation-artifact token**:
+
+```markdown
+- [x] ✅ ... <the claim> ... Evidence: vm-logs=<prefix>/RESULT.json[, gcs-op=<id>, manifest-delta=<...>, ...]
+```
+
+**Recognized artifact token forms** (at least one required on a mutation claim's `Evidence:` line):
+
+| Token form                       | Example                                         | What it proves                                       |
+| -------------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
+| `vm-logs=<prefix>/RESULT.json`   | `vm-logs=prediction-restamp-2026-08-11/RESULT.json` | A durable VM log artifact with measured outcomes |
+| `manifest-delta=<ref>`           | `manifest-delta=restamp_12k_rows_2026-08-11`    | A named, written manifest-delta row                  |
+| `gcs-op=<id>` / `gcs-operation=<id>` | `gcs-op=rename_490_objects_2026-08-09`       | A GCS operation id or named operation batch          |
+| `gs://...`                       | `gs://<bucket>/_index/audit/<report>.parquet`   | A durable GCS object the mutation wrote or updated   |
+| `state-list=<ref>`               | `state-list=tofu_state_list_after.txt`          | A terraform/tofu state snapshot (before or after)    |
+| `log=<ref>` / `log=<path>`       | `log=vm-logs/canon-migration-defi-2026-08-11/run.log` | A log path carrying the measured outcome         |
+
+A `<repo>@<sha>` code-ship citation or `Evidence: cloudbuild=<id>` proves the SCRIPT was BUILT (or deployed), not that the
+mutation happened and produced the claimed outcome — neither satisfies this rule. A code-ship claim (`<repo>@<sha>` + "QG
+green") is NOT a mutation claim in the first place; it doesn't need mutation evidence. A launch/VM-start claim ("launched
+backfill VM X") is also NOT a mutation claim — it asserts an infra action, not a measured data outcome.
+
+**What counts as a mutation claim** (co-occurring in the same clause, same discipline as § 8b's same-clause check):
+a mutation verb (`restamp(ed|ing)`, `backfill(ed|ing)`, `renam(ed|ing|e)`, `delet(ed|ing|e)`, `backstamp(ed|ing)`,
+`tofu state`, `terraform state`) paired with a measured data object (a counted noun like `N rows`/`M shards`/`K objects`/
+`X records`, a `gs://` path, or a state-op reference like `state list`/`state rm`/`before state`). "Backfill script" /
+"backfill VM" / "launched backfill" is a code-ship or launch claim, not a mutation claim — the verb is the same but the
+OBJECT is wrong. "Manifest backstamp" is self-sufficient (a manifest backstamp is a prod mutation by definition even
+without a measured object). "Delete" with no measured data object (e.g. "delete the deprecated code") is NOT a mutation
+claim.
+
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate), sub-rule
+  C — a baselined ratchet (same file as sub-rules A/B, key `mutation_claim_without_evidence_baseline`). A `- [x]`
+  mutation claim that cites NO `Evidence:` ref at all (rule: `C-mutation-claim-without-evidence`), or an `Evidence:` ref
+  carrying NONE of the recognized artifact token forms (rule: `C-mutation-claim-without-artifact`), is flagged. Re-baseline
+  with `--baseline-write` after confirming flagged claims are pre-existing.
+- The check runs in both the full `quality-gates.sh` post-gate sweep and the `--only` precommit mode (new claims only,
+  comparing HEAD vs working-tree signatures for sub-rules B + C combined).
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
