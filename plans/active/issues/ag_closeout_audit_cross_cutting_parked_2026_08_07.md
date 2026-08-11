@@ -43,7 +43,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
-    /plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-07"
@@ -238,7 +238,7 @@ lives in the 2026-08-06 doc; the open todos there remain the single source of tr
 (baseline 69)** today — down from 72 (2026-08-06 later re-measure) / 87 (2026-08-06 initial). Per-tranche breakdown
 today: cross-cutting 37, ao 14, defi 9, ci 7, infrastructure 2, tradfi 1, sports 1. Full detail + Todos already tracked
 in
-[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)
+[`ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md)
 (updated with today's number, this run's Progress Log entry). Not re-filed as a separate doc. **Cross-cutting-specific
 insight for whoever picks up that doc's Todo 2**: this run's own Phase 1 evidence shows a large fraction of
 cross-cutting's 37-doc share is the exact same same-day-mistagged-issue-doc cluster this doc's findings 1-7 above

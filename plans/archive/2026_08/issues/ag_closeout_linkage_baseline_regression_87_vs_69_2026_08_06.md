@@ -17,7 +17,7 @@ summary: >-
   that FIXED, widened code, not the old broken version). This is a second, independent finding: real NEW docs landing
   since 2026-07-31 without a `related:`/mention link back to their tranche's closeout family, which the ratchet is
   specifically designed to catch and which nobody has yet triaged.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ related:
   ]
 created: 2026-08-06
 author: ag_closeout_auditor (cefi tranche, dispatch agt-02411c, slot 3)
-last_updated: 2026-08-08
+last_updated: 2026-08-11
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -164,13 +164,16 @@ family, which is exactly the failure mode this gate exists to catch.
       the count down, not one coordinated link-adding pass. Closing on the stated done-when, but note the count is
       measurably volatile day-to-day (69→87→72→71→65 across 3 days) — a future re-measure reading over 69 again would be
       a regression of THIS todo, not evidence it was never really done; re-open rather than silently re-fix if so.
-- [ ] [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
-      `check_ag_closeout_linkage.py`, mirroring the already-shipped `generate_ag_closeout_audit_candidates.py:172`
-      (`parser.add_argument("--tranche", choices=ALL_TRANCHES, required=True)`) — direct existing precedent, not a novel
-      design call. Keep additive/opt-in (no-flag preserves the full-corpus ratchet). AO-dispatchable, no operator
-      decision needed. (was: "Consider whether `check_ag_closeout_linkage.py` should gain a `--tranche <name>` filter" —
-      a real, measured cost this run incurred: the scan surfaced 80 non-cefi orphans irrelevant to a cefi-scoped
-      dispatch.)
+- [x] ✅ [SCRIPT] P3. **round5-cross-cutting-audit 2026-08-08**: Add a `--tranche <name>` filter to
+      `check_ag_closeout_linkage.py` — **DONE 2026-08-11 unified-trading-pm@5a609fd46b** (Pass-1
+      quality-gates.sh → Pass-2 quickmerge). Mirrors `generate_ag_closeout_audit_candidates.py`'s `--tranche`
+      flag: same `ALL_TRANCHES` vocabulary (incl. `infra` → `infrastructure` asset_group mapping),
+      additive/opt-in (no-flag preserves the full-corpus ratchet), scoped exit zero-tolerance on its own
+      tranche, `--update-baseline` rejected under `--tranche` (baseline is corpus-wide). Live-verified:
+      `--tranche cefi/defi/infra/cross-cutting` each filter + exit 0 (current 0 orphans); invalid/missing
+      name exits with usage error; `--only` + no-flag modes unchanged.
+
+> **ARCHIVED 2026-08-11**, all 3 todos complete — `--tranche` filter shipped at `unified-trading-pm@5a609fd46b`.
 
 ## Codex SSOTs
 
@@ -232,3 +235,13 @@ the triage given their concentration.
   todo to build this feature (2 finalize docs cite `check_ag_closeout_linkage.py --tranche prediction` in a "Done
   when" clause, but that's a citation error confusing it with `generate_ag_closeout_audit_candidates.py`'s real flag).
   Exempt from the finalize-twin requirement per `check_finalize_plan_coverage.py`'s single-open-todo carve-out.
+- **2026-08-11 — slot 12 worker (dispatch `ag_closeout_linkage_baseline_regression_87_vs_69-625963a0ddfd`)**:
+  implemented + shipped Todo 3 (the `--tranche <name>` filter). Design: full-corpus scan still runs unchanged
+  (a doc's orphan status is corpus-global — its graph path can go through any doc, so a filtered subgraph would
+  change the answer); only the REPORT + exit are scoped to the requested tranche's orphans, zero-tolerance on its
+  own tranche (mirrors `--only`'s scoped-exit precedent). Mirrors `generate_ag_closeout_audit_candidates.py`'s
+  `ALL_TRANCHES` (cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infra/ui) + `infra → infrastructure`
+  asset_group mapping. `--update-baseline` rejected under `--tranche` (baseline is corpus-wide, not per-tranche).
+  Verified live: full no-flag run still `0 orphan(s) (baseline 0)`; `--tranche cefi/defi/infra/cross-cutting`
+  each filter + exit 0; invalid/missing tranche name exits with usage error; `--only` and `--update-baseline`
+  modes unchanged. Committed as `unified-trading-pm@5a609fd46b`.
