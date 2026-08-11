@@ -287,8 +287,8 @@ source doc (that partial write was reverted, not committed).
 
 ## Second symptom, same mechanism: a MODIFICATION dropped, and reported as SUCCESS (2026-08-10, slot 1)
 
-The create-only archival above is the benign face of this. The severe one, reproduced twice identically later the
-same day while pushing the data-pipeline alert-storm plan:
+The create-only archival above is the benign face of this. The severe one, reproduced twice identically later the same
+day while pushing the data-pipeline alert-storm plan:
 
 ```
 ✓ current dirty tree quarantined; the next pull will start clean (no new autostash entry).
@@ -299,14 +299,14 @@ DOCPUSH_EXIT=0
 ```
 
 Origin had **zero** of the commit's content; the local file had all of it (450 lines, 6 distinct markers verified via
-`git show origin/…:<path> | grep -c`). The ordering is the bug: the run **quarantines the dirty tree FIRST**, then
-looks for changes to stage — and finds none, because it just stashed them. It then reaches the "concurrent session
-landed identical content" branch, which is a REASONABLE inference from a clean tree matching HEAD, and exits 0.
+`git show origin/…:<path> | grep -c`). The ordering is the bug: the run **quarantines the dirty tree FIRST**, then looks
+for changes to stage — and finds none, because it just stashed them. It then reaches the "concurrent session landed
+identical content" branch, which is a REASONABLE inference from a clean tree matching HEAD, and exits 0.
 
 **Why this outranks the create-only symptom.** A red result makes you look; a false green makes you stop looking.
-Nothing downstream distinguishes "pushed" from "silently pushed nothing" — exit code, summary line, and the absence
-of any warning all say success. It was caught only because this session had adopted the habit of verifying every
-claimed sha against origin (after an earlier false `features-service@305d897a` claim in the same batch).
+Nothing downstream distinguishes "pushed" from "silently pushed nothing" — exit code, summary line, and the absence of
+any warning all say success. It was caught only because this session had adopted the habit of verifying every claimed
+sha against origin (after an earlier false `features-service@305d897a` claim in the same batch).
 
 **Second-order cost, measured the same night.** Because the push kept "succeeding", the edits stayed UNCOMMITTED in a
 shared 4-slot checkout across several pull cycles — and were then silently reverted by a peer operation: an appended
@@ -315,15 +315,19 @@ showed, so there was no artifact left to recover from**. It was only rewritable 
 in-session. A false-success push is therefore not merely "no-op" — it strands work in the one place this workspace
 guarantees is unsafe.
 
-Also note the two symptoms compose: a multi-file `--files` push in the same session landed ONE of two named paths
-(the untracked CREATE went through, the tracked MODIFY did not) and still exited 0 — per-file partial success inside
-a single "successful" invocation.
+Also note the two symptoms compose: a multi-file `--files` push in the same session landed ONE of two named paths (the
+untracked CREATE went through, the tracked MODIFY did not) and still exited 0 — per-file partial success inside a single
+"successful" invocation.
 
-- [ ] [SCRIPT] P0. Never report success on a no-op push. If nothing was staged, distinguish "content genuinely
-      already on the REMOTE" (verify against the remote ref, not HEAD) from "we quarantined the changes ourselves" —
-      the latter must be a loud FAILURE printing the quarantine ref for recovery.
-- [ ] [SCRIPT] P0. Do not quarantine before staging. Stage the named files FIRST (they are the payload), then
-      quarantine only what remains, so the payload can never be swept into the stash it is about to be compared
-      against.
-- [ ] [SCRIPT] P1. Verify per-file: a `--files` invocation naming N paths must confirm all N reached the remote and
-      fail naming the specific paths that did not, instead of succeeding on a partial landing.
+- [x] ✅ [SCRIPT] P0. Never report success on a no-op push. If nothing was staged, distinguish "content genuinely
+      already on the REMOTE" (verify against the remote ref, not HEAD) from "we quarantined the changes ourselves" — the
+      latter must be a loud FAILURE printing the quarantine ref for recovery. — **DONE 2026-08-11
+      (`unified-trading-pm@87b7243e53`, cherry-picked from slot-12's orphan `08c3ff3493`)**: new
+      `_sdp_assert_remote_has_entry_content()` gate checks each named file's ENTRY content against `origin/$BRANCH` (not
+      HEAD) before the "nothing to stage"/"nothing to commit" fallbacks report success; a real-diff-at-entry file whose
+      content is NOT on the remote → exit 14 + printed quarantine ref. 2 new bats tests (nothing-to-commit +
+      nothing-to-stage exit-14 variants) + exit-12 semantics hardening, 24/24 pass.
+- [ ] [SCRIPT] P0. Do not quarantine before staging. Stage the named files FIRST (they are the payload), then quarantine
+      only what remains, so the payload can never be swept into the stash it is about to be compared against.
+- [ ] [SCRIPT] P1. Verify per-file: a `--files` invocation naming N paths must confirm all N reached the remote and fail
+      naming the specific paths that did not, instead of succeeding on a partial landing.

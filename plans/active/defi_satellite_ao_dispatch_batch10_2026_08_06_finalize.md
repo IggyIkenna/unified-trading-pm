@@ -59,12 +59,18 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 
 ## Todos
 
-- [ ] [DOC] P1. **Source-doc reconciliation**: for each of batch10's 9 todos, confirm the cited source doc's own open
+- [x] ✅ [DOC] P1. **Source-doc reconciliation**: for each of batch10's 9 todos, confirm the cited source doc's own open
       item was actually flipped/closed-by-citation as that todo's Done-when specified (todos 1-9, one check each — most
       todos already instruct flipping the source doc's own checkbox/status directly as part of their own Done-when, so
       this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 8
       source docs listed in batch10's todos either shows the item closed in its own text, or a citation note pointing
-      back at the batch10 todo that closed it, with no orphaned "still looks open" gap.
+      back at the batch10 todo that closed it, with no orphaned "still looks open" gap. — ✅ **Done 2026-08-11
+      (slot-20)**: all 8 source-doc citations verified. 7 already `[x]`-closed by citation (manifestwriter race ×2 —
+      todos 1/2; bridge_events — todo 4; clean_path item 4 — todo 5; onchain_dep_check items 1-2 — todo 6; desync
+      yearn_v3 Todo 5 — todo 7; lst_rate over-cap Todos 2+3 — todos 8/9). 1 gap fixed: `defi_track5` Todo 1 (batch10
+      todo 3) carried no citation — unpark condition `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` was
+      flipped `true` 2026-08-07 by batch10 todo 3; citation note appended to that source doc's Todo 1 same-turn. No
+      orphaned "still looks open" gaps remain.
 - [ ] [DOC] P2. **Re-check the 27 Deferred items** (18 operator_gated, 4 too_large_or_risky, 4 time_gated, 1
       genuinely_human_only): has any blocking condition cleared since batch10 was drafted (an operator ruling landed,
       elapsed time passed, a competing claim shipped/superseded)? Per the skill's iterative-drain methodology, any item
@@ -90,3 +96,8 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
   `status: active`, gated on batch10's 9 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on
   batch10's operator-approval flip to `active` and subsequent dispatch.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries)
+- **2026-08-11 (slot-20, finalize todo 1 — source-doc reconciliation)**: all 8 source-doc citations verified per
+  per-todo Done-when. 7 already closed by citation; the one gap (`defi_track5` Todo 1, unpark condition flipped true by
+  batch10 todo 3 but not cited in the source doc) fixed same-turn with an appended citation note. Inline citation on the
+  flipped checkbox above. (Safe-doc-push orphan fix shipped in the same turn per main-agent instruction —
+  `unified-trading-pm@87b7243e53`.)

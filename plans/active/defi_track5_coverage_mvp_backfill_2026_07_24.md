@@ -101,7 +101,11 @@ context_scope:
       Phase-D historical carry tracer on real data; resolve the 2 derivable-values P1s. On first real progress, flip
       `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true per the unpark note above — that is what releases
       the parked `mvp_backfill_defi_onchain_v10-001` backlog task back to the fleet. (repos: deployment-service,
-      market-tick-data-service, features-service)
+      market-tick-data-service, features-service) **UNPARK FLIPPED 2026-08-07 by
+      `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3 (slot-7)**: prerequisite
+      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` set `true` 2026-08-07T16:44Z (VM
+      `mtds-perp-funding-backfill` running); the 100%-backfill goal itself remains open and is tracked by this todo.
+      Source-doc reconciliation citation (finalize batch10, 2026-08-11).
 - [x] ✅ [BACKEND] P2. **Async fan-out + executor-offload for the MTDS DeFi collectors** (recovered from the
       pre-2026-07-24 historical Progress Log's deferred-work table — genuinely correctness-sensitive, deliberately not
       squeezed into a sub-agent turn). The sequential loops needing fan-out are
