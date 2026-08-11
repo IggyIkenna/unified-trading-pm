@@ -9,8 +9,7 @@ summary:
   immediately before purging the unrelated frozen 2018-2020 rows for the same 4 data_types). Either the capability
   declaration is stale (never actually re-enabled) or a real, silent, multi-year capture gap exists for whatever venues
   are supposed to be producing this data.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -34,6 +33,8 @@ source:
   discovered live while purging the frozen 2018-2020 markets/outcomes/settlements/arbitrage_opportunity manifest rows
   (sports_closeout_batch1_ao_ready-018)
 resolved_by:
+  implemented 2026-08-08 (sports taxonomy P1 — uac@975f0191/05a709fd/49e83239, is@06791d0e/0c143439); verified in-sync
+  2026-08-11 (slot 23)
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -46,6 +47,12 @@ context_scope:
     /codex/02-data/external-data-always-available-rule.md,
   ]
 ---
+
+> **✅ ARCHIVED 2026-08-11** — `status: resolved`, all 4 todos done, unlocked. The retirement was implemented 2026-08-08
+> by the sports-taxonomy P1 effort (uac@975f0191 removed markets/outcomes/settlements caps, uac@05a709fd removed the
+> ODDS_API cap incl. arbitrage_opportunity, uac@49e83239 removed bare BETFAIR; is@06791d0e + 0c143439 synced the golden)
+> and re-verified in-sync 2026-08-11 (slot 23: `build_expected("sports")` == golden, 31 trades-only tuples). Moved to
+> `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
 
 # Sports odds markets/outcomes/settlements/arbitrage_opportunity — live expected-vs-captured gap
 
