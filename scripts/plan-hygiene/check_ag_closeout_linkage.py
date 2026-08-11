@@ -60,7 +60,19 @@ mention", never "raise the baseline").
 Usage:
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py [--quiet] [--update-baseline]
   python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --only <path> [<path> ...]
+  python3 scripts/plan-hygiene/check_ag_closeout_linkage.py --tranche <name> [--quiet]
 Exit 0 if the orphan count is <= baseline. NEVER hand-raise a baseline entry.
+
+``--tranche <name>`` (2026-08-11): scope the run to ONE tranche, report-only — lists that
+tranche's single-AG orphans WITHOUT gating on the corpus-wide baseline (a scoped count would
+essentially never approach it; the same reasoning the ``--only`` mode documents above). Mirrors
+``generate_ag_closeout_audit_candidates.py --tranche`` so a tranche-scoped dispatch (e.g. the
+``/ag-closeout-audit`` skill's post-retag re-run) can re-check this gate without surfacing the
+other tranches' irrelevant orphans. Same choices as that script's ALL_TRANCHES:
+cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infra/ui — ``infra`` maps to the
+``infrastructure`` asset_group enum value. Mutually exclusive with ``--update-baseline`` (the
+baseline is corpus-wide; a tranche-scoped count must never re-seed it). No flag = the full-corpus
+ratchet, unchanged.
 
 ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
 precommit-time presence, only the full corpus-wide baseline mode (baseline: 49 orphans at
@@ -113,6 +125,23 @@ COVERED_ASSET_GROUPS = tuple(sorted(docspec.ASSET_GROUP - {"meta"}))
 # Filename PREFIX differs from the enum value for two tranches — an explicit mapping, never
 # a `.replace("-", "_")` transform (that alone would still miss `infra_`).
 _CLOSEOUT_FILENAME_PREFIX = {"cross-cutting": "cross_cutting", "infrastructure": "infra"}
+# `--tranche` names, mirroring generate_ag_closeout_audit_candidates.py's ALL_TRANCHES so the two
+# scripts' tranche vocabulary stays identical. The `infra` TRANCHE name maps to the
+# `infrastructure` asset_group enum VALUE (the same mismatch that script documents) — a naive
+# `tranche == asset_group` membership test for `infra` would silently match zero docs.
+ALL_TRANCHES = (
+    "cefi",
+    "defi",
+    "tradfi",
+    "prediction",
+    "sports",
+    "cross-cutting",
+    "ao",
+    "ci",
+    "infra",
+    "ui",
+)
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 MAX_HOPS = 3
 # Closed/terminal statuses excluded from orphan candidacy — a superseded, resolved,
 # cancelled, or completed doc is already closed; flagging it as an unlinked orphan is noise.
@@ -265,12 +294,14 @@ def _orphans_for(
     all_docs: dict[Path, dict],
     all_bodies: dict[Path, str],
     closeout_family: dict[str, set[Path]],
+    only_ag: str | None = None,
 ) -> dict[Path, str]:
     """Every current orphan among `all_docs`, given a precomputed closeout_family (paths only —
     filename-glob-derived, does not depend on doc content, so it's safe to compute ONCE and
     reuse across the current-state pass and every staged file's HEAD-content-override pass).
-    Shared by full-sweep mode and `--only` mode so the two can never define "an orphan"
-    differently."""
+    Shared by full-sweep mode, `--only` mode and `--tranche` mode so the three can never define
+    "an orphan" differently. `only_ag` (an asset_group enum VALUE, not a tranche name) restricts
+    the scan to that single tranche."""
     closeout_targets = frozenset(p for fam in closeout_family.values() for p in fam)
     graph = build_related_graph(all_docs, extra_nodes=closeout_targets)
 
@@ -297,6 +328,8 @@ def _orphans_for(
         if len(ag_values) != 1 or ag_values[0] not in COVERED_ASSET_GROUPS:
             continue
         ag = ag_values[0]
+        if only_ag is not None and ag != only_ag:
+            continue  # --tranche scoping: only this tranche's single-AG docs are candidates
         family = closeout_family[ag]
         if not family or path in family:
             continue  # no closeout doc yet for this AG, or this doc IS the closeout family
@@ -374,6 +407,25 @@ def main() -> int:
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
 
+    # --tranche <name>: scope the scan to ONE tranche (report-only — the corpus-wide ratchet
+    # against the baseline stays the no-flag mode). Mirrors generate_ag_closeout_audit_candidates.py's
+    # --tranche choices so a tranche-scoped dispatch re-uses the same vocabulary.
+    tranche: str | None = None
+    if "--tranche" in sys.argv:
+        idx = sys.argv.index("--tranche")
+        if idx + 1 >= len(sys.argv):
+            raise SystemExit(f"error: argument --tranche: expected one of {', '.join(ALL_TRANCHES)}")
+        tranche = sys.argv[idx + 1]
+        if tranche not in ALL_TRANCHES:
+            raise SystemExit(
+                f"error: argument --tranche: invalid choice: {tranche!r} (choose from {', '.join(ALL_TRANCHES)})"
+            )
+        if update:
+            # The baseline is a corpus-wide shrinking ratchet; re-seeding it from a tranche-scoped
+            # count would silently mis-seed the gate — refuse the combination rather than guess.
+            raise SystemExit("error: --tranche and --update-baseline are mutually exclusive")
+    only_ag = TRANCHE_ASSET_GROUP_VALUE.get(tranche, tranche) if tranche is not None else None
+
     files = target_files()
     all_docs, all_bodies = _scan_current()
 
@@ -391,8 +443,22 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family)
+    violations_by_path = _orphans_for(all_docs, all_bodies, closeout_family, only_ag=only_ag)
     violations = list(violations_by_path.values())
+
+    if tranche is not None:
+        # Report-only: prints the tranche's orphans without gating on the corpus-wide baseline
+        # (a scoped count would essentially never approach it — the same reasoning the `--only`
+        # mode's docstring documents for staged files). Always exits 0; the no-flag run is the gate.
+        label = f"--tranche {tranche}"
+        if not quiet:
+            print(f"AG-closeout linkage check {label} ({len(all_docs)} docs scanned, {len(files)} candidate files):")
+            print()
+            for v in sorted(violations):
+                print(f"  ORPHAN  {v}")
+            print()
+        print(f"✅ check_ag_closeout_linkage {label}: {len(violations)} orphan(s) in tranche {tranche}")
+        return 0
 
     baseline = load_baseline()
     n = len(violations)
