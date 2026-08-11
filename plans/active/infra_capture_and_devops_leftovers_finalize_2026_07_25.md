@@ -23,7 +23,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-02"
+last_updated: "2026-08-11"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,6 +38,7 @@ depends_on: [infra_capture_and_devops_leftovers_2026_07_06]
 gate_on_depends: true
 locked_by:
 locked_since:
+archive_exempt: true
 context_scope:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
@@ -170,7 +171,7 @@ source: >-
       no referrer paths touched (the doc did not move). Re-run only once the parent's remaining 4 items clear or the
       coverage-gate design changes.
 
-- [ ] [DOC] P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED-*` items on
+- [x] ✅ [DOC] P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED-*` items on
       `infra_capture_and_devops_leftovers_2026_07_06.md` clears (ASTER CeFi live-capture cost-control freeze
       `BLK-55d45a68`/`BLK-4f52080e`; MANTLE paid-RPC Secret Manager grant; Live-ODDS quota decision; rate-limit-probe VM
       sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
@@ -189,16 +190,27 @@ source: >-
       scaffold): **rate-limit-probe VM** (as of the 2026-08-02 check, re-confirmed operator-decision-gated, no operator
       answer found — since RULED 2026-08-06 (operator): AUTHORIZED, per
       `infra_capture_and_devops_leftovers_2026_07_06.md`'s own todo; the operator-decision hold is cleared, the probe
-      itself has not yet been executed);
-      **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet wired — now a plain execution todo,
-      tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
-      VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across
-      2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a new finding in
-      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here).
-      Per this todo's own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all
-      clear" — **no archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the
-      standing re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
-      verification confirms, or the Live-ODDS second source ships.
+      itself has not yet been executed); **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet
+      wired — now a plain execution todo, tracked in the sibling sports plan, not this doc); **ASTER** (freeze already
+      lifted 2026-07-28, but the "+ live VM" data-landing verification remains unconfirmed — spot-check this session
+      found ZERO `live_aster` rows across 2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a
+      new finding in `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than
+      chased here). Per this todo's own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is
+      NOT "all clear" — **no archival ritual run, this finalize plan and its parent both stay `active`.** This todo
+      remains the standing re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER
+      live-data-landing verification confirms, or the Live-ODDS second source ships. — **✅ ALL 4 ITEMS NOW CLEARED,
+      FULL RECONCILIATION DONE 2026-08-11 (slot 3) — parent is 9/9 done, archival ritual now APPROPRIATE.** Re-verified
+      the parent today: **0 remaining `- [ ]` checkboxes, 9 `[x]`**. All 4 originally-named BLOCKED items have resolved
+      since the 2026-08-02 partial reconciliation: (1) **ASTER CeFi live-capture** — freeze lifted 2026-07-28, connector
+      registered+launched 2026-07-30, live-data-landing verified 2026-08-09 (slot 6, fresh SSH + GCS evidence); (2)
+      **MANTLE paid-RPC** — `unified-api-contracts@1924bfed` (2026-07-29) routes through Alchemy's `alchemy-api-key`,
+      live-verified 2026-07-29; (3) **Live-ODDS quota decision** — operator ruled 2026-07-28, quota key landed
+      2026-07-29, api_football second-source struck (operator decision B, 2026-08-02), live odds_api VM confirmed
+      healthy 2026-08-08 (slot 10), both halves resolved; (4) **rate-limit-probe VM** — RETIRED 2026-08-11 (operator):
+      superseded, closing as won't-do (the real fix was the Tardis 1-concurrent-VM hard cap + larger boot disk, not IP
+      rotation). Parent is now genuinely fully done (9/9 `[x]`). Per this todo's own gate, the 6-step archival ritual on
+      BOTH this finalize plan and its parent is now the correct next action — this checkbox flip is the gate-clear; the
+      archival itself is the follow-through.
 
 ## Progress Log
 
@@ -210,5 +222,11 @@ source: >-
   and ASTER live-data-landing verification (also logged a new finding there re: 3 days of zero rows + an unexplained VM
   replacement). Archival ritual NOT run; both docs stay `active`. Full detail on this todo's own checkbox above and the
   parent's matching Progress Log entry.
+- **2026-08-11 (slot 3, finalize reconciliation — ALL CLEAR)**: re-ran the parent-reconciliation trigger check. ALL 4
+  originally-named `BLOCKED-*` items have now cleared since the 2026-08-02 partial reconciliation: ASTER live-capture
+  verified 2026-08-09, MANTLE RPC resolved 2026-07-29, Live-ODDS both halves resolved 2026-08-08, rate-limit-probe VM
+  RETIRED 2026-08-11 (operator). Parent is now **9/9 `[x]`, 0 open checkboxes** — genuinely fully done. This finalize
+  plan's last remaining todo (#2) flipped `[x]` ✅. Both plans are now ready for the 6-step archival ritual together
+  (parent fully resolved, finalize plan's gate satisfied). No code shipped (DOC-only task, `repos: []`).
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
