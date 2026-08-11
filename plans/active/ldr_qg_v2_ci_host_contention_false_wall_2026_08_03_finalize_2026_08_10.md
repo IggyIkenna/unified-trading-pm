@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, ci, host-contention, finalize]
 related:
   [
-    /plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
+    /plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/08-workflows/ci-cd-flow.md,
@@ -44,7 +44,7 @@ effort: medium
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
+    /plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -55,7 +55,7 @@ source: >-
 
 # ldr_qg_v2_ci_host_contention_false_wall_2026_08_03 — finalize
 
-> **Machine-gated on `/plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md`** (`depends_on` +
+> **Machine-gated on `/plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until all 3 of its audit todos are `done`.
 
 ## Todos
@@ -91,11 +91,14 @@ source: >-
       quality-gates-v2 + sit-gate/fleet-green, bypass_actors=[], default_branch=main). Follow-up todo 1's
       `<see Progress Log for SHA>` placeholder fixed → `unified-trading-pm@f3534a90ea`. No bare "done" claims remain in
       the source doc's audit todos.
-- [ ] [REVIEW] P1. **Archive only if genuinely fully resolved.** If all 3 audits found no gap (or every found gap's
+- [x] ✅ [REVIEW] P1. **Archive only if genuinely fully resolved.** If all 3 audits found no gap (or every found gap's
       follow-up todo is itself already `[x]`), run the standard 6-step archival ritual on the source doc (banner, move
       to `plans/archive/2026_08/issues/`, fix every corpus referrer including this finalize plan's own `related:`,
       re-run the active-plan inventory generator). **If any follow-up todo is still open, leave the source doc
-      `status: open` and do NOT archive** — record which follow-up(s) remain and why.
+      `status: open` and do NOT archive** — record which follow-up(s) remain and why. **ARCHIVED 2026-08-11 (slot-18): all
+      6 source-doc todos `[x]`, all 3 follow-ups `[x]`, no lock. Banner added, git mv'd to
+      `plans/archive/2026_08/issues/`, 12 referrers fixed (codex, scripts, tests, issue docs, INDEX, this plan's
+      related/context_scope/body).**
 
 ## Codex SSOTs
 

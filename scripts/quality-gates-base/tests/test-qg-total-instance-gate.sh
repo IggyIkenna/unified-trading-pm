@@ -13,7 +13,7 @@
 #
 # Covers:
 #   (A) default cap = floor(physical cores × 0.75), floored at 6 (tightened 2026-08-10,
-#       plans/active/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4
+#       plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 4
 #       — was a flat `cores` with no headroom discount)
 #   (B) QG_TOTAL_GOVERNOR_DISABLE makes acquire/release safe no-ops
 #   (C) acquire/release round-trip in the CURRENT process (token freed after release)

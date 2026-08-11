@@ -15,8 +15,9 @@ summary: >-
   EVERY `quality-gates-v2` `workflow_dispatch` run against LDR since ~2026-08-03T12:31 has completed `cancelled` (not
   success, not failure) rather than a clean run, with one currently stuck `queued` 16+ min. This masks whether LDR is
   actually green and burns CI compute repeatedly.
-status: open
+status: archived
 nature: issue
+superseded_by: ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, market-tick-data-service, agent-orchestrator, unified-trading-pm]
@@ -56,6 +57,12 @@ context_scope:
     deployment-service/tests/unit/test_vm_launcher_scripts.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-11** — all 6 todos resolved; all 3 follow-up fixes shipped and verified. Reconciled by
+> [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md`](../active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
+> (re-verified audit verdicts + reconciled evidence back into this doc). Key fixes shipped: governor ledger unification
+> (`unified-trading-pm@f3534a90ea`), total-instance cap tightening (`unified-trading-pm@1ec1d683f9`), auto-merge race
+> documented as known-quirk.
 
 # quality-gates-v2 false-red on a contended self-hosted runner host (LDR + promotion PR)
 
