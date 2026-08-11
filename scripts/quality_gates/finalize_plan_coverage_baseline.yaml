@@ -1,5 +1,6 @@
 violation_count: 0
 draft_gate_violation_count: 0
+duplicate_gate_violation_count: 5
 rule: finalize-plan-coverage
 source: "task_template.md \xA74 'Every AO-dispatched plan needs a gated finalize plan'\
   \ (operator ruling 2026-07-24)"

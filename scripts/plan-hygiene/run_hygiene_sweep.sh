@@ -432,6 +432,14 @@ run_check "No broken links (plans/active/*.md, corpus-wide)" hard python3 "$SCRI
 # in the full sweep, not the staged-files-only --precommit path. Corpus proven clean (0 cycles,
 # 0 self-deps) before this was made hard. SSOT: check_depends_on_graph.py.
 run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_depends_on_graph.py" --quiet
+# Duplicate finalize-plan gates (parent with >1 gated plan — corpus-wide, ratchet-baselined).
+# The 2026-07-31 incident produced two finalize plans for the same parent on the same day; the
+# idempotency guard (--check-parent-gated) prevents creation-time collisions from recurring, and
+# this detector catches any that slipped through at rest.  Same shape as the archive-candidates /
+# reference-path / NA-corpus ratchets: hard-fails only on a NEW duplicate above the pre-existing
+# count, never on the baseline's pre-existing debt.  SSOT: the `duplicate_gate_violation_count`
+# key in scripts/quality_gates/finalize_plan_coverage_baseline.yaml.
+run_check "Duplicate finalize-plan gates (parent with >1 gated plan, ratchet)" hard python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --duplicate-gate-only --quiet
 # Reference path convention (/plans/... + /codex/... leading-slash, operator ruling
 # 2026-07-23) — a shrinking-ratchet baseline (reference_paths_baseline.yaml), same shape
 # as the fallback-import/DTZ ratchets: hard-fails only on a NEW violation above the

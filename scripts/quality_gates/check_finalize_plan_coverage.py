@@ -168,6 +168,59 @@ def _find_draft_gate_violations(active_dir: Path) -> list[Path]:
     return violations
 
 
+def _find_duplicate_gates(active_dir: Path) -> list[tuple[str, list[Path]]]:
+    """Find parent slugs named in depends_on of >1 gate_on_depends: true plan.
+
+    Returns a list of (parent_slug, [finalize_plan_path, ...]) for duplicates only,
+    sorted by parent_slug for deterministic output.  Keyed on the depends_on
+    relationship — the filename shape is irrelevant, same as the real incident's
+    two collision files differed only by a redundant date suffix.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    slug_to_paths: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                dep_slug = dep.strip()
+                if dep_slug not in slug_to_paths:
+                    slug_to_paths[dep_slug] = []
+                slug_to_paths[dep_slug].append(cov.path)
+    result = [(slug, paths) for slug, paths in slug_to_paths.items() if len(paths) > 1]
+    result.sort(key=lambda x: x[0])
+    return result
+
+
+def _parent_already_gated(parent_slug: str, active_dir: Path) -> tuple[bool, list[Path]]:
+    """Check whether *parent_slug* already has at least one gated finalize plan.
+
+    Returns ``(True, [paths of gating plans])`` if already gated, ``(False, [])``
+    if not.  Keyed on the ``depends_on`` relationship — not filename shape — so a
+    guard calling this before writing a new ``<parent>_finalize*.md`` catches the
+    exact collision class the 2026-07-31 duplicate-finalize-plan incident produced.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gated = _gated_slugs(all_plans)
+    if parent_slug not in gated:
+        return (False, [])
+    existing: list[Path] = []
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str) and dep.strip() == parent_slug:
+                existing.append(cov.path)
+                break
+    return (True, existing)
+
+
 def _load_baseline_count(baseline_path: Path, key: str) -> int:
     if not baseline_path.exists():
         return 0
@@ -187,6 +240,7 @@ def _write_baseline(
     violations: list[Path],
     draft_gate_violations: list[Path],
     workspace_root: Path,
+    duplicate_gate_violations: int = 0,
 ) -> None:
     def _rels(paths: list[Path]) -> list[str]:
         out: list[str] = []
@@ -200,6 +254,7 @@ def _write_baseline(
     payload: dict[str, object] = {
         "violation_count": len(violations),
         "draft_gate_violation_count": len(draft_gate_violations),
+        "duplicate_gate_violation_count": duplicate_gate_violations,
         "rule": "finalize-plan-coverage",
         "source": (
             "task_template.md §4 'Every AO-dispatched plan needs a gated finalize plan' (operator ruling 2026-07-24)"
@@ -230,7 +285,148 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-parent-gated",
+        type=str,
+        default=None,
+        help=(
+            "Check if a parent slug already has a gated finalize plan (idempotency guard). "
+            "Exits 0 if safe to create, 1 if already gated."
+        ),
+    )
+    parser.add_argument(
+        "--duplicate-gate-only",
+        action="store_true",
+        help="Run only the duplicate-gate detector (parent with >1 gated finalize plan).",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress output; exit code only.",
+    )
     return parser.parse_args(argv)
+
+
+def _run_check_parent_gated(
+    parent_slug: str,
+    active_dir: Path,
+    workspace_root: Path,
+    quiet: bool,
+) -> int:
+    """``--check-parent-gated`` mode: idempotency guard for finalize-plan creation.
+
+    Returns 0 if *parent_slug* is safe to gate (no existing finalize plan), 1 if
+    already gated (creation would be a duplicate).
+    """
+    already_gated, existing = _parent_already_gated(parent_slug, active_dir)
+    if already_gated:
+        rel_paths: list[str] = []
+        for p in existing:
+            try:
+                rel_paths.append(str(p.relative_to(workspace_root)))
+            except ValueError:
+                rel_paths.append(str(p))
+        print(
+            f"REFUSED: parent '{parent_slug}' already has {len(existing)} gated finalize plan(s):",
+            file=sys.stderr,
+        )
+        for rp in rel_paths:
+            print(f"  - {rp}", file=sys.stderr)
+        return 1
+    if not quiet:
+        print(f"OK: parent '{parent_slug}' is not yet gated — safe to create a finalize plan.")
+    return 0
+
+
+def _run_duplicate_gate_only(
+    active_dir: Path,
+    workspace_root: Path,
+    baseline_path: Path,
+    baseline_write: bool,
+    strict: bool,
+    only: list[str] | None,
+    quiet: bool,
+) -> int:
+    """``--duplicate-gate-only`` mode: corpus-wide duplicate-gate detector.
+
+    Finds parent slugs named in ``depends_on`` of more than one
+    ``gate_on_depends: true`` plan and compares against a shrinking-ratchet
+    baseline.  Returns 0 at/below baseline, 1 on regression.
+    """
+    duplicates = _find_duplicate_gates(active_dir)
+
+    if only is not None:
+        only_resolved = {Path(o).resolve() for o in only}
+        duplicates = [(slug, [p for p in paths if p.resolve() in only_resolved]) for slug, paths in duplicates]
+        duplicates = [(slug, paths) for slug, paths in duplicates if paths]
+
+    if not quiet:
+        print(f"Scanned plans/active/ for parent slugs with >1 gated finalize plan — {len(duplicates)} duplicate(s).")
+        if duplicates:
+            print("\nParent slugs with duplicate gated finalize plans:")
+            for slug, paths in duplicates:
+                print(f"  - '{slug}':")
+                for p in paths:
+                    try:
+                        print(f"      {p.relative_to(workspace_root)}")
+                    except ValueError:
+                        print(f"      {p}")
+
+    if baseline_write:
+        _write_baseline(
+            baseline_path,
+            violations=[],
+            draft_gate_violations=[],
+            workspace_root=workspace_root,
+            duplicate_gate_violations=len(duplicates),
+        )
+        if not quiet:
+            print(f"✅ Wrote baseline ({len(duplicates)} duplicate-gate violations) to {baseline_path}")
+        return 0
+
+    if strict:
+        if duplicates:
+            if not quiet:
+                print(f"\n❌ STRICT: {len(duplicates)} duplicate-gate violation(s).")
+            return 1
+        if not quiet:
+            print("\n✅ STRICT: no duplicate-gate violations.")
+        return 0
+
+    baseline = _load_baseline_count(baseline_path, "duplicate_gate_violation_count")
+    if len(duplicates) > baseline:
+        if not quiet:
+            print(
+                f"\n❌ Regression: {len(duplicates)} > baseline {baseline}. A parent now has >1 gated"
+                " finalize plan — de-race before merging (port unique todos to the survivor, supersede"
+                " the duplicate)."
+            )
+        return 1
+    elif len(duplicates) < baseline:
+        if not quiet:
+            print(f"\n⚠️  Improvement: {len(duplicates)} < baseline {baseline}. Re-baseline to codify.")
+
+    if not quiet:
+        print(f"\n✅ At baseline ({baseline} duplicate-gate).")
+    return 0
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Resolve ``plans/active/`` under the PM checkout, with three fallback strategies.
+
+    Returns the resolved directory, or ``None`` when every strategy fails (caller
+    prints the error and exits 2).
+    """
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -256,21 +452,30 @@ def main(argv: list[str] | None = None) -> int:
     # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
     # checkout root regardless of what `--workspace-root` was given or what the checkout directory
     # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        print(
+            f"ERROR: plans/active not found — tried _pm_root_or_legacy({workspace_root}), "
+            f"{workspace_root / 'plans' / 'active'}, and self-locate from {__file__}",
+            file=sys.stderr,
+        )
+        return 2
+
+    # ── --check-parent-gated: idempotency guard for finalize-plan creation (todo 1) ──
+    if ns.check_parent_gated is not None:
+        return _run_check_parent_gated(ns.check_parent_gated, active_dir, workspace_root, ns.quiet)
+
+    # ── --duplicate-gate-only: corpus-wide duplicate-gate detector (todo 2) ──
+    if ns.duplicate_gate_only:
+        return _run_duplicate_gate_only(
+            active_dir,
+            workspace_root,
+            baseline_path,
+            baseline_write,
+            strict,
+            only,
+            ns.quiet,
+        )
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
@@ -314,7 +519,8 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if baseline_write:
-        _write_baseline(baseline_path, violations, draft_gate_violations, workspace_root)
+        dup_count = len(_find_duplicate_gates(active_dir))
+        _write_baseline(baseline_path, violations, draft_gate_violations, workspace_root, dup_count)
         print(
             f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate "
             f"violations) to {baseline_path}"
