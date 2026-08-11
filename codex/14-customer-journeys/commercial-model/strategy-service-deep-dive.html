@@ -201,7 +201,7 @@
         <div class="stat"><span class="v">102k</span><span class="k">Lines of code</span></div>
         <div class="stat"><span class="v">11</span><span class="k">Instruction types emitted</span></div>
         <div class="stat"><span class="v">19</span><span class="k">API route modules</span></div>
-        <div class="stat"><span class="v">8</span><span class="k">Strategy families present</span></div>
+        <div class="stat"><span class="v">9</span><span class="k">Strategy families declared</span></div>
       </div>
       <p>
         The top-level packages map directly onto responsibilities, and the names are literal:
@@ -833,7 +833,7 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
 <i># What applies without you writing it</i>
 · Pre-trade risk gates and limit checks        · Position monitoring and venue reconciliation
 · Capital budget enforcement per instance      · P&amp;L attribution by decision/execution/funding
-· Circuit breakers and kill-switch semantics   · Compliance attestation on every instruction
+· Circuit breakers and kill-switch semantics   · The attestation field on every instruction
 · Execution algorithms and venue routing       · Transfer netting and custody routing
 · The promotion ladder: candidate → paper → live</div>
       <p>
@@ -863,7 +863,7 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
     </p>
     <div class="keypoints">
       <div><b>One engine, five asset groups</b><span>DeFi, CeFi, TradFi, sports and prediction markets run the same tick loop and contract</span></div>
-      <div><b>Eight families present</b><span>Carry and yield, arbitrage, statistical arbitrage, volatility, market making, directional, liquidity provision, ML-driven</span></div>
+      <div><b>Nine families declared</b><span>Carry and yield, structural arbitrage, statistical-arbitrage pairs, volatility, market making, event-driven, rules-directional, ML-directional, portfolio</span></div>
       <div><b>Config-shaped, not fork-shaped</b><span>Per-asset-group typed config blocks rather than per-asset-group codebases</span></div>
     </div>
     <details class="sec-body">
