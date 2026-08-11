@@ -338,3 +338,15 @@ mitigations, cheapest first:
   run's own commit. Did NOT apply the patch or touch the foreign sports file — wrong task/repo scope (this session is
   cefi batch17, not the sports_af_completion_pass owner). Left the patch file in place for that owner to recover; noting
   per this doc's established practice.
+- **2026-08-11 (slot 6, tradfi honest-coverage smoke-harness task `honest_coverage_smoke_harness_4ag_verify-06809dbd31f9`
+  — hit the safety net live on the tradfi data-gap issue-doc push)**: the push (`d2e62d8643`,
+  `plans/active/issues/tradfi_smoke_290d_window_data_gap_2026_08_11.md`) succeeded but exited 9 with THREE orphaned
+  patches (`1786406839214-3692985.patch`, `1786406844379-3704481.patch`, `1786406849227-3714702.patch`, byte-identical
+  per `git apply --stat`), diffing UNRELATED files this session never touched — 8 files: the
+  `*satellite_ao_dispatch_batch{17,11,2}_finalize` plans, `ml_service_full_blob_missing`, vm-tarball-staleness, the
+  canonical-path-migration design, and this tracking doc itself (+20 lines). `git status --porcelain` clean before and
+  after; this run's own push verified on origin (`d2e62d8643` `merge-base --is-ancestor`-confirmed). Consistent with the
+  prior recurrences: leftover stashes from concurrent sessions sharing this host's `~/.cache/prek/patches/` cache dir,
+  not a defect in this run's own commit. Did NOT apply the patches or touch the foreign files — wrong task/repo scope
+  (this session is the tradfi smoke-harness task, not the satellite/ml-service owners). Left all three patch files in
+  place for their owners to recover; noting per this doc's established practice.
