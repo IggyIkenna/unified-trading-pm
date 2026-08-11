@@ -124,3 +124,12 @@ depends_on: []
   the downsize shipped (`deployment-service@9db194e6`, 2026-08-10 13:42Z), so there is still nothing to re-measure.
   Releasing back to queue with `reason_code: GATED` again — this todo needs the launcher's next real dispatch, not
   another poll.
+- **infra (slot 22) 2026-08-11T18:36Z**: Re-checked, third identical result. `run_ledger` (partition-filtered
+  `completed_at >= 2026-08-01`) top row for `cefi-hyperliquid-*`/`cefi-aster-*`/`cefi-lighter-zksync-*`/
+  `cefi-extended-starknet-*` is still `cefi-extended-starknet-20260302-20260809-203922` completed `2026-08-09 21:24:53`
+  — byte-identical to both prior checks, zero new rows. `gcloud compute instances list` for the same 4 prefixes returns
+  zero running instances. Launcher confirmed still not re-invoked since the downsize shipped
+  (`deployment-service@9db194e6`, 2026-08-10 13:42Z) — now ~29h with no dispatch. Releasing `GATED` with
+  `estimated_unblock_minutes: 180` (the fleet cap) this time, since two prior GATED releases at default cooldown still
+  produced two more no-op re-checks within ~24h on a launcher with no fixed cadence — a longer cooldown should cut
+  redundant polling until the campaign actually re-dispatches this launcher.
