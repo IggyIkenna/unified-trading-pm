@@ -1015,3 +1015,13 @@ are genuinely in scope for the operator's "no exceptions" directive.
   stale-baseline reasoning slot 25's re-census (above) and the sibling paper-gate doc both applied. Declining to run the
   census this turn; skipping with `reason_code: GATED` + `park_now: true` so it stops re-dispatching to fresh workers
   until the INJURIES backfill terminates. No code/report changes; this Progress Log entry is the only change this turn.
+- **2026-08-11 (slot 19, `sports_af_full_entity_completion-9798da269f23` re-dispatch of the final re-census todo)**:
+  done-when STILL unmet — `af-backfill-20260810-162910` (STANDINGS all-383 completion pass, 2020-06-06→2026-08-10) is
+  RUNNING and GENUINELY progressing (PROGRESS.json `last_completed_date=2022-03-13` monotonic, updated 00:01:13Z live;
+  run.log tail shows active per-fixture STANDINGS work + fresh PIPELINE_HEARTBEAT — not a stale heartbeat). The two
+  other today VMs (`-154220`/`-160958`) are TERMINATED with no EXIT_STATUS blob (preempted/killed, not clean
+  completions). Running the 8-entity census now would capture a mid-backfill snapshot of STANDINGS (residual 271 at
+  slot-25 census), not the terminal convergence check — same rule-4a/slot-18/25 stale-baseline reasoning. Skipping
+  `reason_code: GATED` + `park_now: true`. **Unpark**: when `af-backfill-20260810-162910` terminates (running
+  `af-backfill-*` count == 0), re-run both census scripts + confirm all 8 entities stable ~0 / honest-absence floors,
+  then close this doc + notify operator. No code changes; Progress Log entry only.
