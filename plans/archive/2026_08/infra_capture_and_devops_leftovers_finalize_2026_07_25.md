@@ -10,7 +10,7 @@ summary: >-
   parent's other 4 open items are `BLOCKED-CREDENTIALS`/ `BLOCKED-OPERATOR-DECISION` and won't clear on their own, so
   this finalize plan's own archival todo stays correctly gated open until those are individually resolved (same posture
   as any other blocked-item plan — not a defect, the honest state).
-status: active
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -19,11 +19,11 @@ scope: [engineer]
 tags: [infra, capture, ao-dispatch, finalize, archival]
 related:
   [
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-02"
+last_updated: "2026-08-11"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,9 +38,10 @@ depends_on: [infra_capture_and_devops_leftovers_2026_07_06]
 gate_on_depends: true
 locked_by:
 locked_since:
+superseded_by:
 context_scope:
   [
-    /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
+    /plans/archive/2026_08/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /scripts/quality_gates/check_finalize_plan_coverage.py,
@@ -170,35 +171,20 @@ source: >-
       no referrer paths touched (the doc did not move). Re-run only once the parent's remaining 4 items clear or the
       coverage-gate design changes.
 
-- [ ] [DOC] P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED-*` items on
-      `infra_capture_and_devops_leftovers_2026_07_06.md` clears (ASTER CeFi live-capture cost-control freeze
-      `BLK-55d45a68`/`BLK-4f52080e`; MANTLE paid-RPC Secret Manager grant; Live-ODDS quota decision; rate-limit-probe VM
-      sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
-      permanently-blocked parent. Only then run the standard 6-step archival ritual on both this finalize plan and its
-      parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.) — **🟡 TRIGGER
-      MET, PARTIAL RECONCILIATION DONE 2026-08-02 (slot 2) — still NOT fully resolved, archival NOT run.** 2 of the 4
-      named items have cleared since the 2026-07-25 re-check: **MANTLE paid-RPC** — no Secret Manager grant was actually
-      needed; `unified-api-contracts@1924bfed` (2026-07-29) routes it through Alchemy's already-provisioned
-      `alchemy-api-key` instead, live-verified. **Live-ODDS quota decision** — operator ruled 2026-07-28 + a new
-      5M-credits/mo key landed + live-verified 2026-07-29; the sibling gate half (api_football second-source scaffold)
-      is still open but is no longer operator-decision-gated (tracked in
-      `sports_live_availability_and_source_latency_2026_07_24.md`'s own todo, not duplicated here). Both flipped/updated
-      on the parent with full citations — see the parent's 2026-08-02 Progress Log entry (parent checkbox count now 6/9
-      done, up from 5/9). **3 checkboxes remain genuinely open on the parent** (not 2 — the Live-ODDS item's
-      operator-decision component cleared, but its own checkbox stays `[ ]` pending the still-unwired second-source
-      scaffold): **rate-limit-probe VM** (as of the 2026-08-02 check, re-confirmed operator-decision-gated, no operator
-      answer found — since RULED 2026-08-06 (operator): AUTHORIZED, per
-      `infra_capture_and_devops_leftovers_2026_07_06.md`'s own todo; the operator-decision hold is cleared, the probe
-      itself has not yet been executed);
-      **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet wired — now a plain execution todo,
-      tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
-      VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across
-      2026-07-30 through 2026-08-01 and an unexplained VM replacement, logged as a new finding in
-      `/plans/archive/2026_08/cefi_consolidated_vm_aster_data_landing_recheck_2026_07_30.md` rather than chased here).
-      Per this todo's own gate ("only then run the standard 6-step archival ritual"), 3 open checkboxes is NOT "all
-      clear" — **no archival ritual run, this finalize plan and its parent both stay `active`.** This todo remains the
-      standing re-check pointer; re-run again once the rate-limit-probe VM sanction lands, the ASTER live-data-landing
-      verification confirms, or the Live-ODDS second source ships.
+- [x] ✅ [DOC] P2. **ARCHIVAL TRIGGERED 2026-08-11 (slot 7, data_engineering) — all 9 parent checkboxes now `[x]`;
+      archival ritual executed, both docs moved to `plans/archive/2026_08/`.** Since the last 2026-08-02 reconciliation
+      (6/9 done), the remaining 3 items all resolved: **rate-limit-probe VM** — RETIRED 2026-08-11 (operator): the
+      original motivating incident (Tardis rate-limiting) was already solved by the 1-concurrent-VM hard cap + larger
+      boot disk; a disposable-IP probe was never needed. **Live-ODDS second-source scaffold** — RESOLVED 2026-08-08
+      (slot 10): api_football second-source STRUCK per operator decision (conflicts with the 2026-06-24 wipe ruling);
+      live `odds_api` VM confirmed healthy with fresh evidence. **ASTER live-data-landing verification** — DONE
+      2026-08-09 (slot 6): live SSH check confirmed both `live-aster-book-snapshot-5.log` and
+      `live-aster-liquidations.log` actively writing `ManifestWriter` shard updates; warm event-log tier cross-checked
+      with objects timestamped within minutes of the check. Net: parent now 9/9 ✅ — every checkbox genuinely resolved,
+      none silently stale. 6-step archival ritual run on both this finalize plan and its parent
+      (`infra_capture_and_devops_leftovers_2026_07_06.md`): no DEFERRED items to migrate; archival banners added; no new
+      codex contracts; referrer paths swept (epic, tracker, INDEX, + 17 other docs); both moved to
+      `plans/archive/2026_08/`. — `unified-trading-pm@<pending-sha>`.
 
 ## Progress Log
 
@@ -210,5 +196,12 @@ source: >-
   and ASTER live-data-landing verification (also logged a new finding there re: 3 days of zero rows + an unexplained VM
   replacement). Archival ritual NOT run; both docs stay `active`. Full detail on this todo's own checkbox above and the
   parent's matching Progress Log entry.
+- **2026-08-11 (slot 7, data_engineering, final archival)**: all 9 parent checkboxes now `[x]` — the last 3 items
+  resolved since the 2026-08-02 check: rate-limit-probe VM RETIRED (operator, 2026-08-11 — original need superseded by
+  concurrency cap + disk sizing fix); Live-ODDS second-source RESOLVED (2026-08-08 — api_football STRUCK per operator
+  decision, live odds_api VM confirmed healthy); ASTER live-data-landing DONE (2026-08-09 — fresh live SSH check, warm
+  event-log tier flowing). 6-step archival ritual executed: no DEFERRED items; archival banners added; no new codex
+  contracts; referrer paths swept across epic, tracker, INDEX, and 17 other docs; both this finalize plan and its parent
+  moved to `plans/archive/2026_08/`. — `unified-trading-pm@<pending-sha>`.
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (6 entries).
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).

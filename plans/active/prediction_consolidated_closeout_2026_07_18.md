@@ -551,9 +551,9 @@ sports's own consolidated closeout plan; short digest only:
 - [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
   (8 open, all `[DESIGN] P3`) — top: define the decay-window STATISTIC precisely; define the WINDOW boundaries
   (signal-time → first-leg fill vs last-leg). +6 more — see file for the rest.
-- [`plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md`](/plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md)
-  (5 open, all `[BACKEND]/[DESIGN]/[SCRIPT] P3`) — top: add `run_sports_backtest(args, config, config_path) -> int`;
-  wire a data source (reuse the Group-B fixture dataset). +3 more — see file for the rest.
+- [`plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md`](/plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md)
+  — ARCHIVED 2026-08-11, all 5 todos shipped (`run_sports_backtest` CLI wiring + fixture data source + `L0Matcher`
+  execution-alpha harness).
 - [`plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
   (8 open total — listed in full, not over the >8 cap threshold)
   - **[DATA] P1.** NEW compute, not a rename: add per-bookmaker raw decimal-odds retention

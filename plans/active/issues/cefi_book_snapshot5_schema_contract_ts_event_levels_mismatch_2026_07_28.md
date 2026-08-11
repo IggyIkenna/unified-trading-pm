@@ -922,3 +922,18 @@ against the reproduction script.
   launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome; this is now the 24th+ dispatch for this
   condition, further corroborating `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s closed Option A
   dedup fix (the checkpoint-write lag documented in the 23rd dispatch's own entry).
+- **2026-08-11 (data_pipeline_failure escalation worker, agt-a45914, slot 7) — SAME escalation_id as the entry directly
+  above, a genuine duplicate worker dispatch of one escalation event to two slots (slot 4, then slot 7), not a
+  re-evaluated condition — the same exact-duplicate-escalation_id shape this doc has now documented 6+ times
+  (`agt-ccb54c` 2026-07-30, `agt-0bf4a3` 2026-07-31, `agt-406c1f` 2026-07-31, `agt-e11908` 2026-08-03, now
+  `agt-a45914`).** Read this doc first per the pre-task plan/issue conflict-check rule; found the slot-4 entry directly
+  above already fully investigated this exact escalation_id/reading (8,670/958,967 = 0.9%, "STATIC BACKLOG — only 15
+  attempted_failed row(s) in the last 1d"). Re-verified all seven fix commits are still ancestors of
+  `origin/live-defi-rollout` (fresh `git fetch` in all three repos): MTDS `339ca767`/`6bf568ee`, UAC
+  `8db188fe`/`1c4d8864`, deployment-service `a564cca`/`1b035c52`/`9102eb9b` — all OK. Per the established
+  "numerator/reading byte-identical, prior session's live manifest read only minutes old → skip the live re-read"
+  precedent, did not repeat the GCS read this session. **Conclusion: no code fix needed** — all three root-cause
+  schema-contract fixes plus both alerting-layer fixes (materiality downgrade, dedup-gap) continue to hold; this is a
+  duplicate dispatch of the exact same already-fully-investigated static-backlog condition, not a new regression.
+  Session cost: doc read + git-ancestor batch check (7 commits) + this Progress Log append, no GCS read, no code change,
+  no VM launch. Pinged `dp-fleet-monitor` (authoring slot) with this outcome.

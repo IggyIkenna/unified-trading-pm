@@ -8,7 +8,7 @@ summary: >-
   wiring + `SportsMatchingEngine` deletion + hermetic test, resolves the one remaining judgment call the 2026-08-08
   operator ruling didn't cover (docs/BACKTESTS.md verification-surface placement) via existing-sibling precedent, then
   runs the standard archival ritual.
-status: active
+status: complete
 nature: process
 asset_group: [sports, prediction]
 stage: [execution]
@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [sports, predictions, backtest, execution, group-c, close-out, archival, reclassification, na-audit]
 related:
   [
-    /plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md,
+    /plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
     /plans/epics/sports_master.md,
     /codex/04-architecture/backtest-groups.md,
@@ -25,7 +25,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-10"
+last_updated: "2026-08-11"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -60,6 +60,13 @@ context_scope:
 ---
 
 # Sports/predictions Group-C execution-alpha backtest harness — finalize
+
+> **🟢 ARCHIVED 2026-08-11 — COMPLETE.** All 4 todos done: parent-plan evidence re-verification, todo-5 placement
+> precedent check, downstream-gate citation, the `Any`/blanket-`# type: ignore` review-finding fix, and the archival
+> itself (this doc + `sports_group_c_execution_backtest_harness_2026_07_21.md`, moved to `plans/archive/2026_08/` in the
+> same commit per the 6-step ritual, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Every
+> corpus referrer repointed to the archive path. No codex staleness found — `/codex/04-architecture/backtest-groups.md`
+> already covers sports as a Group-C category example. Successor: none.
 
 > **Machine-gated on `sports_group_c_execution_backtest_harness_2026_07_21.md`** (`depends_on` +
 > `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 implementation todos in that plan
@@ -147,7 +154,7 @@ context_scope:
       `test_run_sports_backtest_produces_nontrivial_execution_alpha` test is unchanged and still asserts non-trivial
       `total_execution_alpha_bps != 0.0`.
 
-- [ ] [DOCS] P3. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
+- [x] ✅ [DOCS] P3. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
       `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set `status: complete`; (3)
       confirm no codex doc needs an update (this plan didn't introduce a new pattern beyond the existing
       cefi/tradfi/defi domain-runner shape, so likely none — verify, don't assume); (4) update every referrer's path
@@ -157,7 +164,23 @@ context_scope:
       assume — none is expected here); (6) run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` and
       `check_reference_paths.py` to confirm no new dangling reference above baseline. Then physically move the parent
       plan under `plans/archive/2026_08/`. **Done when**: the hygiene sweep is 0 hard and
-      `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm.
+      `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm. **Evidence (slot
+      19, 2026-08-11)**: (1) Confirmed zero open todos in the parent plan — all 5 `[x]`. (2) Added the archival banner +
+      `status: complete` to the parent plan. (3) Codex-alignment check: `/codex/04-architecture/backtest-groups.md`
+      already lists sports as a Group-C category example ("Simultaneous-leg timing") — no update needed, confirmed by
+      reading the doc in full, not assumed. (4) Updated every corpus referrer with a real path link/`related:` entry to
+      the archived path: `prediction_consolidated_closeout_2026_07_18.md`,
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md` (`related:`),
+      `sports_taxonomy_p3_consumers_2026_08_08.md` (`related:`), `plans/epics/sports_master.md` (Plan Inventory list + 2
+      markdown links, both parent + this finalize doc), and this doc's own `related:` field. Bare-filename prose
+      mentions with no path/link syntax (Progress Log narrative in several satellite-batch and audit docs) are
+      historical point-in-time records, out of scope per the fact-vs-path referrer rule — left as-is. (5) No lock was
+      set on either doc — confirmed (`locked_by:`/`locked_since:` both empty on both). (6) Ran
+      `scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` and `check_reference_paths.py` post-archival — no new
+      dangling reference above baseline. **This finalize plan itself is also archived in the same commit** (single-repo
+      finalize-plan case — this todo's own completion is its own archival trigger, per
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "same-commit flip+archival is the
+      SANCTIONED path" ruling for single-repo finalize plans).
 
 ## Codex SSOTs
 
@@ -191,3 +214,9 @@ contract) · `plans/active/task_template.md` §4 (finalize-plan-coverage rule)
   before flipping — zero `Any` remains in `signal_driven_v3_base.py`, zero blanket `# type: ignore` remains in
   `test_sports_backtest_exec_alpha.py`. Only the parent-plan's todo 5 (archival ritual) remains open on this finalize
   plan.
+- **2026-08-11 (slot 19, infra)**: Todo 5 (archival ritual) done — the last open todo. Executed the full 6-step ritual
+  on the parent plan (banner, `status: complete`, codex-alignment check confirming `backtest-groups.md` needs no update,
+  corpus-wide referrer repoint, lock confirmation, hygiene sweep) and moved it to `plans/archive/2026_08/`. With this
+  finalize plan's own last todo now done and unlocked, archived this doc alongside it in the same commit — the
+  sanctioned single-repo same-commit flip+archival shape for a finalize plan whose own last todo is its own archival
+  trigger.

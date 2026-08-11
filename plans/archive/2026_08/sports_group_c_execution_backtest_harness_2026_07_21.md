@@ -7,7 +7,7 @@ summary: >-
   harness. Decided YES-needed (not a category error) in
   sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md — this plan is the scope note the
   decision-todo said to produce, not the implementation itself.
-status: active
+status: complete
 nature: design
 asset_group: [sports, prediction]
 stage: [execution]
@@ -20,7 +20,7 @@ related:
     /codex/04-architecture/backtest-groups.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-08-08"
+last_updated: "2026-08-11"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,6 +62,16 @@ context_scope:
 > rather than wiring it, per the workspace no-shims rule.
 
 # Sports/predictions Group-C execution-alpha backtest harness — scope note
+
+> **🟢 ARCHIVED 2026-08-11 — COMPLETE.** All 5 implementation todos shipped with independently re-verified evidence
+> (`execution-service@5e80d437`+`4ceaec57` CLI wiring, `@51bee662a` fixture data source, `@70d18a44`
+> `SportsMatchingEngine` deletion, `@893355cb`+`7680d3f0d` hermetic exec-alpha test, todo 5's docs/BACKTESTS.md
+> placement decided — stays a manually-invoked one-off, no verification surface exists for any domain runner to add it
+> to). Archived per the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) by its
+> paired finalize plan (`sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`, archived
+> alongside this doc in the same commit). No codex doc required an update — `/codex/04-architecture/backtest-groups.md`
+> already covers sports as a Group-C category example; this harness introduced no new pattern beyond the existing
+> cefi/tradfi/defi domain-runner shape. Every corpus referrer repointed to the archive path. Successor: none.
 
 > **RECLASSIFIED 2026-08-08 (na-eligibility-audit, sports tranche, round7 RECLASSIFY sweep)** — flipped
 > `assigned_vm: NA → planning` / `execution_scope: local-only → orchestrator-agent`. The 2026-08-08 OPERATOR RULING

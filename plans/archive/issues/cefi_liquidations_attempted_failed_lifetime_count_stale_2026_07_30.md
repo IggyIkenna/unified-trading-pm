@@ -21,7 +21,7 @@ summary:
   unconfirmed). Filed per the "genuinely ambiguous, do not guess" NEEDS-A-HUMAN-DECISION path in the
   data_pipeline_failure role brief; also posted as a bounded `/blocked` question (2-min wait) to the orchestrator
   dashboard.
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -175,12 +175,28 @@ not lost if the bound expires unanswered.
       rows to the 14-day trailing window (NaT rows treated as recent, conservative); `check_high_attempted_failed`
       accepts injectable `now=` for deterministic testing; 3 existing tests updated + 3 new trailing-window tests added;
       QG green.
-- [ ] [DIAG] P3. If the operator wants the residual trickle root-caused before deciding: pull Cloud Logging /
-      Tardis-side request logs for the exact process that produced the 2026-07-29 09:00 UTC
-      `Tardis HTTP 403 code=274 concurrent-IP-lock` COINBASE-FUTURES rows (the VM-creation audit-log trace in this doc
-      ruled out `canonical-migration-cefi-fts-*`; no other candidate launch was found in that window — may need broader
-      time range or non-GCE-launch source, e.g. a manually-run local/interactive session). Repo:
-      market-tick-data-service.
+- [x] [DIAG] P3. ✅ **CLOSED 2026-08-11 (slot 3, data_engineering) — no live code bug found; scope exhausted.**
+      Broadened the VM-creation audit-log trace to the full 2026-07-29T07:00-11:00Z window (vs the original doc's
+      narrower pass): confirmed only `canonical-migration-cefi-fts-{binance-futures,okx-swap,bitget-futures}-*` (already
+      ruled out — launcher makes zero live Tardis calls) plus unrelated-AG VMs (`tradfi-bf-*`, `footystats-fwd-*`)
+      launched in that window. Found and traced ONE new candidate the original name-pattern search missed:
+      `batch-live-smoke-matrix-daily` (Cloud Scheduler → GCE VM, fires exactly `0 9 * * *` UTC daily — matches the
+      incident hour). Read `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py`: its live-connectivity
+      check only opens a connection for a venue that resolves to a registered `WS_FEED_CONNECTOR_FACTORIES` key, and
+      `COINBASE-FUTURES` is not one (only `COINBASE-SPOT`/`COINBASE-CDE` are registered; the venue-normalizer
+      deliberately PRESERVES the `-SPOT`/`-FUTURES` suffix for cefi market-axis pairs, so `COINBASE-FUTURES` cannot
+      collide-match `COINBASE-SPOT`'s tardis-machine-backed connector) — so this VM never opens a live Tardis connection
+      for COINBASE-FUTURES. Its batch-symmetry check (`_ag_batch_sample`) only lists/reads already-stored GCS blobs
+      (`manifest_index_summary`/`sample_blobs`), no live download — ruled out cleanly. Also queried Cloud Logging for
+      any `SetMetadata`/SSH/start/reset instance-control event on any VM in the same window (the "manually-run
+      local/interactive session" alternative this todo flagged) — zero results, no audit trail for that either. A direct
+      text search for the `274`/`concurrent-IP-lock` error string in Cloud Logging for the window also returned nothing
+      — the manifest is the only place this error is recorded, it isn't shipped to app-level Cloud Logging (a real
+      observability gap, but outside this bounded todo's scope to fix). Conclusion: no further root cause identifiable
+      with available evidence; consistent with irreducible low-rate Tardis IP-lock timing noise rather than a live bug.
+      Moot for the operator's actual decision either way — option A (14-day trailing window) already shipped 2026-08-08,
+      and this 2026-07-25/29 trickle has since aged out of that window. No code changed. Repo: market-tick-data-service
+      (investigation only, no changes needed).
 
 ## Progress log
 
@@ -247,3 +263,16 @@ not lost if the bound expires unanswered.
   Shipped: `deployment-service@96271280`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate -- the shipped fix
   landed in `meta_watchers.py`, already covered.
+- **2026-08-11 (slot 3, data_engineering) — todo-2 [DIAG] CLOSED, no fix needed.** Broadened the VM-creation audit-log
+  trace to the full 2026-07-29T07:00-11:00Z window; the only cefi/tardis-shaped launches were the already-ruled-out
+  `canonical-migration-cefi-fts-*` VMs. Traced one new candidate the original pass missed by name-pattern
+  (`batch-live-smoke-matrix-daily`, fires `0 9 * * *` UTC) and ruled it out definitively via code read:
+  `COINBASE-FUTURES` is not a registered live-WS venue key (only `COINBASE-SPOT`/`COINBASE-CDE` are; the venue
+  normalizer deliberately keeps the `-SPOT`/`-FUTURES` suffix distinct for cefi, so no collision with `COINBASE-SPOT`'s
+  tardis-machine connector), and its batch-symmetry check only reads already-stored GCS blobs, never a live download.
+  Also found zero SSH/`SetMetadata`/start/reset instance-control audit events on any VM in the window (rules out the
+  "manual/interactive session" alternative too), and zero structured Cloud Logging entries for the
+  `274`/`concurrent-IP-lock` error text (that error is recorded only in the manifest, not shipped to app-level logging —
+  a real observability gap, out of this todo's bounded scope). No live code bug identified; consistent with irreducible
+  low-rate Tardis IP-lock timing noise. Moot for the operator's decision regardless — option A (14-day trailing window)
+  already shipped 2026-08-08 and this trickle has aged out of that window. No code changed. Flipped todo 2 to done.

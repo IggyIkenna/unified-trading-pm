@@ -103,3 +103,16 @@ depends_on: []
   memory-pressure pause (75%/30s) gates only NEW tasks; in-flight downloads continue past OOM threshold. Fixed by
   upsizing `e2-standard-8` → `e2-highmem-8` (64GB) in `launch-cefi-forward-poll.sh` (`deployment-service@1717d294`).
   Also identified a secondary gap in the UTL memory-pressure mechanism — tracked as a new P3 follow-up above.
+- **data_engineering (slot 16) 2026-08-11T12:10Z**: Re-measurement attempted for the hl-aster todo. Downsize shipped
+  `deployment-service@9db194e6` (2026-08-10 13:42Z). Queried
+  `central-element-323112.deployment_operational_data.run_ledger` (BigQuery) for every
+  `cefi-hyperliquid-*`/`cefi-aster-*`/`cefi-lighter-zksync-*`/`cefi-extended-starknet-*` row — **zero completions since
+  2026-08-09 21:24Z** (the last pre-downsize batch, an `extended-starknet` sweep). Cross-checked live GCE state
+  (`gcloud compute instances list --filter="name~'^cefi-(hyperliquid|aster|lighter-zksync|extended-starknet)-'"`) —
+  **zero running instances**, confirming this isn't an in-flight-but-uncompleted gap. Confirmed
+  `launch-cefi-hl-aster-historical-backfill.sh` has no cron/scheduler wiring anywhere in the repo (`grep` for its name
+  outside itself only hits the unrelated Tardis launcher + its concurrency guard) — this launcher is invoked on-demand
+  (by an operator or another agent's campaign work), not on a fixed cadence, so there is no ETA mechanism to key off.
+  **Todo remains gated**: the launcher genuinely has not been re-invoked since the downsize shipped — nothing to
+  re-measure yet, not a data-access or methodology gap. Releasing back to queue with `reason_code: GATED` per worker.md
+  § 4c; next check should occur whenever this campaign is next dispatched (no fixed interval known).

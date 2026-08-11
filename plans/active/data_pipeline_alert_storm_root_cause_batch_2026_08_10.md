@@ -119,35 +119,33 @@ last_updated: 2026-06-27
 > **This is the single most expensive failure mode in this batch** and it has now bitten three distinct ways in one
 > session: (1) `safe-doc-push` exited 0 having pushed nothing, (2) a peer operation silently reverted an uncommitted
 > append (323 L → 286 L, with no artifact left to recover from), and (3) this — a peer correctly observing absence and
-> reasonably concluding loss, nearly triggering a full re-author of a day's work.
-> **Also corrected: the "bug STILL PRESENT at :399-400" claim.** `tempfile.gettempdir()` at lines 80 and 401 is the
-> deliberate LOCAL-ONLY fallback (`_default_budget_dir()` / `_default_preemption_budget_dir()`), used only when a caller
-> passes an explicit `budget_dir` — i.e. unit tests. Production passes nothing and goes through
-> `_ShardedState(..., local_only=False)` against GCS. Presence of the symbol is not presence of the bug; that read was
-> grep-then-conclude rather than grep-then-READ.
-> **RESOLVED 2026-08-11 — shipped at `deployment-service@0c38c00d`.** All four modules are now ON ORIGIN (verified by
-> name: `_durable_state.py`, `_captured_reader.py`, `_classify.py`, `_attempted_failed_index.py`), with the race-free
-> `_ShardedState` wiring and the windowed-ratio fix present. Final gate: 3,317 passed / 0 failed, sentinel == HEAD.
-> Nothing to re-author. Original status line follows for provenance:
-> Status at the time of writing: the tree is fast-forwarded clean onto the current HEAD and the full gate is RUNNING.
-> **If slot 1 dies before that gate + `quickmerge` complete, THEN the work is genuinely lost and re-authoring is
-> correct** — the record below will carry a resolving sha the moment it lands.
+> reasonably concluding loss, nearly triggering a full re-author of a day's work. **Also corrected: the "bug STILL
+> PRESENT at :399-400" claim.** `tempfile.gettempdir()` at lines 80 and 401 is the deliberate LOCAL-ONLY fallback
+> (`_default_budget_dir()` / `_default_preemption_budget_dir()`), used only when a caller passes an explicit
+> `budget_dir` — i.e. unit tests. Production passes nothing and goes through `_ShardedState(..., local_only=False)`
+> against GCS. Presence of the symbol is not presence of the bug; that read was grep-then-conclude rather than
+> grep-then-READ. **RESOLVED 2026-08-11 — shipped at `deployment-service@0c38c00d`.** All four modules are now ON ORIGIN
+> (verified by name: `_durable_state.py`, `_captured_reader.py`, `_classify.py`, `_attempted_failed_index.py`), with the
+> race-free `_ShardedState` wiring and the windowed-ratio fix present. Final gate: 3,317 passed / 0 failed, sentinel ==
+> HEAD. Nothing to re-author. Original status line follows for provenance: Status at the time of writing: the tree is
+> fast-forwarded clean onto the current HEAD and the full gate is RUNNING. **If slot 1 dies before that gate +
+> `quickmerge` complete, THEN the work is genuinely lost and re-authoring is correct** — the record below will carry a
+> resolving sha the moment it lands.
 
 - [x] ✅ [SCRIPT] P1. **SHIPPED — deployment-service@0c38c00d.** Durable, race-free relaunch state — replaced the
-      `tempfile.gettempdir()` budget with
-      one-object-per-fact GCS state in `deployment-scripts-<project>`; `DP_VM_PREEMPTED_NO_RELAUNCH` now pages at most
-      once per VM via an ATOMIC create-if-absent claim (`if_generation_match=0`), and the repeat sweep returns
-      `SUPPRESSED` BEFORE re-running the launcher (stopping the wasted relaunches, not just the page). Budget counts
-      OBJECTS under a day-partitioned prefix instead of incrementing an integer, so overlapping executions cannot lose
-      an increment. No lock: the manifest writer's own record shows CAS-on-a-shared-doc "melts under fleet load", and
-      its durable answer was per-writer sharding. Also fixed a `_PAGED_GROUP` NameError (AST-clean, would have been a
-      runtime failure in prod) and a test-hermeticity defect this change introduced (the pytest fake-GCS backend under
-      `$TMPDIR/local-storage/` persists BETWEEN runs, so a claim from one run silently suppressed the alert the next run
-      asserted on — two `sweep()` tests passed then failed with no code change; closed with a per-test namespacing
-      autouse fixture in `tests/conftest.py`). Gate evidence (pre-extraction): quality-gates.sh QG_EXIT=0, 3265 passed,
-      sentinel == HEAD; 5 new regression tests incl. two that assert CONCURRENT behaviour (atomic claim admits exactly
-      one winner; concurrent stamps tally 2 not 1), proven hermetic by passing twice consecutively without clearing
-      stale state.
+      `tempfile.gettempdir()` budget with one-object-per-fact GCS state in `deployment-scripts-<project>`;
+      `DP_VM_PREEMPTED_NO_RELAUNCH` now pages at most once per VM via an ATOMIC create-if-absent claim
+      (`if_generation_match=0`), and the repeat sweep returns `SUPPRESSED` BEFORE re-running the launcher (stopping the
+      wasted relaunches, not just the page). Budget counts OBJECTS under a day-partitioned prefix instead of
+      incrementing an integer, so overlapping executions cannot lose an increment. No lock: the manifest writer's own
+      record shows CAS-on-a-shared-doc "melts under fleet load", and its durable answer was per-writer sharding. Also
+      fixed a `_PAGED_GROUP` NameError (AST-clean, would have been a runtime failure in prod) and a test-hermeticity
+      defect this change introduced (the pytest fake-GCS backend under `$TMPDIR/local-storage/` persists BETWEEN runs,
+      so a claim from one run silently suppressed the alert the next run asserted on — two `sweep()` tests passed then
+      failed with no code change; closed with a per-test namespacing autouse fixture in `tests/conftest.py`). Gate
+      evidence (pre-extraction): quality-gates.sh QG_EXIT=0, 3265 passed, sentinel == HEAD; 5 new regression tests incl.
+      two that assert CONCURRENT behaviour (atomic claim admits exactly one winner; concurrent stamps tally 2 not 1),
+      proven hermetic by passing twice consecutively without clearing stale state.
 - [x] ✅ [OPERATOR] P2. Firestore dual-write 403 — `uts-prd-sa` had NO Firestore role at all. Granted
       `roles/datastore.user`, verified live via `gcloud projects get-iam-policy`. This ALSO closes the 11× "transaction
       has no transaction ID, so it cannot be rolled back" errors: `heartbeat()` is transactional (`@fs.transactional`),
@@ -254,7 +252,7 @@ last_updated: 2026-06-27
       silently. Evidence: DuckDB query over
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, discriminated by
       `service_name` + `error_reason`. Prior doc
-      `/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
+      `/plans/archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
       at exactly 1 row as of 2026-08-02, which is what dates the onset.
 - [ ] [DATA] P2. Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
       an `@INV` suffix (`BINANCE-FUTURES:PERPETUAL:IP-USDC`, `BYBIT:PERPETUAL:XRPUSD`, `BYBIT:FUTURE:BTC-20250926`, …)
@@ -468,15 +466,15 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
 
 ## Deferred work after 2026-08-11
 
-| item | state / why deferred | blocked-on |
-| --- | --- | --- |
-| ~~**deployment-service ship**~~ | ✅ **SHIPPED `0c38c00d`** (3,317 passed). Superseded row: 12 files, tree fast-forwarded clean (16 commits, no conflicts), gate re-running at pre-compact. Previously gated GREEN at `d85832ba` (3,287 passed, tests genuinely ran) BEFORE the 16-commit pull, so the code is sound; it needs one clean gate on the current HEAD then `quickmerge`. Four prior gate attempts died to environment, not code: import-pattern deep-import (fixed), ruff I001 (fixed), file-size cap 972>960 (fixed by extraction), and TWO kills — one governor RAM-watchdog while I foolishly ran it beside AO's re-gate, one session teardown. | nobody — pick it up, gate ALONE |
-| **PM batching checker** (`scripts/finops/check_tool_call_batching.py`) | **Not done.** Untracked in the PM repo (NOT scratchpad — it survives). Lint-clean, runs, carries its lifecycle marker, measured 44.9% collapsible vs the 57.3% baseline. Needs a PM full gate (it is a script, not a doc) then quickmerge. | nobody — gate AFTER deployment-service, never beside it |
-| **Liquidations re-drive** (~150k cells) | **Cannot be done yet.** Needs `market-data-processing-service@6c2c4b6e` to promote LDR→main and deploy; promotion is healthy (Option-B direct, no PR by design), the commit simply pushed after the last sweep. | elapsed time — the standing `*/15` promoter |
-| **Canary + full re-drive execution** | **Operator-owned.** VM launch + cost decision under launch gating. Operator ruled 2026-08-11: canary first covering one `@LIN` AND one `@INV`, verify, then full. | operator |
-| **Cross-cloud WIF for the AO VM** | **Operator-owned.** AO VM has NO GCP identity (AWS EC2, no ADC/SA key/WIF pool). Blocks installing the data-pipeline-alerts-reconciler timer — code shipped, installer deliberately held. | operator |
-| **#9 chain relabel migration · #13 date sharding · #15 rightsizing · #11 empty instrument_id · #18 shellcheck flake** | **Not done.** All scoped, none started. | nobody |
-| **New findings from this session** (Tardis-403 classification · adapter-error fix · pytest-timeout-vs-admission · content-sentinel skip · stale governor token · safe-doc-push P0s) | **Not done.** All filed as `- [ ]` todos in this plan / the safe-doc-push issue. | nobody |
+| item                                                                                                                                                                                | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | blocked-on                                              |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| ~~**deployment-service ship**~~                                                                                                                                                     | ✅ **SHIPPED `0c38c00d`** (3,317 passed). Superseded row: 12 files, tree fast-forwarded clean (16 commits, no conflicts), gate re-running at pre-compact. Previously gated GREEN at `d85832ba` (3,287 passed, tests genuinely ran) BEFORE the 16-commit pull, so the code is sound; it needs one clean gate on the current HEAD then `quickmerge`. Four prior gate attempts died to environment, not code: import-pattern deep-import (fixed), ruff I001 (fixed), file-size cap 972>960 (fixed by extraction), and TWO kills — one governor RAM-watchdog while I foolishly ran it beside AO's re-gate, one session teardown. | nobody — pick it up, gate ALONE                         |
+| **PM batching checker** (`scripts/finops/check_tool_call_batching.py`)                                                                                                              | **Not done.** Untracked in the PM repo (NOT scratchpad — it survives). Lint-clean, runs, carries its lifecycle marker, measured 44.9% collapsible vs the 57.3% baseline. Needs a PM full gate (it is a script, not a doc) then quickmerge.                                                                                                                                                                                                                                                                                                                                                                                   | nobody — gate AFTER deployment-service, never beside it |
+| **Liquidations re-drive** (~150k cells)                                                                                                                                             | **Cannot be done yet.** Needs `market-data-processing-service@6c2c4b6e` to promote LDR→main and deploy; promotion is healthy (Option-B direct, no PR by design), the commit simply pushed after the last sweep.                                                                                                                                                                                                                                                                                                                                                                                                              | elapsed time — the standing `*/15` promoter             |
+| **Canary + full re-drive execution**                                                                                                                                                | **Operator-owned.** VM launch + cost decision under launch gating. Operator ruled 2026-08-11: canary first covering one `@LIN` AND one `@INV`, verify, then full.                                                                                                                                                                                                                                                                                                                                                                                                                                                            | operator                                                |
+| **Cross-cloud WIF for the AO VM**                                                                                                                                                   | **Operator-owned.** AO VM has NO GCP identity (AWS EC2, no ADC/SA key/WIF pool). Blocks installing the data-pipeline-alerts-reconciler timer — code shipped, installer deliberately held.                                                                                                                                                                                                                                                                                                                                                                                                                                    | operator                                                |
+| **#9 chain relabel migration · #13 date sharding · #15 rightsizing · #11 empty instrument_id · #18 shellcheck flake**                                                               | **Not done.** All scoped, none started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | nobody                                                  |
+| **New findings from this session** (Tardis-403 classification · adapter-error fix · pytest-timeout-vs-admission · content-sentinel skip · stale governor token · safe-doc-push P0s) | **Not done.** All filed as `- [ ]` todos in this plan / the safe-doc-push issue.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | nobody                                                  |
 
 **Recommended NEXT item: finish the deployment-service gate and ship it.** It is the only remaining code from this
 batch, the code is already proven green on a pre-pull tree, and every failure so far was environmental. Gate it ALONE —
@@ -503,10 +501,10 @@ running it beside another gate is what killed it once already.
 10. **The gate and the pre-commit hook enforce DIFFERENT rule sets.** A `quality-gates.sh`-green tree was still rejected
     at commit by ruff's hook config (SIM108, ternary-over-if/else). Gate-green is necessary, not sufficient — expect a
     second, narrower lint pass at commit time.
-11. **A green gate can mean "tests skipped" (service repos).** `SHA sentinel NOT refreshed (content-sentinel HIT → tests
-    skipped)` is logged mid-run while the SUMMARY still prints `ALL QUALITY GATES PASSED`, and `.qg_last_passed_sha ==
-    HEAD` still reads TRUE from an earlier full run. Caught on MDPS; forcing `QG_SENTINEL_DISABLE=true` moved the count
-    2,399 → 2,415, proving the new tests had never run.
+11. **A green gate can mean "tests skipped" (service repos).**
+    `SHA sentinel NOT refreshed (content-sentinel HIT → tests skipped)` is logged mid-run while the SUMMARY still prints
+    `ALL QUALITY GATES PASSED`, and `.qg_last_passed_sha == HEAD` still reads TRUE from an earlier full run. Caught on
+    MDPS; forcing `QG_SENTINEL_DISABLE=true` moved the count 2,399 → 2,415, proving the new tests had never run.
 12. **Deleting a peer's superseded helper can break tests that arrive LATER.** Removing `_probe_gcs_budget_client` was
     right (its read-modify-write budget loses updates under overlapping executions), but a subsequent 16-commit pull
     brought an autouse fixture still patching it — 64 setup errors, one cause. The fix is not a shim: the determinism

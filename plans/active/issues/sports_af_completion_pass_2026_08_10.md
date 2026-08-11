@@ -704,3 +704,28 @@ automator still alive, re-launch if session teardown killed it.
     consistent with prior slots.
   - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS at ~36%, ~12-24h ETA; then 4 more
     entities). Task remains in-flight for the next slot.
+
+- **2026-08-11 (slot 28, data_engineering, ~12:00Z–12:05Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2022-09-23`
+    (run.log tail, ~12:02:49Z), monotonic forward progress from slot 16's `2022-08-25` check (~11:39Z). ~840/2258 days ≈
+    ~37% through range. VM confirmed RUNNING via `gcloud compute instances list`. No other `af-backfill-*`/`af-audit-*`
+    VM running (singleton lock clear other than this one).
+  - **Chain automator confirmed DEAD as expected** (durability caveat from slot 16's/21's entries): no
+    `run-af-residual-completion-chain.sh` process found on this host (`ps aux` clean) — died with slot 16's session
+    teardown, exactly per its documented resume-aware/idempotent design.
+  - **Chain automator RE-LAUNCHED in background** (`run_in_background`, no nohup):
+    `bash deployment-service/scripts/vm/run-af-residual-completion-chain.sh --start-date 2020-06-06 --end-date 2026-08-10`
+    (default entities: TEAMS FIXTURE_STATS FIXTURE_LINEUPS PLAYER_STATS). Confirmed correctly picked up the in-flight
+    STANDINGS VM: first log line is
+    `waiting for AF VM af-backfill-20260811-012845 to reach a terminal state (poll 120s)`. Will auto-launch
+    TEAMS→FIXTURE_STATS→FIXTURE_LINEUPS→PLAYER_STATS serially once STANDINGS exits.
+  - Read GCS run.log via UTL `gcs_describe_object`/`gcs_read_object_range` (bounded tail read) instead of `gsutil cat` —
+    the new subprocess-GCS-object-op guardrail (2026-08-10, `check_subprocess_gcs_object_cli.py` /
+    `block_destructive_commands.py`) now blocks `gsutil`/`gcloud storage` object reads too, not just deletes. Future
+    monitoring ticks on this doc should use the same SDK path, not `gsutil cat`.
+  - **No code shipped** — pure operations + monitoring; the chain script itself already landed (commit `54cdaf80`).
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS ~37%, then 4 more entities serially).
+    Task remains in-flight for the next slot. Same durability caveat applies: if this session tears down before
+    STANDINGS finishes, the next worker should re-run the same chain command (idempotent — it will just wait on whatever
+    AF VM is currently RUNNING).

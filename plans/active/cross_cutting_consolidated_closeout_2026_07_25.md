@@ -260,17 +260,18 @@ decision itself cleared 2026-07-28/29 — but the api_football scaffold half is 
 VM sanction (still genuinely operator-decision-gated). MANTLE gas-fees RPC cleared for real 2026-07-29
 (`unified-api-contracts@1924bfed`, no Secret Manager grant needed after all).)
 
-- [`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`](/plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
-  (**DONE but DELIBERATELY NOT ARCHIVED — do not move this file**; was: "[IN FLIGHT 2026-07-25] … a workflow is
-  re-verifying + archiving it now"). Its own single todo is `[x]`; a 2026-08-02 re-reconciliation found MANTLE (of the
-  original 4 named `BLOCKED-*` items) has fully cleared and the Live-ODDS quota decision-component cleared, but 3
-  checkboxes remain open on the parent (ASTER data-landing verification, Live-ODDS second-source scaffold,
-  rate-limit-probe VM) — parent updated with citations, archival still deferred. **Archiving it would break a hard
-  shared gate**: it is the parent's ONLY `depends_on`+`gate_on_depends: true` coverage, so removing it from
-  `plans/active/` regresses `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a post-gate
-  `exit 1` blocking every future `unified-trading-pm` commit (empirically verified by simulating the move; see that
-  doc's own 🟡 banner). Re-attempt archival only once the parent's remaining items clear (archive both together) or the
-  coverage-gate design changes.
+- [`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`](/plans/archive/2026_08/infra_capture_and_devops_leftovers_finalize_2026_07_25.md)
+  (**now archived** — the earlier "deliberately not archived" note here is stale: the doc was archived by a later
+  session, and a 2026-08-11 backmerge artifact briefly resurrected a stale active-path duplicate of it, which has since
+  been deleted; the archived path above is the current, correct location). Its own single todo is `[x]`; a 2026-08-02
+  re-reconciliation found MANTLE (of the original 4 named `BLOCKED-*` items) has fully cleared and the Live-ODDS quota
+  decision-component cleared, but 3 checkboxes remain open on the parent (ASTER data-landing verification, Live-ODDS
+  second-source scaffold, rate-limit-probe VM) — parent updated with citations, archival still deferred. **Archiving it
+  would break a hard shared gate**: it is the parent's ONLY `depends_on`+`gate_on_depends: true` coverage, so removing
+  it from `plans/active/` regresses `scripts/quality_gates/check_finalize_plan_coverage.py` from baseline 1 to 2 — a
+  post-gate `exit 1` blocking every future `unified-trading-pm` commit (empirically verified by simulating the move; see
+  that doc's own 🟡 banner). Re-attempt archival only once the parent's remaining items clear (archive both together) or
+  the coverage-gate design changes.
 
 **Close-out criterion**: not AO-eligible as a whole — the remaining items each need a human credential/decision, a
 scaffold shipped, or a live-data confirmation; this Track stays a pointer until all clear.
