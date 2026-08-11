@@ -637,16 +637,40 @@ ff_one() {
     # gospel. _record_repo_dirty_state persists this tick's dirty/clean observation for
     # THIS repo so the NEXT sweep's read sees it (merged into the result file by
     # _write_ff_result at sweep end, never written mid-sweep — see that function).
+    # COLLISION-DEFERRAL (2026-08-10 fleet-drift RCA). Confirmed tracked dirt no longer
+    # returns here. It sets _dirt_confirmed and FALLS THROUGH to Step 5.5, where
+    # origin/<int_branch> is resolved and the incoming changed-file set is knowable, so the
+    # skip is gated on an ACTUAL collision (dirty ∩ incoming) rather than on the mere
+    # presence of tracked dirt.
+    #
+    # WHY: "any tracked dirt ⇒ skip" is the same over-broad guess the untracked-dirt comment
+    # below was written to kill, and it caused an identical outage one class down. Measured
+    # 2026-08-10: one stale `.github/workflows/semver-agent.yml` (a never-committed rollout
+    # artifact, superseded upstream by the unified-trading-ci thin-caller dedup) sat in 15
+    # slot-2 repos. No incoming commit touched that path, so no FF was ever at risk — yet
+    # every repo was skipped on every 5-minute tick for THREE DAYS, reaching 206 / 113 / 109
+    # commits behind. Self-sustaining for the reason documented above: a clone that cannot
+    # FF never stops being dirty.
+    #
+    # Worse, it was INVISIBLE. ff-starvation-detect.sh only pages on `collision AND
+    # (behind>=N OR age>H)`, so non-colliding tracked dirt starved the clone while the
+    # watchdog stayed silent BY CONSTRUCTION — actor and detector disagreed on the skip
+    # rule. Aligning the actor to the detector's (git-accurate) collision model closes the
+    # gap from both ends; the detector's new cause-agnostic behind-backstop covers whatever
+    # neither model anticipates.
+    #
+    # Safety is unchanged and doubly held: we skip on a real collision, AND `git merge
+    # --ff-only` independently refuses if a dirty tracked file would be clobbered
+    # ([skip:ff-failed]). Git stays the authority; we stop pre-emptively guessing.
+    local _dirt_confirmed=0
     _tracked_dirt="$(_filter_nonblank_porcelain "$(git status --porcelain --untracked-files=no 2>/dev/null)")"
     if [[ -n "${_tracked_dirt}" ]]; then
         local _prev_repo_dirty_ticks
         _prev_repo_dirty_ticks="$(_read_repo_dirty_ticks "${FF_RESULT_FILE}" "${repo_key}")"
         if [[ "${_prev_repo_dirty_ticks:-0}" -ge 1 ]]; then
-            log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes (confirmed, this repo's own dirty_consecutive_ticks>=2)"
-            _ff_record "skip:dirty"
+            _dirt_confirmed=1
             _record_repo_dirty_state "${repo_key}" "dirty"
-            popd >/dev/null
-            return 0
+            # fall through — Step 5.5 decides on collision, not on dirt alone.
         else
             log "[dirty:unconfirmed] ${repo_name} (${branch}) — uncommitted changes on a single tick; not yet confirmed, FF proceeds this tick"
             _ff_record "dirty:unconfirmed"
@@ -753,8 +777,33 @@ ff_one() {
         return 0
     fi
 
-    # Step 6: clean fast-forward (merge_base == local_sha, remote ahead).
+    # Step 5.5 — confirmed-tracked-dirt COLLISION gate (deferred from the dirt gate above,
+    # where origin/<int_branch> was not yet resolved). Skip ONLY if a dirty tracked path is
+    # actually in the incoming diff; otherwise the FF cannot touch it, so proceed. Mirrors
+    # ff-starvation-detect.sh's `collision = dirty ∩ incoming` definition so the actor and
+    # the detector cannot silently drift apart again (they did — see the RCA comment above).
     behind=$(git rev-list --count "HEAD..origin/${int_branch}")
+    if [[ "${_dirt_confirmed}" -eq 1 ]]; then
+        local _incoming _dirty_paths _colliding
+        _incoming="$(git diff --name-only "HEAD..origin/${int_branch}" 2>/dev/null || echo "")"
+        # Porcelain v1: "XY PATH", or "R  old -> new" for renames (take the destination).
+        _dirty_paths="$(printf '%s\n' "${_tracked_dirt}" | while IFS= read -r _l; do
+            [[ -z "${_l}" ]] && continue
+            _p="${_l:3}"; _p="${_p##* -> }"; _p="${_p%\"}"; _p="${_p#\"}"
+            printf '%s\n' "${_p}"
+        done)"
+        _colliding="$(printf '%s\n' "${_dirty_paths}" \
+            | grep -Fxf <(printf '%s\n' "${_incoming}") 2>/dev/null || true)"
+        if [[ -n "${_colliding}" ]]; then
+            log "[skip:dirty-collision] ${repo_name} (${branch} → ${int_branch}) — behind ${behind}; dirty tracked file(s) collide with incoming: $(printf '%s' "${_colliding}" | tr '\n' ' ')"
+            _ff_record "skip:dirty"
+            popd >/dev/null
+            return 0
+        fi
+        log "[dirty-nocollide] ${repo_name} (${branch} → ${int_branch}) — behind ${behind}; tracked dirt present but NOT in the incoming diff; FF proceeds (git rejects a real collision)"
+    fi
+
+    # Step 6: clean fast-forward (merge_base == local_sha, remote ahead).
     if [[ "${DRY_RUN}" -eq 1 ]]; then
         log "[dry-run:ff] ${repo_name} (${branch} → ${int_branch}) — would FF by ${behind} commit(s) to ${remote_sha:0:8}"
     else
