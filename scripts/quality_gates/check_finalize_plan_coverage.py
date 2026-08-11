@@ -149,6 +149,75 @@ def _find_violations(active_dir: Path) -> list[Path]:
     return violations
 
 
+def _is_finalize_shaped(cov: Coverage) -> bool:
+    """Is this a FINALIZE/archival gate specifically — as opposed to a regular phase or
+    umbrella plan that merely happens to gate on a predecessor via gate_on_depends?
+
+    A finalize plan is recognizable by its filename (`<parent>_finalize*.md`) or its title
+    (contains "finalize"). This distinction matters for the duplicate-gate detector: a
+    sequential phase chain (P2 gates on P1, P3 on P2, ...) or an umbrella rollup legitimately
+    leaves ONE parent named in the depends_on of MULTIPLE gate_on_depends plans — that is
+    sequencing, not a collision. Only MULTIPLE finalize-shaped plans gating the same parent
+    is the duplicate-archival-gate bug this detector exists to surface (the
+    `..._finalize.md` + `..._finalize_2026_07_31.md` pair).
+    """
+    if not _is_finalize_plan(cov.frontmatter):
+        return False
+    if "_finalize" in _slug(cov.path):
+        return True
+    title = cov.frontmatter.get("title")
+    return isinstance(title, str) and "finalize" in title.lower()
+
+
+def _find_duplicate_gates(active_dir: Path) -> dict[str, list[Path]]:
+    """Find parent slugs gated by MORE THAN ONE finalize-shaped plan.
+
+    Returns ``{parent_slug: [finalize_plan_path, ...]}`` for each parent with >1
+    finalize-shaped gating plan. A single finalize plan per parent is normal; two or more
+    would race the identical archival ritual concurrently. A parent gated by several
+    regular phase/umbrella plans is legitimate sequencing and is NOT flagged (see
+    ``_is_finalize_shaped`` for the distinction).
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    parent_to_finalizers: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_shaped(cov):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                parent_to_finalizers.setdefault(dep.strip(), []).append(cov.path)
+    return {p: fps for p, fps in parent_to_finalizers.items() if len(fps) > 1}
+
+
+def _check_parent_not_already_gated(parent_slug: str, active_dir: Path) -> tuple[bool, list[Path]]:
+    """Check whether *parent_slug* already has a gated finalize plan.
+
+    Returns ``(already_gated, finalizer_paths)`` — True if the parent is already gated by
+    at least one existing ``gate_on_depends: true`` plan, False if no gating plan exists.
+    Keyed on the ``depends_on`` relationship (the real contract), NOT the expected filename,
+    so a collision via a differently-suffixed filename is still caught.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gated = _gated_slugs(all_plans)
+    if parent_slug not in gated:
+        return False, []
+    finalizers: list[Path] = []
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str) and dep.strip() == parent_slug:
+                finalizers.append(cov.path)
+                break
+    return True, finalizers
+
+
 def _find_draft_gate_violations(active_dir: Path) -> list[Path]:
     """A finalize plan (`depends_on` + `gate_on_depends: true`) sitting at `status:
     draft` is a redundant double-gate — `gate_on_depends` already machine-holds it.
@@ -230,7 +299,86 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--parent-slug",
+        default=None,
+        metavar="SLUG",
+        help=(
+            "Idempotency guard for finalize-plan creation: exit 0 if SLUG is NOT already gated by an existing "
+            "gate_on_depends: true plan (safe to create a new finalize plan), exit 1 if it IS (refuse — a "
+            "finalize plan already exists). Keyed on the depends_on relationship, not filename shape, so a "
+            "collision via a differently-suffixed filename is still caught."
+        ),
+    )
+    parser.add_argument(
+        "--check-duplicates",
+        action="store_true",
+        help=(
+            "Duplicate-gate detector: list every parent slug named in the depends_on of MORE THAN ONE "
+            "gate_on_depends: true plan. Exit 1 if any duplicates exist (even a single collision is a "
+            "violation — there is no baseline for this check), 0 if clean."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _run_parent_slug_mode(parent_slug: str, active_dir: Path, workspace_root: Path) -> int:
+    """Idempotency guard for finalize-plan creation (Todo 1,
+    duplicate_finalize_plans_created_for_one_parent_2026_08_06.md): exit 0 if the
+    parent is NOT already gated (safe to create a new finalize plan), exit 1 if it IS
+    (refuse). Keyed on the depends_on relationship, not filename shape."""
+    already_gated, finalizers = _check_parent_not_already_gated(parent_slug, active_dir)
+    if already_gated:
+        print(f"❌ Parent '{parent_slug}' is already gated by {len(finalizers)} existing finalize plan(s):")
+        for fp in finalizers:
+            try:
+                print(f"  - {fp.relative_to(workspace_root)}")
+            except ValueError:
+                print(f"  - {fp}")
+        print("Refusing — a finalize plan already exists for this parent. Do NOT create a duplicate.")
+        return 1
+    print(f"✅ Parent '{parent_slug}' is NOT already gated — safe to create a new finalize plan.")
+    return 0
+
+
+def _run_duplicates_mode(active_dir: Path, workspace_root: Path) -> int:
+    """Duplicate-gate detector (Todo 2, same issue): flag any parent gated by >1
+    FINALIZE-SHAPED plan. Phase-chain / umbrella multi-gates are NOT flagged (they're
+    sequencing, not collisions). Absolute check — even a single duplicate is a violation."""
+    duplicates = _find_duplicate_gates(active_dir)
+    if not duplicates:
+        print("✅ No duplicate finalize-plan gates — every gated parent has at most one finalize plan.")
+        return 0
+    print(f"❌ {len(duplicates)} parent slug(s) with >1 finalize-shaped gating plan (duplicate gates):")
+    for parent_slug, finalizer_paths in sorted(duplicates.items()):
+        print(f"\n  Parent: {parent_slug}")
+        for fp in finalizer_paths:
+            try:
+                print(f"    - {fp.relative_to(workspace_root)}")
+            except ValueError:
+                print(f"    - {fp}")
+    print(
+        "\nEach parent above has multiple finalize plans that would race the identical archival ritual. "
+        "De-race by porting any unique todos from the loser into the survivor, then supersede the loser "
+        "(see the procedure documented in duplicate_finalize_plans_created_for_one_parent_2026_08_06.md)."
+    )
+    return 1
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Resolve the plans/active/ directory, trying three candidates in order and
+    returning None when none exist (caller hard-fails). Extracted from main() to keep
+    its cyclomatic-complexity budget under the gate cap."""
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -240,37 +388,24 @@ def main(argv: list[str] | None = None) -> int:
     baseline_write: bool = cast(bool, ns.baseline_write)
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
+    parent_slug: str | None = cast("str | None", ns.parent_slug)
+    check_duplicates: bool = cast(bool, ns.check_duplicates)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        print(
+            f"ERROR: plans/active not found at {_pm_root_or_legacy(workspace_root) / 'plans' / 'active'},"
+            f" {workspace_root / 'plans' / 'active'}, or"
+            f" {Path(__file__).resolve().parents[2] / 'plans' / 'active'}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if parent_slug is not None:
+        return _run_parent_slug_mode(parent_slug, active_dir, workspace_root)
+
+    if check_duplicates:
+        return _run_duplicates_mode(active_dir, workspace_root)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)

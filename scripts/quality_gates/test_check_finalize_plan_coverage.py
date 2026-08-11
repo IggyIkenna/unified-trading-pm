@@ -128,3 +128,84 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --parent-slug idempotency guard (Todo 1, duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) ──
+
+
+def test_parent_slug_refuses_when_parent_is_already_gated(tmp_path: Path) -> None:
+    """A parent already gated by an existing gate_on_depends plan must refuse a new
+    finalize plan — keyed on the depends_on relationship, not filename shape."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_06.md",  # note the suffix variant
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--parent-slug", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_parent_slug_allows_when_parent_is_not_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--parent-slug", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+# ── --check-duplicates detector (Todo 2, same issue) ───────────────────────────
+
+
+def test_check_duplicates_flags_two_finalize_plans_for_one_parent(tmp_path: Path) -> None:
+    """Two FINALIZE-shaped plans gating the same parent is the duplicate-archival-gate bug."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_05.md")
+    _write_plan(
+        active / "parent_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_05_finalize_2026_08_06.md",
+        extra_frontmatter="depends_on: [parent_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicates"])
+    assert rc == 1
+
+
+def test_check_duplicates_ignores_phase_chain_multi_gates(tmp_path: Path) -> None:
+    """A parent gated by several NON-finalize phase/umbrella plans is legitimate sequencing
+    (P2 gates P1, P3 gates P1, ...), NOT a duplicate finalize gate — the raw '>1 gate_on_depends'
+    signal would false-positive here, the finalize-shaped refinement must not."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_05.md")
+    _write_plan(
+        active / "parent_2026_08_05_phase2.md",
+        extra_frontmatter="depends_on: [parent_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_05_phase3.md",
+        extra_frontmatter="depends_on: [parent_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicates"])
+    assert rc == 0
+
+
+def test_check_duplicates_clean_when_each_parent_has_one_finalize(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_08_05.md")
+    _write_plan(
+        active / "parent_a_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [parent_a_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(active / "parent_b_2026_08_05.md")
+    _write_plan(
+        active / "parent_b_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [parent_b_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicates"])
+    assert rc == 0
