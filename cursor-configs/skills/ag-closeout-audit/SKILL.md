@@ -573,8 +573,16 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 
 Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
 `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
-**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
-`.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
+**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below).
+
+**Create-time idempotency guard (2026-08-11, `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`)**: before
+authoring the finalize plan, run
+`.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <batchN-slug>` and REFUSE to
+author it if the parent slug is already gated — the batch may already have a finalize companion from a prior run under a
+different filename shape (keyed on the `depends_on` relationship, not the filename). If gated, reuse the existing
+finalize plan or supersede it first — never write a second one.
+
+Validate both with `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
 `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
 **Why the finalize plan is `active`, not `draft` (2026-07-30 finding — no double gate)**: `gate_on_depends: true`

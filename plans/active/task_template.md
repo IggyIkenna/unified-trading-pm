@@ -513,7 +513,11 @@ version.
   `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`. Skip only for a plan that IS ITSELF already a finalize
   plan (no infinite regress) or a genuinely single-todo plan where archival is trivial enough to fold into that one
   todo's own done-when. Enforced (ratchet-mode, warn-only, wired into `quality-gates.sh`) by
-  `scripts/quality_gates/check_finalize_plan_coverage.py`.
+  `scripts/quality_gates/check_finalize_plan_coverage.py`. **Create-time idempotency guard (2026-08-11)**: before
+  authoring the companion, run
+  `python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <plan-slug>` and refuse if the parent is
+  already gated by an existing finalize plan — keyed on the `depends_on` relationship, never the filename shape (two
+  `_finalize*` files can collide for one parent; `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`).
 - **Finalize-plan todos: give the "reconcile source docs" todo and the "archive this plan" todo DIFFERENT `[TAG] P<n>.`
   prefixes (found 2026-07-31, `sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md`).** Both
   `batch2_finalize`/`batch3_finalize` authored these as `[DOC] P1` for BOTH todos — harmless until the self-archival

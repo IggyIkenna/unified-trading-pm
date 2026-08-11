@@ -618,6 +618,7 @@ if [ -f "$FINALIZE_PLAN_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     else
         echo "❌ Finalize-plan coverage regression — a new assigned_vm: planning plan shipped with no gated finalize plan." >&2
         echo "   Author a <slug>_finalize_*.md with depends_on: [<slug>] + gate_on_depends: true — see task_template.md §4." >&2
+        echo "   First confirm the parent isn't already gated: python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <slug> (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md)." >&2
         _post_gate_fail "finalize-plan-coverage"
     fi
 fi

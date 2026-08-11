@@ -276,7 +276,11 @@ check).
   correct `execution_scope` to `orchestrator-agent` if stale, fill `assigned_role` if missing (validate against the live
   `agents/*.md` registry, never hand-type a near-miss), author the companion `{stem}_finalize_{today}.md` per
   `task_template.md`'s finalize-plan-coverage rule (`plan` doc type only — an issue doc is structurally exempt,
-  `check_finalize_plan_coverage.py` only globs `plans/active/*.md`).
+  `check_finalize_plan_coverage.py` only globs `plans/active/*.md`). **Before authoring the companion, run the
+  create-time idempotency guard**
+  (`python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <stem>`,
+  `duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`): refuse if the stem is already gated by an existing
+  finalize plan (keyed on `depends_on`, not filename shape) — reuse the existing one or supersede it first.
 - **RECLASSIFY, conflict-cleared (per-todo split path — verdict 5) — extraction mechanics**: the bounded items are
   extracted into a NEW `{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize` pair under `plans/active/`. This
   is the SAME pattern `/ag-closeout-audit` already uses — same naming convention, same pairing convention, same
@@ -290,7 +294,9 @@ check).
      operator decision that flips the draft gate; `/ag-closeout-audit`'s own batches are `draft` because that skill is
      read-only by design, but THIS skill IS authorized to apply). Each extracted item becomes one `- [ ]` todo in the
      batch plan, citing the source doc + the specific item's text verbatim. The batch's `Source:` cites this skill run.
-     The `_finalize` doc is `depends_on` + `gate_on_depends: true`, `status: active` (not `draft` — same reasoning).
+     The `_finalize` doc is `depends_on` + `gate_on_depends: true`, `status: active` (not `draft` — same reasoning);
+     before writing it, run the same `--check-parent <stem>` create-time guard as verdict 4 — refuse if the parent is
+     already gated.
   3. **Conflict-check the batch BEFORE writing.** Run the shared conflict-check protocol (Phase 2) against every item in
      the batch — same bar as verdict 4. An item that conflicts stays in the source doc; only conflict-cleared items go
      into the batch.

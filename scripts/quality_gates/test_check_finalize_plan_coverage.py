@@ -128,3 +128,103 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-parent create-time idempotency guard ──────────────────────────────
+# (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md — todo 1)
+
+
+def test_check_parent_passes_when_parent_not_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_check_parent_refuses_when_already_gated(tmp_path: Path) -> None:
+    """The .md suffix on the slug is tolerated (normalised to a bare slug) — the
+    guard keys on the depends_on relationship, never on how the parent is named."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05.md"])
+    assert rc == 1
+
+
+def test_check_parent_is_filename_shape_independent(tmp_path: Path) -> None:
+    """The incident shape: the ONLY existing finalize plan carries a redundant date
+    suffix (parent_finalize_2026_08_05.md), not the 'expected' parent_finalize.md.
+    A guard keyed on the exact expected filename would MISS it; this one keys on the
+    depends_on relationship and must refuse regardless of the existing file's name."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_2026_08_05.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_check_parent_refuses_on_any_depends_on_entry(tmp_path: Path) -> None:
+    """A gating plan listing MULTIPLE parents gates each one — the guard must refuse
+    for a parent that appears as a NON-first entry too."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "first_parent_2026_08_05.md")
+    _write_plan(active / "second_parent_2026_08_05.md")
+    _write_plan(
+        active / "combined_finalize.md",
+        extra_frontmatter=("depends_on: [first_parent_2026_08_05, second_parent_2026_08_05]\ngate_on_depends: true"),
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "second_parent_2026_08_05"])
+    assert rc == 1
+
+
+def test_check_parent_ignores_a_superseded_gate(tmp_path: Path) -> None:
+    """A superseded finalize plan is a dead gate — its successor / the de-race owns
+    the parent, so it must not block authoring a fresh one. (status: active is the
+    _write_plan base value; the extra `status: superseded` line overrides it as the
+    last duplicate key, matching how the de-raced loser plan reads.)"""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize_old.md",
+        extra_frontmatter=(
+            "depends_on: [source_plan_2026_08_05]\ngate_on_depends: true\n"
+            "superseded_by: source_plan_2026_08_05_finalize\nstatus: superseded"
+        ),
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_check_parent_reports_every_gated_parent(tmp_path: Path) -> None:
+    """Repeated --check-parent: one gated + one clean -> rc 1; the clean one is
+    still reported as safe, and the gated one is what fails the call."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "gated_plan_2026_08_05.md")
+    _write_plan(
+        active / "gated_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [gated_plan_2026_08_05]\ngate_on_depends: true",
+    )
+    _write_plan(active / "clean_plan_2026_08_05.md")
+
+    rc = main(
+        [
+            "--workspace-root",
+            str(tmp_path),
+            "--check-parent",
+            "gated_plan_2026_08_05",
+            "--check-parent",
+            "clean_plan_2026_08_05",
+        ]
+    )
+    assert rc == 1

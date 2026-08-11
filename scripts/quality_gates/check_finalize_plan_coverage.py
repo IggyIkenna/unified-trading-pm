@@ -35,8 +35,15 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
-Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
-2 = arg/IO error.
+Create-time idempotency guard (added 2026-08-11, duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):
+`--check-parent <slug>` re-derives the gating relationship over the CURRENT corpus and refuses (exit 1) if the given
+parent slug is already gated by an existing finalize plan. Keyed on the `depends_on` relationship, never the filename
+shape — two `_finalize*` files for one parent (e.g. a redundant date-suffix collision) are caught regardless of their
+names. A `status: superseded` finalize plan is a dead gate (its successor / the de-race owns the parent) and does not
+count; a `status: draft` one is in-flight creation intent and DOES count.
+
+Exit-code semantics: 0 = at/below baseline (both checks) / no given parent already gated; 1 = regression (either
+check) / a given parent is already gated; 2 = arg/IO error.
 """
 
 from __future__ import annotations
@@ -128,6 +135,104 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
             if isinstance(dep, str):
                 out.add(dep.strip())
     return out
+
+
+def _gating_plans(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """Reverse of _gated_slugs: parent slug -> the finalize plans that gate on it.
+
+    Only plans that ACTUALLY gate count: `_is_finalize_plan` (depends_on +
+    gate_on_depends: true) AND status != 'superseded' — a superseded finalize plan
+    is a dead gate whose successor / the de-race owns the parent, so it must not
+    block authoring a fresh one. A `status: draft` finalize plan DOES count: it is
+    in-flight creation intent, and two agents drafting a finalize plan for the same
+    parent is exactly the collision this guard exists to catch. Keyed on the
+    `depends_on` relationship, never the filename shape — two files differing only
+    by a date suffix for the same parent are caught regardless of their names.
+    """
+    out: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        if cov.frontmatter.get("status") == "superseded":
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                out.setdefault(dep.strip(), []).append(cov.path)
+    for paths in out.values():
+        paths.sort()
+    return out
+
+
+def _run_check_parent_guard(active_dir: Path, check_parents: list[str], workspace_root: Path) -> int:
+    """Create-time idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md) —
+    refuse to author a <parent>_finalize*.md when the parent is ALREADY gated by an existing finalize
+    plan, keyed on the depends_on relationship (never the filename shape). Whole-corpus read, same as
+    --only: gating is inherently corpus-wide knowledge. Returns 0 when no given parent is gated, 1 when
+    at least one is.
+    """
+    gating = _gating_plans([c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None])
+    refused = False
+    for parent in check_parents:
+        parent_slug = parent.strip().removesuffix(".md")
+        existing = gating.get(parent_slug)
+        if existing:
+            refused = True
+            print(f"❌ REFUSE: parent '{parent_slug}' is ALREADY gated by {len(existing)} finalize plan(s):")
+            for g in existing:
+                try:
+                    rel = g.relative_to(workspace_root)
+                except ValueError:
+                    rel = g
+                print(f"   - {rel}")
+            print(
+                "   Do NOT author another <parent>_finalize*.md — the depends_on relationship is already"
+                " covered (keyed on depends_on, not filename shape). Reuse the existing finalize plan, or"
+                " supersede it first if it is genuinely dead."
+            )
+        else:
+            print(
+                f"✅ Parent '{parent_slug}' is not gated by any finalize plan — safe to author"
+                f" <{parent_slug}>_finalize*.md."
+            )
+    return 1 if refused else 0
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Locate `plans/active` by CONTENT, not by checkout-directory NAME.
+
+    The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
+    (all existing tests construct exactly this shape) — preserved as the first candidate below. An
+    isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
+    per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
+    checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
+    `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
+    `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
+    `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
+    location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
+    running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
+    while committing a plan-only change from exactly this worktree shape). Self-locate as the last
+    resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
+    so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
+    checkout root regardless of what `--workspace-root` was given or what the checkout directory
+    happens to be named. Returns None (after printing an error) when no candidate exists.
+    """
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    print(
+        f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+        file=sys.stderr,
+    )
+    return None
 
 
 def _find_violations(active_dir: Path) -> list[Path]:
@@ -230,6 +335,18 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-parent",
+        action="append",
+        default=None,
+        metavar="SLUG",
+        help=(
+            "Create-time idempotency guard: refuse (exit 1) if any given parent slug is already gated by an "
+            "existing finalize plan (depends_on + gate_on_depends: true, status != superseded). Keyed on the "
+            "depends_on relationship, not filename shape. Repeatable; exits 0 when none are gated. "
+            "duplicate_finalize_plans_created_for_one_parent_2026_08_06.md."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -240,37 +357,14 @@ def main(argv: list[str] | None = None) -> int:
     baseline_write: bool = cast(bool, ns.baseline_write)
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
+    check_parents: list[str] | None = cast("list[str] | None", ns.check_parent)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        return 2
+
+    if check_parents:
+        return _run_check_parent_guard(active_dir, check_parents, workspace_root)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
