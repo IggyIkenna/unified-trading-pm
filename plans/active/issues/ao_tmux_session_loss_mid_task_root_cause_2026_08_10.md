@@ -371,13 +371,19 @@ memory and that's what kills sessions" as-is.
       common case" requirement explicitly). **Verification in progress**: `ao-self-pull.sh` redeploys from
       `live-defi-rollout` within ~15min of the push; relaunched the live-capture loop to watch whether the next real
       burst stays bounded now — see Progress Log for the result once caught. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **Promote `/tmp/tmux_server_live_capture.log`'s capture script into the repo.** Currently a
-      hand-authored one-shot shipped via SSM directly to the VM (`/tmp/tmux_live_capture.sh`), not committed anywhere —
-      it did its job for this catch but is NOT durable and doesn't survive a VM restart or an intentional cleanup pass.
-      Give it a real home (a `scripts/orchestrator/` diagnostic, following the same lifecycle-marker convention as
-      `watch_production_slot_death.sh`) so the NEXT death doesn't need this re-authored from scratch, and add a systemd
-      timer or an always-on lightweight variant if the operator wants continuous coverage rather than one-shot 20-minute
-      windows. Repo: agent-orchestrator.
+- [x] [INFRA] P2. ~~Promote the capture script into the repo~~ — **DONE 2026-08-11, same session.** Confirmed the exact
+      durability problem live: the hand-authored `/tmp/tmux_live_capture.sh` got cleaned from `/tmp` between two uses in
+      this SAME session, forcing a full re-author from the chat transcript before it could be relaunched to verify the
+      throttle fix. Gave it a real home: `agent-orchestrator/scripts/orchestrator/tmux_server_live_capture.sh`
+      (`launch`/`status`/`tail` subcommands, same lifecycle-marker + SSM-read-only-access conventions as
+      `watch_production_slot_death.sh`; the remote loop is base64-transported to sidestep the JSON/nested-quote escaping
+      hit repeatedly hand-authoring this over SSM this session). Also added a `spawns=` field to the capture (live
+      `autospawn-do-spawn` thread count via `pgrep -c -f`) so the NEXT capture directly shows whether the throttle cap
+      is holding, not just its downstream effects on load/FDs. Test-launched against production, confirmed working, and
+      killed the stray duplicate instance it created alongside the still-running manually-launched one from earlier in
+      this session. An always-on/systemd-timer variant was considered but not built — the one-shot 20-minute-window
+      model has been sufficient for this investigation's on-demand catches; revisit only if continuous coverage becomes
+      a real need. Repo: agent-orchestrator.
 - [ ] [INFRA] P3. **Wire `resource-watchdog`'s existing tick log into future death correlation.** Discovered live
       2026-08-11 — a previously-undocumented-in-this-doc systemd service already logging periodic
       `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
@@ -388,6 +394,38 @@ memory and that's what kills sessions" as-is.
       `orchestrator running checkout 4452cbb — 0     pre-existing tmux session(s): []` — the self-pull restart landing
       exactly as expected, ~43s after the tmux-server death, finding zero sessions (consistent with the server having
       died and not yet respawned by then, not causing it). Confirmed coincidental, not causal. Repo: agent-orchestrator.
+- [ ] [INFRA] P0. **Throttle fix verified insufficient alone — TWO more live catches (20:54, 21:11) show the SAME
+      flat-then-instant-crash signature with the fix active and AutoSpawn's own concurrent-spawn count confirmed at ZERO
+      throughout.** The 20:54 death: nsess=26, load=11.85 (moderate, not the pre-fix 40-77 danger zone),
+      `tmux list-sessions` at 11-13ms right up to the last healthy sample, `spawns=0` — then instant vanish, 63s
+      recovery. The 21:11 death: same shape, 92s recovery, `spawns=0` throughout. **AutoSpawn's
+      `_do_spawns_concurrently` cap is confirmed NOT the trigger for this crash class** — it may still be preventing
+      SOME deaths (the fix stands, unbounded concurrency was a real hazard regardless), but the dominant "instant,
+      healthy-then-gone" mechanism is still unexplained. Extended the live-capture script with a broader `newsess=`
+      counter (any `tmux new-session -d -s` process, not just AutoSpawn's thread-prefix) to catch
+      escalation.py/worker_liveness_watchdog.py/plan_health.py's own uncapped direct `do_spawn`/`tmux_spawn.spawn()`
+      calls, since they bypass AutoSpawn's cap entirely. **Measurement trap found + fixed in the same pass**: the first
+      version of that counter was a false-positive generator — the running tmux SERVER's own `/proc/<pid>/cmdline`
+      permanently retains its ORIGINAL `tmux new-session -d -s ...` invocation forever (Linux doesn't rewrite cmdline on
+      a `comm`-only rename), so `pgrep -f "tmux new-session -d -s"` always matched the server's own PID as a permanent
+      self-match. Fixed by excluding the already-known server PID from the count. Every `newsess=1` reading up to this
+      fix was meaningless self-matching, not evidence of a genuine concurrent spawn — corrected before drawing any
+      conclusion from it. **Done when**: a live catch under the corrected counter, to see whether ANY non-AutoSpawn
+      spawn source (escalation/watchdog/plan_health) is active at the moment of a future death. Repo:
+      agent-orchestrator.
+- [x] [INFRA] P1. ~~Reduce fleet capacity while root cause remains open~~ — **DONE 2026-08-11, operator-directed.**
+      Given the throttle fix alone hasn't stopped the crash class, and to slow credit burn during the ongoing
+      investigation, operator directed reducing "planning worker count" by 8. Implemented via the existing
+      `POST /api/slots/{id}/pause` (sets `status=paused`; already respected by `TmuxPruner`/`AutoSpawn` as operator
+      intent — no code change needed, fully reversible via `POST /api/slots/{id}/resume`). Checked slot state first
+      (`GET /api/state`, HS256 JWT minted on-VM per the `[[orch-dispatch-recipe]]` pattern — secret never leaves the
+      VM): 25 idle, 9 working (`[7,12,13,14,15,16,24,32,33]`), 0 already paused. Paused the 8 highest-numbered IDLE
+      slots (`[23,25,26,27,28,29,30,31]`) — zero active work disrupted. Fleet is now 26 active / 34 configured.
+      **Operator's fallback plan if this doesn't help** (not yet executed, staged for if needed): kill all roles except
+      escalation, confirm stable, re-add scheduled tasks, confirm stable, re-add planning workers — an incremental
+      re-enablement to isolate which role/workload is the actual trigger. **Re-enlarge**: 8×
+      `POST /api/slots/{id}/resume` on the same slot IDs once either root cause is found or the smaller fleet is
+      confirmed not to help. Repo: agent-orchestrator (no code shipped — pure runtime state change).
 
 ## Progress Log
 
