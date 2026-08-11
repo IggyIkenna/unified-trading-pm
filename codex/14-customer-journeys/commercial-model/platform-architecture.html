@@ -535,7 +535,8 @@
         <li><a href="#s9"><span class="num">09</span><span class="ttl">How the work gets built and CI stays green</span></a></li>
         <li><a href="#s10"><span class="num">10</span><span class="ttl">Running it: isolation, capital, risk</span></a></li>
         <li><a href="#s11"><span class="num">11</span><span class="ttl">What we can share, and what we can't</span></a></li>
-        <li><a href="#s12"><span class="num">12</span><span class="ttl">Where the programme stands</span></a></li>
+        <li><a href="#s12"><span class="num">12</span><span class="ttl">The wider surface, and where it can go</span></a></li>
+        <li><a href="#s13"><span class="num">13</span><span class="ttl">Where the programme stands</span></a></li>
       </ol>
     </nav>
   </header>
@@ -3106,7 +3107,124 @@
 
   <!-- ==================== 12 ==================== -->
   <section id="s12">
-    <div class="sec-head"><span class="num">12</span><h2>Where the programme stands</h2></div>
+    <div class="sec-head"><span class="num">12</span><h2>The wider surface, and where it can go</h2></div>
+
+    <p class="lede">
+      Everything described so far is the shape of your mandate. It is worth saying plainly what else the same machinery
+      already carries, because it determines what a future conversation costs rather than what today's delivery contains.
+    </p>
+
+    <div class="keypoints">
+      <div><b>One engine, several asset groups</b><span>The same tick loop, instruction contract and ledgers already serve markets well outside crypto perpetuals and on-chain protocols</span></div>
+      <div><b>Breadth is configuration</b><span>Asset-group differences live in typed configuration blocks and venue adapters, not in separate engines or forks</span></div>
+      <div><b>Relevant to the second thing, not the first</b><span>None of this changes your delivery. It changes what the next addition to it costs</span></div>
+    </div>
+
+    <details class="sec-body">
+      <summary>What the same spine already covers, and what that means for expansion</summary>
+
+      <p>
+        Your two archetypes sit in one strategy family, operating on one asset group. The platform was not built for that
+        case specifically — it was built so that the case is one instance of a general pattern. Concretely, the same
+        decision engine, the same instruction contract and the same ledger model are in service across several distinct
+        market types, spanning centralised venues, on-chain protocols, regulated exchange-traded instruments, and
+        event-driven markets whose settlement has nothing to do with price at all.
+      </p>
+
+      <p>
+        That last category is worth dwelling on for a moment, because it is the clearest evidence that the abstraction is
+        real rather than asserted. A market that settles on an outcome rather than a price has a different notion of an
+        instrument, a different notion of expiry, and a different notion of what "position" means. It runs on the same
+        engine. If the architecture only tolerated variations on "buy an instrument, hedge it, mark it to a price", that
+        would not be possible.
+      </p>
+
+      <h3>Where the differences actually live</h3>
+      <p>
+        Each asset group brings its own risk model, its own attribution treatment and its own operating mode. Those
+        differences are expressed as typed configuration blocks against a common engine — one risk schema per asset
+        group, one attribution schema, one mode schema — rather than as parallel implementations. The practical
+        consequence is that a fix to the engine, the reconciliation spine or the execution layer applies everywhere at
+        once, and an addition does not fork anything.
+      </p>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">What generalises, and what is genuinely per-market</span>
+          <span class="note">The left column is why breadth is affordable; the right is why it is not free</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Layer</th><th>Shared across every asset group</th><th>Supplied per asset group</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>Decision</strong></td>
+                <td>The tick interface, the archetype lifecycle, the orchestrator, capital-budget enforcement</td>
+                <td>The archetype itself — the actual trading idea</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Instruction</strong></td>
+                <td>The full instruction contract, including multi-leg atomicity, targets rather than deltas, and venue-eligibility declaration</td>
+                <td>Nothing. This layer is genuinely universal, which is what makes the rest work</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>Data</strong></td>
+                <td>Capture, storage layout, coverage accounting, the availability model, feature versioning</td>
+                <td>Instrument definitions, the vendor or venue integration, and what a "bar" means in that market</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Risk</strong></td>
+                <td>The gate mechanism, the breaker mechanism, limit evaluation and halt semantics</td>
+                <td>The risk model — what is dangerous differs per market, so each has its own typed schema</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Post-trade</strong></td>
+                <td>The ledgers, reconciliation, the determinism check, reporting and fee accounting</td>
+                <td>The attribution treatment — which factors a return decomposes into</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Operations</strong></td>
+                <td>Deployment, monitoring, alerting, escalation, the promotion ladder, CI and the quality gate</td>
+                <td>Little to nothing. Operationally, a new market is an existing shape</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>What that means in practice, without overstating it</h3>
+      <p>
+        Two honest halves. The first is that a new market, a new venue or a new strategy family arrives as an integration
+        against established contracts rather than as a rebuild — which is why the second venue costs a fraction of the
+        first, and the fifth costs a fraction of the second. The second half is that "a fraction" is not "nothing": every
+        one of them involves real work, and the work that does not compress is the part that touches the outside world.
+        Live-probing a venue's actual collateral behaviour, calibrating against it, and running a careful cutover take the
+        time they take regardless of how good the abstraction underneath is.
+      </p>
+
+      <p>
+        The distinction worth carrying away is that the expensive parts of building a trading platform are mostly
+        one-time and mostly already paid. The parts that recur per market are the parts that were always going to be
+        specific: what the instrument is, what is dangerous about it, and how a return should be decomposed. Those are
+        deliberately the three places where the architecture asks for a per-market answer.
+      </p>
+
+      <div class="callout">
+        <span class="tag">Why this is in an architecture document at all</span>
+        <p>
+          Not as a menu. It is here because the design decision it reflects is the same one that shapes your delivery: the
+          strategy layer is deliberately agnostic to venue, asset class, execution method and custodian, and the cost of
+          that decision is that your strategy sits inside a system rather than in its own box. The benefit is everything
+          in this section. Both halves are the same choice, and it seemed more useful to show you both than to describe
+          only the half that is convenient.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==================== 13 ==================== -->
+  <section id="s13">
+    <div class="sec-head"><span class="num">13</span><h2>Where the programme stands</h2></div>
 
     <p class="lede">
       What remains is data completion, production integration and operational validation — not research, and not
