@@ -174,10 +174,18 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
       deployment-api@faad8437b; `CLOUD_AUTH_FAILED` AlertCode + AlertRule (HIGH, PagerDuty+Telegram) + runbook
       (cloud_auth_failed.md) + 4 unit tests; `_is_auth_error()` helper routes IAM/STS errors to `CLOUD_AUTH_FAILED`,
       others to `SERVICE_ERROR`; QG green, both quickmerged to LDR.
-- [ ] [DIAG] P3. For findings 4 and 8 (mtds-dex-swaps-backfill-2 idle VM; mtds-backfill-odds-401-retry self-recovering
-      OOM): check the live `MissTracker` state for DP-VM-003/DP-VM-001 against these two VM names to confirm whether the
-      conceptually-matching rule genuinely didn't cross its consecutive-miss threshold (benign) vs. a real wiring bug
-      (same class as findings A/B/C above). Repo: deployment-service.
+- [x] ✅ [DIAG] P3. For findings 4 and 8 (mtds-dex-swaps-backfill-2 idle VM; mtds-backfill-odds-401-retry
+      self-recovering OOM): check the live `MissTracker` state for DP-VM-003/DP-VM-001 against these two VM names to
+      confirm whether the conceptually-matching rule genuinely didn't cross its consecutive-miss threshold (benign) vs.
+      a real wiring bug (same class as findings A/B/C above). Repo: deployment-service. — **Verdict: benign threshold
+      gap, not a wiring bug.** Neither DP-VM-003 nor DP-VM-001 uses the MissTracker at all (MissTracker serves only
+      meta-watchers like catalogue-freshness/cron/consolidator-OOM checks, not the VM-liveness monitors). DP-VM-003
+      (`heartbeat_stall_watcher`) classifies liveness per-sweep from live sidecar + run.log signals with a 10-min
+      sidecar / 90-min run.log threshold — the idle VM eventually self-completed before crossing the sustained-stall
+      window. DP-VM-001 (`exit_code_fleet_monitor`) is census-diffing — a self-recovering OOM cycle (7-9 min) relaunches
+      faster than the census sweep detects it as "gone." Live GCS state confirmed: neither VM appears in
+      `active-dp-alerts-heartbeat.json` (2 bytes, empty), `active-dp-alerts-exit-code.json` (64 bytes, no match), or
+      `dp-miss-counters.json` (2,935 bytes, no match). No code change needed.
 
 ## Progress Log
 
@@ -190,3 +198,10 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
 - **2026-08-07 (item 3)**: GCS 429 routing fix shipped — `_is_gcs_rate_limit()` helper + `DP_GCS_429_THRASH` routing in
   all 4 AlertStorageStore write methods + 16 unit tests. alerting-service@773bb55c2. QG green.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (9 entries).
+- **2026-08-11 (item 5 — findings 4 & 8 diagnostic)**: investigated MissTracker state for DP-VM-003/DP-VM-001. Neither
+  monitor uses MissTracker (it serves meta-watchers only, not VM-liveness monitors). Live GCS state confirmed:
+  `active-dp-alerts-heartbeat.json` (2 bytes, empty), `active-dp-alerts-exit-code.json` (64 bytes, no match for either
+  VM), `dp-miss-counters.json` (2,935 bytes, no match). Root cause for both is a benign threshold gap: finding 4's idle
+  VM self-completed before crossing the 10-min sidecar / 90-min run.log stall threshold; finding 8's self-recovering OOM
+  cycle (7-9 min) outpaces the exit-code census-diff window. No wiring bug — no code change needed. All 5 todos in this
+  doc now complete.
