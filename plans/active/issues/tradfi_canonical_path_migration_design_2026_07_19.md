@@ -497,12 +497,27 @@ removal + casing normalization remain before backfill-resume.
       `combo ∉     CHAIN_INSTRUMENT_TYPES` — resolved by the P1 `combo→combo_chain` todo, which adds it to the set and
       therefore the lookup. Historical short-code futures_chain objects need a separate GCS content-based migration
       (follow-up todo below). Repos: market-tick-data-service, unified-api-contracts.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Migrate historical short-code `underlying=` GCS objects to display-name form** for
-      `futures_chain/` and `combo/` — content-based rename (read parquet → derive canonical underlying → write canonical
-      path → verify → delete old). ~92K futures_chain objects (~35 short-code roots mirroring existing display-name
-      equivalents) + ~1,598 combo objects (11 roots). Must run AFTER the P1 `combo→combo_chain` design ships (so new
-      writes emit display names). Dry-run default, `--apply` gated; prod-bucket delete = operator-go hard-stop per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Migrate historical short-code `underlying=` GCS objects to display-name form**
+      for `futures_chain/` and `combo/` — content-based rename (read parquet → derive canonical underlying → write
+      canonical path → verify → delete old). ~92K futures_chain objects (~35 short-code roots mirroring existing
+      display-name equivalents) + ~1,598 combo objects (11 roots). Must run AFTER the P1 `combo→combo_chain` design
+      ships (so new writes emit display names). Dry-run default, `--apply` gated; prod-bucket delete = operator-go
+      hard-stop per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. —
+      **Verified 2026-08-11 (slot 11, data_engineering): already built and shipped by a prior session, this todo's
+      checkbox was stale.** `market_tick_data_service/scripts/migrate_tradfi_underlying_display_names_2026_08.py`
+      (`market-tick-data-service@486f82ba` + pyright-suppression narrowing `@ccb84c57`) reuses the base
+      `migrate_tradfi_canonical_2026_07.py` classifier/path-builder (byte-identical lockstep with the writer), scopes to
+      `{futures_chain, combo}` chain types with a short-code `underlying=` (via UAC `canonical_tradfi_underlying`),
+      dry-run by default (mapping-manifest + reconcile report, no writes), `--apply` gated behind content verification
+      (reads each parquet's `underlying` column, requires single-value canonicalization agreement before copy→verify→
+      delete). Confirmed on `origin/live-defi-rollout` (both files present, tree clean). Test coverage
+      `tests/unit/scripts/test_migrate_tradfi_underlying_display_names_2026_08.py` (`market-tick-data-service@21da8a81`)
+      covers short-code detection, in-scope filtering, per-object target computation for both `futures_chain`→
+      display-name and `combo`→`combo_chain`+display-name, sharding/streaming, and the dry-run manifest+reconcile
+      report; `--apply`'s GCS I/O is `# pragma: no cover` (VM-only, correctly out of unit-test scope per the
+      operator-gate note). No code change needed this turn — the actual `--apply` run against prod remains correctly
+      gated behind the doc's hard-stops (operator-go + the delete-safety protocol), not part of this todo's own
+      done-when.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Re-verify whether ES_OPT/options_chain rows hit the same real-captured-row-vs-
       EXPECTED_CHAIN_AGGREGATE-denominator conflict** found for futures_chain/GOLD — not yet directly checked against
       the blank-instrument_id expectation. Repo: market-tick-data-service. — **Verified 2026-08-11 (slot 14,
