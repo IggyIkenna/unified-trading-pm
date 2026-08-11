@@ -10,7 +10,7 @@ summary: >-
   involved. Root cause genuinely unknown — must not be guessed; needs the same kind of direct investigation the pro
   finding got in `deepseek_flash_ab_routing_test` todo 19. Operator-gated: the investigation direction is a judgment
   call on whether to chase it (the flash account is now at steady-state usage).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -35,7 +35,7 @@ assigned_role: backend_engineer
 drift_direction: diagnose
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11
 source: >-
   Migrated from /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md's Deferred table during its
   2026-08-10 archival (batch12-finalize ritual step 1 — never let a prose deferral evaporate).
@@ -43,6 +43,13 @@ depends_on: []
 ---
 
 # DeepSeek flash ~$2.35 real-time-vs-task-usage spend residual
+
+> **ARCHIVED 2026-08-11** — root-caused, sole todo done. There is **no systematic pricing divergence**: the rate card
+> matches api-docs.deepseek.com exactly, zero turns are double-counted across 115,589 rows, and a live 50-minute
+> drawdown window attributed 95.7% of real spend. The residual is a historical STOCK (spend predating the ledger's
+> 2026-08-04 first priced row, whose transcripts have aged out), not a leak — so the KEEP-FLASH verdict stands
+> unchanged. Remaining fidelity work lives in
+> `/plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md` (`resolved_by`).
 
 ## What I found
 
@@ -68,12 +75,16 @@ flash account is about to be used for a pricing/calibration decision.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. **Decide whether to investigate the ~$2.35 flash real-time-vs-task-usage spend residual, and if so
-      fund a root-cause pass mirroring the archived plan's todo-19 pro finding** (check whether `task_usage` sum for
-      `account_id=deepseek-v4-flash` reconciles against the account's real-time usage meters / slot-derived spend; if a
-      systematic divergence, file a follow-up fix). Migrated 2026-08-10 from
-      `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md`'s Deferred table. (repo: agent-orchestrator,
-      read-only DB queries to start)
+- [x] ✅ [OPERATOR] P3. **Investigated 2026-08-11 — root-caused, see
+      `/plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`.** The operator
+      funded the pass (interactive session, "deepseek costs are off by a factor"). Finding: **no systematic pricing
+      divergence**. The rate card matches api-docs.deepseek.com exactly, zero turns are double-counted across 115,589
+      rows, and a live 50-minute drawdown window attributed 95.7% of real spend (ratio 1.045). The residual — by then
+      $26.40 wallet-wide, up from the ~$2.35 recorded here — is a historical STOCK, not a leak: the priced ledger's
+      first row is 2026-08-04 while this wallet was funded and running earlier, and the full-history sweep only landed
+      2026-08-05, so the missing span's transcripts have aged out. It does NOT change the KEEP-FLASH verdict. Follow-up
+      work (windowed reconciliation shipped as agent-orchestrator@b4e3e74205, plus attribution-fidelity todos) is
+      tracked in the plan above.
 
 ## Codex SSOTs
 
@@ -85,3 +96,7 @@ flash account is about to be used for a pricing/calibration decision.
 - **2026-08-10** — Created by the batch12-finalize review as the archival-migration home for the ~$2.35 residual prose
   deferral in the now-archived deepseek_flash_ab_routing_test_2026_08_05.md. `assigned_vm: NA` (operator-gated — the
   investigation direction is a judgment call, and the residual is bounded/low-priority).
+- **2026-08-11** — Root-caused and closed by
+  `/plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`. No pricing factor error
+  exists; the residual is pre-observability spend whose transcripts are gone. `resolved_by` points at that plan, which
+  carries the remaining fidelity work.
