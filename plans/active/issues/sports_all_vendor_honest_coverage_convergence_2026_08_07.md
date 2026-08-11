@@ -867,3 +867,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   permits the singleton). Frontier at last check ≈2020-12-21 (chunk 115/2171) — still before the first real gap
   (~2021-06-07); gap census not re-run. No VM launched from the P2 VERIFY dispatch (its own standing instruction forbids
   it; this tracker owns relaunching).
+- **2026-08-11T03:38Z (slot 16, P1 backfill dispatch `-3b44a0a4ec31` — tracker-narrative update + relaunch)**:
+  `smallchunk14-20260809` was **SPOT-preempted 2026-08-11T01:34Z** (ops-list confirmed, NOT a hang — hang count stays
+  12), leaving **0 `mtds-backfill-odds-*` VMs running for ~2h** (03:30Z check). This doc's own babysit todo is now
+  `status: done` in the AO backlog, so the relaunch loop fell to the sibling P1 todo (per this doc's own 09:05Z
+  overlap-resolution); relaunched as **`mtds-backfill-odds-20260811-0330`**
+  (`--start 2020-06-06 --end 2026-08-11 --chunk-size 5`, e2-highmem-4 SPOT) — guard OK (0+1<=1), key live (10.47M rem),
+  RUNNING, run.log genuine (chunk 1/452, API keys validated, PIPELINE_HEARTBEAT fresh 03:37:56Z, RSS ~600MiB). Frontier
+  ≈2020-06-10; census NOT re-run (300/2257 unchanged per guidance — frontier not past the 2021-06-07 milestone).
