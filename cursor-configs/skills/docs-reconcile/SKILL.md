@@ -21,7 +21,7 @@ description:
 
 # /docs-reconcile — retrieval-layer + codex doc health audit
 
-Finds and fixes the failure classes that make the grep-native L0→L1→L2→L3 retrieval design
+Finds and fixes the failure classes that make the grep-native L0→L1→L2→L3→L4 retrieval design
 (`/codex/11-project-management/doc-frontmatter-schema.md`) quietly stop working even though every doc still passes the
 existing structural frontmatter gate (`check_frontmatter_schema.py` — required fields + closed-vocab enums, already
 hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
@@ -130,7 +130,7 @@ spawn; set `model=` explicitly, default sonnet):
    before flagging (a short summary can still be a complete one).
 3. **Doctrine-consistency hunters** — beyond the two hardcoded QG surfaces, sweep `.cursor/rules/*.mdc` and
    `agents/*.md` (role charters) for retrieval-doctrine references that have gone stale (naming a retired file path, a
-   superseded index format, or contradicting the current L0/L1/L2/L3 terminology).
+   superseded index format, or contradicting the current L0/L1/L2/L3/L4 terminology).
 4. **Codex-freshness scope report** — for docs outside the 4 gated dirs, report staleness distribution (not a per-doc
    finding list) so the operator can decide if/when to widen the ratchet.
 5. **Broken-link triage hunters** — batch the `known_broken` entries from BOTH `doc_reference_baseline.yaml` and
@@ -172,7 +172,7 @@ Split votes go to a tiebreaker. Only CONFIRMED findings proceed to Phase 3.
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | Schema<->generator drift (missing/stale facet entry)                                             | Fix `_PER_TYPE_FACETS` directly against the live `docspec.py`                        |
 | Doctrine missing from a surface                                                                  | Add the pointer section, mirrored from the surface that already has it               |
-| Stale doctrine reference (retired path/terminology)                                              | Update the reference to the current L0/L1/L2/L3 shape                                |
+| Stale doctrine reference (retired path/terminology)                                              | Update the reference to the current L0/L1/L2/L3/L4 shape                             |
 | Derivable placeholder summary (the doc's own title/first-paragraph makes a real summary obvious) | Write it, cite the source line                                                       |
 | Broken link (frontmatter ref or body link) where the target provably moved                       | Repoint the ref/link, then re-run `--update-baseline` on the matching checker        |
 | Baseline entry that no longer reproduces (link got fixed since seeding)                          | Drop it via `--update-baseline` on the matching checker (dead weight, not a finding) |
@@ -223,7 +223,8 @@ broken links," and the report must not conflate the two.
 - `scripts/quality_gates/check_doc_body_links.py` — inline markdown BODY link existence check, ratcheted against
   `scripts/quality_gates/doc_body_link_baseline.yaml`; has its own unit tests in the sibling
   `test_check_doc_body_links.py`
-- `plans/active/docs_retrieval_layer_reconcile_2026_07_23.md` — this skill's origin + the AGENTS.md gap it fixed
+- `plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md` — this skill's origin + the AGENTS.md gap it
+  fixed
 - `cursor-configs/skills/plan-reconcile/SKILL.md` — the sibling skill for plans-corpus contradictions (different scope,
   see "Out of scope" above); it has its own, separate dangling-ref auto-fix rule scoped to `depends_on`/`related`/
   `supersedes`/`superseded_by` inside the PLANS corpus specifically — this skill's broken-link checks cover the CODEX
