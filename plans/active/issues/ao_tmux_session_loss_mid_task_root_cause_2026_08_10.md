@@ -37,6 +37,7 @@ related:
   - /codex/05-infrastructure/deployment-observability.md
   - /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
+  - /codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master
@@ -183,14 +184,19 @@ memory and that's what kills sessions" as-is.
       host-wide-pressure check would miss even with plenty of free RAM fleet-wide. **Done when**: confirm whether slots
       run under a cgroup memory limit at all, and if so, whether `journalctl -k` shows any cgroup-scoped OOM line
       correlated with a sample of loss timestamps. Repo: agent-orchestrator.
-- [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask, still open): tmux's own
-      post-mortem bookkeeping is now CONFIRMED empty by capture time on every death sampled since
-      agent-orchestrator@4c5a86bc3f shipped (`pane_dead` itself reads blank, or the capture call finds no target at all)
-      — so reconstructing after the fact is a dead end; the only way to get the actual kill signal/cause is to watch one
-      slot live (strace on the tmux server/pane PID, or a tight `dmesg`/`journalctl -k` tail) and wait for its next
-      death. **Done when**: at least one death on the watched slot has a real-time-captured cause, or the watch ran long
-      enough with zero signal to conclude the mechanism leaves no OS-level trace either (a different, still useful,
-      negative result). Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Live-catch the next death on one isolated slot** (todo 1's original ask — SUBSTANTIAL PROGRESS
+      2026-08-11, still open). Built a fully isolated agent-orchestrator sandbox
+      (`/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`,
+      `agent-orchestrator/scripts/orchestrator/{setup_debug_sandbox,watch_sandbox_slot_death}.sh`) specifically to catch
+      a death live without ptrace overhead. First real run caught a genuine session-level death (332s into a real
+      DeepSeek-backed task, same empty-`pane_dead` signature as production) and additionally checked macOS's built-in
+      crash reporter (`ReportCrash`, confirmed actively working on the same run — it logged OTHER processes' events in
+      the same window) — **zero crash report for this death**, ruling out segfault/abort/uncaught-exception as the
+      mechanism with a second, independent, always-on crash-capture system (the Linux VM's now-enabled core dumps gave
+      the same null result). Leading hypothesis narrowed to an uncatchable (SIGKILL-class) signal to the whole session,
+      or a pty/session teardown below where either OS's normal crash machinery watches. **Done when**: a live-caught
+      death's underlying cause is identified from OS-level evidence (not just "confirmed absent again"), or enough
+      sandbox runs accumulate that a pattern (timing, account, task shape) emerges. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -228,3 +234,18 @@ memory and that's what kills sessions" as-is.
   abrupt SESSION-level teardown (which `remain-on-exit` cannot protect against, since it only preserves a pane after its
   own process exits normally) rather than a graceful process exit — real, but still not a root cause; three new todos
   filed above rather than closing this doc on the strength of it.
+- 2026-08-11 (continued, same day): built the isolated debug sandbox (see todo above) and ran a first live-catch attempt
+  — a DeepSeek-backed worker in a fully isolated agent-orchestrator instance, given real sustained work, died 332s in
+  with the same signature as production (`tmux has-session` fails entirely, `pane_dead_status/signal/time` all empty).
+  Checked macOS's `ReportCrash` subsystem for the exact window: zero hits for this process, despite confirming the
+  subsystem was actively logging OTHER processes' crash/memory events at the same time — a controlled negative, not an
+  absence of looking. This is the SECOND independent, always-on OS crash-capture mechanism (after the Linux VM's core
+  dumps, enabled same day, also silent across multiple real production deaths) to come back empty for this failure.
+  Ruling in/out at this point: NOT a segfault/abort/uncaught-exception (both OS's automatic crash reporters would have
+  caught that, and didn't) — narrows the leading hypothesis to an uncatchable signal (SIGKILL-class) or a
+  pty/session-level teardown neither OS's normal crash machinery observes. Also found two reusable-tooling gotchas while
+  building the sandbox, documented in `/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`: a worker spawned
+  with `cwd` inside any repo carrying this workspace's CLAUDE.md ignores its boot prompt and tries to self-boot as a
+  real fleet worker against the PRODUCTION VM; a fixed-PID liveness check produces false deaths because Claude Code can
+  legitimately rotate its own subprocess PID mid-task (observed once, ~180s in, session/pane stayed healthy through it)
+  — track session-level liveness (`tmux has-session`), never a specific PID.
