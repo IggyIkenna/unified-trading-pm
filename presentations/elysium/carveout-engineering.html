@@ -1,4 +1,4 @@
-<title>The Carve-Out in Engineering Detail — Odum Research / Elysium</title>
+<title>Strategy Carve-Out — Engineering Architecture &amp; Hand-Over Boundary — Odum Research × Elysium</title>
 
 <style>
   /* Tokens carried from the platform-architecture document so the two read as one set.
@@ -88,10 +88,20 @@
   }
   h1 {
     font-size: clamp(2.3rem, 5vw, 3.5rem); line-height: 1.05; font-weight: 400;
-    letter-spacing: -0.018em; text-wrap: balance; margin: 0 0 0.5em; max-width: 24ch;
+    letter-spacing: -0.018em; text-wrap: balance; margin: 0 0 0.5em; max-width: 25ch;
   }
   h1 .light { color: var(--ink-3); font-style: italic; }
-  .standfirst { font-size: 1.16rem; line-height: 1.56; color: var(--ink-2); max-width: 64ch; margin-bottom: 32px; }
+  .standfirst { font-size: 1.16rem; line-height: 1.56; color: var(--ink-2); max-width: 64ch; margin-bottom: 26px; }
+
+  .principle {
+    border-left: 3px solid var(--ink); background: var(--surface); padding: 18px 22px;
+    margin: 0 0 30px; max-width: 84ch; border-radius: 0 4px 4px 0;
+  }
+  .principle .tag {
+    font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 8px;
+  }
+  .principle p { margin: 0; max-width: none; font-size: 1.04rem; }
 
   .factbar {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
@@ -204,14 +214,23 @@
   .grp-data { border-left-color: var(--g-data); }
   .grp-exec { border-left-color: var(--g-exec); }
   .grp-post { border-left-color: var(--g-post); }
+  .step-col { font-family: var(--mono); font-size: 12px; color: var(--accent); white-space: nowrap; }
 
-  /* disposition pills */
-  .disp {
+  /* ship-form pills */
+  .sf {
     display: inline-block; font-family: var(--sans); font-size: 10px; font-weight: 700;
     letter-spacing: 0.09em; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; white-space: nowrap;
   }
-  .d-red { color: var(--g-exec); background: var(--g-exec-wash); border: 1px solid var(--g-exec); }
-  .d-no { color: var(--ink-3); background: var(--surface-2); border: 1px solid var(--rule-strong); }
+  .sf-full { color: var(--g-data); background: var(--g-data-wash); border: 1px solid var(--g-data); }
+  .sf-red { color: var(--g-exec); background: var(--g-exec-wash); border: 1px solid var(--g-exec); }
+  .sf-static { color: var(--g-post); background: var(--g-post-wash); border: 1px solid var(--g-post); }
+  .sf-iface { color: var(--ink-3); background: var(--surface-2); border: 1px dashed var(--rule-strong); }
+
+  .sf-legend {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline;
+    font-family: var(--sans); font-size: 12px; color: var(--ink-3); margin: 0 0 4px;
+  }
+  .sf-legend > span { display: flex; gap: 8px; align-items: baseline; }
 
   /* stats */
   .stat-row {
@@ -234,14 +253,7 @@
     text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 7px;
   }
 
-  .eq {
-    font-family: var(--mono); font-size: 13px; line-height: 1.85; background: var(--surface-2);
-    border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; margin: 22px 0;
-    overflow-x: auto; white-space: pre; color: var(--ink-2);
-  }
-  .eq b { color: var(--ink); font-weight: 600; }
-
-  figure { margin: 0; }
+  figure { margin: 26px 0; }
   figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
   figcaption {
     font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--ink-3);
@@ -269,99 +281,154 @@
 
   <header class="masthead">
     <div class="eyebrow">
-      <span class="mark">ODUM RESEARCH</span>
+      <span class="mark">ODUM RESEARCH × ELYSIUM</span>
       <span class="sep">/</span>
-      <span>Technical briefing — engineering audience</span>
+      <span>Engineering architecture &amp; hand-over boundary</span>
       <span class="sep">/</span>
-      <span>Companion to the platform architecture document</span>
+      <span>CTO discussion document</span>
       <span class="conf">Confidential</span>
     </div>
 
-    <h1>The carve-out, in engineering detail <span class="light">— and what the system does that a carve-out cannot</span></h1>
+    <h1>Strategy carve-out <span class="light">— architecture, hand-over boundary and acceptance</span></h1>
 
     <p class="standfirst">
-      Twenty-six repositories. Six of them contribute code to a self-run hand-over; twenty do not. This document walks
-      the boundary repository by repository, states plainly what a reduced package can and cannot do, and then does the
-      more useful thing — prices the next two years of the mandate both ways, because that is what actually decides it.
+      This document defines a credible standalone hand-over of the contracted strategy: the components transferred and
+      the form each takes, the runtime path through them, the interfaces at which platform services are substituted, and
+      the acceptance test that says the hand-over is complete. It is written to be planned and contracted against.
     </p>
 
+    <div class="principle">
+      <span class="tag">Working principle</span>
+      <p>
+        The hand-over transfers a strategy that a competent engineering team can make operational — not a replica of the
+        operating platform built around strategies. The boundary is made explicit in code: strategy decision logic is
+        portable, and every point where the platform normally supplies a capability appears as a typed interface rather
+        than as something silently absent.
+      </p>
+    </div>
+
     <dl class="factbar">
-      <div><dt>Repositories</dt><dd>26 total</dd></div>
-      <div><dt>Contribute code</dt><dd>6, all reduced</dd></div>
-      <div><dt>Not transferred</dt><dd>20</dd></div>
-      <div><dt>Archetypes shipped</dt><dd>2 of 8 in-family</dd></div>
-      <div><dt>Venue adapters</dt><dd>4 of 13</dd></div>
-      <div><dt>Extraction method</dt><dd>import closure</dd></div>
+      <div><dt>Audience</dt><dd>CTO / engineering</dd></div>
+      <div><dt>Revision</dt><dd>2.0 · 11 Aug 2026</dd></div>
+      <div><dt>Packages</dt><dd>11 proposed</dd></div>
+      <div><dt>Substitution seams</dt><dd>10 interfaces</dd></div>
+      <div><dt>Language</dt><dd>Python 3.13</dd></div>
+      <div><dt>Governing terms</dt><dd>Agreement + SLA</dd></div>
     </dl>
 
     <nav class="contents" aria-label="Contents">
       <h2>Contents — every section opens to full detail; summaries stay visible</h2>
       <ol>
-        <li><a href="#s1"><span class="num">01</span><span class="ttl">What the contract specifies, and what the platform is</span></a></li>
-        <li><a href="#s2"><span class="num">02</span><span class="ttl">The 26 repositories, classified</span></a></li>
-        <li><a href="#s3"><span class="num">03</span><span class="ttl">Inside the six: what reduction actually removes</span></a></li>
-        <li><a href="#s4"><span class="num">04</span><span class="ttl">"Light" adapters — connectivity without the estate</span></a></li>
-        <li><a href="#s5"><span class="num">05</span><span class="ttl">Static config versus a system that keeps looking</span></a></li>
-        <li><a href="#s6"><span class="num">06</span><span class="ttl">The economics of shared infrastructure</span></a></li>
-        <li><a href="#s7"><span class="num">07</span><span class="ttl">Marginal cost of the next coin, venue and strategy</span></a></li>
-        <li><a href="#s8"><span class="num">08</span><span class="ttl">The expansion path, and what each step costs</span></a></li>
-        <li><a href="#s9"><span class="num">09</span><span class="ttl">An honest summary of the trade</span></a></li>
+        <li><a href="#s1"><span class="num">01</span><span class="ttl">What "runnable" means — the acceptance bar</span></a></li>
+        <li><a href="#s2"><span class="num">02</span><span class="ttl">The package: 11 components and their ship form</span></a></li>
+        <li><a href="#s3"><span class="num">03</span><span class="ttl">Runtime path through the carved system</span></a></li>
+        <li><a href="#s4"><span class="num">04</span><span class="ttl">The platform seam — 10 interface contracts</span></a></li>
+        <li><a href="#s5"><span class="num">05</span><span class="ttl">Configuration and parameter snapshot</span></a></li>
+        <li><a href="#s6"><span class="num">06</span><span class="ttl">Hand-over acceptance criteria</span></a></li>
+        <li><a href="#s7"><span class="num">07</span><span class="ttl">Operational responsibilities on self-operation</span></a></li>
+        <li><a href="#s8"><span class="num">08</span><span class="ttl">Extension work-items</span></a></li>
+        <li><a href="#s9"><span class="num">09</span><span class="ttl">Appendix — the source estate</span></a></li>
       </ol>
     </nav>
   </header>
 
   <!-- ==================== 01 ==================== -->
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>What the contract specifies, and what the platform is</h2></div>
+    <div class="sec-head"><span class="num">01</span><h2>What "runnable" means — the acceptance bar</h2></div>
 
     <p class="lede">
-      Both of the following are true, and the distance between them is the entire subject of this document. The
-      engagement specifies a delta-neutral basis strategy on BTC, ETH and SOL across major venues. What was built to
-      deliver it is a twenty-six repository platform.
+      "Runnable" is defined narrowly and deliberately. It means a team can take the package, supply credentials and
+      infrastructure, complete a clearly identified set of platform substitutions, and run the contracted strategy
+      against the agreed venues and instruments. It does not mean inheriting an operating model.
     </p>
 
     <div class="keypoints">
-      <div><b>The deliverable is narrow</b><span>Two archetypes, four venues, one collateral protocol. That is what was commissioned and it is what a carve-out contains</span></div>
-      <div><b>The platform is not</b><span>Six repositories contribute to the hand-over; twenty exist to make the strategy defensible, evolvable and operable</span></div>
-      <div><b>The gap is not code volume</b><span>It is the difference between a program that trades and a system that can be trusted, tuned and extended — see §8 for what that costs as the mandate grows</span></div>
+      <div><b>In scope</b><span>Strategy decision logic, static universe and configuration, thin venue connectivity, basic execution, a local test harness</span></div>
+      <div><b>Substituted</b><span>Ten platform capabilities, each behind a typed interface with a local or static implementation supplied</span></div>
+      <div><b>Out of scope</b><span>Execution algorithms, dynamic universe and allocation, reconciliation and attribution, version governance, multi-client machinery</span></div>
     </div>
 
     <details class="sec-body" open>
-      <summary>Why the distinction matters more than it sounds</summary>
+      <summary>The capability boundary, and the two paths this document sits between</summary>
 
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Capability boundary</span>
+          <span class="note">The right column is the boundary condition, stated per capability</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Capability</th><th>In the hand-over</th><th>Boundary</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>Strategy logic</strong></td>
+                <td><span class="sf sf-full">yes</span></td>
+                <td>Signal and decision state machine, basis and funding logic, position intent, and the sizing rules intrinsic to the strategy</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Static universe and config</strong></td>
+                <td><span class="sf sf-full">yes</span></td>
+                <td>The agreed venue and instrument set, and one parameter set fixed as at hand-over</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Venue connectivity</strong></td>
+                <td><span class="sf sf-red">thin</span></td>
+                <td>Market data, order submission and account reads sufficient for the strategy. No generalised custody or treasury fabric</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Execution</strong></td>
+                <td><span class="sf sf-red">minimal</span></td>
+                <td>The order placement needed to express strategy intent. Execution algorithms remain platform-side</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>Simulation</strong></td>
+                <td><span class="sf sf-red">targeted</span></td>
+                <td>A strategy-local harness for logic verification against replay fixtures. Not the batch/live symmetry framework</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Deployment</strong></td>
+                <td><span class="sf sf-static">example</span></td>
+                <td>Container artefacts and an example runbook. Not CI/CD, environment promotion or fleet orchestration</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Reconciliation and attribution</strong></td>
+                <td><span class="sf sf-iface">interface</span></td>
+                <td>Typed contracts with documented extension points; the implementation is built or sourced</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Dynamic universe and allocation</strong></td>
+                <td><span class="sf sf-iface">interface</span></td>
+                <td>The static set satisfies the contract; rotation and portfolio allocation remain platform capabilities</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Governance and compliance trail</strong></td>
+                <td><span class="sf sf-iface">interface</span></td>
+                <td>No version governance, approval trail, per-client or share-class rules, or centralised audit machinery</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>The two paths</h3>
       <p>
-        A reasonable CTO reading the contract would conclude that the deliverable is a trading program. That reading is
-        correct. If the question is "does the strategy run and make money", a reduced package answers it: two engines,
-        four venue adapters, the staking leg, a runner, and the strategy trades.
+        This document specifies one of two paths. They differ as follows; the election point and support period are
+        defined in the service-level agreement rather than here.
       </p>
-
-      <p>
-        The reason twenty other repositories exist is that "does it run" is not the question a regulated allocator ends
-        up asking. The questions that actually arrive are these, and each one is answered by a different part of the
-        platform rather than by the strategy code:
-      </p>
-
       <ul>
-        <li>Is the backtest that justified this allocation reproducible, and provably the same program as the live one?</li>
-        <li>When the basis compresses, who re-parameterises, on what evidence, and how do we know the new parameters are better rather than merely more recent?</li>
-        <li>When a venue withdraws collateral acceptance mid-position, what happens in the next sixty seconds?</li>
-        <li>Which of last month's return was strategy and which was execution, per venue, per leg?</li>
-        <li>Where did this number in the investor report come from, and can it be rebuilt from source?</li>
-        <li>When we add a second strategy, or a fifth venue, or a second share class, what does that cost?</li>
+        <li><strong>Odum-operated.</strong> The strategy runs on the platform as a client-isolated deployment. POD holds
+          read access to its own positions, runs, attribution and strategy decision records, queryable remotely. The ten
+          interfaces in §04 resolve to maintained services.</li>
+        <li><strong>Self-operated.</strong> The package in §02 transfers. The ten interfaces resolve to local or static
+          implementations, and §07 lists the standing operational functions that come with running it.</li>
       </ul>
 
-      <p>
-        None of those are answered by the code that places the trade. That is the honest shape of the trade-off, and the
-        rest of this document quantifies it repository by repository rather than asserting it.
-      </p>
-
       <div class="callout">
-        <span class="tag">A note on what this document is not</span>
+        <span class="tag">Status of this specification</span>
         <p>
-          It is not an argument that a carve-out cannot work. It can, we built the hand-over package for it, and for an
-          organisation that wants to own its operational stack it may be the right answer. It is an attempt to make the
-          decision legible — because the parts that are easy to underestimate are precisely the parts that took us
-          longest, and we would rather you priced them before electing than discovered them afterwards.
+          The eleven packages in §02 are a proposed extraction structure, not existing repositories. The strategy,
+          adapter and contract code they contain is production code running today; the packaging, the interface layer and
+          the local implementations are scoped extraction work. §06 is the acceptance test that would close it.
         </p>
       </div>
     </details>
@@ -369,381 +436,410 @@
 
   <!-- ==================== 02 ==================== -->
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>The 26 repositories, classified</h2></div>
+    <div class="sec-head"><span class="num">02</span><h2>The package: 11 components and their ship form</h2></div>
 
     <p class="lede">
-      Six repositories contribute code, every one of them in reduced form, because none is single-purpose. The other
-      twenty are the platform. Grouped below by what their absence costs you.
+      Eleven components, each with a declared ship form. The distinction between them is the substance of the boundary:
+      what arrives complete, what arrives deliberately thinned, what arrives frozen, and what arrives as a contract with
+      no implementation behind it.
     </p>
 
+    <div class="sf-legend">
+      <span><span class="sf sf-full">full</span> substantially transferable</span>
+      <span><span class="sf sf-red">reduced</span> deliberately thinned implementation</span>
+      <span><span class="sf sf-static">static</span> frozen snapshot at hand-over</span>
+      <span><span class="sf sf-iface">interface only</span> contracts, schemas and mocks</span>
+    </div>
+
     <div class="keypoints">
-      <div><b>6 contribute</b><span>Strategy, execution, contracts, the shared library, one feature calculator, minimal reference data</span></div>
-      <div><b>20 do not</b><span>Data plane, valuation and post-trade, control plane and delivery, surfaces and assurance</span></div>
-      <div><b>None ships whole</b><span>Even the six arrive as an import closure — the subset your two engines actually reach</span></div>
+      <div><b>4 full</b><span>Strategy core, configuration, runner, and the documentation and examples set</span></div>
+      <div><b>5 reduced</b><span>Venue adapters, instrument model, basic execution, local risk guards, simulation harness</span></div>
+      <div><b>1 interface only</b><span>The platform contracts package — the seam, and the subject of §04</span></div>
     </div>
 
     <details class="sec-body">
-      <summary>The full classification — all 26, what each does, and why it lands where it does</summary>
-
-      <div class="stat-row">
-        <div class="stat"><span class="v">6</span><span class="k">Repositories contributing code, all reduced</span></div>
-        <div class="stat"><span class="v">3</span><span class="k">Data-plane services not transferred</span></div>
-        <div class="stat"><span class="v">5</span><span class="k">Valuation and post-trade services not transferred</span></div>
-        <div class="stat"><span class="v">6</span><span class="k">Control-plane and delivery repositories not transferred</span></div>
-        <div class="stat"><span class="v">6</span><span class="k">Surfaces and assurance repositories not transferred</span></div>
-      </div>
+      <summary>All eleven components — contents, exclusions, and the source they derive from</summary>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Group A · Contributes to the hand-over — 6 repositories, all reduced</span>
-          <span class="note">Extraction is an import closure, not a folder copy</span>
+          <span class="label">Proposed package structure</span>
+          <span class="note">Source column maps each package to the repository the code is extracted from</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Repository</th><th>What it does in full</th><th>What you would receive</th><th>Disposition</th></tr></thead>
+            <thead><tr><th>Package</th><th>Form</th><th>Contains</th><th>Excludes</th><th>Source</th></tr></thead>
             <tbody>
               <tr>
-                <td class="grp grp-exec"><strong>strategy-service</strong></td>
-                <td>Every strategy archetype across every family — carry, arbitrage, statistical arbitrage, volatility, market making, directional, liquidity provision — plus the backtest harness, the risk engine, the position monitor and P&amp;L attribution as sub-packages</td>
-                <td>Two archetype modules from the carry package, the dynamic hedge-ratio logic, and the YAML configs for your venue set</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>strategy-basis-core</strong></td>
+                <td><span class="sf sf-full">full</span></td>
+                <td>The strategy decision layer: state machine, opportunity scoring, basis and funding calculations, desired exposures, strategy-local risk limits, deterministic parameter loading. Two archetypes — perpetual basis and staked basis — plus the dynamic hedge-ratio logic</td>
+                <td>The other four archetypes in the same family, the allocator framework, cross-strategy capital logic, and the feature platform</td>
+                <td class="mono">strategy-service</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>execution-service</strong></td>
-                <td>Venue connectivity for thirteen venues across CeFi, DeFi, sports and prediction; the algorithm library; smart order routing; the policy registry; paper and live matching engines; custody integrations; multi-leg atomic execution</td>
-                <td>Four venue adapters, two custody adapters, the Lido staking leg, and the multi-leg executor for your structure</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>strategy-config</strong></td>
+                <td><span class="sf sf-static">static</span></td>
+                <td>Production-equivalent configuration for the agreed scope: venues, instruments, thresholds, cadence, risk caps, and one parameter set</td>
+                <td>Parameter history, the optimisation service, rollout governance, dynamic config service, per-client and share-class overlays</td>
+                <td class="mono">strategy-service</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>unified-api-contracts</strong></td>
-                <td>The canonical type system for the whole platform: every domain schema, every venue and collateral registry, error classifications, instruction and ledger models, capability declarations</td>
-                <td>The closure your engines and adapters import — your venues, your instruments, the ledger and instruction models</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>strategy-runner</strong></td>
+                <td><span class="sf sf-full">full</span></td>
+                <td>Process wrapper: startup, dependency wiring, tick loop, strategy lifecycle, health endpoint, graceful shutdown, structured logging</td>
+                <td>The service framework's multi-tenant paths, scheduler and fleet orchestration, centralised secret control, deployment topology, environment promotion</td>
+                <td class="mono">unified-trading-library</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>unified-trading-library</strong></td>
-                <td>Shared infrastructure: config and cloud interfaces, the service framework, manifest readers and writers, ledger writers, allocation, chaos injection, circuit breakers, client lifecycle, the streaming facade, the domain client</td>
-                <td>Config and cloud interfaces, manifest and ledger writers, type guards, retry and shutdown handling, on-chain rate primitives</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>exchange-adapters-lite</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Direct REST and WebSocket adapters for the four agreed venues: market data, order submit and cancel, order, fill and account events, rate-limit and reconnect handling, and the shared venue error classification</td>
+                <td>The adapter framework, the other sixteen venue adapters, the normalised reference-data fabric, automated reconciliation, custody switching, treasury routing, execution optimisers</td>
+                <td class="mono">execution-service</td>
               </tr>
               <tr>
-                <td class="grp grp-data"><strong>features-service</strong></td>
-                <td>Feature computation across every family — on-chain, delta-one, volatility, calendar, microstructure, cross-instrument and cross-asset-group — with formula versioning so a backtest is reproducible</td>
-                <td>One calculator: the staking-yield aggregator</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>custody-adapters-lite</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Signing and settlement against the two agreed custody providers, and the on-chain staking leg for the contracted liquid-staking token</td>
+                <td>The pluggable custody factory, provider switching, tri-party mirroring, treasury-versus-trading separation, cross-chain bridging</td>
+                <td class="mono">execution-service</td>
               </tr>
               <tr>
-                <td class="grp grp-data"><strong>instruments-service</strong></td>
-                <td>Reference-data source of truth: full venue catalogue enumeration, instrument definitions, listing and delisting lifecycle, coverage windows, per-venue adapters, corporate actions</td>
-                <td>Minimal venue-identifier reference data for four venues</td>
-                <td><span class="disp d-red">reduced</span></td>
+                <td class="grp grp-exec"><strong>instrument-model-lite</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Instrument definitions and contract specifications for the handed-over universe, normalised enough that venue-symbol logic does not leak into strategy code</td>
+                <td>The reference-data catalogue, listing and delisting lifecycle, coverage windows, the cross-venue instrument graph, corporate actions</td>
+                <td class="mono">instruments-service</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>execution-basic</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Post, cancel and replace sufficient to translate a target position into venue instructions, including the multi-leg sequencing the structure requires</td>
+                <td>The algorithm library, venue selection, slicing and queue logic, impact modelling, hedge orchestration, the paper matching engine</td>
+                <td class="mono">execution-service</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>risk-guards-local</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Strategy-local hard limits: maximum size and notional, stale-data guard, malformed-state checks, kill-switch hook</td>
+                <td>Cross-strategy circuit breakers, dynamic portfolio and risk allocators, client-level limits, global inventory controls, the centralised risk service</td>
+                <td class="mono">strategy-service · unified-trading-library</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>sim-harness</strong></td>
+                <td><span class="sf sf-red">reduced</span></td>
+                <td>Deterministic unit and integration harness for the strategy logic, sample replay fixtures, and acceptance tests for the contracted behaviour</td>
+                <td>The historical data platform, the simulation estate, the exchange-time fill engine, research orchestration, the batch/live determinism proof</td>
+                <td class="mono">strategy-service · e2e-testing</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>ops-local</strong></td>
+                <td><span class="sf sf-static">static</span></td>
+                <td>Container definition and compose file, example metrics and logging configuration, environment-variable schema, and a sample runbook</td>
+                <td>CI/CD, the quality gate, secret rotation, release governance, the observability platform, alert topology, automated rollback</td>
+                <td class="mono">unified-trading-ci · deployment-service</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>contracts-platform</strong></td>
+                <td><span class="sf sf-iface">interface only</span></td>
+                <td>Typed interfaces and event schemas for the ten substituted capabilities, each with a local or static implementation or a documented extension point. This is the architectural seam — see §04</td>
+                <td>All implementations. Nothing behind these contracts transfers</td>
+                <td class="mono">unified-api-contracts</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>examples-and-docs</strong></td>
+                <td><span class="sf sf-full">full</span></td>
+                <td>Architecture overview, sequence diagrams, configuration examples, local-run instructions, failure modes, interface descriptions, and the acceptance procedure in §06</td>
+                <td>Internal engineering playbooks and the operating documentation for the wider platform</td>
+                <td class="mono">unified-trading-pm</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Group B · The data plane — 3 repositories, not transferred</span>
-          <span class="note">The difference between trading live and being able to evidence anything</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead><tr><th>Repository</th><th>What it does</th><th>What its absence means for you</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="grp grp-data"><strong>market-tick-data-service</strong></td>
-                <td>Captures ticks, order books, funding and liquidations across every venue, plus on-chain rates; maintains the availability manifest with four-state absence accounting per shard</td>
-                <td>No history and no coverage accounting. You can trade from a live feed; you cannot re-backtest, re-evidence a return, or prove a gap was genuine absence rather than a failed fetch</td>
-              </tr>
-              <tr>
-                <td class="grp grp-data"><strong>market-data-processing-service</strong></td>
-                <td>Derives candles and normalised series from raw ticks, on the same code path in batch and live</td>
-                <td>Any derived series your strategy or your reporting needs, you compute yourself — and its batch and live versions become two implementations to keep agreeing</td>
-              </tr>
-              <tr>
-                <td class="grp grp-data"><strong>ml-service</strong></td>
-                <td>Model training, inference and artefact management for the ML-driven families</td>
-                <td>Not on your critical path today. It is the route by which regime detection and parameter search would later inform your carry book</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Group C · Valuation and post-trade — 5 repositories, not transferred</span>
-          <span class="note">Where a number becomes defensible</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead><tr><th>Repository</th><th>What it does</th><th>What its absence means for you</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="grp grp-post"><strong>greeks-service</strong></td>
-                <td>Marks every position to market and computes the carry-family rates — basis, funding, lending and staking APR — writing them to a global pricing ledger</td>
-                <td><strong>This is the one most often missed.</strong> Your own strategy's marks and carry rates are produced here, independently of the strategy that took the position. Without it you mark your own book from your own assumptions</td>
-              </tr>
-              <tr>
-                <td class="grp grp-post"><strong>batch-live-reconciliation-service</strong></td>
-                <td>Produces the daily determinism verdict: replays the paper run as a batch rerun and asserts they match trade for trade</td>
-                <td>The proof that your backtest and your live system are the same program stops being produced. Drift becomes something you discover in performance rather than in a check</td>
-              </tr>
-              <tr>
-                <td class="grp grp-post"><strong>client-reporting-api</strong></td>
-                <td>Performance reporting, the fee engine, high-water-mark accounting and invoice generation</td>
-                <td>Investor-facing reporting and the high-water-mark computation become yours to build, including the three-method HWM that avoids misstating after a capital flow</td>
-              </tr>
-              <tr>
-                <td class="grp grp-post"><strong>fund-administration-service</strong></td>
-                <td>Pooled-fund administration: subscription, redemption and allocation lifecycle, and the share-class model underneath it</td>
-                <td>Share classes, subscription and redemption flows, and their interaction with position sizing are not part of the package</td>
-              </tr>
-              <tr>
-                <td class="grp grp-post"><strong>alerting-service</strong></td>
-                <td>Multi-channel alerting across Slack, email and pager, and the service that drives trading circuit breakers from feed health</td>
-                <td>No alerting, and — more consequentially — no circuit breakers, since the breakers are driven from here rather than from the strategy</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Group D · Control plane and delivery — 6 repositories, not transferred</span>
-          <span class="note">How a change reaches production safely</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead><tr><th>Repository</th><th>What it does</th><th>What its absence means for you</th></tr></thead>
-            <tbody>
-              <tr><td class="grp grp-post"><strong>deployment-service</strong></td><td>VM and container lifecycle, launchers, spot-instance management with preemption recovery, zombie reaping, resource rightsizing</td><td>Provisioning, launch, restart and cost management become yours, including preemption recovery that resumes from measured progress</td></tr>
-              <tr><td class="grp grp-post"><strong>deployment-api</strong></td><td>The single deploy, launch and subscription backend — backtest, experiment and execution launches routed through one contract</td><td>No unified launch path; backtest and live become separately operated things</td></tr>
-              <tr><td class="grp grp-post"><strong>unified-trading-ci</strong></td><td>The quality gate: type checking, tests, complexity limits, banned-pattern enforcement, dual-cloud image builds from one commit</td><td>You build a release process for a system that moves real money, or you change it by hand</td></tr>
-              <tr><td class="grp grp-post"><strong>agent-orchestrator</strong></td><td>The autonomous engineering fleet: plan-driven dispatch, self-healing workers, and the escalation queue that auto-recovers a red pipeline before paging a human</td><td>Every failure becomes a pager event for a person, including the ones that resolve themselves</td></tr>
-              <tr><td class="grp grp-post"><strong>unified-trading-pm</strong></td><td>The written system: architecture decision records, runbooks, the venue and collateral research, the deployment topology configuration that services read at runtime</td><td>The topology configuration is a runtime dependency, not documentation. Operational knowledge arrives as a runbook rather than as a maintained corpus</td></tr>
-              <tr><td class="grp grp-post"><strong>ibkr-gateway-infra</strong></td><td>Manages the broker gateway process for TradFi connectivity</td><td>Not relevant to your current venue set; relevant the moment a regulated venue enters scope</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Group E · Surfaces and assurance — 6 repositories, not transferred</span>
-          <span class="note">Observability, and the tests that cross service boundaries</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead><tr><th>Repository</th><th>What it does</th><th>What its absence means for you</th></tr></thead>
-            <tbody>
-              <tr><td class="grp grp-exec"><strong>unified-trading-api</strong></td><td>The API surface over the trading and research estate</td><td>No programmatic surface over your own positions, runs and attribution beyond what you build</td></tr>
-              <tr><td class="grp grp-exec"><strong>unified-trading-system-ui</strong></td><td>Trading, research and client surfaces including the research terminal, promotion console and client management</td><td>No operator interface. Your interaction with the strategy is a command line and logs</td></tr>
-              <tr><td class="grp grp-exec"><strong>deployment-ui</strong></td><td>DevOps pane: deployments, CI health, fleet state, alerts, data status, safety operations including the kill-switch console</td><td>No operational console — including no kill-switch surface for a human to reach under pressure</td></tr>
-              <tr><td class="grp grp-exec"><strong>e2e-testing</strong></td><td>End-to-end proofs that cross service boundaries, including the determinism spine proof and the live funding-snapshot readers</td><td>The proofs that validate the whole chain, and — see the flag in the companion document — the only implementation of direct-from-venue funding reads</td></tr>
-              <tr><td class="grp grp-exec"><strong>system-integration-tests</strong></td><td>Cross-service integration scenarios at the staging boundary</td><td>Integration coverage across the boundaries your reduced package still has</td></tr>
-              <tr><td class="grp grp-exec"><strong>trading-agent-service</strong></td><td>An agent pipeline translating model inference into live instructions</td><td>Not on your critical path today; part of how directional and ML-driven allocations would later be operated</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <p>
+        Two notes on the source column. First, no package is a directory copy: each is an import closure taken over the
+        repository tier graph, which is computable exactly because imports only ever point downward through that graph —
+        so the package is reproducible from a commit rather than assembled by hand. Second, the count of components is
+        larger than the count of source repositories, because the extraction splits along capability lines rather than
+        along our internal repository boundaries. §09 maps it the other way, from the estate to the package.
+      </p>
     </details>
   </section>
 
   <!-- ==================== 03 ==================== -->
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>Inside the six: what reduction actually removes</h2></div>
+    <div class="sec-head"><span class="num">03</span><h2>Runtime path through the carved system</h2></div>
 
     <p class="lede">
-      "Reduced" does most of the work in this document, so it is worth being concrete about it. In each of the six, the
-      part that ships is small and the part that stays is the part that made the small part cheap to write.
+      The runtime path is short and auditable by design. Seven steps from a venue event to a persisted decision, each
+      owned by exactly one component.
     </p>
 
     <div class="keypoints">
-      <div><b>2 of 8 archetypes</b><span>The carry package alone holds eight; you receive two, without the family machinery around them</span></div>
-      <div><b>4 of 13 venues</b><span>Adapters for your venues only — and the registry that makes venues interchangeable stays</span></div>
-      <div><b>1 feature calculator</b><span>Staking yield. The funding side is produced by a pipeline you would not have</span></div>
+      <div><b>Seven steps</b><span>Event, normalise, decide, guard, order intent, place, persist — one owner each</span></div>
+      <div><b>One decision point</b><span>All strategy logic sits in step 3; the components either side are transport and safety</span></div>
+      <div><b>Auditable</b><span>A reviewer can follow one tick end to end without entering platform code</span></div>
     </div>
 
-    <details class="sec-body">
-      <summary>Repository by repository — the closure, and what sits immediately outside it</summary>
+    <details class="sec-body" open>
+      <summary>The seven steps, their owners, and where the platform normally intervenes</summary>
 
-      <h3>strategy-service — two modules out of a family, out of a platform</h3>
-      <p>
-        The carry-and-yield package alone contains eight archetype modules; you receive two of them. Sitting alongside
-        them in the same package are the recursive-staked variant, lending rotation, passive staking, dated basis, and
-        the funding-dispersion analysis that decides which coins are worth holding at all. Underneath, the repository's
-        other sub-packages own risk, position monitoring and P&amp;L attribution — which is why the two modules you
-        receive are as short as they are. They delegate.
-      </p>
-      <p>
-        The consequence for a receiving engineer: the two modules are readable and self-contained at the decision level,
-        and they assume a caller that supplies features, a ledger that accepts writes, a risk layer that vetoes, and a
-        position monitor that reconciles. Those assumptions are interfaces in the package you get and implementations in
-        packages you do not.
-      </p>
+      <figure>
+        <svg viewBox="0 0 1160 214" role="img" aria-label="Diagram: the runtime path has seven sequential steps. A venue market or account event enters the exchange adapters, is normalised by the instrument model, is evaluated by the strategy core, is checked by local risk guards, becomes an order intent in basic execution, is placed back through the exchange adapters, and is persisted by the runner and local ops components.">
+          <text x="24" y="20" style="fill:var(--ink-3);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">ONE TICK, END TO END</text>
 
-      <h3>execution-service — connectivity out of an execution platform</h3>
-      <p>
-        Four venue adapters out of thirteen, and the custody pair. What stays is the layer that decides how an order is
-        worked: the algorithm library, the routing, the policy registry, and the paper matching engine that makes a
-        backtest fill model match the live one. Also staying: the adapters for every other venue, which is what makes
-        adding a fifth venue an integration rather than a project.
-      </p>
+          <!-- step 1 -->
+          <rect x="24" y="34" width="138" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.4"/>
+          <text x="36" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">01</text>
+          <text x="36" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Market /</text>
+          <text x="36" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">account event</text>
+          <text x="24" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">exchange-</text>
+          <text x="24" y="134" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">adapters-lite</text>
+          <path d="M166 67 L180 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
 
-      <h3>unified-api-contracts and unified-trading-library — the closure, not the library</h3>
-      <p>
-        These two are where "reduced" is least intuitive. Both are large, both are imported by everything, and the
-        subset you need is defined by what your engines actually reach — computable exactly, because the tier rule
-        guarantees imports only point downward. What arrives is that closure: your venue and collateral registries, the
-        instruction and ledger models, config and cloud interfaces, manifest and ledger writers, the on-chain rate
-        primitives.
-      </p>
-      <p>
-        What stays inside the same repositories is instructive, because it is the machinery this document keeps
-        referring to: the allocation package, chaos injection, circuit breakers, client lifecycle, the streaming event
-        facade, the domain client with its path registry and typed readers. Those are not withheld to be difficult —
-        they are the multi-tenant, multi-strategy platform, and a single-strategy package does not import them.
-      </p>
+          <!-- step 2 -->
+          <rect x="184" y="34" width="138" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.4"/>
+          <text x="196" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">02</text>
+          <text x="196" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Normalised</text>
+          <text x="196" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">minimal event</text>
+          <text x="184" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">instrument-</text>
+          <text x="184" y="134" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">model-lite</text>
+          <path d="M326 67 L340 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
 
-      <h3>features-service and instruments-service — one calculator and one registry</h3>
+          <!-- step 3 — the decision -->
+          <rect x="344" y="34" width="138" height="66" rx="4" style="fill:var(--g-exec-wash);stroke:var(--g-exec);stroke-width:2.4"/>
+          <text x="356" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">03</text>
+          <text x="356" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:700">Strategy</text>
+          <text x="356" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:700">decision</text>
+          <text x="344" y="120" style="fill:var(--ink-2);font-family:var(--mono);font-size:10px;font-weight:600">strategy-</text>
+          <text x="344" y="134" style="fill:var(--ink-2);font-family:var(--mono);font-size:10px;font-weight:600">basis-core</text>
+          <path d="M486 67 L500 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
+
+          <!-- step 4 -->
+          <rect x="504" y="34" width="138" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-post);stroke-width:1.4"/>
+          <text x="516" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">04</text>
+          <text x="516" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Local safety</text>
+          <text x="516" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">checks</text>
+          <text x="504" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">risk-guards-</text>
+          <text x="504" y="134" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">local</text>
+          <path d="M646 67 L660 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
+
+          <!-- step 5 -->
+          <rect x="664" y="34" width="138" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.4"/>
+          <text x="676" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">05</text>
+          <text x="676" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Order intent</text>
+          <text x="664" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">execution-basic</text>
+          <path d="M806 67 L820 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
+
+          <!-- step 6 -->
+          <rect x="824" y="34" width="138" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.4"/>
+          <text x="836" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">06</text>
+          <text x="836" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Venue order</text>
+          <text x="836" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">and fill</text>
+          <text x="824" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">exchange-</text>
+          <text x="824" y="134" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">adapters-lite</text>
+          <path d="M966 67 L980 67" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#a2)"/>
+
+          <!-- step 7 -->
+          <rect x="984" y="34" width="152" height="66" rx="4" style="fill:var(--surface);stroke:var(--g-post);stroke-width:1.4"/>
+          <text x="996" y="52" style="fill:var(--accent);font-family:var(--mono);font-size:10px">07</text>
+          <text x="996" y="72" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Local ledger</text>
+          <text x="996" y="88" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">and logs</text>
+          <text x="984" y="120" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">strategy-runner</text>
+          <text x="984" y="134" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">+ ops-local</text>
+
+          <!-- seam note -->
+          <line x1="24" y1="164" x2="1136" y2="164" style="stroke:var(--rule);stroke-width:1"/>
+          <text x="24" y="186" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">Steps 1, 2, 4 and 7 each call outward to a substituted capability — features and marks in, reference-data refresh,</text>
+          <text x="24" y="202" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">breaker state, reconciliation and attribution out. Those calls are the ten interfaces in §04.</text>
+
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--ink-3)"/>
+            </marker>
+          </defs>
+        </svg>
+        <figcaption>
+          <b>Figure 1 — the runtime path.</b> Seven steps, one owner each. The heavier outline at step 3 marks the only
+          step containing strategy logic; everything either side is transport, normalisation, safety or persistence. The
+          path is deliberately shallow so a reviewer can follow a single tick end to end without reading platform code.
+        </figcaption>
+      </figure>
+
       <p>
-        You receive the staking-yield aggregator and a minimal venue-identifier registry. What stays is the reason those
-        two are trustworthy: formula versioning that makes a feature reproducible at the version a backtest used, and
-        the reference-data lifecycle that knows when an instrument listed, when it delisted, and what its coverage window
-        is. A minimal registry tells you a venue's identifier. It does not tell you that the venue changed its contract
-        specification last March.
+        The design intent is that every place where the platform normally adds capability is an explicit interface
+        boundary rather than something embedded invisibly in the carved code. That gives a clean engineering choice at
+        each seam: implement the dependency, or resolve it to a maintained service.
       </p>
     </details>
   </section>
 
   <!-- ==================== 04 ==================== -->
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>"Light" adapters — connectivity without the estate</h2></div>
+    <div class="sec-head"><span class="num">04</span><h2>The platform seam — 10 interface contracts</h2></div>
 
     <p class="lede">
-      You receive working exchange connectivity: authenticate, place, cancel, read fills, sign through custody. That is
-      genuinely what an adapter is. What surrounds an adapter in this platform is a different matter, and it is where
-      most of the operational value sits.
+      The seam is the most useful part of this specification. Ten capabilities the strategy depends on are declared as
+      typed interfaces in <code>contracts-platform</code>. In the carved package each resolves to a local, static or mock
+      implementation. In the hosted form each resolves to a maintained service. The interface is identical either way.
     </p>
 
     <div class="keypoints">
-      <div><b>You get</b><span>Direct connectivity to your four venues plus the two custody providers — authenticate, place, cancel, read</span></div>
-      <div><b>You do not get</b><span>Automated position and balance reconciliation against venue truth</span></div>
-      <div><b>Nor</b><span>Custody-provider abstraction, the treasury-and-trading split, per-client separation, or share-class dynamics</span></div>
+      <div><b>One boundary, two resolutions</b><span>The same contract is satisfied locally or by a service — so the choice is per-capability, not all-or-nothing</span></div>
+      <div><b>No implementation transfers</b><span>Contracts, schemas and mocks only; nothing behind them</span></div>
+      <div><b>One named gap</b><span>The funding-rate reader has no production implementation outside the platform data path — flagged below</span></div>
     </div>
 
-    <details class="sec-body">
-      <summary>The five things that sit around an adapter, and what each one is worth</summary>
+    <details class="sec-body" open>
+      <summary>The seam diagram, the ten contracts, and the funding-reader requirement</summary>
+
+      <figure>
+        <svg viewBox="0 0 1160 470" role="img" aria-label="Diagram: the carved package calls through a single typed-interface seam named contracts-platform, containing ten interfaces. The seam resolves two ways: under self-operation to local, static or mock implementations that the receiving team supplies, and under Odum hosting to maintained platform services. The interface is identical in both cases.">
+          <!-- package -->
+          <rect x="20" y="52" width="278" height="352" rx="5" style="fill:var(--surface);stroke:var(--ink);stroke-width:1.5"/>
+          <text x="36" y="76" style="fill:var(--ink-3);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">CARVED PACKAGE</text>
+          <line x1="36" y1="86" x2="282" y2="86" style="stroke:var(--rule);stroke-width:1"/>
+          <text x="36" y="112" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Strategy and configuration</text>
+          <text x="36" y="130" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">basis-core · config · runner</text>
+          <text x="36" y="166" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Connectivity and execution</text>
+          <text x="36" y="184" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">adapters · custody · execution-basic</text>
+          <text x="36" y="220" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Instrument model</text>
+          <text x="36" y="238" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">instrument-model-lite</text>
+          <text x="36" y="274" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Local safety and test</text>
+          <text x="36" y="292" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">risk-guards · sim-harness · ops</text>
+          <line x1="36" y1="322" x2="282" y2="322" style="stroke:var(--rule);stroke-width:1"/>
+          <text x="36" y="344" style="fill:var(--ink-3);font-family:var(--sans);font-size:11px">Derived as an import closure over</text>
+          <text x="36" y="360" style="fill:var(--ink-3);font-family:var(--sans);font-size:11px">the tier graph — reproducible from</text>
+          <text x="36" y="376" style="fill:var(--ink-3);font-family:var(--sans);font-size:11px">a commit, not assembled by hand</text>
+
+          <path d="M298 228 L336 228" style="fill:none;stroke:var(--ink);stroke-width:1.6" marker-end="url(#a3)"/>
+
+          <!-- seam -->
+          <rect x="340" y="52" width="214" height="352" rx="5" style="fill:var(--accent-wash);stroke:var(--accent);stroke-width:2"/>
+          <text x="356" y="76" style="fill:var(--accent);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">THE SEAM</text>
+          <text x="356" y="94" style="fill:var(--ink);font-family:var(--mono);font-size:11px;font-weight:600">contracts-platform</text>
+          <line x1="356" y1="106" x2="538" y2="106" style="stroke:var(--accent);stroke-width:1;stroke-opacity:0.45"/>
+          <text x="356" y="128" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">FeatureProvider</text>
+          <text x="356" y="147" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">PricingService</text>
+          <text x="356" y="166" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">ReferenceDataProvider</text>
+          <text x="356" y="185" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">ExecutionService</text>
+          <text x="356" y="204" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">PortfolioRiskService</text>
+          <text x="356" y="223" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">TreasuryService</text>
+          <text x="356" y="242" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">ReconciliationService</text>
+          <text x="356" y="261" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">AttributionService</text>
+          <text x="356" y="280" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">ConfigVersionService</text>
+          <text x="356" y="299" style="fill:var(--ink-2);font-family:var(--mono);font-size:10.5px">UniverseService</text>
+          <line x1="356" y1="322" x2="538" y2="322" style="stroke:var(--accent);stroke-width:1;stroke-opacity:0.45"/>
+          <text x="356" y="344" style="fill:var(--ink-2);font-family:var(--sans);font-size:11px">Typed interfaces and event</text>
+          <text x="356" y="360" style="fill:var(--ink-2);font-family:var(--sans);font-size:11px">schemas only. Identical in</text>
+          <text x="356" y="376" style="fill:var(--ink-2);font-family:var(--sans);font-size:11px">both resolutions below.</text>
+
+          <!-- fork -->
+          <path d="M554 160 L600 160 L600 118 L638 118" style="fill:none;stroke:var(--rule-strong);stroke-width:1.4;stroke-dasharray:5 3" marker-end="url(#a3d)"/>
+          <path d="M554 296 L600 296 L600 338 L638 338" style="fill:none;stroke:var(--g-data);stroke-width:1.4" marker-end="url(#a3g)"/>
+
+          <!-- self-operated -->
+          <rect x="642" y="52" width="498" height="150" rx="5" style="fill:var(--surface-2);stroke:var(--rule-strong);stroke-width:1.4;stroke-dasharray:5 3"/>
+          <text x="660" y="76" style="fill:var(--ink-3);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">RESOLUTION A · SELF-OPERATED</text>
+          <text x="660" y="100" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Local, static or mock implementations, supplied with the package</text>
+          <text x="660" y="124" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Static universe and frozen configuration satisfy the universe and config contracts</text>
+          <text x="660" y="142" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Mocks and documented extension points for reconciliation and attribution</text>
+          <text x="660" y="160" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Feature and pricing readers built against venue APIs — see the requirement below</text>
+          <text x="660" y="184" style="fill:var(--ink-3);font-family:var(--sans);font-size:11px">Each contract is then implemented, sourced or deliberately left inert.</text>
+
+          <!-- odum hosted -->
+          <rect x="642" y="254" width="498" height="150" rx="5" style="fill:var(--surface);stroke:var(--g-data);stroke-width:1.6"/>
+          <text x="660" y="278" style="fill:var(--g-data);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">RESOLUTION B · ODUM-HOSTED</text>
+          <text x="660" y="302" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Each contract resolves to a maintained platform service</text>
+          <text x="660" y="326" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Features, pricing, reference data and universe served by running pipelines</text>
+          <text x="660" y="344" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Reconciliation, attribution and treasury as post-trade services</text>
+          <text x="660" y="362" style="fill:var(--ink-2);font-family:var(--sans);font-size:11.5px">· Config versioning and portfolio risk under platform governance</text>
+          <text x="660" y="386" style="fill:var(--ink-3);font-family:var(--sans);font-size:11px">The strategy code is unchanged; only the resolution differs.</text>
+
+          <!-- legend -->
+          <line x1="20" y1="428" x2="1140" y2="428" style="stroke:var(--rule);stroke-width:1"/>
+          <text x="20" y="450" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">Dashed — a component the receiving team supplies.  ·  Solid green — an existing maintained service.  ·  The seam itself is identical in both paths, which is what makes the choice reversible per capability.</text>
+
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--ink)"/>
+            </marker>
+            <marker id="a3d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--rule-strong)"/>
+            </marker>
+            <marker id="a3g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--g-data)"/>
+            </marker>
+          </defs>
+        </svg>
+        <figcaption>
+          <b>Figure 2 — one seam, two resolutions.</b> The strategy calls ten typed interfaces. Under self-operation they
+          resolve to local implementations the receiving team owns; under Odum hosting they resolve to maintained
+          services. Because the contract is the same in both directions, the decision is per-capability and reversible
+          rather than a single irreversible election — and the strategy code does not change either way.
+        </figcaption>
+      </figure>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Adapter, and adapter-in-a-platform</span>
-          <span class="note">The column on the right is what does not transfer</span>
+          <span class="label">The ten contracts</span>
+          <span class="note">Illustrative signatures — the shipped interfaces are typed and versioned</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Concern</th><th>What the light adapter does</th><th>What the platform does around it</th></tr></thead>
+            <thead><tr><th>Interface</th><th>Illustrative contract</th><th>In the carved package</th></tr></thead>
             <tbody>
               <tr>
-                <td class="grp grp-exec"><strong>Reconciliation</strong></td>
-                <td>Reports the fills the venue returned</td>
-                <td>Continuously reconciles believed position and balance against venue truth, detects drift, and treats a mismatch as an incident with a defined response rather than a logging line</td>
+                <td class="grp grp-data"><strong>FeatureProvider</strong></td>
+                <td class="mono">staking_apy() · funding_apy() · feature_version()</td>
+                <td>Direct-from-venue readers. Formula versioning becomes a convention rather than an enforced property</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>Custody abstraction</strong></td>
-                <td>Signs through the provider it was written for</td>
-                <td>Treats the signing surface as pluggable, so moving from one custodian to another — or running a tri-party mirror alongside direct custody — is a configuration change and a credential handover, not an execution-path rewrite</td>
+                <td class="grp grp-data"><strong>PricingService</strong></td>
+                <td class="mono">mark_price() · carry_rates() · pricing_asof()</td>
+                <td>Self-marked from venue prices. Independent marking is the substitution most often overlooked</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>Treasury and trading split</strong></td>
-                <td>Trades whatever is in the account it points at</td>
-                <td>Separates a per-share-class treasury from per-strategy trading wallets, moves capital between them on a reserve ratio, and bridges across chains as part of the same flow — so idle capital is not sitting in a trading wallet and a strategy cannot consume more than its allocation</td>
+                <td class="grp grp-data"><strong>ReferenceDataProvider</strong></td>
+                <td class="mono">resolve_instrument() · venue_symbol() · tick_size() · contract_multiplier()</td>
+                <td>Static export for the agreed universe; re-exported when a venue changes a specification</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>Per-client separation</strong></td>
-                <td>One account, one book</td>
-                <td>One isolated process per client with a data model that refuses to represent a cross-client transfer, so isolation is structural rather than procedural — the property an allocator's operational due diligence asks about</td>
+                <td class="grp grp-exec"><strong>ExecutionService</strong></td>
+                <td class="mono">submit_intent() · cancel_intent() · hedge_intent() · execution_events()</td>
+                <td><code>execution-basic</code> satisfies it with direct order placement; algorithms remain platform-side</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>Share-class dynamics</strong></td>
-                <td>Not modelled</td>
-                <td>Subscriptions and redemptions land against a share class, size positions accordingly, and flow through to fee and high-water-mark accounting at the class level</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <p>
-        The pattern across all five: the adapter answers "can I place an order at this venue". The platform answers "is
-        what I believe about this venue true, whose money is it, and what happens when the answer changes". A single
-        strategy at a single client with one custodian can live without the second question for a while. A fund
-        administrator asking for a monthly reconciliation cannot.
-      </p>
-    </details>
-  </section>
-
-  <!-- ==================== 05 ==================== -->
-  <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Static config versus a system that keeps looking</h2></div>
-
-    <p class="lede">
-      This is the single largest difference and the easiest to underestimate, because it does not look like missing code.
-      A carve-out receives one parameter set, optimised as at the hand-over date. What stays behind is the machinery that
-      found it and the machinery that keeps re-finding it.
-    </p>
-
-    <div class="keypoints">
-      <div><b>You receive</b><span>One frozen, optimised configuration — correct for the regime it was fitted in</span></div>
-      <div><b>You do not receive</b><span>Parameter search, regime detection, or the dynamism that reallocates as conditions move</span></div>
-      <div><b>Nor the governance</b><span>Version control over which config is live, the promotion ladder that let it become live, and the compliance trail behind both</span></div>
-    </div>
-
-    <details class="sec-body">
-      <summary>What "dynamic" means concretely — six mechanisms, and what a static config does instead</summary>
-
-      <div class="plate">
-        <div class="plate-head">
-          <span class="label">Dynamism, itemised</span>
-          <span class="note">Each row is a running mechanism, not a roadmap item</span>
-        </div>
-        <div class="plate-body scroll-x">
-          <table>
-            <thead><tr><th>Mechanism</th><th>What it does in the platform</th><th>Static-config equivalent</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="grp grp-exec"><strong>Dynamic coin rotation</strong></td>
-                <td>Ranks the coin universe continuously on current funding across venues, with smoothing to damp turnover, and rotates the book toward where the carry actually is</td>
-                <td>A fixed coin list. When funding on one name compresses, the position stays</td>
+                <td class="grp grp-post"><strong>PortfolioRiskService</strong></td>
+                <td class="mono">capital_budget() · risk_limits() · circuit_state() · target_allocation()</td>
+                <td>Static budget and limits from configuration; <code>circuit_state()</code> returns a locally computed value</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>Dynamic venue and structure switching</strong></td>
-                <td>Moves between staked-basis and cash-basis per venue as collateral acceptance and funding change, respecting each venue's rules</td>
-                <td>A fixed structure per venue, chosen once</td>
+                <td class="grp grp-post"><strong>TreasuryService</strong></td>
+                <td class="mono">available_balance() · request_transfer() · transfer_status() · custody_location()</td>
+                <td>Balance reads against the trading account; transfers are an operational procedure rather than a call</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>Portfolio allocation</strong></td>
-                <td>Allocates across strategies, venues and versions, with capital moving to the better risk-adjusted opportunity</td>
-                <td>One strategy, one allocation, adjusted manually</td>
+                <td class="grp grp-post"><strong>ReconciliationService</strong></td>
+                <td class="mono">position_snapshot() · balance_snapshot() · exceptions() · reconciled_state()</td>
+                <td>Mock with a documented extension point. Production reconciliation is built or sourced</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>Circuit breakers</strong></td>
-                <td>Feed health, staleness and error classification drive automatic breakers that stop new signals and then halt, with resume gated by a defined recovery matrix</td>
-                <td>Whatever the runner does on an exception</td>
+                <td class="grp grp-post"><strong>AttributionService</strong></td>
+                <td class="mono">decision_pnl() · execution_pnl() · funding_pnl() · attribute_by()</td>
+                <td>Mock. The ledgers the package writes contain the inputs an implementation would need</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>Version governance</strong></td>
-                <td>A strategy climbs candidate, one-day paper, early live, full live on one config surface, with pre-flight gates at each step and an operator approving every fill for the first three trading days</td>
-                <td>Deploy and hope. The tested artefact and the promoted artefact are separate things</td>
+                <td class="grp grp-post"><strong>ConfigVersionService</strong></td>
+                <td class="mono">active_config() · version_id() · approval_metadata() · rollout_state()</td>
+                <td>Returns the frozen configuration and its version identifier; approval and rollout are inert</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>Compliance trail</strong></td>
-                <td>Every instruction carries its archetype build, slot version, config hash and attestations; every event carries the same tag; any run replays deterministically from its manifest</td>
-                <td>Logs. Reconstructing why a decision was made in October is an investigation</td>
+                <td class="grp grp-exec"><strong>UniverseService</strong></td>
+                <td class="mono">eligible_instruments() · ranking() · rebalance_events()</td>
+                <td>Returns the static list. Ranking is constant and no rebalance event is ever emitted</td>
               </tr>
             </tbody>
           </table>
@@ -751,334 +847,436 @@
       </div>
 
       <div class="callout">
-        <span class="tag">The compounding point</span>
+        <span class="tag">Named requirement — funding-rate reader</span>
         <p>
-          A frozen optimum decays. Not because the parameters were wrong, but because the regime they were fitted in
-          moves — and in today's compressed basis environment it moves quickly. Dynamic switching between structures and
-          venues is, on our own measurement, one of the larger contributors to maintaining returns rather than a
-          refinement on top of them. A static configuration is therefore not a slightly worse version of the same
-          strategy; it is a strategy with a different and shorter half-life.
+          The staked-basis archetype reads a funding-rate feature. On the platform that value is produced by the
+          market-data path and the features pipeline. The only direct-from-venue implementation currently outside that
+          path sits in a test repository, which is not in the transferring set. A self-operated deployment therefore needs
+          a production funding reader per venue behind <code>FeatureProvider</code> as a first-order item. We are
+          productionising these readers into the licensed set; until that lands, treat it as scoped extraction work in
+          either direction.
         </p>
       </div>
     </details>
   </section>
 
-  <!-- ==================== 06 ==================== -->
-  <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>The economics of shared infrastructure</h2></div>
+  <!-- ==================== 05 ==================== -->
+  <section id="s5">
+    <div class="sec-head"><span class="num">05</span><h2>Configuration and parameter snapshot</h2></div>
 
     <p class="lede">
-      A managed platform is cheaper than a dedicated one for a structural reason rather than a commercial one: the
-      expensive components are fixed-cost and shared, so their cost per strategy falls as the platform carries more
-      strategies. A carve-out converts all of it into your fixed cost, at a scale of one.
+      At the hand-over point the package receives a configuration snapshot. Several values that the configuration format
+      presents as constants are, on the platform, outputs of services that recompute them — and the file format does not
+      distinguish the two cases, so it is stated here explicitly.
     </p>
 
     <div class="keypoints">
-      <div><b>Shared, not duplicated</b><span>Capture, storage, reference data, CI, monitoring and the escalation fleet serve every strategy at once</span></div>
-      <div><b>Your cost is marginal</b><span>You pay for your slice of a running estate, not for standing one up</span></div>
-      <div><b>A carve-out inverts it</b><span>Every shared component becomes a dedicated component, at single-strategy scale</span></div>
+      <div><b>Transferred</b><span>One parameter set, a documented schema with validation constraints, the covered universe, and a version identifier binding source, config and fixtures</span></div>
+      <div><b>Not transferred</b><span>Parameter history, the search space, the optimisation pipeline, auto-tuning, alternate variants, research notebooks</span></div>
+      <div><b>Consequence</b><span>The set is correct for the conditions it was fitted against and does not re-derive itself</span></div>
     </div>
 
     <details class="sec-body">
-      <summary>Which costs are shared, which are yours alone, and what changes under a carve-out</summary>
+      <summary>What the snapshot contains, and which inputs are constants here but services on the platform</summary>
+
+      <p>The snapshot comprises exactly five things:</p>
+      <ul>
+        <li>One parameter set, appropriate to the agreed universe at the agreed version and date.</li>
+        <li>A human-readable schema describing every strategy parameter and its validation constraints.</li>
+        <li>The exact venue and instrument universe covered by the acceptance test in §06.</li>
+        <li>A version identifier tying source, configuration and test fixtures together.</li>
+        <li>The replay fixtures the acceptance test runs against.</li>
+      </ul>
+      <p>
+        It does not include the parameter history, the search space, the optimisation pipeline, an auto-tuning loop,
+        alternate strategy variants, or research notebooks, unless separately agreed.
+      </p>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Cost structure</span>
-          <span class="note">Structure, not figures — commercial terms are in the SLA</span>
+          <span class="label">Constants here, services there</span>
+          <span class="note">Capability boundary — mechanism detail is out of scope for this document</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Component</th><th>Under the managed platform</th><th>Under a carve-out</th></tr></thead>
+            <thead><tr><th>Input</th><th>In the package</th><th>On the platform</th></tr></thead>
             <tbody>
-              <tr><td class="grp grp-data"><strong>Market-data capture and storage</strong></td><td>One estate serving every strategy and client; your slice is marginal storage and compute</td><td>You capture only what you need, and lose the history behind everything you would want to evidence</td></tr>
-              <tr><td class="grp grp-data"><strong>Data vendor licences</strong></td><td>Held centrally and amortised across the estate</td><td>Procured by you, priced for one consumer</td></tr>
-              <tr><td class="grp grp-data"><strong>Reference data and venue research</strong></td><td>Maintained once — collateral matrices live-probed, contract changes tracked — and consumed by everything</td><td>A snapshot, maintained by you, re-probed by you when a venue changes its risk engine</td></tr>
-              <tr><td class="grp grp-post"><strong>CI, quality gates, release</strong></td><td>One pipeline, one gate, every repository</td><td>Yours to build and run for one repository</td></tr>
-              <tr><td class="grp grp-post"><strong>Monitoring, alerting, on-call</strong></td><td>One rotation and one alerting estate across all strategies</td><td>A rotation for one strategy, at the same fixed human cost</td></tr>
-              <tr><td class="grp grp-post"><strong>Autonomous escalation</strong></td><td>Shared fleet handling restarts, resource failures and pipeline recovery before a human is involved</td><td>Not available. The floor is a human on a pager</td></tr>
-              <tr><td class="grp grp-exec"><strong>Compute</strong></td><td>Spot-first with preemption recovery, admission sized to measured load, and rightsizing audits — across a fleet where the savings compound</td><td>Yours to provision, and the same savings require the same engineering</td></tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Instrument universe</strong></td>
+                <td>A fixed list in configuration</td>
+                <td><code>UniverseService</code> — selected from cross-venue rate data and re-evaluated on a schedule</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Structure per venue</strong></td>
+                <td>One structure per venue, chosen once</td>
+                <td>Selected per venue against current collateral acceptance and rate conditions, within each venue's rules</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Capital allocation</strong></td>
+                <td>One allocation, changed by editing configuration</td>
+                <td><code>PortfolioRiskService</code> — allocated across strategies, venues and versions</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Hedge and sizing parameters</strong></td>
+                <td>Fixed values, valid for the conditions they were fitted against</td>
+                <td>Re-fitted on a research cadence, version-controlled and promoted rather than edited in place</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Which configuration is live</strong></td>
+                <td>Whatever is deployed</td>
+                <td><code>ConfigVersionService</code> — a staged promotion ladder with pre-flight gates; the tested artefact and the promoted artefact are the same artefact</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Decision provenance</strong></td>
+                <td>Application logs and the local ledgers</td>
+                <td>Every instruction and event carries its build, version, configuration hash and attestations, so a run replays deterministically from its manifest</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
 
       <p>
-        The asymmetry is worth stating directly: <strong>the components that dominate the cost of running a trading
-        platform are the ones least sensitive to how many strategies run on it.</strong> A monitoring rotation costs the
-        same for one strategy as for eight. A capture estate costs marginally more for the ninth venue than the eighth. A
-        release pipeline is a fixed build. That is what makes a shared platform economically different in kind rather
-        than in degree — and it is why a carve-out's true cost is rarely the hand-over fee.
+        Whether a fixed set drifts materially over a given horizon is a question about the strategy's environment rather
+        than about the software, and it is measurable directly — compare a frozen set's behaviour against a re-derived one
+        over the same window. It is raised here only because it is not visible from reading the package.
+      </p>
+    </details>
+  </section>
+
+  <!-- ==================== 06 ==================== -->
+  <section id="s6">
+    <div class="sec-head"><span class="num">06</span><h2>Hand-over acceptance criteria</h2></div>
+
+    <p class="lede">
+      The hand-over is complete when these nine conditions hold. They are written to be executed and signed off rather
+      than agreed in principle, and the last one is the most important.
+    </p>
+
+    <div class="keypoints">
+      <div><b>Nine conditions</b><span>Build, connectivity, market state, decision determinism, orders, safety, configuration, observability, documentation</span></div>
+      <div><b>Determinism is testable</b><span>Supplied replay fixtures must produce identical decisions on your infrastructure</span></div>
+      <div><b>Condition 9 is the real test</b><span>Your team can enumerate every external dependency it must replace to operate independently</span></div>
+    </div>
+
+    <details class="sec-body">
+      <summary>The nine acceptance conditions</summary>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Acceptance test</span>
+          <span class="note">Executed jointly during the support period defined in the SLA</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>#</th><th>Area</th><th>Acceptance condition</th></tr></thead>
+            <tbody>
+              <tr><td class="step-col">01</td><td class="grp grp-post"><strong>Build</strong></td><td>The package set builds from a clean checkout using documented dependencies, on your infrastructure, without access to our estate</td></tr>
+              <tr><td class="step-col">02</td><td class="grp grp-exec"><strong>Connectivity</strong></td><td>Connects to each agreed venue in sandbox or an agreed safe production mode, authenticating with your credentials</td></tr>
+              <tr><td class="step-col">03</td><td class="grp grp-data"><strong>Market state</strong></td><td>Consumes the required market and account events and constructs the minimal strategy state from them</td></tr>
+              <tr><td class="step-col">04</td><td class="grp grp-exec"><strong>Decision logic</strong></td><td>Produces deterministic, identical strategy decisions for the supplied replay fixtures</td></tr>
+              <tr><td class="step-col">05</td><td class="grp grp-exec"><strong>Orders</strong></td><td>Expresses strategy order intents through the basic execution implementation, including the multi-leg sequence</td></tr>
+              <tr><td class="step-col">06</td><td class="grp grp-post"><strong>Safety</strong></td><td>Local hard limits and the kill-switch path are demonstrated to fire under induced conditions</td></tr>
+              <tr><td class="step-col">07</td><td class="grp grp-post"><strong>Configuration</strong></td><td>Runs on the frozen agreed configuration, and fails loudly and clearly on an invalid one</td></tr>
+              <tr><td class="step-col">08</td><td class="grp grp-post"><strong>Observability</strong></td><td>Produces local logs and metrics sufficient for your team to debug the strategy process unaided</td></tr>
+              <tr><td class="step-col">09</td><td class="grp grp-data"><strong>Documentation</strong></td><td>Your engineering team can enumerate every external dependency it must replace to operate independently — the ten contracts in §04 and the nine functions in §07</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>
+        Condition 9 carries the most weight because it is the one that prevents a hand-over from looking complete and
+        failing later. A package that builds, connects and trades in a sandbox but leaves its substitution list implicit
+        is the failure mode worth designing against, which is why the interface seam exists as a shipped artefact rather
+        than as an appendix to a document.
       </p>
     </details>
   </section>
 
   <!-- ==================== 07 ==================== -->
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Marginal cost of the next coin, venue and strategy</h2></div>
+    <div class="sec-head"><span class="num">07</span><h2>Operational responsibilities on self-operation</h2></div>
 
     <p class="lede">
-      The practical value of staying is not the twenty repositories in the abstract. It is what they do to the cost of
-      the next thing you want — and this is the part that gets more interesting rather than less as the mandate grows.
+      The package is software. Running it in production requires an operational estate around it. This is what that
+      estate contains, drawn from what currently sits around the same code — written to be audited line by line against
+      what Elysium already runs, since several may already be satisfied.
     </p>
 
     <div class="keypoints">
-      <div><b>A new coin</b><span>Enters the ranked universe automatically once the data exists; no engineering per name</span></div>
-      <div><b>A new venue</b><span>A registry row plus an adapter against a stable spine — bounded integration, not a rebuild</span></div>
-      <div><b>A new strategy</b><span>Plugs into the same tick interface, ledger and reconciliation spine, and inherits every guarantee</span></div>
+      <div><b>Nine standing functions</b><span>Release, provisioning, monitoring, reconciliation, marking, reporting, breakers, on-call, data retention</span></div>
+      <div><b>Mostly fixed-cost</b><span>Seven of the nine cost substantially the same for one strategy as for several</span></div>
+      <div><b>Audit, don't accept</b><span>Check each against your existing infrastructure rather than treating the list as new build</span></div>
     </div>
 
     <details class="sec-body">
-      <summary>What each addition actually costs on the platform, and what it costs standalone</summary>
+      <summary>The nine functions, what each involves, and how each is discharged on the platform</summary>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">Marginal cost of expansion</span>
-          <span class="note">The right column is the same work without the platform underneath</span>
+          <span class="label">Standing operational functions</span>
+          <span class="note">Some may be satisfiable by existing Elysium infrastructure</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Addition</th><th>On the platform</th><th>Standalone</th></tr></thead>
+            <thead><tr><th>Function</th><th>What it involves</th><th>Discharged on the platform by</th></tr></thead>
             <tbody>
-              <tr>
-                <td class="grp grp-exec"><strong>A coin</strong></td>
-                <td>Capture already covers a broad base-asset universe, so a name enters the ranked universe as soon as it is listed and liquid enough. No per-coin engineering</td>
-                <td>Extend capture, extend features, extend the fixed coin list, and re-validate — per name</td>
-              </tr>
-              <tr>
-                <td class="grp grp-exec"><strong>A venue</strong></td>
-                <td>An adapter plus a registry row against a stable execution spine; slots regenerate; the collateral matrix, error classification and rate-limit ledger already know how to hold a new venue. Real integration work — live haircut probing, calibration, cutover — but bounded and predictable</td>
-                <td>The same integration, plus building the spine it would have attached to</td>
-              </tr>
-              <tr>
-                <td class="grp grp-exec"><strong>A strategy archetype</strong></td>
-                <td>Written against the same tick interface, emitting the same instruction contract, writing the same ledger. It inherits the determinism proof, the attribution, the risk layer, the promotion ladder and the operational estate on day one</td>
-                <td>A second trading system, with a second set of everything around it, and a new reconciliation problem between them</td>
-              </tr>
-              <tr>
-                <td class="grp grp-post"><strong>A share class or client</strong></td>
-                <td>A configuration entry; isolation, treasury and fee accounting already model it</td>
-                <td>A structural change to a system that assumed one book</td>
-              </tr>
+              <tr><td class="grp grp-post"><strong>Release</strong></td><td>Type checking, tests, complexity and banned-pattern gates, image build, and a promotion path from tested artefact to running artefact</td><td>One pipeline and one gate across every repository</td></tr>
+              <tr><td class="grp grp-post"><strong>Provisioning</strong></td><td>Host and container lifecycle, restart, capacity sizing, and resume-from-progress if interruptible capacity is used</td><td>Deployment service with preemption recovery and rightsizing audits</td></tr>
+              <tr><td class="grp grp-post"><strong>Monitoring</strong></td><td>Liveness, feed health, latency, error-rate and position-drift signals, with defined thresholds</td><td>Shared monitoring estate across all strategies</td></tr>
+              <tr><td class="grp grp-exec"><strong>Reconciliation</strong></td><td>Continuous comparison of believed position and balance against venue truth, with a defined response to a mismatch</td><td>Position monitor plus the daily batch/live determinism verdict</td></tr>
+              <tr><td class="grp grp-post"><strong>Independent marking</strong></td><td>Marks and carry rates produced separately from the strategy that took the position</td><td>Pricing service writing to a global pricing ledger</td></tr>
+              <tr><td class="grp grp-post"><strong>Reporting</strong></td><td>Performance reporting, fee and high-water-mark accounting, and the audit trail behind each figure</td><td>Client-reporting service reading the four ledgers</td></tr>
+              <tr><td class="grp grp-post"><strong>Breakers</strong></td><td>Automatic halt conditions, and defined criteria for resuming after one fires</td><td>Alerting service driving breakers, with a gated resume matrix</td></tr>
+              <tr><td class="grp grp-post"><strong>On-call</strong></td><td>A rotation with escalation paths, covering the hours the strategy trades — continuous, for crypto venues</td><td>One rotation across all strategies, with automated recovery attempted before a person is paged</td></tr>
+              <tr><td class="grp grp-data"><strong>Data retention</strong></td><td>Storage, retention and backup for ledgers, decision records and captured inputs, at whatever horizon your auditor requires</td><td>Shared storage estate with per-shard coverage accounting</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
       <p>
-        There is a second-order effect worth naming for a CTO specifically. Because every strategy on the platform shares
-        the instruction contract, the ledger and the reconciliation spine, <strong>a capability built for one becomes
-        available to all of them</strong> — and that includes capabilities built for other clients. Execution improvements,
-        a new venue integration, a better fill model, tighter reconciliation: these arrive as platform upgrades rather
-        than as per-client projects. A carve-out steps out of that flow permanently, because the snapshot is frozen at
-        hand-over by design.
+        One structural note for planning. Of the nine, seven are insensitive to how many strategies they serve: a release
+        pipeline, a monitoring estate and an on-call rota cost substantially the same for one strategy as for several.
+        That is why the operational estate rather than the strategy code tends to dominate the cost of a self-run
+        deployment — and it is the part most usefully estimated against your own infrastructure rather than from this
+        document.
       </p>
     </details>
   </section>
 
   <!-- ==================== 08 ==================== -->
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>The expansion path, and what each step costs</h2></div>
+    <div class="sec-head"><span class="num">08</span><h2>Extension work-items</h2></div>
 
     <p class="lede">
-      Everything above is a snapshot. This section is the forward-looking version, and it is the one that matters most,
-      because the arithmetic of a carve-out is entirely different depending on whether the mandate stays where it is.
+      If the mandate grows, each direction is a defined set of work items. Both columns below contain real engineering —
+      calibration, live probing and a cutover are required either way. The difference is how many layers each item
+      touches, and whether the layer beneath it already exists.
     </p>
 
     <div class="keypoints">
-      <div><b>Static mandate</b><span>If it stays BTC, ETH and SOL on four venues in one structure, a carve-out is a defensible choice and we would support it</span></div>
-      <div><b>Growing mandate</b><span>Every direction you are likely to grow in is cheap on the platform and expensive alone — and the gap widens rather than closes</span></div>
-      <div><b>TradFi is a discontinuity</b><span>Not another venue. A different protocol family, a clearing relationship and a compliance surface — already part-built here</span></div>
+      <div><b>An instrument</b><span>Platform: a universe entry once capture covers it. Standalone: capture, features, list, re-validation — per name</span></div>
+      <div><b>A venue</b><span>Both: an adapter, collateral calibration, a cutover. Standalone additionally builds the spine the adapter attaches to</span></div>
+      <div><b>A regulated venue</b><span>A discontinuity rather than an increment — different protocol family, clearing relationship, margin model, settlement path</span></div>
     </div>
 
     <details class="sec-body">
-      <summary>Each direction of growth, what it costs on the platform, and what it costs standalone</summary>
+      <summary>Each direction of growth, as work items on each path</summary>
 
       <div class="plate">
         <div class="plate-head">
-          <span class="label">The roadmap, priced both ways</span>
-          <span class="note">Real integration work in both columns — the difference is what it attaches to</span>
+          <span class="label">Work items by direction of growth</span>
+          <span class="note">Neither column is zero — the difference is layers touched, not effort avoided</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Direction</th><th>On the platform</th><th>Standalone, after a carve-out</th></tr></thead>
+            <thead><tr><th>Direction</th><th>Odum-hosted</th><th>Self-operated</th></tr></thead>
             <tbody>
               <tr>
-                <td class="grp grp-exec"><strong>More coins</strong><span class="mono">beyond BTC · ETH · SOL</span></td>
-                <td>Capture already spans a broad base-asset universe, so a name becomes eligible as soon as it is listed and liquid. It enters the ranked universe with no per-coin engineering</td>
-                <td>Extend capture, extend features, extend the coin list, re-validate — per name, forever</td>
+                <td class="grp grp-exec"><strong>More instruments</strong><span class="mono">beyond BTC · ETH · SOL</span></td>
+                <td>Capture already spans a broad base-asset universe, so a name becomes eligible once listed and liquid enough, and enters the universe without per-name engineering</td>
+                <td>Extend capture, extend features, extend the fixed list, re-validate — per name</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>More perp venues</strong><span class="mono">Hyperliquid · Drift · Kraken · Bitfinex · Bitget · Aster</span></td>
-                <td>An adapter and a registry row against a spine that already models collateral acceptance, error classification and rate limiting. Bounded, priced, predictable</td>
-                <td>The same integration, plus first building the spine it would have attached to — and repeating that judgement per venue</td>
+                <td class="grp grp-exec"><strong>More perpetual venues</strong><span class="mono">Hyperliquid · Drift · Kraken · Bitfinex · Bitget · Aster</span></td>
+                <td>An adapter and a registry entry against a spine that already models collateral acceptance, error classification and per-venue rate limits. Sixteen further adapters exist as precedent, so the work is bounded and repeatable</td>
+                <td>The same adapter work, plus building the spine it attaches to, then repeating that judgement per venue</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>More staking protocols</strong><span class="mono">Rocket Pool · EtherFi · Jito · Marinade</span></td>
-                <td>A matrix row, a wrap-step decision, an on-chain rate reader and rebasing reconciliation — the pattern exists and has been run four times. Still gated on you securing venue-side cross-margin acceptance first</td>
-                <td>The same, without the pattern, the reconciliation, or the calibration discipline behind the haircuts</td>
+                <td>A collateral-matrix entry, a wrap-step decision, an on-chain rate reader and rebasing reconciliation — an established pattern. Gated on venue-side cross-margin acceptance, which is a commercial step on your side either way</td>
+                <td>The same items without the pattern, the reconciliation, or the calibration history behind the collateral parameters</td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>More chains</strong><span class="mono">Solana already live</span></td>
-                <td>The identical staked-basis structure already runs on Solana against a different protocol and a different LST. A further chain is an extension of a proven pattern</td>
-                <td>A second chain integration with no precedent in your codebase, including its RPC, gas and settlement differences</td>
+                <td>The same staked-basis structure already runs on Solana against a different protocol and a different liquid-staking token, so a further chain extends a proven path</td>
+                <td>A first chain integration with no in-codebase precedent, including RPC, gas and settlement differences</td>
               </tr>
               <tr>
-                <td class="grp grp-exec"><strong>More Carry &amp; Yield archetypes</strong><span class="mono">recursive · lending rotation · dated basis</span></td>
-                <td>Written against the same tick interface, emitting the same instruction contract, writing the same ledger — inheriting the determinism proof, attribution, risk layer and promotion ladder on day one</td>
-                <td>A second trading system, and a new reconciliation problem between it and the first</td>
+                <td class="grp grp-exec"><strong>More carry archetypes</strong><span class="mono">dated basis · recursive · lending rotation</span></td>
+                <td>Written against the same tick interface, emitting the same instruction contract, writing the same ledgers — inheriting the determinism check, attribution, risk layer and promotion ladder</td>
+                <td>A second engine plus its own collaborators, and a reconciliation problem between the two books</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>Non-carry families</strong><span class="mono">arbitrage · vol · stat-arb · LP</span></td>
-                <td>Already built and running on the same spine. Adoption is a commercial conversation, not an engineering programme</td>
-                <td>Not available at any effort — these were never in scope and are not part of any hand-over</td>
+                <td class="grp grp-post"><strong>Non-carry families</strong><span class="mono">arbitrage · volatility · stat-arb · liquidity provision</span></td>
+                <td>Built and running on the same spine; adoption is a commercial conversation</td>
+                <td>Out of scope — never part of the engagement and not in any hand-over</td>
               </tr>
               <tr>
-                <td class="grp grp-post"><strong>More share classes and clients</strong></td>
+                <td class="grp grp-post"><strong>More share classes or clients</strong></td>
                 <td>A configuration entry. Isolation, treasury separation, subscription and redemption flows and fee accounting already model it</td>
-                <td>A structural change to a system built on the assumption of one book</td>
+                <td>A structural change to a system built on one book</td>
               </tr>
               <tr>
-                <td class="grp grp-data"><strong>TradFi and regulated venues</strong></td>
+                <td class="grp grp-data"><strong>Regulated venues</strong><span class="mono">futures · options</span></td>
                 <td>An integration onto existing groundwork — see below</td>
-                <td>A second platform, with a compliance surface attached</td>
+                <td>A second platform with a compliance surface attached</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <h3>TradFi as the worked example of a discontinuity</h3>
+      <h3>Regulated venues as the worked discontinuity</h3>
       <p>
-        We single this one out because it is the direction where the difference between the two paths stops being a
-        matter of degree. A regulated futures venue is not another venue with a different symbol format. It brings a
-        different protocol family rather than REST and WebSocket, a clearing relationship that has to be established and
-        maintained, regulatory reporting obligations, a margin model computed by the clearing house rather than by a
-        collateral haircut, and cash settlement on a settlement cycle rather than a wallet transfer. Each of those touches
-        a different layer of a trading system.
+        A regulated futures venue is not another venue with a different symbol format. It brings a different protocol
+        family rather than REST and WebSocket, a clearing relationship to establish and maintain, regulatory reporting
+        obligations, a margin model computed by the clearing house rather than from a collateral haircut, and cash
+        settlement on a settlement cycle rather than a wallet transfer. Each touches a different layer.
       </p>
       <p>
-        On the platform, a meaningful part of that groundwork already exists and is not something you would be funding
-        from zero: a broker-gateway service that manages the long-lived connection to a regulated broker, a TradFi
-        market-data path with its own vendor integration and instrument definitions for futures and options, an options
-        pricing service that already computes greeks and carry-family rates for marked positions, and a delta-one feature
-        family. Adding a regulated venue is therefore an integration project with a compliance workstream beside it.
-      </p>
-      <p>
-        Standalone, after a carve-out, the same ambition means building a futures-capable trading system next to your
-        crypto one — new connectivity, new instrument model, new margin model, new settlement path, new reporting — and
-        then reconciling the two. That is the point at which the carve-out decision stops being about a retainer and
-        starts being about a multi-year engineering commitment.
-      </p>
-
-      <h3>The compounding effect, and why it only runs one way</h3>
-      <p>
-        Because every strategy on the platform shares the instruction contract, the ledger and the reconciliation spine,
-        <strong>a capability built for one becomes available to all of them</strong> — including capabilities built for
-        other clients and for our own book. A better fill model, a tighter reconciliation, a new venue integration, an
-        improvement to how collateral is monitored: these arrive as platform upgrades rather than as per-client projects.
-      </p>
-      <p>
-        A carve-out steps out of that flow permanently and by design, because the licensed snapshot is frozen at
-        hand-over. That is not a penalty clause — it is the only honest way to licence components we continue to develop.
-        But it does mean the gap between what you hold and what the platform does widens every month, starting on day
-        one.
+        On the platform, part of that groundwork exists: a broker-gateway service managing the long-lived connection to a
+        regulated broker, a TradFi market-data path with its own vendor integration and instrument definitions for
+        futures and options, a pricing service already computing greeks and carry-family rates, and a delta-one feature
+        family. Adding a regulated venue is an integration project with a compliance workstream beside it. Self-operated,
+        the same ambition is a futures-capable trading system built next to the crypto one, then reconciled with it.
       </p>
 
       <div class="callout">
-        <span class="tag">The asymmetry worth naming</span>
+        <span class="tag">On the shared spine</span>
         <p>
-          There is a version of this decision that has nothing to do with cost. A managed service you later conclude you
-          did not need is a recoverable mistake — you elect the carve-out, the package is there, you take it. A self-run
-          estate that turns out to be under-built is discovered with client capital deployed, and it is not recoverable on
-          the same timescale. The downside is asymmetric in a way that the monthly numbers do not capture, and in our
-          experience that is the consideration that actually decides it.
+          Every strategy on the platform emits the same instruction contract and writes the same ledgers, so an
+          improvement to execution, reconciliation or a venue integration applies to all of them. A transferred package
+          is a snapshot at a commit and does not receive later platform work — a property of any code transfer, stated
+          here so it is priced rather than discovered.
         </p>
       </div>
     </details>
   </section>
 
-
+  <!-- ==================== 09 ==================== -->
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>An honest summary of the trade</h2></div>
+    <div class="sec-head"><span class="num">09</span><h2>Appendix — the source estate</h2></div>
 
     <p class="lede">
-      A carve-out gives you a working implementation of exactly what was specified, and full ownership of it. That is a
-      real thing and we are not going to argue you out of wanting it. But it is the wrong question asked in isolation —
-      the answer depends almost entirely on where the mandate is going, not on where it is.
+      For completeness, the mapping in the other direction: the twenty-six repositories the platform comprises, which of
+      them contribute code to the package in §02, and what the remainder do. Counts re-derived from the workspace tree on
+      the date of this revision.
     </p>
 
     <div class="keypoints">
-      <div><b>What transfers well</b><span>The strategy logic, the venue connectivity, and the decision-level code — all of it readable and self-contained</span></div>
-      <div><b>What transfers poorly</b><span>Anything whose value comes from being maintained: reference data, calibration, coverage accounting, operational rehearsal</span></div>
-      <div><b>What does not transfer</b><span>The history behind the numbers, the proof that live matches backtest, and the flow of improvements over time</span></div>
-      <div><b>Decide against a roadmap</b><span>A static mandate makes the carve-out defensible; any of the growth directions in §8 make it the more expensive path by a widening margin</span></div>
+      <div><b>6 contribute</b><span>Strategy, execution, contracts, shared library, one feature calculator, reference data</span></div>
+      <div><b>20 do not</b><span>Data plane, valuation and post-trade, control plane and delivery, surfaces and assurance</span></div>
+      <div><b>Reconciles to §02</b><span>Eleven packages from six source repositories — the extraction splits by capability, not by repository</span></div>
     </div>
 
-    <details class="sec-body" open>
-      <summary>The three questions we would ask in your position</summary>
+    <details class="sec-body">
+      <summary>All twenty-six repositories and their relationship to the package</summary>
 
-      <p>
-        <strong>First — what am I actually buying if I stay?</strong> Not access to twenty repositories as a catalogue
-        item. Three specific things: the evidence layer that makes a return defensible to an investor and an auditor; the
-        dynamism that keeps a carry book earning as regimes move; and a marginal cost of expansion low enough that adding
-        a venue or a second strategy is a conversation rather than a project.
-      </p>
-
-      <p>
-        <strong>Second — what is the real cost of leaving?</strong> Not the hand-over fee. It is the operational estate:
-        a release process, a monitoring rotation, reconciliation, reporting, and the engineering to keep an adapter
-        working when a venue changes something. And it is the standing loss of the improvement flow, since the licensed
-        snapshot is frozen at hand-over.
-      </p>
-
-      <p>
-        <strong>Third — where is the genuine risk in staying?</strong> Concentration on a single provider, and we would
-        rather answer it than have it sit unspoken. The mitigations are structural rather than promissory: the code is
-        yours under the agreement regardless, the carve-out package exists and is documented, the strategy logic is
-        readable rather than obfuscated, the platform runs on two clouds from one codebase, and the venue and custody
-        relationships are held by you rather than by us. If you elect to leave, you leave with the thing you commissioned
-        and a documented route to running it. That option not expiring is, we think, the right basis for a long
-        relationship.
-      </p>
-
-      <h3>What we would suggest</h3>
-      <p>
-        Two things, in order. <strong>First, decide it against your own twenty-four month roadmap rather than against
-        today's mandate.</strong> If the honest answer is that this stays BTC, ETH and SOL, on four venues, in one
-        structure, for one share class, indefinitely — then the carve-out is a defensible choice, the package exists, and
-        we will support the hand-over properly. If any of more coins, a fifth venue, a second staking protocol, a second
-        archetype, a second share class or a regulated venue is plausible in that window, then §8 is the section that
-        decides this, not §2. Tell us the roadmap and we will price it both ways, including the parts that are
-        inconvenient for us.
-      </p>
-      <p>
-        <strong>Second, run the managed service through the first regime change before electing anything.</strong> The
-        claim in §5 — that a frozen optimum decays — is the one assertion in this document you can test cheaply and
-        directly, by watching what the dynamic layer does when the basis moves against the parameters it was fitted on.
-        If it earns its place, the question answers itself. If it does not, you will have a far better-informed view of
-        what you would be taking on, and the package will still be there. Nothing about waiting costs you optionality.
-      </p>
-
-      <div class="callout">
-        <span class="tag">And to be direct about our own position</span>
-        <p>
-          We would rather you stayed, and the reason is not only commercial. A carve-out that under-delivers reflects on
-          the strategy we designed, whoever is operating it at the time — and we would be watching that happen without
-          the ability to fix it. If you do elect it, we would rather do the hand-over thoroughly, with the gaps named in
-          advance and the manifest corrected, than have it go out fast and half-documented. That is the same interest
-          either way: this working is worth more to us than the difference between the two fee structures.
-        </p>
+      <div class="stat-row">
+        <div class="stat"><span class="v">26</span><span class="k">Repositories in the estate</span></div>
+        <div class="stat"><span class="v">6</span><span class="k">Contribute code to the package</span></div>
+        <div class="stat"><span class="v">2<span class="u"> / 6</span></span><span class="k">Carry archetypes transferred</span></div>
+        <div class="stat"><span class="v">4<span class="u"> / 20</span></span><span class="k">Venue adapters transferred</span></div>
+        <div class="stat"><span class="v">10</span><span class="k">Substitution interfaces</span></div>
       </div>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Contributing repositories — 6</span>
+          <span class="note">Each contributes a subset, mapped to the packages in §02</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Repository</th><th>Full scope</th><th>Contributes to</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>strategy-service</strong></td>
+                <td>Archetypes across every family — carry, arbitrage, statistical arbitrage, volatility, market making, directional, liquidity provision — plus the backtest harness, risk engine, position monitor and P&amp;L attribution</td>
+                <td class="mono">strategy-basis-core · strategy-config · risk-guards-local · sim-harness</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>execution-service</strong></td>
+                <td>Venue connectivity across CeFi, DeFi, TradFi and prediction markets; the algorithm library; order routing; the policy registry; paper and live matching engines; custody integrations; multi-leg atomic execution</td>
+                <td class="mono">exchange-adapters-lite · custody-adapters-lite · execution-basic</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>unified-api-contracts</strong></td>
+                <td>The canonical type system: every domain schema, the venue and collateral registries, error classifications, instruction and ledger models, capability declarations</td>
+                <td class="mono">contracts-platform</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>unified-trading-library</strong></td>
+                <td>Shared infrastructure: config and cloud interfaces, the service framework, manifest and ledger writers, allocation, chaos injection, circuit breakers, client lifecycle, the streaming facade, the domain client</td>
+                <td class="mono">strategy-runner · risk-guards-local</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>features-service</strong></td>
+                <td>Feature computation across on-chain, delta-one, volatility, calendar, microstructure, cross-instrument and cross-asset-group families, with formula versioning binding a value to the version a backtest used</td>
+                <td class="mono">strategy-basis-core (staking-yield calculator)</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>instruments-service</strong></td>
+                <td>Reference-data source of truth: venue catalogue enumeration, instrument definitions, listing and delisting lifecycle, coverage windows, corporate actions</td>
+                <td class="mono">instrument-model-lite</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Non-contributing repositories — 20</span>
+          <span class="note">Grouped by function; each maps to one or more interfaces in §04 or functions in §07</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Group</th><th>Repositories</th><th>Substituted by</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-data"><strong>Data plane</strong><span class="mono">3</span></td>
+                <td class="mono">market-tick-data-service · market-data-processing-service · ml-service</td>
+                <td><code>FeatureProvider</code> · data retention (§07). Historical series and per-shard coverage accounting do not transfer</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Valuation and post-trade</strong><span class="mono">5</span></td>
+                <td class="mono">greeks-service · batch-live-reconciliation-service · client-reporting-api · fund-administration-service · alerting-service</td>
+                <td><code>PricingService</code> · <code>ReconciliationService</code> · <code>AttributionService</code> · breakers and reporting (§07)</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Control plane and delivery</strong><span class="mono">6</span></td>
+                <td class="mono">deployment-service · deployment-api · unified-trading-ci · agent-orchestrator · unified-trading-pm · ibkr-gateway-infra</td>
+                <td><code>ConfigVersionService</code> · release, provisioning and on-call (§07). Note that deployment topology configuration is a runtime dependency, not documentation</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Surfaces and assurance</strong><span class="mono">6</span></td>
+                <td class="mono">unified-trading-api · unified-trading-system-ui · deployment-ui · e2e-testing · system-integration-tests · trading-agent-service</td>
+                <td>Local logs and CLI in place of an operator console; <code>sim-harness</code> in place of the cross-boundary proofs. The funding-reader gap in §04 originates here</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="ref">
+        <summary>What transfers well, and what transfers poorly<span class="tag-ref">Reference</span></summary>
+        <div class="plate">
+          <div class="plate-body">
+            <ul>
+              <li><strong>Transfers cleanly:</strong> the decision logic, the venue connectivity, the type system and the
+                ledger writers. Readable, statically typed, self-contained at the decision level.</li>
+              <li><strong>Transfers as a snapshot:</strong> reference data, collateral parameters and the fitted
+                configuration. Correct on the day; each needs an owner and a refresh path afterwards.</li>
+              <li><strong>Does not transfer:</strong> anything whose value is in being continuously produced — captured
+                history, coverage accounting, independent marks, the determinism verdict, and later platform work.</li>
+            </ul>
+          </div>
+        </div>
+      </details>
     </details>
   </section>
 
   <footer>
     <p class="who">Odum Research · Ikenna Igboaka, Founder &amp; CEO · ikenna@odum-research.com · FCA registered firm, FRN 975797</p>
     <p>
-      Technical briefing prepared for Elysium and POD, 11 August 2026. Companion to the platform architecture document;
-      where the two differ, the architecture document is the more recent. Repository classification reflects the
-      workspace manifest as at this date. Commercial terms are governed by the consulting agreement and the
+      Engineering architecture and hand-over boundary, prepared for Elysium and POD, 11 August 2026. Revision 2.0.
+      Companion to the platform architecture document; where the two differ, the architecture document is the more
+      recent. The eleven packages in §02 are a proposed extraction structure rather than existing repositories.
+      Repository, module and adapter counts were re-derived from the workspace tree on the date of this revision.
+      Commercial terms, the election point and the support period are governed by the consulting agreement and the
       service-level agreement, not by this document. Confidential — not for onward distribution without our written
       consent.
     </p>

@@ -193,13 +193,28 @@ complete" by 30 June 2026, which did not happen.
 > artifacts; **URLs recorded in that directory's README — pass the URL when updating or you create a duplicate
 > artifact**).
 
-- [ ] [OPERATOR] P1. **Rewrite `carveout-engineering.html` into a technical-briefing register before it is shown to
-      anyone.** Operator verdict 2026-08-11: it "discusses our methodology way too much" and is not presentable to a CTO
-      as written. Diagnosis: the section framing is internal-negotiation shaped — "an honest summary of the trade",
-      "what we would want to know if the positions were reversed", "and to be direct about our own position". A CTO
-      briefing should assert architecture and let the commercial inference happen on its own. The repo classification
-      (§2), the reduction detail (§3), the light-adapter table (§4) and the expansion pricing (§8) are the reusable
-      substance; §1's framing and §9 in its entirety are the parts that read wrong.
+- [x] ✅ [AGENT] P1. **Rewrote `carveout-engineering.html` into a specification register** — rev 2.0, republished to the
+      same artifact URL (`39d52123…`, favicon 🧩 unchanged), file at
+      [`/presentations/elysium/carveout-engineering.html`](/presentations/elysium/carveout-engineering.html). Operator
+      verdict 2026-08-11 was that it "discusses our methodology way too much" and was not presentable to a CTO.
+      Restructured against an operator-supplied advisory draft
+      (`~/Downloads/Odum_Elysium_Strategy_Carve_Out_CTO_Architecture.docx`, **input to us, not a document for the
+      client**) whose structure was better than the original nine sections. Four ideas adopted from it: (1) a
+      **ship-form taxonomy** — FULL / REDUCED / STATIC / INTERFACE-ONLY — replacing a single flat "reduced" pill; (2)
+      **`contracts-platform`, the architectural seam** — the twenty non-contributing repositories are now expressed as
+      **10 typed interfaces** the strategy calls, each resolving either to a local implementation or to a maintained
+      service, which communicates platform scope in method signatures rather than in a loss-list (this is the change
+      that actually fixes the register complaint — showing, not telling); (3) **hand-over acceptance criteria**, nine
+      conditions, making the hand-over contractible; (4) **proposed package names** rather than our real repo names, so
+      internal topology is not disclosed. Retained from the original: the estate mapping (now a §09 appendix), the
+      funding-reader requirement, operational responsibilities, extension work-items. Deleted entirely: the
+      internal-negotiation sections ("an honest summary of the trade", "the three questions we would ask in your
+      position", "to be direct about our own position") and every mechanism-level description of how the dynamic layer
+      works. Two SVG figures (runtime path; the seam resolving two ways). Verified: 0 `var()`-in-SVG-attribute
+      occurrences, 0 script/style inside SVG, 0 external hosts, 0 text/text collisions and 0 text-overflows-host **on a
+      detector first validated by injecting a known collision and a known overflow and confirming both fired**, no
+      horizontal page overflow, themes resolve in all three states (light / dark-stamped / un-stamped), 44% of scroll
+      hidden at default and 64% fully collapsed (measured).
 - [ ] [OPERATOR] P1. **Decide the carve-out presentation sequencing.** Three options were assessed; recommendation is
       the third. (a) Build the lite repo and hand it over — maximum credibility, but pre-delivers the carve-out before
       election, which is free optionality for the client. (b) Hand over deliberately unfinished/unconnected code —
@@ -222,6 +237,43 @@ complete" by 30 June 2026, which did not happen.
       demo, that is the wrong impression at the worst moment. The readers exist in
       `e2e-testing/scripts/defi/funding_ensemble_engine.py`; productionising them converts the most awkward gap in the
       package into a completeness signal.
+
+### Added 2026-08-11 (fourth pass) — defects found in our OWN published client documents while rewriting
+
+> All three were found by re-deriving numbers the previous pass had asserted, rather than by re-reading the prose. The
+> README in [`/presentations/elysium/`](/presentations/elysium/) instructs re-derivation before reuse for exactly this
+> reason; this is that instruction paying for itself one day later.
+
+- [ ] [OPERATOR] P0. **The published `platform-architecture.html` states a "complimentary 30-day support period" in
+      three places (plus "the decision point is day 31") — which contradicts this issue's own operator ruling that **60
+      calendar days** is the binding Initial Support Period.** Found 2026-08-11 by grepping the published artifact for
+      the support-period wording. The 2026-08-09 ruling (todo 1 above) settled that `ODUM_SLA_v4` §3 line 131 and §5
+      line 220 were right at 60 days and every 30-day summary was wrong; the client-facing architecture document I
+      published on 2026-08-11 then repeated the wrong number. **Deliberately NOT fixed unilaterally**: which number
+      appears in client-facing material is precisely the open operator decision in todo 2 (reissue vs. side letter), and
+      changing it silently would pre-empt that ruling and could create a third inconsistent version. The rewritten
+      `carveout-engineering.html` avoids the trap by stating no number and deferring to the SLA — the same fix is
+      available for the architecture document once the operator rules. **Understates our obligation in the client's
+      favour, so it is not urgent commercially — but it is a contradiction sitting in a forwardable document.**
+- [x] ✅ [AGENT] P1. **Corrected two over-stated counts in the client documents.** Re-derived from the tree 2026-08-11.
+      (a) **Carry archetypes: claimed 8, actual 6** — `carry_and_yield/` contains `basis_dated`, `basis_perp`,
+      `recursive_staked`, `rotation_lending`, `staked_basis`, `staking_simple`; the earlier count folded in supporting
+      modules (`funding_dispersion`, `dynamic_hedge_ratio`, the writers) that are not archetypes. The transferred figure
+      is therefore **2 of 6**, not 2 of 8. (b) **Venue adapters: claimed 13, actual 20 distinct adapters** in
+      `trade_execution/adapters/` alone (aster, binance, bitfinex, bitget, bybit, cboe, cme, coinbase, deribit, fx,
+      hyperliquid, ibkr, ice, kraken, nasdaq, nyse, okx, polymarket, sports, upbit — Kraken's four files are one venue),
+      plus the on-chain protocol modules. So **4 of 20**, and the earlier number _understated_ our own estate. Both
+      corrected in the rewrite; `platform-architecture.html` should be checked for the same two figures. **Method
+      note:** `VENUE_TO_ADAPTER_KEY` is named in CLAUDE.md as the venue-registry SSOT but its definition was not
+      locatable in `unified-api-contracts/` non-test sources in a reasonable search, so the count above is a **measured
+      floor from the adapter directory**, not a registry read. Anyone quoting a venue total should either find the
+      registry definition or quote the floor and say so.
+- [ ] [AGENT] P2. **Locate the real `VENUE_TO_ADAPTER_KEY` definition and record its path in CLAUDE.md's conditional
+      index.** CLAUDE.md asserts venue lists and adapter keys are UAC data with `VENUE_TO_ADAPTER_KEY` as the resolver,
+      but a `rg -l` across non-test sources returned only _consumers_ (`deployment-api`, `market-tick-data-service`,
+      `e2e-testing`, `unified-trading-pm/scripts/cicd`) and one UAC **test** file. Either the symbol lives somewhere the
+      search missed or it has been renamed and the doc reference has rotted. A pointer that costs each agent a failed
+      search is a defect in the pointer.
 
 #### Rebuild-effort calibration (recorded because it decides the sequencing question, and existed only in chat)
 
@@ -269,24 +321,32 @@ leaving". Same facts, forward-looking, and it is the argument we actually believ
 Separated by KIND, because these need different responses. Nothing below is half-committed — everything shipped this
 session is on `live-defi-rollout` at `05088f8a18`.
 
-| Item                                                                                                     | Kind                                 | Blocked on                             |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------- |
-| Rewrite `carveout-engineering.html` into a briefing register (drop the negotiation framing)              | **Not done** — real work, pick it up | nobody                                 |
-| Correct Exhibit A's non-resolving adapter paths in the SLA manifest                                      | **Not done** — real work, pick it up | nobody; wording wanted operator review |
-| Productionise the venue funding readers into the licensed set                                            | **Not done** — real work, pick it up | nobody                                 |
-| Build the lite carve-out repo (recommendation: build now, demo, deliver on election)                     | **Operator-owned**                   | operator go-ahead on sequencing        |
-| Decide which DOCUMENTATION ships with a carve-out (the venue-integration reference is the sensitive one) | **Operator-owned**                   | operator decision                      |
-| Locate the $90k → $135k variation document, or stop citing $135k                                         | **Operator-owned**                   | document may not exist                 |
-| Resolve the entity position (unsigned subcontract, not a novation) before any SLA names Odum Research    | **Operator-owned**                   | counsel + Elysium consent              |
-| Confirm which contract version was executed (1 vs 3 March 2025)                                          | **Operator-owned**                   | Elysium confirmation                   |
-| Written reading of Art. 6.2's 24-month clock                                                             | **Operator-owned**                   | counsel                                |
-| Elysium's Art. 1.4 written consent for the Odum Research subcontract                                     | **Cannot be done yet**               | external party                         |
+| Item                                                                                                     | Kind                                 | Blocked on                                 |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------ |
+| Correct Exhibit A's non-resolving adapter paths in the SLA manifest                                      | **Not done** — real work, pick it up | nobody; wording wanted operator review     |
+| Check `platform-architecture.html` for the 8-archetype / 13-venue counts corrected in the rewrite        | **Not done** — real work, pick it up | nobody                                     |
+| Locate the real `VENUE_TO_ADAPTER_KEY` definition; fix the rotted CLAUDE.md pointer                      | **Not done** — real work, pick it up | nobody                                     |
+| Resolve the 30-vs-60-day support period in the published `platform-architecture.html`                    | **Operator-owned**                   | ruling on todo 2 (reissue vs. side letter) |
+| Productionise the venue funding readers into the licensed set                                            | **Not done** — real work, pick it up | nobody                                     |
+| Build the lite carve-out repo (recommendation: build now, demo, deliver on election)                     | **Operator-owned**                   | operator go-ahead on sequencing            |
+| Decide which DOCUMENTATION ships with a carve-out (the venue-integration reference is the sensitive one) | **Operator-owned**                   | operator decision                          |
+| Locate the $90k → $135k variation document, or stop citing $135k                                         | **Operator-owned**                   | document may not exist                     |
+| Resolve the entity position (unsigned subcontract, not a novation) before any SLA names Odum Research    | **Operator-owned**                   | counsel + Elysium consent                  |
+| Confirm which contract version was executed (1 vs 3 March 2025)                                          | **Operator-owned**                   | Elysium confirmation                       |
+| Written reading of Art. 6.2's 24-month clock                                                             | **Operator-owned**                   | counsel                                    |
+| Elysium's Art. 1.4 written consent for the Odum Research subcontract                                     | **Cannot be done yet**               | external party                             |
 
 **Recommended NEXT item: productionise the funding readers.** It is the only one that is (a) pure engineering with no
 operator dependency, (b) a prerequisite for BOTH remaining paths — a lite-repo demonstration and a real hand-over — and
 (c) currently the single defect that would most damage credibility if an Elysium engineer found it first. The Exhibit A
-path correction is second and is roughly an hour, but it wants a wording review. The document rewrite is third: it is
-blocked on nothing, but it is presentation work and the substance underneath it is already correct.
+path correction is second and is roughly an hour, but it wants a wording review. The document rewrite that was third
+here is **done** (rev 2.0, 2026-08-11).
+
+**Note on sequencing after the rewrite.** The rewritten document now specifies eleven packages and a ten-interface seam
+as the deliverable, and labels them a _proposed_ structure that does not yet exist. That is honest, but it also means
+the document commits us to building the seam if it is ever shown — a CTO who reads §04 will ask to see
+`contracts-platform`. So the lite-repo decision is now **coupled to whether this document goes out**, where previously
+they were independent. Worth the operator knowing before forwarding it.
 
 ## Progress Log
 
@@ -332,3 +392,23 @@ blocked on nothing, but it is presentation work and the substance underneath it 
   overrides ONLY for documentation and plan files (zero code, zero shipping surface) because the alternative was losing
   the artifacts and the calibration to compaction in a shared checkout that already carried another session's staged
   changes and a stale unmerged index entry.
+- **2026-08-11 (fourth pass)** — `carveout-engineering.html` rewritten to rev 2.0 and republished to the same artifact
+  URL. The register problem the operator identified was fixed structurally rather than by editing prose: the twenty
+  non-contributing repositories are now **ten typed interfaces** (`contracts-platform`) that resolve either to local
+  implementations or to maintained services, so platform scope is communicated in method signatures instead of in a list
+  of things the client does not get. Structure taken from an operator-supplied advisory draft; substance, measurements
+  and diagrams retained from the original. **Three defects found in our own published documents by re-deriving asserted
+  numbers**: the archetype count was overstated (8 → 6), the venue-adapter count was _understated_ (13 → 20), and the
+  published architecture document repeats the 30-day support period that this issue's own ruling had already established
+  as wrong (60 is binding). The last is left for the operator because it is the same decision as todo 2. **Process note
+  worth keeping: the null result from the SVG collision detector was only trusted after injecting a known collision and
+  a known overflow and confirming the detector fired** — the previous pass shipped two buggy versions of that same
+  check, so "0 findings" from an unvalidated detector is not evidence.
+- **Two standing environment conditions, neither mine to fix.** (1) The checkout still carries a peer's stale unmerged
+  index entry for `scripts/dev/ff-starvation-detect.sh` (`UU`, no `MERGE_HEAD`), so `git pull` fails in this slot and
+  the five-minute ff-pull cron is failing with it; local HEAD was **171 commits behind** origin during this session.
+  Work was unaffected because `safe-doc-push.sh` commits from an isolated worktree, which is exactly the failure this
+  script exists for. (2) Because HEAD was stale, the local copy of **this issue doc was the 127-line version while
+  origin held 334 lines** — editing the local copy would have destroyed ~200 lines of the previous pass's work. It was
+  re-synced from `origin` before editing (stale copy preserved at `/tmp/issue-local-stale-backup.md`). **Any session
+  working in a behind-HEAD checkout must read the file from `origin/<branch>` before editing it, not from disk.**
