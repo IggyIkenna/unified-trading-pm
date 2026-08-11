@@ -317,12 +317,15 @@ removal + casing normalization remain before backfill-resume.
       (rename combo wrapper to combo_chain across writer+manifest) and `e5581a63` (canonicalize chain underlying
       naming). Cherry-pick from any slot worktree (shared object store), verify + QG, ship via quickmerge — do NOT
       re-implement. `8147050e` (BYBIT futures_chain venue) is redundant vs origin, skip.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
-      isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
-      systemic. Repo: market-tick-data-service. **Recover-first (2026-08-11, review finding agt-533c4e):** stranded
-      implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `2bcec56e` +
-      `5706f9bb` (force lifecycle_phase to string dtype). Cherry-pick from any slot worktree, verify + QG, ship via
-      quickmerge — do NOT re-implement.
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — scoped 2026-08-11
+      (slot 4, data_engineering). **Recovery: `8c264a4e` already on origin** — byte-identical to stranded `2bcec56e` and
+      subsumes `5706f9bb` (narrower single-file fix). No cherry-pick needed. **Scope: SYSTEMIC** — all non-FUTURE tradfi
+      instrument_types (combo, options_chain, equity, etf, spot_pair, index) affected; only FUTURE rows get a
+      `lifecycle_phase` value (`_enrich_with_canonical_ids` L149-155). **Fix already shipped** via `mtds@8c264a4e` in
+      two places: source cast in `databento_enrichment.py` L268-269 + finaliser cast in `tradfi_shared.py`
+      L615-623 (`finalise_tradfi_rows_and_path` is the single choke-point for ALL tradfi write paths — Databento, OFR,
+      IBKR, ECB, Yahoo Finance, FRED, and migration scripts). Full detail in Progress Log. Repo:
+      market-tick-data-service.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
