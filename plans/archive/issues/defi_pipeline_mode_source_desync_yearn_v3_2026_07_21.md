@@ -19,7 +19,7 @@ summary: >-
   current RPC-based handler has not reconciled, compounded by the current handler's own separate gap (never stamping
   `source=` explicitly, against the crosscutting "source= is required on record_captured" rule). Both need a
   data-engineering pass; neither was fixed here (docs-hygiene-only task).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,7 +30,6 @@ related: [data_pipeline_reconciliation_defi_2026_07_20]
 created: 2026-07-21
 author: unknown
 last_updated: 2026-08-11
-archive_exempt: true
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -61,6 +60,9 @@ context_scope:
 ---
 
 # DeFi manifest pipeline_mode<->source desync on YEARN_V3 vault_share_price
+
+> **🟢 RESOLVED 2026-08-11** — all 5 todos closed (1-3 shipped 2026-07-28 via slot-4/batch1; 4 resolved 2026-07-30 via
+> `unified-api-contracts@8c506575`; 5 F10 register-append closed 2026-08-11 via batch10 item 7). Archived.
 
 > **Follow-up filing, not a new discovery.** The reconciliation audit itself already surfaced this as F10 and explicitly
 > flagged it as not yet tracked as its own issue (§9: "F10 ... not in the register as defi-scoped rows ... flagged as

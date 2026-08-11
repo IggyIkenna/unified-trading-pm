@@ -155,9 +155,9 @@ same day) before being drafted here.
       ("Append F10 to the reconciliation register") is unchecked but the substance already shipped 2026-07-26
       (`unified-trading-pm@0c4172c31`, via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`, appended to
       `/codex/02-data/canonical-cutover-register.md` §2). Repo: unified-trading-pm. Source:
-      `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` (Todo 5). Done when: the checkbox is flipped
-      `[x]` with the batch2/commit citation inline. — **Done 2026-08-11 (slot-7): source-doc Todo 5 flipped `[x]`;
-      substance verified live in register §2 (line 136) + commit `0c4172c31`; both flips shipped same turn.**
+      `/plans/archive/issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` (Todo 5). Done when: the checkbox
+      is flipped `[x]` with the batch2/commit citation inline. — **Done 2026-08-11 (slot-7): source-doc Todo 5 flipped
+      `[x]`; substance verified live in register §2 (line 136) + commit `0c4172c31`; both flips shipped same turn.**
 - [x] ✅ [DOC] P2. **DONE 2026-08-08 (na-eligibility-audit, defi tranche)** — both stated "done when" conditions are now
       satisfied, via a different mechanism than originally scoped: this todo's premise (source doc over the 1000L hard
       cap, needing the VM-monitoring-history extraction to get under it) was stale — an unrelated 2026-08-05 trim
