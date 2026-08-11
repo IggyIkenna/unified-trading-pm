@@ -11,7 +11,7 @@ summary: >-
   preemption — this 4-date run cannot (nothing to resume, every relaunch pays full boot for zero work). Requesting
   operator ruling: approve `--on-demand` for this tiny bounded window, or park P2.11.16 for a less-contended launch
   window.
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -34,10 +34,17 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-11
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: >-
+  citadel_satellite_ao_dispatch_batch1-004 (slot 9, data_engineering, 2026-08-11) — the P2.11.16 corpus recompute was
+  already EXECUTED by slot-20 on 2026-08-10 via the sibling blocker's P2 re-run todo
+  (delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md), on the host (run-bounded-analysis.sh, not a VM) —
+  the `[OPERATOR]` on-demand ruling is MOOT. Verified live from GCS: btc_trailing_return_{1m,3m,6m,12m} +
+  btc_realized_vol non-null in the returns corpus for 2026-05-01/02/03 (100% on 05-02/03), availability-index
+  capture_status=captured on all 3 dates. No on-demand VM relaunch performed. This issue is an archive candidate (0 open
+  todos).
 context_scope:
   [
     /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
@@ -47,6 +54,13 @@ context_scope:
     deployment-service/scripts/vm/launch-features-vm.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-11 — RESOLVED** (status: resolved, 0 open todos, unlocked). The blocking condition cleared
+> without an operator ruling: slot-20 executed the P2.11.16 recompute on 2026-08-10 via the sibling blocker's P2 re-run
+> todo, on the host (run-bounded-analysis.sh) — no backfill VM and no `--on-demand` decision were ever needed. Live-GCS
+> verification (slot 9, 2026-08-11) confirmed `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` non-null in the
+> returns corpus for 2026-05-01/02/03 with availability-index `capture_status=captured`; P2.11.16 flipped in
+> `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`. Archived by task `citadel_satellite_ao_dispatch_batch1-004`.
 
 # features-service delta_one cefi BTC-trend backfill — 3× boot-stage SPOT preemption
 
@@ -111,14 +125,35 @@ backfill that CAN cheaply absorb preemption. This run cannot.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Ruling: approve `--on-demand` (option A) for the 4-date delta_one cefi `returns` backfill, or
+- [x] ✅ [OPERATOR] P1. **Ruling: approve `--on-demand` (option A) for the 4-date delta_one cefi `returns` backfill, or
       park P2.11.16/P2.11.20 (option B)** — 3× boot-stage SPOT preemption evidence above; launcher `--on-demand`
       verified functional. On approve: relaunch
       `FEATURE_GROUP=returns bash launch-features-vm.sh --feature-family delta_one --asset-group CEFI --start-date 2026-04-22 --end-date 2026-05-03 --launch-mode full --env prod --on-demand`,
       verify terminal state, manifest-row check, flip P2.11.16/P2.11.20, /done. Repo: deployment-service (launch) +
-      unified-trading-pm (plan flip).
+      unified-trading-pm (plan flip). ✅ CLOSED AS MOOT 2026-08-11 (slot 9, citadel_satellite_ao_dispatch_batch1-004):
+      no operator ruling was needed — the P2.11.16 recompute was already EXECUTED by slot-20 on 2026-08-10 via the
+      sibling blocker `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`'s P2 re-run todo, on the host
+      via `run-bounded-analysis.sh` (not a VM). Live-GCS verification this session: `returns` parquets for
+      2026-05-01/02/03 carry `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` non-null (05-02/03 100% @15s),
+      and the availability index shows `capture_status=captured` for `returns` + `volatility_realized` on all 3 dates
+      (written 2026-08-10T23:14Z). 2026-04-22 honestly emission-suppressed (data sparsity: 229 candles < 12m's 252-bar
+      lookback). P2.11.16 checkbox flipped in `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`. No `--on-demand` VM
+      was launched — the blocker this ruling was for is gone.
 
 ## Progress Log
+
+- 2026-08-11 (slot 9, data_engineering, dispatched `citadel_satellite_ao_dispatch_batch1-004`): **RESOLVED — the blocker
+  cleared without an operator ruling.** Re-investigating P2.11.16 found the corpus recompute was already EXECUTED by
+  slot-20 on 2026-08-10 via the sibling blocker `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`'s
+  own P2 re-run todo (that doc now archived RESOLVED) — slot-20 ran `returns` + `volatility_realized` for cefi/BTC on
+  the HOST (`run-bounded-analysis.sh`), so no backfill VM and no `--on-demand` ruling were ever needed (the slot-30
+  escalation's 3× SPOT preemption was moot from the start). Independently verified live from GCS this session
+  (features-service venv; `list_blobs` + pyarrow schema/null count + availability-index read):
+  `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` are present + non-null in the `returns` corpus for
+  2026-05-01/02/03 (05-02/03 100% @15s; 05-01 95.6–99.6% warmup), availability index `capture_status=captured` for
+  `returns` + `volatility_realized` on all 3 dates (written 2026-08-10T23:14Z); 2026-04-22 honestly emission-suppressed
+  (229 candles < 12m's 252-bar lookback — data sparsity, consistent with slot-7/slot-20). P2.11.16 flipped in the batch
+  plan; this `[OPERATOR]` todo closed as moot; doc set `status: resolved` — archive candidate (0 open todos).
 
 - 2026-08-10 (slot 30, data_engineering, dispatched `citadel_satellite_ao_dispatch_batch1-004`): Established P2.11.16
   need (returns corpus absent; volatility_realized lacks btc_realized_vol), confirmed fix chain live (preflight 1/1),

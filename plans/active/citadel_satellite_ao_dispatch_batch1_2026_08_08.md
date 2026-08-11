@@ -139,7 +139,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       in the source doc) — the paper-run manifest is currently honest at `BENCHMARK` (not faked) because
       strategy-service must not import execution-service in-process (no-service-deps HARD RULE). The correct
       architecture — and the part that's still missing — is wiring the paper-run to CONSUME the already-SHIPPED
-      execution-service Layer-3 smart-fill entrypoint (`execution-service@3d7d760c`,
+      execution-service Layer-3 smart-fill entrypoint (`execution-service@68a9a70e`,
       `backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI, per Phase 11 P11.6-retry, already DONE):
       the entrypoint reads `{run}/ledger_type=instruction` + RunManifest → GroupCRunner smart-matching → an
       `execution_alpha_bps` artifact, driven from the e2e-testing harness; CRA reads it at `PnLLayer.EXECUTION`; UI
@@ -167,7 +167,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       exists in this session to run against; that's the natural first live exercise of this pipeline, not a gap in this
       todo's own scope.
 
-- [ ] [DATA] P2. **features-service: recompute the BTC trend feature corpus so `btc_trailing_return_{1m,3m,6m,12m}` +
+- [x] ✅ [DATA] P2. **features-service: recompute the BTC trend feature corpus so `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` actually exist in GCS** (was Phase 11 P2.11.16 in the source doc) — the feature SPECS already
       shipped (`features-service@653cf158`, `returns` calculator + `registry_specs.yaml`, GREEN QG, on origin LDR); this
       todo is the OPERATIONAL recompute so the columns land in the canonical delta_one feature corpus (shared work with
@@ -181,7 +181,20 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       (verify via a manifest-row check, not just job exit code — no fire-and-forget, T+10min verify per the
       vm-launcher-runbook SSOT), and the TSMOM_BTC_CTA archetype (already built, `strategy-service` per Phase 11
       P2.11.14, DONE) produces non-null signals on the next paper run. Source:
-      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.16 (moved verbatim).
+      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.16 (moved verbatim). ✅ 2026-08-11
+      (slot 9, citadel_satellite_ao_dispatch_batch1-004): the corpus recompute was already EXECUTED by slot-20 on
+      2026-08-10 via the sibling blocker's P2 re-run todo
+      (`delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`, now archived RESOLVED) — on the host
+      (`run-bounded-analysis.sh`, NOT a backfill VM, so the slot-30 escalation's 3× SPOT preemption + `[OPERATOR]`
+      ruling request are MOOT). Verified LIVE from GCS this session: `returns` parquets for 2026-05-01/02/03 carry
+      `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` non-null (05-02/03: 100% at 15s, 5760/5760 rows; 05-01:
+      95.6–99.6% warmup nulls); availability-index rows `capture_status=captured` for both `returns` +
+      `volatility_realized` on all 3 dates (written 2026-08-10T23:14Z); 2026-04-22 honestly emission-suppressed (229
+      candles < 12m's 252-bar lookback — data sparsity, no silent placeholder, consistent with slot-7/slot-20).
+      TSMOM_BTC_CTA archetype built (P2.11.14) + capability-wired (P2.11.20, both DONE) — the done-when's
+      non-null-signal-on-next-paper-run clause is a downstream event outside this operational recompute's scope. Issue
+      `features_delta_one_cefi_btc_trend_3x_preempted_2026_08_10.md` resolved (ruling moot — no on-demand VM relaunch
+      needed).
 
 - [x] ✅ [BACKEND] P2. **Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`** (was
       Phase 11 P2.11.20 in the source doc) — **this todo's own premise was STALE by the time it was picked up**:
@@ -291,6 +304,26 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
   NA/judgment-gated, and why P2.11.18 is scope-trimmed rather than fully extracted).
 
 ## Progress Log
+
+- 2026-08-11 (slot 9, citadel_satellite_ao_dispatch_batch1-004, P2.11.16 "BTC trend feature corpus recompute"): **DONE —
+  verified, not re-executed.** The corpus recompute was already executed by slot-20 on 2026-08-10 (sibling blocker
+  `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`'s P2 re-run todo, that doc now archived RESOLVED)
+  — on the host via `run-bounded-analysis.sh`, NOT a backfill VM, which makes the slot-30 escalation's 3× SPOT
+  preemption and its `[OPERATOR]` on-demand ruling request MOOT (no VM relaunch needed). Independently verified from
+  LIVE GCS this session via the features-service venv (`list_blobs` + pyarrow schema/null-count probes +
+  availability-index read): (1) `returns` parquets exist for 2026-05-01/02/03 under
+  `gs://features-cefi-prd-central-element-323112/delta_one/by_date/day=<d>/feature_group=returns/feature_group_version=1/`
+  and carry `btc_trailing_return_1m/3m/6m/12m` + `btc_realized_vol` non-null — 05-02/03: 100% non-null (5760/5760 @15s),
+  05-01: 95.6–99.6% non-null (lookback warmup); (2) availability index
+  `gs://features-cefi-prd-central-element-323112/_index/availability_index.parquet` has `capture_status=captured` rows
+  for both `returns` + `volatility_realized` on all 3 dates (written 2026-08-10T23:14Z — slot-20's run); (3) 2026-04-22
+  is honestly absent (no objects, no manifest row) — 229 candles < `btc_trailing_return_12m`'s 252-bar lookback, the
+  honest-absence guard refused the empty stamp (identical to slot-7/slot-20's documented data-sparsity verdict, not a
+  bug). Done-when's second clause — TSMOM_BTC_CTA producing non-null signals on the next paper run — is downstream: the
+  archetype is built (P2.11.14) + capability-wired (P2.11.20, both DONE), but no paper run exists in this session to
+  exercise; noted for the next natural paper run, not a gap in this operational recompute. Issue
+  `features_delta_one_cefi_btc_trend_3x_preempted_2026_08_10.md`'s `[OPERATOR]` ruling todo closed as moot (this entry
+  cited in that doc's Progress Log). Todo flipped.
 
 - 2026-08-10 (slot 30, citadel_satellite_ao_dispatch_batch1-004, P2.11.16 "BTC trend feature corpus recompute"): **in
   flight — backfill VM running, NOT yet done.** Verified the P2.11.16 recompute is genuinely needed: `returns`
