@@ -641,3 +641,24 @@ FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
     `auto_unpark__sports_af_full_entity_completion-9798da269f23` and flip this checkbox + close this doc.
   - **Checkbox NOT flipped this session** — done-when (census ~0) is multi-day away (STANDINGS VM ETA 24-60h); task
     remains in-flight for the next slot. No code shipped (pure operations + monitoring).
+
+- **2026-08-11 (slot 21, data_engineering, ~04:30Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260811-012845` confirmed HEALTHY + progressing**: `last_completed_date=2021-01-19`
+    (04:22Z), monotonic; run.log 1MB actively written (last_modified 04:22:28Z); per-VM shard `c3.parquet` (36,049
+    entries, 767 new) — chunked `instruments-backfill` path still working; PIPELINE_HEARTBEAT emitting. Singleton lock
+    held (only af-backfill-* RUNNING; prior `-154220`/`-160958`/`-162910` TERMINATED).
+  - **Fresh census (04:25Z, both scripts)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452**;
+    FIXTURE_STATS 132 · FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** (byte-for-byte match with slot
+    14/25). STANDINGS unchanged at 271 — VM mid-flight (~2021-01-19 of the 2020-06-06→2026-08-10 range).
+  - **Chain automator shipped + launched**: the prior slot-21 session committed
+    `deployment-service/scripts/vm/run-af-residual-completion-chain.sh` (a38c2a5c) but the push was lost (ahead=1 vs
+    origin). This session ships it (Pass-1 QG → quickmerge --agent) and **launches it in the background**: it
+    resume-waits on the STANDINGS VM, then auto-launches TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serially
+    under the singleton lock (on-demand). Removes the per-slot manual next-entity launch step.
+  - **Durability caveat**: the chain is a session-bound background process — it dies if the slot session tears down. It
+    is resume-aware + idempotent; the next worker should re-launch it
+    (`bash deployment-service/scripts/vm/run-af-residual-completion-chain.sh --start-date 2020-06-06 --end-date 2026-08-10`).
+    The STANDINGS VM itself is independent (GCE on-demand, `VM_SHUTDOWN_ON_COMPLETION=true` → self-terminates on exit).
+  - **Checkbox NOT flipped** — done-when (census ~0) is multi-day away (STANDINGS ETA 24-60h). Task remains in-flight
+    for the next slot.
