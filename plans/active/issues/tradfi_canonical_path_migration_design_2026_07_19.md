@@ -354,7 +354,7 @@ removal + casing normalization remain before backfill-resume.
       canonical row per `(venue, data_type, date,     underlying)` cell double-counts. Confirms options_chain is
       in-scope for the P1 `instrument_id-blank` design todo — the fix must reconcile BOTH the blank-id real-data rows
       and the non-blank synthetic-id rows to one canonical chain-bundle row per cell. Full detail in Progress Log.
-- [ ] [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
+- [x] ✅ [SCRIPT] P1. **(NEW 2026-08-11) Split 2 files that crossed the 900-line SRP cap during this rename effort —
       currently a repo-wide hard-gate blocker on EVERY commit to market-tick-data-service, not just this doc's own
       work.** Confirmed live via quickmerge's isolated-worktree re-gate (pulls fresh from origin, so this is a real
       current-tree state, not stale): `market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py` (905 L) and
@@ -365,7 +365,20 @@ removal + casing normalization remain before backfill-resume.
       c31cfe7a's intentional behavior change, 29/29 passing locally) — that fix is ready but blocked until this gate
       clears. `partitioned_writer.py` is under active same-day WIP from this rename effort — not touched here to avoid
       collision; whoever owns that work should extract a natural SRP boundary (e.g. chain-partition-dims resolution)
-      into a companion module. Repo: market-tick-data-service.
+      into a companion module. Repo: market-tick-data-service. — **DONE 2026-08-11 (interactive session), operator
+      go-ahead ("do the split").** `partitioned_writer.py` 906L→847L: extracted 4 pure chain-partition-dims/timestamp
+      helpers (`_pick_ts_col`, `_tradfi_chain_partition_dims`, `_cefi_chain_partition_dims`,
+      `_assert_canonical_chain_path`) into new `engine/orchestrator/chain_partition_dims.py`, re-exported for zero
+      call-site changes. `migrate_tradfi_canonical_2026_07.py` 905L→562L: extracted the disposition-classification +
+      canonical-target-derivation half (pure, dry-run-safe, no GCS writes) into new
+      `scripts/migrate_tradfi_canonical_classify_2026_07.py`; the GCS-mutating apply/CLI half stays in the parent
+      script. Fully re-exported (45 names) — 5 downstream production scripts (`rebundle_tradfi_chains_2026_07.py`,
+      `migrate_tradfi_underlying_display_names_2026_08.py`, `recover_tradfi_garbage_underlying_2026_07.py`,
+      `register_tradfi_recovery_quarantine_manifest_2026_07_30.py`,
+      `recover_tradfi_chain_manifest_registration_2026_07_22.py`) plus the test suite import these "private" helpers
+      directly from the original module path — verified via repo-wide grep, not guessed. 300 tests passing across both
+      split files + every downstream consumer + the originally-blocked reader.py/combo_chain fix, ruff clean. Shipped
+      together in one commit: `market-tick-data-service@b13e3a2b98` → landed on live-defi-rollout.
 
 ## Progress Log
 
