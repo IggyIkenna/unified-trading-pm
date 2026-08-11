@@ -135,6 +135,21 @@ _detect_hits() {
 # _detect_hits' over-indent branch prints, but for EVERY line, not just ones that
 # happen to cross INDENT_THRESHOLD. Used by --only below to recognize pre-existing
 # prose that merely crossed the threshold on THIS pass (see rec. (A) comment there).
+_check_sort_ok() {
+  # Fails loudly if the immediately-preceding sort-terminated pipeline exited non-zero
+  # (via `set -o pipefail`, already active above) — e.g. a locale/encoding failure such as
+  # "sort: string comparison failed: Illegal byte sequence". Without this, a failed sort
+  # silently produces a truncated/empty result and the comm/diff logic downstream misreads
+  # that as "nothing here", degrading into a false positive instead of a hard, diagnosable
+  # error. Call immediately after each `x="$(... | sort ...)"` assignment or `... | sort
+  # ... > file` redirect, passing $? and a short description of what was being computed.
+  local rc="$1" desc="$2"
+  if [ "$rc" -ne 0 ]; then
+    echo "❌ check_prosewrap_padding: sort failed (exit ${rc}) while ${desc} — LC_ALL=C is already exported above, so this indicates a deeper problem than the known locale gap. Failing loudly instead of silently degrading into a false positive." >&2
+    exit 1
+  fi
+}
+
 _all_content_previews() {
   awk '
     /^[[:space:]]*```/ { fence = !fence; next }
@@ -178,8 +193,12 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    _pre_cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    cur_backtick="$(printf '%s' "$_pre_cur_backtick" | sort -u)"
+    _check_sort_ok $? "computing cur_backtick for $f"
+    _pre_head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://')"
+    head_backtick="$(printf '%s' "$_pre_head_backtick" | sort -u)"
+    _check_sort_ok $? "computing head_backtick for $f"
     new_backtick=""
     [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
@@ -195,8 +214,11 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
+    _pre_cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://')"
+    cur_overindent="$(printf '%s' "$_pre_cur_overindent" | sort -u)"
+    _check_sort_ok $? "computing cur_overindent for $f"
     head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    _check_sort_ok $? "computing head_all_content for $f"
     new_overindent=""
     [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
@@ -307,7 +329,9 @@ if [ -n "$DIFF_BASE" ]; then
   BASE_SIGS_FILE="$(mktemp)"
   trap 'rm -f "$BASE_SIGS_FILE"' EXIT
   _violations_at "$DIFF_BASE" | sort -u > "$BASE_SIGS_FILE"
+  _check_sort_ok $? "computing BASE_SIGS_FILE at $DIFF_BASE"
   HEAD_SIGS="$(_violations_at "" | sort -u)"
+  _check_sort_ok $? "computing HEAD_SIGS"
   NEW_SIGS="$(comm -23 <(printf '%s\n' "$HEAD_SIGS") "$BASE_SIGS_FILE" 2>/dev/null || true)"
   NEW_COUNT=0
   [ -n "$NEW_SIGS" ] && NEW_COUNT=$(printf '%s\n' "$NEW_SIGS" | grep -c .)
