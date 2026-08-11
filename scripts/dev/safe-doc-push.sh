@@ -1044,10 +1044,19 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
+# Stage the named files FIRST (they are the payload), before any quarantine step, so they can
+# never be swept into the stash they are about to be compared against.
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 (second symptom / P0 todo):
+# autostash_guard_bound_backlog quarantines the dirty tree; if it stashes the caller's edits
+# before `git add` has seen them, the staging step below finds nothing, falls through to
+# "already matches HEAD", and reports success having shipped nothing.
+git add -- "${FILES[@]}" 2>/dev/null || true
+
 # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
-# --files are passed as protected so the extreme-pile self-arrest never quarantines the very
-# work this run is shipping (dogfooded live 2026-08-10 slot-9).
+# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). With the
+# named files already staged above, the quarantine only touches REMAINING dirty files -- the
+# payload is protected regardless of whether autostash_guard_bound_backlog honours the
+# protected-files parameter (it has been observed to not).
 if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
   autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
 fi
