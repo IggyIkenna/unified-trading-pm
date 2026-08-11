@@ -37,6 +37,8 @@ estimate_class: small
 estimate_baseline: 0.05
 calibrated_ai_days: 0.05
 assigned_role: infra
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

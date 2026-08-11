@@ -26,6 +26,8 @@ asset_group: [sports, meta]
 stage: [meta]
 repos: [agent-orchestrator]
 tags: [ao, auto-park, dispatch, gated, sports]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # AO durable park wiring missing from task entry → false condition does not gate dispatch
