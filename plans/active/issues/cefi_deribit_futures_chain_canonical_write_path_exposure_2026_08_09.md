@@ -227,3 +227,15 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   capture/backfill slot is available for DERIBIT") remains UNMET — a fresh post-fix DERIBIT futures_chain capture would
   breach the hard N=1 cap → do NOT force. Not touching todo 2 (separately dispatchable). Releasing via
   `/skip-current-task {"reason_code": "GATED"}`.
+  - **2026-08-11T01:55Z (slot 12, data_engineering)** — re-dispatched on todo 1, 6th consecutive check. Precondition
+    re-verified via CANONICAL guard: `tardis_running_vm_count asia-northeast1-c central-element-323112` returns **1**
+    (rc=0) — N=1 Tardis slot STILL fully occupied. Pre-flight `tardis_concurrency_guard 1 ...` REFUSES (rc=1: 1+1=2 >
+    cap 1). Holder unchanged: `cefi-queue-heavy-binancefutu-x17-20260809-083733` (RUNNING since 08-09T08:37Z,
+    `VM_TARDIS_CONSUMER=1`, created ~4.5h BEFORE the fix `market-tick-data-service@e24199df` landed at 2026-08-09T13:10Z
+    — executes PRE-fix code, cannot prove the fix). Todo 1 precondition remains UNMET after ~42h of the same pre-fix VM
+    occupying the sole slot. **Todo 2 (P3 — registry drift fix in UAC `DataTypeCapability` + `venue_data_types.yaml`
+    reconcile) is separately dispatchable, non-gated, and has NEVER been attempted across all 6 dispatches** (slots
+    27/8/19/18/12) — the dispatcher should route it to any available data_engineering slot regardless of Tardis slot
+    state, since it's a pure code/config change touching unified-api-contracts/market-tick-data-service with no
+    external-API dependency. Releasing via
+    `/skip-current-task {"reason_code": "GATED", "estimated_unblock_minutes": 480}`.
