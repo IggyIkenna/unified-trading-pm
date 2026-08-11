@@ -580,42 +580,15 @@ are genuinely in scope for the operator's "no exceptions" directive.
   forward for the rest of this campaign: always independently verify a quickmerge's real git effect, never trust the
   notification alone. AF campaign: TEAMS 8,287→7,872 (-415), STANDINGS 12,168→11,753 (-415). FIXTURE_STATS 34,154→33,671
   (-483). Grand total 83,332 (core 4) + 92,194 (FIXTURE_STATS+LINEUPS). All 3 VM lanes confirmed RUNNING.
-- **2026-08-06T16:50Z** — All 3 lanes healthy. TEAMS 7,872→7,524 (-348), STANDINGS 11,753→11,405 (-348). FIXTURE_STATS
-  33,671→33,161 (-510). Grand total 82,636 (core 4) + 91,684 (FIXTURE_STATS+LINEUPS). odds_api bigmem VM still RUNNING,
-  continuing to hold steady well past every prior crash point.
-- **2026-08-06T17:09Z** — All 3 lanes healthy. TEAMS 7,524→7,277 (-247), STANDINGS 11,405→11,158 (-247, both now under
-  8k/12k, approaching completion — TEAMS's chunk-loop VM backlog is winding down). FIXTURE_STATS 33,161→32,802 (-359).
-  Grand total 82,142 (core 4) + 91,325 (FIXTURE_STATS+LINEUPS).
-- **2026-08-06T17:27Z** — Genuine stash-pop conflict this tick: a large unrelated commit batch pulled in included
-  `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, and this checkout's accumulated autostash (9+ entries,
-  pre-existing, not caused by this campaign) conflicted applying its own stale version of that same foreign file.
-  Confirmed via `git diff HEAD`/`git diff origin` that the incoming commit was ALREADY a "reconciled against concurrent
-  same-day work" commit (per its own message) — the authoritative version — so restored the file to `HEAD` via
-  `git checkout HEAD -- <file>` (the stash entry itself untouched, nothing dropped, nothing destroyed; not my file to
-  arbitrate further). TEAMS/STANDINGS chunk-loop VM confirmed at chunk 65/76 (~85% through its own sweep). AF campaign:
-  TEAMS 7,277→6,465 (-812), STANDINGS 11,158→10,346 (-812). FIXTURE_STATS 32,802→32,094 (-708). Grand total 80,518
-  (core 4) + 90,617 (FIXTURE_STATS+LINEUPS). All 3 lanes confirmed RUNNING.
-- **2026-08-06T17:47Z** — All 3 lanes healthy. TEAMS/STANDINGS accelerating sharply: TEAMS 6,465→5,238 (-1,227),
-  STANDINGS 10,346→9,119 (-1,227) — chunk-loop VM now at chunk 66/76, both entities under 6k/10k for the first time.
-  FIXTURE_STATS 32,094→31,295 (-799). Grand total 78,064 (core 4) + 89,818 (FIXTURE_STATS+LINEUPS).
-- **2026-08-06T18:09Z** — All 3 lanes healthy; odds_api bigmem VM log confirms actively writing (rss=7.7GB, far below
-  the ~27-31GB crash point seen pre-fix), no crash. TEAMS 5,238→4,071 (-1,167), STANDINGS 9,119→7,952 (-1,167) —
-  chunk-loop VM now at chunk 67/76 (~9 chunks left). FIXTURE_STATS 31,295→30,435 (-860). Grand total 75,730 (core 4)
-  - 88,958 (FIXTURE_STATS+LINEUPS). Corrected a stale FIXTURE_STATS figure (38,077) in the summary paragraph above the
-    table that had drifted out of sync with the table row itself — now both read 30,435.
-- **2026-08-06T18:33Z** — All 3 lanes healthy. odds_api bigmem VM log shows a normal sawtooth memory pattern (climbs to
-  ~25-32GB per date processed, resets to ~1.5-6.5GB after each write) — peaked at rss=31,798MiB (52% of the
-  e2-highmem-8's 64GB), comfortably clear of the ceiling; confirmed NOT a repeat crash, just per-date accumulation
-  behavior. TEAMS 4,071→3,172 (-899), STANDINGS 7,952→7,053 (-899) — chunk-loop VM now at chunk 69/76 (~7 chunks left).
-  FIXTURE_STATS 30,435→29,392 (-1,043). Grand total 73,932 (core 4) + 87,915 (FIXTURE_STATS+LINEUPS).
-- **2026-08-06T19:03Z** — All 3 lanes healthy, odds_api log continues normal sawtooth (no crash markers). TEAMS
-  3,172→2,102 (-1,070), STANDINGS 7,053→5,983 (-1,070) — TEAMS now under 2.2k, converging within 1-2 more ticks;
-  chunk-loop VM at chunk 70/76 (~6 chunks left). FIXTURE_STATS 29,392→28,111 (-1,281). Grand total 71,792 (core 4)
-  - 86,634 (FIXTURE_STATS+LINEUPS).
-- **2026-08-06T19:31Z** — All 3 lanes healthy, odds_api sawtooth continues normally. TEAMS 2,102→996 (-1,106) — now
-  essentially converged (99.1% resolved, on par with PLAYER_STATS' 998). STANDINGS 5,983→4,448 (-1,535) — chunk-loop VM
-  at chunk 71/76 (~5 chunks left). FIXTURE_STATS 28,111→27,291 (-820). Grand total 69,151 (core 4) + 85,814
-  (FIXTURE_STATS+LINEUPS).
+- **2026-08-06T16:50Z-19:31Z (condensed, 7 ticks)** — All 3 lanes (af-backfill FIXTURE_STATS, TEAMS/STANDINGS
+  chunk-loop, odds_api bigmem) healthy throughout, odds_api sawtooth normal (peak rss=31,798MiB, comfortably clear of
+  the 64GB e2-highmem-8 ceiling, confirmed not a repeat crash). TEAMS dropped 7,872→996 (chunk-loop VM 65→71/76, now
+  essentially converged at 99.1%), STANDINGS 11,753→4,448 (lockstep as always), FIXTURE_STATS 33,671→27,291. One
+  stash-pop conflict at 17:27Z on an unrelated foreign file
+  (`cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`) — confirmed the incoming commit was already the
+  authoritative reconciled version, restored via `git checkout HEAD -- <file>`, nothing dropped. Also corrected a stale
+  FIXTURE_STATS summary-paragraph figure that had drifted from the table row. Grand total 82,636→69,151 (core 4) +
+  91,684→85,814 (FIXTURE_STATS+LINEUPS) across this stretch.
 - **2026-08-06T21:55Z — Both dedicated VMs finished; API-Football daily quota exhausted campaign-wide; FIXTURE_STATS VM
   deleted as confirmed billing-waste.** TEAMS/STANDINGS chunk-loop VM (`instr-backfill-sports-teams-20260805-055622`)
   completed its full 76/76-chunk sweep (`exit_code=0`, clean self-delete) — TEAMS 996→96 (99.9% resolved), STANDINGS
@@ -675,56 +648,16 @@ are genuinely in scope for the operator's "no exceptions" directive.
   slowdown. Given PLAYER_STATS is only ~1,028 shards from done (97.6%+ resolved) and `--force` is omitted
   (already-captured shards skip fast), expect it to converge quickly — monitoring on the normal ~15-20 min cadence now
   that real work has resumed.
-- **2026-08-07T02:11Z** — `af-backfill-20260807-013716` confirmed still RUNNING and healthy: zero rate-limit errors
-  across its full log (grepped explicitly), genuine `Fetched N player stat entries` with real non-zero counts, still
-  early in its sweep (chunk 1/26). PLAYER_STATS 1,028→1,003 (-25) — real but modest progress this tick given the
-  per-minute API throttle (~106 req/min, self-pacing `sleeping Ns to next minute` waits are normal, not the daily
-  quota). No entity switch — FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES all still correctly queued behind
-  the singleton lock. Grand total 64,079 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged — queued).
-- **2026-08-07T02:34Z** — Still RUNNING and healthy (0 rate-limit errors), now at chunk 2/26. PLAYER_STATS 1,003→973
-  (-30), steady real progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued behind
-  the singleton lock, no switch needed. Grand total 64,049 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
-- **2026-08-07T02:58Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 2/26. PLAYER_STATS 973→929 (-44),
-  steady real progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch
-  needed. Grand total 64,005 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
-- **context-scout 2026-08-07**: refreshed context_scope (6 entries) — added `launch-api-football-backfill-vm.sh` (the
-  af-backfill singleton-lock launcher) + `census_other_vendors_gap_2026_08_06.py`; all 4 pre-existing re-verified, kept.
-- **2026-08-07T03:21Z** — Still RUNNING and healthy (0 rate-limit errors), accelerated sharply from chunk 2/26 to chunk
-  9/26 — skip-fast through a stretch of chunks with few/no remaining PLAYER_STATS gaps. PLAYER_STATS 929→702 (-227), the
-  biggest single-tick drop since the quota reset. Census scripts hit their 280s timeout on first attempt this tick
-  (transient, retried successfully — not a new failure mode). FIXTURE_STATS/TEAMS/STANDINGS/ FIXTURE_LINEUPS/INJURIES
-  unchanged — still queued, no switch needed. Grand total 63,778 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged).
-- **2026-08-07T03:39Z** — Still RUNNING and healthy (0 rate-limit errors), now chunk 10/26. PLAYER_STATS 702→643 (-59),
-  steady progress. FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES unchanged — still queued, no switch needed.
-  Grand total 63,719 (core 4) + 83,051 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: this tick also handled a genuine live
-  operator request off-loop, unrelated to this campaign — researched + reported the `footystats-api-key` GSM rotation
-  command (couldn't execute it myself, no session identity has Secret Manager access on central-element-323112) and
-  produced the FootyStats Prediction+Features 49-league checklist for the operator to check in FootyStats's own UI;
-  logged here only for continuity since it interleaved with this tick's cadence.)
-- **2026-08-07T03:53Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 10/26. PLAYER_STATS 643→604
-  (-39). FIXTURE_STATS/FIXTURE_LINEUPS both ticked down slightly on their own (-33 each: 24,495→24,462, 58,556→58,523)
-  despite no dedicated VM running for either — background manifest activity elsewhere, not from this campaign's own
-  lane; noted, not investigated further (harmless direction). TEAMS/STANDINGS/INJURIES unchanged — still queued, no
-  switch needed. Grand total 63,680 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS). (Aside: this tick also answered a
-  follow-up from the operator's FootyStats request — confirmed there is no vendor API for setting/subscribing leagues,
-  it's a manual web-dashboard action only; unrelated to this campaign.)
-- **2026-08-07T04:09Z** — Still RUNNING and healthy (0 rate-limit errors), still chunk 10/26 (3rd consecutive tick on
-  this chunk — more real PLAYER_STATS gaps here than the earlier skip-fast stretch, but genuine forward progress each
-  tick, not stalled). PLAYER_STATS 604→592 (-12). FIXTURE_STATS/FIXTURE_LINEUPS flat this tick (no further background
-  drift). TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch needed. Grand total 63,668 (core 4) + 82,985
-  (FIXTURE_STATS+LINEUPS, unchanged). (Aside: continued operator FootyStats follow-up — their UI confirmed the 47/50
-  save genuinely succeeded, with FootyStats' own documented ~30 min API-cache propagation delay; polled the API twice
-  ~60s apart showing no change yet, consistent with that delay; will re-check nearer the 30 min mark on a future tick;
-  unrelated to this campaign.)
-- **2026-08-07T04:25Z** — Still RUNNING and healthy (0 rate-limit errors), advanced to chunk 12/26. PLAYER_STATS 592→553
-  (-39), back to steady pace. FIXTURE_STATS/FIXTURE_LINEUPS/TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch
-  needed. Grand total 63,629 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: the operator FootyStats
-  follow-up RESOLVED this tick — re-polled the API and it now shows **47/50 confirmed live** (cache delay cleared).
-  Diffed against the target 50-list: exactly 3 missing — **Norway Eliteserien**, **Norway
-  1. divisjon** (both Norway leagues entirely absent), and **Turkey 1. Lig** (Süper Lig present, only the 2nd tier
-     missing). All 4 newly-added Prediction leagues from the earlier "highest prio" swap — Argentina, Chile, Mexico,
-     South Korea — confirmed live. Reported to operator; this closes out the FootyStats side-task, no further follow-up
-     needed unless raised again; unrelated to this campaign.)
+- **2026-08-07T02:11Z-04:25Z (condensed, 8 ticks)** — `af-backfill-20260807-013716` RUNNING+healthy throughout (0
+  rate-limit errors every tick), chunk 1/26→12/26. PLAYER_STATS 1,028→553 (steady real per-minute-throttled progress,
+  one 227-shard skip-fast burst at chunk 2→9). FIXTURE_STATS/TEAMS/STANDINGS/FIXTURE_LINEUPS/INJURIES all correctly
+  queued behind the singleton lock throughout (2 small background drifts on FIXTURE_STATS/LINEUPS, -33 each, not from
+  this campaign's own lane). Grand total 64,079→63,629 (core 4) + 83,051→82,985 (FIXTURE_STATS+LINEUPS). Off-loop aside
+  (unrelated to this campaign, closed out by 04:25Z): an operator FootyStats-subscription request — reported the
+  50-league Prediction+Features checklist, confirmed no vendor API for league subscription (manual UI only), tracked the
+  ~30min cache-propagation delay, and confirmed the final state as **47/50 live**, 3 genuinely missing (Norway
+  Eliteserien, Norway 1. divisjon, Turkey 1. Lig) — reported to operator, closed. context-scout refreshed
+  `context_scope` (6 entries, added the af-backfill launcher + `census_other_vendors_gap_2026_08_06.py`).
 - **2026-08-07T09:03Z** — Still RUNNING and healthy (0 rate-limit errors), advanced to chunk 13/26. PLAYER_STATS 553→513
   (-40), steady pace. FIXTURE_STATS/FIXTURE_LINEUPS/TEAMS/STANDINGS/INJURIES unchanged — still queued, no switch needed.
   Grand total 63,589 (core 4) + 82,985 (FIXTURE_STATS+LINEUPS, unchanged). (Aside: a large amount of off-loop work
@@ -1054,3 +987,14 @@ are genuinely in scope for the operator's "no exceptions" directive.
   not terminal convergence — same rule-4a/slot-17/18/19/23/24 stale-baseline reasoning. Skipping `reason_code: GATED` +
   `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8
   entities stable ~0 / honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11T16:53Z (slot 21, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  `gcloud compute instances list` shows only `af-backfill-20260811-162726` RUNNING (`af-backfill-20260810-162910`
+  TERMINATED, matches slot-32). Verified genuine live progress directly via `run.log` (UTL `download_bytes`, not
+  `gsutil` — blocked by the destructive-command guardrail; not just `gcloud list`/serial-console boot noise, which
+  doesn't carry app-level output): monotonic `[[VM_PROGRESS]] last_completed_date=2023-07-05→2023-07-06` at `16:53:33Z`,
+  real `ManifestWriter` per-VM shard write (23,010 entries, +767 new) moments before this check — advanced well past
+  slot-32's `2023-06-06→2023-06-08` checkpoint 17 min earlier, confirming continuous forward progress, not a stall.
+  Census now = mid-backfill STANDINGS snapshot, not terminal convergence — same rule-4a/slot-17/18/19/23/24/32
+  stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`. **Unpark**: when running `af-backfill-*`
+  count == 0, re-run both census scripts + confirm all 8 entities stable ~0 / honest-absence floors, then close this
+  doc + notify operator. No code changes; Progress Log only.
