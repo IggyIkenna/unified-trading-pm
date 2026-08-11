@@ -587,3 +587,14 @@ depends_on: []
 
 **Recommended NEXT item**: STANDINGS VM at `2022-03-23` (~28.6%). Monitor for `exit_code=0`; then launch TEAMS →
 FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
+
+- **2026-08-11 (slot 20, data_engineering, ~00:35Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`):
+  - **STANDINGS VM `af-backfill-20260810-162910` RUNNING + healthy**: `last_completed_date=2022-04-22` (PROGRESS.json
+    updated 00:30Z; run.log age ~1.4 min — no stall). ~31% through 2020-06-06→2026-08-10. Singleton lock held → serial
+    next: TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS.
+  - **Fresh census** (`census_all_af_entities_completion_2026_08_03.py`): PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271
+    · TEAMS 95 (grand 452; consolidated-index lag vs slot-25 snapshot — INJURIES 334→72 converged). PLAYER_STATS 3→14 is
+    denominator growth (new MVP fixtures), not regression.
+  - **No new launches** (lock). Armed terminal-state watchdog (`af_standings_watchdog.py`, slot-20) — wakes on
+    EXIT_STATUS / VM stop → then launch TEAMS (`--entity TEAMS 2020-06-06 2026-08-10`, on-demand).
