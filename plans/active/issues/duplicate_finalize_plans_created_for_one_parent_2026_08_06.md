@@ -65,22 +65,17 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
-      `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
-      refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
-      two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
+- [x] ✅ [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** — unified-trading-pm@PENDING
+      (idempotency guard added to ag-closeout-audit SKILL.md Phase 4: re-derive _gated_slugs() before creating finalize
+      plan, skip if parent already gated — keyed on depends_on relationship, not filename shape)
 
-- [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
-      `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's
-      frontmatter for `_gated_slugs`), it catches the collision at rest instead of at dispatch time, and it would have
-      surfaced this pair on 2026-07-31 rather than a week later via a worker's blocked question. Report it the same way
-      the orphan count is reported — a non-zero count is review-blocking.
+- [x] ✅ [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** — unified-trading-pm@PENDING
+      (check_duplicate_finalize_gates.py: hard check for parent slugs with >1 finalize-identifiable gating plan, wired
+      into run_hygiene_sweep.sh alongside depends_on DAG check)
 
-- [ ] [DOC] P3. **Sweep the corpus once for other duplicate gates.** Run the detector from todo 2 over `plans/active/`
-      and de-race any other parent found with >1 gated finalize plan, using the same procedure applied here: port any
-      todo unique to the loser into the survivor FIRST, then set `superseded_by`/`supersedes` + a dated banner. Report
-      the count found — if it is zero, this pair was a one-off and todo 1's guard is belt-and-braces.
+- [x] ✅ [DOC] P3. **Sweep the corpus once for other duplicate gates.** — unified-trading-pm@PENDING (corpus sweep
+      result: zero genuine duplicate-finalize-plan cases; 5 raw >1-gate cases all legitimate sibling dependencies;
+      original pair was a one-off, todo 1's guard is belt-and-braces)
 
 ## Progress Log
 
@@ -123,3 +118,23 @@ just picking a winner by filename.
   directly once all 3 todos clear.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+### 2026-08-11 — all 3 todos shipped (slot 32, data_engineering worker adopting infra craft)
+
+**Todo 1 — idempotency guard**: Added a pre-creation check to the `ag-closeout-audit` SKILL.md (Phase 4, before the
+"Pair it with..." step). The guard re-derives `check_finalize_plan_coverage.py::_gated_slugs()` over the current corpus
+and refuses if the batch's slug is already gated by an existing finalize plan — keyed on the `depends_on` relationship,
+not on the expected filename. If already gated, the skill skips finalize-plan creation and reports the existing plan's
+path.
+
+**Todo 2 — duplicate-gate detector**: Created `scripts/plan-hygiene/check_duplicate_finalize_gates.py`, a new ABSOLUTE
+hard check that flags any parent slug gated by >1 `gate_on_depends: true` plan where at least 2 of the gating plans are
+finalize-identifiable (slug contains `finalize`). Wired into `run_hygiene_sweep.sh` as a hard check alongside the
+depends_on DAG check. Scoped to finalize-identifiable plans to avoid false-flagging legitimate sibling-phase DAG edges
+(e.g. phases C/D/E all depending on phases A+B).
+
+**Todo 3 — corpus sweep**: Ran the detector over `plans/active/`. Result: **zero genuine duplicate-finalize-plan
+cases**. The raw >1-gate count was 5, but all 5 were legitimate sibling dependencies (prediction phases C/D/E, sports
+taxonomy phases, etc.) — none had >1 finalize-identifiable plan. The original incident's pair
+(`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31`) was genuinely a one-off. Todo 1's guard is
+belt-and-braces.
