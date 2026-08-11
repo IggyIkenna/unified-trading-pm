@@ -66,19 +66,27 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+@test "a genuinely already-landed tracked file (content matches HEAD, no lock) -- identical at entry = exit 12; SDP_ALLOW_NOOP=1 restores exit 0" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
   git push -q origin HEAD:live-defi-rollout
 
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
+  # The identical-at-entry gate (F8) refuses that: "a peer landed it" and "your edit was
+  # reverted before we hashed it" are indistinguishable from inside the process, so it must
+  # not resolve to a silent 0 (measured false green 2026-08-10).
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
   [[ "$output" == *"staging completed cleanly"* ]]
   [[ "$output" != *"could not stage named files"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
+
+  # SDP_ALLOW_NOOP=1 accepts it as a deliberate idempotent re-run.
+  SDP_ALLOW_NOOP=1 PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+  [ "$status" -eq 0 ]
   [[ "$output" == *"✅"* ]]
 }
 
@@ -90,7 +98,8 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # nothing-to-stage: genuinely already-landed tracked file -- identical at entry, exits 12
+  # (F8 gate: the two causes are indistinguishable and must not resolve to a silent 0).
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -99,6 +108,6 @@ setup() {
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }

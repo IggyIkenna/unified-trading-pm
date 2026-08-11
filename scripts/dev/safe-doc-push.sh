@@ -104,6 +104,12 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the "nothing to stage"/"nothing to commit" fallback found a named file that HAD a real diff
+# at entry, the branch moved for that path, but origin/$BRANCH does NOT contain the caller's
+# content -- "nothing to stage" + "real diff at entry" means this run's reconcile moved the
+# working tree off the caller's edit while a DIFFERENT commit advanced the branch (the P0
+# "we quarantined the changes ourselves" class). Loud failure printing the quarantine ref; a
+# bare re-run would push the branch's content, not the caller's.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -571,6 +577,56 @@ _sdp_assert_entry_change_landed() {
       echo "   stash BEFORE re-running, or the re-run ships the reverted content."
     fi
     echo "   See plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md (F8)."
+  } >&2
+  return 1
+}
+
+# _sdp_assert_remote_has_entry_content -- the "nothing to stage" / "nothing to commit"
+# fallbacks must only report "already landed, treating as success" when the caller's ENTRY
+# content is genuinely on the REMOTE -- verified against origin/$BRANCH, not HEAD (P0,
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10, "Second symptom"). A named file
+# that HAD a real diff at entry (entry blob != entry HEAD blob) but is identical to HEAD NOW
+# was moved off the caller's content DURING this run. Two ways that resolves:
+#   * a peer landed identical content -- origin/$BRANCH:<path> then equals the entry blob and
+#     the fallback's success claim is honest;
+#   * this run's own reconcile/autostash quarantine parked the caller's edit in a stash while
+#     a DIFFERENT commit advanced the branch -- origin then holds the peer's blob, NOT the
+#     caller's, and reporting success would certify a branch that contains none of the caller's
+#     work: the exact false-green this P0 exists to kill. Loud failure, exit 14, printing the
+#     quarantine ref.
+# F8's exit 13 already covers the "branch did not move for this path" half (the caller's change
+# simply never landed); this is the half F8 cannot see -- the branch moved, but to someone
+# else's content. The identical-at-entry case is deliberately NOT touched (exit 12): no
+# remote-ref comparison can resolve "a peer landed it" from "your edit was reverted before
+# hashing", because both leave the same content on the remote.
+# Returns 0 when every real-diff-at-entry named file's entry content is at origin/$BRANCH;
+# 1 (after printing the loud failure + recovery refs) otherwise -- the caller exits 14.
+_sdp_assert_remote_has_entry_content() {
+  local _f _disk _entry_head _now_head _remote
+  local -a _not_on_remote=()
+  for _f in "${FILES[@]}"; do
+    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
+    case "$_disk" in ABSENT | MISSING | "") continue ;; esac
+    [[ "$_disk" == "$_entry_head" ]] && continue # nothing of ours at entry -- exit-12 ambiguity
+    _now_head="$(_sdp_head_blob "$_f")"
+    [[ "$_now_head" == "$_entry_head" ]] && continue # branch did not move for this path -- exit 13, not 14
+    _remote="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
+    [[ "$_remote" == "$_disk" ]] || _not_on_remote+=("$_f")
+  done
+  [[ ${#_not_on_remote[@]} -eq 0 ]] && return 0
+  {
+    echo
+    echo "🛑 NOTHING OF YOURS IS ON THE REMOTE -- nothing to stage for file(s) that HAD a real diff"
+    echo "   when you invoked this run, and origin/${BRANCH} does not contain your content:"
+    printf '     %s\n' "${_not_on_remote[@]}"
+    echo "   'nothing to stage' + 'real diff at entry' means this run's reconcile moved the working"
+    echo "   tree off your edit while a DIFFERENT commit advanced the branch -- your content was"
+    echo "   parked, not pushed, so reporting success here would be a false green. Recover it:"
+    git stash list 2>/dev/null | head -5 | sed 's/^/     /'
+    echo "     Inspect:  git stash show -p 'stash@{0}'"
+    echo "     Extract ONE file (never blind-pop):  git show 'stash@{0}:<path>' > <path>"
+    echo "   See plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md (P0)."
   } >&2
   return 1
 }
@@ -1119,8 +1175,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
         if verify_committed && verify_pushed; then
+          _sdp_assert_remote_has_entry_content || exit 14
           _sdp_certify_success || exit $?
-          echo "✅ Named files already match HEAD (a concurrent session landed identical content while this run was in flight) -- treating as success."
+          echo "✅ Named files already on origin/${BRANCH} (a concurrent session landed identical content while this run was in flight) -- treating as success."
           final_ok=true
           break
         fi
@@ -1133,8 +1190,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
         if verify_committed && verify_pushed; then
+          _sdp_assert_remote_has_entry_content || exit 14
           _sdp_certify_success || exit $?
-          echo "✅ Nothing to commit -- already landed. Treating as success."
+          echo "✅ Nothing to commit -- your content is already on origin/${BRANCH}. Treating as success."
           final_ok=true
           break
         fi
