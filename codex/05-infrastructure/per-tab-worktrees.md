@@ -283,24 +283,95 @@ is a known archived/consolidated repo. SSOT for the incident + remediation:
 | A slot clone's `git fsck` FAILS with `invalid sha1 pointer` / `invalid reflog entry` for an object "missing" from the store (VM git-health guard alerts "genuine missing/broken objects")                                                                                                                              | **Reference-clone prune hazard** (below): the base clone's default auto-gc pruned an unreachable object that a slot's stale ref/reflog still points at. The base's gc has no knowledge of slot refs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Prevent:** `git -C <base> config gc.pruneExpire never` on every base (asserted by `setup-tab-worktrees.sh` at clone time + `fleet-git-health-guard.sh` every 15 min). **Repair a broken slot:** reset the stale local ref off the missing object (`git update-ref refs/heads/<b> origin/<b>`) + `git reflog expire --stale-fix --all`, then re-fsck. See § below.        |
 | A repo's test/QG run fails with `ImportError: cannot import name 'X'` (or similar) while importing/probing a **sibling** repo's code (e.g. unified-trading-pm's capability-schema tests reading strategy-service's live engine registry) — even though that sibling's own quality-gates is green on its current branch | **Stale sibling `.venv` on THIS slot**: each slot's sibling clones have fully independent `.venv`s (3-tier isolation above). A fleet-wide dependency bump landing in the sibling's `pyproject.toml`/`uv.lock` does **not** retroactively refresh any slot's already-built venv — only the NEXT `uv sync` in that specific clone does. Confirmed 2026-07-31: `strategy-service/.venv` on slot 2 had `fastapi==0.135.1` installed while its own `pyproject.toml`/`uv.lock` already required `0.140.7` (a fleet-wide CVE-remediation bump shipped 2026-07-28, `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`) — a cross-repo probe in unified-trading-pm's tests hit `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` purely from the stale venv. | **Self-service first, don't escalate**: `cd <sibling-repo> && uv sync`, then verify — e.g. `.venv/bin/python -c "import <pkg>; print(<pkg>.__version__)"` should match the version pinned in that repo's own `uv.lock`. No code/pyproject change needed; this is a local environment refresh, not a dependency-resolution bug.                                             |
 
-| Repeated `index.lock` contention, edits needing recovery from an autostash TWICE, or a commit landing under the WRONG
-operator's author identity — even though Path-B's separate clones make CROSS-slot collisions unrepresentable |
-**Interactive-session slot collision — a DISTINCT failure mode from the cross-slot collision Path-B's separate clones
-already solve.** AO-dispatched workers get programmatic slot allocation; an INTERACTIVE session (a human opening a
-terminal/IDE tab) has none — the operator just `cd`s into whichever `.tabs/N` they have open, and nothing warns them if
-a different live session already occupies it. Multiple `claude` processes (potentially different operators) then share
-ONE slot's single `.git` — one index, one `HEAD`, one set of refs, and one `user.name`/`user.email` (§ "Commit
-attribution" below assumes one live session per slot — this incident breaks that premise). Confirmed live 2026-08-01: up
-to 6 concurrent `claude` processes on one slot, 3 collisions in ~15 min, one commit mis-attributed to the wrong operator
-despite correct content. Full incident:
-`plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`. | **Recovery**:
-`scripts/dev/safe-doc-push.sh` for the docs-only fast path (CLAUDE.md-mandated default —
-fetch/reconcile/stage-by-name/foreign-content-isolation/bounded retry, the same contention-hardening quickmerge.sh has
-for code). **Prevention (WARN, never hard-block — 2026-08-08 operator ruling)**: a live heartbeat on `.agent-claim`
+| Repeated `index.lock` contention, an edit needing recovery from an autostash TWICE, or a commit landing under the
+WRONG operator's identity — even though Path-B's separate clones make CROSS-slot collisions unrepresentable |
+**Interactive-session slot collision** — two live sessions sharing ONE slot's `.git` (see § below) | **Prevention**:
+hold uncommitted work in a private `git worktree` via `scripts/dev/ship-from-worktree.sh setup`, not the shared checkout
+(§ below). **Detection**: `SessionStart` collision hook (WARN-only) + `.agent-claim` heartbeat. |
+
+### Interactive-session slot collision — a distinct failure mode Path-B's clones do NOT solve
+
+AO-dispatched workers get programmatic slot allocation; an INTERACTIVE session (a human opening a terminal/IDE tab) has
+none — the operator just `cd`s into whichever `.tabs/N` they have open, and nothing prevented a different live session
+from already occupying it. Multiple `claude` processes (potentially different operators) then share ONE slot's single
+`.git` — one index, one `HEAD`, one set of refs, and one `user.name`/`user.email` (§ "Commit attribution" below assumes
+one live session per slot — this failure mode breaks that premise). Confirmed live 2026-08-01: up to 6 concurrent
+`claude` processes on one slot, 3 collisions in ~15 min, one commit mis-attributed to the wrong operator despite correct
+content. Full incident:
+`plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`.
+
+**Detection (WARN, never hard-block — 2026-08-08 operator ruling): a live heartbeat on `.agent-claim`**
 (`slot-git-status-report.sh`'s `refresh_agent_claim_heartbeat()`) distinguishes "claimed" from "claimed-and-alive"; a
-`SessionStart` hook (`cursor-configs/hooks/session-start-collision-check.sh`) checks that heartbeat plus a
-`/proc/<pid>/cwd` process scan and warns (non-blocking) naming the live occupant. Operator-side: before opening a new
-session, check `.agent-claim` liveness and pick an unclaimed slot. |
+`SessionStart` hook (`cursor-configs/hooks/session-start-collision-check.sh`) checks that heartbeat plus a live-process
+cwd scan and warns (non-blocking) naming the live occupant.
+
+**Signal 2's cwd scan was silently blind on macOS (fixed 2026-08-11).** It originally read ONLY `/proc/<pid>/cwd` +
+`/proc/<pid>/status` — Linux-only paths. This operator's own laptop (Darwin — the host every measured instance of this
+incident, including the 2026-08-11 recurrence below, actually happened on) has no `/proc` at all, so every read silently
+failed and `foreign_count` stayed 0 regardless of how many peer sessions were actually live: the signal never once fired
+on the platform it exists to protect, and nothing said so. Confirmed by direct reproduction: a simulated peer process
+(cwd inside a fake slot dir, argv0 renamed to match `pgrep -f claude`) produced ZERO warning from the unpatched hook and
+the correct warning after the fix, on the identical input. Fixed by adding a `ps`/`lsof` fallback (`_ppid_of` /
+`_cwd_of` helpers) that only engages when `/proc` is absent — Linux behavior is unchanged. This is a
+detection-completeness fix, not a severity change: still WARN-only, still never blocks. Regression coverage:
+`tests/test_session_start_collision_check.bats` (10/10).
+
+**2026-08-11 recurrence — the mitigation that actually worked was to stop sharing the checkout, not to detect harder.**
+In slot 4, AFTER the quarantine-guard fix that closed the specific call-site bug behind the earlier losses
+(`pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`), a peer session's own reconcile still reverted a
+DIFFERENT session's tracked edits to HEAD twice in ~30 minutes — `git status` clean, content recoverable only from a
+`pre-reconcile quarantine` stash by path. Neither detection signal above prevented it (WARN-only by design; the
+`.agent-claim` heartbeat is best-effort and an interactive session commonly has none at all, per the header comment on
+the hook itself). The only thing that reliably worked was to stop holding uncommitted work in the shared checkout at all
+— a private linked `git worktree`, which by construction has its own working tree, index, and HEAD, so a peer session's
+stash/reconcile machinery (which operates entirely within the SHARED `.git`'s index and working tree) cannot touch it.
+See § "What worktree isolation does NOT cover" above for the two surfaces (`refs/stash`, `.git/COMMIT_EDITMSG`) a
+worktree does NOT protect against — this mitigation is for the working-tree/index/HEAD class of loss specifically, which
+is what both 2026-08-11 losses were.
+
+**`scripts/dev/ship-from-worktree.sh` formalizes this as a real, tested tool** rather than a hand-derived emergency
+manoeuvre every session re-invents. `setup` fetches, creates a detached linked worktree named after the CALLING repo
+(never a hardcoded literal — resolved via `git rev-parse --show-toplevel`, so it tracks whatever the F7-adjacent P1
+around quickmerge's own directory-name assumptions eventually settles on, rather than needing a matching fix here),
+symlinks sibling repos in for a subsequent `quickmerge.sh`'s STAGE 1.5 dependency alignment, and optionally
+(`--with- venv`) provisions a Python venv via the SAME shared per-repo cache (`QM_ISO_VENV_CACHE`, default
+`$HOME/.cache/qm-iso-venv/<repo>`) that `quickmerge.sh`'s own isolated mode already uses — deliberately NEVER a symlink
+to the caller's real `.venv`: both `scripts/quickmerge.sh`'s own header comment and this section's source issue doc's
+"Lessons carried forward" record that doing so let `uv sync --frozen` PRUNE packages out of the operator's live
+environment (measured 2026-08-10). `cleanup <dest>` removes the worktree via `git worktree remove --force` (git's own
+removal, never a raw `rm -rf`, which a guardrail hook on this host blocks anyway) resolved against the ORIGIN repo (via
+`git rev-parse --git-common-dir` from inside the worktree, so cleanup works regardless of where the caller currently
+is), prunes worktree admin state, unlinks sibling symlinks by name, and `rmdir`s the parent — never forced, so anything
+unexpectedly left behind fails loudly instead of being deleted. Ship from inside it exactly as from the shared checkout
+— `safe-doc-push.sh` / `quickmerge.sh` both run fine from within a worktree (they build their OWN, shorter- lived
+isolation worktree internally regardless of whether the caller is already in one). Tests:
+`tests/test_ship_from_worktree.bats` (16/16, hermetic — builds its own scratch origin + slot clone, never touches a real
+`.tabs/<N>`).
+
+**Open question, not yet resolved: should detection escalate past WARN?** Two options were assessed (2026-08-11); no
+change beyond the detection-completeness fix above has shipped, pending an operator decision:
+
+- **Option A — keep SessionStart WARN-only; strengthen the message to name `ship-from-worktree.sh` as the concrete
+  mitigation [RECOMMENDED as the immediate default].** A true hard block is not mechanically available at this hook
+  event regardless of preference — `SessionStart` is documented as non-blocking in Claude Code REGARDLESS of exit code
+  (see the hook's own header comment), so "harder than WARN" cannot mean "refuse the session" without moving to a
+  different hook event entirely. The operator's 2026-08-08 ruling (WARN, never hard-block) was made for exactly the
+  reason still true today: an operator may deliberately run two sessions in one slot for a review pass, and a session
+  that refuses to start with no per-invocation override is a worse cost than the collision it prevents.
+- **Option B — a narrower `PreToolUse` guard scoped to the actual risky commands** (`git commit` / `quickmerge.sh` /
+  `safe-doc-push.sh`), re-checking the same two liveness signals at the MOMENT of the mutating call rather than only at
+  session start, with a clean, cheap opt-out for anything invoked from inside a `ship-from-worktree.sh` worktree (which
+  is safe by construction and must never be blocked). This targets the actual moment of loss more precisely than a
+  session-start check — the 2026-08-11 recurrence happened well after both sessions had already started, when a PEER
+  session's reconcile fired mid-session, not at either session's launch. What it would break if adopted carelessly: a
+  second session doing purely read-only/planning work with no git-mutating intent would still hit friction on its first
+  commit attempt; an AO-spawned tmux pane transiently visible during a worker handoff in the SAME slot could false-
+  positive; and unlike a session-start warning (skippable by just continuing), a `PreToolUse` block genuinely stops the
+  next action, so its false-positive cost is now paid mid-task rather than at a natural pause point.
+
+Recorded here rather than decided unilaterally — a change to hook-blocking severity is a workflow-wide policy call, not
+a same-turn code fix, per the escalation-to-operator convention (present options, mark a recommendation, let the
+operator choose).
 
 ### Reference-clone prune hazard (codified 2026-07-13)
 
