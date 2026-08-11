@@ -64,8 +64,9 @@
 # EXIT CODES: 0 success -- verified end-to-end (incl. "nothing to commit" -- another slot
 # already landed the identical content; every success path, including that fallback, only
 # reports 0 after independently confirming `git log --oneline -1 -- <path>` is non-empty for
-# every named file and, post-push, that `git branch -r --contains HEAD` includes the target
-# branch -- see verify_committed/verify_pushed below). 2 bad usage. 3 unresolved rebase
+# every named file, post-push that `git branch -r --contains HEAD` includes the target
+# branch, AND that every named path reached origin/$BRANCH in the state this push intended
+# (see verify_committed / verify_pushed / _sdp_verify_named_reached_remote below). 2 bad usage. 3 unresolved rebase
 # conflict (real content collision, needs a human). 4 push rejected for a non-drift reason, OR
 # `git push` exited 0 but verify_pushed found origin/<branch> does not actually contain HEAD.
 # 5 exhausted retries under sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
@@ -104,6 +105,12 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the push landed (or the already-landed fallback certified) but NOT every named path reached
+# origin/$BRANCH in the state this push intended -- a per-file PARTIAL LANDING; the failing paths
+# are named in the message. Distinct from 13 (a named FILE's change absent from HEAD): 14 covers
+# the shape 13 is structurally blind to -- a DELETION / rename-source that was dropped, leaving
+# the old path live on the remote (the create-only archival bug this issue documents).
+# Recover the missing path(s) and re-run; already-landed files no-op (12) rather than double-apply.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -575,12 +582,73 @@ _sdp_assert_entry_change_landed() {
   return 1
 }
 
+# _sdp_verify_named_reached_remote -- per-file ground truth for "every named path reached
+# origin/$BRANCH", the REMOTE surface, not just "a commit landed on the branch". verify_pushed
+# proves HEAD is contained in origin/$BRANCH; this proves each NAMED path's state ON that ref is
+# the one this push intended. Three states, each checked directly against origin/$BRANCH:
+#   * DELETION / rename-source (absent from the caller tree at entry): the path must be ABSENT
+#     from the remote. A surviving remote entry is a dropped deletion -- the create-only shape
+#     this issue documents -- and _sdp_assert_entry_change_landed (13) is structurally blind to
+#     it because its ABSENT/MISSING case `continue`s.
+#   * MODIFY (present at entry, differs from entry HEAD): the remote blob must have moved off
+#     the PRE-RUN HEAD blob. Still equal is "your change did not land", whatever verify_committed
+#     said -- a dropped path still has SOME prior commit in history, so `git log -1 -- <path>`
+#     is non-empty.
+#   * net-new CREATE (present at entry, entry HEAD absent): the path must resolve on the remote
+#     at all; any blob is the landing.
+# Paths identical to entry HEAD (nothing of ours to land) are skipped -- flagging them would be
+# a false positive the moment a concurrent session legitimately removes or rewrites a path this
+# push did not touch. Returns 1 naming the missing path(s); the caller maps that to exit 14.
+_sdp_verify_named_reached_remote() {
+  local _f _disk _entry_head _remote_blob
+  local -a _missing=()
+  for _f in "${FILES[@]}"; do
+    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
+    _remote_blob="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
+    case "$_disk" in
+      ABSENT | MISSING | "")
+        # Deletion / rename-source: must be gone from the remote. A surviving remote entry is a
+        # dropped deletion (the create-only archival shape), and this is the one surface no
+        # earlier check sees -- verify_committed's `git log -1 -- <path>` matches a PRIOR commit.
+        if [[ "$_remote_blob" != "ABSENT" ]]; then
+          _missing+=("$_f")
+        fi
+        ;;
+      *)
+        # Nothing of ours to land for this path -- it already matched entry HEAD. Skip rather
+        # than flag a legitimate concurrent rewrite/removal of a path we did not touch.
+        [[ "$_disk" == "$_entry_head" ]] && continue
+        # MODIFY: remote must have moved off the pre-run HEAD blob. net-new CREATE: entry_head is
+        # ABSENT, so "_remote_blob == _entry_head" folds to "remote is still absent".
+        if [[ "$_remote_blob" == "ABSENT" || "$_remote_blob" == "$_entry_head" ]]; then
+          _missing+=("$_f")
+        fi
+        ;;
+    esac
+  done
+  [[ ${#_missing[@]} -eq 0 ]] && return 0
+  {
+    echo
+    echo "🛑 PARTIAL LANDING -- not all named files reached origin/${BRANCH}."
+    echo "   These named path(s) did NOT reach the remote in the state this push intended:"
+    printf '     %s\n' "${_missing[@]}"
+    echo "   verify_pushed confirmed a commit reached the branch; this is a PER-FILE gap -- the"
+    echo "   commit that landed carries fewer than all ${#FILES[@]} named paths. The most common"
+    echo "   shape is a dropped DELETION (the create-only archival bug this issue documents)."
+    echo "   Recover the missing path(s) from disk / the stash and re-run; already-landed files"
+    echo "   no-op (exit 12) rather than double-apply."
+  } >&2
+  return 1
+}
+
 # _sdp_certify_success -- the SINGLE gate every success path in this script passes through, so a
 # short-circuit added later cannot accidentally bypass either check. Echoes nothing on success;
-# returns the exit code the caller should exit with (12 or 13), or 0 to proceed.
+# returns the exit code the caller should exit with (12, 13 or 14), or 0 to proceed.
 _sdp_certify_success() {
   _sdp_guard_already_landed_claim || return 12
   _sdp_assert_entry_change_landed || return 13
+  _sdp_verify_named_reached_remote || return 14
   return 0
 }
 
