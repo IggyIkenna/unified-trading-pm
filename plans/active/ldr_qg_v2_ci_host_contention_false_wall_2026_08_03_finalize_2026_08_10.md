@@ -60,11 +60,16 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify each audit's stated YES/NO/verdict against the cited evidence** — todo 1's
+- [x] ✅ [REVIEW] P1. **Re-verify each audit's stated YES/NO/verdict against the cited evidence** — todo 1's
       governor-ledger participation call (code path cited, function + file), todo 2's undersized/adequate verdict
       (numbers cited, compared against `qg_resource_baseline.json`), and todo 3's branch-protection YES/NO (the actual
-      `gh api`/ruleset output quoted, not paraphrased). **Done when**: independently reproduced or the cited command
-      output directly confirms the stated verdict.
+      `gh api`/ruleset output quoted, not paraphrased). **RE-VERIFIED 2026-08-11 (slot-8)** — (1) NO disjoint ledger
+      CONFIRMED: pre-fix `qg-host-governor.sh` `_qg_shared_root()` at f3534a90ea^ routes `.tabs/*` → `${ws%/.tabs/*}` vs
+      `/opt/github-glue-runners*` → `/opt/.qg-governor-glue-shared`, genuinely disjoint; both call identical
+      `qg_governor_acquire()`. (2) UNDERSIZED CONFIRMED: live host 8phys/16log, 30GiB RAM, load 16.76/15.30/15.17 (~2x);
+      baseline `deployment-service` `wall_s=106.0` `measured_concurrency:1`. (3) YES CONFIRMED:
+      `gh api repos/IggyIkenna/deployment-service/rulesets/13787653` — enforcement=active, required checks =
+      quality-gates-v2 + sit-gate/fleet-green, bypass_actors=[], default_branch=main.
 - [ ] [REVIEW] P1. **Confirm any "if [gap found], file a follow-up todo" branch was actually followed.** Each of the 3
       source todos conditions a NEW fix/wiring todo on its own finding — check whether a gap was found in each case and,
       if so, that a properly-scoped `- [ ]` follow-up todo now exists (in the source doc or a new properly-targeted doc,
@@ -87,3 +92,11 @@ source: >-
 
 - **2026-08-10** — Authored in the same turn as the source doc's RECLASSIFY, per the mandatory finalize-twin rule.
   `sequential: true` since the 4 todos are a genuine reconcile→archive chain (and all touch the same source doc).
+
+- **2026-08-11 (slot-8, review)** — Todo 1 done. Independently re-verified all 3 audit verdicts: (1) governor-ledger NO
+  — pre-fix `_qg_shared_root()` routes to disjoint dirs per caller cwd (confirmed via `git show f3534a90ea^` diff); both
+  surfaces call identical `qg_governor_acquire()`. (2) Host UNDERSIZED — live re-measure confirms 8phys/16log cores,
+  30GiB RAM, load ~2x oversubscribed; `qg_resource_baseline.json` deployment-service `wall_s=106.0` at
+  `measured_concurrency:1`. (3) Branch-protection YES — `gh api` ruleset 13787653 (`require-quality-gates`):
+  enforcement=active, required checks = quality-gates-v2 + sit-gate/fleet-green, bypass_actors=[], default_branch=main.
+  All 3 independently confirmed against the live evidence.
