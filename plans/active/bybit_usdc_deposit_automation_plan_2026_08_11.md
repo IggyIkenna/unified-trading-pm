@@ -140,14 +140,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add `resolve_deposit_address(asset, network)` to `BybitPerpHedgeConnector`. Wraps the CCXT
-      exchange's `fetch_deposit_address(code, params)` — the underlying `BybitCCXTAdapter._get_exchange()` returns a
-      `ccxt.bybit` instance that already supports this method (Bybit REST `/v5/asset/deposit/query-address`). Returns
-      `{"address": str, "network": str, "tag": str | None}` or raises a typed error on failure. Include an in-memory
-      cache (deposit addresses are stable per asset+network; re-resolve only on explicit invalidation or cache miss).
-      Repo: execution-service. Done-when: unit tests (address resolution with mocked CCXT exchange, cache hit returns
-      cached address, network not supported returns clean error, adapter not initialized raises clean);
-      `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. Add `resolve_deposit_address(asset, network)` to `BybitPerpHedgeConnector` —
+      execution-service@73edfc9e. Wraps the CCXT exchange's `fetch_deposit_address(code, params)` — the underlying
+      `BybitCCXTAdapter._get_exchange()` returns a `ccxt.bybit` instance that already supports this method (Bybit REST
+      `/v5/asset/deposit/query-address`). Returns `{"address": str, "network": str, "tag": str | None}` or raises a
+      typed error on failure. Include an in-memory cache (deposit addresses are stable per asset+network; re-resolve
+      only on explicit invalidation or cache miss). Repo: execution-service. Done-when: unit tests (address resolution
+      with mocked CCXT exchange, cache hit returns cached address, network not supported returns clean error, adapter
+      not initialized raises clean); `quality-gates.sh` green.
 
 - [ ] [BACKEND] P2. Add `fetch_deposit_records(asset)` to `BybitPerpHedgeConnector`. Wraps CCXT `fetch_deposits(code)`
       (Bybit REST `/v5/asset/deposit/query-record`) to list recent deposit records for arrival confirmation. Returns
@@ -231,3 +231,11 @@ context_scope:
   transfer to Bybit (CEX deposit addresses, not a bridge contract). `BybitWiring` (`bybit_wiring.py`) — resolves trade
   keys only, no funding-wallet credential surface. Filed as the gated follow-up required by
   `bybit_perp_hedge_execution_plan_2026_08_10.md` todo 7.
+- **2026-08-11 (slot 25, backend_engineer)**: Todo 1 (`resolve_deposit_address`) — verified already implemented +
+  unit-tested in `execution-service@73edfc9e` (on `origin/live-defi-rollout`, `Quickmerge: agent` trailer → v2-gated at
+  ship time). Method at `protocols/bybit.py:161-193` wraps
+  `BybitCCXTAdapter._get_exchange().fetch_deposit_address(code, params)`, caches per (asset, network), returns
+  `DepositAddressResult`, raises `BybitDepositAddressError` on failure; `invalidate_deposit_address_cache()` forces
+  re-resolve. Tests at `tests/unit/defi_execution/test_bybit_connector.py` cover mocked-exchange resolution, cache hit,
+  invalidate, unsupported-network error, uninitialised-adapter error, and empty-address error. Code + tests were shipped
+  without the checkbox flip — flipped in this turn.
