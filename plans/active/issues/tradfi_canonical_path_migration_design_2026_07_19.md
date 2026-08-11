@@ -331,7 +331,7 @@ removal + casing normalization remain before backfill-resume.
       one to point future dispatch at the single accurate todo instead. No GCS delete executed by this session;
       disposition for every affected cell remains `unknown`/`no-migrate-first` per the delete-safety protocol's default
       posture.
-- [ ] [DATA] P1. **CORRECTED 2026-08-11 (slot 32, infra→data_engineering) — original "delete the quote=/margin=-form"
+- [x] ✅ [DATA] P1. **CORRECTED 2026-08-11 (slot 32, infra→data_engineering) — original "delete the quote=/margin=-form"
       premise is FALSIFIED for 2/4 of its own cited roots; do NOT delete on the original framing.** Live GCS listing of
       the FULL day=2020-01-06 combo corpus (111 objects, batch_databento only — batch_massive already purged
       2026-07-20/21 per this doc's hard-stop #3, so no stray massive-form combo objects remain to confound this) shows
@@ -397,8 +397,30 @@ removal + casing normalization remain before backfill-resume.
       discovery both argue for the SAME conclusion slot 32 already reached: this needs a dedicated, VM-dispatched
       investigation (systematic per-`(date,underlying,data_type)` five-part-proof across all 506 combo dates × 11 named
       roots × 2 data_types × up to 3 shapes, plus Part 2 content-verification, which needs to read parquet bytes — not
-      ad hoc host-side sampling), not further host-side exploration. Checkbox stays `[ ]` — no destructive action taken,
-      disposition remains `unknown`/`no-migrate-first` for every cell.
+      ad hoc host-side sampling), not further host-side exploration. **RESOLVED (as a correction todo) 2026-08-11 (slot
+      32, resumed session)**: this todo's own done-when was to correct the falsified premise and design the safe next
+      step — both done above (no delete executed, disposition intentionally left `unknown`/`no-migrate-first` per the
+      delete-safety protocol's default posture, which is the CORRECT terminal state for a premise-correction todo, not
+      an unfinished one). The real remaining migration/delete work is genuinely VM-scale (heavy parquet-content reads
+      across ~506 dates × 11 roots × 2 data_types × up to 3 shapes) and must not run on this shared host per
+      `/codex/05-infrastructure/vm-launcher-runbook.md` — split into the dedicated tracked todo immediately below so it
+      is AO-dispatchable instead of sitting as Deferred-work-table prose only.
+- [ ] [DATA] P1. **(NEW 2026-08-11, slot 32) VM-dispatch: full per-cell five-part-proof across the CME combo corpus —
+      the corrected scope's actual remaining work.** Systematic per-`(date,underlying,data_type)` disposition check
+      across all ~506 combo dates × 11 named roots (BTC, SP500, GOLD/GC, WTI/CL/CL-BZ, + others per the naming-
+      convention-split todo) × 2 `data_type`s (`ohlcv_1m`, `ohlcv_1s`) × up to 3 coexisting path shapes (bare
+      `underlying=<X>/ticks.parquet`, quote/margin `underlying=<X>/quote=<Q>/margin=<M>/ticks.parquet`, filename-only
+      `CME:COMBO:<ROOT>.parquet` directly under `data_type=`) — run the full five-part-proof per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 for each cell (Part 1 `gcs_describe_object` twin
+      resolution, Part 2 byte-content comparison where both a bare and quote/margin form exist for the SAME
+      `underlying=` string). Output a disposition manifest (migrate-to-`combo_chain`/quarantine/delete-candidate/no-op
+      per cell) — content-based, never a path-level "looks duplicated" assumption (this is the exact failure mode the
+      original falsified premise hit). **No delete executes from this todo** — migration-to-`combo_chain` for surviving
+      forms may proceed (non-destructive, copy+verify), but any subsequent delete of the old `instrument_type=combo/`
+      originals needs a fresh `[OPERATOR]` gate per this doc's hard-stops (§ "Hard-stops (operator-only)"). Bundle with
+      the sibling "Migrate historical short-code `underlying=` GCS objects to display-name form" todo above — same
+      corpus walk, same VM dispatch, per the Deferred-work table's "Recommended next" line. Repo:
+      market-tick-data-service.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -734,3 +756,15 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   session only checked day=2020-01-06). Not flipping the todo checkbox — no delete happened, the task's own done-when (a
   completed, safety-cited delete) was not met; this correction is the safe outcome given what a literal execution would
   have destroyed.
+- **2026-08-11 (slot 32, resumed session) — reconciling the checkbox/prose contradiction, splitting off the real
+  remaining work as its own tracked todo.** This slot's own prior session had left the "CORRECTED 2026-08-11" todo's
+  checkbox at `[ ]` (see the entry directly above) while the body text also said "Checkbox stays `[ ]`" — internally
+  consistent at the time, but this todo was never actually asking for a completed delete; re-reading its own title
+  ("original... premise is FALSIFIED... do NOT delete on the original framing"), its done-when is disproving a false
+  premise and designing a safe corrected scope — both of which were fully done in the prior session's edit. Flipping the
+  checkbox to `[x]` now on that basis (the correction itself is complete), and splitting the genuinely-still-open
+  VM-scale investigation (full per-cell five-part-proof across ~506 dates × 11 roots × 2 data_types × up to 3 shapes)
+  into its own new `- [ ]` todo directly below the corrected one, per the HARD RULE that every follow-up is a tracked
+  checkbox, not prose-only (the Deferred-work table's "Broader orphaned-duplicate combo scope" row already flagged this
+  as real work but wasn't itself an actionable, AO-dispatchable item). No GCS read/write/delete executed this session —
+  doc-only reconciliation. Repo: unified-trading-pm only.
