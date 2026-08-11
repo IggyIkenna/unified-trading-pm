@@ -13,6 +13,13 @@ the whole corpus to resolve gating (which plans have finalize companions is
 inherently corpus-wide knowledge) but only reports/fails on violations among the
 given paths, so a pre-existing violation in an unrelated plan never blocks an
 unrelated commit.
+
+Also covers the duplicate-gate detector (--check-duplicate-gates) and the
+idempotent-creation guard in --only mode (todos 1+2 of
+duplicate_finalize_plans_created_for_one_parent_2026_08_06.md). A "finalize
+companion" of a parent is a plan named `<parent>_finalize*` that declares
+`depends_on: [<parent>]` + `gate_on_depends: true` — work plans that merely gate on
+a parent as a shared prerequisite are NOT companions and must not be flagged.
 """
 
 from __future__ import annotations
@@ -56,6 +63,25 @@ def _active_dir(tmp_path: Path) -> Path:
     return d
 
 
+def _finalize(active: Path, parent_slug: str, suffix: str = "") -> Path:
+    """Write a finalize COMPANION for `parent_slug` following the `<parent>_finalize*`
+    naming contract, and return its path."""
+    name = f"{parent_slug}_finalize{suffix}.md"
+    return _write_plan(
+        active / name,
+        extra_frontmatter=f"depends_on: [{parent_slug}]\ngate_on_depends: true",
+    )
+
+
+def _work_plan_gating(active: Path, name: str, parent_slug: str) -> Path:
+    """Write a WORK plan (not a finalize companion — name does not follow
+    `<parent>_finalize*`) that gates on `parent_slug` as a shared prerequisite."""
+    return _write_plan(
+        active / name,
+        extra_frontmatter=f"depends_on: [{parent_slug}]\ngate_on_depends: true",
+    )
+
+
 # ── --only scoping ────────────────────────────────────────────────────────────
 
 
@@ -84,10 +110,7 @@ def test_only_ignores_an_unrelated_violation_outside_scope(tmp_path: Path) -> No
 def test_only_passes_when_the_scoped_plan_has_a_finalize_companion(tmp_path: Path) -> None:
     active = _active_dir(tmp_path)
     source = _write_plan(active / "source_plan_2026_08_05.md")
-    _write_plan(
-        active / "source_plan_2026_08_05_finalize.md",
-        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
-    )
+    _finalize(active, "source_plan_2026_08_05")
 
     rc = main(["--workspace-root", str(tmp_path), "--only", str(source)])
     assert rc == 0
@@ -128,3 +151,128 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-duplicate-gates ───────────────────────────────────────────────────
+
+
+def test_check_duplicate_gates_clean_when_no_duplicates(tmp_path: Path) -> None:
+    """A corpus where every parent has at most one finalize companion passes."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_08_11.md")
+    _finalize(active, "parent_a_2026_08_11")
+    _write_plan(active / "parent_b_2026_08_11.md")
+    _finalize(active, "parent_b_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates"])
+    assert rc == 0
+
+
+def test_check_duplicate_gates_finds_duplicate(tmp_path: Path) -> None:
+    """A parent with TWO finalize companions is flagged (the incident shape —
+    `..._finalize.md` vs `..._finalize_<date>.md` differ only by a redundant suffix)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    _finalize(active, "parent_2026_08_11")
+    _finalize(active, "parent_2026_08_11", "_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates"])
+    assert rc == 1
+
+
+def test_check_duplicate_gates_finds_multiple_duplicates(tmp_path: Path) -> None:
+    """Multiple parents each with >1 finalize companion are all flagged."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_08_11.md")
+    _finalize(active, "parent_a_2026_08_11")
+    _finalize(active, "parent_a_2026_08_11", "_b")
+    _write_plan(active / "parent_b_2026_08_11.md")
+    _finalize(active, "parent_b_2026_08_11")
+    _finalize(active, "parent_b_2026_08_11", "_c")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates"])
+    assert rc == 1
+
+
+def test_check_duplicate_gates_quiet_suppresses_output(tmp_path: Path, capsys) -> None:
+    """--quiet mode produces no stdout on a clean corpus."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    _finalize(active, "parent_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates", "--quiet"])
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert captured.out == ""
+
+
+def test_check_duplicate_gates_ignores_shared_prereq_dag(tmp_path: Path) -> None:
+    """A parent gated by TWO distinct WORK plans (neither named `<parent>_finalize*`)
+    is a legitimate shared-prerequisite DAG, NOT a duplicate gate — must pass."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    _work_plan_gating(active, "phase_c_data_status_ui_2026_08_11.md", "parent_2026_08_11")
+    _work_plan_gating(active, "phase_e_arb_live_2026_08_11.md", "parent_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates"])
+    assert rc == 0
+
+
+def test_check_duplicate_gates_mixed_one_companion_one_work_plan(tmp_path: Path) -> None:
+    """A parent with ONE finalize companion PLUS a distinct work plan gating on it is
+    exactly one companion — not a duplicate — must pass."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    _finalize(active, "parent_2026_08_11")
+    _work_plan_gating(active, "registry_coverage_2026_08_11.md", "parent_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-duplicate-gates"])
+    assert rc == 0
+
+
+# ── Idempotent-creation guard in --only mode ──────────────────────────────────
+
+
+def test_only_blocks_duplicate_finalize_plan_for_already_gated_parent(tmp_path: Path) -> None:
+    """A staged finalize companion whose parent ALREADY has a DIFFERENT finalize
+    companion is flagged as a duplicate-gate violation."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    _finalize(active, "parent_2026_08_11", "_existing")  # the surviving companion
+    second = _finalize(active, "parent_2026_08_11", "_duplicate")  # staged for commit
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(second)])
+    assert rc == 1
+
+
+def test_only_allows_first_finalize_plan_for_parent(tmp_path: Path) -> None:
+    """The FIRST finalize companion for a parent passes — no duplicate exists yet."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    first = _finalize(active, "parent_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(first)])
+    assert rc == 0
+
+
+def test_only_allows_multiple_work_plans_gating_on_different_parents(tmp_path: Path) -> None:
+    """Two finalize companions for DIFFERENT parents are both fine."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_a_2026_08_11.md")
+    _write_plan(active / "parent_b_2026_08_11.md")
+    fa = _finalize(active, "parent_a_2026_08_11")
+    fb = _finalize(active, "parent_b_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(fa), str(fb)])
+    assert rc == 0
+
+
+def test_only_allows_a_work_plan_gating_on_a_parent(tmp_path: Path) -> None:
+    """A staged WORK plan (not companion-named) that gates on a parent is fine even
+    when the parent has no finalize companion — it is not a duplicate-gate attempt."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_11.md")
+    work = _work_plan_gating(active, "phase_c_work_2026_08_11.md", "parent_2026_08_11")
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(work)])
+    assert rc == 0

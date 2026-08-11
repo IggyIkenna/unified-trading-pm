@@ -35,7 +35,19 @@ way, most with their upstream already done and archived weeks earlier. Fix: auth
 finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
 same day). This check ratchets that fix so it can't silently regress.
 
-Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
+Third check — duplicate-gate detector (added 2026-08-11,
+duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):
+two gated finalize plans for the SAME parent slug is a latent race — once the parent's
+last todos clear, BOTH become dispatchable on the same tick and run the identical archival
+procedure concurrently against one target. `_gated_slugs()` returns a `set[str]` (deduped
+by construction), so it cannot surface a duplicate — a parent with >1 gate reads identically
+to a parent with exactly 1. `_find_duplicate_gates()` returns the actual duplicates.
+Two surfaces:
+  - `--check-duplicate-gates`: corpus-wide report (hygiene sweep, non-zero = review-blocking).
+  - `--only` mode: when a staged plan IS a finalize plan, verify none of its parent slugs
+    already have a DIFFERENT gated finalize plan — the idempotent-creation guard (todo 1).
+
+Exit-code semantics: 0 = at/below baseline (all checks); 1 = regression (any check);
 2 = arg/IO error.
 """
 
@@ -130,6 +142,52 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _is_finalize_companion_for(cov: Coverage, parent_slug: str) -> bool:
+    """Is `cov` a FINALIZE COMPANION of `parent_slug` — as opposed to a work plan
+    that merely sequences after it via `depends_on` + `gate_on_depends: true`?
+
+    The companion naming contract is `<parent>_finalize` or `<parent>_finalize_<suffix>`
+    (the incident pair differed only by a redundant date suffix:
+    `..._finalize.md` vs `..._finalize_2026_07_31.md`). Distinguishing companions
+    from work plans is what separates a genuine duplicate-gate RACE (two companions
+    running the identical 6-step archival against one target) from a legitimate
+    shared-prerequisite DAG (several distinct work plans gating on one parent — they
+    do different work and must NOT be flagged as duplicates).
+    """
+    stem = cov.path.stem
+    prefix = parent_slug + "_finalize"
+    return stem == prefix or stem.startswith(prefix + "_")
+
+
+def _find_duplicate_gates(all_plans: list[Coverage]) -> dict[str, list[Path]]:
+    """Return parent slugs that have >1 FINALIZE COMPANION plan, mapped to the plan paths.
+
+    A duplicate gate means two or more active plans BOTH declare
+    `depends_on: [<parent>]` + `gate_on_depends: true` AND both look like finalize
+    companions (`<parent>_finalize*`) — so when the parent's last todo clears, BOTH
+    become dispatchable on the same tick and race the identical archival procedure
+    concurrently against one target. Work plans that merely gate on the parent as a
+    shared prerequisite are not counted (they do different work — see
+    `_is_finalize_companion_for`).
+
+    Distinct from `_gated_slugs()` which returns a `set[str]` (deduped by
+    construction — a parent with >1 gate reads identically to exactly 1).
+    """
+    parent_to_finalizers: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                slug = dep.strip()
+                if _is_finalize_companion_for(cov, slug):
+                    parent_to_finalizers.setdefault(slug, []).append(cov.path)
+    return {k: v for k, v in parent_to_finalizers.items() if len(v) > 1}
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -217,6 +275,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parents[2].parent)
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
+    parser.add_argument("--quiet", action="store_true", help="Suppress non-error output; exit code only.")
     parser.add_argument("--strict", action="store_true")
     parser.add_argument(
         "--only",
@@ -230,7 +289,154 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-duplicate-gates",
+        action="store_true",
+        help=(
+            "Corpus-wide duplicate-gate detector (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md "
+            "todo 2): report every parent slug named in the depends_on of >1 gate_on_depends: true plan. "
+            "Non-zero count is review-blocking (absolute check, not a ratchet — there is no legitimate reason "
+            "for a parent to have multiple gated finalize plans)."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _resolve_active_dir(workspace_root: Path) -> tuple[Path, int]:
+    """Locate `plans/active` by content (F7, 2026-08-10) — see the long comment in
+    the original `main()` body for the worktree-resolution rationale. Returns
+    (active_dir, exit_code); exit_code is non-zero only on the hard failure path.
+    """
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir, 0
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir, 0
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir, 0
+    print(
+        f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+        file=sys.stderr,
+    )
+    return active_dir, 2
+
+
+def _run_duplicate_gate_check(active_dir: Path, workspace_root: Path, quiet: bool) -> int:
+    """Corpus-wide duplicate-gate detector (`--check-duplicate-gates`): a parent
+    with >1 finalize companion is a latent race — both become dispatchable on the
+    same tick and run the identical archival against one target."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    dup_gates = _find_duplicate_gates(all_plans)
+    if not dup_gates:
+        if not quiet:
+            print("✅ No duplicate finalize gates (every gated parent has exactly one finalize plan).")
+        return 0
+    if not quiet:
+        print(f"❌ {len(dup_gates)} parent slug(s) with >1 gated finalize plan — duplicate-gate race:")
+        for parent, finalizers in sorted(dup_gates.items()):
+            print(f"  - {parent}:")
+            for f in finalizers:
+                try:
+                    rel = f.relative_to(workspace_root)
+                except ValueError:
+                    rel = f
+                print(f"      {rel}")
+    return 1
+
+
+def _find_only_duplicate_gate_violations(active_dir: Path, only_resolved: set[Path]) -> list[Path]:
+    """Idempotent-creation guard (todo 1 of duplicate_finalize_plans_created_for_one_parent_2026_08_06.md):
+    a staged finalize plan must not create a duplicate companion for a parent that already has a
+    DIFFERENT finalize companion. Key on the `depends_on` relationship — but only count existing
+    FINALIZE COMPANIONS (`<parent>_finalize*`), never work plans that merely gate on the parent as
+    a shared prerequisite (those do different work and don't race the archival). The two colliding
+    files in the incident differed only by a redundant date suffix, so a guard keyed on the EXACT
+    expected filename would have missed it — the `_is_finalize_companion_for` prefix match catches
+    both shapes.
+    """
+    if not only_resolved:
+        return []
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    # Build parent→finalizer mapping from the corpus ON DISK (not including the staged
+    # plan, which hasn't been committed yet).
+    parent_to_finalizers: dict[str, list[Path]] = {}
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if isinstance(dep, str):
+                slug = dep.strip()
+                if _is_finalize_companion_for(cov, slug):
+                    parent_to_finalizers.setdefault(slug, []).append(cov.path)
+    duplicate_gate_violations: list[Path] = []
+    for o in only_resolved:
+        staged = _load_plan(o)
+        if staged is None or not _is_finalize_plan(staged.frontmatter):
+            continue
+        depends_on = staged.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        for dep in cast(list[object], depends_on):
+            if not isinstance(dep, str):
+                continue
+            parent = dep.strip()
+            # Exclude the staged plan ITSELF — it may already be on disk
+            # (test fixture) or not yet committed (real pre-commit scenario).
+            existing = [p for p in parent_to_finalizers.get(parent, []) if p.resolve() != o.resolve()]
+            if existing:
+                duplicate_gate_violations.append(o)
+                break
+    return duplicate_gate_violations
+
+
+def _run_only_mode(
+    active_dir: Path,
+    only: list[str],
+    violations: list[Path],
+    draft_gate_violations: list[Path],
+) -> int:
+    """--only (staged-files) mode: report/fail on violations among the given paths
+    only — the corpus scan already ran in full (gating is inherently corpus-wide),
+    only the reported/failed set narrows. A plan outside --only that's ALSO in
+    violation is silently not-our-problem here, same as check_frontmatter_schema.py's
+    staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
+    """
+    only_resolved = {Path(o).resolve() for o in only}
+    violations = [v for v in violations if v.resolve() in only_resolved]
+    draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
+    duplicate_gate_violations = _find_only_duplicate_gate_violations(active_dir, only_resolved)
+
+    if not violations and not draft_gate_violations and not duplicate_gate_violations:
+        print("✅ finalize-plan-coverage (--only): clean.")
+        return 0
+    if violations:
+        print(
+            "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
+            " to a new/existing companion plan — see task_template.md §4):"
+        )
+        for v in violations:
+            print(f"  - {v}")
+    if draft_gate_violations:
+        print(
+            "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4):"
+        )
+        for v in draft_gate_violations:
+            print(f"  - {v}")
+    if duplicate_gate_violations:
+        print(
+            "❌ Staged finalize plan(s) would create a duplicate gate — parent already has a gated"
+            " finalize plan (key on depends_on, not filename; the existing plan may have a different"
+            " filename shape — port any unique todos into the survivor, then supersede the duplicate):"
+        )
+        for v in duplicate_gate_violations:
+            print(f"  - {v}")
+    return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -240,69 +446,22 @@ def main(argv: list[str] | None = None) -> int:
     baseline_write: bool = cast(bool, ns.baseline_write)
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
+    check_duplicate_gates: bool = cast(bool, ns.check_duplicate_gates)
+    quiet: bool = cast(bool, ns.quiet)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir, rc = _resolve_active_dir(workspace_root)
+    if rc != 0:
+        return rc
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
 
+    # ── --check-duplicate-gates: corpus-wide duplicate-gate detector ──
+    if check_duplicate_gates:
+        return _run_duplicate_gate_check(active_dir, workspace_root, quiet)
+
     if only is not None:
-        # --only: resolve each given path the same way (relative-to-cwd or absolute both work,
-        # since argparse hands us whatever the caller typed) and keep just the violations that
-        # ARE one of them — the corpus scan above still ran in full (gating is inherently
-        # corpus-wide), only the reported/failed set narrows. A plan outside --only that's
-        # ALSO in violation is silently not-our-problem here, same as check_frontmatter_schema.py's
-        # staged-files scoping (foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18).
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.resolve() in only_resolved]
-        draft_gate_violations = [v for v in draft_gate_violations if v.resolve() in only_resolved]
-        if not violations and not draft_gate_violations:
-            print("✅ finalize-plan-coverage (--only): clean.")
-            return 0
-        if violations:
-            print(
-                "❌ Plan(s) missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true"
-                " to a new/existing companion plan — see task_template.md §4):"
-            )
-            for v in violations:
-                print(f"  - {v}")
-        if draft_gate_violations:
-            print(
-                "❌ Finalize plan(s) redundantly stuck at status: draft (gate_on_depends already holds them —"
-                " flip to status: active, see task_template.md §4):"
-            )
-            for v in draft_gate_violations:
-                print(f"  - {v}")
-        return 1
+        return _run_only_mode(active_dir, only, violations, draft_gate_violations)
 
     print(
         f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "

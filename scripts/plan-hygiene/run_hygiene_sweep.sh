@@ -432,6 +432,12 @@ run_check "No broken links (plans/active/*.md, corpus-wide)" hard python3 "$SCRI
 # in the full sweep, not the staged-files-only --precommit path. Corpus proven clean (0 cycles,
 # 0 self-deps) before this was made hard. SSOT: check_depends_on_graph.py.
 run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_depends_on_graph.py" --quiet
+# Duplicate finalize-gate detector (duplicate_finalize_plans_created_for_one_parent_2026_08_06.md
+# todo 2): a parent slug with >1 gated finalize plan is a latent race — both become
+# dispatchable on the same tick and run the identical archival procedure concurrently
+# against one target. Absolute check (non-zero = review-blocking); there is no legitimate
+# reason for a parent to have multiple gated finalize plans.
+run_check "Duplicate finalize gates (parent with >1 gated finalize plan)" hard python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --check-duplicate-gates --workspace-root "$(dirname "$PM_DIR")"
 # Reference path convention (/plans/... + /codex/... leading-slash, operator ruling
 # 2026-07-23) — a shrinking-ratchet baseline (reference_paths_baseline.yaml), same shape
 # as the fallback-import/DTZ ratchets: hard-fails only on a NEW violation above the
