@@ -26,13 +26,31 @@ import tempfile
 from pathlib import Path
 
 from unified_trading_library import get_storage_client
+from unified_trading_library.cloud_interface.bucket_naming import BucketNamingError, resolve_bucket_name
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 CATEGORIES = ["cefi", "tradfi", "defi", "sports", "prediction"]
-GCP_PROJECT = "central-element-323112"
-BUCKET_TEMPLATE = "gs://instruments-store-{category}-{project}/instrument_availability/by_date/day={date}/"
+
+
+def _resolve_bucket_prefix(category: str, date: str) -> str:
+    """Resolve a per-category GCS prefix for the given date.
+
+    Uses the canonical bucket isolation model (``resolve_bucket_name``) so the
+    bucket name always carries the deployment-environment tier
+    (``{asset_group}-{env_short}-{project}``).  The caller's ``DEPLOYMENT_ENV``
+    controls the tier; unset → ``prod``.
+
+    Prediction uses a dedicated flat bucket key
+    (``instruments-store-prediction``) rather than the per-asset_group
+    ``instruments-store`` dict the other four categories share.
+    """
+    if category == "prediction":
+        bucket = resolve_bucket_name(cloud="gcp", kind="instruments-store-prediction")
+    else:
+        bucket = resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group=category)
+    return f"gs://{bucket}/instrument_availability/by_date/day={date}/"
 
 
 def _list_venues(bucket_prefix: str) -> list[str]:
@@ -187,11 +205,11 @@ def generate_snapshot(
         tmppath = Path(tmpdir)
 
         for category in CATEGORIES:
-            bucket_prefix = BUCKET_TEMPLATE.format(
-                category=category,
-                project=GCP_PROJECT,
-                date=date,
-            )
+            try:
+                bucket_prefix = _resolve_bucket_prefix(category, date)
+            except BucketNamingError:
+                LOG.warning("  Cannot resolve bucket for %s, skipping", category)
+                continue
 
             LOG.info("\n%s. Listing venues in %s...", category.upper(), bucket_prefix[:60])
             venues = _list_venues(bucket_prefix)
