@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [OPERATOR, live-trading, data-correctness, cross-cutting, execution-service, strategy-service]
 related:
   [
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
@@ -43,7 +43,7 @@ resolved_by:
 context_scope:
   [
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     strategy-service/strategy_service/position/core/fill_event_consumer.py,
     strategy-service/strategy_service/adapters/fill_subscriber.py,
   ]
