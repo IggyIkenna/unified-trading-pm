@@ -1048,8 +1048,26 @@ push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
 # --files are passed as protected so the extreme-pile self-arrest never quarantines the very
 # work this run is shipping (dogfooded live 2026-08-10 slot-9).
-if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-  autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
+#
+# STAGE THE PAYLOAD FIRST (P0, safe_doc_push_isolation_drops_rename_deletions_2026_08_10,
+# "Do not quarantine before staging"). The guard's quarantine sweep reads `git diff --name-only`
+# -- the UNSTAGED view of the tree -- so a named file that is already in the index is invisible
+# to it: the extreme-pile self-arrest can then only ever quarantine what REMAINS unstaged, and
+# the work being shipped can never be swept into the stash it is about to be compared against.
+# The old order (quarantine first, stage inside the attempt loop) let a swept payload land back
+# at HEAD content, which satisfied the "nothing to stage ... already matches HEAD" fallback and
+# exited 0 with the work gone (measured twice 2026-08-10). This is belt-and-suspenders on top of
+# the protected-path list (which quickmerge's argument-order bug proved can silently fail): the
+# protected matching never even gets a chance to be wrong about the payload. If staging fails
+# here (index.lock), skip the quarantine rather than risk it sweeping the payload -- the attempt
+# loop below retries staging with its own index.lock handling.
+if git add -- "${FILES[@]}" 2>/tmp/_sdp_pre_stage_err; then
+  if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
+    autostash_guard_bound_backlog "${FILES[*]}" "origin/${BRANCH}" || true
+  fi
+else
+  echo "  ⚠ could not stage the named files before the chain-breaker check -- skipping the quarantine this run; the attempt loop will retry staging." >&2
+  cat /tmp/_sdp_pre_stage_err >&2
 fi
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
