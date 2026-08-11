@@ -386,6 +386,18 @@ in this read-only audit pass (time-bounded scope).
       session's `--apply` already completed the fold). Verified via direct manifest read (column-projected pyarrow
       ParquetFile, not inference). 8,214,021 canonical `pool` rows present. No further action needed.
 
+      **STALE — CONTRADICTED 2026-08-11 (slot 4, data_engineering).** This "0 remaining" claim no longer holds: a fresh
+              live read on 2026-08-11 (`plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` todo 1)
+              found **7,930,863** `instrument_type=POOL` (uppercase) captured rows in `data_type=dex_pool_swaps` — not zero, and
+              not a small residue. Root cause is NOT a recurred live-writer bug (verified: the only live `record_captured` call
+              site for `dex_pool_swaps` pool-grain rows passes lowercase `instrument_type="pool"` with a bare id,
+              `market-tick-data-service/cli/handlers/_dex_swaps_queries.py:174-182`) and is NOT `rebuild_defi_manifest.py`
+              re-emitting uppercase (its `parse_hive_path` unconditionally `.lower()`s `instrument_type`, added 2026-06-18,
+              `market-tick-data-service@3f5cc6e4`, well before the 2026-08-10 rebuild VM chain ran) — so the mechanism by which
+              this population regrew from 0 to 7.9M between 2026-08-05 and 2026-08-11 is UNRESOLVED. Full writeup + open
+              questions: `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`. Do not trust this P3
+              todo's "no further action needed" claim without reading that doc first.
+
 ## Progress Log
 
 Progress Log entries 2026-07-30 through 2026-08-10 moved **verbatim** — nothing summarized, rewritten, or dropped — to
