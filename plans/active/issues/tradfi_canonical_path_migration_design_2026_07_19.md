@@ -316,9 +316,20 @@ removal + casing normalization remain before backfill-resume.
 - [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
       isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
       systemic. Repo: market-tick-data-service.
-- [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** (exchange-root short codes
-      vs display names vs currency-pair style, differing between combo/ and futures_chain/) — decide one canonical
-      naming convention per axis and migrate. Repos: market-tick-data-service, unified-api-contracts.
+- [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
+      (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
+      column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
+      **display names** via `EXCHANGE_CODE_TO_NAME` (already the SSOT in `tradfi_symbology.py`, already applied by
+      futures_chain/options_chain writer path). Combo's short-code leak is a natural consequence of
+      `combo ∉     CHAIN_INSTRUMENT_TYPES` — resolved by the P1 `combo→combo_chain` todo, which adds it to the set and
+      therefore the lookup. Historical short-code futures_chain objects need a separate GCS content-based migration
+      (follow-up todo below). Repos: market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P2. **(NEW 2026-08-11) Migrate historical short-code `underlying=` GCS objects to display-name form** for
+      `futures_chain/` and `combo/` — content-based rename (read parquet → derive canonical underlying → write canonical
+      path → verify → delete old). ~92K futures_chain objects (~35 short-code roots mirroring existing display-name
+      equivalents) + ~1,598 combo objects (11 roots). Must run AFTER the P1 `combo→combo_chain` design ships (so new
+      writes emit display names). Dry-run default, `--apply` gated; prod-bucket delete = operator-go hard-stop per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Re-verify whether ES_OPT/options_chain rows hit the same real-captured-row-vs-
       EXPECTED_CHAIN_AGGREGATE-denominator conflict** found for futures_chain/GOLD — not yet directly checked against
       the blank-instrument_id expectation. Repo: market-tick-data-service. — **Verified 2026-08-11 (slot 14,
@@ -373,3 +384,65 @@ removal + casing normalization remain before backfill-resume.
     (67). No code change this turn (verification only) — options_chain is firmly in-scope for the P1
     `instrument_id-blank / combo→combo_chain` design todo, which must reconcile BOTH the blank-id real-data rows and the
     non-blank synthetic-id rows to one canonical chain-bundle row per cell.
+- **2026-08-11 (slot 9, data_engineering) — `underlying` naming-convention inconsistency SCOPED** (closed the P2 scoping
+  todo above). Column-pruned single-object read of the consolidated tradfi availability index
+  (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 12.1M rows → 659K chain
+  rows, no new GCS walk). Full enumeration of distinct `underlying` values per `instrument_type`:
+
+  **combo — 11 values, 1,598 manifest rows, ALL exchange-root short codes:** `BTC`(402) `ES`(296) `HG`(266) `HO`(266)
+  `PL`(172) `GC`(140) `CL`(16) `CL-BZ`(16) `NG`(8) `NG-HH`(8) `PA`(8). Root cause: `tradfi_shared.py::_file_stem_for`
+  L535-542 — combo (NOT in `CHAIN_INSTRUMENT_TYPES`) uses bare `row.get("symbol")` directly, no `EXCHANGE_CODE_TO_NAME`
+  normalization. `combo ∉ CHAIN_INSTRUMENT_TYPES` is correct per the 2026-08-11 operator ruling (combo→combo_chain
+  rename pending), so this is a natural consequence of the P1 migration not yet being done — once `combo_chain` joins
+  `CHAIN_INSTRUMENT_TYPES`, the lookup applies automatically.
+
+  **futures_chain — 93 values, 446,506 manifest rows, THREE conventions coexist:**
+  - _Display names_ (current writer, ~35 values, via `EXCHANGE_CODE_TO_NAME`): `GOLD`(9907) `SP500`(9787) `CRUDE`(10409)
+    `COPPER`(9901) `NATGAS`(7280) `NASDAQ100`(7097) `SILVER`(7090) `PLATINUM`(7147) `PALLADIUM`(6919) `AUD`(6921)
+    `NZD`(6688) `JPY`(6687) `CHF`(6686) `GBP`(6685) `CAD`(6685) `EUR`(6683) `MXN`(6683) `BRL`(6681) `ZAR`(6674)
+    `LEANHOGS`(5799) `HEATINGOIL`(3367) `RUSSELL2000`(3363) `GASOLINE`(3309) `TBOND`(3298) `LIVECATTLE`(3284)
+    `TNOTE5Y`(3237) `TNOTE10Y`(3222) `TNOTE2Y`(3180) `DOW`(3203) `CORN`(3201) `SOYMEAL`(3157) `SOYOIL`(3152)
+    `SOYBEAN`(3034) `WHEAT`(3016) `VIX`(4935) `MICRO-SP500`(3577) `BRENT`(1128) `GASOIL`(1122) `COCOA`(221)
+    `COTTON`(160) `DOLLARINDEX`(73) `COFFEE`(63) `SUGAR`(63) `ORANGEJUICE`(63) `WTI`(63) `BTC`(8768) `ETH`(6257)
+    `MET`(5768) `MBT`(4762).
+  - _Exchange-root short codes_ (historical, pre-`EXCHANGE_CODE_TO_NAME` lookup, ~35 values — byte-for-byte duplicates
+    of the display-name set above): `GC`(5280) `SI`(5283) `HG`(5282) `NG`(5283) `CL`(5280) `PA`(5255) `PL`(5255)
+    `ES`(1327) `NQ`(2726) `ZN`(35) `ZT`(34) `ZB`(32) `ZF`(31) `YM`(28) `HO`(28) `RB`(28) `RTY`(27) `6C`(28) `6A`(28)
+    `6S`(28) `6J`(28) `6N`(28) `6B`(27) `6E`(27) `6L`(26) `6M`(26) `6Z`(23) `LE`(23) `HE`(23) `ZC`(23) `ZM`(23) `ZL`(23)
+    `ZS`(23) `ZW`(23).
+  - _Sector codes_ (now mapped to `MATERIALS_SECTOR` etc. via 2026-08-07 fill-in, but historical rows carry raw):
+    `XAF`(3261) `XAP`(3261) `XAB`(3259) `XAU`(3258) `XAK`(3257) `XAI`(3257) `XAV`(3234) `XAY`(3232).
+  - _Other_: `NKD`(3308, Nikkei — not in `EXCHANGE_CODE_TO_NAME`), `""` (34,127 rows, 0 data-rows — blank-id
+    chain-aggregate placeholder rows).
+
+  **options_chain — 14,012 values, 211,245 manifest rows:** Mostly per-contract option codes (`ESZ6`, `GCJ7`, `SIH6`, …)
+  — individual contract identifiers, NOT product roots. ~35 display-name roots exist (`SP500` 6953, `NASDAQ100` 3212,
+  `GOLD` 68, `CRUDE` 67, …) but are dwarfed by per-contract codes. This is the per-contract-vs-per-root bundling issue
+  (rebundle migration), not the underlying naming convention — separate from this task's scope.
+
+  **The SAME commodity appears under 2-3 different `underlying=` values across paths:**
+
+  | Commodity                                   | combo      | futures_chain (display) | futures_chain (short) |
+  | ------------------------------------------- | ---------- | ----------------------- | --------------------- |
+  | Gold                                        | `GC` (140) | `GOLD` (9,907)          | `GC` (5,280)          |
+  | S&P 500                                     | `ES` (296) | `SP500` (9,787)         | `ES` (1,327)          |
+  | Crude Oil                                   | `CL` (16)  | `CRUDE` (10,409)        | `CL` (5,280)          |
+  | Copper                                      | `HG` (266) | `COPPER` (9,901)        | `HG` (5,282)          |
+  | NatGas                                      | `NG` (8)   | `NATGAS` (7,280)        | `NG` (5,283)          |
+  | Platinum                                    | `PL` (172) | `PLATINUM` (7,147)      | `PL` (5,255)          |
+  | Palladium                                   | `PA` (8)   | `PALLADIUM` (6,919)     | `PA` (5,255)          |
+  | Silver                                      | —          | `SILVER` (7,090)        | `SI` (5,283)          |
+  | HeatingOil                                  | `HO` (266) | `HEATINGOIL` (3,367)    | `HO` (28)             |
+  | … (35 roots total with dual representation) |            |                         |
+
+  **Canonical convention: display names** via `EXCHANGE_CODE_TO_NAME` (`tradfi_symbology.py` L166-274, 78 entries). This
+  is already the SSOT mapping, already applied by the `futures_chain`/`options_chain` writer path (`_file_stem_for`
+  L526), and is the operator-chosen convention (2026-07-18 closeout A1 ruling: "same pattern regardless of asset
+  class"). Combo's short-code leak is a natural consequence of `combo ∉ CHAIN_INSTRUMENT_TYPES` in the MTDS writer —
+  resolved by the P1 `combo→combo_chain` design todo, which will add `combo_chain` to the set and therefore the
+  `EXCHANGE_CODE_TO_NAME` lookup. UAC `TRADFI_CHAIN_INSTRUMENT_TYPES` already includes `combo_chain` (per the 2026-08-11
+  ruling); the MTDS writer's `CHAIN_INSTRUMENT_TYPES` still lags at `{"options_chain", "futures_chain"}` only — the P1
+  todo closes that gap.
+
+  **Migration scope:** ~92K `futures_chain/` short-code objects (35 roots with existing display-name equivalents) +
+  ~1,598 `combo/` objects (11 roots) → content-based rename to display-name paths. Filed as follow-up P2 todo above.
