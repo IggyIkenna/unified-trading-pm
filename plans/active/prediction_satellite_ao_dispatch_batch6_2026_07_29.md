@@ -250,6 +250,15 @@ sports-tranche-owned).
           verified ancestors of origin; `tests/unit/test_betfair_adapter.py` present). Tracking + 4 re-scoped todos:
           `/plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`.
 
+          **UPDATE 2026-08-11 (slot-3, infra): egress provisioned + PROVEN working — geo-block is resolved.** The
+          `europe-west2` egress above is now live (`betfair-egress-proxy-20260811-211046`,
+          `deployment-service/scripts/vm/launch-betfair-egress-proxy-vm.sh`); routing
+          `refresh_betfair_session_token.py` through it reaches Betfair's real login API (no more 403). New blocker
+          surfaced instead: Betfair rejects the GSM-stored `betfair-username`/`betfair-password` as
+          `INVALID_USERNAME_OR_PASSWORD` — a credentials problem, not network. Did not retry (real-account
+          lockout/fraud-trigger risk). Full detail + next step in the issue doc's 2026-08-11 (slot-3) Progress Log
+          entry — this item stays unchecked pending operator credential confirmation.
+
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-5, backend_engineer) — `market-tick-data-service@85872cab`.** Sub-item of
       the Betfair back+lay todo above: implement `BetfairAdapter.download_batch()` + `factory.py`/`umi_tick_provider.py`
       wiring (re-scoped issue doc todo 2 —

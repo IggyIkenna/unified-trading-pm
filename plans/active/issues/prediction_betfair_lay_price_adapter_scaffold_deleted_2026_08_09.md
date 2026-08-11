@@ -182,7 +182,16 @@ concrete reason not to).
           the live API. Todo 4's live-verify pass should confirm the resolver actually matches real captured markets,
           not just that the wiring compiles.
 
-- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]`.** Provisioning a new
+- [ ] [INFRA] P2. **BLOCKED-CREDENTIALS 2026-08-11 (slot-3, infra) — egress provisioned + PROVEN working; new blocker
+      is invalid Betfair credentials, not network/geo.** See the 2026-08-11 (slot-3) Progress Log entry below for full
+      detail: `betfair-egress-proxy-20260811-211046` (europe-west2-a, tinyproxy:8888, firewalled to the orchestrator IP)
+      is live; `refresh_betfair_session_token.py` routed through it reaches `identitysso.betfair.com` and gets a REAL
+      Betfair API response (`INVALID_USERNAME_OR_PASSWORD`, confirmed via tinyproxy's own access log correlating the
+      exact request timestamp) instead of the previous 403 "Restricted" geo-block page — the network/jurisdiction
+      question from below is RESOLVED. The GSM `betfair-username`/`betfair-password` secrets themselves are rejected by
+      Betfair; did not retry (repeated failed logins risk tripping additional fraud/lockout defenses on a real
+      account) — operator needs to confirm/rotate the credentials before the next step can proceed.
+      **RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]`.** Provisioning a new
       `europe-west2` network egress (VM/proxy) is `infra` craft's domain per `backend_engineer.md`'s `does_not` ("Infra
       provisioning, VM launches, CI/CD, cloud (→ infra)") — retagged so dispatch routes correctly; see the matching
       retag note in the parent plan's mirrored item for the full rationale. **OPERATOR-DECIDED 2026-08-11: provision
@@ -385,3 +394,43 @@ concrete reason not to).
     something a backend_engineer worker should do itself per the craft-scoping rule. Mirror retag applied to the parent
     plan's item. No egress provisioned this session; skipping the dispatched task so it redispatches to an `infra`-craft
     worker.
+  - **2026-08-11** (slot-3, infra): dispatched to this issue doc's todo 4. **Provisioned the `europe-west2` egress +
+    confirmed it clears the geo-block; hit a NEW blocker (invalid credentials) on the next step.**
+    - **Egress**: launched `betfair-egress-proxy-20260811-211046` (e2-small, `europe-west2-a`) running `tinyproxy` as a
+      plain HTTP forward proxy on port 8888, with a firewall rule (`betfair-egress-proxy-allow-8888`) scoped to the
+      orchestrator VM's IP only (`13.113.200.22/32` — this account's whole current egress surface; deliberately NOT
+      opened to `0.0.0.0/0`, since an unauthenticated forward proxy with no source restriction is an open-relay abuse
+      vector). Verified via `curl -x http://<proxy-ip>:8888 https://httpbin.org/ip` that traffic egresses from the
+      europe-west2 IP, not Tokyo.
+    - **Geo-block confirmed cleared**: `curl -x <proxy> https://identitysso.betfair.com/api/login` returns the real
+      Betfair react-ui app (HTTP 405 on a GET to a POST-only endpoint) instead of the previous Betfair-authored
+      "Restricted" 403 page slot-8/slot-25/slot-19 all hit from the Tokyo IP.
+    - **Ran `refresh_betfair_session_token.py` through the proxy** (`HTTPS_PROXY=http://<proxy-ip>:8888
+      HTTP_PROXY=http://<proxy-ip>:8888 uv run python scripts/refresh_betfair_session_token.py`, from
+      execution-service). Credentials (`betfair-username`/`betfair-password`/`betfair-app-key`) still load fine from
+      GSM. `betfairlightweight`'s `login_interactive()` call reached Betfair and got back a REAL API error —
+      `betfairlightweight.exceptions.LoginError: API login: INVALID_USERNAME_OR_PASSWORD` — not another 403. Confirmed
+      this genuinely routed through the proxy (not a coincidental different error from a still-blocked direct path) by
+      SSHing to the proxy VM and correlating `journalctl -u tinyproxy`: a `CONNECT identitysso.betfair.com:443` entry
+      from `13.113.200.22` at the exact same second (21:32:17 UTC) as the script's own "Logging in to Betfair..." log
+      line.
+    - **Did NOT retry the login.** A real gambling account plausibly has its own fraud/lockout heuristics on repeated
+      failed logins, separate from this workspace's infra; one clean failure is sufficient evidence the GSM-stored
+      password (or username) is wrong/stale, and burning further attempts against a live account isn't a worker's call
+      to make. `betfair-session-token` GSM secret is still 0 versions (unchanged — the refresh never got far enough to
+      write it).
+    - **Governance**: the VM was ad-hoc (no `deployment-service/scripts/vm/` launcher existed for it) — backfilled
+      `launch-betfair-egress-proxy-vm.sh` (singleton-checked, idempotent firewall-rule creation, `--print-ip` helper) +
+      registered the `betfair-egress-proxy-` prefix in `VM_PREFIX_TO_BUCKET` (heartbeat-only,
+      `LifecycleClass.LONG_LIVED_LIVE`) per `launcher-script-ssot.md`'s "every script running `gcloud compute instances
+      create` MUST live under `deployment-service/scripts/vm/`" rule, so this VM isn't watchdog-invisible going
+      forward. Shipped `deployment-service@<pending>`.
+    - **Left running**: `betfair-egress-proxy-20260811-211046` stays up (correct regardless of the credential
+      resolution — needed either way once credentials are fixed).
+    - **Next step for whoever resumes**: operator needs to confirm/rotate `betfair-username`/`betfair-password` in GSM
+      (check for a recent Betfair-side password change, 2FA requirement, or account lock — none of which a worker can
+      resolve). Once fixed, re-run `refresh_betfair_session_token.py` through this same proxy
+      (`bash deployment-service/scripts/vm/launch-betfair-egress-proxy-vm.sh --print-ip` to get the current IP), confirm
+      the secret populates, then do the live-verify (`get_markets()`/`get_prices()` against a real sampled in-play
+      market, confirm `backs`+`lay_price` persist through the normal MTDS capture path) before flipping this todo +
+      the parent plan's item + `prediction_arb_live_execution_bridge_2026_07_20.md` item [5].
