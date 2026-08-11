@@ -156,13 +156,14 @@ context_scope:
       with mock Bybit connector responses (perp size, available margin, initial margin estimate); `quality-gates.sh`
       green. — execution-service@22a8923ef6, QG green (7965 passed, 21 skipped, 103s).
 
-- [ ] [BACKEND] P3. Bybit USDC margin topup path — honest interim stub. Extend `PerpHedgeConsumer._topup_guard()` to
+- [x] ✅ [BACKEND] P3. Bybit USDC margin topup path — honest interim stub. Extend `PerpHedgeConsumer._topup_guard()` to
       accept `PerpVenueId.BYBIT` with `TopupSource.TREASURY_HOT`, returning an honest `NOT_WIRED` result with a filed
       follow-up todo for the real Bybit deposit automation (Bybit deposits use exchange deposit addresses, not an
       on-chain bridge contract — the automation surface is different from HL's Arbitrum bridge and needs separate
       design). This ensures the topup path doesn't silently no-op for Bybit while the automation is pending. Repo:
       execution-service. Done-when: unit test asserts Bybit TREASURY_HOT topup returns honest NOT_WIRED (not a crash or
-      silent success); `quality-gates.sh` green.
+      silent success); `quality-gates.sh` green. — execution-service@0f0d1d7a, QG green (full gate HEAD 20d692c6;
+      content-sentinel re-verify 63s).
 
 - [ ] [DESIGN] P3. Bybit USDC deposit automation follow-up — file a properly-scoped implementation plan (same shape as
       this one) covering: Bybit deposit-address resolution API, USDC transfer tracking via `get_account_state()`
@@ -197,3 +198,10 @@ context_scope:
   `tardis-api-key`, the market-data key), so `config_reloaders.py` gets a dedicated `_BybitKeyReloader` polling the
   config secret names directly, pushing rotations into `BybitPerpHedgeConnector.update_credentials()` (new method +
   stale-adapter cleanup) only when the pair changes. QG green (193s full gate); wiring tests 17/17 pass.
+- **2026-08-11 (slot 8, backend_engineer)**: Todo 6 (Bybit USDC margin topup honest interim stub) verified + flipped.
+  The stub + unit tests were shipped by slot-30 at execution-service@0f0d1d7a: `_topup_guard()` now returns an honest
+  `NOT_WIRED` for `PerpVenueId.BYBIT` + `TopupSource.TREASURY_HOT` (message cites the gated follow-up, todo 7 — Bybit
+  deposits use exchange deposit addresses, not an on-chain bridge contract). Tests asserting the NOT_WIRED path live in
+  `tests/unit/defi_execution/test_perp_hedge_consumer.py` (TestTopupGuard + TestDispatchMarginTopup) and
+  `tests/unit/defi_execution/test_recursive_loop_orchestrator_consumer.py`. QG green on LDR HEAD 20d692c6 (full gate)
+  - content-sentinel re-verify (63s); the checkbox flip had not landed with the code.
