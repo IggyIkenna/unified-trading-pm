@@ -307,16 +307,14 @@ removal + casing normalization remain before backfill-resume.
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
-      update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
-      manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
-      `combo` string — both TradFi and CEFI (CEFI's Deribit multi-expiry wrapper is the direct `combo` string
-      collision). Migrate existing historical manifest rows written under the old convention. Repos:
-      market-tick-data-service, unified-api-contracts. **Recover-first (2026-08-11, review finding agt-533c4e):**
-      stranded implementation commits in dead-slot worktrees, NOT on origin/live-defi-rollout (re-verified) — `1777229f`
-      (rename combo wrapper to combo_chain across writer+manifest) and `e5581a63` (canonicalize chain underlying
-      naming). Cherry-pick from any slot worktree (shared object store), verify + QG, ship via quickmerge — do NOT
-      re-implement. `8147050e` (BYBIT futures_chain venue) is redundant vs origin, skip.
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** — all stranded
+      commits already recovered + landed on origin by prior sessions (verified 2026-08-11, slot 20). MTDS: c31cfe7a
+      (combo→combo_chain across writer+manifest, ≡ stranded 1777229f), e5581a63 (chain underlying naming convention),
+      8c264a4e (lifecycle_phase string dtype), b13e3a2b (combo_chain reader routing + SRP split), fbc9cc6f
+      (instrument_id-blank design — deletes _resolve_chain_bundle_manifest_id, venue_fetch.py blanks instrument_id for
+      chain-bundle rows, migration-script combo→combo_chain TARGET remap). UAC: 807de834 + a621b0de (combo_chain in
+      CEFI/TRADFI_CHAIN_INSTRUMENT_TYPES). All verified on origin/live-defi-rollout. Repos: market-tick-data-service,
+      unified-api-contracts. — mtds@fbc9cc6f + uac@807de834
 - [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
       isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
       systemic. Repo: market-tick-data-service. **Recover-first (2026-08-11, review finding agt-533c4e):** stranded
