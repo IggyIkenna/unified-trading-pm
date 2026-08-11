@@ -69,11 +69,13 @@ depends_on: []
       already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
       the stale "66% attempted_failed... not yet launched" text). Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
+- [x] ✅ [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
       content substitution** (not just `DELETED=0`), per the root-cause analysis already done in
       `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a shared fix would unblock both that
       doc's link-archival case and this doc's table-row-update case without requiring every over-cap closeout plan to be
-      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
+      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`. **Decided + implemented
+      2026-08-11**: added a bounded non-growing content-substitution carve-out (`DELETED>=1`, `1<=ADDED<=DELETED`, no
+      added/removed checkbox lines) — `unified-trading-pm@85951375d0`, see Progress Log.
 
 ## Progress Log
 
@@ -87,3 +89,18 @@ depends_on: []
   the established 2026-07-24/2026-07-25 split precedent. Parent doc 1005L → 879L; `check_line_caps.sh` now exits 0 on
   it. Todos 2 and 3 remain open (out of this task's scope — a P3 content-landing todo and a P3 tooling-improvement todo,
   both separate follow-ups).
+- **2026-08-11, slot-13 (backend_engineer)**: closed todo 3. Considered + implemented the net-zero content-substitution
+  carve-out in `scripts/plan-hygiene/check_line_caps.sh` (`unified-trading-pm@85951375d0`) as a third SCOPED-mode
+  exception: a bounded non-growing content substitution on an already-over-cap live doc passes as SOFT when
+  `DELETED>=1`, `1<=ADDED<=DELETED` (content replaced, never grown) and no added/removed line matches `- [ ]`/`- [x]`
+  (tracked-work set never mutated; a mid-line checkbox inside a table cell is not tracked work and is correctly allowed
+  — the guard is line-start, matching the script's own `todos=` grep). Rationale: the marker-append (DELETED=0) and
+  link-repoint (path-token-only) carve-outs cannot express a routine accuracy fix that genuinely changes a line's
+  content — the exact class that froze the closeout plan's "S&P index options" MVP-cell row until todo 1's split.
+  Full-corpus/ratchet modes still count every over-cap doc HARD against the baseline, so the split pressure the cap is
+  designed to create remains intact (this carve-out only unblocks the SCOPED pre-commit staged check). Verified: 17/17
+  bats tests green (7 new) + 5 live scoped-mode scenarios in an isolated scratch repo (positive net-zero; blocked on
+  added/removed line-start checkbox; blocked on growth; mid-line checkbox allowed). Also documented in
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The line-cap does NOT block a bounded
+  non-growing content substitution..." and the script header. Todo 2 (landing the S&P row) remains open and is now
+  unblocked.
