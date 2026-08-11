@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [cefi, ag-closeout-audit, parked-findings, batch-approval-backlog, dispatch-gap]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch7_2026_08_03.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch8_2026_08_06.md,
@@ -212,3 +212,16 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
   `/ag-closeout-audit` skill; todo 1 is an explicit `[OPERATOR]` approval gate for 4 drafted satellite batches, todo 2
   is minor docs-linkage hygiene incidental to the doc's core purpose. No trap triggered; both items correctly remain
   open.
+- **STANDING OPERATOR FLAG — 2026-08-11 (slot 28, `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-002`)** — FIFTH
+  consecutive no-change re-check (batch4→5→6→7→8) of the two carried `BLOCKED-OPERATOR-DECISION` items in this doc's
+  "Carried forward" section. **Both STILL unresolved — direct operator attention required, not more automated
+  re-triage** (batch8-finalize's standing instruction: five no-change re-checks is the flag-explicitly threshold). (a)
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" (line 156) is still
+  `- [ ]` open — Schema v10 `instrument_id_form` backfill Stage 2 (a future batch10 candidate) stays blocked on it +
+  Stage 1 write-enforce. **Needs the operator to run the §5 design session.** (b)
+  `estate_orphan_assessment_2026_07_21.md` todo 6 cross-tranche boundedness (cefi+sports KEEP-NA vs defi RECLASSIFY,
+  reverted) — the "Operator/next-toucher: rule on todo 6's boundedness, then flip deliberately" note (line ~558) is
+  still present, unresolved. **Needs the operator to rule on todo 6's boundedness.** Until either gate clears or the
+  operator decides, these two items will keep re-appearing in every future cefi batch finalize re-check. (Appended to an
+  archived doc per `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md` todo 2's explicit standing-flag
+  instruction — status/verdicts left untouched.)

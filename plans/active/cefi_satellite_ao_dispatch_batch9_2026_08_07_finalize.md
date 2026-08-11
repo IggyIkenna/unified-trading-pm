@@ -77,7 +77,7 @@ context_scope:
       content/ancestry against the current branch, and if a cited SHA is unreachable, record the content-verification
       instead). **Done when**: every landed todo's source checkbox is flipped (or, for the prose-record item, appended)
       with a verified commit, and each source doc's remaining-open count is explicitly re-stated.
-- [ ] [REVIEW] P1. **Re-check the two items carried forward from batch4→batch6→batch7→batch8's Deferred/re-check
+- [x] ✅ [REVIEW] P1. **Re-check the two items carried forward from batch4→batch6→batch7→batch8's Deferred/re-check
       sections for cleared gates — FIFTH consecutive re-check to find them unchanged (2026-08-07).** (a) Has
       `issues/fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" todo (line
       ~156) closed? If so, the Schema v10 `instrument_id_form` backfill becomes a normal batch10 candidate — record it,
@@ -91,7 +91,20 @@ context_scope:
       (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md` or its 2026-08-07 successor) AND surface it
       in this run's report. **Done when**: both items carry either a "gate cleared → batch10 candidate" note or a dated
       fifth re-verification that they are still blocked, AND — if still blocked — the explicit operator flag described
-      above is written to the parked-findings doc.
+      above is written to the parked-findings doc. — **DONE 2026-08-11 (slot 28, task
+      cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-002)**: **⚠️ 5TH CONSECUTIVE NO-CHANGE — STANDING OPERATOR
+      FLAG POSTED** (this plan's own body's escalation trigger + batch8-finalize's standing instruction): (a)
+      `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" is STILL OPEN
+      (direct grep, line 156 — `- [ ]`); Schema v10 `instrument_id_form` backfill (`[DATA] P3`, Stage 2) is NOT yet a
+      batch10 candidate; gate unchanged. (b) `estate_orphan_assessment_2026_07_21.md` todo 6 cross-tranche boundedness
+      ruling is STILL PENDING — the "Operator/next-toucher: rule on todo 6's boundedness, then flip deliberately" note
+      (line ~558) is still present; na-eligibility-audit 2026-08-09 (tranche=cefi, KEEP-NA) still "awaits the operator's
+      explicit boundedness ruling" (`/plans/active/issues/estate_orphan_assessment_2026_07_21.md`). Standing tally:
+      cefi+sports=KEEP-NA, defi=RECLASSIFY (reverted), operator ruling outstanding. Both items are now five no-change
+      re-checks deep (batch4→5→6→7→8) with zero gate movement. Per this plan's escalation rule, the explicit standing
+      flag was POSTED to the cefi parked-findings doc
+      (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`, appended to its Progress Log) and surfaced
+      in this run's report below.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Deferred — *", "Reconciliation" and "Linkage
       housekeeping" sections (informational, never batch todos) need no separate migration → add the archive banner →
@@ -132,3 +145,14 @@ context_scope:
   DONE note's half-2 completion record already appended (real-VM auto-republish observation, 2026-08-10 slot 12, flip at
   `43ec2ec651`); todo stays `[x]`, remaining open: **0**. All three done-when halves satisfied; no source-doc edit
   needed this run.
+- **2026-08-11 (slot 28, task cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize-002)** — 5th consecutive no-change
+  re-check of the two carried-forward items (todo 2; done-when half 1). (a)
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`'s `[DESIGN] P1` "close the three §5 gaps" (line 156)
+  re-verified still `- [ ]` open via direct grep; Schema v10 `instrument_id_form` backfill (`[DATA] P3`, Stage 2)
+  remains dependency-blocked, NOT a batch10 candidate. (b) `estate_orphan_assessment_2026_07_21.md` todo 6 boundedness
+  ruling re-verified still PENDING — the "Operator/next-toucher: rule on todo 6's boundedness, then flip deliberately"
+  note (line ~558) is still present; no operator decision recorded. Both still blocked → per the todo's escalation
+  trigger + batch8-finalize's standing instruction, the explicit STANDING OPERATOR FLAG was written to the
+  parked-findings doc (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`, Progress Log) and surfaced
+  in this run's report. No source-doc edit needed (both source docs already carry their own na-eligibility-audit
+  markers).
