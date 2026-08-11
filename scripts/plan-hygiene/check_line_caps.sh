@@ -53,6 +53,23 @@
 # PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
 # (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
+# A FOURTH DOCUMENTED EXCEPTION (operator ruling 2026-08-11,
+# tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md option (a)): a
+# bounded, net-zero-LENGTH CONTENT SUBSTITUTION on an already-over-cap LIVE doc is also allowed
+# through in SCOPED mode. Root problem this closes: a same-line CONTENT edit (e.g. correcting a
+# stale table-cell value like "66% attempted_failed" -> "94.8-100% covered") always shows ADDED=1,
+# DELETED=1 in `git diff --numstat` — the link-repoint exception's content-normalization check
+# rejects it because the actual prose differs, and the marker-append exception's DELETED=0 check
+# can never fire. This deadlocked a routine, net-zero-line MVP-cell table update on a 1005L
+# closeout doc (same class as the link-repoint deadlock above, but for content substitution rather
+# than path re-pointing). Narrowly scoped: only fires when (a) ADDED equals DELETED exactly (net
+# zero — stricter than link-repoint's ADDED<=DELETED, to avoid covering any net-SHRINK edits that
+# happen to have non-zero deletions), (b) ADDED <= 10 (same bounded ceiling as marker-append), (c)
+# the file was already over cap before this commit (since ADDED==DELETED, pre-commit line count =
+# lines, and we're already inside the lines>cap branch), and (d) no checkbox lines are added OR
+# removed by the diff — same guard as marker-append, so this can never be used to sneak new tracked
+# work onto an over-cap doc.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -153,6 +170,7 @@ for f in "${TARGETS[@]}"; do
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
+    NET_ZERO_SUBSTITUTION=""
     if [ -n "$SCOPED" ]; then
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
@@ -183,11 +201,27 @@ for f in "${TARGETS[@]}"; do
           LINK_REPOINT_EDIT="1"
         fi
       fi
+      # Net-zero-length content substitution exception (see policy comment above): only when
+      # neither marker-append nor link-repoint already fired, AND ADDED==DELETED exactly
+      # (net zero, stricter than link-repoint's ADDED<=DELETED), AND the change is bounded
+      # (ADDED<=10), AND no checkbox lines are touched by the diff.
+      if [ -z "$SMALL_MARKER_APPEND" ] && [ -z "$LINK_REPOINT_EDIT" ] \
+        && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
+        && [ "$ADDED" = "$DELETED" ] 2>/dev/null && [ "$ADDED" -le 10 ] 2>/dev/null \
+        && [ "$ADDED" -gt 0 ] 2>/dev/null; then
+        ADDED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null | grep -cE '^\+\s*-\s*\[.\]' || true)"
+        REMOVED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null | grep -cE '^-\s*-\s*\[.\]' || true)"
+        ADDED_CHECKBOX_LINES="${ADDED_CHECKBOX_LINES:-0}"
+        REMOVED_CHECKBOX_LINES="${REMOVED_CHECKBOX_LINES:-0}"
+        [ "$ADDED_CHECKBOX_LINES" = "0" ] && [ "$REMOVED_CHECKBOX_LINES" = "0" ] && NET_ZERO_SUBSTITUTION="1"
+      fi
     fi
     if [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$NET_ZERO_SUBSTITUTION" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded net-zero content substitution only, operator ruling 2026-08-11)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))
