@@ -12,8 +12,8 @@ stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-status, prediction, migration, canonicalisation, uac, escalation]
-related:
-  - verdict_cefi.md
+
+  - /plans/audit/results/r3_beta_renders_2026_06_11/verdict_cefi.md
   - ../r3_verdict_packs_2026_06_17/verdict_prediction.md
 created: 2026-06-11
 audited_scope:

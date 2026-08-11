@@ -14,10 +14,10 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, execution, client-isolation, reconciliation, cefi, defi]
-related:
+
   [
     ../axes/share-class.md,
-    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
     /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
     ../../../04-architecture/capital-structure-and-regulatory.md,
   ]

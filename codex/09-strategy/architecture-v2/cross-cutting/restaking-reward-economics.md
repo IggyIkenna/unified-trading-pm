@@ -13,10 +13,10 @@ stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [defi, features, execution, strategy, pnl-attribution, uac]
-related:
+
   [
-    pnl-attribution.md,
-    reward-lifecycle.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
     ../../../04-architecture/amm-slippage-simulation.md,
     /codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md,
   ]

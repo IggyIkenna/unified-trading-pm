@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [engineer]
 tags: [token-optimization, quality-gates, refactor]
-related: [README.md]
+[/codex/06-coding-standards/README.md]
 created: 2026-03-27
 authoritative_for:
 referenced_by:

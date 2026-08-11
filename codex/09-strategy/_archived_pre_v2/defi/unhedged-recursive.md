@@ -12,11 +12,11 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, leverage, flash-loan, staking, directional]
-related:
+
   [
     /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
     /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
-    reward-lifecycle.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
   ]
 created: 2026-06-16
 authoritative_for: []

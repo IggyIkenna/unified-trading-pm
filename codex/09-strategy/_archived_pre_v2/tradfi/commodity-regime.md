@@ -13,7 +13,7 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, tradfi, ml, regime, commodity, weather, features]
-related: [ml-directional.md, ../../architecture-v2/archetypes/rules-directional-continuous.md]
+[/codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md, ../../architecture-v2/archetypes/rules-directional-continuous.md]
 created: 2026-06-16
 authoritative_for:
 referenced_by:

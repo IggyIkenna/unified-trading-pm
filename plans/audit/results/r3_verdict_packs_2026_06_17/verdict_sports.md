@@ -13,9 +13,9 @@ stage: [meta]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-status, sports, migration, odds, single-walk, data-correctness]
-related:
+
   - ../r3_beta_renders_2026_06_11/verdict_sports.md
-  - verdict_tradfi.md
+  - /plans/audit/results/r3_verdict_packs_2026_06_17/verdict_tradfi.md
 created: 2026-06-17
 audited_scope:
   SPORTS odds + reference buckets projected-v9 index (mtds@77f1a61) vs current _index, manifest_diff_sports.json + R8

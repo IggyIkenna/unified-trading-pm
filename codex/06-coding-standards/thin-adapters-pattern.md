@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [engineer]
 tags: [thin-adapters, service-structure, refactor]
-related: [/codex/06-coding-standards/service-structure-standards.md, README.md]
+[/codex/06-coding-standards/service-structure-standards.md, /codex/06-coding-standards/README.md]
 created: 2026-03-27
 authoritative_for: []
 referenced_by:

@@ -13,9 +13,9 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, hold-policy, reconciliation, defi, execution, backtest]
-related:
+
   [
-    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
     /codex/09-strategy/architecture-v2/axes/signal-sources.md,
     ../cross-cutting/execution-policies.md,
     ../cross-cutting/benchmark-fills.md,

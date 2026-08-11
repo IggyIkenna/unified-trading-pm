@@ -12,11 +12,11 @@ stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, catalogue, defi, execution, uac, data-quality]
-related:
+
   [
     /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
     /codex/09-strategy/architecture-v2/restriction-policy.md,
-    README.md,
+    /codex/09-strategy/architecture-v2/README.md,
   ]
 created: 2026-04-20
 authoritative_for: [architecture-v2 coverage BLOCKED-cell remediation registry (BL-N entries)]

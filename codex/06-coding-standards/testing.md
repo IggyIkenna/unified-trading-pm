@@ -12,10 +12,10 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [testing, quality-gates, conventions, refactor]
-related:
+
   [
     /codex/06-coding-standards/integration-testing-layers.md,
-    README.md,
+    /codex/06-coding-standards/README.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]

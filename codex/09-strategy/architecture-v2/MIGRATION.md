@@ -12,9 +12,9 @@ stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, migration, refactor, ssot-audit, cefi, defi, sports]
-related:
+
   [
-    README.md,
+    /codex/09-strategy/architecture-v2/README.md,
     /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
     /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
     /codex/09-strategy/architecture-v2/legacy-family-migration.md,

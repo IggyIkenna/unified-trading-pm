@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [infrastructure, service-setup, stub]
-related: [/codex/05-infrastructure/new-repo-setup.md, README.md]
+[/codex/05-infrastructure/new-repo-setup.md, /codex/05-infrastructure/README.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — see README.md + new-repo-setup.md]
 referenced_by:

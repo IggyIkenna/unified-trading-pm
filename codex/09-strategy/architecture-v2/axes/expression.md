@@ -13,10 +13,10 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, expression, options, defi, execution, sports]
-related:
+
   [
     /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
-    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
     /codex/09-strategy/architecture-v2/axes/signal-sources.md,
     ../cross-cutting/execution-policies.md,
     ../cross-cutting/trade-expression.md,

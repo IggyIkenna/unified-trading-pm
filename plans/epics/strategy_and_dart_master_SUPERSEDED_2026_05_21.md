@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-ui, e2e-testing, execution-service, features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, refactor, consolidation, promote, ui, ssot-audit]
-related: [/plans/epics/strategy_master.md, /plans/epics/dart_and_promote_master.md, README.md]
+[/plans/epics/strategy_master.md, /plans/epics/dart_and_promote_master.md, /plans/epics/README.md]
 created: 2026-05-07
 name:
 tier:

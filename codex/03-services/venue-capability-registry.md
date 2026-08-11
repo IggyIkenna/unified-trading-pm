@@ -13,10 +13,10 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer]
 tags: [venue-capability, registry, uac, execution, strategy, cefi, defi]
-related:
+
   [
     /codex/02-venues/venue-registry-reference.md,
-    portfolio-allocator.md,
+    /codex/03-services/portfolio-allocator.md,
     /codex/04-architecture/capital-efficiency-patterns.md,
     /codex/02-data/contracts-scope-and-layout.md,
   ]

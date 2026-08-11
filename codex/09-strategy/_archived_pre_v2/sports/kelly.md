@@ -12,9 +12,9 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, staking, odds, execution]
-related:
+
   [
-    staking-methods.md,
+    /codex/09-strategy/_archived_pre_v2/sports/staking-methods.md,
     /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
     ../../architecture-v2/axes/staking-methods.md,
   ]

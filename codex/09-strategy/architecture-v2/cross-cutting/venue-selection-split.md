@@ -12,13 +12,13 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [execution, strategy, venue-selection, cefi, defi, mev]
-related:
+
   [
     ../axes/venue-eligibility.md,
     /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
     ../../../04-architecture/slow-fast-routing-split.md,
     /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
-    mev-protection.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
   ]
 created: 2026-04-17
 authoritative_for:

@@ -12,12 +12,12 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, basis-trade, staking, etherfi, hedging, rewards]
-related:
+
   [
     /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
     /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
     /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
-    reward-lifecycle.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
   ]
 created: 2026-03-27
 authoritative_for: []

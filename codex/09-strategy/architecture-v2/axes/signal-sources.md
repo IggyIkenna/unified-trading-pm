@@ -13,12 +13,12 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, signal-sources, ml, features, market-making, book-microstructure]
-related:
+
   [
     /codex/09-strategy/architecture-v2/axes/edge-methods.md,
     /codex/09-strategy/architecture-v2/axes/expression.md,
     /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
-    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
     ../../../04-architecture/artifact-versioning.md,
   ]
 created: 2026-04-17

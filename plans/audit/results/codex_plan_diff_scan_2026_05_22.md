@@ -13,7 +13,7 @@ stage: [meta]
 repos: [trading-agent-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [audit, plan-hygiene, ssot-audit, verification, refactor]
-related: [README.md, /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md]
+[/plans/audit/results/README.md, /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md]
 created: 2026-05-22
 audited_scope:
   all codex docs (717) referenced across 44 active plans + 26 epics — broken codex refs, SUPERSEDED forward-link health,

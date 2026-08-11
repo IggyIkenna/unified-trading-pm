@@ -12,9 +12,9 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [service-hardening, quality-gates, refactor]
-related:
+
   [
-    README.md,
+    /codex/06-coding-standards/README.md,
     /codex/06-coding-standards/integration-testing-layers.md,
     /codex/06-coding-standards/validation-and-errors.md,
   ]
