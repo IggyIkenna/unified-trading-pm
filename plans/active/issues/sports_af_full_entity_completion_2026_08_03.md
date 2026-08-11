@@ -1047,3 +1047,10 @@ are genuinely in scope for the operator's "no exceptions" directive.
   — same rule-4a/slot-17/18/19/23 stale-baseline reasoning. Skipping `reason_code: GATED` + `park_now: true`.
   **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8 entities stable ~0 /
   honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
+- **2026-08-11T16:36Z (slot 32, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet —
+  prior `-012845` gone; a fresh `af-backfill-20260811-162726` (STANDINGS all-383, resuming from 2023-06-06) is RUNNING
+  (GCP asia-northeast1-c), verified via `run.log`/heartbeat (not just `gcloud list`): real `ManifestWriter` shard
+  writes, fresh `PIPELINE_HEARTBEAT`, monotonic checkpoint `2023-06-06→2023-06-08`. Census now = mid-backfill snapshot,
+  not terminal convergence — same rule-4a/slot-17/18/19/23/24 stale-baseline reasoning. Skipping `reason_code: GATED` +
+  `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8
+  entities stable ~0 / honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
