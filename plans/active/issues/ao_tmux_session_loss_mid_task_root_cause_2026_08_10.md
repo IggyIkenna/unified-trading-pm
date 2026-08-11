@@ -241,11 +241,11 @@ memory and that's what kills sessions" as-is.
       `pressure=<state> cgroup_mem=<val>` ticks. Confirm its log retention/location and whether it's worth pulling into
       the same enrichment path as the cgroup `memory.events` counters (Tier 1, already shipped
       `agent-orchestrator@4452cbb6da`) rather than re-discovering it ad hoc next time. Repo: agent-orchestrator.
-- [ ] [INFRA] P3. **Confirm the 16:15:xx orchestrator.service restart was `ao-self-pull.sh` picking up
-      `agent-orchestrator@4452cbb6da`, not a symptom of the tmux-server death.** Timing strongly suggests routine
-      self-pull (this session's own Tier-1 ship landed ~16:08 UTC, self-pull runs every 15min), and the tmux server died
-      ~44s BEFORE the restart, but this was flagged not confirmed. **Done when**: check `journalctl -u orchestrator`
-      around 16:15:20-16:15:35 UTC for the self-pull's own log line citing the new SHA. Repo: agent-orchestrator.
+- [x] [INFRA] P3. ~~Confirm the 16:15:xx orchestrator.service restart was ao-self-pull.sh~~ — **CLOSED 2026-08-11,
+      confirmed.** `journalctl -u orchestrator` at 16:15:28 UTC:
+      `orchestrator running checkout 4452cbb — 0     pre-existing tmux session(s): []` — the self-pull restart landing
+      exactly as expected, ~43s after the tmux-server death, finding zero sessions (consistent with the server having
+      died and not yet respawned by then, not causing it). Confirmed coincidental, not causal. Repo: agent-orchestrator.
 
 ## Progress Log
 
