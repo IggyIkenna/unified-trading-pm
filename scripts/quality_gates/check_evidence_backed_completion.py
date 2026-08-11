@@ -17,7 +17,7 @@ The `Evidence:` convention (SSOT: plans/PLAN_FORMAT.md § Evidence-backed comple
   Multiple build-ids and additional token kinds (e.g. `gha=<run-url>`) are allowed; this gate
   VERIFIES every `cloudbuild=<id>` resolves SUCCESS in the Cloud Build API.
 
-Two sub-rules:
+Three sub-rules:
   - **A (strict, baseline 0): cited build must be SUCCESS.** Every `cloudbuild=<id>` in a `- [x]`
     todo is resolved via `gcloud builds describe`. A build whose OVERALL status is a terminal
     NON-success (FAILURE / TIMEOUT / CANCELLED / INTERNAL_ERROR / EXPIRED) is a HARD violation —
@@ -28,8 +28,16 @@ Two sub-rules:
   - **B (ratchet, baselined): runtime-green claim without any Evidence ref.** A `- [x]` todo that
     makes a build/deploy/promote-green claim but cites NO `Evidence:` ref is flagged. Baselined
     so legacy plans ratchet down; new over-claims without evidence push the count up → regression.
+  - **C (ratchet, baselined): prod DATA-mutation claim without a mutation-evidence token.** A `- [x]`
+    todo claiming a restamp/backfill row-count, a manifest backstamp, a GCS object rename/delete, or
+    a terraform/tofu state operation, but citing none of `manifest-delta=` / `vm-log=` / `gcs-op=` /
+    `tofu-state=`, is flagged (SSOT: plans/PLAN_FORMAT.md § 8d, ruled 2026-08-06,
+    plans/archive/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md). Same ratchet shape as B —
+    these artifact kinds are heterogeneous (GCS paths, local paths, op ids) and not all independently
+    resolvable from a QG script without a live GCS/terraform call, so this sub-rule checks CITATION
+    presence only, not artifact resolution.
 
-Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rule B); 1 = violation;
+Exit-code semantics: 0 = clean (sub-rule A) and at/below baseline (sub-rules B, C); 1 = violation;
 2 = arg/IO error.
 """
 
@@ -98,6 +106,24 @@ _RUNTIME_VERB_RE = re.compile(
 # ci_satellite_ao_dispatch_batchN_* corpus, never a claim that anything succeeded) doesn't match
 # — confirmed false-positive, evidence_backed_completion_regression_24_vs_23_2026_08_09.md todo 1.
 _GREEN_TOKEN_RE = re.compile(r"(?<!-)\b(?:green|SUCCESS|succeeded)\b(?!-)", re.IGNORECASE)
+
+# A prod DATA-mutation "went well" claim (sub-rule C trigger, § 8d): restamp/backstamp/backfill row
+# counts, GCS object rename/delete, terraform/tofu state ops. Deliberately excludes build/deploy verbs
+# (those are § 8b's sub-rule B territory) and code-ship claims (`<repo>@<sha>` + "QG green").
+_MUTATION_VERB_RE = re.compile(
+    r"\b(restamp(?:ed|s)?|backstamp(?:ed|s)?|backfill(?:ed|s)?|tofu[\s-]?state|terraform\s+state|"
+    r"gcs\s+object[s]?)\b",
+    re.IGNORECASE,
+)
+# An outcome token co-occurring with a mutation verb in the same clause: a row/shard/object count, or
+# a completion word (renamed/deleted/removed/resolved/clean/complete).
+_MUTATION_OUTCOME_RE = re.compile(
+    r"\b(\d[\d,]*\s+(?:rows?|shards?|objects?|records?)|renamed|deleted|removed|resolved|clean|"
+    r"complete(?:d)?)\b",
+    re.IGNORECASE,
+)
+# The four accepted prod-mutation evidence token kinds (§ 8d).
+_MUTATION_EVIDENCE_TOKEN_RE = re.compile(r"\b(?:manifest-delta|vm-log|gcs-op|tofu-state)=", re.IGNORECASE)
 
 # Sentence/clause boundary for the same-clause proximity check below: a `.`/`!`/`?` followed by
 # whitespace and then an uppercase letter or a backtick (prose/markdown convention — a new clause
@@ -319,12 +345,48 @@ def _check_claims_without_evidence(blocks: list[TodoBlock]) -> list[EvidenceViol
     return out
 
 
+def _check_mutation_claims_without_evidence(blocks: list[TodoBlock]) -> list[EvidenceViolation]:
+    """Sub-rule C (§ 8d): a `- [x]` prod DATA-mutation claim with no mutation-evidence token.
+
+    Same same-clause-proximity design as sub-rule B (a mutation verb and an outcome token must
+    co-occur in one clause, not just anywhere in a long multi-line block) — see that check's
+    docstring for the false-positive shape this guards against.
+    """
+    out: list[EvidenceViolation] = []
+    for b in blocks:
+        if b.cloudbuild_ids:
+            continue
+        if _MUTATION_EVIDENCE_TOKEN_RE.search(b.text):
+            continue
+        for clause in _split_into_clauses(b.text):
+            if _MUTATION_VERB_RE.search(clause) and _MUTATION_OUTCOME_RE.search(clause):
+                first = b.text.splitlines()[0].strip()
+                out.append(
+                    EvidenceViolation(
+                        rule="C-mutation-claim-without-evidence",
+                        path=b.path,
+                        line_no=b.line_no,
+                        detail=f"prod DATA-mutation claim without a manifest-delta=/vm-log=/gcs-op=/"
+                        f"tofu-state= evidence token: {first[:120]}",
+                    )
+                )
+                break
+    return out
+
+
 def _rule_b_signatures_for_text(text: str, path: Path) -> set[str]:
     """Sub-rule B violation signatures for one file's TEXT — shared by the corpus-wide scan and
     ``--only`` mode's HEAD-vs-working-tree comparison so the two can never define "a claim
     without evidence" differently."""
     blocks = _iter_todo_blocks(text, path)
     return {v.detail for v in _check_claims_without_evidence(blocks)}
+
+
+def _rule_c_signatures_for_text(text: str, path: Path) -> set[str]:
+    """Sub-rule C violation signatures for one file's TEXT — same HEAD-vs-working-tree comparison
+    role as `_rule_b_signatures_for_text`, kept separate so B and C never share a signature set."""
+    blocks = _iter_todo_blocks(text, path)
+    return {v.detail for v in _check_mutation_claims_without_evidence(blocks)}
 
 
 def _run_only(paths: list[str], quiet: bool) -> int:
@@ -352,7 +414,7 @@ def _run_only(paths: list[str], quiet: bool) -> int:
             current_text = p.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        current_sigs = _rule_b_signatures_for_text(current_text, p)
+        current_sigs = _rule_b_signatures_for_text(current_text, p) | _rule_c_signatures_for_text(current_text, p)
         if not current_sigs:
             continue
         proc = subprocess.run(
@@ -361,7 +423,10 @@ def _run_only(paths: list[str], quiet: bool) -> int:
             text=True,
             check=False,
         )
-        head_sigs = _rule_b_signatures_for_text(proc.stdout, p) if proc.returncode == 0 else set()
+        if proc.returncode == 0:
+            head_sigs = _rule_b_signatures_for_text(proc.stdout, p) | _rule_c_signatures_for_text(proc.stdout, p)
+        else:
+            head_sigs = set()
         new_sigs = current_sigs - head_sigs
         for sig in sorted(new_sigs):
             flagged.append(f"{p.name}: {sig}")
@@ -385,7 +450,7 @@ def _relpath_for_git(p: Path) -> str:
     return p.name
 
 
-def _load_baseline(baseline_path: Path) -> int:
+def _load_baseline(baseline_path: Path, key: str = "claim_without_evidence_baseline") -> int:
     if not baseline_path.exists():
         return 0
     try:
@@ -393,18 +458,22 @@ def _load_baseline(baseline_path: Path) -> int:
     except yaml.YAMLError:
         return 0
     if isinstance(loaded, dict):
-        count: object = cast(dict[str, object], loaded).get("claim_without_evidence_baseline")
+        count: object = cast(dict[str, object], loaded).get(key)
         if isinstance(count, int):
             return count
     return 0
 
 
-def _write_baseline(baseline_path: Path, rule_b: list[EvidenceViolation]) -> None:
+def _write_baseline(
+    baseline_path: Path, rule_b: list[EvidenceViolation], rule_c: list[EvidenceViolation]
+) -> None:
     payload: dict[str, object] = {
         "claim_without_evidence_baseline": len(rule_b),
-        "rule": "evidence-backed-completion (sub-rule B only; sub-rule A is strict-0)",
+        "mutation_claim_without_evidence_baseline": len(rule_c),
+        "rule": "evidence-backed-completion (sub-rules B, C; sub-rule A is strict-0)",
         "source": "plans/PLAN_FORMAT.md § Evidence-backed completion",
         "baseline_files": [{"path": str(v.path), "line": v.line_no} for v in rule_b],
+        "mutation_baseline_files": [{"path": str(v.path), "line": v.line_no} for v in rule_c],
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
@@ -464,16 +533,18 @@ def main() -> int:
     cited = sum(len(b.cloudbuild_ids) for b in blocks)
     rule_a = _check_builds(blocks, region, project, require_verification)
     rule_b = _check_claims_without_evidence(blocks)
+    rule_c = _check_mutation_claims_without_evidence(blocks)
 
     print(
         f"Scanned {len(plan_files)} plan(s), {len(blocks)} checked todo(s), "
         f"{cited} cited cloudbuild id(s) — sub-rule A: {len(rule_a)} violation(s); "
-        f"sub-rule B: {len(rule_b)} claim(s)-without-evidence."
+        f"sub-rule B: {len(rule_b)} claim(s)-without-evidence; "
+        f"sub-rule C: {len(rule_c)} mutation-claim(s)-without-evidence."
     )
 
     if baseline_write:
-        _write_baseline(baseline_path, rule_b)
-        print(f"✅ Wrote baseline (sub-rule B = {len(rule_b)}) to {baseline_path}")
+        _write_baseline(baseline_path, rule_b, rule_c)
+        print(f"✅ Wrote baseline (sub-rule B = {len(rule_b)}, sub-rule C = {len(rule_c)}) to {baseline_path}")
         return 0
 
     # Sub-rule A: strict-0 — any cited build that is terminal-non-SUCCESS (or unverifiable under
@@ -501,16 +572,40 @@ def main() -> int:
         if len(rule_b) > 20:
             print(f"  ... + {len(rule_b) - 20} more")
 
-    failed = bool(rule_a) or rule_b_regression
+    # Sub-rule C: ratchet against its own baseline (§ 8d, separate from B's).
+    baseline_c = _load_baseline(baseline_path, key="mutation_claim_without_evidence_baseline")
+    rule_c_regression = len(rule_c) > baseline_c
+    if rule_c:
+        print(
+            f"\nSub-rule C — prod DATA-mutation claims without Evidence: {len(rule_c)} (baseline {baseline_c})."
+        )
+        for v in rule_c[:20]:
+            try:
+                rel = v.path.relative_to(workspace_root)
+            except ValueError:
+                rel = v.path
+            print(f"  - {rel}:{v.line_no}: {v.detail}")
+        if len(rule_c) > 20:
+            print(f"  ... + {len(rule_c) - 20} more")
+
+    failed = bool(rule_a) or rule_b_regression or rule_c_regression
     if rule_b_regression:
         print(
             f"\n❌ Sub-rule B regression: {len(rule_b)} > baseline {baseline}. "
             f"Add `Evidence: cloudbuild=<id>` to the new claim, or re-baseline with --baseline-write."
         )
+    if rule_c_regression:
+        print(
+            f"\n❌ Sub-rule C regression: {len(rule_c)} > baseline {baseline_c}. "
+            f"Add `Evidence: manifest-delta=<path>` (or vm-log=/gcs-op=/tofu-state=) to the new claim, "
+            f"or re-baseline with --baseline-write."
+        )
     if not failed:
         if len(rule_b) < baseline:
             print(f"\n⚠️  Sub-rule B improvement: {len(rule_b)} < baseline {baseline}. Re-baseline to codify.")
-        print("\n✅ Evidence-backed-completion: no over-claims; sub-rule B at/below baseline.")
+        if len(rule_c) < baseline_c:
+            print(f"\n⚠️  Sub-rule C improvement: {len(rule_c)} < baseline {baseline_c}. Re-baseline to codify.")
+        print("\n✅ Evidence-backed-completion: no over-claims; sub-rules B, C at/below baseline.")
         return 0
     return 1
 

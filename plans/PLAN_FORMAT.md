@@ -540,6 +540,42 @@ clone, not by trusting the self-report.
   (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
   mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
 
+### 8d. Prod DATA-mutation evidence — restamp/backfill/rename/delete/tofu-state claims cite a VERIFIABLE artifact (HARD RULE — codified 2026-08-11, ruled 2026-08-06)
+
+> **Why:** § 8b makes runtime BUILD/DEPLOY claims machine-checkable via a cited Cloud Build id; prod DATA-mutation
+> claims (restamp row counts, manifest backstamps, GCS object renames/deletes, terraform/tofu state ops) had no
+> equivalent — review independently flagged the same "self-reported operational outcome" gap three times (tofu-state-rm,
+> `do_rename` content-equality, prediction restamp row-counts). Ruled 2026-08-06: extend the §8b pattern to this class.
+> See `plans/archive/issues/prod_mutation_evidence_artifact_gap_2026_08_03.md`.
+
+Any `- [x]` todo whose completion is a **prod DATA-mutation claim** — a restamp/backfill row-count, a manifest
+backstamp, a GCS object rename/delete, or a terraform/tofu state operation — MUST cite a structured evidence token on
+the checkbox line or its continuation lines, the same way a build/deploy claim cites `cloudbuild=<id>`:
+
+```markdown
+- [x] ✅ ... <the claim> ... Evidence: manifest-delta=<path>[#<row-id>]
+- [x] ✅ ... <the claim> ... Evidence: vm-log=vm-logs/<unit>/RESULT.json
+- [x] ✅ ... <the claim> ... Evidence: gcs-op=<operation-id>
+- [x] ✅ ... <the claim> ... Evidence: tofu-state=<path-to-before/after-state-list-diff>
+```
+
+- `manifest-delta=<path>` — the manifest row/path the mutation wrote or updated (a `record_captured(...)` write, a
+  backstamp row); optionally `#<row-id>` to pin the exact row.
+- `vm-log=<path>` — a durable log (e.g. `vm-logs/<unit>/RESULT.json`) the mutation script wrote, carrying the
+  row/shard/object counts the claim cites.
+- `gcs-op=<operation-id>` — the GCS operation id from a rename/delete/copy (from UTL's `gcs_copy_object`/
+  `gcs_delete_object` response — never a subprocess `gsutil`/`gcloud storage` call, per CLAUDE.md § "Writing STORAGE
+  code").
+- `tofu-state=<path>` — a path to the before/after `terraform state list` (or `tofu state list`) diff proving the
+  state change landed.
+- Multiple tokens are allowed on one claim (e.g. a restamp citing both `manifest-delta=` and `vm-log=`).
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate):
+  sub-rule C (baselined ratchet, same shape as §8b's sub-rule B) flags a prod-mutation claim that cites NO `Evidence:`
+  token of the above kinds. New over-claims without evidence push the count up → regression; re-baseline with
+  `--baseline-write` only after confirming a flagged claim is genuine pre-existing drift, not a fresh over-claim.
+- A code-ship claim, or a build/deploy/promote claim already covered by §8b, is NOT a prod-mutation claim and needs no
+  prod-mutation evidence token.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
