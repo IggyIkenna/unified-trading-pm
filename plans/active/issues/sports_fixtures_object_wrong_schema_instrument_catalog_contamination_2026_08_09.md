@@ -739,3 +739,30 @@ transcript available in that session's Progress Log entry on
   (VM `NOT_FOUND` + report growth across two time points); once terminal, fold the final report's
   `contamination_codes`-positive rows (expected: the 0 already observed, plus whatever the un-scanned
   2024-06-23→2026-08-16 range surfaces) into the per-entity/day/pipeline_mode count and flip the todo-1 checkbox.
+
+- **2026-08-11T01:56Z (slot 22, data_engineering, dispatched on todo 3 — "fix write path + remediate")**: repeated the
+  established check (VM `describe` + report row-count growth across two time points; bounded single-object read of the
+  report parquet via UTL `gcs_describe_object`/`download_from_storage` — no corpus walk, no `gcloud storage` CLI).
+  `gcloud compute instances describe sports-schema-census-instruments-store-20260809-224053 --zone=asia-northeast1-c` →
+  still `RUNNING` (features-sports VM long gone — its half of todo 1 already folded CLEAN by slot-29). Downloaded +
+  analyzed the current checkpoint report (15.5MB, **1,348,500 rows**, up from 1,219,000 at the prior slot-22 23:08Z
+  check — healthy monotonic growth, not a stall): covers `day` `2019-01-01`→`2024-11-30` (1,641 distinct days) across
+  all 21 expected entity values incl. `fixtures` (39,596 objects). **`contamination_codes` non-empty on 0 of 1,348,500
+  rows** in the entire scanned range. `schema_verdict` decomposes to `FAIL` (1,136,572 / ~84% — the documented
+  all-NaN-column round-trip artifact `wrong_dtype`/`missing_column`, same proportion as every prior check) /
+  `NO_CONTRACT_MAPPING` (200,221) / `PASS` (11,706) / `READ_ERROR` (1 — the ONE known phantom already root-caused by
+  slot-17: `day=2022-06-26/entity=standings`, list-vs-read race, not contamination). **0 rows at `day>=2026-04-14`** —
+  the known-contaminated partition is still ~1.35 years ahead of the frontier. Rate: ~27.3h elapsed (launch
+  `2026-08-09T22:41:01Z`→`2026-08-11T01:56Z`) for 1,641 days ⇒ ~60 distinct days/hr ⇒ order-of-magnitude **~10h more**
+  to reach present, consistent with every prior session's 12-20h estimate.
+
+  **Todo 3 stays OPEN — same gating**: the write-path half is already resolved (todo 2's shipped
+  `_assert_not_cross_domain_contamination()` guard structurally covers `entity=fixtures`); the one confirmed object
+  (BOLIVIA_PRIMERA_DIVISION) already quarantined (`instruments-service@cfc3736b`); the corpus-wide done-when ("fresh
+  scoped check of the affected triples returns 0 schema-mismatched objects") cannot be evaluated until the census
+  reaches terminal `NOT_FOUND` and its FINAL report is folded into the per-entity/day/pipeline_mode count. Nothing new
+  to remediate. Not busy-waiting on a ~10h background walk — skipping back to the queue (`reason_code=GATED`,
+  `estimated_unblock_minutes=180`). **Next dispatch**: repeat this exact check (VM `NOT_FOUND` + report growth across
+  two time points); once terminal, fold the final report's `contamination_codes`-positive rows (expected: the 0 already
+  observed, plus whatever the un-scanned 2024-11-30→2026-08-16 range surfaces) into the count and flip the todo-3
+  checkbox.
