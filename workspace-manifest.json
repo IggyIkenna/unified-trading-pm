@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "d339621c403ec0c8991e0a347176d19a7fe1623c"
+      "ldr_ci_status_sha": "f759adcf12c10ef9f1509ab9249518ac2f64553e"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1557,7 +1557,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "7a6d0bb47a8e47fcd059ea78f2dac52639377942"
+      "ldr_ci_status_sha": "31a6f0e12b4352c6ad1f850c375b3afe15a2328b"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
