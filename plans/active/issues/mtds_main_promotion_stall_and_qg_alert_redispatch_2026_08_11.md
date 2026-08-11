@@ -128,11 +128,24 @@ applies.
       find what re-dispatches a promote-PR's `quality-gates-v2` check on an unchanged head every ~15 min, and fix the
       redispatch (or, if redispatch is intentional/correct, migrate the "QG Slice Failed" Slack step to the dedup'd
       `notify-slack.yml` carrier so an unchanged repeat failure doesn't repage). (repo: unified-trading-ci)
-- [ ] [OPERATOR] P2. Slack read access (`scripts/dev/slack-read-channel.py`) has been failing all session with
-      `gcloud ADC ... Reauthentication failed. cannot prompt during non-interactive execution` on
-      `ikenna@odum-research.com` — needs an interactive `gcloud auth login` to restore. Confirmed the `github-token-sa`
-      service account also lacks the GSM permission as a fallback (`PERMISSION` error). Until fixed, any
-      `/ci-reconcile`-style session on this workspace has NO live Slack coverage and must rely entirely on direct
-      `gh`/`gcloud` ground truth, which — as this session's own back-and-forth with the operator showed — misses alerts
-      that never surface as a `gh run` state change (e.g. a promote-PR-only failure the bot itself already resolved by
-      closing, not merging).
+- [x] [OPERATOR] P2. ~~Slack read access... needs an interactive `gcloud auth login`~~ — **SUPERSEDED 2026-08-11,
+      corrected finding**: this todo's premise was wrong on two counts. (1) AO itself was never actually blocked —
+      re-diagnosed live via SSM on the orchestrator VM: AO workers run as the `ubuntu` OS user, whose active gcloud
+      identity is already `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, which already holds
+      `secretmanager.secretAccessor` (granted 2026-07-31) and successfully read `SLACK_ALERTS_READER_BOT_TOKEN` live in
+      this check. The earlier "no GCP identity on that VM" claim (`/codex/05-infrastructure/agent-slack-read-access.md`,
+      now corrected) was checked as `root` via SSM's default shell, not `ubuntu` — a wrong-OS-user false negative, not a
+      real gap. (2) There is no `github-token-sa` account in this project's IAM at all (`gcloud auth list` on the VM
+      shows `github-actions-deploy`, `github-deploy`, `uac-weekly-validation-ci`, `unified-trading-sa`, and the
+      operator's own account — never a `github-token-sa`); that name from the prior session's summary does not
+      correspond to a real identity here and should not be reused. **What remains genuinely open**: the operator's own
+      LAPTOP gcloud session (`ikenna@odum-research.com`) hits an org-enforced reauth window that fails non-interactively
+      (`Reauthentication failed. cannot prompt during     non-interactive execution`, reproduced 2026-08-11) — this
+      affects only interactive/laptop sessions running the script as the operator's personal identity, not AO.
+      `slack-read-channel.py` already has a documented fallback (`SLACK_ALERTS_READER_BOT_TOKEN` env var) for exactly
+      this case. A durable fix (SA impersonation or a dedicated key for local use) is a real security decision —
+      deliberately left to the operator rather than self-served, since the self-service HARD RULE covers AO's own two
+      cloud identities, not a human's personal laptop auth setup. **Correction note**: while live-testing the
+      `ubuntu`-user secret access above, the real Slack bot token was briefly exposed (truncated via `head -c 80`,
+      likely near-complete) into SSM command-invocation output and this session's transcript — flagged to the operator
+      directly; recommend rotating `SLACK_ALERTS_READER_BOT_TOKEN` in Slack + GSM as a precaution.
