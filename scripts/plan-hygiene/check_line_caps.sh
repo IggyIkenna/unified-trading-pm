@@ -53,6 +53,24 @@
 # PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
 # (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
+# A FOURTH DOCUMENTED EXCEPTION (2026-08-11, P3 todo in
+# tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md): a bounded,
+# net-zero-LENGTH content substitution on an already-over-cap LIVE doc is also allowed through
+# in SCOPED mode, as the general fallback behind the two narrow carve-outs above. Root problem
+# this closes: the marker-append carve-out requires DELETED=0 and the link-repoint carve-out
+# requires every changed line to differ only by a path token, so a routine same-line content
+# correction on an over-cap doc -- e.g. fixing a stale count / MVP-table cell (the exact case
+# that blocked tradfi_consolidated_closeout_2026_07_18.md) -- was still permanently blocked,
+# forcing a doc split before ANY content fix could land. Narrowly scoped: only fires when (a)
+# the file is already over cap before this commit (implied -- ADDED<=DELETED means the
+# pre-commit line count is >= the current over-cap count), (b) the staged diff's ADDED count is
+# <= its DELETED count (the edit never GROWS the file), (c) ADDED <= 10 (bounded -- no
+# wholesale rewrite of an over-cap doc), and (d) no added line matches a checkbox pattern
+# (`- [ ]`/`- [x]`) -- so this can never be used to sneak in new tracked work, only a bounded
+# net-zero-or-shrinking content fix. This strictly generalizes the link-repoint carve-out (a
+# path-token-only change is a 1+1 content substitution whose content is identical); the
+# link-repoint branch is kept first only so its precise message still fires for that shape.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -153,6 +171,7 @@ for f in "${TARGETS[@]}"; do
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
+    NET_ZERO_CONTENT_EDIT=""
     if [ -n "$SCOPED" ]; then
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
@@ -183,11 +202,24 @@ for f in "${TARGETS[@]}"; do
           LINK_REPOINT_EDIT="1"
         fi
       fi
+      # Bounded net-zero-length content-edit exception (see policy comment above): the general
+      # fallback behind the two narrow carve-outs. Fires only when neither already fired AND
+      # this diff (a) never grows the file (ADDED<=DELETED -- and since the file is currently
+      # over cap, pre-commit was too), (b) adds at most 10 lines (bounded, no wholesale
+      # rewrite), and (c) adds no checkbox line (never sneaks in new tracked work).
+      if [ -z "$SMALL_MARKER_APPEND" ] && [ -z "$LINK_REPOINT_EDIT" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
+        && [ "$ADDED" -le 10 ] 2>/dev/null && [ "$DELETED" -ge "$ADDED" ] 2>/dev/null; then
+        ADDED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null | grep -cE '^\+\s*-\s*\[.\]' || true)"
+        ADDED_CHECKBOX_LINES="${ADDED_CHECKBOX_LINES:-0}"
+        [ "$ADDED_CHECKBOX_LINES" = "0" ] && NET_ZERO_CONTENT_EDIT="1"
+      fi
     fi
     if [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$NET_ZERO_CONTENT_EDIT" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded net-zero-length content edit, ADDED<=DELETED no-checkbox, 2026-08-11)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))
