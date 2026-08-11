@@ -134,7 +134,7 @@ window). Operator already ruled Option A (2026-08-06). Backfill is unbounded wor
 
 **Recommendation**: AO-eligible — standard backfill launcher. Same OOM root cause as Finding 1. Include in next batch.
 
-## Finding 6 — partially covered: `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`
+## Finding 6 — RESOLVED: `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`
 
 **Category**: orphaned_partial_coverage (batch10 lists as "archivable_now" but verification gap unclaimed; still
 `status: open`)
@@ -144,6 +144,11 @@ auto-resolve with one more day's cron captures.
 
 **Recommendation**: Mark for re-check in next audit. `assigned_vm: NA` + writer fix already shipped suggests natural
 resolution.
+
+**RESOLVED 2026-08-11**: the bounded `read_availability_index` re-check for the 2026-08-05T17:42Z→2026-08-06T08:29Z
+accumulation window returned **0 residual `venue=KAMINO_LENDING` rows** (slot 17, 2026-08-09). Source issue doc + its
+companion finalize plan archived 2026-08-11
+(`/plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`).
 
 ## Todos
 
@@ -185,18 +190,20 @@ residue) confirmed closed alongside the rest, not left open as the prior edit's 
 completed 2026-08-07 (GCS-verified, `deployment-service@46eddc9` + 3 Cloud Run executions) and the doc is fully archived
 (all 7 todos `[x]`) — no action needed.
 
-**Already tracked elsewhere (Finding 6)**: the KAMINO_LENDING live-manifest verification gap is already a real open todo
-— `defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`'s `[DATA] P3`
-"Reconcile" todo covers exactly this (bounded VM-backed manifest-index read for the accumulation window, done-when
-criterion cites flipping the source doc's checkbox). No duplicate todo needed here.
+**Already resolved (Finding 6)**: the KAMINO_LENDING live-manifest verification gap closed 2026-08-09 — slot 17's
+bounded `read_availability_index` re-check found **0 residual `venue=KAMINO_LENDING` rows** in the 15h accumulation
+window — and both the source issue doc and its companion finalize plan
+(`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`) were archived
+2026-08-11 (`/plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`). No
+further action needed.
 
 ---
 
 **Parked count reconciliation**: 6 findings = 1 genuine orphan-never-touched + 1 not-covered + 3 partially-covered + 1
 informational tag-finding. All 6 written to this doc. ✓
 
-**AO-eligible candidates for next batch (batch11)**: Findings 1/3/4-item-3/5 = ~5 extractable todos. Finding 6 may
-auto-resolve. Finding 2 is a tag correction, not a todo.
+**AO-eligible candidates for next batch (batch11)**: Findings 1/3/4-item-3/5 = ~5 extractable todos. Finding 6
+auto-resolved (2026-08-11, docs archived). Finding 2 is a tag correction, not a todo.
 
 ## Progress Log
 
@@ -204,8 +211,8 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   re-verified still open/unexecuted, no `batch11` drafted yet. Finding 6 (Kamino) independently re-investigated this
   pass: `bd153821` (the actual venue-fix commit) confirmed NOT yet on `main` (only `live-defi-rollout`), so this doc's
   "may auto-resolve" framing is optimistic — see
-  `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`'s own new Progress Log entry for the
-  full re-check + the tracked follow-up todo added there.
+  `plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`'s own new Progress Log
+  entry for the full re-check + the tracked follow-up todo added there.
 - **context-scout 2026-08-07**: populated context_scope (6 entries) — the 4 next-batch AO-eligible findings' target docs
   (1/3/4/5), the `batch10` draft this report checks coverage against, and SKILL.md for process context. Findings 2's 2
   mistag targets and finding 6's target dropped to stay within the minimal-list budget (lower-priority: tag-only fix /

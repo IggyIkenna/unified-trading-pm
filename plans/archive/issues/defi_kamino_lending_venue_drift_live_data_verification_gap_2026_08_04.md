@@ -38,7 +38,7 @@ summary: >-
   `defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md` migration, which fixed a DIFFERENT
   bug (fabricated timestamps on a historical population that itself used bare `venue=KAMINO`, not `KAMINO_LENDING`) in
   the same lending_indices data family.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -65,7 +65,7 @@ related:
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-07"
+last_updated: "2026-08-11"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -98,6 +98,12 @@ context_scope:
 ---
 
 # KAMINO_LENDING venue-naming-drift — code fixed, live-data remediation unverified
+
+> **🟢 ARCHIVED 2026-08-11** — resolved: the live-data verification gap closed 2026-08-09 (slot 17's bounded,
+> column-pruned `read_availability_index` re-check over the 2026-08-05T17:42Z→2026-08-06T08:29Z accumulation window
+> found **0 residual `venue=KAMINO_LENDING` rows** — zero `date=2026-08-06`, zero `capture_status=captured`, no
+> retire-script re-run needed). Archived via the standard 6-step ritual alongside its gated finalize plan
+> (`/plans/archive/2026_08/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`).
 
 ## Context
 
@@ -266,7 +272,7 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
   citation is a stale (2026-08-06) "archivable_now" list entry, not a dispatch;
   `ag_closeout_audit_defi_parked_2026_08_07.md` Finding 6 recommended re-check (not extraction) and is itself superseded
   by the 2026-08-09 precondition-clear above. Companion gated finalize plan authored:
-  `/plans/active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`.
+  `/plans/archive/2026_08/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`.
 - **worker (slot 17) 2026-08-09**: **todo executed — 0 rows, checkbox flipped.** Ran the bounded, column-pruned
   `read_availability_index(bucket, columns=["venue","date","chain","data_type","instrument_type","capture_status", "attempted_at","written_at"], filters=[("date",">=","2026-08-05")])`
   check (memory-bounded via `run-bounded-analysis.sh --mem-cap 4G`, RSS-poll fallback — this host has no systemd --user
@@ -281,3 +287,8 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
   exact window bounds too — 0 either way). Done-when condition met (zero rows, count cited) without needing to re-run
   `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` — no remediation was required. Checkbox flipped above; no
   code shipped (this was a read-only verification todo, not a code change).
+- **worker (slot 23) 2026-08-11**: doc archived via the standard 6-step ritual — `status` flipped to `resolved`, no
+  deferred items (sole todo already `[x]`, 0 rows verified by slot 17 on 2026-08-09), companion finalize plan archived
+  in the same pass. No new codex-SSOT contract to write (code fix + canonical-naming rule already live in
+  `/codex/02-data/defi-canonical-naming-ssot.md`). Referrer paths corpus-wide repointed to the archive locations
+  (batch10 stale list entry, ag_closeout Finding 6, zero_checkbox sweep, manifest_master epic roster).

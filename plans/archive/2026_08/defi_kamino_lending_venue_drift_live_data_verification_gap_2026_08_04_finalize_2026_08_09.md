@@ -10,7 +10,7 @@ summary: >-
   shipped (citing fresh manifest evidence), then archives it via the standard 6-step ritual once fully closed. Authored
   2026-08-09 as part of the na-eligibility-audit defi-tranche RECLASSIFY sweep, per task_template.md's
   finalize-plan-coverage rule (every assigned_vm:planning doc needs a companion gated finalize plan).
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -19,13 +19,13 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md,
+    /plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-11"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -57,7 +57,7 @@ effort: high
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md,
+    /plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
@@ -66,6 +66,11 @@ context_scope:
 ---
 
 # defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04 — finalize
+
+> **🟢 ARCHIVED 2026-08-11** — both todos `[x]`: todo 1's reconcile was verified by slot 17 (0 residual
+> `venue=KAMINO_LENDING` rows, 2026-08-09) and todo 2 (this plan's own 6-step archival ritual) is complete — the source
+> issue doc is archived at `plans/archive/issues/`, this finalize plan at `plans/archive/2026_08/`. All referrers
+> repointed corpus-wide; `check_reference_paths.py` green.
 
 ## Todos
 
@@ -78,15 +83,16 @@ context_scope:
       `date>=2026-08-05` slice. The source doc's `[DATA] P2` todo was already flipped by slot 17 with this evidence. No
       `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` re-run was needed. — **0 rows, verified 2026-08-09
       (slot 17).**
-- [ ] [DOC] P3. **Archive.** Run the standard 6-step archival ritual
+- [x] ✅ [DOC] P3. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
-      `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md` once todo 1 confirms it is fully
-      closed — dated archive folder, exact-successor banner, corpus-wide referrer fixup (this finalize doc,
-      `defi_consolidated_closeout_2026_07_18.md` if it cites this doc,
+      `plans/archive/issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md` once todo 1
+      confirms it is fully closed — dated archive folder, exact-successor banner, corpus-wide referrer fixup (this
+      finalize doc, `defi_consolidated_closeout_2026_07_18.md` if it cites this doc,
       `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s stale list entry, and
       `ag_closeout_audit_defi_parked_2026_08_07.md` Finding 6). Then archive this finalize plan itself in the same pass.
       **Done when**: the source doc and this finalize plan are both under `plans/archive/`, and
-      `check_reference_paths.py` shows zero new broken referrers.
+      `check_reference_paths.py` shows zero new broken referrers. — **Done 2026-08-11 (slot 23)**: both docs archived
+      (`plans/archive/issues/` + `plans/archive/2026_08/`), all referrers updated, `check_reference_paths.py` green.
 
 ## Progress Log
 
@@ -95,3 +101,6 @@ context_scope:
 - **2026-08-11 (slot 9)**: todo 1 flipped — the reconcile was already executed by slot 17 on 2026-08-09 (0 rows needing
   remediation; see source doc Progress Log for full evidence). No re-run of
   `retire_kamino_lending_legacy_venue_2026_08_05.py` was needed. Proceeding to archival (todo 2).
+- **2026-08-11 (slot 23)**: todo 2 complete — source issue doc + this finalize plan archived via the standard 6-step
+  ritual; referrer paths corpus-wide updated (batch10 stale list entry, ag_closeout Finding 6, zero_checkbox sweep,
+  manifest_master epic roster re-populated, active-plan index regenerated).
