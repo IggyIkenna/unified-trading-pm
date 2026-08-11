@@ -123,7 +123,7 @@ context_scope:
     - 5. **[REVIEW] P2.** Once 2-4 ship, re-run MTDS's full `quality-gates.sh` to confirm this ripple is the only
          blocker.
   - [`plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md`](/plans/archive/2026_07/coinbase_bare_name_migration_execution_service_2026_07_10.md)
-    — 0 open todos (complete/archived 2026-07-26, `execution-service@1267290`).
+    — 0 open todos (complete/archived 2026-07-26, `execution-service@9a09edf`).
     - **[BACKEND] P2.** Re-key bare "COINBASE" → "COINBASE-SPOT" in
       `execution_cost_estimator.py`/`sor.py`/`venue_mapping.py`/`expected_start_dates.yaml`.
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if

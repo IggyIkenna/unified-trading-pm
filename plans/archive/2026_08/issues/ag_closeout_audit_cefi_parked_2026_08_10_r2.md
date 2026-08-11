@@ -34,7 +34,7 @@ depends_on: []
 last_updated: "2026-08-10"
 ---
 
-> **📦 ARCHIVED 2026-08-10 (_r2)** — this is Round 2 of the same-date cefi closeout audit, re-created at the same slug
+> **📦 ARCHIVED 2026-08-10 (\_r2)** — this is Round 2 of the same-date cefi closeout audit, re-created at the same slug
 > after Round 1 (`ag_closeout_audit_cefi_parked_2026_08_10.md`, slot 26, `all`-mode) was already archived. Both rounds
 > are independently resolved. This Round 2 doc: 0 parked findings, batch18 work completed + archived, MDPS staleness fix
 > shipped.
