@@ -49,6 +49,11 @@ source: >-
   has a real backend dependency that must be machine-gated, not merely ordered.
 depends_on: [blocked_question_payload_quality_and_condition_retirement_2026_08_10]
 gate_on_depends: true
+# Cross-repo (mode-2) two-commit bridge (2026-08-11, slot-16): flip-only commit
+# must land BEFORE the git mv, and check_archive_candidates --only flags a flip-only
+# commit on a 0-open-todo unlocked doc — this flag is the sanctioned exemption; it
+# is dropped as part of the immediately-following archival commit.
+archive_exempt: true
 context_scope:
   [
     agent-orchestrator/dashboard/src/layout.tsx,
@@ -97,14 +102,14 @@ behind a disclosure widget that costs nothing to scan past in a queue of ~30 car
 
 ## Todos
 
-- [ ] [UI] P2. **Render `BlockedRow.context` as a `<details>` block collapsed by default** under `.question` in
+- [x] ✅ [UI] P2. **Render `BlockedRow.context` as a `<details>` block collapsed by default** under `.question` in
       `BlockedCard` (`agent-orchestrator/dashboard/src/layout.tsx`) — headline question stays one line, expanding
       reveals both sides' verbatim quotes, their `file:line` anchors, the worker's `description`, and the first-detected
       / last-reconfirmed timestamps. **Done when**: collapsed-by-default and expand-to-full are both covered by a cited
       `pw:L2` Playwright spec, a row with `context: null` renders with no empty disclosure widget, the `<details>` block
       does not force horizontal page scroll at narrow widths, and `tsc` / `vitest` / `quality-gates.sh` are clean. Repo:
       agent-orchestrator.
-- [ ] [UI] P3. **Replace the raw `#{q.slot_id}` render with a named source chip** so `NO_WORKER_SLOT_SENTINEL`
+- [x] ✅ [UI] P3. **Replace the raw `#{q.slot_id}` render with a named source chip** so `NO_WORKER_SLOT_SENTINEL`
       (`orm.py`, value `-1`) never reaches the screen as `#-1` — show `#N` for a real worker slot, and a named chip
       (`plan_health`, `operator-gated`) for synthetic rows, with a tooltip explaining there is no originating worker
       session because the one-shot that raised it freed its slot before the row outlived it. **Done when**: no code path
@@ -120,3 +125,22 @@ behind a disclosure widget that costs nothing to scan past in a queue of ~30 car
   `BlockedCard` lives in `agent-orchestrator/dashboard/`, not `deployment-ui`, contrary to what the sibling doc says. No
   `[OPERATOR]` todos — both items are bounded UI changes with machine-checkable done-whens, per the operator's "no
   operator-blocked parts" instruction the same day.
+- **2026-08-11 (shipped, slot-16)**: P2 + P3 both shipped as `agent-orchestrator@4d2c9580ec`.
+  - P2 — `BlockedCard` renders `BlockedRow.context` (now typed on `BlockedView` in `types.ts`) as a
+    `<details class="context-details">` block collapsed by default under `.question`; expanding shows both sides'
+    verbatim quotes, file:line anchors, the worker's description, and timestamps as a pretty-printed `<pre>`.
+    `context: null` renders no disclosure widget. `word-break: break-word` + `overflow-x` containment prevent horizontal
+    scroll at narrow widths.
+  - P3 — `#{q.slot_id}` is replaced by a source-chip: real worker slots keep `#N` (`.slot-ref`), and synthetic rows
+    (`slot_id === NO_WORKER_SLOT_SENTINEL`/`-1`) render a named chip — `plan_health` for `doc_drift:`-prefixed
+    `blocked_id`s, `operator-gated` otherwise — each with a tooltip explaining there is no originating worker session.
+    No code path can render `#-1`.
+  - Regression: `dashboard/tests/e2e/blocked-context-rendering.spec.ts` — pw:L2 covers collapsed-by-default +
+    expand-to-full, null-context renders no widget, no horizontal scroll at 420px viewport, real-slot `#N`, both
+    synthetic source-chip variants, and an exhaustive no-`#-1` sweep across every card. Seed fixture `seed_e2e_state.py`
+    gains a doc_drift row with structured context.
+  - Gates: `tsc` clean, vitest 290/290, `quality-gates.sh` PASSED.
+  - **2026-08-11 (archival bridge, slot-16)**: both todos done + unlocked → archival-eligible. `archive_exempt: true`
+    set here as the mode-2 bridge so the flip-only commit can land at the still-active path (per
+    `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "archive_exempt is the sanctioned bridge");
+    the flag is dropped when the follow-up `git mv` to `plans/archive/2026_08/` lands.
