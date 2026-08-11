@@ -14,7 +14,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
-| `cloud-build-failure-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
+| `cloud-build-failure-watcher` | schedule(0 * * * *) · manual | — | Slack | escalate-to-orchestrator |
 | `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | Firestore, Slack | change-freeze-check |
 | `deterministic-promotion-conflict-resolve` | dispatch:promotion-conflict · manual | `det-resolve-<var>-<var>` | Slack | conflict-resolution-agent* |
 | `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
@@ -98,3 +98,4 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `stale-build-watcher` | schedule(0 * * * *) · manual | — | Slack | — |
 | `version-coherence-check` | schedule(*/30 * * * *) · manual | — | Firestore | — |
 | `version-registry-update` | dispatch:version-registry-update · manual | — | Firestore | — |
+

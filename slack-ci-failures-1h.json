@@ -1,0 +1,40 @@
+[
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786487698.798009",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "blKvd",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "/mjX2",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | PR #2838 `promote/unified-trading-pm/1fe2eff4a7e0` → `main` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31542740575|sha `aa014c47be4112c2d8b46e412aacf29c66b9a324`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "SjJFA",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31542740575|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  }
+]

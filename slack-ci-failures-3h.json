@@ -1,0 +1,78 @@
+[
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786478292.516559",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "7a+aj",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "t+6QX",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | PR #2828 `promote/unified-trading-pm/6e312858d347` → `main` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31530095774|sha `739b181f4312b5dd9c108990f60ef8416fe11e98`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "Ctaa0",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31530095774|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":x: CRITICAL — cloud-build-router",
+    "type": "message",
+    "ts": "1786483312.218369",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "KWgFZ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *CRITICAL* — cloud-build-router  |  result: *FAILED* (`failure`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "RfFFH",
+        "text": {
+          "type": "mrkdwn",
+          "text": "unified-trading-library-prod Cloud Build trigger did not fire — the base Docker image every service Dockerfile FROMs has stopped republishing. This is NEVER an intentional pre-cutover state (unlike other repos' prod triggers). Actual error: ``. If that says NOT_FOUND, the trigger itself is gone — recreate `unified-trading-library-prod` in GCP project central-element-323112, region asia-northeast1 (mirror instruments-service-prod's config). Any OTHER error (e.g. INVALID_ARGUMENT / source.revision) means the trigger exists but the router's `gcloud builds triggers run` invocation itself is failing — check `cloud-build-router.yml`'s `trigger_build_in_region` first, do NOT assume the trigger is missing. See plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md.",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "YpmC/",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31537427181|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  }
+]
