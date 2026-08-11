@@ -386,3 +386,31 @@ pair (2026-07-03 `0G`):
   VM self-deleted on completion. **Range 2 (2026-05-02..07-24) IN FLIGHT —
   `canonical-migration-cefi-late-renames-20260810-235650`** (cron paused). After Range-2: resume cron + verify ENABLED,
   then flip the apply todo + final verify.
+- **2026-08-11 (slot 18, PRE-COMPACT CHECKPOINT — Range-2 apply still running, resume-state)** — VM
+  `canonical-migration-cefi-late-renames-20260810-235650` mid-Discovery-walk: as of 2026-08-11T00:08:33Z run.log 3,951
+  lines, actively processing `day=2026-05-29` (~1/3 through the 05-02..07-24 window), emitting `[DUP-CONFIRMED]`
+  (content-identical → delete stale wire-form source) and `[WIRE-SUPERSET]` (wire schema-newer → UPGRADE canonical
+  backup-first, delete wire) — BOTH shipped fixes (`335c94f1` wire-superset, `a8a29c8a1` dtype-normalize) firing on real
+  data. **No STOP-ON-SURPRISE / "Refusing to proceed" lines yet; `EXIT_STATUS` object not yet present** (terminal
+  verdict pending). Cron `uts-prod-manifest-consolidator-market-data-cefi-cron` still PAUSED (asia-northeast1,
+  central-element-323112) per the apply sequence. Re-check WITHOUT the session scratch script (one-shot UTL read):
+  `deployment-service/.venv/bin/python -c "from unified_trading_library.cloud_interface import get_storage_client; c=get_storage_client(); print(c.download_bytes('deployment-scripts-central-element-323112','vm-logs/canonical-migration-cefi-late-renames-20260810-235650/EXIT_STATUS').decode())"`
+  then read `vm-logs/<vm>/run.log` tail for `Collisions: 0 unhandled` / `GCS rename stats` / `MANIFEST {`. On
+  EXIT_STATUS=0 + 0-unhandled: resume the cron
+  (`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1 --project=central-element-323112`) +
+  verify ENABLED → flip the apply todo (line 211) → delete scratch `.watch_lz_apply.py` (slot root, untracked) → `/done`
+  with task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`.
+
+## Deferred work after 2026-08-11
+
+| Item                                                                      | State/why deferred                                                                                                                                                                    | Blocked-on                                              |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Range-2 `cefi-late-renames` apply (`2026-05-02..07-24`) — VM `...-235650` | **Cannot be done yet** — VM mid-walk (day=2026-05-29 as of 00:08Z), needs elapsed time for Discovery + apply + manifest rewrite                                                       | VM terminal EXIT_STATUS=0 AND "Collisions: 0 unhandled" |
+| Resume consolidator cron + verify ENABLED                                 | **Not done** — must follow Range-2 success (pause/resume sequence is explicit in the apply todo)                                                                                      | Range-2 apply success                                   |
+| Flip apply todo (line 211) + final Progress Log entry                     | **Not done** — ships as `docs(plans):` safe-doc-push after Range-2 verify                                                                                                             | Range-2 + cron resume                                   |
+| Delete scratch `.watch_lz_apply.py` (slot root)                           | **Not done** — untracked, needed by the live watchdog only until the apply's terminal verdict; deleted before `/done` (dirty gate)                                                    | Apply terminal verdict                                  |
+| `/done` task_id `cefi_lighter_zksync_systemic_collision-e118bc65e80a`     | **Not done**                                                                                                                                                                          | All of the above                                        |
+| BTC 2026-05-01 leave-both residual (todo at line 255)                     | **Operator-owned** — disposition=final (BLK-0a76df10, DIRECTION A LEAVE-BOTH); 05-01 excluded from Range-2 by design; only a future prefer-wire/canonical policy change would revisit | Operator policy (none pending)                          |
+
+**Recommended NEXT item**: wait on the Range-2 VM terminal verdict, then resume the consolidator cron. No new priority
+derivation needed — the sequence is fixed by the operator's BLK-0a76df10 answer.
