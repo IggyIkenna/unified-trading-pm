@@ -1107,7 +1107,21 @@ final_ok=false
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
-# autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 todo 3 (P0): stage the named
+# files FIRST, BEFORE any quarantine, so the payload can never be swept into the stash it is
+# about to be compared against. Measured twice 2026-08-10: the quarantine ran first, stashed
+# the caller's edits, then "nothing to stage" + "already matches HEAD" reported success while
+# origin had zero of the commit's content. This pre-stage is a safety belt: even if the
+# quarantine ignores its protected-files list, the named content is already in the index and
+# survives. The original staging inside the attempt loop (post-reconcile) remains as the
+# canonical stage that lands in the commit.
+git add -- "${FILES[@]}" 2>/dev/null || true
+unstage_foreign_paths
+reassert_renames
+
+# autostash chain-breaker: bound the backlog AFTER staging the payload, so a quarantine that
+# stashes everything dirty now only sees what REMAINS (the foreign WIP), never the named files
+# this run is shipping.
 # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md). The caller's
 # --files are passed as protected so the extreme-pile self-arrest never quarantines the very
 # work this run is shipping (dogfooded live 2026-08-10 slot-9).
