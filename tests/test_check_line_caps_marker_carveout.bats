@@ -212,3 +212,128 @@ _write_plan() {
     run _check_small_marker_append "$repo" "$plan" "$lines"
     [ "$status" -eq 1 ]
 }
+
+# ── replicated net-zero-substitution carve-out logic ─────────────────────────
+# Args: $1=git-repo-root  $2=absolute-path-to-staged-plan
+# Returns 0 (NET_ZERO_SUBSTITUTION fires) or 1 (blocked).
+_check_net_zero_substitution() {
+    local repo="$1" fpath="$2"
+    local diff_numstat added deleted changed_chk
+    diff_numstat="$(git -C "$repo" diff --cached --numstat -- "$fpath" 2>/dev/null || true)"
+    added="$(printf '%s' "$diff_numstat" | awk '{print $1}')"
+    deleted="$(printf '%s' "$diff_numstat" | awk '{print $2}')"
+    [ -n "$added" ] && [ -n "$deleted" ] || return 1
+    [ "$deleted" -gt 0 ] 2>/dev/null || return 1
+    [ "$added" -ge 1 ] 2>/dev/null || return 1
+    [ "$added" -le "$deleted" ] 2>/dev/null || return 1
+    changed_chk="$(git -C "$repo" diff --cached -- "$fpath" 2>/dev/null \
+        | grep -cE '^[+-]\s*-\s*\[.\]' || true)"
+    changed_chk="${changed_chk:-0}"
+    [ "$changed_chk" = "0" ] || return 1
+    return 0
+}
+
+@test "net-zero-substitution carve-out is present in check_line_caps.sh" {
+    run grep -c "NET_ZERO_SUBSTITUTION" "$SCRIPT"
+    [ "$status" -eq 0 ]
+    [ "$output" -ge 1 ]
+}
+
+@test "net-zero substitution fires for a same-line content fix on an over-cap plan (1 del, 1 add)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/subst.md"
+    _write_plan 1005 "$plan"
+    printf 'stale MVP row: 66%% attempted_failed\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Same-line content substitution (1 delete + 1 add), no checkboxes
+    sed -i.bak 's/stale MVP row: 66% attempted_failed/accurate MVP row: 94.8-100% covered/' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 0 ]
+}
+
+@test "net-zero substitution fires for a multi-line shrink on an over-cap plan (3 added, 5 deleted)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/shrink.md"
+    _write_plan 1005 "$plan"
+    printf 'verbose line A\nverbose line B\nverbose line C\nverbose line D\nverbose line E\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Replace 5 verbose lines with 3 concise ones (ADDED=3, DELETED=5), no checkboxes
+    sed -i.bak 's/verbose line A/concise line 1/' "$plan" && rm -f "$plan.bak"
+    sed -i.bak 's/verbose line B/concise line 2/' "$plan" && rm -f "$plan.bak"
+    sed -i.bak 's/verbose line C/concise line 3/' "$plan" && rm -f "$plan.bak"
+    sed -i.bak '/verbose line D/d' "$plan" && rm -f "$plan.bak"
+    sed -i.bak '/verbose line E/d' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 0 ]
+}
+
+@test "net-zero substitution does NOT fire when a checkbox is in the diff (added checkbox)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/subst_chk_add.md"
+    _write_plan 1005 "$plan"
+    printf 'OLD LINE\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Substitute, but the added side includes a checkbox
+    sed -i.bak 's/OLD LINE/- [ ] [SCRIPT] P3. Sneaked todo via substitution./' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "net-zero substitution does NOT fire when a checkbox is in the diff (removed checkbox)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/subst_chk_del.md"
+    _write_plan 1005 "$plan"
+    printf -- '- [x] old todo: done\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Substitute, removing a checkbox line
+    sed -i.bak 's/- \[x] old todo: done/updated note (todo gone)/' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "net-zero substitution does NOT fire when the diff GROWS the file (ADDED > DELETED)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/grow.md"
+    _write_plan 1005 "$plan"
+    printf 'one line\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Replace 1 line with 2 lines (ADDED=2, DELETED=1) — grows the file
+    sed -i.bak 's/one line/expanded line 1\nexpanded line 2/' "$plan" && rm -f "$plan.bak"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}
+
+@test "net-zero substitution does NOT fire when there are no deletions (pure append — wrong carve-out)" {
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/pure_add.md"
+    _write_plan 1005 "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    # Pure append (ADDED=2, DELETED=0) — should fail this carve-out (no deletions)
+    printf 'new line 1\nnew line 2\n' >> "$plan"
+    git -C "$repo" add "$plan"
+
+    run _check_net_zero_substitution "$repo" "$plan"
+    [ "$status" -eq 1 ]
+}

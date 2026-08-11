@@ -243,6 +243,37 @@ incident + the shipped fix (`unified-trading-pm@d765b4cfb1`, `scripts/plan-hygie
 `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`. Regression coverage:
 verified via an isolated scratch repo, not the live corpus.
 
+### The line-cap does NOT block a bounded non-growing content substitution on a live over-cap doc (RULED 2026-08-11)
+
+**A commit whose diff to an already-over-cap `plans/active/*.md` is a bounded, non-growing content subtraction
+(`ADDED<=DELETED`, `DELETED>=1`, `ADDED>=1`) that mutates NO checkbox lines passes through SCOPED mode**, alongside the
+marker-append and link-repoint carve-outs above — same motivating problem (an over-cap doc gets permanently frozen
+against even a routine accuracy fix), different shape of edit. Bounded the same way, via `check_line_caps.sh`'s
+SCOPED-mode diff inspection:
+
+- The file must **already** be over the hard cap before this commit (automatically implied: `ADDED<=DELETED` means the
+  pre-commit line count `lines-ADDED+DELETED >= lines > 1000` — same reasoning as the link-repoint branch, no separate
+  `PRE_COMMIT_LINES` check needed).
+- **`DELETED >= 1` AND `ADDED >= 1`** — a real substitution, not the marker-append case (which requires `DELETED=0`) and
+  not a pure deletion.
+- **`ADDED <= DELETED`** in `git diff --numstat` — the substitution does not grow the doc.
+- **No added or removed line matches a checkbox pattern** (`- [ ]` or `- [x]`) — as diffed, both sides checked. The
+  tracked-work set (`todos=`) is never mutated, so this carve-out cannot be used to sneak new work onto or silently drop
+  pre-existing tracked work from an over-cap doc.
+
+**Why this is a separate carve-out from the link-repoint carve-out**: the link-repoint carve-out requires every changed
+line's content to be textually identical after normalizing a `plans/active/...` ↔ `plans/archive/<YYYY_MM>/...` path
+token — a pure path-token substitution. That cannot express a line whose actual content genuinely changes (e.g.
+correcting a stale MVP-cell table row with accurate manifest count data, the real-world case that drove this).
+
+**The failure this closes**: `tradfi_consolidated_closeout_2026_07_18.md`'s "S&P index options" MVP-cell row carried
+stale text ("66% attempted_failed... not yet launched") even after the doc had been split below cap. A net-zero-line
+table-cell accuracy update (substituting corrected text within the same row) would have been permanently blocked under
+the two prior carve-outs because neither expressed "same-line content substitution, not path-repoint." Full incident +
+fix (`unified-trading-pm@<this-sha>`, `scripts/plan-hygiene/check_line_caps.sh`):
+`/plans/active/issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md`. Regression
+coverage: `tests/test_check_line_caps_marker_carveout.bats` net-zero-substitution tests.
+
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 
 A "next steps" paragraph, a Progress Log aside that only describes future work in prose, or a chat-summary bullet that

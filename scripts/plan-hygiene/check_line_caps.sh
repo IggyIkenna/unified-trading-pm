@@ -53,6 +53,24 @@
 # PRE_COMMIT_LINES check the marker-append branch uses: since ADDED<=DELETED, pre-commit line count
 # (lines - ADDED + DELETED) is always >= the current (already-over-cap) line count.
 #
+# A FOURTH DOCUMENTED EXCEPTION (decided + implemented 2026-08-11, resolves todo 3 of
+# tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md): a bounded,
+# NON-GROWING content substitution on an already-over-cap LIVE doc is also allowed through in
+# SCOPED mode, alongside the marker-append and link-repoint exceptions above. Root problem this
+# closes: neither of those two can express a routine accuracy fix that genuinely changes a line's
+# CONTENT on an over-cap doc -- the marker-append requires DELETED=0 and the link-repoint requires
+# path-token-only differences -- so a net-zero MVP-cell table-row correction (the live case: the
+# tradfi closeout plan's "S&P index options" row) was permanently blocked until the doc got split.
+# Narrowly scoped: fires only when (a) the file is already over cap before this commit
+# (automatically implied -- ADDED<=DELETED means pre-commit line count >= current > cap, same
+# reasoning as the link-repoint branch), (b) DELETED>=1 and ADDED>=1 (a real substitution, not the
+# marker-append case and not a pure deletion), (c) ADDED<=DELETED (content is replaced, never
+# grown), and (d) NO added or removed line matches a checkbox pattern (`- [ ]`/`- [x]`) -- the
+# tracked-work set is never mutated, so the carve-out cannot sneak new todos onto (or silently drop
+# todos from) an over-cap doc. The full-corpus/ratchet modes still count every over-cap doc as a
+# HARD failure -- this only unblocks the SCOPED pre-commit staged check -- so the split pressure
+# the cap exists to create remains intact.
+#
 # ONE DOCUMENTED EXCEPTION (operator ruling 2026-07-30): a doc with ZERO OPEN TODOS archives via
 # the normal 6-step ritual regardless of how far over its cap it is. The cap exists to stop a LIVE
 # plan growing into an unreadable hub; it has no purpose on a finished doc that is on its way OUT
@@ -153,6 +171,7 @@ for f in "${TARGETS[@]}"; do
   if [ "$lines" -gt "$PLAN_HARD_CAP" ]; then
     SMALL_MARKER_APPEND=""
     LINK_REPOINT_EDIT=""
+    NET_ZERO_SUBSTITUTION=""
     if [ -n "$SCOPED" ]; then
       # Small-marker-append exception (see policy comment above): only when this diff is a bounded,
       # non-checkbox append to a doc ALREADY over cap before this commit.
@@ -183,11 +202,26 @@ for f in "${TARGETS[@]}"; do
           LINK_REPOINT_EDIT="1"
         fi
       fi
+      # Net-zero content-substitution exception (see policy comment above): the non-growing
+      # sibling of the link-repoint carve-out for edits that genuinely change a line's content
+      # (not just a path token). Fires only when the diff is a bounded substitution --
+      # DELETED>0, ADDED>=1, ADDED<=DELETED -- AND no added or removed line is a checkbox
+      # (tracked work is never mutated by this carve-out).
+      if [ -z "$SMALL_MARKER_APPEND" ] && [ -n "$ADDED" ] && [ -n "$DELETED" ] \
+        && [ "$DELETED" -gt 0 ] 2>/dev/null && [ "$ADDED" -ge 1 ] 2>/dev/null \
+        && [ "$ADDED" -le "$DELETED" ] 2>/dev/null; then
+        CHANGED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null \
+          | grep -cE '^[+-]\s*-\s*\[.\]' || true)"
+        CHANGED_CHECKBOX_LINES="${CHANGED_CHECKBOX_LINES:-0}"
+        [ "$CHANGED_CHECKBOX_LINES" = "0" ] && NET_ZERO_SUBSTITUTION="1"
+      fi
     fi
     if [ -n "$SMALL_MARKER_APPEND" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — small non-checkbox marker append only, operator ruling 2026-08-02)"
     elif [ -n "$LINK_REPOINT_EDIT" ]; then
       echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded same-line link-repoint edit only, operator ruling 2026-08-09)"
+    elif [ -n "$NET_ZERO_SUBSTITUTION" ]; then
+      echo "  SOFT    $name  ${lines}L  todos=${todos}  (over cap pre-existing; allowed — bounded non-growing content substitution only, tradfi line-cap issue todo 3)"
     else
       echo "  HARD    $name  ${lines}L  todos=${todos}"
       HARD_FAILURES=$(( HARD_FAILURES + 1 ))
