@@ -25,9 +25,14 @@ authoritative_for:
   trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so
   silent stalls are visible within minutes.
 referenced_by: [plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
-owner:
+owner: deployment-platform
 last_reviewed: 2026-08-11
 code_refs:
+  [
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
+    deployment-service/scripts/vm/heartbeat_daemon.py,
+    deployment-service/deployment_service/vm/heartbeat_cli.py,
+  ]
 ---
 
 # Live Deployment Monitoring

@@ -27,9 +27,10 @@ referenced_by:
     /codex/05-infrastructure/launcher-script-ssot.md,
     /codex/05-infrastructure/strategy-shard-vm-topology.md,
   ]
-owner:
+owner: deployment-platform
 last_reviewed: 2026-08-11
 code_refs:
+  [deployment-service/scripts/vm/launch-strategy-paper-vm.sh, deployment-service/scripts/vm/launch-strategy-live-vm.sh]
 related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 ---
 

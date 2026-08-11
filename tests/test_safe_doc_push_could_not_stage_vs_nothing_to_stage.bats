@@ -77,7 +77,14 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "a genuinely already-landed tracked file (content matches HEAD, no lock) reports the benign nothing-to-stage message and exits 0" {
+# The two branches of the already-landed-at-entry contract (_sdp_guard_already_landed_claim,
+# 2026-08-10). This case USED to exit 0 with a benign "already matches HEAD" message. It no
+# longer does, and that is deliberate: when every named file is byte-identical to HEAD *at
+# entry*, the script never saw a change to ship, and "a peer landed it first" is indistinguishable
+# from "your edit was destroyed before we hashed it". Reporting the benign reading
+# unconditionally is exactly what made a real destroyed-work case invisible. So the default is
+# now a loud non-zero, and the benign reading requires the caller to assert it explicitly.
+@test "already-landed-at-entry without SDP_ALLOW_NOOP fails loudly (cannot distinguish landed-by-peer from destroyed)" {
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -86,11 +93,26 @@ setup() {
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 12 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
-  [[ "$output" == *"staging completed cleanly"* ]]
+  [[ "$output" == *"NOTHING OF YOURS SHIPPED"* ]]
+  # It must name BOTH readings rather than picking one -- that is the whole point of the guard.
+  [[ "$output" == *"landed your identical content"* ]]
+  [[ "$output" == *"reverted before this script hashed it"* ]]
   [[ "$output" != *"could not stage named files"* ]]
-  [[ "$output" == *"✅"* ]]
+}
+
+@test "already-landed-at-entry WITH SDP_ALLOW_NOOP=1 is a deliberate idempotent re-run and exits 0" {
+  echo "shared content" > tracked.md
+  git add tracked.md
+  git commit -q -m "add tracked.md"
+  git push -q origin HEAD:live-defi-rollout
+
+  SDP_ALLOW_NOOP=1 PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"deliberate idempotent re-run"* ]]
+  [[ "$output" != *"could not stage named files"* ]]
 }
 
 @test "could-not-stage and nothing-to-stage produce distinct exit codes for the same script" {
@@ -101,7 +123,7 @@ setup() {
   rm -f .git/index.lock
   stage_fail_status="$status"
 
-  # nothing-to-stage: genuinely already-landed tracked file -- must succeed.
+  # already-landed-at-entry: must fail loudly (exit 12), NOT succeed silently.
   echo "shared content" > tracked.md
   git add tracked.md
   git commit -q -m "add tracked.md"
@@ -109,7 +131,11 @@ setup() {
   PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
   nothing_to_stage_status="$status"
 
+  # Both are non-zero now, but they must remain DISTINCT: could-not-stage is an infrastructure
+  # failure (the index was unwritable), already-landed-at-entry is "nothing of yours shipped and
+  # I cannot tell you why". Collapsing them to one code would lose exactly the distinction the
+  # caller needs to decide whether to recover work or simply retry.
   [ "$stage_fail_status" -ne 0 ]
-  [ "$nothing_to_stage_status" -eq 0 ]
+  [ "$nothing_to_stage_status" -eq 12 ]
   [ "$stage_fail_status" -ne "$nothing_to_stage_status" ]
 }
