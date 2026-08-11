@@ -74,7 +74,7 @@ context_scope:
       structurally exempt from needing a finalize twin), each citing the specific `RULED 2026-08-06` marker that
       unblocked it: `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
       `issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`,
-      `issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
+      `archive/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
       `issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`,
       `issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`,
       `issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`,
@@ -151,17 +151,17 @@ context_scope:
       conflict cited.
 
       **round5-cross-cutting-audit 2026-08-08: all 6 subparts now confirmed resolved, no operator ruling needed.**
-                                      (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
-                                      self-corrects the stale PR#1084 citation (current PR is #1093). (3)
-                                      `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
-                                      re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
-                                      `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
-                                      (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
-                                      as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
-                                      already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
-                                      corrections against the docs they collide with.
+                                          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
+                                          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
+                                          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
+                                          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
+                                          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
+                                          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
+                                          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
+                                          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
+                                          corrections against the docs they collide with.
 
-                              **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
+                                  **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
 
 - [x] ✅ [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
