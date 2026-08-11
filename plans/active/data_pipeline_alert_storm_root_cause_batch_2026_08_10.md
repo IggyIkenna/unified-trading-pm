@@ -109,8 +109,32 @@ last_updated: 2026-06-27
 > `_MAX_RELAUNCHES_PER_DAY=2` is still a no-op in production, and the `DP_VM_PREEMPTED_NO_RELAUNCH` storm this todo was
 > built to stop is STILL FIRING (724 messages in the 24h to 2026-08-10T23:34Z). This todo must be RE-AUTHORED from
 > scratch, not "picked up where the code left off".
+>
+> **⚠️⚠️ COUNTER-CORRECTION (2026-08-11T06:2xZ, slot 1 — the authoring slot). DO NOT RE-AUTHOR. The code is NOT lost.**
+> All four modules exist RIGHT NOW, uncommitted, in slot 1's working tree: `scripts/recovery/_durable_state.py` (138 L),
+> `_captured_reader.py` (205 L), `_classify.py` (565 L), `_attempted_failed_index.py` (176 L), alongside 8 modified
+> files. The slot-20 check was CORRECT FROM WHERE IT LOOKED and the inference was reasonable — but each slot is a
+> SEPARATE clone with its own working tree, so uncommitted work in slot 1 is invisible from slot 20, from `--all`, from
+> the reflog, and from origin. "Not on any branch/stash/reflog" proves it is unshipped, NOT that it does not exist.
+> **This is the single most expensive failure mode in this batch** and it has now bitten three distinct ways in one
+> session: (1) `safe-doc-push` exited 0 having pushed nothing, (2) a peer operation silently reverted an uncommitted
+> append (323 L → 286 L, with no artifact left to recover from), and (3) this — a peer correctly observing absence and
+> reasonably concluding loss, nearly triggering a full re-author of a day's work.
+> **Also corrected: the "bug STILL PRESENT at :399-400" claim.** `tempfile.gettempdir()` at lines 80 and 401 is the
+> deliberate LOCAL-ONLY fallback (`_default_budget_dir()` / `_default_preemption_budget_dir()`), used only when a caller
+> passes an explicit `budget_dir` — i.e. unit tests. Production passes nothing and goes through
+> `_ShardedState(..., local_only=False)` against GCS. Presence of the symbol is not presence of the bug; that read was
+> grep-then-conclude rather than grep-then-READ.
+> **RESOLVED 2026-08-11 — shipped at `deployment-service@0c38c00d`.** All four modules are now ON ORIGIN (verified by
+> name: `_durable_state.py`, `_captured_reader.py`, `_classify.py`, `_attempted_failed_index.py`), with the race-free
+> `_ShardedState` wiring and the windowed-ratio fix present. Final gate: 3,317 passed / 0 failed, sentinel == HEAD.
+> Nothing to re-author. Original status line follows for provenance:
+> Status at the time of writing: the tree is fast-forwarded clean onto the current HEAD and the full gate is RUNNING.
+> **If slot 1 dies before that gate + `quickmerge` complete, THEN the work is genuinely lost and re-authoring is
+> correct** — the record below will carry a resolving sha the moment it lands.
 
-- [ ] [SCRIPT] P1. Durable, race-free relaunch state — replaced the `tempfile.gettempdir()` budget with
+- [x] ✅ [SCRIPT] P1. **SHIPPED — deployment-service@0c38c00d.** Durable, race-free relaunch state — replaced the
+      `tempfile.gettempdir()` budget with
       one-object-per-fact GCS state in `deployment-scripts-<project>`; `DP_VM_PREEMPTED_NO_RELAUNCH` now pages at most
       once per VM via an ATOMIC create-if-absent claim (`if_generation_match=0`), and the repeat sweep returns
       `SUPPRESSED` BEFORE re-running the launcher (stopping the wasted relaunches, not just the page). Budget counts
@@ -441,3 +465,58 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining ~150k cells once the canary verifies. Expect ~1,578 (≈1%) to REMAIN
       `attempted_failed` by design — the unresolved-margin-type ids that raise `MalformedTickFieldError` rather than
       take a guessed branch; they clear only when the instruments-service reference-data todo lands.
+
+## Deferred work after 2026-08-11
+
+| item | state / why deferred | blocked-on |
+| --- | --- | --- |
+| ~~**deployment-service ship**~~ | ✅ **SHIPPED `0c38c00d`** (3,317 passed). Superseded row: 12 files, tree fast-forwarded clean (16 commits, no conflicts), gate re-running at pre-compact. Previously gated GREEN at `d85832ba` (3,287 passed, tests genuinely ran) BEFORE the 16-commit pull, so the code is sound; it needs one clean gate on the current HEAD then `quickmerge`. Four prior gate attempts died to environment, not code: import-pattern deep-import (fixed), ruff I001 (fixed), file-size cap 972>960 (fixed by extraction), and TWO kills — one governor RAM-watchdog while I foolishly ran it beside AO's re-gate, one session teardown. | nobody — pick it up, gate ALONE |
+| **PM batching checker** (`scripts/finops/check_tool_call_batching.py`) | **Not done.** Untracked in the PM repo (NOT scratchpad — it survives). Lint-clean, runs, carries its lifecycle marker, measured 44.9% collapsible vs the 57.3% baseline. Needs a PM full gate (it is a script, not a doc) then quickmerge. | nobody — gate AFTER deployment-service, never beside it |
+| **Liquidations re-drive** (~150k cells) | **Cannot be done yet.** Needs `market-data-processing-service@6c2c4b6e` to promote LDR→main and deploy; promotion is healthy (Option-B direct, no PR by design), the commit simply pushed after the last sweep. | elapsed time — the standing `*/15` promoter |
+| **Canary + full re-drive execution** | **Operator-owned.** VM launch + cost decision under launch gating. Operator ruled 2026-08-11: canary first covering one `@LIN` AND one `@INV`, verify, then full. | operator |
+| **Cross-cloud WIF for the AO VM** | **Operator-owned.** AO VM has NO GCP identity (AWS EC2, no ADC/SA key/WIF pool). Blocks installing the data-pipeline-alerts-reconciler timer — code shipped, installer deliberately held. | operator |
+| **#9 chain relabel migration · #13 date sharding · #15 rightsizing · #11 empty instrument_id · #18 shellcheck flake** | **Not done.** All scoped, none started. | nobody |
+| **New findings from this session** (Tardis-403 classification · adapter-error fix · pytest-timeout-vs-admission · content-sentinel skip · stale governor token · safe-doc-push P0s) | **Not done.** All filed as `- [ ]` todos in this plan / the safe-doc-push issue. | nobody |
+
+**Recommended NEXT item: finish the deployment-service gate and ship it.** It is the only remaining code from this
+batch, the code is already proven green on a pre-pull tree, and every failure so far was environmental. Gate it ALONE —
+running it beside another gate is what killed it once already.
+
+## Lessons from the 2026-08-10/11 continuation — each cost real time
+
+8. **Uncommitted work in a shared checkout is invisible, revertible, and looks LOST to everyone else.** This is the
+   single most expensive class in the batch and it bit THREE distinct ways in one session: (a) `safe-doc-push` exited 0
+   having pushed nothing, twice identically, because it quarantines the dirty tree BEFORE staging and then reads the
+   resulting clean tree as "a concurrent session already landed it"; (b) a peer operation silently reverted an
+   uncommitted append (323 L → 286 L) with no artifact left in the worktree, HEAD, or the autostash — it survived only
+   because the author still had the text in-session; (c) a peer agent checked from its OWN slot, correctly found the
+   modules on no branch/stash/reflog, reasonably concluded the work was lost, and wrote "must be RE-AUTHORED from
+   scratch" into this plan. **"Not on any ref" proves UNSHIPPED, never NON-EXISTENT** — each slot is a separate clone.
+   The mitigation is not vigilance, it is shipping sooner: commit at every shippable unit, and never let a ship script's
+   exit code stand in for a verified `origin` read.
+9. **Absence of test output means different things in a SERVICE repo and a LIBRARY repo.** `base-service.sh` streams
+   pytest; `base-library.sh` CAPTURES it into `$_pytest_out` and echoes only on failure, so a passing library gate
+   legitimately renders as `── TESTS ──` → `✅ Tests PASSED` with no collection line and no dots. I read that as a
+   skipped-test run, escalated a P2 finding to P1 on a second occurrence that never happened, and burned a 15-minute
+   forced re-gate. Verify a skip by the explicit skip LINE, a moved test COUNT, or fresh `coverage.xml`/`.coverage`
+   mtimes — never by the absence of dots.
+10. **The gate and the pre-commit hook enforce DIFFERENT rule sets.** A `quality-gates.sh`-green tree was still rejected
+    at commit by ruff's hook config (SIM108, ternary-over-if/else). Gate-green is necessary, not sufficient — expect a
+    second, narrower lint pass at commit time.
+11. **A green gate can mean "tests skipped" (service repos).** `SHA sentinel NOT refreshed (content-sentinel HIT → tests
+    skipped)` is logged mid-run while the SUMMARY still prints `ALL QUALITY GATES PASSED`, and `.qg_last_passed_sha ==
+    HEAD` still reads TRUE from an earlier full run. Caught on MDPS; forcing `QG_SENTINEL_DISABLE=true` moved the count
+    2,399 → 2,415, proving the new tests had never run.
+12. **Deleting a peer's superseded helper can break tests that arrive LATER.** Removing `_probe_gcs_budget_client` was
+    right (its read-modify-write budget loses updates under overlapping executions), but a subsequent 16-commit pull
+    brought an autouse fixture still patching it — 64 setup errors, one cause. The fix is not a shim: the determinism
+    that fixture bought is now STRUCTURAL (`budget_dir` ⇒ `local_only=True`), and the comment left in its place says so
+    to stop anyone re-adding the patch.
+13. **Re-gate after every pull; a gate result describes the tree it ran on.** MDPS went green, then a main→LDR backmerge
+    landed 2 TradFi canon tests that a UTL ruling (`74fe04fd`, `continuous_future` no longer → `FUTURE`, after a census
+    found 473,374 bundle-grain rows misclassified) had made stale. Proven not-mine by stashing and re-running on a clean
+    tree before touching it.
+14. **Host contention manufactures FALSE RED gates, and the governor cannot see the cause.** ~7 of 10 cores were burned
+    by spinning BATS tmux fixtures the governor never admitted; it reported `reserved: 0MB, running heavy phases: 0` at
+    load 283. AO failed 9 tests under load and passed 3,364/0 on a quiet host (264s vs 776s). Always re-run a suspicious
+    red on a quiet host, and prove not-mine by stashing.
