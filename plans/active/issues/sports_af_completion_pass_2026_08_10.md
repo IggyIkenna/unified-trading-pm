@@ -614,3 +614,30 @@ FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.
     not yet written (VM booting, expected). Serial port confirms chunk loop launched.
   - **Next**: confirm first progress marker → wait for exit_code=0 → launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS →
     PLAYER_STATS (serial, singleton lock).
+
+- **2026-08-11 (slot 14, data_engineering, ~03:35Z)** — Resumed residual completion pass (task
+  `sports_af_completion_pass-649179736927`); STANDINGS VM mid-flight:
+  - **STANDINGS VM `af-backfill-20260811-012845` (slot 25's fresh launch) confirmed HEALTHY + progressing**:
+    `last_completed_date=2020-11-13` (~23.5% of the 2020-06-06→2026-08-10 range) as of 03:30Z. Chunked 90-day mode
+    (`VM_TASK=instruments-backfill`) has already crossed the chunk-1 boundary — per-VM shard
+    `af-backfill-20260811-012845-c2.parquet` (53,690 entries, 767 new) — proving the chunk-loop fix works vs the
+    single-shot stall that killed `af-backfill-20260810-162910`. run.log 750KB actively written, PIPELINE_HEARTBEAT live
+    (03:30:12Z), rate budget 110 req/min. ETA ~24-60h (STANDINGS is season-scoped; pace decelerates into denser 2022+
+    seasons — do not trust the early-dense 2020 pace).
+  - **Fresh census (03:31Z)**: PLAYER_STATS 14 · INJURIES 72 · STANDINGS 271 · TEAMS 95 = **452** (matches slot 20/25);
+    plus widening census (`census_fixture_stats_lineups_widening_volume_2026_07_31.py`): FIXTURE_STATS 132 ·
+    FIXTURE_LINEUPS 132 = **264** → **716 total in-scope tail** across 6 entities (FIXTURE_EVENTS DONE; FIXTURES = the
+    schedule spine). INJURIES 334→72 converged; PLAYER_STATS 3→14 is denominator growth, not regression.
+  - **Singleton**: exactly one `af-backfill-*` RUNNING (the STANDINGS VM) — lock held, API quota healthy (149,078
+    remaining at slot-25 check). Prior terminated: `-154220`, `-160958`, `-162910`.
+  - **Fleet safety net (verified in code)**: `af-backfill-` registered in `vm_prefix_registry.py` (heartbeat/zombie
+    detection) + `launcher_registry.py` (relaunch launcher = `launch-api-football-backfill-vm.sh`), covered by
+    `exit_code_fleet_monitor`; `VM_SHUTDOWN_ON_COMPLETION=true` → VM self-terminates on exit. On-demand provisioning (no
+    SPOT preemption risk).
+  - **No serial-chain automator exists** (slot 20's `af_standings_watchdog.py` was never committed) — the next-entity
+    launch is a per-slot manual step. **Next worker**: on STANDINGS exit_code=0 → launch TEAMS
+    (`--entity TEAMS 2020-06-06 2026-08-10`, on-demand) → then FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS, all
+    serial under the singleton lock. After all entities converge, re-run BOTH census scripts → confirm ~0 → unpark
+    `auto_unpark__sports_af_full_entity_completion-9798da269f23` and flip this checkbox + close this doc.
+  - **Checkbox NOT flipped this session** — done-when (census ~0) is multi-day away (STANDINGS VM ETA 24-60h); task
+    remains in-flight for the next slot. No code shipped (pure operations + monitoring).
