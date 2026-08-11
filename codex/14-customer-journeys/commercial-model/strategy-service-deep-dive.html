@@ -1,0 +1,962 @@
+<title>Strategy Service — Integration Deep Dive — Odum Research × Elysium</title>
+
+<style>
+  :root {
+    --ground: #f6f7fa; --surface: #ffffff; --surface-2: #eef1f7; --surface-3: #e4e9f2;
+    --ink: #0c1424; --ink-2: #3b475f; --ink-3: #6b7794;
+    --rule: #d8deea; --rule-strong: #b6c1d6;
+    --accent: #8c6d14; --accent-wash: rgba(140, 109, 20, 0.09);
+    --g-data: #107c5f; --g-exec: #3b62c4; --g-post: #a38112;
+    --g-data-wash: rgba(16, 124, 95, 0.09); --g-exec-wash: rgba(59, 98, 196, 0.1); --g-post-wash: rgba(163, 129, 18, 0.11);
+    --good: #0f7a4e; --warn: #96660a; --crit: #ad2f24;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", ui-serif, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --shell: 1200px; --prose: 74ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
+      --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
+      --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
+      --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
+      --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
+      --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0a0f1e; --surface: #131c33; --surface-2: #1b2745; --surface-3: #223056;
+    --ink: #edf1fa; --ink-2: #b4c0d8; --ink-3: #8492af; --rule: #23304f; --rule-strong: #3a4b74;
+    --accent: #d4af37; --accent-wash: rgba(212, 175, 55, 0.12);
+    --g-data: #15907a; --g-exec: #4c7fda; --g-post: #ae8c24;
+    --g-data-wash: rgba(21, 144, 122, 0.16); --g-exec-wash: rgba(76, 127, 218, 0.18); --g-post-wash: rgba(174, 140, 36, 0.17);
+    --good: #3fc98d; --warn: #dfb143; --crit: #ef7d6f;
+  }
+  body { background: var(--ground); color: var(--ink); font-family: var(--serif); font-size: 17.5px; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+  .shell { max-width: var(--shell); margin: 0 auto; padding: 0 32px 96px; }
+  p, ul, ol { max-width: var(--prose); } p { margin: 0 0 1.05em; }
+  ul, ol { margin: 0 0 1.15em; padding-left: 1.35em; } li { margin-bottom: 0.45em; } li::marker { color: var(--ink-3); }
+  a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code, .mono { font-family: var(--mono); font-size: 0.845em; }
+  code { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; padding: 0.08em 0.34em; white-space: nowrap; }
+
+  .masthead { border-bottom: 1px solid var(--rule-strong); padding: 56px 0 34px; margin-bottom: 12px; }
+  .eyebrow { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 26px; }
+  .eyebrow .mark { color: var(--accent); letter-spacing: 0.2em; } .eyebrow .sep { color: var(--rule-strong); }
+  .eyebrow .conf { border: 1px solid var(--accent); color: var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 3px 9px; letter-spacing: 0.13em; }
+  h1 { font-size: clamp(2.3rem, 5vw, 3.5rem); line-height: 1.05; font-weight: 400; letter-spacing: -0.018em; text-wrap: balance; margin: 0 0 0.5em; max-width: 25ch; }
+  h1 .light { color: var(--ink-3); font-style: italic; }
+  .standfirst { font-size: 1.16rem; line-height: 1.56; color: var(--ink-2); max-width: 64ch; margin-bottom: 26px; }
+  .factbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(136px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+  .factbar div { background: var(--surface); padding: 13px 15px; }
+  .factbar dt { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
+  .factbar dd { margin: 0; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1.4; }
+
+  .contents { margin: 38px 0 0; border-top: 1px solid var(--rule); padding-top: 22px; }
+  .contents h2 { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.17em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+  .contents ol { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 2px 28px; }
+  .contents li { margin: 0; }
+  .contents a { display: flex; gap: 12px; align-items: baseline; padding: 7px 0; text-decoration: none; border-bottom: 1px solid var(--rule); }
+  .contents a:hover, .contents a:hover .ttl { color: var(--accent); }
+  .contents .num { font-family: var(--mono); font-size: 11px; color: var(--accent); min-width: 1.6em; }
+  .contents .ttl { font-size: 0.93rem; color: var(--ink-2); }
+
+  section { padding-top: 72px; scroll-margin-top: 24px; }
+  .sec-head { display: flex; gap: 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 24px; }
+  .sec-head .num { font-family: var(--mono); font-size: 12px; color: var(--accent); padding-top: 0.55em; }
+  .sec-head h2 { font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 400; line-height: 1.14; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--sans); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); margin: 2.2em 0 0.85em; }
+  .lede { font-size: 1.07rem; color: var(--ink-2); max-width: 66ch; }
+
+  .keypoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; margin: 22px 0 26px; max-width: none; }
+  .keypoints > div { background: var(--surface); padding: 13px 16px 14px; }
+  .keypoints b { font-family: var(--sans); font-size: 11.5px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 4px; }
+  .keypoints span { font-family: var(--sans); font-size: 12px; line-height: 1.45; color: var(--ink-3); display: block; }
+
+  details.sec-body { max-width: none; margin: 0; }
+  details.sec-body > summary { display: flex; gap: 11px; align-items: baseline; list-style: none; cursor: pointer; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); transition: border-color 0.12s ease, color 0.12s ease; }
+  details.sec-body > summary::-webkit-details-marker { display: none; }
+  details.sec-body > summary::before { content: "Open"; font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); background: var(--accent-wash); border-radius: 3px; padding: 2px 7px; flex: none; line-height: 1.35; }
+  details.sec-body[open] > summary::before { content: "Close"; }
+  details.sec-body > summary::after { content: "▾"; margin-left: auto; color: var(--ink-3); font-size: 11px; }
+  details.sec-body[open] > summary::after { content: "▴"; }
+  details.sec-body > summary:hover { border-color: var(--rule-strong); color: var(--ink); }
+  details.sec-body[open] > summary { margin-bottom: 10px; }
+  @media (prefers-reduced-motion: reduce) { details.sec-body > summary { transition: none; } }
+
+  details.ref { max-width: none; border: 1px solid var(--rule); border-radius: 5px; margin: 22px 0; overflow: hidden; }
+  details.ref > summary { padding: 13px 18px; background: var(--surface-2); display: flex; gap: 10px; align-items: baseline; list-style: none; cursor: pointer; font-family: var(--sans); font-size: 12.5px; color: var(--ink-2); }
+  details.ref > summary::-webkit-details-marker { display: none; }
+  details.ref > summary::before { content: "＋"; font-family: var(--mono); font-size: 12px; color: var(--accent); flex: none; line-height: 1; }
+  details.ref[open] > summary::before { content: "－"; }
+  details.ref[open] > summary { border-bottom: 1px solid var(--rule); }
+  details.ref > summary:hover { color: var(--accent); }
+  details.ref > summary .tag-ref { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-3); margin-left: auto; flex: none; }
+  details.ref > .plate, details.ref > .code { margin: 0; border: none; border-radius: 0; }
+
+  .plate { margin: 24px 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; }
+  .plate-head { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding: 12px 18px; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  .plate-head .label { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3); }
+  .plate-head .note { font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); }
+  .plate-body { padding: 18px; } .scroll-x { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 13px; line-height: 1.45; }
+  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 10px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid var(--rule-strong); white-space: nowrap; }
+  td:last-child, th:last-child { padding-right: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .mono { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+  .grp { border-left: 3px solid var(--rule); padding-left: 11px; }
+  .grp-data { border-left-color: var(--g-data); } .grp-exec { border-left-color: var(--g-exec); } .grp-post { border-left-color: var(--g-post); }
+
+  .code { font-family: var(--mono); font-size: 12.5px; line-height: 1.62; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 4px; padding: 16px 18px; margin: 20px 0; overflow-x: auto; white-space: pre; color: var(--ink-2); max-width: none; }
+  .code b { color: var(--ink); font-weight: 600; }
+  .code i { color: var(--ink-3); font-style: normal; }
+  .code .k { color: var(--g-exec); font-weight: 600; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; margin: 26px 0; }
+  .stat { background: var(--surface); padding: 17px 18px 15px; }
+  .stat .v { font-family: var(--serif); font-size: 1.8rem; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; display: block; }
+  .stat .k { font-family: var(--sans); font-size: 11px; line-height: 1.42; color: var(--ink-3); display: block; margin-top: 8px; }
+  .stat .u { font-size: 0.6em; color: var(--ink-3); }
+
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-wash); padding: 16px 20px; margin: 24px 0; border-radius: 0 4px 4px 0; max-width: 84ch; }
+  .callout p { max-width: none; } .callout p:last-child { margin-bottom: 0; }
+  .callout .tag { font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 7px; }
+
+  figure { margin: 24px 0; } figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+  figcaption { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--ink-3); margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); max-width: 96ch; }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  footer { margin-top: 80px; border-top: 2px solid var(--ink); padding-top: 22px; font-family: var(--sans); font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+  footer .who { color: var(--ink-2); font-weight: 600; }
+
+  @media print { body { background: #fff; color: #000; font-size: 10.5pt; } section { padding-top: 26px; break-inside: avoid; } .plate, figure, table, .code { break-inside: avoid; } .contents { display: none; } details { display: block; } details > summary { display: none; } }
+</style>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span class="mark">ODUM RESEARCH × ELYSIUM</span>
+      <span class="sep">/</span>
+      <span>Strategy service — integration deep dive</span>
+      <span class="sep">/</span>
+      <span>Accompanies the repository</span>
+      <span class="conf">Confidential</span>
+    </div>
+
+    <h1>Strategy service <span class="light">— contracts, configuration and integration points</span></h1>
+
+    <p class="standfirst">
+      A reading guide for the repository itself. It gives the exact contracts the strategy emits, the complete
+      configuration surface, how to halt it, how capital and collateral move through Copper, what can be read back out,
+      and what an external strategy would have to implement to sit in the same slot. Every contract below is the real
+      declaration, not a paraphrase.
+    </p>
+
+    <dl class="factbar">
+      <div><dt>Python files</dt><dd>499</dd></div>
+      <div><dt>Lines</dt><dd>~102,000</dd></div>
+      <div><dt>Instruction types</dt><dd>11 + envelope</dd></div>
+      <div><dt>API route modules</dt><dd>19</dd></div>
+      <div><dt>Language</dt><dd>Python 3.13</dd></div>
+      <div><dt>Typing</dt><dd>strict, no Any</dd></div>
+    </dl>
+
+    <nav class="contents" aria-label="Contents">
+      <h2>Contents — every section opens to full detail</h2>
+      <ol>
+        <li><a href="#s1"><span class="num">01</span><span class="ttl">What this repository is, and what it isn't</span></a></li>
+        <li><a href="#s2"><span class="num">02</span><span class="ttl">The strategy → execution contract</span></a></li>
+        <li><a href="#s3"><span class="num">03</span><span class="ttl">Configuration surface, in full</span></a></li>
+        <li><a href="#s4"><span class="num">04</span><span class="ttl">Halting it: breakers and kill switch</span></a></li>
+        <li><a href="#s5"><span class="num">05</span><span class="ttl">Capital, collateral and Copper</span></a></li>
+        <li><a href="#s6"><span class="num">06</span><span class="ttl">Positions, risk and P&amp;L — the read surface</span></a></li>
+        <li><a href="#s7"><span class="num">07</span><span class="ttl">Feeding an external strategy in</span></a></li>
+        <li><a href="#s8"><span class="num">08</span><span class="ttl">Asset-group agnosticism and expansion</span></a></li>
+        <li><a href="#s9"><span class="num">09</span><span class="ttl">Contributing research and backtests</span></a></li>
+      </ol>
+    </nav>
+  </header>
+
+  <!-- 01 -->
+  <section id="s1">
+    <div class="sec-head"><span class="num">01</span><h2>What this repository is, and what it isn't</h2></div>
+    <p class="lede">
+      This service decides. It consumes features and market state, evaluates archetypes on each tick, sizes and hedges,
+      and emits typed instructions. It does not connect to venues, work orders into the market, or move funds itself —
+      those are execution-service concerns, reached through the contracts in §02.
+    </p>
+    <div class="keypoints">
+      <div><b>It decides</b><span>Archetype evaluation, sizing, hedge ratios, risk vetoes, position monitoring, P&amp;L attribution</span></div>
+      <div><b>It does not execute</b><span>No venue connectivity, no order working, no signing. It emits intent; execution-service realises it</span></div>
+      <div><b>One tick interface</b><span>Every archetype in every family implements the same interface, which is what makes the rest of this document short</span></div>
+    </div>
+    <details class="sec-body" open>
+      <summary>Layout, boundaries, and the one rule that governs both</summary>
+      <div class="stat-row">
+        <div class="stat"><span class="v">499</span><span class="k">Python modules</span></div>
+        <div class="stat"><span class="v">102k</span><span class="k">Lines of code</span></div>
+        <div class="stat"><span class="v">11</span><span class="k">Instruction types emitted</span></div>
+        <div class="stat"><span class="v">19</span><span class="k">API route modules</span></div>
+        <div class="stat"><span class="v">8</span><span class="k">Strategy families present</span></div>
+      </div>
+      <p>
+        The top-level packages map directly onto responsibilities, and the names are literal:
+      </p>
+      <div class="code"><b>engine/</b>            archetype implementations + the V2 orchestrator that ticks them
+<b>configs/</b>           one YAML per strategy instance, plus configs/defaults/ per family
+<b>position/</b>          position monitor, treasury monitor, reconciliation, NAV, margin health
+<b>risk/</b>              pre-trade risk gates and limit evaluation
+<b>pnl/</b>               attribution — decision vs execution vs funding
+<b>circuit_breakers/</b>  automatic protective actions (see §04)
+<b>portfolio_allocator/</b> capital allocation across instances
+<b>compliance/</b>        attestation and evidence trail
+<b>allocation_sizer.py</b>  position sizing against capital budget
+<b>transfer_coordinator.py</b> intra-client rebalance netting (see §05)
+<b>archetype_kill_switch_subscriber.py</b>  halt semantics (see §04)
+<b>config_reloaders.py</b>   typed hot-reload of configuration
+<b>api/</b>               read + control surfaces (see §06)</div>
+      <p>
+        <strong>The governing rule is the tier model:</strong> imports only ever point downward, and no service imports
+        another service. This repository depends on the shared library and the contracts package, and on nothing else in
+        the estate. That is why it can be read in isolation — and why the set of things it needs from outside is finite
+        and enumerable rather than a matter of discovery.
+      </p>
+      <div class="callout">
+        <span class="tag">What is deliberately not here</span>
+        <p>
+          Execution algorithms and order routing, venue adapters and connectivity, custody signing, market-data capture,
+          and feature computation all live in other services. Where this repository needs one of them it holds an
+          interface, not an implementation. Those seams are the subject of §02 and §05.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 02 -->
+  <section id="s2">
+    <div class="sec-head"><span class="num">02</span><h2>The strategy → execution contract</h2></div>
+    <p class="lede">
+      This is the part most likely to matter to you, because it is the boundary your side would integrate against. Every
+      strategy in every family emits one of eleven instruction types, all sharing a common envelope. The envelope is
+      where the interesting design sits.
+    </p>
+    <div class="keypoints">
+      <div><b>One envelope</b><span>Identity, urgency, deadline, policy reference, attestations, eligible venues, constraints</span></div>
+      <div><b>Eleven subtypes</b><span>Trade, Swap, Lend, Borrow, Stake, Unstake, Quote, Transfer, Bridge, Atomic, Cancel</span></div>
+      <div><b>Declares intent, not method</b><span>The strategy says what it wants and where it may go; execution decides how</span></div>
+    </div>
+    <details class="sec-body" open>
+      <summary>The envelope, all eleven subtypes, and what the design guarantees</summary>
+
+      <h3>The envelope — every instruction carries this</h3>
+      <div class="code"><span class="k">class</span> <b>StrategyInstructionEnvelope</b>(BaseModel):
+    instruction_id: str
+    emitted_at_utc: datetime
+    identity: StrategyInstanceIdentity
+    urgency: Urgency = Urgency.MEDIUM
+    deadline_utc: datetime | None = None
+    execution_policy_ref: str | None = None      <i># names a policy; does not contain it</i>
+    attestations: dict[str, str] = {}            <i># compliance trail</i>
+    correlation_id: str | None = None
+    eligible_venues: list[str] = []              <i># where it MAY go</i>
+    venue_constraints: dict[str, VenueConstraints] = {}
+    venue_routing_mode: VenueRoutingMode = VenueRoutingMode.SOR_AT_EXECUTION
+    target_venue: str | None = None
+    chain: str | None = None
+
+<span class="k">class</span> <b>VenueConstraints</b>(BaseModel):
+    max_notional_usd: Decimal | None = None
+    min_liquidity_usd: Decimal | None = None
+    fee_tier: str | None = None
+    max_slippage_bps: int | None = None</div>
+
+      <p>
+        Three fields carry most of the architectural meaning. <code>eligible_venues</code> plus
+        <code>venue_constraints</code> say where an instruction is <em>permitted</em> to be worked and under what limits;
+        <code>venue_routing_mode</code> defaults to <code>SOR_AT_EXECUTION</code>, meaning the venue choice is made at
+        execution time rather than by the strategy; and <code>execution_policy_ref</code> <em>names</em> an execution
+        policy without containing it. The strategy therefore expresses intent and permission, and never expresses method.
+        That separation is enforced by the type, not by convention.
+      </p>
+
+      <h3>Position and target instructions</h3>
+      <div class="code"><span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[TRADE]
+    target_position_units: Decimal        <i># a TARGET, not a delta — idempotent by design</i>
+    target_instrument: str
+    direction: Literal["LONG", "SHORT", "FLAT"] | None = None
+    max_price: Decimal | None = None
+    min_price: Decimal | None = None
+    stop_loss_price: Decimal | None = None
+    take_profit_price: Decimal | None = None
+
+<span class="k">class</span> <b>SwapInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[SWAP]
+    in_asset: str
+    out_asset: str
+    in_amount: Decimal
+    min_out_amount: Decimal               <i># slippage bound expressed as an outcome</i>
+    route_hint: str | None = None
+    mev_policy_ref: str | None = None
+
+<span class="k">class</span> <b>QuoteInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[QUOTE]
+    instrument: str
+    reference_price: Decimal
+    half_spread_bps: int
+    max_inventory_abs: Decimal
+    skew_on_inventory: bool = True
+    refresh_cadence_ms: int = 1000</div>
+
+      <p>
+        <code>target_position_units</code> is worth pausing on: instructions express a <strong>target</strong> rather than
+        a delta. Re-emitting the same instruction is therefore idempotent, and a missed or duplicated message cannot
+        compound a position. This is the single most useful property to know when integrating.
+      </p>
+
+      <h3>DeFi leg instructions</h3>
+      <div class="code"><span class="k">class</span> <b>LendInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[LEND]
+    protocol: str
+    asset: str
+    target_supplied_amount: Decimal
+    min_apy_bps: int | None = None
+
+<span class="k">class</span> <b>BorrowInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[BORROW]
+    protocol: str
+    asset: str
+    target_debt_amount: Decimal
+    max_borrow_apy_bps: int | None = None
+    collateral_health_min: Decimal | None = None
+
+<span class="k">class</span> <b>StakeInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[STAKE]
+    protocol: str
+    asset: str
+    target_staked_amount: Decimal
+    lst_asset: str | None = None
+
+<span class="k">class</span> <b>UnstakeInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[UNSTAKE]
+    protocol: str
+    asset: str
+    amount: Decimal
+    exit_queue_ok: bool = True            <i># whether an exit queue is acceptable</i></div>
+
+      <h3>Capital movement instructions</h3>
+      <div class="code"><span class="k">class</span> <b>TransferInstructionV2</b>(StrategyInstructionEnvelope):
+    action: Literal[TRANSFER]
+    asset: str
+    venue_from: str
+    venue_to: str
+    target_balance_at_destination: Decimal    <i># an OUTCOME, not a route</i>
+    max_cost_bps: int | None = None
+
+<span class="k">class</span> <b>BridgeInstructionV2</b>(StrategyInstructionEnvelope):
+    action: Literal[BRIDGE]
+    asset: str
+    chain_from: str
+    chain_to: str
+    target_balance_at_destination: Decimal
+    bridge_hint: str | None = None</div>
+
+      <p>
+        Note what is absent: neither carries a rail, a custodian or a mechanism. The strategy asks for a balance to exist
+        at a destination within a cost bound; how that is achieved — an internal venue transfer, an exchange withdrawal,
+        an on-chain send through custody — is resolved downstream. §05 covers what actually happens.
+      </p>
+
+      <h3>Multi-leg and cancellation</h3>
+      <div class="code"><span class="k">class</span> <b>AtomicLeg</b>(BaseModel):
+    leg_index: int
+    action: InstructionActionV2
+    instrument: str
+    side: Literal["BUY", "SELL"] | None = None
+    size_units: Decimal | None = None
+    venue: str | None = None
+    weight: Decimal | None = None
+    params: dict[str, str] = {}
+
+<span class="k">class</span> <b>AtomicInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[ATOMIC]
+    legs: list[AtomicLeg]
+    execution_mode: AtomicExecutionMode
+    leader_leg: int | None = None            <i># which leg goes first</i>
+    hedge_deadline_ms: int | None = None     <i># how long the book may sit unhedged</i>
+    compensation_policy: CompensationPolicy | None = None   <i># what happens if a leg fails</i>
+    balance_mode: str | None = None
+    max_total_slippage_bps: int | None = None
+
+<span class="k">class</span> <b>CancelInstruction</b>(StrategyInstructionEnvelope):
+    action: Literal[CANCEL]
+    cancel_instruction_id: str
+    cancel_scope: Literal["SINGLE", "ALL_FOR_STRATEGY_INSTANCE"] = "SINGLE"</div>
+
+      <p>
+        <code>AtomicInstruction</code> is how a basis trade is expressed as one unit: the staking leg and the hedge leg
+        travel together, with a declared leader, a deadline on how long the position may sit unhedged, and a compensation
+        policy if a leg fails. A partially-filled multi-leg structure is the central operational risk in basis trading,
+        and it is handled at the contract level rather than in strategy code.
+      </p>
+
+      <details class="ref">
+        <summary>Strategy instance identity — what every instruction is stamped with<span class="tag-ref">Reference</span></summary>
+        <div class="code"><span class="k">class</span> <b>StrategyInstanceIdentity</b>(BaseModel):
+    family: StrategyFamily
+    archetype_id: StrategyArchetype
+    archetype_build_version: str
+    strategy_instance_id: str
+    slot_version: int = 1
+    config_hash: str                  <i># the exact config that produced this decision</i>
+    config_version: int
+    client_id: str
+    share_class: ShareClass
+    env: Literal["prod", "paper", "canary", "dev"] = "prod"
+    holding_wallet: str | None = None
+    wallet_id: str = ""
+
+<span class="k">class</span> <b>StrategyInstanceDefinition</b>(BaseModel):
+    strategy_instance_id: str
+    archetype_id: StrategyArchetype
+    family: StrategyFamily
+    client_id: str
+    capital_budget_amount: Decimal    <i># the instance cannot exceed this</i>
+    capital_budget_share_class: ShareClass
+    share_class: ShareClass
+    env: Literal["prod", "paper", "canary", "dev"] = "prod"
+    created_at_utc: datetime
+    created_by: str
+    retired_at_utc: datetime | None = None
+    retired_reason: str | None = None
+    slot_version: int = 1
+    holding_wallet: str | None = None
+    wallet_id: str = ""</div>
+        <div class="plate"><div class="plate-body"><p>
+          Because <code>config_hash</code> and <code>archetype_build_version</code> ride on every instruction, any
+          decision can be traced back to the exact code and configuration that produced it, and a run can be replayed
+          from its manifest. This is the mechanism behind the batch/live equivalence property — the same identity flows
+          through a backtest, a paper run and a live run.
+        </p></div></div>
+      </details>
+    </details>
+  </section>
+
+  <!-- 03 -->
+  <section id="s3">
+    <div class="sec-head"><span class="num">03</span><h2>Configuration surface, in full</h2></div>
+    <p class="lede">
+      Configuration is a YAML file per strategy instance, validated against typed schemas, with family-level defaults
+      underneath and typed hot-reload on top. Below is the real configuration for the staked-basis strategy, unedited.
+    </p>
+    <div class="keypoints">
+      <div><b>One YAML per instance</b><span>Plus <code>configs/defaults/</code> per family for the values an instance doesn't override</span></div>
+      <div><b>Typed, not free-form</b><span>~22 <code>TypedDict</code> schemas cover risk, monitors, attribution and per-family blocks</span></div>
+      <div><b>Hot-reloadable</b><span>Typed reloaders pick up changes without a restart; the config hash changes with it</span></div>
+    </div>
+    <details class="sec-body">
+      <summary>The live staked-basis config, the schema set, and the defaults hierarchy</summary>
+
+      <h3>The actual config — <code>configs/carry_staked_basis.yaml</code></h3>
+      <div class="code">mode: carry_staked_basis
+strategy_config:
+  strategy_id: DEFI_CARRY_STAKED_BASIS_ETH_LIDO_BINANCE_SCE_1H
+  category: DEFI
+  domain: defi
+  archetype: carry_staked_basis
+  timeframe: 1h
+  execution_mode: continuous
+
+  <i># ── Legs ──</i>
+  staking_protocol: LIDO_STETH
+  staking_chain: ETHEREUM
+  staking_instrument: LIDO-ETHEREUM:STAKED:stETH
+  borrowing_protocol: AAVE_V3
+  borrowing_chain: ETHEREUM
+  hedge_venue: BINANCE
+  hedge_instrument: BINANCE:PERP:ETHUSDT-PERP
+
+  <i># ── Capital allocation ──</i>
+  capital_usd: 50000
+  max_leverage: 1.5
+  staking_apr_threshold: 0.025      <i># min 2.5% APR to deploy</i>
+  perp_funding_threshold_bps: 8     <i># require positive funding for hedge</i>
+
+  <i># ── Health monitoring ──</i>
+  health_factor_target: 2.0
+  health_factor_emergency_reduce_at: 1.2
+  health_factor_emergency_close_at: 1.0</div>
+
+      <p>
+        The shape is the point: legs are named by protocol and canonical instrument identifier rather than by venue
+        symbol, thresholds are explicit and unit-suffixed, and the health-factor ladder gives three distinct levels —
+        target, reduce, close. Changing venue or LST is a change to this file, not to strategy code.
+      </p>
+
+      <div class="callout">
+        <span class="tag">Read this in the repository, not from here</span>
+        <p>
+          The committed file carries a header marking the risk thresholds as conservative pre-cutover placeholders
+          pending final operator sign-off, and the values will move before go-live. Treat the numbers above as
+          illustrative of the <em>shape</em> of the configuration; the thresholds themselves are still being finalised as
+          part of the October readiness work.
+        </p>
+      </div>
+
+      <h3>Family defaults</h3>
+      <p>
+        An instance config sits on top of a family default, so only the deviations are stated per instance:
+      </p>
+      <div class="code">configs/defaults/default_basis_trade.yaml          configs/defaults/default_momentum.yaml
+configs/defaults/default_arbitrage.yaml            configs/defaults/default_mean_reversion.yaml
+configs/defaults/default_options_ml.yaml           configs/defaults/default_halftime_ml.yaml
+configs/defaults/default_value_betting.yaml        configs/defaults/default_tradfi_ml_directional.yaml</div>
+
+      <details class="ref">
+        <summary>The typed configuration schemas — all of them<span class="tag-ref">Reference</span></summary>
+        <div class="code"><i># Risk</i>
+RiskLimitsConfig            RiskInstrumentSubscriptions     RiskMetricsConfig
+DefiRiskConfig              MlRiskConfig                    CexRiskConfig
+SportsRiskConfig
+
+<i># Monitors</i>
+PositionMonitorConfig       ExposureMonitorConfig           RiskMonitorConfig
+PnlMonitorConfig
+
+<i># Attribution</i>
+PnLInstrumentSubscriptions  DefiAttributionConfig           MlAttributionConfig
+
+<i># Managers and modes</i>
+StrategyManagerConfig       UtilityManagerConfig            ComponentConfig
+SportsStrategyManagerConfig StrategySpecificConfig          RelVolConfig
+DefiModeConfig              MlModeConfig</div>
+        <div class="plate"><div class="plate-body"><p>
+          All are <code>TypedDict</code> declarations, so configuration is checked statically rather than at first use.
+          A malformed config fails at load with a typed error naming the field, not at 3am with a <code>KeyError</code>.
+          Per-asset-group blocks (<code>Defi…</code>, <code>Ml…</code>, <code>Cex…</code>, <code>Sports…</code>) are how
+          one engine serves multiple asset groups — see §08.
+        </p></div></div>
+      </details>
+    </details>
+  </section>
+
+  <!-- 04 -->
+  <section id="s4">
+    <div class="sec-head"><span class="num">04</span><h2>Halting it: breakers and kill switch</h2></div>
+    <p class="lede">
+      There are two independent mechanisms: an automatic circuit that reacts to position health, and an operator kill
+      switch delivered over the event bus with per-archetype halt semantics. They are separate on purpose — one does not
+      depend on the other being healthy.
+    </p>
+    <div class="keypoints">
+      <div><b>Automatic</b><span><code>LiquidationProximityCircuit</code> — seven graded responses to a health alert</span></div>
+      <div><b>Operator-driven</b><span><code>ArchetypeKillSwitchSubscriber</code> — arm/disarm per archetype over the bus</span></div>
+      <div><b>Graded, not binary</b><span>Responses range from an oracle buffer through partial unwind to flash close</span></div>
+    </div>
+    <details class="sec-body" open>
+      <summary>Both mechanisms, their decision surfaces, and how you would drive them</summary>
+
+      <h3>The automatic circuit</h3>
+      <div class="code"><span class="k">class</span> <b>LiquidationProximityCircuit</b>:
+    <span class="k">def</span> evaluate(self, alert: DefiAlert) -> ProximityDecision: ...
+
+    <i># graded responses, selected by how close the position is to liquidation</i>
+    _oracle_buffer()        <i># widen tolerance for oracle lag; take no position action</i>
+    _position_pause()       <i># stop opening; hold what is held</i>
+    _partial_unwind()       <i># reduce exposure toward the health target</i>
+    _hedge_failover()       <i># re-establish the hedge via an alternate venue</i>
+    _flash_close()          <i># exit now, accept slippage</i>
+    _mid_loop_recovery()    <i># resume safely after an interrupted action</i>
+
+<span class="k">class</span> <b>ProximityDecision</b>: ...      <i># the chosen action + its rationale</i>
+<span class="k">class</span> <b>ProximityAction</b>(StrEnum): ...</div>
+      <p>
+        The design point is that the response is <strong>graded</strong>. A position drifting toward its health floor
+        gets a pause or a partial unwind; only genuine proximity to liquidation triggers a flash close. A binary
+        stop-everything breaker is both more likely to fire spuriously and more expensive when it does.
+        <code>_mid_loop_recovery</code> exists because the dangerous state is not "halted" — it is "halted halfway
+        through a multi-leg action", and that needs an explicit path back.
+      </p>
+
+      <h3>The operator kill switch</h3>
+      <div class="code"><span class="k">class</span> <b>ArchetypeKillSwitchSubscriber</b>(KillSwitchSubscriber):
+    <span class="k">def</span> on_armed(self, event: KillSwitchArmedEvent) -> None: ...
+    <span class="k">def</span> on_disarmed(self, event: KillSwitchDisarmEvent) -> None: ...
+    <span class="k">def</span> is_archetype_halted(self, archetype: str) -> bool: ...
+    <span class="k">def</span> halt_behaviour(self, archetype: str) -> ArchetypeHaltBehaviour | None: ...
+
+<span class="k">class</span> <b>ArchetypeHaltBehaviour</b>(StrEnum): ...   <i># what "halted" means for this archetype</i></div>
+      <p>
+        Arming is an event on the bus, so it reaches every running instance without a deploy and without the strategy
+        process needing to poll. Halting is <strong>per archetype</strong> rather than global, so one strategy can be
+        stopped while others continue — and <code>ArchetypeHaltBehaviour</code> lets each archetype declare what halting
+        means for it, because "stop trading" is not the same instruction for a market-making book as for a basis
+        position that must stay hedged.
+      </p>
+      <div class="callout">
+        <span class="tag">How you would halt it, concretely</span>
+        <p>
+          Three levels, in increasing severity: publish a kill-switch armed event for the archetype (halts new decisions,
+          honouring the archetype's declared halt behaviour); set the instance's capital budget to zero in configuration
+          (prevents new exposure while leaving the position monitored); or stop the process (the position remains, and
+          nothing is monitoring it — so this is the least safe option, not the most). Under the managed service the
+          first is what we use, and the operational console exposes it as a single action.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 05 -->
+  <section id="s5">
+    <div class="sec-head"><span class="num">05</span><h2>Capital, collateral and Copper</h2></div>
+    <p class="lede">
+      The strategy never names a rail. It asks for a balance to exist somewhere, and a layered set of coordinators and
+      adapters resolves that into either an exchange transfer or an on-chain movement signed through custody. Copper sits
+      at the custody end, and its ClearLoop service is what lets collateral be traded at a venue without leaving custody.
+    </p>
+    <div class="keypoints">
+      <div><b>Netted before emitted</b><span><code>IntraClientRebalanceCoordinator</code> nets offsetting requests per pair before any intent is produced</span></div>
+      <div><b>One entry point</b><span><code>TransferCoordinator</code> validates, enforces client isolation and de-duplicates</span></div>
+      <div><b>Rail chosen last</b><span><code>CompositeTransferAdapter</code> routes exchange moves to venue APIs and on-chain moves to custody</span></div>
+    </div>
+    <details class="sec-body" open>
+      <summary>The full path from a strategy's rebalance request to funds arriving</summary>
+
+      <figure>
+        <svg viewBox="0 0 1160 300" role="img" aria-label="Diagram: a strategy emits transfer requests which are netted per asset pair, converted to transfer intents, validated and de-duplicated by the TransferCoordinator, then routed by the CompositeTransferAdapter either to venue APIs for internal transfers and withdrawals, or to the custody provider for on-chain movements, which for Copper includes ClearLoop mirroring collateral onto the exchange.">
+          <text x="20" y="22" style="fill:var(--ink-3);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">FROM DECISION TO SETTLED FUNDS</text>
+
+          <rect x="20" y="40" width="176" height="62" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.5"/>
+          <text x="34" y="62" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Strategy</text>
+          <text x="34" y="80" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">TransferRequest</text>
+          <text x="34" y="94" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">wants balance elsewhere</text>
+          <path d="M200 71 L232 71" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#ar5)"/>
+
+          <rect x="236" y="40" width="196" height="62" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.5"/>
+          <text x="250" y="62" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Netting</text>
+          <text x="250" y="80" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">IntraClientRebalance…</text>
+          <text x="250" y="94" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">offsets cancel, per pair</text>
+          <path d="M436 71 L468 71" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#ar5)"/>
+
+          <rect x="472" y="40" width="200" height="62" rx="4" style="fill:var(--g-post-wash);stroke:var(--g-post);stroke-width:2"/>
+          <text x="486" y="62" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:700">Coordinator</text>
+          <text x="486" y="80" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">TransferCoordinator</text>
+          <text x="486" y="94" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">validate · isolate · dedupe</text>
+          <path d="M676 71 L708 71" style="fill:none;stroke:var(--ink-3);stroke-width:1.2" marker-end="url(#ar5)"/>
+
+          <rect x="712" y="40" width="196" height="62" rx="4" style="fill:var(--surface);stroke:var(--g-post);stroke-width:1.5"/>
+          <text x="726" y="62" style="fill:var(--ink);font-family:var(--sans);font-size:12px;font-weight:600">Rail selection</text>
+          <text x="726" y="80" style="fill:var(--ink-3);font-family:var(--mono);font-size:10px">CompositeTransfer…</text>
+          <text x="726" y="94" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">by transfer kind</text>
+
+          <path d="M810 106 L810 132 L900 132" style="fill:none;stroke:var(--g-exec);stroke-width:1.3" marker-end="url(#ar5b)"/>
+          <path d="M810 106 L810 214 L900 214" style="fill:none;stroke:var(--g-data);stroke-width:1.3" marker-end="url(#ar5c)"/>
+
+          <rect x="904" y="108" width="236" height="52" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.4"/>
+          <text x="918" y="128" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Venue API — CCXT</text>
+          <text x="918" y="146" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">internal transfer · withdrawal</text>
+
+          <rect x="904" y="190" width="236" height="52" rx="4" style="fill:var(--surface);stroke:var(--g-data);stroke-width:1.4"/>
+          <text x="918" y="210" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Custody — Copper</text>
+          <text x="918" y="228" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">on-chain send · ClearLoop mirror</text>
+
+          <line x1="20" y1="264" x2="1140" y2="264" style="stroke:var(--rule);stroke-width:1"/>
+          <text x="20" y="286" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">The strategy names an asset, a source, a destination and a cost bound. Every decision about HOW is taken to the right of the coordinator.</text>
+
+          <defs>
+            <marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--ink-3)"/></marker>
+            <marker id="ar5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--g-exec)"/></marker>
+            <marker id="ar5c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--g-data)"/></marker>
+          </defs>
+        </svg>
+        <figcaption>
+          <b>Figure 1 — capital movement, decision to settlement.</b> Netting happens before an intent exists, so
+          offsetting moves never reach a venue. The coordinator is the only entry point, which is where client isolation
+          and idempotency are enforced. Rail selection is last, and is the only place that knows about Copper or CCXT.
+        </figcaption>
+      </figure>
+
+      <h3>Wallet and transfer vocabulary</h3>
+      <div class="code"><span class="k">class</span> <b>WalletType</b>(StrEnum):
+    FUNDING   <i># where deposits land; not directly tradeable</i>
+    TRADING   <i># where orders are placed from</i>
+    SPOT      <i># separate spot wallet, on venues that have one</i>
+    UNIFIED   <i># single-account venues</i>
+
+<span class="k">class</span> <b>TransferType</b>(StrEnum):
+    ON_CHAIN        <i># blockchain transfer, signed via custody or local key.
+                      DeFi→DeFi same chain, DeFi→CeFi deposit, CeFi→DeFi withdrawal.
+                      Minutes; gas applies.</i>
+    CEX_WITHDRAWAL  <i># exchange withdrawal to an external address, via CCXT.
+                      CeFi→CeFi cross-exchange, or CeFi→DeFi.
+                      Minutes to hours; withdrawal fees apply.</i></div>
+
+      <h3>Custody is an interface, not a vendor</h3>
+      <div class="code"><span class="k">class</span> <b>CustodyProvider</b>(Protocol):
+    <span class="k">async def</span> sign_transaction(wallet_id, chain, raw_tx) -> SignedTransaction
+    <span class="k">async def</span> get_balance(...)
+    <span class="k">async def</span> create_transfer(...)
+    <span class="k">async def</span> list_wallets(chain=None) -> list[dict[str, str]]
+    <span class="k">async def</span> health_check() -> CustodyHealth
+
+<i># get_custody_provider(config) resolves by name:</i>
+mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
+
+      <p>
+        Because custody is a <code>Protocol</code> with five methods, adding or changing a custodian is a new
+        implementation plus a configuration value — not a change to any strategy or execution path. The Copper
+        implementation is <code>execution_service/custody/copper.py</code>, and it signs, polls for completion, reads
+        balances, creates transfers, lists wallets and reports health.
+      </p>
+
+      <div class="callout">
+        <span class="tag">Where Copper and ClearLoop actually sit</span>
+        <p>
+          Our code talks to <strong>Copper</strong>. Collateral is posted into Copper custody, and Copper's
+          <strong>ClearLoop</strong> service mirrors that collateral onto the exchange so it can be traded without ever
+          leaving custody — which is the property that matters for counterparty risk. ClearLoop is therefore Copper's
+          mechanism rather than a separate integration on our side: you will find <code>copper.py</code> in the
+          execution service and no ClearLoop-specific code path, and that is by design. The instruction the strategy
+          emits is <code>TransferInstructionV2</code>, which names neither.
+        </p>
+      </div>
+
+      <details class="ref">
+        <summary>Client isolation — the guarantee, and where it is enforced<span class="tag-ref">Reference</span></summary>
+        <div class="code"><span class="k">class</span> <b>TransferCoordinator</b>:
+    <i>"""Single entry point for all TransferIntent events."""</i>
+    <span class="k">def</span> execute(self, intent: TransferIntent) -> TransferResult
+    <span class="k">def</span> validate_intent(self, intent: TransferIntent) -> None
+    <span class="k">def</span> register_handler(self, transfer_type, handler) -> None
+
+<span class="k">class</span> <b>CrossClientTransferForbiddenError</b>(RuntimeError): ...</div>
+        <div class="plate"><div class="plate-body"><p>
+          Funds cannot move between clients: every transfer is scoped to a single <code>client_id</code>, and an intent
+          that would cross that boundary raises rather than executing. The guarantee is structural — it is not a policy
+          check that could be configured off, and there is no code path that expresses a cross-client movement. Each
+          client also runs in its own process. The coordinator additionally holds an idempotency cache, so a replayed
+          intent returns the original result instead of moving funds twice.
+        </p></div></div>
+      </details>
+    </details>
+  </section>
+
+  <!-- 06 -->
+  <section id="s6">
+    <div class="sec-head"><span class="num">06</span><h2>Positions, risk and P&amp;L — the read surface</h2></div>
+    <p class="lede">
+      Nineteen route modules expose what the service knows. This is what you would query — directly if you self-operate,
+      or remotely under the managed service, which is how you would interrogate the strategy's decisions without
+      operating it.
+    </p>
+    <div class="keypoints">
+      <div><b>Positions and NAV</b><span>Current positions, aggregated views, NAV snapshots, a streaming feed, trade history</span></div>
+      <div><b>Risk and health</b><span>Risk state, margin health, treasury state, reconciliation status</span></div>
+      <div><b>Attribution</b><span>P&amp;L series and attribution — decision versus execution versus funding</span></div>
+    </div>
+    <details class="sec-body">
+      <summary>The route inventory, grouped by what it answers</summary>
+      <div class="plate">
+        <div class="plate-head"><span class="label">API route modules</span><span class="note">Real module paths; each mounts a FastAPI router</span></div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Area</th><th>Modules</th><th>Answers</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>Positions</strong></td>
+                <td class="mono">position/api/routes/{positions_health, positions_stream, aggregated, trades, nav_snapshot}.py</td>
+                <td>What is held, live updates as it changes, aggregated exposure, the trade history behind it, and NAV at a point in time</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Risk</strong></td>
+                <td class="mono">position/api/routes/risk.py · position/api/margin_health.py · risk/api/main.py</td>
+                <td>Current risk state against limits, and margin health — the input the liquidation circuit acts on</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Reconciliation</strong></td>
+                <td class="mono">position/api/{reconciliation_routes.py, routes/reconciliation.py}</td>
+                <td>Whether believed position matches venue truth, and what any exceptions are</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>Treasury</strong></td>
+                <td class="mono">position/api/routes/treasury.py</td>
+                <td>Treasury versus trading balances, and capital available to deploy</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>P&amp;L</strong></td>
+                <td class="mono">pnl/api/main.py · position/api/routes/pnl_series.py</td>
+                <td>P&amp;L over time and its attribution across decision, execution and funding</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>Control and registry</strong></td>
+                <td class="mono">api/{operational_mode_router, registry_router, restriction_profile_router, evidence_router}.py</td>
+                <td>Operational mode, the registry of instances, restriction profiles, and the evidence and attestation trail</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>
+        <code>evidence_router</code> is the one worth calling out for a due-diligence conversation: it exposes the
+        attestation trail, which is how a decision is evidenced after the fact rather than reconstructed from logs.
+      </p>
+    </details>
+  </section>
+
+  <!-- 07 -->
+  <section id="s7">
+    <div class="sec-head"><span class="num">07</span><h2>Feeding an external strategy in</h2></div>
+    <p class="lede">
+      If you wanted to run your own strategy on this infrastructure, the integration surface is small and precisely
+      defined: consume the tick, emit one of the eleven instruction types with a valid envelope, and everything
+      downstream applies unchanged.
+    </p>
+    <div class="keypoints">
+      <div><b>Implement one interface</b><span>Evaluate on tick, return instructions. The orchestrator handles lifecycle</span></div>
+      <div><b>Inherit the estate</b><span>Risk gates, position monitoring, reconciliation, attribution and breakers apply automatically</span></div>
+      <div><b>Nothing bespoke</b><span>An external strategy is not a special case — it is another archetype in the registry</span></div>
+    </div>
+    <details class="sec-body">
+      <summary>What an external strategy must provide, and what it gets for free</summary>
+      <p>The contract is: your archetype is registered, receives ticks from <code>V2EngineOrchestrator</code>, and returns instructions.</p>
+      <div class="code"><i># What you provide</i>
+1. An archetype module that evaluates on each tick and returns
+   zero or more StrategyInstructionV2 (the union of the 11 types)
+2. A config YAML declaring instruments, thresholds and capital budget,
+   validated against the typed schemas in §03
+3. A registry entry naming the archetype and its family
+
+<i># What applies without you writing it</i>
+· Pre-trade risk gates and limit checks        · Position monitoring and venue reconciliation
+· Capital budget enforcement per instance      · P&amp;L attribution by decision/execution/funding
+· Circuit breakers and kill-switch semantics   · Compliance attestation on every instruction
+· Execution algorithms and venue routing       · Transfer netting and custody routing
+· The promotion ladder: candidate → paper → live</div>
+      <p>
+        Because the envelope carries <code>eligible_venues</code> and <code>execution_policy_ref</code>, your strategy
+        declares where it may trade and which policy should work its orders, without needing to know how either is
+        implemented. And because instructions express targets rather than deltas, your strategy does not have to track
+        what has already been filled to remain correct.
+      </p>
+      <div class="callout">
+        <span class="tag">The practical consequence</span>
+        <p>
+          A strategy idea becomes a config file and one module implementing one interface. It inherits the risk,
+          reconciliation, attribution and operational estate on its first tick rather than needing them built. That is
+          the same route our own archetypes take — there is no separate internal path.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- 08 -->
+  <section id="s8">
+    <div class="sec-head"><span class="num">08</span><h2>Asset-group agnosticism and expansion</h2></div>
+    <p class="lede">
+      The same engine, contract and ledger serve every asset group. This is the property that makes expansion a
+      configuration and adapter exercise rather than a new system, and it is a property of the ongoing platform rather
+      than of any static snapshot.
+    </p>
+    <div class="keypoints">
+      <div><b>One engine, five asset groups</b><span>DeFi, CeFi, TradFi, sports and prediction markets run the same tick loop and contract</span></div>
+      <div><b>Eight families present</b><span>Carry and yield, arbitrage, statistical arbitrage, volatility, market making, directional, liquidity provision, ML-driven</span></div>
+      <div><b>Config-shaped, not fork-shaped</b><span>Per-asset-group typed config blocks rather than per-asset-group codebases</span></div>
+    </div>
+    <details class="sec-body">
+      <summary>How one engine serves five asset groups, and what expansion costs</summary>
+      <p>
+        The mechanism is visible in the configuration schemas from §03: <code>DefiRiskConfig</code>,
+        <code>CexRiskConfig</code>, <code>MlRiskConfig</code> and <code>SportsRiskConfig</code> are per-asset-group
+        blocks against a common engine, not separate engines. The same pattern runs through attribution
+        (<code>DefiAttributionConfig</code>, <code>MlAttributionConfig</code>) and mode
+        (<code>DefiModeConfig</code>, <code>MlModeConfig</code>). Adding an asset group adds blocks and an adapter; it
+        does not fork the engine.
+      </p>
+      <div class="plate">
+        <div class="plate-head"><span class="label">What each direction of expansion actually touches</span><span class="note">Real work in every row — the point is which layers, not that it is free</span></div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Direction</th><th>What changes</th><th>What does not</th></tr></thead>
+            <tbody>
+              <tr><td class="grp grp-exec"><strong>Another instrument</strong></td><td>A universe entry, once capture covers it</td><td>Engine, contract, risk, attribution, ledgers</td></tr>
+              <tr><td class="grp grp-exec"><strong>Another venue</strong></td><td>An adapter, a registry entry, collateral calibration, a cutover</td><td>The instruction contract and everything above it</td></tr>
+              <tr><td class="grp grp-exec"><strong>Another LST or protocol</strong></td><td>A collateral-matrix entry, a rate reader, rebasing reconciliation</td><td>The staked-basis archetype itself</td></tr>
+              <tr><td class="grp grp-exec"><strong>Another chain</strong></td><td>RPC, gas and settlement handling; the structure already runs on two chains</td><td>Strategy logic and instruction shape</td></tr>
+              <tr><td class="grp grp-post"><strong>Another archetype</strong></td><td>One module and a config, per §07</td><td>The entire operational estate</td></tr>
+              <tr><td class="grp grp-data"><strong>Another asset group</strong></td><td>Typed config blocks and venue adapters; TradFi additionally brings clearing and reporting</td><td>The engine, the tick loop and the ledger model</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>
+        This is the concrete answer to why the strategy is not a standalone program. It is agnostic because the things it
+        would otherwise hard-code — venue, asset class, execution method, custodian — are all resolved outside it. That
+        agnosticism is exactly what a static carve-out cannot reproduce, because a snapshot fixes each of those choices
+        at the moment it is taken.
+      </p>
+    </details>
+  </section>
+
+  <!-- 09 -->
+  <section id="s9">
+    <div class="sec-head"><span class="num">09</span><h2>Contributing research and backtests</h2></div>
+    <p class="lede">
+      Under the ongoing arrangement you can bring ideas rather than only receive results. Backtests launch through the
+      same contract as live runs, which is what makes a backtest result meaningful rather than indicative.
+    </p>
+    <div class="keypoints">
+      <div><b>Same code path</b><span>A backtest runs the identical engine, contract and ledger as live — not a separate simulator</span></div>
+      <div><b>One launch contract</b><span>Backtest, experiment and live launches route through the same deployment API</span></div>
+      <div><b>Promotion is a ladder</b><span>Candidate → paper → early live → live, with pre-flight gates at each step</span></div>
+    </div>
+    <details class="sec-body">
+      <summary>How a submitted idea becomes a tested result, and what you would see</summary>
+      <p>
+        The property that makes this worth doing is that <strong>paper and batch runs are required to agree with each
+        other trade for trade</strong>. Because the same orchestrator, the same instruction contract and the same ledger
+        writers serve batch, paper and live, a backtest is a rerun of the production program over historical data rather
+        than a model of it. A result therefore carries over to live behaviour, subject only to fills.
+      </p>
+      <div class="code"><i># What a research contribution looks like in practice</i>
+1. You describe the idea — a parameter variation on an existing archetype,
+   or a new decision rule
+2. It becomes a config (a variation) or a module (a new rule), per §07
+3. It launches as a backtest through the deployment API, against the same
+   history and feature versions our own research uses
+4. Results come back as the standard ledgers and attribution — so they are
+   directly comparable with live performance, not a separate report format
+5. If it earns promotion it climbs the ladder: candidate, paper, early live,
+   live — with pre-flight gates at each step</div>
+      <p>
+        What you would see is the attribution surface from §06 applied to your idea: P&amp;L split across decision,
+        execution and funding, per venue and per leg. That split is usually the interesting part, because it separates
+        "the idea was right" from "the idea was implementable".
+      </p>
+      <div class="callout">
+        <span class="tag">Worth agreeing in advance</span>
+        <p>
+          If a contributed idea works, ownership and commercial treatment are better settled before the contribution
+          than after it. We would rather raise that now, while it is hypothetical, than negotiate it about something
+          specific that already works.
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <p class="who">Odum Research · Ikenna Igboaka, Founder &amp; CEO · ikenna@odum-research.com · FCA registered firm, FRN 975797</p>
+    <p>
+      Strategy service integration deep dive, prepared for Elysium and POD, 11 August 2026. Accompanies the
+      strategy-service repository and complements the platform architecture and carve-out specification documents. Class,
+      field and method declarations are reproduced from the current source; configuration values shown are illustrative
+      of shape and are subject to the final pre-cutover review. Commercial terms are governed by the consulting agreement
+      and the service-level agreement, not by this document. Confidential — not for onward distribution without our
+      written consent.
+    </p>
+  </footer>
+
+</div>
