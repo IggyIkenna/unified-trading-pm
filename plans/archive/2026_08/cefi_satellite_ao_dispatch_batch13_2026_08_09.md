@@ -59,7 +59,7 @@ context_scope:
 > and independently re-verified by finalize-plan todos 1-2. Archived per the 6-step ritual
 > (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); a codex-alignment contract gap surfaced in
 > the process — `depth_of_book_10` is live-captured but has no SINK_MATRIX entry — filed as
-> `/plans/active/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md`. Finalize plan
+> `/plans/archive/2026_08/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md`. Finalize plan
 > `cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md` completed and archived alongside this doc. No deferred
 > items (both source-doc remaining-open counts re-stated in the finalize's Progress Log).
 
