@@ -67,7 +67,9 @@
 # every named file and, post-push, that `git branch -r --contains HEAD` includes the target
 # branch -- see verify_committed/verify_pushed below). 2 bad usage. 3 unresolved rebase
 # conflict (real content collision, needs a human). 4 push rejected for a non-drift reason, OR
-# `git push` exited 0 but verify_pushed found origin/<branch> does not actually contain HEAD.
+# `git push` exited 0 but verify_pushed found origin/<branch> does not actually contain HEAD
+# (branch-level) OR not every named file reached the remote with the right content (per-file,
+# 2026-08-11).
 # 5 exhausted retries under sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
 # for a DETERMINISTIC content reason (plan-hygiene, conflict markers,
 # frontmatter schema, terminal-status-archived, ...) -- fix the content; re-running cannot
@@ -675,13 +677,47 @@ verify_committed() {
   return 0
 }
 
-# verify_pushed -- ground truth for "did this actually land on the target branch", independent
-# of `git push`'s own exit code. `git branch -r --contains HEAD` lists every remote-tracking
-# branch whose history includes the current HEAD commit -- origin/$BRANCH must be among them, or
-# the push did not genuinely land there regardless of what the push command reported.
+# verify_pushed -- two-tier ground truth for "did this actually land on the target branch",
+# independent of `git push`'s own exit code.
+#
+# Tier 1 — branch-level: `git branch -r --contains HEAD` lists every remote-tracking branch
+# whose history includes the current HEAD commit; origin/$BRANCH must be among them, or the push
+# did not genuinely land there regardless of what the push command reported.
+#
+# Tier 2 — per-file (2026-08-11, safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md
+# § "Second symptom"): the branch-level check says HEAD is on origin but does NOT say every
+# named file landed with the right content. Measured 2026-08-10: a multi-file `--files` push
+# landed ONE of two named paths and still exited 0 — per-file partial success inside a single
+# "successful" invocation. For each named file, compare HEAD's blob against origin/$BRANCH's
+# blob after a fresh fetch. A path ABSENT from HEAD (source half of a rename, staged deletion)
+# expects ABSENT on origin too. Fail naming the specific paths that did not land.
 verify_pushed() {
   if ! git branch -r --contains HEAD 2>/dev/null | grep -qF "origin/${BRANCH}"; then
     echo "  ❌ verification failed: origin/${BRANCH} does not contain HEAD after push" >&2
+    return 1
+  fi
+  # Tier 2 — per-file blob comparison. Fetch first so origin/$BRANCH is current; a peer
+  # landing a newer commit after our push does not invalidate this check — the branch still
+  # contains our HEAD, so origin/$BRANCH:<f> must match HEAD:<f> for every file we shipped
+  # (a peer would have had to touch the SAME file to differ, which is a genuine race to flag).
+  git fetch -q origin "$BRANCH" 2>/dev/null || true
+  local _f _head_blob _origin_blob
+  local -a _missing=()
+  for _f in "${FILES[@]}"; do
+    _head_blob="$(git rev-parse -q --verify "HEAD:$_f" 2>/dev/null || echo ABSENT)"
+    _origin_blob="$(git rev-parse -q --verify "origin/${BRANCH}:$_f" 2>/dev/null || echo ABSENT)"
+    if [[ "$_head_blob" != "$_origin_blob" ]]; then
+      _missing+=("$_f  (HEAD=$_head_blob  origin/$BRANCH=$_origin_blob)")
+    fi
+  done
+  if [[ ${#_missing[@]} -gt 0 ]]; then
+    {
+      echo "  ❌ per-file push verification failed: ${#_missing[@]} of ${#FILES[@]} named file(s) did not reach origin/${BRANCH}:"
+      printf '     - %s\n' "${_missing[@]}"
+      echo "   The branch-level check passed (HEAD is on origin/${BRANCH}) but these specific"
+      echo "   paths differ or are missing on the remote — partial landing inside a single push."
+      echo "   Re-stage and re-push."
+    } >&2
     return 1
   fi
   return 0
