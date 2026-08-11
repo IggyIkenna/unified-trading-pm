@@ -104,6 +104,15 @@
 # change is not in the commit that shipped (measured twice 2026-08-10, once with the file left
 # dirty on disk so no revert-detection could have caught it). Recover per the printed guidance;
 # a bare re-run may or may not re-land it depending on which of the two shapes occurred.
+# 14 the push landed and every HEAD/branch-level check passed, but a PER-FILE check found a named
+# path's INTENDED state is not what origin/$BRANCH carries (added 2026-08-11,
+# safe_doc_push_isolation_drops_rename_deletions_2026_08_10 todo 5 -- the multi-file partial
+# landing: one of N named paths reached the remote, another did not, and the run would have
+# exited 0). Two shapes: a DELETION at entry (absent on disk, tracked in HEAD) is still present on
+# origin (the create-only-archival delete half dropped from the commit), or a create/modify's
+# origin blob differs from what HEAD carries. The specific failing paths are named. For the
+# deletion shape, re-stage and re-commit the deletion (the on-disk delete usually survives); a
+# bare re-run may or may not re-land it depending on which shape occurred.
 #
 # ON PREK'S OWN PATCH RESTORE RELIABILITY (2026-08-10, re-scoped per
 # safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md todo 3): the live
@@ -576,11 +585,12 @@ _sdp_assert_entry_change_landed() {
 }
 
 # _sdp_certify_success -- the SINGLE gate every success path in this script passes through, so a
-# short-circuit added later cannot accidentally bypass either check. Echoes nothing on success;
-# returns the exit code the caller should exit with (12 or 13), or 0 to proceed.
+# short-circuit added later cannot accidentally bypass any check. Echoes nothing on success;
+# returns the exit code the caller should exit with (12, 13, or 14), or 0 to proceed.
 _sdp_certify_success() {
   _sdp_guard_already_landed_claim || return 12
   _sdp_assert_entry_change_landed || return 13
+  verify_pushed_per_file || return 14
   return 0
 }
 
@@ -682,6 +692,59 @@ verify_committed() {
 verify_pushed() {
   if ! git branch -r --contains HEAD 2>/dev/null | grep -qF "origin/${BRANCH}"; then
     echo "  ❌ verification failed: origin/${BRANCH} does not contain HEAD after push" >&2
+    return 1
+  fi
+  return 0
+}
+
+# verify_pushed_per_file -- per-file ground truth: every named path's INTENDED state must be what
+# origin/$BRANCH actually carries. verify_pushed proves the COMMIT reached the branch; it cannot
+# see a path the commit silently dropped. That is the create-only-archival class
+# (safe_doc_push_isolation_drops_rename_deletions_2026_08_10): the commit carried the ADD of a
+# `git mv` and dropped the DELETE of its source, so origin kept the old path while the run
+# reported success. Measured 2026-08-10 also as a MULTI-FILE partial landing: one of two named
+# paths reached the remote, the other did not, and the script still exited 0. The entry-change
+# gate (_sdp_assert_entry_change_landed, exit 13) deliberately skips paths absent at entry -- the
+# exact DELETION shape -- so a dropped delete half slips through every HEAD/branch-level check:
+# `git log --oneline -1 -- <path>` returns the LAST historical commit that touched it (non-empty,
+# "committed"), and origin contains the commit ("pushed"). This is the check that actually walks
+# the FILES list and asserts each path against the branch we pushed to:
+#   * a DELETION at entry (path absent from the caller tree, but tracked in HEAD) must be ABSENT
+#     at origin/$BRANCH -- the delete half of a rename/revert really reached the remote;
+#   * a CREATE/MODIFY at entry must resolve at origin/$BRANCH to the same blob HEAD carries.
+# Reads the local remote-tracking ref, which `git push` has just advanced to the exact commit this
+# run shipped, so a peer landing on top of us cannot cause a false failure -- this asserts OUR
+# push's content, which is precisely the claim in scope.
+verify_pushed_per_file() {
+  local _f _disk _entry_head _now_head _remote
+  local -a _missing=()
+  for _f in "${FILES[@]}"; do
+    _disk="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_FINGERPRINT")"
+    _entry_head="$(_sdp_blob_of "$_f" "$_SDP_ENTRY_HEAD_BLOBS")"
+    _now_head="$(_sdp_head_blob "$_f")"
+    _remote="$(git rev-parse -q --verify "origin/${BRANCH}:${_f}" 2>/dev/null || echo ABSENT)"
+    case "$_disk" in
+      ABSENT | MISSING | "")
+        # Not on disk at entry. Tracked in HEAD then -> a deletion the commit must carry; absent
+        # from HEAD too -> a caller error already rejected at staging (defensive skip).
+        if [[ "$_entry_head" != "ABSENT" && "$_entry_head" != "MISSING" && -n "$_entry_head" ]]; then
+          if [[ "$_remote" != "ABSENT" ]]; then
+            echo "  ❌ per-file verification failed: deletion of named file did not reach origin/${BRANCH} (still present there): $_f" >&2
+            _missing+=("$_f")
+          fi
+        fi
+        ;;
+      *)
+        # A create/modify: the blob the pushed commit carries (HEAD now) must be what origin has.
+        if [[ "$_now_head" == "ABSENT" || "$_remote" == "ABSENT" || "$_remote" != "$_now_head" ]]; then
+          echo "  ❌ per-file verification failed: origin/${BRANCH} does not carry the shipped content of: $_f" >&2
+          _missing+=("$_f")
+        fi
+        ;;
+    esac
+  done
+  if [[ ${#_missing[@]} -gt 0 ]]; then
+    echo "  → NOT all named files reached origin/${BRANCH}; the commit landed but these specific paths did not: ${_missing[*]}" >&2
     return 1
   fi
   return 0
