@@ -409,6 +409,29 @@ Directions, cheapest first — each is a todo below:
       `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` 2/2, A/B against the call-site-removed build fails at
       the `git pull --ff-only` assertion — the peer's exact symptom. Repo: unified-trading-pm.
 
+- [x] [INFRA] P2. **The byte-identity condition in `_sdp_reconcile_caller_duplicates` almost never held for prose
+      docs.** ✅ Fixed. The reconciler removed a caller-side leftover only when it was **byte-identical** to the landed
+      blob — but prek runs prettier INSIDE the isolated worktree, so for any prose-wrapped `.md` the landed blob is
+      re-wrapped and byte-identity never holds. It was a no-op on precisely the file class it was written for. Measured
+      3 hits in one session (`plan_alignment_npm_global_eacces_…`, `sit_gate_treadmill_…`, `codex_freshness_ratchet_…`),
+      every one a pure re-wrap with ZERO word-level difference; each cost a conflicted pull and once failed an unrelated
+      quality gate via the conflict-marker check. Same wrong-property mistake
+      `/codex/12-agent-workflow/measurement-claims-discipline.md` names — byte-identity standing in for "same content",
+      broken by a formatter that does not change the content. Fix: new `_sdp_same_content()` compares with every
+      whitespace run collapsed (same words, same order = same content, differently wrapped), scoped to `.md` ONLY — for
+      code, whitespace is semantic and byte-identity stays the sole test. **Also closed the other half**: two of the
+      three hits were TRACKED files, which the untracked-only loop never looked at; a tracked, locally-modified,
+      content-equivalent doc named in THIS push's `--files` is now synced to the landed version instead of being left to
+      conflict on the next pull. The loud-warning path for a REAL content delta is unchanged. Coverage:
+      `tests/test_safe_doc_push_isolated_untracked_duplicate.bats` 6/6 — re-wrap recognised, a real word change refused,
+      non-`.md` refused on whitespace, and the tracked-sync path asserted. **Caught by its own test**: the first cut
+      made byte-identical files `continue` early, silently disabling the ORIGINAL untracked-duplicate removal; test 1
+      failed and named it. Evidence: unified-trading-pm@54f9102183. Repo: unified-trading-pm. **Recovery note worth
+      keeping**: this very todo was parked mid-session by quickmerge's own `safety-snapshot: pre-reconcile quarantine`
+      when the autostash chain hit 65 entries — it announced the quarantine loudly and named the stash, so the text was
+      recoverable in full from `stash@{0}` rather than lost. That mechanism worked; the standing hazard it points at is
+      the 65-deep autostash pile itself.
+
 - [x] [INFRA] P1. **The host gate silently disarmed the isolation regression test.** ✅ Done —
       `tests/test_safe_doc_push_isolated_identity_preserved.bats` exports `ORCHESTRATOR_VM_ID=planning` to pin the host
       label in its expected author string. When isolation became host-gated (default OFF on a named VM,
