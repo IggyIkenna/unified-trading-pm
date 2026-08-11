@@ -493,9 +493,16 @@ version.
   operator DIRECTLY asks for Fable (it is for the hardest / longest-running interactive work — overkill for routine
   dispatch). Effort: Haiku has NO effort levels (thinking on/off only); sonnet/opus/fable support `--effort` low→max.
   _[ROLLING OUT: fable spawn + per-model effort.]_
-- **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** Alongside any
-  `assigned_vm: planning` plan, author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` +
-  `gate_on_depends: true` + `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into
+- **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** **Before authoring one, check
+  it's not already covered** — run
+  `python3 scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <plan-slug>` (bare slug, the parent's
+  filename stem, no `.md`); exit 0 means safe to create, exit 1 prints the existing covering plan's path — add your
+  fix as a todo there instead of authoring a duplicate. This create-time guard exists because two responders can each
+  independently conclude "no finalize plan exists yet" and both write one on the same day
+  (`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`) — the check re-derives coverage from the CURRENT
+  corpus by the `depends_on` relationship, not by guessing a filename. Alongside any `assigned_vm: planning` plan,
+  author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` + `gate_on_depends: true` +
+  `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into
   its TRUE source doc(s) — either the plan's own checkboxes if self-contained, or every named source doc's corresponding
   checkbox if the plan was a batch-style extraction from other docs (do not trust a source doc's own copy of the
   evidence line — re-verify the cited commit exists); (2) re-check any deferred/excluded-at-authoring-time follow-up

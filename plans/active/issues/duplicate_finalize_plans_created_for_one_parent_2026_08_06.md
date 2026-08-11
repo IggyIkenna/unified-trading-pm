@@ -65,11 +65,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** Before writing a new
-      `<parent>_finalize*.md`, re-derive `check_finalize_plan_coverage.py::_gated_slugs()` over the CURRENT corpus and
-      refuse if the parent is already gated by an existing finalize plan — regardless of that plan's filename shape. The
-      two colliding files differ only by a redundant `_2026_07_31` suffix, so any guard keyed on the exact expected
-      filename would have missed this; key it on the `depends_on` relationship, which is the real contract.
+- [x] [INFRA] P3. **Make finalize-plan creation idempotent at the point of creation.** ✅ — added
+      `--check-parent <slug>` to `check_finalize_plan_coverage.py` (re-derives coverage from the CURRENT corpus via
+      `_gated_slugs`'s `depends_on`+`gate_on_depends: true` relationship, exits 1 + prints the existing covering plan's
+      path if already gated, 0 if safe to create — no filename-shape assumption, so the exact `_2026_07_31`-suffix
+      collision this doc documents is now caught regardless of naming). Wired as a required pre-authoring step into
+      `task_template.md` §4's finalize-plan rule. Unit-tested (`test_check_finalize_plan_coverage.py`, 3 new cases incl.
+      the mismatched-filename-shape case) — 10/10 passing.
+      Evidence: unified-trading-pm — `scripts/quality_gates/check_finalize_plan_coverage.py`,
+      `scripts/quality_gates/test_check_finalize_plan_coverage.py`, `plans/active/task_template.md`.
 
 - [ ] [INFRA] P3. **Add a corpus-wide duplicate-gate detector to the hygiene sweep.** Flag any parent slug named in the
       `depends_on` of MORE THAN ONE `gate_on_depends: true` plan. This is cheap (the sweep already parses every plan's

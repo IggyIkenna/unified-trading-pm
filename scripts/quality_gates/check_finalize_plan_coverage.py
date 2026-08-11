@@ -130,6 +130,23 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _find_gating_plan(all_plans: list[Coverage], parent_slug: str) -> Path | None:
+    """The first (other) plan whose depends_on + gate_on_depends: true already names
+    parent_slug — i.e. the plan that WOULD collide with a new finalize plan for the
+    same parent. Mirrors _gated_slugs() but returns the covering plan's path, not just
+    the fact of coverage, so a create-time caller can point at the existing collision."""
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        deps = {dep.strip() for dep in cast(list[object], depends_on) if isinstance(dep, str)}
+        if parent_slug in deps:
+            return cov.path
+    return None
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -230,17 +247,23 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-parent",
+        default=None,
+        help=(
+            "Create-time idempotency guard (issue: duplicate_finalize_plans_created_for_one_parent_2026_08_06). "
+            "Before authoring a NEW <parent>_finalize*.md, pass the parent plan's bare slug (its filename stem, "
+            "no .md) here. Re-derives _gated_slugs() over the CURRENT corpus and exits 1 (printing the existing "
+            "covering plan's path) if the parent is ALREADY gated by some other active finalize plan — regardless "
+            "of that plan's filename shape, since gating is keyed on the depends_on relationship, not the name. "
+            "Exits 0 (safe to create) if ungated. No baseline/ratchet involved — this is a live, current-corpus "
+            "check, not a regression gate."
+        ),
+    )
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    ns = _parse_args(argv)
-    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
-    baseline_path: Path = cast(Path, ns.baseline_path)
-    baseline_write: bool = cast(bool, ns.baseline_write)
-    strict: bool = cast(bool, ns.strict)
-    only: list[str] | None = cast("list[str] | None", ns.only)
-
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
     # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
     # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
     # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
@@ -270,7 +293,44 @@ def main(argv: list[str] | None = None) -> int:
                     f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
                     file=sys.stderr,
                 )
-                return 2
+                return None
+    return active_dir
+
+
+def _run_check_parent(active_dir: Path, workspace_root: Path, check_parent: str) -> int:
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gating_plan = _find_gating_plan(all_plans, check_parent.strip())
+    if gating_plan is None:
+        print(f"✅ '{check_parent}' is not yet gated by any finalize plan — safe to create one.")
+        return 0
+    try:
+        rel = gating_plan.relative_to(workspace_root)
+    except ValueError:
+        rel = gating_plan
+    print(
+        f"❌ '{check_parent}' is ALREADY gated by an existing finalize plan — do NOT create a new one:\n"
+        f"  - {rel}\n"
+        "If that plan is missing a fix your remediation needs, add a todo to it instead of authoring a "
+        "duplicate (see: duplicate_finalize_plans_created_for_one_parent_2026_08_06.md)."
+    )
+    return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    ns = _parse_args(argv)
+    workspace_root: Path = cast(Path, ns.workspace_root).resolve()
+    baseline_path: Path = cast(Path, ns.baseline_path)
+    baseline_write: bool = cast(bool, ns.baseline_write)
+    strict: bool = cast(bool, ns.strict)
+    only: list[str] | None = cast("list[str] | None", ns.only)
+    check_parent: str | None = cast("str | None", ns.check_parent)
+
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        return 2
+
+    if check_parent is not None:
+        return _run_check_parent(active_dir, workspace_root, check_parent)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
