@@ -356,7 +356,7 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       on a real multi-hour-wait case (`plan_reconciler:ao:2026-08-09`, queued 02:01 -> dispatched 02:47, `agt-fe4564`,
       one worker). New minor finding tracked below (not a correctness bug — no double-dispatch, no lost work). (repo:
       agent-orchestrator)
-- [ ] [DATA] P3. Same-day timer refire AFTER its `<job>:<tranche>:<day>` queue row is already `status=dispatched`
+- [x] ✅ [DATA] P3. Same-day timer refire AFTER its `<job>:<tranche>:<day>` queue row is already `status=dispatched`
       reports a misleading `status="queued"` in `/api/scheduled-jobs/recent` — found live 2026-08-09 verifying the todo
       above. `_queue_for_capacity()` (`server/plan_health.py`) unconditionally returns `{"status": "queued", ...}`
       regardless of whether `queue_scheduled_job()` actually (re-)queued the row or hit its `else: return row` no-op
@@ -367,7 +367,17 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `queued` reports at 00:40/02:31/07:55/08:40 for the same key, none of which will ever get their own worker. Fix:
       have `_queue_for_capacity()` (or `queue_scheduled_job()`) distinguish "freshly queued/attempts bumped" from
       "already dispatched today, no-op" and return a distinct status (e.g. `"already_dispatched_today"`) for the latter.
-      (repo: agent-orchestrator)
+      (repo: agent-orchestrator) — SHIPPED agent-orchestrator@a38423e889. `_queue_for_capacity()` now returns
+      `status="queued"` only when `queue_scheduled_job()`'s row is genuinely `status=="queued"` (fresh insert or a
+      bumped still-pending retry); the no-op branch (row already `dispatched`/`abandoned`) now reports
+      `f"already_{row.status}_today"` instead. All 10 `install-*-timer.sh` dispatch scripts updated to recognize the new
+      status and skip re-reporting a phantom dispatch attempt for the no-op case (a real "dispatched" row already exists
+      for that tranche/day) — otherwise the bash script's `grep -q '"status":"queued"'` check would have fallen through
+      to its DISPATCHED branch and filed a false `status="dispatched"` row with no agent_id, trading one mislabeling bug
+      for a worse one. 2 new regression tests in `tests/test_scheduled_jobs.py`
+      (`test_queue_for_capacity_reports_queued_for_a_fresh_defer`,
+      `test_queue_for_capacity_distinguishes_same_day_refire_after_dispatch`). QG green: 3445 python passed, 295
+      vitest passed, tsc clean.
 - [ ] [DATA] P3. Confirm the hoisted working-pane guard reduced false spawn-retry-cap pages (agent-orchestrator@9d26598,
       deployed 2026-08-06 15:04 UTC). Baseline to beat, measured 2026-07-30..08-06 from the orchestrator journal: 45 cap
       declarations, pane state at cap = frozen 19 / no_session 11 / **working 8** / idle 7. The 8 `pane=working` pages
