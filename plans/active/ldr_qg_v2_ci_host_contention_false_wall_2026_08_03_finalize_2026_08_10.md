@@ -10,6 +10,7 @@ summary: >-
   archives the source doc if no follow-up work remains open. Authored 2026-08-10 as part of the `ao` full-tranche
   RECLASSIFY + satellite-extraction sweep, group 3, per task_template.md's finalize-plan-coverage rule.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -91,11 +92,13 @@ source: >-
       quality-gates-v2 + sit-gate/fleet-green, bypass_actors=[], default_branch=main). Follow-up todo 1's
       `<see Progress Log for SHA>` placeholder fixed → `unified-trading-pm@f3534a90ea`. No bare "done" claims remain in
       the source doc's audit todos.
-- [ ] [REVIEW] P1. **Archive only if genuinely fully resolved.** If all 3 audits found no gap (or every found gap's
+- [x] ✅ [REVIEW] P1. **Archive only if genuinely fully resolved.** If all 3 audits found no gap (or every found gap's
       follow-up todo is itself already `[x]`), run the standard 6-step archival ritual on the source doc (banner, move
       to `plans/archive/2026_08/issues/`, fix every corpus referrer including this finalize plan's own `related:`,
       re-run the active-plan inventory generator). **If any follow-up todo is still open, leave the source doc
-      `status: open` and do NOT archive** — record which follow-up(s) remain and why.
+      `status: open` and do NOT archive** — record which follow-up(s) remain and why. **ARCHIVED 2026-08-11 (slot-18):
+      unified-trading-pm@484b3af11e — both source doc and this finalize plan archived; full copy at
+      `plans/archive/2026_08/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md`.**
 
 ## Codex SSOTs
 
