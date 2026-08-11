@@ -69,11 +69,21 @@ depends_on: []
       already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
       the stale "66% attempted_failed... not yet launched" text). Repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
+- [x] ✅ [SCRIPT] P3. **Consider whether `check_line_caps.sh`'s scoped-mode carve-out should accept a net-zero-LENGTH
       content substitution** (not just `DELETED=0`), per the root-cause analysis already done in
       `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a shared fix would unblock both that
       doc's link-archival case and this doc's table-row-update case without requiring every over-cap closeout plan to be
-      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`.
+      split first. Repo: unified-trading-pm, `scripts/plan-hygiene/check_line_caps.sh`. **Decision: yes — added a fourth
+      SCOPED-mode carve-out** (`CONTENT_SUBSTITUTION_EDIT`), generalizing the existing link-repoint carve-out beyond
+      path-token-only edits: fires when the staged diff to an already-over-cap doc has `ADDED<=DELETED` (never grows the
+      file — the load-bearing safety property, since the cap exists to stop growth) AND touches no checkbox line
+      (`- [ ]`/`- [x]`) on either side (can't smuggle tracked-work changes). Unlike the link-repoint branch, does NOT
+      require the changed lines to be textually similar — any content swap is fine as long as it can't grow the file or
+      touch a todo. Verified in an isolated scratch git repo (copied the script alongside a synthetic over-cap doc so
+      its `PM_DIR`-relative `git diff` calls resolve correctly, same technique as the link-repoint carve-out's own
+      verification): the exact case this todo names (an MVP-cell table-row content correction, `git diff --numstat` =
+      `1 1`) now passes SOFT; confirmed still HARD-blocked: a net-growing edit (`ADDED>DELETED`), a checkbox-line touch,
+      and the pre-existing link-repoint case still classifies via its own (unchanged) branch, not this new one.
 
 ## Progress Log
 
@@ -87,3 +97,7 @@ depends_on: []
   the established 2026-07-24/2026-07-25 split precedent. Parent doc 1005L → 879L; `check_line_caps.sh` now exits 0 on
   it. Todos 2 and 3 remain open (out of this task's scope — a P3 content-landing todo and a P3 tooling-improvement todo,
   both separate follow-ups).
+- **2026-08-11, slot-12 (backend_engineer)**: closed todo 3. Added the `CONTENT_SUBSTITUTION_EDIT` carve-out to
+  `check_line_caps.sh` per the todo's own analysis; see the todo's own text above for the decision + verification
+  detail. Todo 2 (landing the accurate "S&P index options" MVP-cell row) remains open — this task's own doc,
+  `tradfi_consolidated_closeout_2026_07_18.md`, is a separate follow-up that can now land under the new carve-out.
