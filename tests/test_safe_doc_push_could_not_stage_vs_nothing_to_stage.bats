@@ -73,7 +73,12 @@ setup() {
   git push -q origin HEAD:live-defi-rollout
 
   # Nothing changed on disk since the commit -- staging succeeds but has nothing new to add.
-  PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+  # The F8 guard (pm_repo_commit_rate_exceeds_precommit_hook_duration F8) intentionally refuses
+  # to auto-report a no-op-at-entry as success: "a peer landed it" and "your edit was reverted
+  # before the script hashed it" are indistinguishable from inside the script, so it exits 12
+  # unless the caller explicitly accepts the idempotent re-run. SDP_ALLOW_NOOP=1 is that
+  # declaration -- this test is about the staging-failure WORDING, not the F8 guard.
+  PATH="${WORK}/bin:$PATH" SDP_ALLOW_NOOP=1 run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"nothing to stage for the named files"* ]]
@@ -95,7 +100,7 @@ setup() {
   git add tracked.md
   git commit -q -m "add tracked.md"
   git push -q origin HEAD:live-defi-rollout
-  PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
+  PATH="${WORK}/bin:$PATH" SDP_ALLOW_NOOP=1 run bash "$SCRIPT" "docs: no-op edit" --files "tracked.md"
   nothing_to_stage_status="$status"
 
   [ "$stage_fail_status" -ne 0 ]
