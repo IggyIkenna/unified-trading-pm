@@ -406,6 +406,40 @@ _refresh_independent_clone_ref() {
         "+refs/remotes/origin/${int_branch}:refs/remotes/origin/${int_branch}" 2>/dev/null
 }
 
+# ── venv currency ─────────────────────────────────────────────────────────────
+# This cron keeps CODE current and, until 2026-08-11, nothing kept the ENVIRONMENT
+# current with it. A FF that moves `uv.lock` leaves the venv behind silently and
+# forever, which is how 162 of 216 local slot venvs and 135 of 194 on the
+# orchestrator VM ended up drifted from their lockfiles
+# (/plans/active/issues/fleet_venv_drift_after_pull_no_resync_2026_08_11.md). The
+# damaging case is not version skew but an API boundary: agent-orchestrator sat on
+# fastapi 0.136.3 against a lock pinning 0.140.7, so UTL's `iter_route_contexts`
+# import raised and the ENTIRE pytest suite stopped collecting.
+#
+# Deliberately narrow: it re-syncs ONLY when the FF actually changed that repo's
+# uv.lock, so an ordinary no-op tick costs one `git diff --quiet` and nothing else.
+_resync_venv_if_lock_moved() {
+    local repo_name="$1" prev_sha="$2"
+    [[ "${SLOT_CRON_SKIP_VENV_RESYNC:-0}" == "1" ]] && return 0
+    [[ -f uv.lock && -x .venv/bin/python ]] || return 0
+    command -v uv >/dev/null 2>&1 || return 0
+    # Unchanged lock -> nothing to do. This is the common case and stays free.
+    git diff --quiet "${prev_sha}" HEAD -- uv.lock 2>/dev/null && return 0
+    # Never rewrite site-packages under a peer mid-run — same rule the manual sweep
+    # followed. A skipped repo is picked up on a later tick, when it is idle.
+    if pgrep -af 'pytest|quality-gates|basedpyright' 2>/dev/null | grep -qF "${PWD}"; then
+        log "[venv-skip] ${repo_name} — uv.lock moved but a test/gate is running here; resync deferred to a later tick"
+        return 0
+    fi
+    local _to=""
+    command -v timeout >/dev/null 2>&1 && _to="timeout 600"
+    if ${_to} uv sync --frozen >/dev/null 2>&1; then
+        log "[venv-resync] ${repo_name} — uv.lock moved; venv re-synced"
+    else
+        log "[venv-resync-failed] ${repo_name} — uv.lock moved but 'uv sync' failed; run it manually"
+    fi
+}
+
 ff_one() {
     local repo_dir="$1"
     local do_fetch="${2:-1}"
@@ -810,6 +844,7 @@ ff_one() {
         if git merge --ff-only --quiet "origin/${int_branch}" 2>/dev/null; then
             log "[ff] ${repo_name} (${branch} → ${int_branch}) — FF +${behind} → ${remote_sha:0:8}"
             _ff_record "ok"
+            _resync_venv_if_lock_moved "${repo_name}" "${local_sha}"
         else
             log "[skip:ff-failed] ${repo_name} (${branch} → ${int_branch}) — --ff-only refused; manual inspection needed"
             _ff_record "conflict"

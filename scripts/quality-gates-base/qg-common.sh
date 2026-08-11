@@ -316,3 +316,45 @@ qg_cache_store() {  # $1=name $2=key — call ONLY after a clean/green step run
     mkdir -p "$_QG_CACHE_DIR" 2>/dev/null || return 0
     printf '%s' "$2" > "${_QG_CACHE_DIR}/$1" 2>/dev/null || :
 }
+
+# ── venv freshness ────────────────────────────────────────────────────────────
+# Fail closed when .venv EXISTS but has drifted from uv.lock. This is the same
+# reasoning as each base's "no usable .venv/bin/python" abort, one step further
+# along: gating against the WRONG dependency set is as meaningless as gating
+# against the wrong interpreter, but it is far harder to notice.
+#
+# Measured 2026-08-11 (fleet_venv_drift_after_pull_no_resync_2026_08_11.md):
+# agent-orchestrator carried fastapi 0.136.3 against a pyproject requiring
+# >=0.137.0 (lock pinned 0.140.7), so `from fastapi.routing import
+# iter_route_contexts` — reached via UTL from tests/conftest.py — raised
+# ImportError and the ENTIRE pytest suite failed to COLLECT. The gate ran every
+# other check around it and reported one failed pytest step, which reads as a code
+# defect rather than an environment one. A sweep the same day found 162/216 local
+# slot venvs and 135/194 on the orchestrator VM drifted, because
+# slot-cron-ff-pull.sh keeps CODE current and nothing re-syncs the environment
+# after a pull moves uv.lock.
+#
+# DEFINED HERE, CALLED BY THE BASES — never invoked at source time: quickmerge.sh
+# also sources this file for helpers, and in isolated-worktree mode its .venv is a
+# symlink into a cache that may be unprovisioned. Aborting there would break
+# shipping, which is not what this check is for.
+#
+# `-f uv.lock` is load-bearing, not defensive: with no lockfile the command fails
+# with "Unable to find lockfile" — a MISSING LOCK, not a stale env — which would
+# abort every lockless repo (measured: unified-trading-system-ui, a TS repo
+# carrying a pyproject.toml but no uv.lock).
+qg_assert_venv_fresh() {
+    [ "${QG_ALLOW_STALE_VENV:-0}" = "1" ] && return 0
+    [ -f "${REPO_ROOT:-.}/uv.lock" ] || return 0
+    [ -x "${REPO_ROOT:-.}/.venv/bin/python" ] || return 0
+    command -v uv >/dev/null 2>&1 || return 0
+    # Read-only: --check never writes the env and --frozen never touches the lock.
+    # ~50ms on an in-sync tree, so this costs nothing in the common case.
+    if ! (cd "${REPO_ROOT:-.}" && uv sync --frozen --check >/dev/null 2>&1); then
+        echo "❌ quality gate ABORTED — .venv is STALE against uv.lock in ${REPO_ROOT:-$PWD}" >&2
+        echo "   Fix with 'uv sync'. Set QG_ALLOW_STALE_VENV=1 only to gate a drifted env deliberately." >&2
+        echo "   NOT skipping: a stale venv can stop the suite COLLECTING, and a gate that reports that" >&2
+        echo "   as one failed step reads like a code problem, not an environment one." >&2
+        exit 1
+    fi
+}
