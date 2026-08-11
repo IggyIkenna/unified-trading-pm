@@ -137,6 +137,12 @@ memory and that's what kills sessions" as-is.
 
 ## Todo
 
+- [ ] [DATA] P3. **Re-check the daily reaped-stale rate — spiked 2026-08-11.** Found closing a superseded todo
+      (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, slot 25): live snapshot (`live_20260811T171546Z.db`)
+      shows `exit_reason='reaped-stale'` at 93/152 (61%) of today's dispatched agents vs 8-12/day (12-32%) on
+      08-09/08-10, with `tmux_session_lost` firing in mass bursts (6-21 events in the same second) roughly every 5-17
+      minutes all day. Not investigated further (out of scope for that todo) — worth a fresh pass here to confirm this
+      is the same "unplanned loss" class already being measured, or a new regression. (repo: agent-orchestrator)
 - [ ] [INFRA] P2. **Get real tmux/system-level evidence for an unplanned loss**, not just orchestrator-side activity_log
       inference. On the orchestrator VM (`i-0c9b283b31d6b5ca7`, read-only SSM only — see
       `scripts/orchestrator/check-ao-backlog-status.sh` for the access pattern): (a) fix the `journalctl -k` OOM check

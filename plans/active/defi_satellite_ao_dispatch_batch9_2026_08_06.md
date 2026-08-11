@@ -216,14 +216,28 @@ over all pending draft batches) that independently spot-verified every todo belo
       `2023-01-01` default instead of an explicit manifest-derived `--start`, so it's redundantly re-walking
       already-captured ground — not a correctness issue, SPOT/idempotent, self-resolves in ~2 weeks): see
       `/plans/archive/2026_08/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
-- [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
-      2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
-      handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096
-      rows per the 2026-07-22 census) or only the narrower composite-venue-object subset that fold applied to — do NOT
-      touch the separate `dex_swaps` DATA migration item, that stays its own dedicated, too-large-for-batch migration.
-      Repo: market-tick-data-service. Source: `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`. Done
-      when: the source doc's open DIAG todo is checked off with an explicit population-overlap finding (full match /
-      partial match + residual scope) citing the batch6 evidence.
+- [x] ✅ [DIAG] P3. **Verify manifest migration scope — PARTIAL MATCH at batch6's own fold, but residual now CLOSED by a
+      separate later migration.** batch6's 2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`,
+      `market-tick-data-service@13f14b78`) was a NAMING-only determination — verified against live `_lending_grain.py`
+      handler source AND cross-confirmed by UAC/MDPS/features-service's own `rate_indices`→`lending_indices` aliases
+      (per `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py`'s docstring) — a scope-independent fact about the
+      canonical target NAME, not itself a data migration. The `fold_legacy_composite_venue_objects_2026_07_31.py`
+      EXECUTION that finding was embedded in only wrote rows for its own narrow 9-venue/5,332-object population
+      (`AAVEV3-ETHEREUM` etc., 2024-05-02..2026-01-24) — a small subset of the full `rate_indices` manifest population,
+      since `AAVEV3-ETHEREUM` is the only one of those 9 venues that emits `rate_indices`-typed rows. It did NOT cover
+      the full ~49,096-row 2026-07-22-census population. **This gap is moot, not open**: the FULL `rate_indices` legacy
+      population was separately migrated to completion by a DIFFERENT, purpose-built, later script —
+      `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py` — confirmed **GENUINELY 100% COMPLETE 2026-08-07**
+      (`market-tick-data-service@f835f605f`, VM `backfill-defi-legacy-datatype-fold-20260807-195817`): 1,189/1,189
+      shards, 3,160+22,968=26,128 rows written/accounted, `missing_source: 0`, exactly matching the fresh 2026-08-04
+      census's 26,128-row legacy population (`defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 4 +
+      line ~331) — zero residual. The migrated legacy rows still carry `capture_status=captured` manifest rows pending
+      RETIREMENT (not re-migration, a separate already-tracked step) — live-confirmed 26,128
+      `data_type=rate_indices captured` rows as of the 2026-08-10 rebuild verification
+      (`defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md:83,109-112,170`, its own open `[DATA] P1`
+      retirement todo). Repo: market-tick-data-service. Source:
+      `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` (its own DIAG todo already closed 2026-08-07
+      by citation to this exact todo — no further action needed there).
 - [x] ✅ [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
       (`--start-date 2023-11-01 --end-date 2026-08-05`, ~980 days, log `/tmp/lst_yields_resume_20260805.log`) actually
       ran to completion via a fresh `gcloud storage ls` day-partition count on

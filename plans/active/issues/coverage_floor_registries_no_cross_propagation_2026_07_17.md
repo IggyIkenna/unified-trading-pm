@@ -324,11 +324,33 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   Follow-up's real target (`manifest_writer/_read_index.py`, where `read_availability_index` lives) and kept the 2 core
   registries + the falsifier + the sibling fold-in-target doc; dropped the now-fully-resolved sports `league_data.py`
   and the closed `cefi_hl_aster_batch_data_gaps_2026_06_22.md` HYPERLIQUID item.
+- **slot-10 2026-08-11** (coverage_floor_registries_no_cross_propagation-001): Closed the "read_availability_index empty
+  DataFrame" Follow-up — it was a stale duplicate of a separately-filed, already-resolved sibling issue doc
+  (`/plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md`, root-caused + fixed
+  2026-08-03). Verified live: the fix (`unified-trading-library@0db19a72` + `@3b72245a`) and both regression tests are
+  still present in current code. No new code needed.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
-      2026-07-27 (flagged 'worth its own follow-up, not chased here').
+- [x] ✅ [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
+      2026-07-27 (flagged 'worth its own follow-up, not chased here'). — **ALREADY RESOLVED — this was a stale
+      duplicate.** The exact same finding was independently filed the same day as its own issue doc,
+      `/plans/archive/issues/read_availability_index_slim_path_silent_empty_return_2026_07_27.md`, root-caused
+      2026-08-03 (slot-12): `_read_availability_index_slim`'s no-`filters=` branch resolved `get_storage_client()`
+      INSIDE its broad `except (FileNotFoundError, OSError, ValueError, pd.errors.ParserError)`, so a config
+      `ValueError` from `get_project_id()` (missing `GCP_PROJECT_ID`/`AWS_ACCOUNT_ID`) was silently folded into "empty
+      index" — the identical defect shape as the sibling
+      `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`. Fixed
+      `unified-trading-library@0db19a72` (2026-07-28, both slim-path branches now resolve the storage client OUTSIDE the
+      try) + `unified-trading-library@3b72245a` (2026-08-03, added the `test_slim_read_row_count_matches_full_read`
+      parity regression test). Verified LIVE in this session (2026-08-11):
+      `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py` still has `get_storage_client()`
+      resolved before the `try` in both `_read_availability_index_slim` branches (filters= and columns-only) and in the
+      top-level `read_availability_index`/`_read_availability_index_full_filtered` paths too;
+      `tests/unit/test_manifest_read_index_slim.py` still carries both `test_slim_read_raises_on_missing_gcp_project_id`
+      and `test_slim_read_row_count_matches_full_read`. No new code needed — this todo's own investigation had already
+      happened in a sibling doc that this doc's Follow-ups section was never cross-referenced against. (repo:
+      unified-trading-library, no new commit)
 - [ ] [DATA] P3. **Re-verify manifest coverage for Hyperliquid 2023-04-15..2023-12-31** once
       `DEPLOYMENT_COMPLETED exit_code=0` lands for the `cefi-hyperliquid-2023-*` backfill VM (run-id `20260727-071055`
       was actively advancing through this window as of 2026-07-27T08:37:45Z, ~88s/day — check current run status, it has
