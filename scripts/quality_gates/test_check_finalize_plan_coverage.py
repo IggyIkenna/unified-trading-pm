@@ -20,6 +20,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import check_finalize_plan_coverage as _checker  # type: ignore[import-not-found]
+import pytest
 from check_finalize_plan_coverage import main  # type: ignore[import-not-found]
 
 
@@ -128,3 +129,68 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --guard-parent-slug (create-time idempotency guard) ─────────────────────
+# duplicate_finalize_plans_created_for_one_parent_2026_08_06 todo 1: before authoring a
+# new <parent>_finalize*.md, refuse if the parent is ALREADY gated by an existing finalize
+# plan — keyed on the depends_on relationship, not the expected filename shape.
+
+
+def test_guard_passes_when_parent_not_yet_gated(tmp_path: Path) -> None:
+    """A parent with no existing gate is safe to pair — the guard exits 0."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent-slug", "source_plan_2026_08_11"])
+    assert rc == 0
+
+
+def test_guard_refuses_when_parent_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_11.md")
+    _write_plan(
+        active / "source_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent-slug", "source_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_guard_refuses_regardless_of_filename_shape(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    """The exact collision from the issue: two finalize plans for one parent differ only by a
+    redundant date suffix. A guard keyed on the expected filename would miss one of them; keyed
+    on the depends_on relationship it must refuse AND name BOTH existing gating plans."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_07_31.md")
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_plan_2026_07_31_finalize_2026_07_31.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_07_31]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent-slug", "parent_plan_2026_07_31"])
+    assert rc == 1
+    out = capsys.readouterr().out
+    assert "parent_plan_2026_07_31_finalize.md" in out
+    assert "parent_plan_2026_07_31_finalize_2026_07_31.md" in out
+
+
+def test_guard_unaffected_by_a_gate_on_a_different_parent(tmp_path: Path) -> None:
+    """A finalize plan gating an UNRELATED parent must not block authoring this parent's companion."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "other_plan_2026_08_11.md")
+    _write_plan(active / "target_plan_2026_08_11.md")
+    _write_plan(
+        active / "other_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [other_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--guard-parent-slug", "target_plan_2026_08_11"])
+    assert rc == 0
