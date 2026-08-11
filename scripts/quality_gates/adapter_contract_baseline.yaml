@@ -28,6 +28,8 @@ baseline:
     count: 5
   deployment-api/deployment_api/services/data_status/sports_helpers.py:
     count: 1
+  deployment-service/deployment_service/data_pipeline_monitors/_attempted_failed_index.py:
+    count: 1
   deployment-service/deployment_service/data_pipeline_monitors/_gcs.py:
     count: 8
   deployment-service/deployment_service/data_pipeline_monitors/cli.py:
@@ -38,8 +40,6 @@ baseline:
     count: 5
   deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:
     count: 2
-  deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py:
-    count: 1
   deployment-service/deployment_service/vm_prefix_registry.py:
     count: 3
   execution-service/execution_service/adapters/defi_adapter.py:
@@ -281,6 +281,8 @@ baseline:
   market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py:
     count: 2
   market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py:
+    count: 1
+  market-data-processing-service/market_data_processing_service/app/adapters/cefi/liquidations_adapter.py:
     count: 1
   market-data-processing-service/market_data_processing_service/app/adapters/cefi/trades_adapter.py:
     count: 1

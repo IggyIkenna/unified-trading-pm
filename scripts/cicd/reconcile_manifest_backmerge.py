@@ -37,6 +37,19 @@ An unparseable version on either side falls through to the normal genuine-confli
 escalation (never guess). A version field that only one side changed already takes
 that side via the standard 3-way (no special-casing needed).
 
+**``published_packages.<name>`` records (added 2026-08-11, ci_reconcile hardening).**
+Same monotonic-version-surface shape as ``versions.<repo>`` — a wheel-publish bot
+stamps ``{version, published_at, registry}`` on whichever branch races there first,
+and both main and LDR can lead. This was NOT covered by ``_is_version_field`` (it
+only recognised ``versions.<repo>`` / ``repositories.<name>.version``), so a
+both-sides-published package fell all the way through to a genuine-conflict
+escalation — the exact "dam" this reconciler exists to prevent, caught live when
+PM's ``ldr-to-main-promote`` bot sat DIRTY for 400+ commits of drift on
+``unified-api-contracts`` / ``instruments-service`` publishes. Resolved atomically:
+when both sides changed a ``published_packages.<name>`` record, the WHOLE record
+(version + published_at + registry) is taken from whichever side has the higher
+``version`` — never split version from one side with published_at from the other.
+
 Direction contract: ``--ours`` is the LDR side (HEAD during the back-merge),
 ``--theirs`` is the main side (MERGE_HEAD). CI fields resolve to ``theirs``;
 both-bumped version-surface fields resolve to the semver-max of both sides.
@@ -112,6 +125,22 @@ def _semver_max(ours: object, theirs: object) -> object | None:
     return ours if to >= tt else theirs
 
 
+def _is_published_package_record(path: ConflictPath) -> bool:
+    """``published_packages.<name>`` — a whole publish-record dict, resolved
+    atomically (see module docstring) rather than field-by-field."""
+    return len(path) == 2 and path[0] == "published_packages"
+
+
+def _resolve_published_package(ours: Mapping[str, object], theirs: Mapping[str, object]) -> Mapping[str, object] | None:
+    """Whichever side's ``.version`` is higher wins its WHOLE record. ``None`` when
+    either side lacks a parseable ``version`` — falls through to normal recursive
+    merge / genuine-conflict escalation (never guess)."""
+    winner = _semver_max(ours.get("version"), theirs.get("version"))
+    if winner is None:
+        return None
+    return ours if winner == ours.get("version") else theirs
+
+
 def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath) -> tuple[object, list[ConflictPath]]:
     """Standard 3-way merge of a single value. Returns (merged, conflicts)."""
     if ours == theirs:
@@ -154,6 +183,22 @@ def _merge_dict(
             elif in_ours:
                 merged[key] = ours[key]
             continue
+        if (
+            in_ours
+            and in_theirs
+            and _is_published_package_record(child)
+            and isinstance(ours[key], Mapping)
+            and isinstance(theirs[key], Mapping)
+            and ours[key] != theirs[key]
+        ):
+            resolved = _resolve_published_package(
+                cast("Mapping[str, object]", ours[key]), cast("Mapping[str, object]", theirs[key])
+            )
+            if resolved is not None:
+                merged[key] = resolved
+                continue
+            # unparseable version on either side — fall through to normal recursive
+            # merge so a genuine per-field conflict still escalates (never guess).
         if in_ours and in_theirs:
             value, sub = _merge_value(
                 base.get(key) if isinstance(base, Mapping) else None,
