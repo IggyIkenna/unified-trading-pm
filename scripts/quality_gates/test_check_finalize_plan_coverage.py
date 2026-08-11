@@ -165,7 +165,7 @@ def test_only_ignores_a_duplicate_gate_outside_scope(tmp_path: Path) -> None:
         active / "source_plan_2026_08_05_finalize_2026_08_06.md",
         extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
     )
-    clean = _write_plan(active / "unrelated_plan_2026_08_05.md")
+    clean = _write_plan(active / "unrelated_plan_2026_08_05.md", assigned_vm="NA")
 
     rc = main(["--workspace-root", str(tmp_path), "--only", str(clean)])
     assert rc == 0
