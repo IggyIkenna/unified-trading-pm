@@ -264,6 +264,30 @@ strategies needs the shared spine, and TradFi is a second platform with a compli
 So the frame is "here is what the next 24 months costs on the platform versus alone", not "here is what you lose by
 leaving". Same facts, forward-looking, and it is the argument we actually believe.
 
+## Deferred work after 2026-08-11
+
+Separated by KIND, because these need different responses. Nothing below is half-committed — everything shipped this
+session is on `live-defi-rollout` at `05088f8a18`.
+
+| Item                                                                                                     | Kind                                 | Blocked on                             |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------- |
+| Rewrite `carveout-engineering.html` into a briefing register (drop the negotiation framing)              | **Not done** — real work, pick it up | nobody                                 |
+| Correct Exhibit A's non-resolving adapter paths in the SLA manifest                                      | **Not done** — real work, pick it up | nobody; wording wanted operator review |
+| Productionise the venue funding readers into the licensed set                                            | **Not done** — real work, pick it up | nobody                                 |
+| Build the lite carve-out repo (recommendation: build now, demo, deliver on election)                     | **Operator-owned**                   | operator go-ahead on sequencing        |
+| Decide which DOCUMENTATION ships with a carve-out (the venue-integration reference is the sensitive one) | **Operator-owned**                   | operator decision                      |
+| Locate the $90k → $135k variation document, or stop citing $135k                                         | **Operator-owned**                   | document may not exist                 |
+| Resolve the entity position (unsigned subcontract, not a novation) before any SLA names Odum Research    | **Operator-owned**                   | counsel + Elysium consent              |
+| Confirm which contract version was executed (1 vs 3 March 2025)                                          | **Operator-owned**                   | Elysium confirmation                   |
+| Written reading of Art. 6.2's 24-month clock                                                             | **Operator-owned**                   | counsel                                |
+| Elysium's Art. 1.4 written consent for the Odum Research subcontract                                     | **Cannot be done yet**               | external party                         |
+
+**Recommended NEXT item: productionise the funding readers.** It is the only one that is (a) pure engineering with no
+operator dependency, (b) a prerequisite for BOTH remaining paths — a lite-repo demonstration and a real hand-over — and
+(c) currently the single defect that would most damage credibility if an Elysium engineer found it first. The Exhibit A
+path correction is second and is roughly an hour, but it wants a wording review. The document rewrite is third: it is
+blocked on nothing, but it is presentation work and the substance underneath it is already correct.
+
 ## Progress Log
 
 - **2026-08-08** — Found during Elysium client-pack reconciliation. Both `.docx` attachments in `~/Downloads` extracted
