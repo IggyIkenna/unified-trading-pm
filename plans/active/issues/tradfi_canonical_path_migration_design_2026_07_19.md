@@ -308,10 +308,23 @@ removal + casing normalization remain before backfill-resume.
       function, it has no `underlying=` segment) and expanded `_CHAIN_ITYPES` to also recognize already-canonical
       `combo_chain` objects (previously fell through to `D_QUARANTINE_CORRUPT` — a real bug a re-run would have hit
       today). 2 new regression tests. Shipped `market-tick-data-service@<pending, see next progress-log entry>`.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **The 4 KNOWN
+      2020-01-06 duplicates: DONE 2026-08-11 (interactive session).** Content-identity verified byte-identical (keyed on
+      `(timestamp, symbol)` — combo bundles multiple calendar-spread symbols per timestamp, a naive timestamp-only
+      sort/compare gives a false mismatch, caught and corrected mid-session). Bucket confirmed reversibility-qualified:
+      `gcs_bucket_soft_delete_retention_seconds()` = 604800s (7 days, meets the ≥604800s carve-out). Deleted the 4
+      orphaned quote=/margin=-form objects via UTL `gcs_delete_object` (kept the bare-form objects, matching what the
+      canonical-path oracle currently expects pre-migration), verified absent post-delete. **NOT DONE — the broader
+      scope** (every duplicate combo cell beyond this one date/4-underlying sample): the manifest does NOT reliably
+      surface these (a `groupby(venue,data_type,date,underlying)` on the availability index found 0 "duplicate cells"
+      for GOLD/SP500/WTI even though the GCS objects clearly exist — most likely explained by the original silent
+      manifest-write-failure bug from earlier this session, meaning affected cells may have NO manifest row at all, not
+      a detectable duplicate row). Finding the full population requires either a scoped GCS prefix walk of
+      `instrument_type=combo/` across all dates (structurally can't skip the `day=` partition to filter by
+      instrument_type, so this is a real, non-trivial walk) or VM dispatch — see the new follow-up todo below.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -350,13 +363,24 @@ removal + casing normalization remain before backfill-resume.
       2bcec56e/5706f9bb, NOT on origin" note above was STALE — those exact SHAs are unreachable in this repo's object
       store (checked `git log --all`), but the equivalent fix landed under a different SHA (`8c264a4e`) and IS on
       origin; re-verified via `git merge-base --is-ancestor`.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Re-blank the 3,267 manifest rows the now-deleted
+- [ ] [OPERATOR] P1. **(NEW 2026-08-11) Re-blank the manifest rows the now-deleted
       `restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` already restamped with real synthetic ids**
       (41 roots, `venue=CME`, `instrument_type ∈ {futures_chain, options_chain}`, `data_type ∈ {ohlcv_1m, ohlcv_1s}` —
-      full per-root breakdown in `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s Progress Log, `--apply` ran
-      2026-08-09). These rows now contradict the new instrument_id-blank design shipped above — a manifest-row column
-      update (not a GCS object delete), so the delete-safety protocol may not directly apply, but this still needs a
-      real production manifest write; scope + safety approach not yet determined. Repo: market-tick-data-service.
+      historical figure 3,267 rows from `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s `--apply` run,
+      2026-08-09). These rows now contradict the new instrument_id-blank design shipped above. **Script written, tested,
+      shipped 2026-08-11: `scripts/unblank_tradfi_cme_chain_bundle_instrument_id_2026_08_11.py`
+      (`market-tick-data-service@2dc27de8`)** — exact-match candidate selection (never a substring match, so a real
+      per-contract dated id is never touched), same CAS-write safety pattern as the sibling
+      `restamp_tradfi_fx_spot_pair_blank_instrument_id_2026_08_04.py` (snapshot-before-write, self-verify,
+      stop-on-surprise, generation-conflict retry). 11/11 unit tests passing, QG green. **Dry-run against the LIVE prod
+      manifest measured 59,197 candidates — far above the historical 3,267 figure**: the restamp script only touched
+      historical rows as of 2026-08-09, but the underlying writer bug (`_resolve_chain_bundle_manifest_id`) stayed live
+      in the writer from 2026-07-30 until today's fix, so every new ohlcv_1m/1s capture in between kept accumulating
+      more non-blank rows. **`--apply` NOT YET RUN — Auto Mode's own classifier flagged the live prod-manifest write as
+      needing explicit operator confirmation, asked the operator directly, awaiting answer.** Run
+      `.venv/bin/python scripts/unblank_tradfi_cme_chain_bundle_instrument_id_2026_08_11.py --bucket     market-data-tick-tradfi-prd-central-element-323112 --apply`
+      once confirmed (dry-run first to re-measure the live count, may have grown further). Repo:
+      market-tick-data-service.
 - [x] ✅ [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** — scoped 2026-08-11
       (slot 9, data_engineering). Full enumeration from the consolidated tradfi availability index (12.1M rows,
       column-pruned single-object read, no new GCS walk). Findings in Progress Log below. Canonical convention:
@@ -421,6 +445,19 @@ removal + casing normalization remain before backfill-resume.
       directly from the original module path — verified via repo-wide grep, not guessed. 300 tests passing across both
       split files + every downstream consumer + the originally-blocked reader.py/combo_chain fix, ruff clean. Shipped
       together in one commit: `market-tick-data-service@b13e3a2b98` → landed on live-defi-rollout.
+
+## Deferred work after 2026-08-11
+
+| Item                                                                                                                                 | State / why deferred                                                                                                                           | Blocked on                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Re-blank ~59,197 CME chain-bundle manifest rows                                                                                      | Not done — script ready, QG-green, dry-run confirms real scope                                                                                 | Operator confirmation (asked directly, awaiting answer)                                                                                     |
+| Broader orphaned-duplicate combo scope (beyond the 4 known GOLD/SP500/WTI/BTC objects)                                               | Not done — manifest doesn't reliably surface these (see finding above); needs a scoped `instrument_type=combo/` GCS prefix walk or VM dispatch | Real work — pick it up (VM-scale, not a quick local task)                                                                                   |
+| Migrate historical short-code `underlying=` objects to display-name form                                                             | Not done — dry-run script exists, needs an enumeration input + prod-bucket delete gate                                                         | Real work — needs VM dispatch (per `/codex/05-infrastructure/vm-launcher-runbook.md`, heavy I/O never runs on the operator's local machine) |
+| `_CHAIN_ITYPES`/combo target-path remap, instrument_id-blank design, `lifecycle_phase` dtype, ArrowTypeError path-read investigation | Done — all shipped/verified with real SHAs and evidence above                                                                                  | —                                                                                                                                           |
+
+Recommended next: the 59,197-row re-blank is the smallest, most-ready, highest-leverage item (script done, just needs a
+go/no-go) — do that first once the operator answers. The two VM-scale items (broader duplicate scope, short-code
+migration) should be scoped together as one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
 
 ## Progress Log
 
