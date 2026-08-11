@@ -1025,3 +1025,11 @@ are genuinely in scope for the operator's "no exceptions" directive.
   `reason_code: GATED` + `park_now: true`. **Unpark**: when `af-backfill-20260810-162910` terminates (running
   `af-backfill-*` count == 0), re-run both census scripts + confirm all 8 entities stable ~0 / honest-absence floors,
   then close this doc + notify operator. No code changes; Progress Log entry only.
+- **2026-08-11 (slot 23, `sports_af_full_entity_completion-9798da269f23` re-dispatch)**: done-when STILL unmet — slot-19
+  VM `af-backfill-20260810-162910` TERMINATED, but its STANDINGS all-383 scope was RELAUNCHED as
+  `af-backfill-20260811-012845` (2020-06-06→2026-08-10, e2-standard-8 asia-northeast1-c), RUNNING + GENUINELY
+  progressing (PROGRESS.json `last_completed_date=2020-11-14` monotonic @2026-08-11T03:30:54Z; WATCHDOG_TRACE size
+  688k→754k, iter=115). Only `-012845` running (GCP); AWS none. Census now = mid-backfill STANDINGS snapshot (residual
+  271), not terminal convergence — same rule-4a/slot-18/19/25 stale-baseline reasoning. Skipping `reason_code: GATED` +
+  `park_now: true`. **Unpark**: when running `af-backfill-*` count == 0, re-run both census scripts + confirm all 8
+  entities stable ~0 / honest-absence floors, then close this doc + notify operator. No code changes; Progress Log only.
