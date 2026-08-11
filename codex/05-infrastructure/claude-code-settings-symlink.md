@@ -51,10 +51,11 @@ Claude Code merges settings from (lowest → highest precedence): `~/.claude/set
 
 1. **TEAM (tracked, shared)** — `unified-trading-pm/cursor-configs/settings.json`. Holds ONLY team policy:
    `permissions.defaultMode: bypassPermissions` + the destructive-command `ask` denylist, `enabledPlugins`, `mcpServers`
-   (playwright), the 2 registered `hooks` (`PreToolUse`/`UserPromptSubmit`, see below), and the bypass-smoothing flags.
-   **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those are personal and must never be committed (a
-   committed `model: opus` would silently force Opus on the whole fleet, violating the Sonnet-default rule in
-   `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this file via a project-level symlink.
+   (playwright), the registered `hooks` (`PreToolUse`/`UserPromptSubmit`/`SessionStart`/`PostToolUse`, see below), and
+   the bypass-smoothing flags. **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those are personal and
+   must never be committed (a committed `model: opus` would silently force Opus on the whole fleet, violating the
+   Sonnet-default rule in `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this file via a
+   project-level symlink.
 
 2. **PERSONAL (real file, NOT a symlink, never in git)** — your own `~/.claude/settings.json`. Holds your `model` /
    `theme` / `effortLevel` / trusted `workspaces`. Because it is user-scope (lowest precedence) it provides your
@@ -118,15 +119,15 @@ Keep it a real, personal file.
 ## Hook commands: use `$CLAUDE_PROJECT_DIR`, never a hardcoded absolute path
 
 The hooks in this file's `hooks` key — `PreToolUse` → `block_destructive_commands.py`, `UserPromptSubmit` →
-`context-threshold-nudge.sh`, `SessionStart` → `session-start-collision-check.sh`, `PostToolUse` →
-`batching-nudge.py` (2026-08-10) — reference their scripts via `$CLAUDE_PROJECT_DIR/...`, not an absolute path.
-(This said "the 2 hooks" until 2026-08-10, having rotted as hooks were added — enumerate, never re-add a count.) Claude Code
-exports `CLAUDE_PROJECT_DIR` to every hook-command subprocess, set to the project root the session was launched from —
-confirmed empirically (2026-07-23) to resolve correctly and DIFFERENTLY per launch root: a session opened at the true
-workspace root gets that path, one opened in `.tabs/1` gets `.../.tabs/1`, one opened in `.tabs/2` gets `.../.tabs/2` —
-each then naturally resolves to that root's OWN clone of the hook script, not the main root's. This is what makes ONE
-tracked `settings.json` (symlinked into every root) work unmodified fleet-wide, regardless of username or workspace path
-on a given machine — no per-machine edit needed. Official reference:
+`context-threshold-nudge.sh`, `SessionStart` → `session-start-collision-check.sh`, `PostToolUse` → `batching-nudge.py`
+(2026-08-10) — reference their scripts via `$CLAUDE_PROJECT_DIR/...`, not an absolute path. (This said "the 2 hooks"
+until 2026-08-10, having rotted as hooks were added — enumerate, never re-add a count.) Claude Code exports
+`CLAUDE_PROJECT_DIR` to every hook-command subprocess, set to the project root the session was launched from — confirmed
+empirically (2026-07-23) to resolve correctly and DIFFERENTLY per launch root: a session opened at the true workspace
+root gets that path, one opened in `.tabs/1` gets `.../.tabs/1`, one opened in `.tabs/2` gets `.../.tabs/2` — each then
+naturally resolves to that root's OWN clone of the hook script, not the main root's. This is what makes ONE tracked
+`settings.json` (symlinked into every root) work unmodified fleet-wide, regardless of username or workspace path on a
+given machine — no per-machine edit needed. Official reference:
 [code.claude.com/docs/en/hooks.md](https://code.claude.com/docs/en/hooks.md) (`${CLAUDE_PROJECT_DIR}` env-var table
 entry) — this fact was never captured anywhere in this codex before 2026-07-23, which is why the hardcoded path crept in
 originally; see `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md` for the full
@@ -152,10 +153,10 @@ behaviour is a different mechanism from a rule read once at session start. Ratio
 
 **Propagation — the reason a hook is worth writing at all:**
 
-| Piece                                      | How it reaches other slots / machines                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `cursor-configs/hooks/batching-nudge.py`   | git-tracked, mode `100755` (`core.fileMode=true`), so the exec bit survives the pull                    |
-| the `PostToolUse` registration             | lives in `cursor-configs/settings.json`, **git-tracked** since 2026-07-23                               |
+| Piece                                      | How it reaches other slots / machines                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `cursor-configs/hooks/batching-nudge.py`   | git-tracked, mode `100755` (`core.fileMode=true`), so the exec bit survives the pull                                  |
+| the `PostToolUse` registration             | lives in `cursor-configs/settings.json`, **git-tracked** since 2026-07-23                                             |
 | the `<root>/.claude/settings.json` symlink | created by `scripts/workspace/link-claude-skills.sh` — run by `workspace-bootstrap.sh` AND `scripts/quality-gates.sh` |
 
 A slot or teammate machine that pulls `live-defi-rollout` and has bootstrapped (or has simply run PM's quality gate

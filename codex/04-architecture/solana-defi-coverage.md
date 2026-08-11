@@ -248,8 +248,9 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 | `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue) | API / SDK                          |
 
 > **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist nowhere
-> in code. Of this family only `restaking_rewards` is real. | `lst_rates` | Exchange rate (underlying SOL per receipt
-> token) | Stake pool state accounts |
+> in code. Of this family only `restaking_rewards` is real.
+>
+> | `lst_rates` | Exchange rate (underlying SOL per receipt token) | Stake pool state accounts |
 
 ### Jito Restaking (already shipped — Plan A)
 
