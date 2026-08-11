@@ -156,7 +156,16 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [BACKEND] P2. **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2` (London) — see updated note
+- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]`, dispatcher picked craft `backend_engineer`.** The
+      remaining work per the "OPERATOR-DECIDED 2026-08-11" note below is provisioning a NEW network egress path
+      (a VM/proxy in `europe-west2`) — VM launches/network provisioning are explicitly `infra` craft's domain, not
+      `backend_engineer`'s (`backend_engineer.md`'s `does_not`: "Infra provisioning, VM launches, CI/CD, cloud
+      (→ infra)"). Retagging so the next dispatch routes to the correct craft rather than bouncing again; per
+      `backend_engineer.md`'s craft rule ("if the plan needs [infra], it was mis-scoped: file an issue doc and
+      escalate... do not silently cross craft lines") a backend_engineer should not launch the VM itself. Once the
+      egress path exists, the remaining live-verify step (running `refresh_betfair_session_token.py` + capturing a
+      sampled market) is ordinary backend work — the same worker can finish it, or hand back to `[BACKEND]`.
+      **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2` (London) — see updated note
       below, was BLOCKED-OPERATOR-DECISION.** Two-sided Betfair odds — persist back+lay, not just one side. Item `[5]`
       under the source doc's "Smaller open items (documented, not blocking paper)" — items `[1]`-`[4]` shipped
       2026-07-20, this one is still open and needs a Betfair-exchange book source. Different component (Betfair adapter)
@@ -773,6 +782,17 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
 `/ag-closeout-audit sports` sibling run (this same dispatch wave) claim it rather than duplicating here.
 
 ## Progress Log
+
+- 2026-08-11 (slot-20, backend_engineer): dispatched to the Betfair back+lay P2 item (dispatch
+  `prediction_satellite_ao_dispatch_batch6-3cb8f8a8ef84`). The remaining "OPERATOR-DECIDED 2026-08-11" work
+  (provision `europe-west2` network egress so `refresh_betfair_session_token.py` can succeed) is a VM-launch/network
+  provisioning task — `infra` craft's domain, explicitly out of scope for `backend_engineer`
+  (`backend_engineer.md`'s `does_not: "Infra provisioning, VM launches, CI/CD, cloud (→ infra)"`). Retagged this
+  item and its mirror in `plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`
+  todo 4 from `[BACKEND]` to `[INFRA]` per the craft rule ("if the plan needs infra, it was mis-scoped: file an
+  issue doc and escalate... do not silently cross craft lines") so the next dispatch routes to the correct craft
+  instead of bouncing to another backend_engineer session. No code changed; skipping the dispatched task
+  (`reason_code: GATED`) rather than a false `/done`.
 
 - 2026-07-29 (slot 14, ag_closeout_auditor, dispatch agt-17d52d): drafted by the `/ag-closeout-audit prediction`
   scheduled run. Phase 0: rediscovered the covering-plan set via `generate_ag_closeout_audit_candidates.py` (8

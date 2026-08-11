@@ -182,7 +182,11 @@ concrete reason not to).
                           the live API. Todo 4's live-verify pass should confirm the resolver actually matches real captured markets,
                           not just that the wiring compiles.
 
-- [ ] [BACKEND] P2. **OPERATOR-DECIDED 2026-08-11: provision egress from `europe-west2` (London), not `europe-west4`.**
+- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20, backend_engineer) — was `[BACKEND]`.** Provisioning a new
+      `europe-west2` network egress (VM/proxy) is `infra` craft's domain per `backend_engineer.md`'s `does_not`
+      ("Infra provisioning, VM launches, CI/CD, cloud (→ infra)") — retagged so dispatch routes correctly; see the
+      matching retag note in the parent plan's mirrored item for the full rationale.
+      **OPERATOR-DECIDED 2026-08-11: provision egress from `europe-west2` (London), not `europe-west4`.**
       Reversing the 2026-08-10 "permanently parked" disposition: asked again, the operator declined to re-approve
       `europe-west4` but asked for whichever Betfair-accepted region matches the credential's actual jurisdiction.
       Confirmed the adapter authenticates against `api.betfair.com`/`identitysso.betfair.com` (the UK & Ireland-licensed
