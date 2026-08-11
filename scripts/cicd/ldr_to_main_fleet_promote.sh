@@ -963,6 +963,69 @@ process_repo() {
     fi
   fi
 
+  # ── One-shot auto-recheck of a terminally-RED promote PR (2026-08-11) ──────────────────
+  # WHY: the block above only handles "v2 still running" — a promote PR whose v2 already
+  # FAILED sits untouched forever unless LDR's tip moves (which cuts a new ref/PR and closes
+  # the old one). If LDR is quiet for that repo, a red PR caused by something TRANSIENT or
+  # ALREADY FIXED upstream (a reusable-workflow bug in unified-trading-ci, a self-hosted
+  # runner flake) never gets a second look — someone has to notice the Slack alert and
+  # manually close/reopen the PR to force a fresh check (confirmed live 2026-08-11:
+  # features-service PR #1003 sat RED for 8+ hours after unified-trading-ci@700e6d3 fixed
+  # the exact bug that broke its original run, because nothing re-triggered it). Manually
+  # nudging individual PRs doesn't scale and doesn't survive the next incident — this closes
+  # the gap at the SOURCE so it self-heals within one fleet-bot tick instead.
+  # MECHANISM: `gh run rerun` deliberately NOT used — GitHub Actions reruns reuse the
+  # ORIGINALLY-RESOLVED content of a floating reusable-workflow ref (`@main`), so a rerun of
+  # a run that started before an upstream fix landed replays the SAME bug even after the fix
+  # is live (confirmed live: rerunning 31463593127 after the fix still hit the pre-fix code
+  # path). Close+reopen forces a genuinely fresh `pull_request` event, which re-resolves
+  # `@main` fresh — confirmed live to work in the same incident.
+  # SAFETY: fires AT MOST ONCE per PR (marker comment gates re-entry — a persistently broken
+  # PR, e.g. a real code regression, gets exactly one free recheck then waits for a human/
+  # agent like any other red PR, never an infinite retry loop) and only after the PR has sat
+  # red for >=20min (lets a same-tick failure be looked at before auto-nudging it, and avoids
+  # racing a run that only just completed).
+  _RECHECK_MARKER="<!-- fleet-bot-auto-recheck-done -->"
+  _EXISTING_HEAD=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+    --json headRefName --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | .headRefName" 2>/dev/null | head -1)
+  if [ -n "$_EXISTING_HEAD" ]; then
+    _EXISTING_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_EXISTING_HEAD" \
+      --state open --json number,createdAt,headRefOid 2>/dev/null || echo "")
+    _EXISTING_NUM=$(printf '%s' "$_EXISTING_PR" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0]["number"] if d else "")' 2>/dev/null || echo "")
+    _EXISTING_SHA=$(printf '%s' "$_EXISTING_PR" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d[0]["headRefOid"] if d else "")' 2>/dev/null || echo "")
+    _EXISTING_AGE_MIN=$(printf '%s' "$_EXISTING_PR" | python3 -c '
+import json, sys
+from datetime import datetime, timezone
+d = json.load(sys.stdin)
+if not d:
+    print(0)
+else:
+    created = datetime.fromisoformat(d[0]["createdAt"].replace("Z", "+00:00"))
+    print(int((datetime.now(timezone.utc) - created).total_seconds() // 60))
+' 2>/dev/null || echo "0")
+    if [ -n "$_EXISTING_NUM" ] && [ -n "$_EXISTING_SHA" ] && [ "${_EXISTING_AGE_MIN:-0}" -ge 20 ]; then
+      _V2_TERMINAL=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 20 \
+        --json headSha,status,conclusion \
+        --jq "[.[]|select(.headSha==\"$_EXISTING_SHA\" and .status==\"completed\" and .conclusion==\"failure\")]|length" 2>/dev/null || echo "0")
+      if [ "${_V2_TERMINAL:-0}" != "0" ]; then
+        _ALREADY_RECHECKED=$(gh pr view "$_EXISTING_NUM" --repo "$OWNER/$REPO" --json comments \
+          --jq "[.comments[]|select(.body|contains(\"$_RECHECK_MARKER\"))]|length" 2>/dev/null || echo "0")
+        if [ "${_ALREADY_RECHECKED:-0}" = "0" ]; then
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "  🔁 [DRY_RUN] $REPO: would auto-recheck red promote PR #$_EXISTING_NUM (red ${_EXISTING_AGE_MIN}min, no prior recheck)"
+          else
+            echo "  🔁 $REPO: promote PR #$_EXISTING_NUM has been red for ${_EXISTING_AGE_MIN}min with no prior auto-recheck — forcing one fresh check (close/reopen)"
+            gh pr close "$_EXISTING_NUM" --repo "$OWNER/$REPO" \
+              --comment "Fleet bot: red for ${_EXISTING_AGE_MIN}min — forcing a fresh check in case this was a transient/since-fixed upstream issue. $_RECHECK_MARKER" 2>/dev/null || true
+            gh pr reopen "$_EXISTING_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+              && echo "  ✅ $REPO: PR #$_EXISTING_NUM reopened — fresh pull_request event dispatched" \
+              || echo "  ⚠️  $REPO: reopen of PR #$_EXISTING_NUM failed — leaving as closed, next tick's SHA/ref logic will recover"
+          fi
+        fi
+      fi
+    fi
+  fi
+
   # ── STEP 1 (frozen-head): pin the promote head to the SIT-validated commit ────────────
   # We only reach here PAST the content + SIT gates, so $LDR_SHA is gate-validated content: a
   # BREAKING delta passed only because sit_validated_tree == this LDR tree; a non-breaking delta
