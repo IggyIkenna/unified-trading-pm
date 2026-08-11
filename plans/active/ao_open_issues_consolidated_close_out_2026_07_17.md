@@ -489,7 +489,7 @@ NOT AO and are deliberately out of scope here.
       `locked_by: live-defi-rollout`). `regenerate_active_plan_inventory.py` re-run clean (0 orphans, 297 plans). NOTE
       (2026-08-10, slot 24 re-verify): the corpus-wide gates have since drifted — `check_archive_candidates.sh` now
       flags 2 candidates and the inventory reports 3 orphans, both from new 2026-08-10 work; tracked as todo 5 in
-      `/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
 
 ### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
 

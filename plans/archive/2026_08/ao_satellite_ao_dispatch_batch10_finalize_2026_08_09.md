@@ -10,7 +10,7 @@ summary: >-
   with the real evidence, not just re-flipping it blind — then checks whether any source doc is now fully closed
   (unlikely given each retains other open, non-extracted items) and archives it if so, before archiving the batch plan
   itself.
-status: active
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -44,7 +44,6 @@ superseded_by:
 depends_on: [ao_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
 sequential: true
-archive_exempt: true
 context_scope:
   [
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md,
@@ -56,6 +55,9 @@ source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
   the same turn as its batch, 2026-08-09, per the satellite-batch-extraction pattern's mandatory finalize-twin rule.
 ---
+
+> **ARCHIVED 2026-08-11** — all 5 todos done; batch plan archived, referrers repointed, check_finalize_plan_coverage
+> green, inventory clean. Original body preserved below.
 
 # AO satellite AO batch 10 — finalize
 
@@ -116,7 +118,7 @@ source: >-
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_2026_08_09.md`, moved to `plans/archive/2026_08/`, all
       corpus-wide referrers fixed (finalize plan's own `related:`/`context_scope:`/prose, orchestrator_master, INDEX.md,
       plan_reconciler_unexplained), inventory regenerated cleanly, and `check_finalize_plan_coverage.py` no longer names
-      this pair. **DONE 2026-08-11 (slot 28, infra) — unified-trading-pm@9368e739e2**.
+      this pair. **DONE 2026-08-11 (slot 28, infra) — unified-trading-pm@3f54c71acc**.
 - [x] ✅ [REVIEW] P1. **Corpus-wide plan-hygiene gates drifted since batch10's sweep — archive the 2 new
       `check_archive_candidates.sh` candidates + epic-wire the orphaned 2026-08-10 satellite plans.** Re-opened by P0's
       re-verification (claim 3 held as-of the 2026-08-09 sweep, but both gates are now RED against baseline). (1)
