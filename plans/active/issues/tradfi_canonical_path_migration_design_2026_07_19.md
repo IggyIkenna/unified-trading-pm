@@ -315,21 +315,22 @@ removal + casing normalization remain before backfill-resume.
       function, it has no `underlying=` segment) and expanded `_CHAIN_ITYPES` to also recognize already-canonical
       `combo_chain` objects (previously fell through to `D_QUARANTINE_CORRUPT` — a real bug a re-run would have hit
       today). 2 new regression tests. Shipped `market-tick-data-service@<pending, see next progress-log entry>`.
-- [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
       duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
       combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **CLAIMED DONE
-      2026-08-11 (interactive session), but CONTRADICTED BY LIVE STATE — re-checked to `[ ]` open, see the slot-32
-      correction immediately below for the full discrepancy.** Original claim: "Content-identity verified byte-identical
-      (keyed on `(timestamp, symbol)`)... Bucket confirmed reversibility-qualified:
-      `gcs_bucket_soft_delete_retention_seconds()` = 604800s... Deleted the 4 orphaned quote=/margin=-form objects via
-      UTL `gcs_delete_object` (kept the bare-form objects)... verified absent post-delete." **This claim does not match
-      a fresh live re-check** (see below) — flagging rather than trusting either "done" or "not done" without further
-      investigation. Also noted in the original claim: the broader scope (every duplicate combo cell beyond this
-      date/4-underlying sample) is NOT covered by the manifest (a `groupby(venue,data_type,date,underlying)` on the
-      availability index found 0 "duplicate cells" for GOLD/SP500/WTI even though the GCS objects clearly exist — likely
-      the silent manifest-write-failure bug from earlier in that session, meaning affected cells may have no manifest
-      row at all) — finding the full population needs a scoped GCS prefix walk or VM dispatch, not the manifest.
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service. — **CLOSED 2026-08-11
+      (slot 21, data_engineering) as SUPERSEDED by the slot-32 correction immediately below — not re-investigated, no
+      new delete attempted.** This todo's own original framing was already disproven by slot 32's live per-cell check
+      (GOLD/WTI are not duplicates at all; only BTC/SP500 ohlcv_1s are genuine dupes; "delete quote/margin, keep bare"
+      is backwards under the shipped combo→combo_chain design) — see the "CLAIMED DONE... CONTRADICTED" trail above and
+      the slot-32 correction below for full evidence. The corrected, safe scope (per-cell five-part-proof, migrate-to-
+      combo_chain design before any delete, full date-range scoping) is now fully owned by the "CORRECTED 2026-08-11
+      (slot 32...)" todo directly below and the "Broader orphaned-duplicate combo scope" row in the Deferred-work table
+      (flagged there as real VM-scale work, not a quick local task). Leaving both todos open duplicated the same
+      investigation across sessions (this doc already shows 3: interactive, slot 32, slot 31-adjacent) — closing this
+      one to point future dispatch at the single accurate todo instead. No GCS delete executed by this session;
+      disposition for every affected cell remains `unknown`/`no-migrate-first` per the delete-safety protocol's default
+      posture.
 - [ ] [DATA] P1. **CORRECTED 2026-08-11 (slot 32, infra→data_engineering) — original "delete the quote=/margin=-form"
       premise is FALSIFIED for 2/4 of its own cited roots; do NOT delete on the original framing.** Live GCS listing of
       the FULL day=2020-01-06 combo corpus (111 objects, batch_databento only — batch_massive already purged
