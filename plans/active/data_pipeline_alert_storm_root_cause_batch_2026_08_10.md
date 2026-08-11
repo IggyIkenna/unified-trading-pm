@@ -530,11 +530,40 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       surgery will be performed. Retagged `[OPERATOR]` → `[DATA]` because nothing here is operator-gated any more — the
       work is now entirely "land `contract_size`, then re-derive". `contract_size` landed 2026-08-11 (todo above,
       instruments-service@2e59354a10 + unified-trading-library@d89467c24f + market-data-processing-service@3ff54776e0) —
-      this re-derive is now the highest-value next item; nothing else blocks it.
+      this re-derive is now the highest-value next item; nothing else blocks it. **RE-MEASURED 2026-08-11 (continuation
+      session)**: population is now 4,429 `capture_status='captured'     margin_type='inverse'` liquidations shards (up
+      from ~4,113 — expected, the population moves every wave), 64 distinct instrument_ids, dates 2020-01-03 to
+      2026-01-28 (query: DuckDB over
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` filtered
+      `service_name='market-data-processing-service'`; `margin_type` column is authoritative and matches the
+      `@INV`/unsuffixed-BYBIT heuristic exactly, 4,429 either way). **New finding: a large ambient VM fleet (439
+      `mdps-cefi-{year}-*` instances, label `purpose=mdps-sharded-backfill`, `VM_OPERATION=backfill-cefi`, command
+      `--operation process --mode batch --start-date {year}-01-01 --end-date {year}-12-31`, years 2019-2026, oldest
+      instance created 2026-08-06 — a 5+ day standing operation, not something launched today) is independently
+      reprocessing the full CEFI corpus right now and, per a direct spot-check, IS already overwriting some
+      already-`captured` inverse shards with correct values: `OKX-SWAP:PERPETUAL:BTC-USD@INV` day=2022-01-29 1d,
+      written_at 2026-08-11T20:43:36Z, reads `liquidation_notional_usd=6872.0` for `liquidation_count=37` (about
+      $185.7/event, about 1.86 contracts x $100 face value — consistent with the fixed `contract_size` formula, NOT the
+      old bare-`sum(amount)` bug). This fleet is NOT scoped to the inverse population specifically (it's a general
+      per-year full reprocess) and VMs appear to pick up whichever code was current at THEIR OWN launch time (SPOT,
+      preemption-recovery churns run-ts continuously — 20-43 instances per year), so convergence on the 4,429 is neither
+      instant nor guaranteed complete (a VM that finished its year range before `3ff54776e0` deployed and never
+      relaunches leaves that year's wrong shards untouched indefinitely). **Decision needed before executing the scoped
+      re-derive: run it now (redundant compute where the ambient fleet already fixed a shard is harmless, both converge
+      on the same value) vs. wait + re-measure for residual-only.** Not yet executed this continuation — asking the
+      operator before running a --force job with 439 other VMs already touching the same corpus.
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
-      re-measure before quoting, this number moves with every backfill wave.
+      re-measure before quoting, this number moves with every backfill wave. **2026-08-11 continuation — likely ALREADY
+      IN FLIGHT, unattributed.** Found 439 `mdps-cefi-{year}-*` VMs (`VM_OPERATION=backfill-cefi`,
+      `--operation process --mode batch` per-year, 2019-2026) currently RUNNING — oldest instance created 2026-08-06, so
+      this predates today and is plausibly the standing mechanism behind this exact todo (or its precursor), not a fresh
+      dispatch. Nobody in this plan's history has claimed launching it. Evidence + implications recorded on the P0
+      re-derive todo above (same fleet). Before marking this `[x]`, confirm who/what owns it and whether it is scoped to
+      cover the full 355,818 (it is NOT `--force` per the visible `VM_BACKFILL_CMD`, so it will only fill
+      `attempted_failed`/`expected_unattempted` gaps, not touch cells already wrongly `captured` — separate question
+      from the P0 inverse-notional overwrite).
 - [x] ✅ [SCRIPT] P2. The GCS guardrail hook's own block message told agents to
       `from unified_trading_library.cloud_interface import list_blobs` — an import that raises `ImportError`, because
       listing is a METHOD (`get_storage_client().list_blobs(bucket, prefix=...)`), not a module-level export. Hit live

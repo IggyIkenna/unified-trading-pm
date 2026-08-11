@@ -56,22 +56,22 @@ last_updated: "2026-08-11"
       (flagged as unverified at ruling time) actually cleared before treating it as done.
 
       **2026-08-11 verification pass (slot 20) — NOT YET READY, checkbox stays open.** The source doc's own checkboxes
-          read "zero open todos", but that is a delegation artifact, not genuine completion for one of the two items:
-          **N1b — genuinely DONE.** Re-verified the source doc's own evidence chain (Step-4 catalogue built + confirmed live
-          `instruments-service@097e230b`; UTL memoization fix `unified-trading-library@a35819ee`; 2 corrector dedup-tiebreak
-          bugs found + fixed `instruments-service@8cf44c665` + `@159c0ebe`; final apply **verified merged (slot 14): 7/7
-          empty_confirmed**). No further work outstanding. **N5r/N6r — NOT actually done**, despite reading `[x]` in both
-          the source doc (line ~718, "EXTRACTED 2026-08-09") and the satellite plan it was extracted to
-          (`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`, "code shipped (sub-steps a+b); VM execution (c-e)
-          tracked in `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`"). That issue
-          doc's own todo **(e) "apply + post-verify" is still `- [ ]` open** — the live prod swap against the 133M-row defi
-          `_index` has not been executed. Confirmed fresh (2026-08-11): no `defi-manifest-projection-*` VM is running and
-          no `canonical-migration-defi-rebuild-*` VM is running either (`gcloud compute instances list` — 0 matches for
-          either prefix), consistent with the issue doc's last progress entry (slot 8, 2026-08-10T21:3xZ) that released the
-          task GATED with nothing to apply yet. **Conclusion: do not flip this REVIEW todo done and do not proceed to the
-          archival todo below** until `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) is checked
-          off with a real post-apply re-audit (0 stale rows, full twin coverage) AND that evidence is reconciled back into
-          the source doc's N5r/N6r checkbox. Re-dispatch this REVIEW todo once that lands.
+              read "zero open todos", but that is a delegation artifact, not genuine completion for one of the two items:
+              **N1b — genuinely DONE.** Re-verified the source doc's own evidence chain (Step-4 catalogue built + confirmed live
+              `instruments-service@097e230b`; UTL memoization fix `unified-trading-library@a35819ee`; 2 corrector dedup-tiebreak
+              bugs found + fixed `instruments-service@8cf44c665` + `@159c0ebe`; final apply **verified merged (slot 14): 7/7
+              empty_confirmed**). No further work outstanding. **N5r/N6r — NOT actually done**, despite reading `[x]` in both
+              the source doc (line ~718, "EXTRACTED 2026-08-09") and the satellite plan it was extracted to
+              (`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`, "code shipped (sub-steps a+b); VM execution (c-e)
+              tracked in `/plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`"). That issue
+              doc's own todo **(e) "apply + post-verify" is still `- [ ]` open** — the live prod swap against the 133M-row defi
+              `_index` has not been executed. Confirmed fresh (2026-08-11): no `defi-manifest-projection-*` VM is running and
+              no `canonical-migration-defi-rebuild-*` VM is running either (`gcloud compute instances list` — 0 matches for
+              either prefix), consistent with the issue doc's last progress entry (slot 8, 2026-08-10T21:3xZ) that released the
+              task GATED with nothing to apply yet. **Conclusion: do not flip this REVIEW todo done and do not proceed to the
+              archival todo below** until `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) is checked
+              off with a real post-apply re-audit (0 stale rows, full twin coverage) AND that evidence is reconciled back into
+              the source doc's N5r/N6r checkbox. Re-dispatch this REVIEW todo once that lands.
 
 - [ ] [DOC] P2. Once the source doc shows zero open todos, run the standard 6-step archival ritual on it
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — migrate any deferred item, banner,
@@ -79,10 +79,10 @@ last_updated: "2026-08-11"
       `[TAG]`/priority from the REVIEW todo above (per task_template.md's same-tag-collision gotcha).
 
       **BLOCKED (2026-08-11, slot 20): do not archive.** See the REVIEW todo's 2026-08-11 verification note above — the
-          source doc's "zero open todos" state is a delegation artifact; the delegated N5r/N6r work
-          (`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e)) is still genuinely open. Archiving now
-          would strand that live tracked work's `related:` back-reference to an archived doc mid-execution. Wait for the
-          REVIEW todo to actually flip first.
+              source doc's "zero open todos" state is a delegation artifact; the delegated N5r/N6r work
+              (`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e)) is still genuinely open. Archiving now
+              would strand that live tracked work's `related:` back-reference to an archived doc mid-execution. Wait for the
+              REVIEW todo to actually flip first.
 
 ## Progress Log
 
@@ -91,3 +91,11 @@ last_updated: "2026-08-11"
   2026-08-11 notes on both todos above. No archival performed. Both todos left open; skipping this task back to the
   queue (`GATED`) rather than false-`/done`ing an archival that would strand live in-progress work
   (`defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md`).
+- **2026-08-11T21:59Z (slot 8)**: Re-dispatched the same archival todo; re-verified fresh rather than trusting slot 20's
+  hours-old check. Same conclusion, precondition still unmet: (1) `gcloud compute instances list` — 0 matches for
+  `defi-manifest-projection-` or `canonical-migration-defi-rebuild-`, no execution VM running; (2)
+  `get_storage_client().list_blobs('deployment-scripts-central-element-323112', prefix='n5r-n6r-projection/')` — 0
+  objects, the projection has never been run. `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) is
+  still `- [ ]` open with no forward progress since its own last entry (slot 8, 2026-08-10T21:3xZ). No archival
+  performed; both todos left open; skipping GATED again — the blocker is VM-execution work outside this archival todo's
+  own scope, not something to force through here.
