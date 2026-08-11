@@ -256,3 +256,9 @@ exposed to this class before the veto shipped.
   simultaneous racers wins — all 11 tests re-run green. Flipped this checkbox + batch9 todo 2 together in the same
   commit, citing the pre-existing commit. No new deployment-service code shipped by this pass — closing a stale
   paperwork gap only.
+- **2026-08-11 (batch9-finalize reconciliation, slot 14)**: re-verified this doc's `[SCRIPT] P2` TOCTOU item remains
+  `[x]` citing `deployment-service@4c28ca640f` (ancestor of `origin/live-defi-rollout`, re-confirmed via
+  `git merge-base --is-ancestor`). **Remaining-open re-stated: exactly 1** — item 1 (`[OPERATOR]` deploy-confirmation)
+  was independently RESOLVED 2026-08-08 (round5 note above; routine deployment-api build cadence picked up the fix), so
+  the only open checkbox is item 3 (`[SCRIPT] P3`, time-gated serial-console capture, non-blocking). All other items
+  `[x]`; no further action pending.
