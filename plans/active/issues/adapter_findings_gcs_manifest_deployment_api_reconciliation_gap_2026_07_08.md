@@ -348,7 +348,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   context_scope/plan-destination default, escalation-N default, reversibility-qualified deletes, Option B retirement,
   AWS lower-stakes, script/tooling sibling-precedent self-service) against the sole open todo — none apply; it is still
   a genuine full-trace-vs-spot-check portfolio-cost tradeoff across 58 findings, not a fact/scope a worker can resolve
-  alone. `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` (both active,
+  alone. [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)/`batch10_2026_08_08.md` (both active,
   `assigned_vm: planning`, most recent full-corpus cefi re-audits) do not reference this doc at all — no conflict, no
   coverage either way. No reclassification.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

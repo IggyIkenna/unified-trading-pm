@@ -80,6 +80,9 @@ context_scope:
 
 # CeFi satellite AO batch 9 — iterative-drain extraction
 
+> **🟢 ARCHIVED 2026-08-11** — all 3 todos complete; moved to `plans/archive/2026_08/` via the standard 6-step ritual
+> (finalize plan `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md`).
+
 > **Status: ACTIVE — operator-approved 2026-08-07** (was DRAFT; missed by an earlier casing-sensitive grep fixing the
 > frontmatter and PLAN_FORMAT.md reference but not this differently-cased banner — corrected here). The paired finalize
 > plan ships `status: active` from the start — `gate_on_depends: true` machine-holds it until this batch's todos are

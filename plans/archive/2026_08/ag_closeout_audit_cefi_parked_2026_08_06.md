@@ -83,7 +83,7 @@ source: >-
 > `BLOCKED-OPERATOR-DECISION` items (`fail_hard_canonical_enforcement_design_2026_07_20.md`'s §5 design gaps;
 > `estate_orphan_assessment_2026_07_21.md` todo 6) and the linkage-gate regression finding remain live in their OWN docs
 > — not lost, just not owned here. Superseded by nothing — this doc's findings are now permanent record in their
-> respective source docs; `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`'s successor findings live in that doc (or
+> respective source docs; [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)'s successor findings live in that doc (or
 > its own `ag_closeout_audit_cefi_parked_2026_08_07.md`, if one is later filed).
 
 ## New findings this run
@@ -223,5 +223,5 @@ itself). 5 `exclude_cross_cutting` flagged above with one-line reasoning (durabl
   reverted) — the "Operator/next-toucher: rule on todo 6's boundedness, then flip deliberately" note (line ~558) is
   still present, unresolved. **Needs the operator to rule on todo 6's boundedness.** Until either gate clears or the
   operator decides, these two items will keep re-appearing in every future cefi batch finalize re-check. (Appended to an
-  archived doc per `cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md` todo 2's explicit standing-flag
+  archived doc per [`cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md) todo 2's explicit standing-flag
   instruction — status/verdicts left untouched.)
