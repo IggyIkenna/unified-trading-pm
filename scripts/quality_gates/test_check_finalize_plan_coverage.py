@@ -128,3 +128,62 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-parent: point-of-creation idempotency guard ──────────────────────
+# (duplicate_finalize_plans_created_for_one_parent_2026_08_06 — before authoring a
+# new <parent>_finalize*.md, refuse if the parent is ALREADY gated by any existing
+# finalize plan, keyed on the depends_on relationship rather than the filename shape.)
+
+
+def test_check_parent_safe_when_not_yet_gated(tmp_path: Path) -> None:
+    """A parent with NO existing finalize plan passes the guard (exit 0) — safe to
+    author a new <parent>_finalize*.md."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "batch_plan_2026_08_11.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "batch_plan_2026_08_11"])
+    assert rc == 0
+
+
+def test_check_parent_refuses_when_gated_by_date_suffixed_finalize(tmp_path: Path) -> None:
+    """The exact regression this guard exists for: the parent is ALREADY gated by a
+    finalize plan whose filename is NOT the expected <parent>_finalize.md shape (it
+    carries a redundant _2026_08_11 date suffix). A filename-keyed guard would have
+    missed it — the depends_on relationship must catch it (exit 1)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_11.md")
+    _write_plan(
+        active / "parent_plan_2026_08_11_finalize_2026_08_11.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "parent_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_check_parent_refuses_when_gated_by_exact_finalize_name(tmp_path: Path) -> None:
+    """Also refuses when the gating plan uses the exact <parent>_finalize.md name."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_11.md")
+    _write_plan(
+        active / "parent_plan_2026_08_11_finalize.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_11]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "parent_plan_2026_08_11"])
+    assert rc == 1
+
+
+def test_check_parent_ignores_a_plain_depends_on_not_gate_on_depends(tmp_path: Path) -> None:
+    """A plan that merely LISTS the parent in depends_on WITHOUT gate_on_depends: true
+    is not a gate — the guard stays permissive (exit 0)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_plan_2026_08_11.md")
+    _write_plan(
+        active / "other_plan_2026_08_11.md",
+        extra_frontmatter="depends_on: [parent_plan_2026_08_11]",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "parent_plan_2026_08_11"])
+    assert rc == 0

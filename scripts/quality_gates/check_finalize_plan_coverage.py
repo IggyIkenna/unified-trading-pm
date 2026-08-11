@@ -130,6 +130,73 @@ def _gated_slugs(all_plans: list[Coverage]) -> set[str]:
     return out
 
 
+def _parent_gating_plans(all_plans: list[Coverage], parent_slug: str) -> list[str]:
+    """Point-of-creation idempotency guard for finalize-plan authoring.
+
+    Returns every finalize-plan slug that gates `parent_slug` over the CURRENT corpus
+    (names it in `depends_on` + `gate_on_depends: true`), or [] if the parent is not yet
+    gated. Call this BEFORE writing a new `<parent>_finalize*.md`: a parent already gated
+    by ANY existing finalize plan — whatever its filename shape — must not get a second
+    one. The colliding pair (duplicate_finalize_plans_created_for_one_parent_2026_08_06)
+    differed only by a redundant `_2026_07_31` filename suffix, so a guard keyed on the
+    expected filename would have missed it; key on the `depends_on` relationship (via
+    `_gated_slugs()`), which is the real contract.
+    """
+    slug = parent_slug.strip()
+    if slug not in _gated_slugs(all_plans):
+        return []
+    gating: list[str] = []
+    for cov in all_plans:
+        if not _is_finalize_plan(cov.frontmatter):
+            continue
+        depends_on = cov.frontmatter.get("depends_on")
+        if not isinstance(depends_on, list):
+            continue
+        deps = {d.strip() for d in cast(list[object], depends_on) if isinstance(d, str)}
+        if slug in deps:
+            gating.append(_slug(cov.path))
+    return sorted(gating)
+
+
+def _run_check_parent(active_dir: Path, parent_slug: str) -> int:
+    """Point-of-creation idempotency guard for finalize-plan authoring.
+
+    Before authoring a new <parent>_finalize*.md, re-derive _gated_slugs() over the
+    CURRENT corpus and refuse if the parent is already gated by an existing finalize
+    plan (duplicate_finalize_plans_created_for_one_parent_2026_08_06). Keyed on the
+    `depends_on` relationship, not the expected filename — the two colliding files
+    differed only by a redundant `_2026_07_31` suffix, so a filename-keyed guard would
+    have missed it. Returns 0 (SAFE) or 1 (REFUSE), never 2.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gating = _parent_gating_plans(all_plans, parent_slug)
+    if gating:
+        print(
+            f"❌ REFUSE: parent '{parent_slug}' is ALREADY gated by finalize plan(s) "
+            f"{', '.join(gating)} — do NOT author a new <parent>_finalize*.md "
+            f"(duplicate_finalize_plans_created_for_one_parent_2026_08_06)."
+        )
+        return 1
+    print(
+        f"✅ SAFE: parent '{parent_slug}' is not gated by any existing finalize plan — "
+        "a new <parent>_finalize*.md would be the only gate."
+    )
+    return 0
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Resolve `plans/active` across three candidate layouts, or return None."""
+    candidates: list[Path] = [
+        (_pm_root_or_legacy(workspace_root)) / "plans" / "active",
+        workspace_root / "plans" / "active",
+        Path(__file__).resolve().parents[2] / "plans" / "active",
+    ]
+    for d in candidates:
+        if d.is_dir():
+            return d
+    return None
+
+
 def _find_violations(active_dir: Path) -> list[Path]:
     all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
     gated = _gated_slugs(all_plans)
@@ -230,6 +297,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-parent",
+        type=str,
+        default=None,
+        metavar="PARENT_SLUG",
+        help=(
+            "Point-of-creation idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06): "
+            "run this against the parent's bare slug BEFORE authoring a new `<parent>_finalize*.md`. It "
+            "re-derives `_gated_slugs()` over the CURRENT corpus and refuses (exit 1, listing the gating "
+            "plan(s)) if the parent is ALREADY gated by an existing finalize plan — regardless of that plan's "
+            "filename shape (the colliding pair differed only by a date suffix, so a filename-keyed guard would "
+            "have missed it; the `depends_on` relationship is the real contract). Exit 0 = parent not yet gated, "
+            "safe to create. Exclusive with the violation-scan modes."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -241,36 +323,16 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        print(
+            f"ERROR: plans/active not found (workspace_root={workspace_root})",
+            file=sys.stderr,
+        )
+        return 2
+
+    if ns.check_parent is not None:
+        return _run_check_parent(active_dir, ns.check_parent)
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)
