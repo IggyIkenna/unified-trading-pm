@@ -54,6 +54,9 @@ context_scope:
 
 # CeFi satellite AO batch 9 — finalize
 
+> **🟢 ARCHIVED 2026-08-11** — all 3 todos complete (batch9 archived); moved to `plans/archive/2026_08/` via the
+> standard 6-step ritual.
+
 > **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
 > every todo below until batch9's own 3 tasks are `done`, regardless of batch9's own `status` (draft or active). Only
 > the batch itself needs `status: draft` + explicit operator approval; this finalize plan carries no independent
@@ -105,7 +108,7 @@ context_scope:
       flag was POSTED to the cefi parked-findings doc
       (`/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`, appended to its Progress Log) and surfaced
       in this run's report below.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm the "Cross-tranche notes", "Deferred — *", "Reconciliation" and "Linkage
       housekeeping" sections (informational, never batch todos) need no separate migration → add the archive banner →
       run the codex-alignment check (batch9 creates no new durable contract; confirm still true) → grep the corpus for

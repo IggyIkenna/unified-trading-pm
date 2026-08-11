@@ -676,13 +676,13 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   clean + `verify_cefi_canonical_4surface_2026_07_20.py` + archival) — bounded and worker-determinable, not a judgment
   call. Conflict-check: (a) grepped `plans/active/` for other `parent_epic: cefi_master` `assigned_vm: planning` docs —
   none cover the residual-rename resume sequence itself; (b)
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md`/`batch10_2026_08_08.md` cite this doc only for the SEPARATE Finding
-  8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently dispatched as its own batch10 `[DATA] P2`
-  todo, read-only, does not touch the 2,962-object safe-residual rename) — no overlap with this doc's own P1 todo;
-  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a "safe residual" text grep) is an
-  unrelated F1-N9 consistency-remediation doc, no shared scope; (c) `cefi_consolidated_closeout_2026_07_18.md` does not
-  reference this doc's resume-migration item. Clear. Companion finalize plan:
-  `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
+  [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)/`batch10_2026_08_08.md`
+  cite this doc only for the SEPARATE Finding 8/10 HYPERLIQUID/ASTER collision-investigation todo (already independently
+  dispatched as its own batch10 `[DATA] P2` todo, read-only, does not touch the 2,962-object safe-residual rename) — no
+  overlap with this doc's own P1 todo; `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (matched a
+  "safe residual" text grep) is an unrelated F1-N9 consistency-remediation doc, no shared scope; (c)
+  `cefi_consolidated_closeout_2026_07_18.md` does not reference this doc's resume-migration item. Clear. Companion
+  finalize plan: `plans/active/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_finalize_2026_08_08.md`.
 - **2026-08-08 (slot 16)**: the sole open todo (`re-run verify + archive`) was dispatched to the backlog despite being
   gated by prose only ("once the 2 blockers above resolve") — no machine-readable `depends_on` existed, so the
   dispatcher offered it as ready. Both blocker issue docs

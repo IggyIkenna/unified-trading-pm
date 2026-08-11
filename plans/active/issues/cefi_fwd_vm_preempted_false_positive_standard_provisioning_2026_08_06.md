@@ -184,10 +184,12 @@ exposed to this class before the veto shipped.
       own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. **Shipped
       `deployment-service@4c28ca640f6b6921f39c493c69995a04984df5f3`** (2026-08-06, the same day as this doc — an atomic
       GCS create-if-absent singleton lock, `lc_acquire_singleton_lock`, gating the RUNNING-VM check) — found still
-      live + tested on `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2's 2026-08-09 pickup; see that plan's
-      flipped checkbox for the full re-verification (6 regression tests incl. a 12-process concurrent-race proof, all
-      green). This checkbox and the plan's were left stale for 3 days because 4 successive na-eligibility-audit passes
-      checked plan-claim status, not live code state — closing both now.
+      live + tested on
+      [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
+      todo 2's 2026-08-09 pickup; see that plan's flipped checkbox for the full re-verification (6 regression tests
+      incl. a 12-process concurrent-race proof, all green). This checkbox and the plan's were left stale for 3 days
+      because 4 successive na-eligibility-audit passes checked plan-claim status, not live code state — closing both
+      now.
 - [ ] [SCRIPT] P3. If runtime/serial-console access to a freshly-`instances.stop`'d `cefi-fwd-*` VM is ever available
       before it self-cleans, capture the shutdown-script's own log line
       (`[preemption-shutdown] wrote PREEMPTED signal for ...` vs "FAILED") to pin down whether the false signal came
@@ -233,13 +235,14 @@ exposed to this class before the veto shipped.
   on a routine multi-times-daily cadence independent of manual triggering.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — never re-litigated (established
   ruling). The remaining line-181 `[SCRIPT]` P2 TOCTOU-race item is still ALREADY claimed by
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed by
-  any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would create a
-  duplicate-dispatch surface. Independently re-confirmed by `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s
-  "Deferred — operator-gated" section (drafted/activated the same day, a separate `/ag-closeout-audit` run), which lists
-  this exact doc and reaches the identical conclusion ("item 2 is already covered by an active in-flight batch9 todo").
-  Line-187 `[SCRIPT]` P3 item remains explicitly time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07
-  conflict citation and this run's independent reaffirmation both hold.
+  [`cefi_satellite_ao_dispatch_batch9_2026_08_07.md`](/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch9_2026_08_07.md)
+  todo 2 (confirmed re-checked in that batch's own text, "unclaimed by any other" caveat notwithstanding — this doc IS
+  the claim it's checking against); reclassifying here would create a duplicate-dispatch surface. Independently
+  re-confirmed by `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated" section
+  (drafted/activated the same day, a separate `/ag-closeout-audit` run), which lists this exact doc and reaches the
+  identical conclusion ("item 2 is already covered by an active in-flight batch9 todo"). Line-187 `[SCRIPT]` P3 item
+  remains explicitly time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07 conflict citation and this
+  run's independent reaffirmation both hold.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — root-cause fix (is_spot veto) shipped
   and live-confirmed. TOCTOU singleton-lock item (line 182) is correctly cited as claimed by

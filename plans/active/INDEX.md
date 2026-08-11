@@ -75,13 +75,6 @@ by hand._
   — Finalize twin for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (drafted 2026-08-08 by the /ag-closeout-audit
   skill, slot 8, dispatch agt-6bc9c4). Reconciling 6 source docs' checkboxes once batch10's 6 todos land, asking the
   operator…
-- [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
-  AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
-  tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
-- [`cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize`](./cefi_satellite_ao_dispatch_batch9_2026_08_07_finalize.md)
-  — Finalize twin for `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (drafted 2026-08-07 by the /ag-closeout-audit
-  skill, slot 4, dispatch agt-ed7b44). Reconciling 3 source docs' checkboxes once batch9's 3 todos land, re-checking the
-  2…
 - [`cefi_track2_coverage_backfill_checkpoints_2026_07_25`](./cefi_track2_coverage_backfill_checkpoints_2026_07_25.md) —
   Resumes the CeFi Tardis COVERAGE backfill (reversing the archived "honest-done 50.79%" verdict — the throughput
   ceiling was a ~350x code bug, now fixed and measured live) and brackets it with the MID/POST…
