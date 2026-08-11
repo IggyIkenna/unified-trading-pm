@@ -420,23 +420,124 @@ just belongs on a different layer than instrument_type does, and conflating the 
   task with the ruling recorded inline; the 2 unrelated roll-back-regardless misclassifications
   (AAVE-ETHEREUM/oracle_prices, MAKER-ETHEREUM/lst_rates) are preserved unchanged. `assigned_vm` was already `planning`
   — no reclassification needed, this doc was never NA-parked on this item.
+- **2026-08-11 (slot-18, data_engineering)** — **Decomposed the monolithic WIRE-REAL-CAPTURE follow-up into per-pair
+  dispatchable todos** (its own text asked the dispatcher to "scope accordingly when dispatched — a strong split
+  candidate for parallel AO dispatch rather than one monolithic todo"). Read the code to confirm the scope is genuine
+  per-protocol capture engineering, not a config flip: `oracle_prices_handler.py` collects only under
+  `CHAINLINK-<chain>` / `PYTH-SOLANA` / `AAVE-ETHEREUM` venues, so each protocol-venue oracle over-claim
+  (`SPARK`/`COMPOUND_V3`/`MORPHO`/`RADIANT`/`FLUID`/`KAMINO`) needs a NEW protocol-specific oracle source wired (each
+  protocol's own price-oracle contract + ABI per chain — distinct handler surfaces, hence parallel-safe). Most
+  over-claiming venues are phase `live` (`defi_venues.py`: COMPOUND_V3/MORPHO/FLUID/SPARK-ETHEREUM, RADIANT-ARBITRUM,
+  KAMINO-SOLANA, AAVE-ETHEREUM all `live`; only ALCHEMY-ONCHAIN is `pipeline`), so the over-claims are live in the
+  honest-coverage denominator. Split into 8 `[CODE]` wire-capture todos + 1 verify-then-roll-back todo + 1 gated
+  `[DATA]` prod-backfill todo (10 replacing 1). No UAC/MTDS code shipped this session — the real work is the split
+  engineering, now individually dispatchable.
+  - **Data-correctness finding (raised while decomposing):** this doc's roll-back claim that
+    `AAVE-ETHEREUM/oracle_prices` is "the wrong venue key" CONTRADICTS the code — `_aave_oracle_collection.py`
+    (`emit_aave_manifest`, lines 184-216) actively records `oracle_prices` as `captured` under
+    `venue="AAVE", chain="ETHEREUM"` via `getAssetPrice`, and the `defi_venue_capabilities.py:223-230` comment documents
+    this genesis was deliberately added 2026-07-21 for exactly that NEW collection surface. So `AAVE-ETHEREUM` very
+    likely has REAL captured rows and the genesis is on the RIGHT key — rolling it back blind would orphan real data.
+    The roll-back todo now gates on a live-manifest check first; if captured, the correct fix is closing the Layer-1
+    declaration gap (declare `oracle_prices` valid for the AAVE oracle protocol in `PROTOCOL_CAPABILITIES`), NOT
+    removing the genesis. The 2026-08-05 `defi_actual_data_types_not_declared_valid()` audit flagged it as
+    "actual⊄theoretical", which is a Layer-1 under-declaration, not proof the genesis is wrong.
 
 ## Follow-ups
 
-- [ ] [CODE] P2. **RULED 2026-08-09 (operator): WIRE REAL CAPTURE** (not roll-back) for the over-claiming DeFi pairs —
-      was `[OPERATOR]` P2 decide-or-rollback. Wire a real MTDS capture handler for each of the 8 (protocol, data_type)
-      pairs from the 2026-08-05 Progress Log's reconciled table: `oracle_prices` →
-      `spark`/`compound_v3`/`morpho`/`radiant`/`fluid`/`kamino` (6 protocols), `rewards` → `aave_v3`, `gas_fees` →
-      `alchemy_onchain`. Each currently has zero real captured rows (100% `empty_confirmed`) despite a declared genesis
-      date — this is genuine new capture-path engineering per protocol (real on-chain/API source per data type), not a
-      config flip; touches distinct MTDS handler files per protocol, so this is a strong split candidate for parallel AO
-      dispatch rather than one monolithic todo — scope accordingly when dispatched. **Unchanged, roll back regardless of
-      this ruling** (these 2 are misclassifications, not part of the wire-vs-rollback decision):
-      `AAVE-ETHEREUM/oracle_prices` (legacy governance venue, not the V3 lending venue where oracle prices actually live
-      — genesis date likely stamped on the wrong venue key) and `MAKER-ETHEREUM/lst_rates` (Maker is a CDP, not an LST —
-      `lst_rates` doesn't conceptually apply; Maker's real analog is `vault_share_price` via sDAI/DSR). Done-when: all 8
-      pairs show real `captured` rows in the live manifest (not just a declaration), and both roll-back candidates have
-      their genesis date corrected/removed.
+> **DECOMPOSED 2026-08-11 (slot-18, data_engineering).** The single monolithic "WIRE REAL CAPTURE for the 8 pairs" todo
+> instructed its own dispatcher to "scope accordingly when dispatched — a strong split candidate for parallel AO
+> dispatch rather than one monolithic todo." Verified on read that this is genuine per-protocol capture engineering, NOT
+> a config flip: the `oracle_prices` handler
+> (`market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py`) only collects under venues
+> `CHAINLINK-<chain>` / `PYTH-SOLANA` / `AAVE-ETHEREUM` (getAssetPrice via
+> `market-tick-data-service/market_tick_data_service/cli/handlers/_aave_oracle_collection.py`), so the protocol-venue
+> oracle declarations (`SPARK-ETHEREUM`, `COMPOUND_V3-ETHEREUM`, …) each need a NEW on-chain source wired (each
+> protocol's own price-oracle contract addresses + ABI, per chain). Split below into one `[CODE]` todo per pair
+> (distinct handler surfaces → parallel-safe, different files) + a gated prod-backfill + the roll-back. The operator's
+> WIRE-REAL-CAPTURE ruling is preserved verbatim in each pair's todo. **Data-correctness finding raised while
+> decomposing** — see Progress Log 2026-08-11: `AAVE-ETHEREUM/oracle_prices` is a REAL wired capture surface
+> (getAssetPrice writes `venue="AAVE", chain="ETHEREUM"` captured rows — `_aave_oracle_collection.py:206-216`), which
+> CONTRADICTS this doc's "roll back — genesis on the wrong venue key" claim; the roll-back todo now gates on a live-
+> manifest check before removing anything.
+
+- [ ] [CODE] P2. **WIRE oracle_prices capture for SPARK-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
+      roll-back). Over-claims a `2024-01-01` genesis in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+      (`unified-api-contracts/.../registry/defi_venue_capabilities.py:109`) with zero captured rows; venue phase is
+      `live`. Add a Spark price-oracle collection branch to
+      `market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py` (+ per-protocol oracle
+      contract addresses/ABI in `_oracle_prices_constants.py`) that writes `oracle_prices` under
+      `venue=SPARK, chain=ETHEREUM` (Spark uses an Aave-V3-fork oracle — `getAssetPrice`). Done-when: a single-day
+      force-compute produces real `captured` rows for `SPARK-ETHEREUM/oracle_prices` (prove against the `-test-` defi
+      bucket via the `/data-pipeline-check-mtds` smoke path). (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
+      CAPTURE). Over-claims a `2022-08-14` genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`.
+      Add a Compound-V3 price-oracle branch to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing
+      under `venue=COMPOUND_V3, chain=ETHEREUM` (Compound V3 markets read a per-market Chainlink-based price feed).
+      Done-when: single-day force-compute produces real `captured` rows for `COMPOUND_V3-ETHEREUM/oracle_prices` against
+      the `-test-` bucket. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE oracle_prices capture for MORPHO-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
+      Over-claims a `2024-01-08` genesis (`defi_venue_capabilities.py:99`), zero captured rows, phase `live`. Add a
+      Morpho-Blue price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under
+      `venue=MORPHO, chain=ETHEREUM` (Morpho markets use per-market oracle contracts — enumerate the active markets'
+      oracles). Done-when: single-day force-compute produces real `captured` rows for `MORPHO-ETHEREUM/oracle_prices`
+      against the `-test-` bucket. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE oracle_prices capture for RADIANT-ARBITRUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
+      Over-claims a `2022-07-25` genesis (`defi_venue_capabilities.py:111`), zero captured rows, phase `live` (only
+      RADIANT-ARBITRUM is `live`; RADIANT-BSC/ETHEREUM stay `pipeline`). Add a Radiant price-oracle branch to
+      `oracle_prices_handler.py` (+ constants) writing under `venue=RADIANT, chain=ARBITRUM` (Radiant is an Aave-V2 fork
+      — `getAssetPrice` on its lending-pool oracle). Done-when: single-day force-compute produces real `captured` rows
+      for `RADIANT-ARBITRUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE oracle_prices capture for FLUID-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
+      Over-claims a `2024-02-27` genesis (`defi_venue_capabilities.py:108`), zero captured rows, phase `live`. Add a
+      Fluid price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under `venue=FLUID, chain=ETHEREUM`
+      (Fluid uses its own per-vault oracle resolvers). Done-when: single-day force-compute produces real `captured` rows
+      for `FLUID-ETHEREUM/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE oracle_prices capture for KAMINO-SOLANA** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
+      Over-claims a `2023-06-01` genesis (`defi_venue_capabilities.py:177`), zero captured rows, phase `live`. Kamino is
+      Solana — add the branch to the Solana defi collection path
+      (`market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py` and/or
+      `oracle_prices_handler.py`'s Pyth surface) writing `oracle_prices` under `venue=KAMINO, chain=SOLANA` (Kamino
+      reads Scope/Pyth price feeds). Done-when: single-day force-compute produces real `captured` rows for
+      `KAMINO-SOLANA/oracle_prices` against the `-test-` bucket. (repo: market-tick-data-service)
+- [ ] [CODE] P2. **WIRE rewards capture for AAVE_V3** (operator ruling 2026-08-09: WIRE REAL CAPTURE). `rewards` is
+      declared valid for `aave_v3` in `PROTOCOL_CAPABILITIES` (added 2026-08-05, `unified-api-contracts@b2874193`) with
+      zero captured rows. Wire real AAVE incentive/GHO-emission `rewards` capture into
+      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_rewards_handler.py` (RewardsController /
+      incentives-controller emissions per reserve). Also add the `(venue, data_type)` genesis entry to
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` for the AAVE_V3-<chain> venues once the write path is proven. Done-when:
+      single-day force-compute produces real `captured` `rewards` rows for at least AAVE_V3-ETHEREUM against the
+      `-test-` bucket. (repos: market-tick-data-service, unified-api-contracts)
+- [ ] [CODE] P2. **WIRE gas_fees capture for alchemy_onchain** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
+      `gas_fees` is declared valid for `alchemy_onchain` in `PROTOCOL_CAPABILITIES` (added 2026-08-05) with zero
+      captured rows. **First verify the venue-key**: `gas_fees` genesis dates already exist in
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` on `ALCHEMY-ETHEREUM/ARBITRUM/POLYGON/OPTIMISM/BASE`
+      (`defi_venue_capabilities.py:210-214`) and
+      `market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py` exists — so this may be a
+      venue-key mismatch (writer emits `ALCHEMY-<chain>`, `PROTOCOL_CAPABILITIES` keys it under `alchemy_onchain`)
+      rather than a genuinely-unwired path. Check the live manifest for real `ALCHEMY-<chain>/gas_fees` captured rows
+      first; if captured, reconcile the Layer-1↔Layer-2 venue-key naming instead of wiring new capture. Done-when:
+      `gas_fees` has real `captured` rows reconciled to the declared venue key (proven, not just declared). (repos:
+      market-tick-data-service, unified-api-contracts)
+- [ ] [CODE] P2. **VERIFY-then-roll-back the 2 over-claim misclassifications** (`AAVE-ETHEREUM/oracle_prices`,
+      `MAKER-ETHEREUM/lst_rates`). **⚠️ Verify against the live prod defi manifest FIRST — do NOT remove blind.**
+      `AAVE-ETHEREUM/oracle_prices` (`defi_venue_capabilities.py:230`) is claimed by this doc to be "the wrong venue
+      key", BUT `_aave_oracle_collection.py` actively writes `oracle_prices` under `venue="AAVE", chain="ETHEREUM"` via
+      `getAssetPrice` (see `emit_aave_manifest`, `_aave_oracle_collection.py:184-216`) — so it is very likely a REAL
+      capture surface and the genesis is on the RIGHT key. If the manifest shows real `captured` rows, do NOT roll back
+      — instead close the Layer-1 gap (declare `oracle_prices` valid for the AAVE oracle protocol in
+      `PROTOCOL_CAPABILITIES`). `MAKER-ETHEREUM/lst_rates` (`defi_venue_capabilities.py:252`): Maker is a CDP not an
+      LST; confirm zero `lst_rates` captured rows, then remove the `lst_rates` genesis (its real analog
+      `vault_share_price` is already declared on the same key). Done-when: each pair either has its genesis
+      corrected/removed OR is confirmed a real capture surface with the Layer-1 declaration fixed instead — with the
+      live-manifest evidence cited. (repo: unified-api-contracts)
+- [ ] [DATA] P2. **Prod full-history backfill of the newly-wired pairs** (gated on the wire-capture todos above
+      landing). Once each pair's capture path is proven against the `-test-` bucket, run the prod full-history backfill
+      so the pairs show real `captured` rows in the live prod manifest (the original monolithic todo's ultimate
+      done-when). Safe- idempotent justification for the VM launch: DeFi backfills are SPOT + idempotent +
+      resumable-from-measured-progress (SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md`) — re-running never
+      double-writes. Done-when: each newly- wired `(venue, data_type)` pair has real `captured` rows in the prod defi
+      availability index. (repo: market-tick-data-service)
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real
