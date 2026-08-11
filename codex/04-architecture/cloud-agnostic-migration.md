@@ -29,7 +29,7 @@ referenced_by:
     /plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
   ]
 owner:
-last_reviewed: 2026-08-19
+last_reviewed: 2026-08-11
 code_refs:
 ---
 
@@ -89,6 +89,17 @@ The `CLOUD_PROVIDER` env var controls which provider implementation is instantia
 
 `CLOUD_PROVIDER` is read once at process start. GCP is the primary production provider; AWS is secondary. The `local`
 provider is for development and unit tests only.
+
+**DeFi services (`features-service`, `execution-service`, `strategy-service`) — GCP cutover complete, 2026-08-10.**
+These three ran as live AWS ECS Fargate tasks (`uts-defi-prod`, `ap-northeast-1`) even though their real data always
+lived in GCS (`central-element-323112`) — the AWS S3 counterparts were empty, driving ongoing cross-cloud egress cost.
+This superseded the mid-2026-05 "DeFi client mandate on AWS" placement
+(`/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md`), whose data-and-compute-co-located-on-AWS premise was
+never completed. All 3 services are now deployed to GCP Cloud Run (`asia-northeast1`), confirmed healthy against the
+real, populated GCS buckets; AWS ECS compute for all 3 is scaled to `desiredCount=0` (`uts-strategy-service-prod`'s ECS
+service definition additionally deleted). Full AWS `uts-defi-prod` cluster teardown is pending a multi-day post-cutover
+stability window, not yet executed as of this note. See `/plans/active/defi_compute_gcp_migration_2026_08_08.md` for the
+full cutover record and current decommission status.
 
 This env var is the **only** acceptable way to inject cloud provider choice. Never branch on
 `os.getenv("CLOUD_PROVIDER")` in application code — the factory functions handle this.

@@ -20,7 +20,7 @@ created: 2026-03-27
 authoritative_for: [dual-cloud readiness gates, rollback and version-tagging requirements]
 referenced_by:
 owner:
-last_reviewed: 2026-10-18
+last_reviewed: 2026-08-11
 code_refs:
 ---
 
@@ -37,6 +37,16 @@ Primary model:
 
 - GCP primary runtime
 - AWS backup posture for resilience and negotiating leverage
+
+**DeFi compute — AWS ECS decommission in progress, cited 2026-08-11.** `features-service`, `execution-service`, and
+`strategy-service` ran as live AWS ECS Fargate tasks (`uts-defi-prod` cluster) against AWS S3 buckets that were empty —
+real data always lived in GCS — driving ongoing cross-cloud egress cost on top of AWS compute itself. This superseded
+the mid-2026-05 "DeFi client mandate on AWS" placement
+(`/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md`), whose AWS-co-located data-and-compute premise was
+never completed. As of 2026-08-10, all 3 services are cut over to GCP Cloud Run and confirmed healthy; AWS ECS compute
+is scaled to 0 (`uts-strategy-service-prod`'s ECS service already deleted). The `uts-defi-prod` cluster + remaining
+service/task-definition teardown is gated on a multi-day observation window, not yet executed. Full record:
+`/plans/active/defi_compute_gcp_migration_2026_08_08.md`.
 
 Readiness must be codified in:
 
