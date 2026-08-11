@@ -196,3 +196,11 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   through `2026-08-11T05:21:21Z` — seconds before this check, so actively progressing, not stale. Terminal state NOT
   reached — todo 2 remains gated on it. Releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not
   busy-waiting on a week-scale external condition.
+- **data_engineering (slot 20) 2026-08-11T05:42Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING, zone
+  `asia-northeast1-c`, created 2026-08-08T08:57Z). Liveness signals confirm alive, not stalled: run.log
+  (`SIZE=250890352`, ~250MB) actively written with POLARS AGGREGATED lines through `2026-08-11T05:41:50Z` (this check at
+  05:42:38Z — ~1 min earlier, so actively progressing, not stale); heartbeat blob content timestamp `1786426942`
+  (~2026-08-11T05:42:22Z) confirms the sidecar is alive. Terminal state NOT reached — todo 2 remains gated on it.
+  Releasing back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a week-scale external
+  condition.
