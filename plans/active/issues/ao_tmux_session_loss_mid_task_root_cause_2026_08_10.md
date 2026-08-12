@@ -426,6 +426,54 @@ memory and that's what kills sessions" as-is.
       re-enablement to isolate which role/workload is the actual trigger. **Re-enlarge**: 8×
       `POST /api/slots/{id}/resume` on the same slot IDs once either root cause is found or the smaller fleet is
       confirmed not to help. Repo: agent-orchestrator (no code shipped — pure runtime state change).
+- [x] [INFRA] P0. ~~Second mass burst even at reduced fleet + operator-directed scheduled-task shutdown~~ — **DONE
+      2026-08-11/12.** A further mass `tmux_session_lost` (8 slots: 16,18,19,20,21,22,24,32,33) at 22:23:45 confirmed
+      the 8-slot capacity cut alone had NOT stabilized things, and `orchestrator.service`'s own cgroup briefly hit
+      `available: 2.9M` of its 26GB ceiling (load 41.44/37.75/28.13) — though `oom_kill` stayed 0 throughout (no actual
+      kill fired; system-wide `free -h` still showed 18GB available — the cgroup's OWN ceiling was the binding
+      constraint, not the host). Operator directed going further: stop ALL scheduled task dispatch, keep only
+      escalations + the already-reduced planning pool. Built a NEW capability for this rather than a one-off action
+      (operator ask: "make the dashboard have ability to pause all scheduled task individually by task type... so that
+      an endpoint is exposed for it") — **SHIPPED `agent-orchestrator@7fb8581df7`**:
+      `server/scheduled_dispatch_pause.py` (operator-toggleable pause registry, DB-persisted via `dedup_state`'s
+      existing seen-keys pattern so a pause survives an orchestrator restart), gated at BOTH independent
+      scheduled-dispatch chokepoints found (`plan_health.dispatch(mode=...)` — 10 of 11 modes — and
+      `CIReconcileLoop.tick_once` separately, since it doesn't route through `plan_health.dispatch` at all), exposed via
+      `POST /api/scheduled-dispatch/{mode}/pause`, `POST .../resume`, `GET /api/scheduled-dispatch/status` (mirrors the
+      existing per-slot pause/resume shape). 24 new tests across 3 files. Applied live once `ao-self-pull` redeployed
+      (~1h self-pull lag observed — worth investigating separately, see follow-up below): paused all 10 `plan_health`
+      modes + `ci_reconcile`, left `escalation_reconcile` active (it maintains the escalation system itself, not a
+      competing scheduled workload). **Dashboard UI toggle NOT built this pass** — the operator's concrete ask ("an
+      endpoint is exposed for it") is satisfied; a UI wiring is a fast-follow, not done here to avoid shipping
+      unpainted-Playwright-covered UI under this session's time pressure. **Observed after**: load 41.44 -> 2.20, cgroup
+      Tasks 1183 -> 68, Memory 22.9G -> 2.3G (20.6G available) — a dramatic improvement, but ~2h of real elapsed time
+      passed between the crisis reading and this one, so this is NOT cleanly attributable to the pause alone (the fleet
+      could have settled on its own); the pause mechanism itself is proven correct and live (verified via
+      `GET /api/scheduled-dispatch/status`), independent of whether it's what caused this specific recovery. Repo:
+      agent-orchestrator.
+- [ ] [INFRA] P2. **New lead found live: `sock_throttled` at the cgroup level.**
+      `/sys/fs/cgroup/system.slice/     orchestrator.service/memory.events` carries a `sock_throttled` counter (not
+      previously checked this investigation) that read **4,302,026** during the 22:35 load spike — an extremely high
+      cumulative count of TCP-send-buffer memory-pressure throttle events at the cgroup level. Not yet connected to a
+      specific death, but a promising NEW angle distinct from everything checked so far (cgroup OOM, host CPU/load,
+      git-fetch concurrency, spawn concurrency) — socket-buffer throttling under memory pressure could plausibly affect
+      tmux's own client/server IPC sockets specifically. **Done when**: correlate `sock_throttled`'s RATE OF CHANGE (not
+      just the cumulative count) against known death timestamps, ideally with the live-capture script extended to sample
+      it every second alongside load/spawns/newsess. Repo: agent-orchestrator.
+- [ ] [INFRA] P3. **`ao-self-pull` took ~1h to redeploy a pushed commit, not the documented ~15min.** Confirmed via
+      `/var/log/ao-self-pull.log`: `agent-orchestrator@7fb8581df7` landed on `live-defi-rollout` well before 22:45:01
+      (its actual pickup time — the log shows
+      `current (7fb8581) but running process predates HEAD...     restarting stale process` at exactly 22:45:01), but
+      earlier `journalctl -u orchestrator` checks at 22:35 and 22:41 still showed the OLD checkout running — meaning
+      either the push landed later than assumed, or the 15-min cron genuinely skipped 2-3 cycles. Not chased further
+      this session (time pressure), but worth a dedicated look given a future urgent pause/config-toggle ship might need
+      to actually confirm live sooner than "wait ~15min and hope." Repo: agent-orchestrator, unified-trading-pm (cron
+      definition).
+- [ ] [INFRA] P3. **Dashboard UI for scheduled-dispatch pause/resume.** The API
+      (`POST     /api/scheduled-dispatch/{mode}/pause`/`/resume`, `GET .../status`) is shipped and live; a dashboard
+      toggle (mirroring however per-slot pause is surfaced) was explicitly requested but not built this pass — needs its
+      own `[UI]`-tagged todo with Playwright `pw:L2` coverage per the workspace's UI-testing HARD RULE, not bundled into
+      this backend-only ship. Repo: agent-orchestrator (dashboard/).
 
 ## Progress Log
 
