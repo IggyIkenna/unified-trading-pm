@@ -141,7 +141,9 @@ symbol or behaviour was read in source. This table is the audit; the todos below
       approval", covering `health_factor_target`, `health_factor_emergency_reduce_at`,
       `health_factor_emergency_close_at`, `staking_apr_threshold`, `perp_funding_threshold_bps`, `max_leverage` and
       `capital_usd`. **This is the client's own configuration, and the repository being sent contains that banner.**
-      Values plan-of-record: `drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md`.
+      Values plan-of-record is the drawdown/liquidation strategy-risk-config plan dated 2026-05-23, which is now
+      **archived** — so the plan of record for these unapproved thresholds is no longer active. Confirm it is still the
+      intended source before approving.
 - [ ] [AGENT] P0. **Productionise the venue funding readers.** The only direct-from-venue implementation lives in
       `e2e-testing/scripts/defi/funding_ensemble_engine.py`; `staked_basis` consumes a funding-rate feature and returns
       no decision without it. Land them in `features-service` following the existing calculator pattern — **no new
@@ -238,8 +240,172 @@ symbol or behaviour was read in source. This table is the audit; the todos below
       exists rather than after.
 - [ ] [AGENT] P3. **Document the promotion ladder as the client sees it** — depends on confirming its terminal state.
 
+## H. Unified transfer model — investigation outcomes and the build (2026-08-12)
+
+Operator direction: build the manual route and the full composite key + ratios, **but investigate first** — check codex
+for existing discussion and conflicts, scan for existing behaviour, consolidate the SSOT in the right place rather than
+adding slop. Rotation: audit per module before migrating. Duplicates: investigate the UAC pair before picking a home.
+
+### H.1 The UAC "duplicates" are three legitimate layers — earlier claim CORRECTED
+
+I previously recorded "TransferStatus/TransferResult declared in four places". **That conflated three different concepts
+that share a name.** Measured 2026-08-12:
+
+| Declaration                                            | Actual concept                                        | Enum members                                                                                                                                          |
+| ------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canonical/crosscutting/transfer_events.py`            | **The canonical bus contract**, strategy→execution    | `BusTransferType`, `TransferPurpose`, `TransferResultStatus`                                                                                          |
+| `internal/domain/defi/transfers.py`                    | On-chain transfer **observation/verification**        | `TransferStatus`: PENDING SUBMITTED CONFIRMING CONFIRMED FAILED BRIDGING BRIDGE_COMPLETE; `TransferType`: SAME_CHAIN/CROSS_CHAIN (topology, not rail) |
+| `execution-service/engine/transfers/adapter.py`        | Adapter-level result (implementation detail)          | `TransferStatus`: PENDING CONFIRMED FAILED                                                                                                            |
+| `fund-administration-service/.../transfer_protocol.py` | **Deliberate structural mirror** of the adapter types | same 3 — docstrings say "Mirrors …" / "Narrow structural view over …"                                                                                 |
+
+**`transfer_events.py` is already the intended SSOT**: it sits in `canonical/`, its docstring states it "replaces the
+fragmented transfer surfaces in execution-service (CEX withdrawals, DeFi protocol deposits/withdrawals, bridges,
+sub-account moves) with a single `TransferIntent` → `TransferResult` pair routed through `TransferCoordinator`", and it
+already carries a `§ SSOT reconciliation` section. **The manual route therefore belongs there, not in a new module.**
+
+- [ ] [AGENT] P1. **Resolve the one real type debt: `BusTransferType` vs `transfer_types.TransferType` "overlapping
+      values"**, which `transfer_events.py` names in its own docstring. Decide whether the rail enum collapses into the
+      bus taxonomy or stays a separate axis, and record the ruling in the docstring's reconciliation section.
+- [ ] [AGENT] P2. **Decide the fate of the fund-admin mirror.** It exists because the tier model forbids service→service
+      imports, so it is defensible — but the fields must be hand-synced across two repos. Either promote the
+      adapter-level pair into UAC so both import it, or leave the mirror and add a test asserting field parity. **Do not
+      simply delete it** — that would break the tier rule it was written to respect.
+- [ ] [AGENT] P3. **Audit the three `deployment-api` treasury route modules** (`treasury.py`, `treasury_routes.py`,
+      `client_treasury.py`) for genuine duplication versus deliberate separation, before touching any of them.
+
+### H.2 The manual route — the actual gap
+
+`TransferType` (the rail axis) has exactly three members: `ON_CHAIN`, `CEX_WITHDRAWAL`, `CEX_INTERNAL`. **All three are
+API-executed.** A bookmaker deposit or a bank wire cannot be represented, so the model is crypto-only and not unified
+across asset groups. `ApprovalBus` (`WithdrawalRequestedEvent` / `WithdrawalApprovedEvent`) provides human _approval of
+a system-executed_ transfer — the inverse of what is needed.
+
+- [ ] [AGENT] P0. **Add the manual/off-system route to the canonical bus taxonomy** in `transfer_events.py`, with a real
+      state machine rather than a flag: `AWAITING_MANUAL_ACTION → ASSERTED_BY_OPERATOR → RECONCILED_AGAINST_BALANCE`.
+      The system must never report settled on an operator assertion alone — a balance check closes it. This is what
+      makes a manual movement UTS-compatible instead of a note in a spreadsheet.
+- [ ] [AGENT] P0. **Add `CustodyRoute` as the rail axis** — ClearLoop (via Copper), direct on-chain, CEX internal, CEX
+      withdrawal, **manual** — so the contract states what interface a transfer finally lands on. Supersedes the
+      narrower framing in section C: the enum is the rail, the manual member is what unifies the asset groups.
+- [ ] [AGENT] P0. **Manual TRADE capture in execution-service**, not just manual transfers. Betting venues will be
+      operated by hand initially, and the fills still have to book in canonical form — same instruction contract, same
+      ledgers, same attribution — or the sports asset group is invisible to reconciliation and P&L. Verify whether any
+      manual-fill path exists before building.
+- [ ] [AGENT] P1. **Reconcile the manual route against `withdrawal_approval_rules.py`** in UAC so approval and manual
+      execution compose rather than conflict.
+
+### H.3 Keying — prior art exists; read it before designing
+
+Measured: `VenueWalletCapabilities` is keyed by **venue only** (`venue`, `deposits_to`, `trading_wallet_type`,
+`requires_internal_transfer`). `FundTransferContext` carries `fund_id`, `share_class`, `allocation_id` — fund-level, not
+client/account. Client isolation is enforced at the `TransferCoordinator`. `WalletType` gives
+FUNDING/TRADING/SPOT/UNIFIED. **No `(client × venue × account_type × purpose)` key exists, and `reserve_ratio` is zero
+hits fleet-wide.**
+
+- [ ] [AGENT] P0. **READ FIRST, before any schema change:**
+      `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` and
+      `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md`. The operator's recollection that
+      treasury and client concepts already exist in some capacity is **confirmed** — a treasury-and-subaccount model is
+      already written down. Reconcile against it and report conflicts rather than designing in parallel.
+- [ ] [AGENT] P0. **Then extend to the full composite key + ratios**: `(client_id × venue × account_type × purpose)`
+      with `purpose ∈ {TREASURY, TRADING}`, a strategy-settable reserve ratio, and `VenueWalletCapabilities` keyed per
+      `(venue, chain)` rather than per venue. Venues span TradFi (IBKR), CeFi (Binance), DeFi (ERC-20 wallet) and manual
+      books, so the key must hold all four without special cases.
+- [ ] [AGENT] P1. **Consolidate the SSOT in one place and delete what it supersedes** — the operator's explicit
+      constraint is no slop. If the treasury model already declares part of this, extend that declaration rather than
+      adding a second one.
+
+### H.4 Rotation research — audit per module before migrating
+
+`e2e-testing/scripts/defi/` holds eight research modules: `funding_ensemble_engine`, `funding_regime_classifier`,
+`funding_reversion_crossvenue_book`, `funding_reversion_multivenue_capital`, `funding_reversion_paper_trade`,
+`staked_basis_funding_scan`, `plot_funding_history`, `launch_perp_funding_vm.sh`. Production holds only
+`rotation_lending.py` (archetype) and `funding_dispersion.py` (analysis) in the carry package.
+
+- [ ] [AGENT] P1. **Audit each of the eight against what production already ships**, per module, before migrating any of
+      them. The risk is productionising a second implementation of `funding_dispersion` — the exact duplication class
+      this section exists to prevent.
+- [ ] [AGENT] P2. **Then migrate the survivors as optionality, not by force**: regime classification and dispersion into
+      `features-service` as versioned calculators; reversion books into `strategy-service` as archetypes **registered
+      but not enabled for any client**. Nothing turns on by default.
+- [ ] [AGENT] P2. **Check `/plans/active/cross_venue_funding_reversion_research_2026_07_24.md` for conflicts** before
+      migrating — an active plan already covers cross-venue funding reversion and may own some of these modules.
+
+### H.5 Strategy composition and rotation breadth — NOT YET AUDITED (operator asks, 2026-08-12)
+
+Four items the operator raised that I have **not** investigated. Recorded verbatim in intent so a fresh session starts
+from the question, not from my paraphrase.
+
+- [ ] [AGENT] P0. **Determine how a COMPOSITE strategy is modelled — this gates the keying and allocation work in H.3.**
+      The operator states the running Elysium strategy is a composite of strategies, and believes `portfolio_allocator`
+      plus weights on archetypes, venues and coins already provides it. Three candidate architectures, and the right one
+      must be established before more schema work: (a) **many instances, one archetype each**, composed by the allocator
+      with weights per axis; (b) **one composite archetype** that internally holds a basket and implicitly weights; (c)
+      a **new composition concept** above the instance. Audit `portfolio_allocator/`, `allocation_sizer.py` and
+      `AllocationDirective`/`StrategyEquityDirective` in `architecture_v2/schemas.py`, then recommend — noting that
+      today `StrategyInstanceDefinition` carries ONE `archetype_id` and ONE `capital_budget_amount`, which points at
+      (a).
+- [ ] [AGENT] P0. **Audit collateral-driven archetype selection.** The logic choosing between cash basis and staked
+      basis by what collateral a venue actually accepts — stETH vs wstETH on ETH, the equivalent on SOL — and switching
+      structure per venue accordingly. The operator flags this as important; it is also what the client documents
+      describe as dynamic structure selection. Verify it exists, where it lives, and whether it reads the collateral
+      matrix or a hardcoded map.
+- [ ] [AGENT] P1. **Audit rotation filters for volume/ADV coverage and confirm they are expansively tracked.** The
+      operator believes ADV/volume filters are already part of rotation. Verify: which filters exist, whether they are
+      per-venue or global, whether the thresholds are configurable per instance, and whether coverage is tracked
+      anywhere. Feeds the H.4 per-module audit.
+- [ ] [AGENT] P1. **Audit the dispersion basket capability**: long low-funding / short high-funding across coins as a
+      basket, mapped to an appropriate archetype. Parts exist in `e2e-testing` (`funding_reversion_crossvenue_book`,
+      `funding_reversion_multivenue_capital`, `funding_dispersion` in the carry package) and, per the operator, some in
+      production. Establish what exists, what is missing, and which archetype it maps to — then complete it. **Depends
+      on the composite ruling above**, since a basket is either one archetype or many weighted instances.
+
+### H.6 Gate findings — the two defects that hid a one-line violation for seven attempts (2026-08-12)
+
+Found by paying the cost, per the workspace rule that a tool which misled you is itself a finding. Both are in
+`scripts/plan-hygiene/check_reference_paths.py` / `run_hygiene_sweep.sh` and affect every agent who stages a doc.
+
+- [ ] [SCRIPT] P1. **`_run_only()` reports success for a file it never opened.** `if not p.is_file(): continue` skips
+      any unresolvable path and the function then prints `0 violation(s)` and returns exit 0 — so running the checker
+      from the wrong working directory produces a clean bill of health for a file with violations. This is a
+      PROXY-vs-property failure of exactly the kind `/codex/12-agent-workflow/measurement-claims-discipline.md` names:
+      exit 0 meant "nothing was checked", not "nothing is wrong". Fix: a path passed explicitly to `--only` that does
+      not resolve is an ERROR (name it, exit non-zero), never a silent skip. Evidence: this plan's own seven failed
+      pushes.
+- [ ] [SCRIPT] P2. **`--quiet` suppresses the violation text but keeps the count, which is the least useful pairing.**
+      `run_hygiene_sweep.sh` invokes the checker with `--quiet --only`, so a precommit failure says
+      `1 violation(s) in     staged files` and never names the reference. `find_moved_doc_referrers.sh` already
+      documents this same trap in its own header comment, which means it has now cost time twice. Fix: always print the
+      offending references on FAILURE regardless of `--quiet` — quiet should suppress noise on success, not evidence on
+      failure.
+
 ## Progress Log
 
+- **2026-08-12 (second pass)** — Recorded four un-audited operator asks in H.5: composite-strategy modelling (which
+  gates H.3), collateral-driven archetype selection, rotation volume/ADV filter coverage, and the dispersion basket.
+  **Sections H and H.5 were blocked for seven `safe-doc-push` attempts by a single `check_reference_paths --only`
+  violation, and the diagnosis was wrong for all seven.** Root cause, measured: line 371 of this file carried a **bare**
+  `codex/...` reference (missing the leading slash) — a FORMAT violation, not the hypothesised dangling-at-origin
+  existence violation. Two things hid it, and both are now recorded as gate findings in H.6: `run_hygiene_sweep.sh`
+  invokes the checker with `--quiet`, which prints the violation **count without the filename**; and `_run_only()`
+  **silently `continue`s past any path it cannot stat, then reports 0 violations and exit 0** — so the "same checker
+  returns 0 locally" evidence that anchored six wrong guesses was a false negative produced by running it from the wrong
+  working directory. The lesson is the one already in the rules: after two identical consecutive failures, stop guessing
+  and get the actual identifier — a throwaway worktree at `origin/<branch>` plus the checker run **without** `--quiet`
+  named the reference in one shot.
+- **2026-08-12** — Investigation outcomes recorded in section H. **Corrected my own earlier over-call**: the "four
+  duplicate `TransferStatus`/`TransferResult` declarations" are actually **three legitimate layers plus one deliberate
+  mirror** — a bus contract, an on-chain observation schema and an adapter-level result, which merely share a name.
+  `canonical/crosscutting/transfer_events.py` is already the self-declared SSOT, so the manual route belongs there
+  rather than in anything new. The genuine debts are the `BusTransferType` vs `TransferType` value overlap (acknowledged
+  in the file's own docstring) and the hand-synced fund-admin mirror, which exists to respect the no-service-imports
+  tier rule and must not simply be deleted. Confirmed the operator's recollection that treasury/client prior art exists:
+  `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` and
+  `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` are both written and must be read before
+  any keying change. Measured the manual gap precisely: the rail enum has three members, all API-executed, so a
+  bookmaker deposit is unrepresentable; and `ApprovalBus` provides approval of a system-executed transfer, which is the
+  inverse of the manual case. Added manual **trade** capture alongside manual transfers, since betting venues will be
+  hand-operated at first and the fills must still book canonically.
 - **2026-08-11** — Rewritten as a **claims audit** on operator instruction: no new repository build, full audit of
   everything missing, every fix in line with the existing architecture. Twenty-three load-bearing document claims were
   checked against the tree: **17 verified in source, 1 partial, 2 unverified, 1 false, 2 already-wrong-and-now-fixed.**
