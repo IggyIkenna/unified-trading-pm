@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Prediction Data Types Catalog
 summary: >-
-  Prediction data-types catalog SSOT — the 3 MTDS prediction data_types (trades / prediction_canonical_question_group /
-  market_lifecycle), their CLI ops, sources (polymarket_clob, polymarket_gamma_api, kalshi_*), shard keys and schemas;
-  the venue-vs-source invariant (never collapse Polymarket-vs-Kalshi into a source merge), event_driven coverage
-  semantics, and the MARKET_LIFECYCLE dual-casing.
+  Prediction data-types catalog SSOT — the 4 MTDS prediction data_types (trades / book_snapshot_5 /
+  prediction_canonical_question_group / market_lifecycle), their CLI ops, sources (polymarket_clob,
+  polymarket_gamma_api, kalshi_*), shard keys and schemas; the venue-vs-source invariant (never collapse
+  Polymarket-vs-Kalshi into a source merge), event_driven coverage semantics, and the MARKET_LIFECYCLE dual-casing.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -26,27 +26,32 @@ authoritative_for: [MTDS prediction data_type catalog, prediction venue-vs-sourc
 referenced_by:
   [/codex/02-data/README.md, /codex/02-data/prediction-perps-sourcing.md, /codex/02-data/prediction-schema-paths.md]
 owner:
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-12
 code_refs:
 ---
 
 # Prediction Data Types Catalog
 
 > SSOT for all MTDS Prediction market data type definitions, sources, shard keys, and implementation status. Last
-> updated: 2026-05-24.
+> updated: 2026-08-12 (book_snapshot_5 re-add corrected — see § "Legacy naming migration").
 
 ## Overview
 
-MTDS collects Prediction market data in 3 distinct data types across trade execution, canonical question grouping, and
-market lifecycle domains. Each data type maps to one or more MTDS CLI operations (`--operation collect-<type>`), one or
-more venues (Polymarket, Kalshi), and a canonical GCS path under the Prediction tick-data bucket.
+MTDS collects Prediction market data in 4 distinct data types across trade execution, top-of-book depth, canonical
+question grouping, and market lifecycle domains. Each data type maps to one or more MTDS CLI operations
+(`--operation collect-<type>`), one or more venues (Polymarket, Kalshi), and a canonical GCS path under the Prediction
+tick-data bucket.
 
 > **Crypto perps (Kalshi-Perp / Polymarket-Perp)** are a SEPARATE `cefi` product (regulated crypto perpetual futures),
 > NOT prediction YES/NO markets — sourcing SSOT: [`prediction-perps-sourcing.md`](./prediction-perps-sourcing.md).
 
-The 3 data types are:
+The 4 data types are:
 
 - `trades` — individual trade executions on prediction markets
+- `book_snapshot_5` — top-5 order-book depth snapshot (instrument-day grain, same grain as `trades`); RE-ADDED
+  2026-06-23 once both venues started emitting it (LIVE via `polymarket_clob_ws`/`kalshi_clob_ws`, BATCH via
+  `polymarket_adapter` REST `/book`) — see § "Legacy data type retirement" below for the earlier RETIRED→re-added
+  history, and `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` for the full capture-pipeline detail
 - `prediction_canonical_question_group` — cluster-grain canonical question group (Plan A; primary current production
   type)
 - `market_lifecycle` / `MARKET_LIFECYCLE` — lifecycle events (instruments-service writes `MARKET_LIFECYCLE` uppercase;
@@ -61,10 +66,12 @@ shards-weighted `capture_coverage_pct` understates real coverage because the den
 day) combo should trade. Aggregator uses `attempt_coverage_pct` for the displayed %.
 
 **Legacy naming migration (2026-04-19)**: Prior to Plan A, MTDS used per-conditionId shards with data_type ∈
-{`prediction_trades`, `prediction_book_snapshot`, `prediction_market_metadata`}. These are RETIRED —
+{`prediction_trades`, `prediction_book_snapshot`, `prediction_market_metadata`}. These were RETIRED —
 `prediction_book_snapshot` and `prediction_market_metadata` removed from `_PER_INSTRUMENT_SHARD_DATA_TYPES`
-(UAC@7511207a). `prediction_trades` folded into canonical `trades`. UAC now: `trades` +
-`prediction_canonical_question_group` + `market_lifecycle`.
+(UAC@7511207a). `prediction_trades` folded into canonical `trades`. **`book_snapshot_5` (the canonical-named successor
+to the retired `prediction_book_snapshot`) was RE-ADDED 2026-06-23** once both venues started emitting it
+(`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:357-372`) — UAC now: `trades` +
+`book_snapshot_5` + `prediction_canonical_question_group` + `market_lifecycle`/`MARKET_LIFECYCLE`.
 
 ### Source vs Venue invariant (HARD — both are true, never collapsed)
 
@@ -118,9 +125,9 @@ Bucket name is resolved via
 
 ### Instrument Type Mapping
 
-| instrument_type     | Data types                                                    |
-| ------------------- | ------------------------------------------------------------- |
-| `prediction_market` | trades, prediction_canonical_question_group, market_lifecycle |
+| instrument_type     | Data types                                                                     |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `prediction_market` | trades, book_snapshot_5, prediction_canonical_question_group, market_lifecycle |
 
 ---
 
@@ -204,10 +211,10 @@ outcomes). The downstream consumer is instruments-service's prediction_market ag
 
 ## Venue Coverage Matrix
 
-| Venue      | Data Types                                                    | Status     | Notes                                                                               |
-| ---------- | ------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------- |
-| POLYMARKET | trades, prediction_canonical_question_group, market_lifecycle | Production | Binary markets (YES/NO outcomes); CLOB; prices ∈ [0, 1]                             |
-| KALSHI     | trades, prediction_canonical_question_group, market_lifecycle | Production | Binary + categorical; REST API; prices in cents [0, 100]; requires `kalshi-api-key` |
+| Venue      | Data Types                                                                     | Status     | Notes                                                                               |
+| ---------- | ------------------------------------------------------------------------------ | ---------- | ----------------------------------------------------------------------------------- |
+| POLYMARKET | trades, book_snapshot_5, prediction_canonical_question_group, market_lifecycle | Production | Binary markets (YES/NO outcomes); CLOB; prices ∈ [0, 1]                             |
+| KALSHI     | trades, book_snapshot_5, prediction_canonical_question_group, market_lifecycle | Production | Binary + categorical; REST API; prices in cents [0, 100]; requires `kalshi-api-key` |
 
 ---
 
@@ -216,6 +223,7 @@ outcomes). The downstream consumer is instruments-service's prediction_market ag
 | data_type                             | Coverage axis                                    | Expected shards (per day)                               | record_empty expected                                                          |
 | ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `trades`                              | per-venue × per-conditionId × daily              | venue × active conditions                               | Yes — zero-trade day on inactive condition = `SOURCE_RETURNED_ZERO`            |
+| `book_snapshot_5`                     | per-venue × per-conditionId × daily              | venue × active conditions                               | Yes — same instrument-day grain as `trades`                                    |
 | `prediction_canonical_question_group` | per-venue × per-canonical_question_group × daily | venue × canonical groups (instruments-service registry) | Yes — no markets in group = `empty_confirmed`                                  |
 | `market_lifecycle`                    | per-venue × daily                                | venue × 1 shard/day                                     | Yes — no lifecycle events = `empty_confirmed` (markets stable, no transitions) |
 
@@ -225,11 +233,11 @@ outcomes). The downstream consumer is instruments-service's prediction_market ag
 
 ### Legacy data type retirement (2026-04-19)
 
-| Old (retired)                | New canonical      | Notes                                                  |
-| ---------------------------- | ------------------ | ------------------------------------------------------ |
-| `prediction_trades`          | `trades`           | Folded into unified trades type                        |
-| `prediction_book_snapshot`   | —                  | RETIRED — no replacement; orderbook snapshots deferred |
-| `prediction_market_metadata` | `market_lifecycle` | Superseded by lifecycle-event model                    |
+| Old (retired)                | New canonical      | Notes                                                                                                                                                                                        |
+| ---------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prediction_trades`          | `trades`           | Folded into unified trades type                                                                                                                                                              |
+| `prediction_book_snapshot`   | `book_snapshot_5`  | RETIRED 2026-04-19, then **RE-ADDED 2026-06-23** as canonical `book_snapshot_5` once both venues started emitting depth (see § "Legacy naming migration" above) — no longer "no replacement" |
+| `prediction_market_metadata` | `market_lifecycle` | Superseded by lifecycle-event model                                                                                                                                                          |
 
 Retired types removed from `_PER_INSTRUMENT_SHARD_DATA_TYPES` at UAC@7511207a. Any manifest rows with old data_type
 strings are re-classified by phantom-reconcile script
