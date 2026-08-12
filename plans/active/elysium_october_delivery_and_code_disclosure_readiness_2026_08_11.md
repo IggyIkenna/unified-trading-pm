@@ -809,6 +809,54 @@ strategy config before either ruling was written.
       tick, or the cross-sectional signal is pre-computed upstream as a scalar. Do not widen a role the feed cannot
       fill.
 
+### H.16 e2e→production diff — the research book has 8 overlays, production has 2 (audited 2026-08-12)
+
+**The single most material deviation found: the measured research Sharpe belongs to a book production does not
+implement.** `funding_reversion_crossvenue_book.py` (738 lines, e2e-testing) ships a stacked 8-overlay book and its
+`Delete-when:` marker says the reversion signal folds into strategy-service. `CarryFundingDispersionEngine`'s docstring
+asserts the overlays are "signal/portfolio-layer concerns folded into the rank + the inverse-vol weight feature".
+**Measured against the tree, that claim does not hold.**
+
+| #   | Overlay (research book)                                    | In production?                                                                                               |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1   | EWMA(halflife=21) of daily funding, lagged 1d              | **Unverified — likely absent.** Upstream is `_cross_sectional_rank(coin_obs, cohort)`, a plain same-day rank |
+| 2   | Rank-buffer hysteresis (hold until it leaves the k+6 band) | **Absent** — no `rank_buffer` anywhere                                                                       |
+| 3   | HL-veto (drop a long in HL's bottom decile / short in top) | **Absent**                                                                                                   |
+| 4   | Inverse-vol sizing within each leg                         | ✅ arrives as `funding_inverse_vol_weight`, applied in `_leg_weight`                                         |
+| 5   | No-trade band (skip weight changes < 0.03)                 | **Absent** — no `no_trade_band`                                                                              |
+| 6   | Beta-hedge (subtract trailing BTC-beta × BTC return)       | **DOCSTRING ONLY** — prose in `funding_dispersion.py` and `catalog_carry.py`, no implementation              |
+| 7   | Vol-target (scale exposure to a trailing-vol budget)       | **DOCSTRING ONLY** — same. (TSMOM has its own real vol-target; that is a different archetype)                |
+| 8   | Squeeze-veto (cut a leg on >2σ adverse 2-day move)         | ✅ implemented in the engine (`squeeze_threshold`, `funding_squeeze_sigma`)                                  |
+
+**Production implements 2 of 8.** Overlays 6 and 7 in particular **cannot** be "folded into the rank" — a beta-hedge
+requires an actual BTC hedge position and vol-target scales book-level exposure; neither is a property of a per-coin
+rank scalar. The upstream rank IS real (`paper_run_handler` computes it from the full day cohort), so overlay 1's
+smoothing is the only one that could plausibly hide there, and the code reads as a plain rank.
+
+**Why this is P0 and not a research nicety:** the research script documents its Sharpe and drawdown _with the full
+stack_, and overlay 7 is explicitly described there as "the drawdown DIAL". Running 2 of 8 is a materially different
+risk profile from the one that justified the strategy. **No client-facing performance claim may cite the research book's
+numbers while production runs a subset.**
+
+- [ ] [AGENT] P0. **Decide per overlay: implement, or delete the docstring claim.** The current state is the worst of
+      both — the docstring tells a reader beta-hedge and vol-target are handled elsewhere, so nobody goes looking.
+      Either build them at the book layer (they are portfolio-level, so likely the allocator or a risk overlay, not the
+      per-instrument engine), or state plainly in the docstring that production runs the un-overlaid book.
+- [ ] [AGENT] P0. **Confirm whether the upstream rank applies EWMA smoothing and lag.** Read `_cross_sectional_rank` and
+      the `perp_funding` feature path. If it is a plain same-day rank, production turnover will materially exceed the
+      research book's, which was explicitly tuned for lower churn ("slower = lower turnover, holds Sharpe").
+- [ ] [AGENT] P1. **`funding_reversion_multivenue_capital.py` is entirely unmigrated.** Its `Delete-when:` says the
+      multi-venue capital/transfer layer folds into `TransferCoordinator`. **Zero hits** for `FIXED_LEVERAGE`,
+      `full_funding`, `pnl_sweep` or equivalents anywhere in strategy-service or execution-service. What it provides and
+      production lacks: gross/net/dollar leverage tracking, **margin posted per venue**, FREE capital, a **treasury of
+      swept PnL**, and cross-venue transfer instructions — plus the two capital regimes (FULL-FUNDING vs the default
+      FIXED-LEVERAGE with weekly sweep). That last is not an accounting nicety: the regime determines transfer volume
+      (~$75k/yr vs ~$300k/yr on $1M by its own figures), so it drives cost. Folds into the H.11 transfer work.
+- [ ] [AGENT] P2. **Then re-check the other e2e research scripts the same way.** Two were audited;
+      `funding_reversion_paper_trade.py`, `test_funding_reversion_crypto_filter.py` and the `scripts/audit/` set were
+      not. The `Delete-when:` markers are the cheap index — each one names the production home it is waiting on, so a
+      script whose marker names a landed component is either migrated or a gap, and the marker tells you which to check.
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
