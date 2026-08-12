@@ -15,7 +15,7 @@ summary: >-
   bug. Not killed — outside the scope of what the operator explicitly approved (which named a specific, now-moot, set of
   VMs), and the launch source is unknown, so a 3-signal staleness check + operator sign-off on kill/no-kill is needed
   before touching them, per the sibling doc's own precedent.
-status: open
+status: archived
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -49,6 +49,12 @@ depends_on: []
 ---
 
 # New out-of-scope CME commodity-futures wave — source unknown, cron confirmed paused
+
+> **ARCHIVED 2026-08-12** — all 3 todos resolved. Launch source root-caused to the host `wave_launcher.py` cron
+> consulting a stale `MVP_SCOPE["tradfi"].underliers` SSOT (slot-31); 3-signal staleness check found all 7 VMs alive,
+> kill/no-kill routed to the operator via BLK-3412aed6 (slot-26); SSOT narrowed to drop GC/SI/PL/PA/NG/CL/HG —
+> `unified-api-contracts@671fe035` (slot-32). No further action pending; this session only flipped the last checkbox and
+> archived (the code todo was already shipped but left unflipped).
 
 ## Observation (2026-08-11)
 
@@ -125,7 +131,7 @@ for what this session was doing; flagging for whoever picks this up).
       every future 3-hourly tick will keep re-launching/replacing these same 7 commodity roots until
       `MVP_SCOPE["tradfi"].underliers` is narrowed. See new P0 follow-up todo below. Repo: deployment-service (launch
       mechanism), unified-api-contracts (stale SSOT — the actual fix surface).
-- [ ] [DATA] P0. **Narrow `MVP_SCOPE["tradfi"].underliers`** (unified-api-contracts,
+- [x] ✅ [DATA] P0. **Narrow `MVP_SCOPE["tradfi"].underliers`** (unified-api-contracts,
       `unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py:704-712`) to drop `GC/SI/PL/PA/NG/CL/HG` per the
       2026-08-09 scope ruling (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`: commodity futures "entirely
       out of scope" until November) — this is the ACTUAL fix `wave_launcher.py@48f55e934b` was supposed to enable but
@@ -134,7 +140,11 @@ for what this session was doing; flagging for whoever picks this up).
       currently-alive 7. Coordinate with the operator's BLK-3412aed6 kill/no-kill answer first (if "no-kill for
       sunk-cost", the underliers narrowing should still land to stop FUTURE relaunches — only the currently-alive 7 are
       exempted). Verify no other consumer of `MVP_SCOPE["tradfi"].underliers` (e.g. catalogue MVP-tagging, completeness
-      denominators) regresses from the narrowing — cite in the commit. Repo: unified-api-contracts.
+      denominators) regresses from the narrowing — cite in the commit. Repo: unified-api-contracts. — completed
+      2026-08-11 (slot-32): `unified-api-contracts@671fe035` narrowed `underliers` (dropping GC/SI/PL/PA/NG/CL/HG) +
+      `MVP_CME_EXCHANGE_CODES` derived from it; commit message documents the no-regression verification (wave_launcher
+      has no root-specific test assertions, MTDS symbol lookups are derivation-based). Checkbox flip only this session
+      (code was already shipped, todo was left unflipped) — verified `671fe035` on `origin/live-defi-rollout`.
 - [x] ✅ [INFRA] P2. Run the 3-signal staleness check (GCS heartbeat blob mtime, run.log tail activity, active data
       writes) on each of the 7 VMs once the source is identified, then route the kill/no-kill call per the same
       sunk-cost-vs-ongoing-violation framing as the sibling doc — do not blind-kill. — completed 2026-08-11 (slot-26):
