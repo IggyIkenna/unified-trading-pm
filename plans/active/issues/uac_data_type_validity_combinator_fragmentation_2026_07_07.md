@@ -452,6 +452,36 @@ just belongs on a different layer than instrument_type does, and conflating the 
     declaration gap (declare `oracle_prices` valid for the AAVE oracle protocol in `PROTOCOL_CAPABILITIES`), NOT
     removing the genesis. The 2026-08-05 `defi_actual_data_types_not_declared_valid()` audit flagged it as
     "actual⊄theoretical", which is a Layer-1 under-declaration, not proof the genesis is wrong.
+- **2026-08-12 (slot 16, data_engineering): COMPOUND_V3-ETHEREUM oracle_prices capture — CODE COMPLETE + verified, ship
+  blocked on the pre-existing MTDS LDR red (RB-fc1bb5dd).** Wired the Comet getPrice branch: new
+  `_compound_oracle_collection.py` + constants + handler wiring + preflight sentinel + regression tests in
+  `market-tick-data-service` (all under `market_tick_data_service/cli/handlers/`). Design: query cUSDCv3 (base=USDC →
+  USD-native getPrice) AND cWETHv3 (base=WETH → WETH-quoted, converted ×ETH/USD Chainlink feed at the same noon block),
+  dedup per-asset preferring the USD-native market — markets + assets **live-verified 2026-08-12 at block 25731615 via
+  eth_call** (cWBTCv3/cLINKv3/cUNIv3/cUSDTv3 at older addresses are retired — excluded). ~12 priceable assets (WBTC,
+  cbBTC, rsETH, USDe from cUSDCv3; rETH, osETH, rswETH, tBTC, ETHx, wOETH, USDC, USDT from cWETHv3); deUSD/sdeUSD
+  excluded by a USD sanity floor (mis-scaled feeds price at ~1e-08). **UAC/UTL registration was ALREADY shipped by a
+  parallel session** (`unified-api-contracts@3c39d9cf` BATCH_COMPOUND_V3 + SOURCE_PRIORITY entry +
+  SOURCE_MODE_CAPABILITY; `unified-trading-library@09038982` `_VENUE_OVERRIDES["COMPOUND_V3"]`) — no re-registration
+  needed. `source=compound_v3`, `pipeline_mode=batch_compound_v3` (manifest emit via
+  `pipeline_mode_for_source("compound_v3", ...)`; write path via the venue override). Done-when (single-day
+  force-compute vs the `-test-` bucket) NOT yet run — the code is written + passes QG (only the pre-existing
+  `test_lending_indices_handler.py::test_collect_protocol_chain_writes_canonical_partition_compound` failure remains,
+  which blocks the commit), but the MTDS ship lane is RED on that pre-existing issue
+  (`mtds_qg_red_lending_indices_compound_pipeline_mode_drift_2026_08_12.md`, blocker RB-fc1bb5dd). **Adjacent finding
+  (raised for the other doc)**: the UTL venue-only overrides (`AAVE`/`SPARK`/`COMPOUND_V3` → BATCH_*) mislabel
+  `lending_indices` as `batch_aave`/`batch_spark`/`batch_compound_v3` instead of `batch_onchain_subgraph` for ALL THREE
+  venues (verified via `derive_pipeline_mode_for_row`); the correct mechanism is `_VENUE_DT_OVERRIDES` scoped per
+  `(venue, "oracle_prices")`, but scoping it changes AAVE/SPARK derivation too (migration implication) — left to the
+  other doc's P0/escalation rather than fixed unilaterally here.
+- **2026-08-12 (slot 16, continued): MTDS ship lane unblocked + UTL root-cause fix applied.** The pre-existing MTDS red
+  was fixed on origin by the escalation (`market-tick-data-service@6a039e5242` — threads the SSOT pipeline_mode through
+  the lending_indices write path; QG green). Separately, applied the UTL root-cause fix for the open P1 there: scoped
+  the venue-only `_VENUE_OVERRIDES["COMPOUND_V3"]` to `_VENUE_DT_OVERRIDES[("COMPOUND_V3","oracle_prices")]`
+  (`unified-trading-library`, regression test added — lending_indices/liquidations/risk_params now derive
+  batch_onchain_subgraph/batch_onchain_rpc per SOURCE_PRIORITY, oracle_prices stays batch_compound_v3). My COMPOUND_V3
+  oracle capture code (entry above) is QG-verified; ship of UTL + MTDS + the done-when force-compute vs the `-test-`
+  bucket in flight.
 
 ## Follow-ups
 
