@@ -122,9 +122,17 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
 
 ## Todos
 
-- [ ] [DATA] P1. Apply the corrective flip: restore 14 CURVE `dex_pool_fees` rows to `captured` (clear `error_reason`)
-      and retire the 7 BALANCER rows to `attempted_failed` per BLK-b118f150. (repo: market-tick-data-service) — in
-      progress (slot 14)
+- [x] ✅ [DATA] P1. Apply the corrective flip: restore 14 CURVE `dex_pool_fees` rows to `captured` (clear
+      `error_reason`) and retire the 7 BALANCER rows to `attempted_failed` per BLK-b118f150. (repo:
+      market-tick-data-service) — **DONE 2026-08-12 (slot 20, data_engineering):
+      `market-tick-data-service@d2014c87df`.** Live census confirmed the 7 BALANCER rows were already `attempted_failed`
+      (correctly retired by a prior slot), so the flip was venue-determined: restored the 14 CURVE rows
+      `attempted_failed -> captured` (error_reason cleared), retired 0 BALANCER (already in target state). Applied via
+      `market-tick-data-service/scripts/one_offs/correct_dex_pool_fees_inverted_flip_2026_08_12.py --apply` (reversible
+      status flip only, no row/object deleted). Round-trip verify on the rewritten `_index`: CURVE captured=14 /
+      attempted_failed=0, BALANCER captured=0 / attempted_failed=7 — target disposition per BLK-b118f150 reached.
+      Snapshot `_index/snapshots/pre_dex_pool_fees_correct_20260812T183039Z.parquet` + `.dex_pool_fees_correct.bak`
+      written pre-write. Consolidator paused before write / resumed after (verified ENABLED). See Progress Log.
 - [x] ✅ [DATA] P1. Reconcile issue-doc todo 1 (`dex_pool_fees_phantom_premise_...-1119d9d2c3d8`): its inverted script
       must not re-apply; mark the BALANCER retirement done based on the corrective result. (repo: agent-orchestrator) —
       **DONE 2026-08-12 (slot 18, data_engineering).** Verified the second slot's task
@@ -155,3 +163,13 @@ BALANCER rows ... Do NOT touch the 14 CURVE rows").
   second slot's task already ran to completion. BALANCER retirement (7 rows) is the uncontested half of the disposition
   and is reconciled as done via the corrective flip (todo 1); the phantom-premise doc's todo-1 checkbox now carries a
   reconciliation note pointing back here.
+- **2026-08-12 (slot 20, data_engineering) — todo 1 DONE: corrective flip applied + verified.** Fresh live census over
+  the consolidated `_index` showed the 7 BALANCER rows were ALREADY `attempted_failed` (correctly retired by a prior
+  slot) — only the 14 CURVE rows were still `attempted_failed` from the inverted flip. Wrote + ran
+  `market-tick-data-service/scripts/one_offs/correct_dex_pool_fees_inverted_flip_2026_08_12.py --apply`
+  (venue-determined: CURVE→captured, BALANCER→retired, memory-bounded row-group-at-a-time). Restored 14 CURVE rows
+  `attempted_failed -> captured` (error_reason cleared), retired 0 (BALANCER already in target state). Consolidator
+  paused pre-write / resumed after (verified ENABLED). Snapshot
+  `_index/snapshots/pre_dex_pool_fees_correct_20260812T183039Z.parquet` + `.bak` written pre-write. Round-trip verify on
+  the rewritten `_index`: CURVE captured=14 / attempted_failed=0; BALANCER captured=0 / attempted_failed=7 — the
+  BLK-b118f150 target disposition. Ship: `market-tick-data-service@d2014c87df`.
