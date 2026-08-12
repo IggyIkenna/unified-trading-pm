@@ -110,6 +110,11 @@ This resolves the contamination problem the plan was working around, and it chan
 | **Ikenna — sub A** (`ikennaigboaka@…`) | **pro**   | $20              | **$24**                   | **Wednesday 13:00** |
 | **Ikenna — sub E** (`odum3default@…`)  | **max20** | $200             | **$240**                  | **Wednesday 22:00** |
 
+**CORRECTED 2026-08-12 (/plan-reconcile, operator-confirmed)**: this row's `odum3default` label was correct; the
+calibration tables below (lines ~561, 639, 686) previously labeled the same account `sub-e-odum2default`, colliding with
+`sub-f`'s distinct `odum2default` suffix — fixed to `sub-e-odum3default` throughout, matching the sequential
+odum1default/odum2default/odum3default pattern already used for sub-d/sub-f/sub-e elsewhere in this doc.
+
 Every OTHER Claude account is paused, so the AO pool is exactly DeepSeek + these two. Three consequences:
 
 1. **Both accounts become measurable, not just one.** The plan previously had no path to a Pro multiplier at all — the
@@ -558,7 +563,7 @@ valued at its standard rate.
 | sub-c-ikenna-odum  | max20 | 46.0x |  4.7x | 6-10x                 |
 | sub-d-odum1default | max20 | 34.4x | 18.4x | 6-10x                 |
 | sub-f-odum2default | max20 | 22.4x | 23.0x | 6-10x                 |
-| sub-e-odum2default | max20 |  7.7x |  3.5x | 6-10x                 |
+| sub-e-odum3default | max20 |  7.7x |  3.5x | 6-10x                 |
 | sub-a-ikenna       | pro   |  107x | 63.8x | 3-6x (excluded — Pro) |
 
 **Verdict: not a usable multiplier yet.** Method (A) is a strict subset of the same turns as (B) and should be a lower
@@ -636,7 +641,7 @@ Sonnet-5 promotion (the correct valuation for an August window):
 | sub-c-ikenna-odum  |          $1,455.53 |      32.2x |                         46.9x |
 | sub-d-odum1default |          $1,088.19 |      24.1x |                         35.1x |
 | sub-f-odum2default |            $699.73 |      15.5x |                         22.8x |
-| sub-e-odum2default |            $274.89 |       6.1x | 7.8x (excluded — capture era) |
+| sub-e-odum3default |            $274.89 |       6.1x | 7.8x (excluded — capture era) |
 
 **The denominator is now exact and the spread survives it** — 15.5x to 32.2x across three clean, identically-entitled
 max20 accounts. The residual error is therefore entirely in the NUMERATOR (attribution coverage), which todos 2-6

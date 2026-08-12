@@ -72,8 +72,11 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — what is `cursor-rules/` for?
 
-- [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 7 — see
-      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md).** What is the 25-file
+- [ ] [DOCS] P2. **REOPENED 2026-08-12 (/plan-reconcile) — was checked `[x]` RESOLVED 2026-08-08, but this doc's own
+      same-day CORRECTION below (round5 ao investigation) found the resolution's premise FALSE and explicitly states
+      "NOT resolving this item, re-flagging it" — the checkbox was never reverted to match. See the CORRECTION paragraph
+      below for the materially new evidence (a live CI consumer, `.github/workflows/rules-alignment-agent.yml`, was
+      missed by all 4 prior passes) and the genuine A/B/C operator call it now requires.** What is the 25-file
       `cursor-rules/` tree's purpose today, and should it be kept, repurposed, or archived?
 
   Verified fact (not in question): `cursor-rules/` (25 `.mdc` files, top-level dir) and `.cursor/rules/` (150 `.mdc`

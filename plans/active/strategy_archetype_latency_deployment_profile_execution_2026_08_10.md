@@ -98,6 +98,15 @@ source: >-
       (e.g. two `Low`-category archetypes) should be able to co-locate per the existing `co_location_rules` structure,
       and the derivation should correctly union them onto shared infrastructure rather than over-provisioning one
       instance per archetype.
+- [ ] [DOC] P1. **ADDED 2026-08-12 (/plan-reconcile) — genuine coverage gap, no tracked remediation existed until now.**
+      Fix `/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md` §6's row set (7 inconsistent rows + ~37
+      missing rows) and the stale `archetypes/*.md` runtime frontmatter (5 stale values + 5 invalid `min_sla_tier` enum
+      values — these raise on `SLATier()` cast at runtime, a live correctness risk, not just a doc gap). Per
+      `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`'s own binding decision artifact (todo 10),
+      which commits this execution plan to fixing exactly this scope but whose actual todo list never carried it. Done
+      when: §6 has 0 inconsistent/missing rows against the live archetype registry, and every `archetypes/*.md`
+      frontmatter's `min_sla_tier` is a valid enum value. Repo: unified-trading-pm (codex) + strategy-service (archetype
+      frontmatter).
 - [ ] [DATA] P2. **Cross-check against the SLA-tier gap the audit plan may have flagged** (any archetype family whose
       real latency requirement exceeds even the `premium` tier's 40ms budget) — if the audit found such a gap, this
       plan's derivation logic must surface it as an explicit warning/exception rather than silently under- provisioning;

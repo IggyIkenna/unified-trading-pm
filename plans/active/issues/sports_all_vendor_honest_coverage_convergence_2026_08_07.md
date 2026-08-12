@@ -39,7 +39,12 @@ parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 sequential: false
-depends_on: []
+depends_on: [sports_odds_api_scattered_multiyear_gaps_2026_07_27]
+gate_on_depends:
+  true # added 2026-08-12 (/plan-reconcile) — this doc's "babysit the mtds-backfill-odds-* fleet" todo
+  # and sports_odds_api_scattered_multiyear_gaps_2026_07_27.md's P1 backfill todo both independently dispatch the SAME
+  # live odds_api backfill VM fleet with no linkage, which already caused a real concurrency-guard-violation incident.
+  # Gate this doc's overlapping VM-management work behind the older, actively-dispatching doc resolving first.
 locked_by:
 locked_since:
 supersedes:

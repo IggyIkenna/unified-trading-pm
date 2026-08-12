@@ -386,15 +386,21 @@ run SEQUENTIALLY, not in parallel:
       gates: `strategy-service` `quality-gates.sh --no-fix` GREEN (fresh, non-cached full run: 5326 tests passed incl.
       91 new/updated for this build; basedpyright clean on every touched file — 5 pre-existing unrelated errors in
       `manifest_allocation_guard.py`; STEP 5.101 empty-string-fallback baseline held at 166).
-- [ ] [BACKEND] P2. **NEW finding 2026-07-23 — `RecursiveLoopOrchestrator` does not exist in strategy-service; 2
-      archetypes are production no-ops.** `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` need real
-      execution logic built from scratch (the "Phase 5" the in-code comment references was never actually shipped, or
-      the comment is aspirational/stale — not determined which). This is materially bigger than a tick-loader wiring
-      task — it's new production strategy-execution logic, live-path-affecting. Needs its own scoping pass before any
-      build; do not fold into the "complete the orphaned archetypes" tick-builder effort. **Minor factual correction
-      (2026-07-23, Phase 2 build agent, no action taken — out of scope)**: the earlier "grepped the ENTIRE repo, exists
-      NOWHERE" claim was scoped to `strategy-service` only. A REAL, tested `RecursiveLoopOrchestrator` class DOES exist
-      — `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` (+
+- [x] ✅ [BACKEND] P2. **DONE — flipped 2026-08-12 (/plan-reconcile).** RULED 2026-08-09 + shipped: real commit SHAs
+      independently re-verified as ancestors of `origin/live-defi-rollout` with fresh green `quality-gates.sh` on all 3
+      touched repos — `strategy-service@817bb4e0` (Family-1 on_tick), `strategy-service@f2ac7fdf` (Family-2 on_tick),
+      `execution-service@2352a17e` (RecursiveLoopOrchestrator's first production caller). Cross-link:
+      `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s already-flipped `[DESIGN]` twin, and the dedicated
+      finalize plan `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`. **NEW finding 2026-07-23 —
+      `RecursiveLoopOrchestrator` does not exist in strategy-service; 2 archetypes are production no-ops.**
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` need real execution logic built from scratch (the
+      "Phase 5" the in-code comment references was never actually shipped, or the comment is aspirational/stale — not
+      determined which). This is materially bigger than a tick-loader wiring task — it's new production
+      strategy-execution logic, live-path-affecting. Needs its own scoping pass before any build; do not fold into the
+      "complete the orphaned archetypes" tick-builder effort. **Minor factual correction (2026-07-23, Phase 2 build
+      agent, no action taken — out of scope)**: the earlier "grepped the ENTIRE repo, exists NOWHERE" claim was scoped
+      to `strategy-service` only. A REAL, tested `RecursiveLoopOrchestrator` class DOES exist —
+      `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` (+
       `tests/defi_execution/unit/test_recursive_loop_orchestrator.py`) — and UAC carries its request/response schemas
       (`unified_api_contracts/internal/architecture_v2/recursive_loop_orchestrator.py`). This does NOT change the
       verdict above: `CarryRecursiveStakedEngine.on_tick()`'s `if not staking_yield_enabled: return []` fires
@@ -865,9 +871,8 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   this same doc — hygiene cleanup candidates for a future pass, not reclassification triggers. Doc stays
   `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
-  since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop
-  archetype design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own
-  text.
+  since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop archetype
+  design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own text.
 - **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (2 open
   checkboxes at entry: the `RecursiveLoopOrchestrator` new-trading-logic gap for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
   /`CARRY_BASIS_PERP_INV`, needing operator-supplied risk-threshold/entry-signal decisions; the MVP_SCOPE

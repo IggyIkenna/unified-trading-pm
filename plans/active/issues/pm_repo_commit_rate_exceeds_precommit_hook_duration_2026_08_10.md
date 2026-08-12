@@ -460,7 +460,11 @@ Directions, cheapest first — each is a todo below:
       laptop — 8 concurrent 19s sweeps produce exactly the observed wall time. Mirror `qg-host-governor.sh`'s
       `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the cap is core-derived, and a measured
       before/after shows per-run sweep wall time on a loaded host materially closer to its idle 18.6s. Repo:
-      unified-trading-pm.
+      unified-trading-pm. **CORRECTION 2026-08-12 (/plan-reconcile), applying this doc's own later "Lessons carried
+      forward" finding**: this K=8→2 core-derived cap was REVERTED same session — three paired samples (K=8: 74/30/27s,
+      K=2: 27/37/29s) were statistically indistinguishable; the original 74s outlier was ambient noise, and isolation
+      (not K) removed the real contention. K is not the lever. Do not rely on this change as a live safeguard; see
+      "Lessons carried forward" below for the correction.
 - [x] ✅ [INFRA] P1. **Shrink the 118s critical section itself.** Re-profiled 2026-08-12 (per-check timestamp method,
       same as the original 2026-08-10 profiling) and found the top cost was NOT residual contention or an
       intrinsically-expensive check — it was two SELF-INFLICTED regressions from earlier sessions, both fixed and
@@ -483,12 +487,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                  isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                  down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                  concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                  single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                  `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                  nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in

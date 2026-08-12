@@ -139,13 +139,17 @@ Not urgent (static, not actively growing) but real and unaddressed.
       tests added, `market-tick-data-service@bd6233b4`, see Progress Log 2026-08-09 (slot-25). Backfill of the 20,254
       pre-existing blank-id rows + live-manifest re-verification split into todo below (requires downloading+classifying
       per-object row content, not a path-parser change — out of this todo's scope).
-- [x] [DATA] P3. ✅ **Fix the root-cause `continuous_future` → `FUTURE` conflation in
+- [ ] [DATA] P3. **REOPENED 2026-08-12 (/plan-reconcile) — checkbox overstated completion relative to this todo's own
+      Done-when.** Fix the root-cause `continuous_future` → `FUTURE` conflation in
       `canonicalize_manifest_instrument_type()`** — `unified-trading-library@74fe04fd98`,
       `instruments-service@de6c820956`. Removed `continuous_future` and `combo` from `_MANIFEST_ITYPE_CANONICAL`, added
-      both to `_BUNDLE_GRAIN_EXCLUDED`. **Follow-up**: re-run `rebuild_tradfi_manifest.py` in MTDS to regenerate the
-      manifest. See Progress Log 2026-08-10 (slot-21). Repos: unified-trading-library, market-tick-data-service. **Done
-      when**: operator re-rules, canonical-lib fix ships, rebuild re-run, live manifest recount shows 0
-      `instrument_type=FUTURE` rows with populated `underlying` + null `instrument_id`.
+      both to `_BUNDLE_GRAIN_EXCLUDED`. **Follow-up (still outstanding)**: re-run `rebuild_tradfi_manifest.py` in MTDS
+      to regenerate the manifest — the live manifest still carries the old values until that rebuild runs (per this
+      doc's own Progress Log 2026-08-10, slot-21: "the live manifest still carries the old values until the next
+      `rebuild_tradfi_manifest.py` run"). The code fix shipped; the operational rebuild+recount step has not. Repos:
+      unified-trading-library, market-tick-data-service, market-tick-data-service (rebuild). **Done when**: rebuild
+      re-run, live manifest recount shows 0 `instrument_type=FUTURE` rows with populated `underlying` + null
+      `instrument_id`.
 
 ## Progress Log
 

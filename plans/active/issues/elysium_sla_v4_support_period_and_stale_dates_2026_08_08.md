@@ -103,6 +103,13 @@ complete" by 30 June 2026, which did not happen.
       (30 days) are unchanged; the client has been told a shorter support window than they're actually entitled to. That
       correction is todo 2 below (reissue vs. side letter) — ruled on the internal record only, not on how/whether to
       notify the client of the discrepancy.
+- [x] ✅ [OPERATOR] P1. **SUPERSEDED 2026-08-11** — see
+      `/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`'s operator ruling: the
+      Initial Support Period is standardised at **30 days**, reversing this doc's own 2026-08-09 ruling above (60 days).
+      `ODUM_SLA_v4` §1/§3/§5 now all read 30. This doc's todo 1 above (60 days binding) is now the STALE side of the
+      reversal — kept for history, not current guidance. The reissue-vs-side-letter MECHANISM decision (todo below) is
+      NOT resolved by this reversal — it's still open, and now also governs the client-facing 30-day correction, not
+      just the stale dates.
 - [ ] [OPERATOR] P1. Decide how to correct the five stale June/May-2026 dates given the SLA has been sent: reissue as v5
       with the September/October timeline, or handle by side letter.
 - [ ] [OPERATOR] P2. Confirm the actual send date of the delay letter. The codex record is dated 2026-07-20, but both

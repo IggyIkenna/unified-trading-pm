@@ -166,8 +166,10 @@ post-merge. Re-ran the checks fresh rather than trusting the citation above:
       scoped down to `TIER_A_CI_FAILING`, checked via a new `tier_a_merge_gate_ok()` immediately before each of the 3
       merge-(re-)arm sites (mirrors `provenance_check_ok()`'s existing re-check-before-every-arm pattern) — PR
       creation/content-gate/SIT-gate/ label-check all proceed unconditionally now; only the act of arming auto-merge
-      stays blocked while red. **Committed locally, not yet pushed** — held pending the operator's live CI-blockage fix;
-      verify this landed on origin before treating the deadlock as resolved.
+      stays blocked while red. **VERIFIED 2026-08-12 (/plan-reconcile): landed on origin** —
+      `git log origin/live-defi-rollout -S "tier_a_merge_gate_ok"` finds `b53eade639`, and `tier_a_merge_gate_ok()` is
+      confirmed live in `scripts/cicd/ldr_to_main_fleet_promote.sh` on origin (defined line 450, called at 1151/1230).
+      The deadlock is resolved.
 - [ ] [OPERATOR] P3. **Decide whether to pin the push-time UAC re-verification to the exact commit the PR validated
       against** (Suggested resolution path #3), instead of content-first re-resolving UAC at HEAD — this would eliminate
       the PR-time-vs-push-time content race at its source rather than only unblocking its downstream deadlock. A design

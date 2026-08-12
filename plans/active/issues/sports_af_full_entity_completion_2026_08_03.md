@@ -117,13 +117,12 @@ needed) if `capture_status` is `captured` OR `empty_confirmed`. Full census:
 `instruments-service/scripts/census_all_af_entities_completion_2026_08_03.py` +
 `census_fixture_stats_lineups_widening_volume_2026_07_31.py` (both UTL-client-backed, both fixed 2026-08-04).
 
-**Grand total needed, 2026-08-07T09:03Z: 63,589 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (was 192,877 on 08-04, a
-further ~67% drop — TEAMS/STANDINGS both essentially converged, see Progress Log) **+ 83,051 across
-FIXTURE_STATS+FIXTURE_LINEUPS** (24,495 + 58,556). **The API-Football daily quota exhaustion has RESET** — PLAYER_STATS
-is ACTIVE via `af-backfill-20260807-013716`, genuinely progressing through its chunk sweep; FIXTURE_STATS + the small
-TEAMS/STANDINGS residual + FIXTURE_LINEUPS/INJURIES are queued behind it (the launcher's own singleton lock blocks
-concurrent `af-backfill-*` VMs against the shared API key — documented anti-pattern, avoided). LEAGUES excluded per the
-resolved verdict below.
+**Grand total needed, 2026-08-07T09:03Z: 63,589 across PLAYER_STATS+INJURIES+STANDINGS+TEAMS** (STALE, see Progress Log
+— INJURIES 62,709→334 by 08-10) **+ 83,051 across FIXTURE_STATS+FIXTURE_LINEUPS** (24,495 + 58,556). **The API-Football
+daily quota exhaustion has RESET** — PLAYER_STATS is ACTIVE via `af-backfill-20260807-013716`, genuinely progressing
+through its chunk sweep; FIXTURE_STATS + the small TEAMS/STANDINGS residual + FIXTURE_LINEUPS/INJURIES are queued behind
+it (the launcher's own singleton lock blocks concurrent `af-backfill-*` VMs against the shared API key — documented
+anti-pattern, avoided). LEAGUES excluded per the resolved verdict below.
 
 ## ✅ RESOLVED 2026-08-03 — LEAGUES verdict: retired entity, 0 real work, do not launch
 

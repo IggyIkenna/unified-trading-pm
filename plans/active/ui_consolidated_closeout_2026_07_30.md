@@ -154,7 +154,7 @@ tranche's home instead; RESOLVED + ARCHIVED 2026-08-10**) ·
 [issues/deployment_api_live_mock_parity_2026_07_17.md](/plans/archive/issues/deployment_api_live_mock_parity_2026_07_17.md)
 (mock mode has drifted from live on 12 of 111 endpoints, incl. an empty coverage-summary — directly relevant to this
 session's own local-dev live-vs-mock confusion) ·
-[issues/deployment_api_sigabrt_crash_loop_2026_07_24.md](/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md)
+[issues/deployment_api_sigabrt_crash_loop_2026_07_24.md](/plans/archive/2026_08/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md)
 (deployment-api container SIGABRT roughly every 20-40 min, undiagnosed, compounding the reaper-drain P0).
 
 **Close-out criterion**: the operator nav-surface decisions (dropdown-vs-bar, the 7 duplicate routes) made; the

@@ -116,15 +116,17 @@ urgency, and warrants its own scoped implementation + test pass.
 
 ## Todos
 
-- [ ] [DATA] P2. Add data-type-aware floor resolution for CBOE to `is_venue_available()`
-      (`market_tick_data_service/engine/orchestrator/__init__.py`) so CBOE ohlcv_24h (Yahoo Treasury INDEX) dates from
-      2000-01-03 (or the correct per-tenor floor) are attempted instead of auto-skipped via the Databento VX-futures
-      genesis (~2020-06-01). Thread `data_types` through `_build_active_venues_for_date()` and its callers. Add
-      regression tests confirming (a) CBOE Databento VX-futures dates before ~2020-06 still correctly skip as
-      honest-absence, (b) CBOE Yahoo ohlcv_24h dates from 2000-2020-06 now attempt a real fetch. Repo:
-      market-tick-data-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch agt-a70469): KEEP-NA-STALE
-      (already-duplicated) — this item is extracted verbatim into `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`
-      todo 1 (status: draft,
+- [x] ✅ [DATA] P2. **DONE — flipped 2026-08-12 (/plan-reconcile), sha's independently verified to exist.** Shipped via
+      `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 1: `UAC@a65c2fa9` (`_data_type_floor_overrides` field in
+      `VenueMapping`), `MTDS@fe000178` (`data_type` param on `is_venue_available()` wrapper). Add data-type-aware floor
+      resolution for CBOE to `is_venue_available()` (`market_tick_data_service/engine/orchestrator/__init__.py`) so CBOE
+      ohlcv_24h (Yahoo Treasury INDEX) dates from 2000-01-03 (or the correct per-tenor floor) are attempted instead of
+      auto-skipped via the Databento VX-futures genesis (~2020-06-01). Thread `data_types` through
+      `_build_active_venues_for_date()` and its callers. Add regression tests confirming (a) CBOE Databento VX-futures
+      dates before ~2020-06 still correctly skip as honest-absence, (b) CBOE Yahoo ohlcv_24h dates from 2000-2020-06 now
+      attempt a real fetch. Repo: market-tick-data-service. **(na-eligibility-audit 2026-08-10, tradfi tranche, dispatch
+      agt-a70469): KEEP-NA-STALE (already-duplicated) — this item is extracted verbatim into
+      `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 1 (status: draft,
       `Source: issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md todo 1`), drafted by
       an earlier same-day `/ag-closeout-audit tradfi` pass. Not reclassifying `assigned_vm` here — that would risk a
       double-dispatch once batch12 flips `active`. Fix is citation-only; leaving `assigned_vm: NA`.)**

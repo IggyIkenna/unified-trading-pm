@@ -79,15 +79,17 @@ plan-hygiene refusal on an unrelated commit, which is why it sat undiagnosed for
 
 ## Adopted findings
 
-Docs blocked on this tranche's absence, adopted here so they can be committed:
+**CORRECTED 2026-08-12 (/plan-reconcile), same-day as this plan's own creation**: both docs below are already fully
+resolved and archived — this section's original framing ("blocked... adopted so they can be committed," "has open todos
+and belongs to the active cycle") was wrong. Neither carries any open work; nothing here needs a resolution path.
 
-- `tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03` — an operator-ruling citation with no traceable
-  source. Tagged `[ao]` (it is about how a worker sourced a ruling), despite the `tradfi_` filename prefix, which is
-  itself a naming trap worth noting: **the filename prefix is not the asset group**, and reading it as one is what made
-  this doc look like it belonged to the tradfi tranche.
-- `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02` — already mentioned by the ARCHIVED tranche
-  doc, so it resolves today, but it is an `ao` finding with open todos and belongs to the active cycle. Adopted so it
-  does not depend on an archived doc remaining unchanged forever.
+- `tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03` — resolved, archived 2026-08-09
+  (`/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`), all todos done.
+  Naming-trap note kept for value: **the filename prefix is not the asset group** — this `tradfi_`-prefixed doc is
+  actually an `[ao]` finding about how a worker sourced a ruling.
+- `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02` — resolved, archived 2026-08-09
+  (`/plans/archive/2026_08/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md`), all 3
+  todos done, both false-positive/false-negative blind spots closed with cited commit SHAs.
 
 ## Todos
 
@@ -95,9 +97,9 @@ Docs blocked on this tranche's absence, adopted here so they can be committed:
       NOT classified them. Some are genuinely open `ao` work, many are `ao_satellite_ao_dispatch_batch*` docs that are
       likely closeable in bulk. Done when: each is either linked into this plan's Sources, retagged to the tranche it
       actually belongs to, or archived. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Adopt the two findings above into a Sources section with per-doc disposition.** Done when: each
-      names its resolution path (folded-in / AO-scope / operator-gated), per the issue-doc lifecycle rule in
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **MOOT 2026-08-12 (/plan-reconcile)** — both findings above are already resolved + archived
+      (2026-08-09), so there is no per-doc disposition left to adopt; the "Adopted findings" section above was corrected
+      to state this directly instead of framing them as active/blocked work.
 - [ ] [SCRIPT] P2. **Make an archived-coordinator tranche detectable before it blocks a commit.** Today the only signal
       is a refused commit on an unrelated change. Options: have the ag-closeout hygiene sweep WARN when an asset group
       has live docs but no ACTIVE coordinator, or have `check_ag_closeout_linkage`'s failure message say "the only

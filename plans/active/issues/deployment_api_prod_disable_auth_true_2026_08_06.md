@@ -147,8 +147,10 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
 
 ## Resolution
 
-- [ ] [BACKEND] P1. Decide fix shape (a) vs (b) above, confirm no other `UnifiedCloudConfig.environment` consumer would
-      be broken by either choice.
+- [x] ✅ [BACKEND] P1. **DONE — flipped 2026-08-12 (/plan-reconcile).** Decide fix shape (a) vs (b) above, confirm no
+      other `UnifiedCloudConfig.environment` consumer would be broken by either choice. Investigated (2026-08-10
+      plan_reconciler entry: grepped all 7 consumers, recommended shape A) and decided+shipped via the successor P0 plan
+      `deployment_api_unauthenticated_prod_p0_2026_08_10.md` step 1 — `UTL@336f2b3b6c` + `deployment-api@d0eebac4e6`.
 - [ ] [BACKEND] P1. Issue a real deployment-api API key (GSM secret), wire it into the prod Cloud Run service's env, and
       populate a `DEPLOYMENT_API_KEY` GH secret on every repo whose CI calls deployment-api server-to-server (starting
       with `deployment-service`'s `service-deployed-listener.yml`).

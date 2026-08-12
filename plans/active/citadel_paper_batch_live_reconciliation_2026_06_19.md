@@ -143,7 +143,11 @@ are identified (2) and the ledger exists (3).
 > `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` (operator-authorized extraction) — the phases below now carry
 > non-ingestable pointer lines for those 7, not the live checkbox. The 3 items still tracked here as real open
 > checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), and P2.11.15 (held back on a conflict-check
-> duplicate-claim finding — see register § A).
+> duplicate-claim finding — see register § A). **CORRECTED 2026-08-12 (/plan-reconcile)**: P2.1/P2.2 themselves are no
+> longer open in the satellite batch either — both SHIPPED the same day they were extracted:
+> `issues/fill_completed_event_schema_break_live_defi_2026_08_08.md` cites execution-service@08808415 (P2.1) and
+> strategy-service@f1a98416 (P2.2, 2026-08-08). Update the satellite batch's own checkbox state if it still shows these
+> open.
 
 **A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these) — EXTRACTED 2026-08-08:**
 

@@ -82,7 +82,13 @@ source: >-
       empty `pane_death_info` — without it, tmux destroys the session entirely when claude exits, leaving no forensic
       trace. The most likely trigger for claude's exit is account-level rate-limiting (4 sessions sharing one account,
       mid-task limit hit). A `tmux_session_lost` rate canary is recommended for future detection. Repo:
-      agent-orchestrator.
+      agent-orchestrator. **RETRACTED 2026-08-12 (/plan-reconcile)**:
+      `fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md` (filed one day later, investigating the same failure
+      signature fleet-wide) explicitly rules out account-level rate-limiting as the cause, citing DeepSeek's documented
+      concurrency ceiling (500 concurrent on v4-pro, 2500 on v4-flash) — nowhere near being hit by the actual worker
+      count. The proximate cause (`remain-on-exit on` bug) still stands and is unaffected; only the "most likely
+      trigger" attribution above is now superseded. See that doc for current status of the actual trigger, which remains
+      unconfirmed.
 - [x] ✅ [BACKEND] P2. **Add a `tmux_session_lost` rate canary alert** — agent-orchestrator@`cc3b5b4` (ahead=0).
       Recovered orphan `2d2a436` (slot-5) via quickmerge. Implementation: `TmuxSessionLossRateCanary` (217-line daemon,
       `server/tmux_session_loss_rate_canary.py`), registered in `server.py`, 3 tunables in `config.py`
