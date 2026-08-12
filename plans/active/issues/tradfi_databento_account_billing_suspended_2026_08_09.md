@@ -109,7 +109,30 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       instruments-service's parallel `databento/adapter.py` reference-data path and the live `databento_tradfi_ws`
       connector were NOT independently re-verified this pass — both share the same account/credential as the MTDS
       historical client just proven live, so account-level restoration should cover them too, but flagging as not
-      directly re-tested).
+      directly re-tested). **RECURRED 2026-08-12 — see new todo below; this checkbox describes the 2026-08-10 event
+      only, do not read it as still-current.**
+- [ ] [OPERATOR] P0. **NEW RECURRENCE (2026-08-12) — pay the new outstanding Databento invoice.** A live IBIT/ETHA
+      backfill smoke-test (`tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s BTC/ETH-spot-ETF cell, single-day
+      NASDAQ OHLCV-1m pull, VM `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-180646`) hit
+      `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice — Unable to submit the     request because there is an unpaid invoice.`
+      on a REAL scoped data-pull call (2026-08-12T17:09:06Z), 2 days after the 2026-08-10 todo above marked this
+      resolved. **This blocks every open Databento-fetch todo fleet-wide again** (same account, same failure class as
+      the original 2026-08-09 issue) — re-apply the `BLOCKED-OPERATOR-DECISION` gate to every item in "Plans/issues
+      gated by this doc" below (that section currently reads RESOLVED/lifted, which is now stale) until re-verified per
+      the next todo's stronger check. Done when: operator confirms the new invoice is paid AND the next todo's
+      real-data-pull re-verification succeeds.
+- [ ] [DOCS] P1. **Verification-methodology gap found by the 2026-08-12 recurrence**: `DatabentoBaseClient.warmup()` /
+      `client.metadata.list_datasets()` (the check the 2026-08-10 "RESOLVED" todo above relied on) is a **free,
+      unbilled, account-level metadata call** — it returned 29 datasets successfully on 2026-08-10 (and would likely
+      still succeed today) even though a REAL billable data-pull fails with 402 `account_delinquent_invoice`. An
+      unpaid-invoice suspension apparently blocks billable data endpoints without blocking the free metadata endpoint,
+      so `list_datasets()` cannot detect this failure mode — only an actual scoped data-pull (the 2026-08-09 ruling
+      doc's original `ES.FUT ohlcv-1m` check got this right; the 2026-08-10 re-verification regressed to the weaker
+      check). **Fix**: any future "is Databento billing healthy" verification MUST include one real scoped data-pull
+      (e.g. a 1-day/1-instrument `ohlcv_1m` request), never `list_datasets()`/`warmup()` alone. Consider codifying this
+      in `/codex/02-data/tradfi-databento-sourcing-ssot.md` so the next recurrence isn't re-verified with the same
+      insufficient check a third time. Repo: unified-trading-pm (codex doc) — no code change needed, this is a
+      documentation/process fix.
 - [ ] [DOCS] P2. **Archive this doc via the 6-step ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) once the corpus-wide referrer-path sweep
       is done.** Deliberately NOT done in the same edit as the resolution above — a `git grep` found 9 referrer files
@@ -209,3 +232,22 @@ archival — no live Databento dependency).
   `resolved`/`false-positive`/`superseded` are `check_terminal_status_archived.py`'s TERMINAL set and would force
   archival in this same commit; `open` accurately reflects "underlying block cleared, doc still carries a real open
   todo" without tripping that gate). Stays in `plans/active/issues/` per the new todo above.
+- **2026-08-12 (RECURRENCE — `/backfill-monitor` smoke test for the MVP-of-MVP BTC/ETH-spot-ETF cell, IBIT/ETHA)**:
+  before a real full-history NASDAQ OHLCV-1m backfill launch for IBIT/ETHA (the confirmed-never-captured cell in
+  `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`), ran the skill's mandatory smoke test — a single real day
+  (2026-08-11), scoped to just `IBIT;ETHA` via a new `--tickers` launcher flag (added this session, see that flag's own
+  commit). VM `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-180646` reached `DEPLOYMENT_COMPLETED exit_code=0` but wrote
+  **0 rows** — `run.log` shows `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice` at
+  2026-08-12T17:09:06Z, on a real scoped data-pull, not a metadata call. The SAME VM's `DatabentoBaseClient.warmup()`
+  (`client.metadata.list_datasets()`) succeeded moments earlier ("29 datasets available") — reproducing exactly the
+  verification gap the new `[DOCS] P1` todo above describes: the account is suspended for billable data pulls again,
+  invisibly to the free metadata check the 2026-08-10 "RESOLVED" entry relied on. **Per this doc's own
+  `BLOCKED-OPERATOR-DECISION` resolution path and the workspace's data-pipeline-correctness hard rule (exhausting the
+  free path = a credential ask, not a descope), the IBIT/ETHA real backfill launch is now BLOCKED pending the operator
+  paying this new invoice** — did not launch the real-scope backfill on top of a known-failing smoke test (that would
+  have just written empty-shard manifest rows across the whole 2024-2026 window, the exact anti-pattern
+  `/backfill-monitor`'s Step 3 exists to prevent). Full re-sweep of "Plans/issues gated by this doc" (previously marked
+  RESOLVED/lifted) not attempted this session — flagged in the new `[OPERATOR] P0` todo above as needed, not done, since
+  this session's scope was the one IBIT/ETHA launch, not a corpus-wide re-gate. Cost note: the failed smoke test itself
+  is cheap (1 VM, 1 day, e2-highmem-8 SPOT, ~20s of actual runtime before self-delete) — the smoke-test-first discipline
+  paid for itself immediately here.
