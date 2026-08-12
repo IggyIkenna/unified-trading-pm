@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                  streaming footprint regardless of corpus size.
+                                      "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                      fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                      DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                      `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                      streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -109,13 +109,15 @@ picking this plan up cold should never trust the flip-time state without a fresh
       lowercases `instrument_type` unconditionally (lines 370/395) — so the 7.9M uppercase `POOL` rows were PRESENT in
       the index BEFORE the rebuild ran and passed through untouched; the rebuild is exonerated as a reintroduction
       mechanism. Full evidence: Progress Log, 2026-08-12 (slot 32) entry.
-- [ ] [DATA] P1. **Sample the 7,930,863 uppercase rows' underlying GCS objects directly**
-      (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether this is a
-      manifest-column-only artifact (as the 2026-08-05 fold assumed) or genuinely reflects physical objects at an
-      uppercase path — the latter needs the Part-5 "legacy COPIED not MOVED" migration treatment
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5), not a manifest-only patch. Once (1)-(3)
-      above are understood, re-evaluate whether the retirement todo below is safe to attempt (also still gated on
-      slot-31's separate wrapped-id content-verify blocker). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **Sample the 7,930,863 uppercase rows' underlying GCS objects directly** — market-tick-data-service
+      (verification-only, no code). **CONFIRMED: manifest-column-only artifact.** Sampled 30 rows across the full date
+      range (2023-01-01→2026-08-05), both pipeline_modes (`batch_onchain_subgraph` + `batch_onchain_rpc`), 5 venues
+      (UNISWAP_V2, UNISWAP_V3, TRADER_JOE_V2), 3 chains (ETHEREUM, AVALANCHE, POLYGON): **0/30 have physical GCS objects
+      at `instrument_type=POOL/`** (uppercase); **30/30 have objects at `instrument_type=pool/`** (lowercase). A broad
+      scan across 5 dates (2023-06-15→2025-06-15) found **0 total objects** containing `instrument_type=POOL/` anywhere
+      in their GCS path. The 2026-08-05 fold's assumption is correct — no Part-5 "legacy COPIED not MOVED" migration
+      treatment needed. The retirement todo's only remaining blocker is slot-31's wrapped-id content-verify gap
+      (manifest-only fix is safe). Full evidence: Progress Log, 2026-08-12 (slot 32) entry.
 - [ ] [DATA] P1. **Pause the DeFi manifest consolidator cron, retire POOL (uppercase `instrument_type`) legacy
       `captured` rows in `dex_pool_swaps` via the proven reversible `capture_status: captured→attempted_failed`
       pattern.** Mirror `retire_dex_pools_legacy_captured_rows_2026_08_05.py` /
@@ -259,3 +261,18 @@ picking this plan up cold should never trust the flip-time state without a fresh
     either the 2026-08-05 fold's verified '0 POOL remain' did not actually remove all rows, or some writer path
     re-created them in that pre-rebuild window. The rebuild is exonerated as a reintroduction mechanism. Remaining open
     question (todo 4): whether the uppercase rows are manifest-column-only or reflect physical uppercase GCS objects.
+- **2026-08-12 (slot 32, data_engineering) — todo 4 done: CONFIRMED manifest-column-only artifact, 0 physical uppercase
+  GCS objects.** Sampled 30 manifest rows with `instrument_type=POOL` + `data_type=dex_pool_swaps` +
+  `capture_status=captured` across the full date range (2023-01-01 → 2026-08-05), both pipeline_modes
+  (`batch_onchain_subgraph` + `batch_onchain_rpc`), 3 chains (ETHEREUM, AVALANCHE, POLYGON), 5 venues (UNISWAP_V2,
+  UNISWAP_V3, TRADER_JOE_V2). For each sampled row, derived the expected GCS prefix with both uppercase
+  `instrument_type=POOL/` and lowercase `instrument_type=pool/`, then listed blobs at each prefix via UTL
+  `storage.list_blobs()` (per the storage-code HARD RULE, never subprocess `gsutil`). Result: **0/30 rows have any
+  objects at the uppercase `POOL/` path; 30/30 have objects at the lowercase `pool/` path.** A broad scan across 5
+  additional dates (2023-06-15, 2024-01-15, 2024-06-15, 2025-01-15, 2025-06-15) found **0 total objects** containing
+  `instrument_type=POOL/` anywhere in their GCS path name. **Conclusion: this is a manifest-column-only artifact.** The
+  2026-08-05 fold's assumption is correct — the physical GCS objects are all at correctly-lowercase
+  `instrument_type=pool/` paths; no Part-5 "legacy COPIED not MOVED" migration treatment is needed. The retirement
+  todo's only remaining blocker is slot-31's wrapped-id content-verify gap (the manifest-only fix is safe from a
+  physical-path perspective). Pipeline_mode distribution of the 7,930,863 POOL rows: `batch_onchain_subgraph` 4,025,328
+  (2023-01-01..2026-08-05), `batch_onchain_rpc` 3,905,535 (2023-01-04..2026-04-19).
