@@ -487,12 +487,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                      isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                      down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                      concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                      single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                      `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                      nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -527,21 +527,30 @@ Directions, cheapest first — each is a todo below:
       passed), but it has been exercised on ONE repo (PM) on ONE host. Before flipping laptop default back on, verify on
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
-      change. Repo: unified-trading-pm. **PARTIAL ATTEMPT 2026-08-12** (operator confirmed: proceed on a small, low-risk
-      repo). Ran `quickmerge.sh --isolated` on `alerting-service` (a docs-only README addition, chosen as the
-      lowest-risk possible real change). The isolation mechanics themselves worked correctly and as documented:
-      staged+ran the FULL gate in a throwaway worktree (`/private/var/.../qm-iso-127/...`), correctly evacuated the
-      caller's dirty file into a named stash for the run's duration (`qm-iso-evac-127-...`), and on failure reported it
-      HONESTLY (a real basedpyright regression, not a false success) rather than silently discarding it. **But the ship
-      itself could not complete**: `alerting-service`'s OWN pre-existing codebase already has **43 basedpyright errors
-      against a `BASEDPYRIGHT_MAX_ERRORS=21` ratchet cap** — unrelated to isolation, unrelated to the docs-only change
-      being shipped, and out of scope to fix here (a different repo's accumulated type-check debt, not this issue's
-      subject). Quickmerge correctly refused to ship past a real gate failure; this is the gate working as intended, not
-      an isolation defect. The stash entry (`stash@{0}` in `alerting-service`) was left in place rather than
-      force-dropped (the `git stash drop` guardrail hook blocks it for autonomous workers) — harmless, recoverable, does
-      not block anything. **Still NOT done**: needed a repo whose OWN gate is currently green to actually exercise the
-      isolated-ship-succeeds path end-to-end, and the lock-bump-refresh half was never reached. Repo:
-      unified-trading-pm.
+      change. Repo: unified-trading-pm. **ATTEMPT 2, ESCALATED FINDING, 2026-08-12** (operator confirmed: proceed on a
+      small, low-risk repo; then "fix the repo, do it all"). First pass (documented previously) hit alerting-service's
+      OWN pre-existing basedpyright debt (43 errors, later found to be 21 by pickup time) — fixed all of it for real
+      this time: alerting-service@afbbdd2df9, ratchet cap now 0, full `quality-gates.sh` clean, full test suite
+      unchanged (1064 passed/30 pre-existing-unrelated-failed, A/B verified). With the repo's OWN debt out of the way,
+      re-ran `quickmerge.sh --isolated` to actually exercise the isolated-ship-succeeds path — and hit something more
+      interesting than cache staleness: the isolated re-gate reproducibly reported ~22 FALSE `DefiAlertType`/
+      `AlertSeverity`/`KillSwitchScope` type-identity errors, on **5 separate isolated attempts across 3 different
+      `QM_ISO_VENV_CACHE` directories** (including two never used before, ruling out cross-run cache contamination — the
+      original hypothesis this todo was testing for). Every direct reproduction attempt came back clean: bare
+      `basedpyright`, the exact `basedpyright alerting_service/` positional-arg form the gate itself uses, and —
+      decisively — running `basedpyright` BY HAND inside the SAME isolated worktree's SAME venv, seconds after the
+      gate's own invocation had just failed there. Full elimination trail (stale editable-install pointer, duplicate
+      package install, shared cache-dir cross-contamination, local-venv staleness) recorded in the new companion issue
+      below — root cause NOT found despite the trail. Shipped alerting-service's fix via `--no-isolated` instead
+      (justified: full non-isolated `quality-gates.sh` had already passed clean, and this session was the sole worker on
+      alerting-service, so the shared-checkout race isolation exists to guard against didn't apply). **Net effect on
+      this todo**: the venv-cache-validity question this todo originally asked is now ANSWERED (not the cause) — but a
+      NEW, better-evidenced, and more concerning defect was found in its place: the isolated re-gate itself is
+      unreliable for at least one repo shape (path-editable UAC dependency via symlink), independent of caching. **Still
+      NOT done** — flipping laptop default back on is now MORE blocked than before, not less: a false-positive failure
+      is worse than a slow gate. New companion issue:
+      `/plans/active/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md` (retitled to match
+      — its 2 basedpyright-debt todos are closed, one new root-cause todo is open). Repo: unified-trading-pm.
 - [x] ✅ [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** CLOSED 2026-08-12 —
       re-verified directly
       (`git -C .tabs/2/unified-trading-pm fetch origin live-defi-rollout && git rev-list     HEAD..origin/live-defi-rollout --count`
@@ -894,3 +903,14 @@ reconciliation, the previous recommendation, shipped 2026-08-10.)
   both were correctly landed on origin the whole time (see Lessons). No content was recreated or duplicated. 6/7 todos
   now done; only the isolation-validation todo remains open, genuinely blocked on finding a second repo with a
   currently-green gate — not archivable yet.
+
+- **2026-08-12 (isolation-validation todo re-attempted, escalated to a new finding)**: fixed alerting-service's own
+  basedpyright debt for real (alerting-service@afbbdd2df9, 21→0 errors, full gate clean) to remove that blocker, then
+  re-ran the isolated ship this todo actually needed — and hit a reproducible false-positive in the isolated re-gate
+  itself (5/5 isolated attempts failed with 22 phantom type-identity errors; every direct-invocation reproduction, incl.
+  inside the failed worktree's own venv seconds later, came back clean). Ruled out: cross-run cache staleness (3
+  different cache dirs, 2 never used before), stale editable-install pointer (`.pth` targets verified identical), local
+  venv staleness (fresh `uv sync` both sides). Root cause not found. Full trail in the companion issue doc (retitled).
+  This todo's original "cache validity" question is answered — the isolated re-gate is NOT reliably valid for at least
+  one repo shape — which is a worse finding than what was being tested for, not a lesser one. Shipped via
+  `--no-isolated` (justified given sole-worker context + a prior clean non-isolated gate run). Todo stays open.
