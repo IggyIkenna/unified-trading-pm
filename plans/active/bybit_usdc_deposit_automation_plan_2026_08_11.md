@@ -200,14 +200,22 @@ context_scope:
       (deposit callable built with real GSM credential resolution, missing credentials returns None, testnet mode gates
       transfer confirmation parameters); `quality-gates.sh` green. — execution-service@50f28d691f.
 
-- [ ] [BACKEND] P2. Wire Bybit deposit at `app.py` startup/shutdown. Add `_wire_bybit_deposit` startup handler —
+- [x] ✅ [BACKEND] P2. Wire Bybit deposit at `app.py` startup/shutdown. Add `_wire_bybit_deposit` startup handler —
       resolves funding-wallet credentials, calls `build_bybit_deposit()`, stores the callable on
       `app.state.bybit_deposit`. Add `_stop_bybit_deposit` shutdown handler (currently a no-op for the callable — the
       connector lifecycle is already managed by `BybitWiring`). `_start_perp_hedge_monitors` now binds
       `bybit_deposit=app.state.bybit_deposit` into `RecursiveLoopOrchestrator` so Bybit-venue TREASURY_HOT topup intents
       route through the real deposit path (todo 5's extended dispatch). Repo: execution-service. Done-when:
       wiring/integration test asserts app startup binds Bybit deposit callable + shutdown tears down cleanly +
-      orchestrator carries both HL bridge and Bybit deposit callables; `quality-gates.sh` green.
+      orchestrator carries both HL bridge and Bybit deposit callables; `quality-gates.sh` green. — **DONE 2026-08-12
+      (slot 20, backend_engineer): `execution-service@d64df597`.** Added `RecursiveLoopOrchestrator.bybit_deposit`
+      (stored + passed through `margin_topup()` → `dispatch_margin_topup(..., bybit_deposit=...)`), the
+      `_wire_bybit_deposit` startup handler (resolves funding-wallet creds via
+      `build_bybit_deposit(config, bybit_connector=app.state.bybit_wiring.connector)`, stores on
+      `app.state.bybit_deposit`), `_stop_bybit_deposit` shutdown no-op, and bound `bybit_deposit` into the orchestrator
+      in `_start_perp_hedge_monitors`. Tests: orchestrator routes Bybit TREASURY_HOT to `bybit_deposit` (not the HL
+      bridge, `confirmed_balance_delta` returned) + app startup binds/tears down + no-connector stays NOT-WIRED.
+      `quality-gates.sh` green (sentinel `d64df597`); full suite 7,960 passed / 0 errors.
 
 - [ ] [BACKEND] P3. Mainnet custody gating — COPPER_MPC/CEFFU_MPC honest `UNSUPPORTED_SOURCE`. `_topup_guard()` already
       returns `UNSUPPORTED_SOURCE` for COPPER_MPC/CEFFU_MPC on Bybit (todo 4). This todo validates that the
@@ -302,3 +310,21 @@ context_scope:
   `tests/unit/defi_execution/test_bybit_wiring.py` (build-with-creds, missing creds/blob/rpc/connector all return None,
   secret-not-JSON, resolution-raises, callable forwards amount + bound params, testnet gating). `quality-gates.sh` green
   (8016 passed, 21 skipped, 1 pre-existing xpass; sentinel `50f28d691f`).
+- **2026-08-12 (slot 20, backend_engineer, dispatch `bybit_usdc_deposit_automation_plan-b5337dde7026`) — todo 7 DONE:
+  `execution-service@d64df597`.** Wired the Bybit deposit callable at app startup/shutdown + into the orchestrator.
+  Details: (1) `RecursiveLoopOrchestrator` gained `bybit_deposit: BybitDepositCallable | None = None` — defined in its
+  TYPE_CHECKING block (mirrors `BridgeDepositCallable`; `BybitDepositCallable` lives under the consumer's TYPE_CHECKING,
+  so it is NOT runtime-importable — caught this as a test-collection ImportError on the first QG pass and fixed before
+  ship) — stored as `self._bybit_deposit` and passed through `margin_topup()` →
+  `dispatch_margin_topup(instruction, bridge_deposit, bybit_deposit=self._bybit_deposit)`. (2) `_wire_bybit_deposit`
+  startup handler resolves the funding-wallet creds via
+  `build_bybit_deposit(get_execution_config(), bybit_connector=app.state.bybit_wiring.connector)` and stores on
+  `app.state.bybit_deposit`; returns (not wired) when the connector/creds are unavailable so Bybit-venue topups stay
+  honest NOT-WIRED. (3) `_stop_bybit_deposit` shutdown no-op (callable holds no resources; connector lifecycle owned by
+  `BybitWiring`). (4) `_start_perp_hedge_monitors` binds `bybit_deposit=getattr(app.state, "bybit_deposit", None)` into
+  the orchestrator — the orchestrator now carries both the HL bridge deposit and the Bybit deposit callables. Tests:
+  `TestMarginTopupConsumer::test_bybit_treasury_hot_routes_to_bybit_deposit` (routes to Bybit callable, not the bridge,
+  returns `confirmed_balance_delta`), `TestBybitAppStartupWiring` (startup binds callable + shutdown no-op; no-connector
+  → no binding). First QG pass surfaced 4 test-collection ImportErrors (the runtime `BybitDepositCallable` import) —
+  fixed by moving the alias into TYPE_CHECKING, re-gated clean. Final `quality-gates.sh` green, sentinel `d64df597`,
+  full suite 7,960 passed / 0 errors.
