@@ -172,8 +172,12 @@ no change at all.**
       (FRACTION, `0.075`) and `AssetHaircut` (WHOLE PERCENT, `7.5`), with a single ×100 conversion in
       `_ah_from_venue_collateral()`. Values agree exactly (verified 2026-08-12, all 12 shared perp rows) — this is a
       naming hazard, not a divergence, and a 100× collateral error is not a survivable class of bug. Rename one side
-      (`haircut_fraction` / `haircut_whole_pct`) or add a typed wrapper. Cross-reference comments landed 2026-08-12; the
-      rename did not.
+      (`haircut_fraction` / `haircut_whole_pct`) or add a typed wrapper. **Cross-reference comments + unit warning
+      SHIPPED — Evidence: unified-api-contracts@8c7277b668** (`ALL QUALITY GATES     PASSED`, real exit 0, zero
+      failures): both files now carry reciprocal SSOT pointers, the unit boundary is stated on both sides, and the
+      coverage asymmetry is named. **The RENAME is what remains open** — comments reduce the odds of the 100× error,
+      they do not remove it. Side-finding while shipping it: the `×` character is banned in docstrings by ruff `RUF002`
+      (ambiguous-unicode) — write `x100`, not `×100`. Cost one gate cycle.
 
 ## C. execution-service — the two missing surfaces
 
