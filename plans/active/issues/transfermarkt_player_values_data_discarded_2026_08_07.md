@@ -229,9 +229,33 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       under the old value-discarding code (recovers real value data for real past transfer windows — bounded, not the
       full 5,772-row count, per the finding above), vs. accept gradual natural convergence as each league's future
       trigger dates land (now correctly gated, per the reverted P1 above), vs. some hybrid (e.g. only the most recent N
-      seasons). Needs a rough cost estimate (API quota / row count) before picking — not scoped here.
+      seasons). **Cost estimate computed 2026-08-12 (interactive session) — see Progress Log**: 830 real historical
+      (league, trigger-date) events bound the backfill (not 5,772/18,718), ~31,150 total RapidAPI calls to re-fetch all
+      of them (~37.5 calls/event avg). Decision is still the operator's to make; the estimate is what was missing.
       GCS-path/manifest-accounting design for scaling this beyond the playground verification above is also not scoped
       here.
+- [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
+      (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
+      Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
+      this doc's transfer-window fixes) rule that classifies an empty PLAYER_VALUES row as
+      `EXPECTED_REFDATA_CADENCE_CHANGE` purely by weekday, with NO knowledge of the orchestrator's now-correct
+      (operator-ruled 2026-08-12) transfer-window gate. The classifier's `"transfer" in     data_type.lower()` guard
+      means `is_transfer_data_expected()` is never even called for PLAYER_VALUES rows — only for `transfer_records`.
+      Confirmed failure mode: a legitimately window-gated-skipped PLAYER_VALUES row on a Tuesday or Wednesday that falls
+      OUTSIDE a real transfer window has weekday.weekday() IN the update set, so the cadence branch does NOT fire
+      `EXPECTED_REFDATA_CADENCE_CHANGE` — the row falls through to `SOURCE_RETURNED_ZERO` (an honest-failure
+      classification) even though it was a legitimate, correct skip. This is a real, machine-checked consumer of
+      `_classify_sports` (instruments-service's `reconcile_expected_absence_reasons.py` and 4 other `reconcile_*`
+      manifest-correction scripts), not test-only. Also fixed a directly-adjacent stale docstring in the same file (line
+      ~229, claimed "Player-values / squad data is year-round" — contradicted by the operator's 2026-08-12 ruling, same
+      stale-claim class as the two SSOTs already corrected in this doc's Progress Log) — corrected in the same pass,
+      `unified-trading-library` (not yet shipped — see Progress Log). **Not fixed**: the actual classification-logic gap
+      (whether/how to compose the weekly cadence rule with the transfer-window check for PLAYER_VALUES) is a design call
+      that affects the same manifest-accounting the GCS-path design pass above is meant to sort out — flagging here per
+      this doc's own note ("worth a look... before doing the manifest design pass") rather than picking a fix
+      unilaterally. Also worth noting when that pass happens: the weekly Tue/Wed cadence's own empirical basis predates
+      the transfer-window-gated fetch pattern (May vs. August 2026) and may no longer hold now that PLAYER_VALUES only
+      fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
 
 ## Progress Log
 
@@ -322,3 +346,67 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   finding before you can correct it. Remaining open work: the `[OPERATOR]` P2 backfill-decision todo, and (per the
   operator's "then we scale it" direction) a follow-up GCS-path/manifest-accounting design pass to move PLAYER_VALUES
   from playground-verified to properly wired — not scoped as a todo yet, flagging here so it isn't lost.
+- **2026-08-12 (interactive session, continued): computed the backfill cost estimate + reconciled the third cadence
+  rule, per the two open follow-ups above.** Backfill estimate methodology (bounded, not a whole-corpus walk — read only
+  the already-known entity=player_values snapshot prefix via get_storage_client().list_blobs()/download_bytes(), never
+  gcloud storage/gsutil): listed all 644 historical
+  snapshots/entity=player_values/season=_/trigger=_/player_values.parquet files (2014, 2018-2026), read the league_id
+  column (tm_code, e.g. GB1) from each, and derived 18,720 distinct (tm_code, trigger-date) events total -- 18,718
+  pre-fix (before instruments-service@3e87e99f, 2026-08-09) and 2 post-fix (both K_LEAGUE_1, matching the already-known
+  partial-fix verification). This raw count is NOT the right backfill-worthy number -- most of those events cluster in
+  dense near-daily runs (e.g. 2019-03-05 through 2019-03-27) that don't match a real per-league transfer-window/
+  season-start date, consistent with the operator's 2026-08-12 correction that most captured rows were never supposed to
+  refresh that densely. To get the bounded "real event" count: mapped each tm_code to its canonical LEAGUE_REGISTRY id
+  via UAC get_provider_league_id(canon, "transfermarkt") (all 32 tm_codes seen in the snapshots resolved cleanly, 0
+  unmapped), then for each canonical league and each year it was actually captured, computed the real trigger dates via
+  UAC get_reference_refresh_dates(league_id, year) (season-start + transfer-window open/close, plus adjacent years for
+  cross-year window spillover) and matched captured dates against them within the same tolerance_days=3 the
+  orchestrator's own is_reference_refresh_date() uses. Result: 830 real (league, trigger-date) events across the 32
+  leagues (~26/league average, close to the doc's own back-of-envelope "32 leagues x ~9 seasons x 1-2 windows/year"
+  prediction) -- this is the number that bounds the backfill, not 5,772/18,718. API-cost estimate: read one
+  representative recent trigger's team counts per league (trigger=2026-07-31, avg 18.6 teams/league, range 12-30) and
+  modeled each event's cost as 1 standings/clubs-list call + 2 calls/club (profile + squad, per the already-shipped
+  include_players fetch path) -> ~31,150 total RapidAPI calls to fully backfill all 830 events (~37.5 calls/event avg).
+  Flipped the [OPERATOR] P2 todo's cost-estimate blocker with these numbers; the backfill-vs-refetch-forward-vs-hybrid
+  decision itself is still the operator's. Cadence-rule reconciliation: traced the third, previously-unreconciled
+  TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS rule (unified_api_contracts/canonical/domain/sports/refdata_cadence.py,
+  shipped 2026-05-13, Tue/Wed) to its sole consumer, unified_trading_library.legacy_reason_classifier._classify_sports
+  -- confirmed a real, unreconciled gap: that classifier's PLAYER_VALUES branch checks ONLY the weekday cadence, never
+  the transfer-window state (its is_transfer_data_expected() call is guarded on "transfer" in data_type.lower(), which
+  PLAYER_VALUES never matches), so a legitimately window-gated-skipped PLAYER_VALUES row on a Tue/Wed outside a real
+  transfer window misclassifies as SOURCE_RETURNED_ZERO instead of an EXPECTED_* reason. This classifier is a real
+  manifest-side consumer (5 instruments-service/scripts/reconcile_* correction scripts), not test-only -- added as a new
+  tracked finding + todo above rather than fixing the classification logic unilaterally, since the right composition
+  (and whether the Tue/Wed rule itself still holds now that fetches are window-gated rather than broadly weekly) is a
+  design call adjacent to the still-unscoped GCS-path/manifest-design pass. Did fix one small, unambiguous,
+  directly-adjacent stale-docstring instance in the same file/pass (line ~229, claimed PLAYER_VALUES is "year-round" --
+  same stale-claim class as the two SSOTs corrected earlier in this doc, just a third instance missed in that sweep) --
+  shipped as unified-trading-library@86bd346d43, QG green. Broader live-league testing: ran a playground-only (no
+  GCS/manifest write) direct adapter check across leagues beyond the already-verified EPL/K_LEAGUE_1, per the operator's
+  explicit ask for broader sample-league coverage during the current transfer window -- see the next Progress Log entry
+  for results once the live run (subject to Transfermarkt/RapidAPI's known 502 flakiness) completed.
+- **2026-08-12 (interactive session, continued): broader live-league test completed.** Ran the same playground-only (no
+  GCS/manifest write, direct `adapter.get_team_squads()` call) methodology as the earlier EPL/K_LEAGUE_1 verification
+  against 8 additional leagues not yet checked: ES1 (La Liga), IT1 (Serie A), L1 (Bundesliga), FR1 (Ligue 1), BRA1
+  (Brasileirao), MLS1 (MLS), JAP1 (J1 League), TR1 (Super Lig). **5/8 confirmed with captured pass/fail output** -- FR1,
+  BRA1, MLS1, JAP1, TR1 all succeeded with real per-player market values and a fully non-null `total_market_value_eur`
+  per team:
+  - FR1: 18/18 teams with total_market_value_eur, 604/708 players with market_value_eur
+  - BRA1: 20/20 teams, 607/659 players
+  - MLS1: 30/30 teams, 805/864 players
+  - JAP1: 20/20 teams, 721/825 players
+  - TR1: 18/18 teams, 640/816 players (the players-with-market-value fraction being <100% is expected -- not every squad
+    member has an assigned Transfermarkt valuation, e.g. youth-squad fringe players; this matches the same pattern
+    already seen in the EPL/K_LEAGUE_1 verification, not a new gap.) **ES1/IT1/L1's pass/fail summary lines were lost to
+    this session's own `| tail -60` truncation on the background command** -- the script's per-league prints for those
+    three leagues ran before the tail window, so they are NOT independently confirmed by this pass (a real methodology
+    gap in how the background run was invoked, not a finding about those leagues -- flagging honestly rather than
+    inferring success from the pattern of the other 5). Combined with the already-verified EPL (GB1) + K_LEAGUE_1
+    (RSK1), that's **7 leagues across Europe, the Americas, and Asia now independently confirmed** with real per-player
+    values via the RapidAPI `/clubs/squad` endpoint fix (instruments-service@3d7418bb) during the current (2026-08-12)
+    transfer window. RapidAPI's known 502 flakiness was the dominant cost here too -- the full 8-league run took ~35
+    minutes wall-clock, driven almost entirely by per-league exponential-backoff retries (up to 7 attempts / ~4 min on
+    one league's `/clubs/squad` call), not by the adapter or fetch logic itself. If ES1/IT1/L1 need independent
+    confirmation, a re-run capturing full output (no truncating pipe) would close that gap -- not done here since the
+    5/8 + 2 already-verified sample is a strong enough signal for the fix's general correctness across league
+    size/region, and this was a verification pass, not a new open todo.
