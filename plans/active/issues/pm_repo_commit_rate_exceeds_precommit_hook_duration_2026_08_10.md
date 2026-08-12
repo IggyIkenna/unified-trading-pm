@@ -352,8 +352,11 @@ Directions, cheapest first — each is a todo below:
       worktree recipe circulated in this session (including in the sub-agent brief) symlinks the throwaway worktree's
       `.venv` at the operator's LIVE venv — a `uv sync --frozen` through that symlink can PRUNE packages out of the real
       environment (measured 2026-08-10; `scripts/quickmerge.sh` already used a shared venv cache for this reason). The
-      helper uses the shared cache (`QM_ISO_VENV_CACHE`). Live venv verified undamaged after the fact: 388 packages
-      before and after a full QG run through such a symlink, imports OK. Codex SSOT:
+      helper uses the shared cache (`QM_ISO_VENV_CACHE`). **Do NOT read a package COUNT as the damage signal** —
+      corrected 2026-08-12, after that framing produced a false alarm here. A later full QG took slot 4 from 388
+      packages to 145, which is CONVERGENCE TO CORRECT, not a prune: 145 is what PM's own `uv.lock` declares (slots 2
+      and 3 sit at 145 untouched, and `pydantic` is not in PM's lock at all), while slot 5's 388 is the outlier
+      superset. The real signal is CAPABILITY — whether the tools the gate needs still run. Codex SSOT:
       `/codex/05-infrastructure/per-tab-worktrees.md`.
 - [x] ✅ [OPERATOR] P2. **Decide whether the session-collision check should escalate past WARN.** RESOLVED 2026-08-12 —
       operator chose **option B**; shipped unified-trading-pm@6aba7ca9ff. New
@@ -464,12 +467,13 @@ Directions, cheapest first — each is a todo below:
       a service repo with a heavier suite and confirm the cached venv stays valid across a dependency bump. **Done
       when**: two repos pass an isolated `--isolated` quickmerge end-to-end and the cache is shown to refresh on a lock
       change. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** 81 commits behind, blocked
-      on 4 unresolved conflict markers in `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min
-      stale at 2026-08-10, no `.agent-claim`). Deliberately NOT resolved by this session — it is another session's
-      in-flight work and the inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is
-      resolved by its owner (or explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo:
-      unified-trading-pm.
+- [ ] [INFRA] P2. **Slot 2's PM checkout is wedged and cannot receive any of these fixes.** **STALE 2026-08-12: slot 2
+      is 3 commits behind origin, not 81 — measured directly. Re-verify the wedge before acting on the number in this
+      todo.** 81 commits behind, blocked on 4 unresolved conflict markers in
+      `scripts/plan-hygiene/na_corpus_baseline.yaml` plus 22 dirty files (~86 min stale at 2026-08-10, no
+      `.agent-claim`). Deliberately NOT resolved by this session — it is another session's in-flight work and the
+      inherit path assumes CLEAN WIP, not a live conflict. **Done when**: the conflict is resolved by its owner (or
+      explicitly abandoned) and slot 2 fast-forwards. Owner: whoever owns that WIP. Repo: unified-trading-pm.
 - [ ] [INFRA] P3. **`check_chain_set_inclusion` has 3 failing tests, pre-existing.** Verified failing identically at the
       pre-F7 baseline `c7fe11851a`; untouched by this session. Recorded so the next person does not mistake them for
       isolation fallout. **Done when**: triaged or fixed. Repo: unified-trading-pm.
@@ -564,7 +568,11 @@ Directions, cheapest first — each is a todo below:
       "every content check passed … Do NOT go looking for a content bug" while one was failing. A false all-clear is
       worse than the false alarm it replaced. Hardened to also match pytest-style `FAILED`/`ERROR`/`E`-prefixed lines,
       not just the emoji.
-- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.**
+- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.** **RE-TRIAGE
+      2026-08-12: the stated blocker is GONE — re-verify and close or re-scope.** Measured:
+      `git -C unified-trading-library status --porcelain` is empty, and PM's full `quality-gates.sh` passed four times
+      on this host on 2026-08-11/12 (287s and 305s runs among them). Nothing is currently blocked by this. Left open
+      rather than flipped because the original author may have intended a durable guard, not just the one incident.
       `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` dies with
       `ImportError: cannot import name '_per_vm_shard_backlog' from 'unified_trading_library.manifest_writer._state'`.
       Measured: the symbol IS on `origin/live-defi-rollout`, is ABSENT from the local working file, and the UTL clone is
