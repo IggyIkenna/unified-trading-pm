@@ -245,6 +245,47 @@ one instruction and one terminal status.
 `AtomicInstruction` / `AtomicLeg` / `CompensationPolicy` were considered and NOT chosen: they exist for trade legs, and
 compensation semantics for a half-moved custody balance differ from unwinding a trade.
 
+### RULING 4 — share class is NOT a venue margin currency; funding routes are computed, not hardcoded
+
+**The defect this replaces.** `_CARRY_BASIS_PERP_VENUE_BUNDLES` and `_FUNDING_DISPERSION_VENUES` in `catalog_carry.py`
+attach a `ShareClass` to each venue — `("hyperliquid", "HYPERLIQUID", ShareClass.USDC)`, with comments like _"KRAKEN
+takes USDC + USDT, USDC wins"_. **`ShareClass` is being used to encode the venue's margin currency.** Those are
+different concepts:
+
+- **Share class** = what the client subscribed in and is redeemed in. A property of the fund.
+- **Venue margin currency** = what collateral the venue accepts. A property of the venue.
+
+Conflating them means an ETH share class cannot trade a USDC-margined venue **by construction of the slot list**, and
+`"USDC wins"` is a static pick where the right answer depends on what the client holds and which routes their config
+permits. **Operator ruling: any share class can work on any venue in theory** — what varies is the route required to get
+from share-class capital to acceptable collateral, and whether that route is permitted.
+
+**The model: a funding-route feasibility graph per `(client_id, strategy_id)`.** The system must know what it has access
+to — trading venues, custodians, **borrow/lend venues**, bank brokers — and from that derive which routes exist:
+
+| Route              | Mechanism                                            | Risk the system must carry                                                                                            |
+| ------------------ | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Direct**         | Share-class asset IS accepted collateral             | none                                                                                                                  |
+| **Convert**        | Swap share-class asset → required collateral         | depeg, and a residual short exposure to the sold asset — optionally perp-hedged (USD/USDT perps exist on some venues) |
+| **Borrow against** | Post share-class asset, borrow the collateral        | borrow cost + liquidation; **gated by client restriction config, not universal**                                      |
+| **Lend to offset** | Lend the share-class asset while borrowing the other | nets out roughly for USDC/USDT; leaves the depeg asymmetry                                                            |
+
+The purpose is **route feasibility, not policy**: knowing Aave lets you borrow USDT against your holdings says the route
+_exists_, not that the strategy _should_ take it. That keeps it opt-in. An ETH share class trading basis (borrow a
+stable, buy spot, sell perps, pay borrow) must therefore be **expressible and then opted into**, never excluded by a
+hardcoded catalogue row.
+
+**What this must produce:** a slot whose funding route is infeasible under the client's constraints **fails loudly at
+resolution time**, in the same way `_staked_basis_eligible()` already refuses to emit an infeasible (LST × perp_venue)
+pair. Same pattern, one layer up.
+
+**Boundary worth stating:** `ShareClassFxMatrix` keeps its role for **NAV conversion in the allocator** — that is an
+accounting projection. It does NOT perform capital movement. A real conversion is a trade with slippage, fees and a
+residual exposure someone owns, so it belongs in the route graph above, not in an FX matrix.
+
+Tracked in
+[the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) § H.15.
+
 ### Manual / acknowledged transfers are part of the model, not an exception
 
 Some moves the system **cannot** execute: separately-managed accounts where the client must move funds to a main

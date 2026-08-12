@@ -773,6 +773,42 @@ elsewhere. That pattern is the workaround for this ceiling, not a coincidence.
       `dict[str, float]` would remove the ceiling but touches every engine and the batch=live determinism spine. Not a
       casual change — scope it before anyone assumes multi-underlying archetypes can simply be finished.
 
+### H.15 Rulings 3 and 4 — venue eligibility is config; share class is not a margin currency (2026-08-12)
+
+SSOTs: [venue-eligibility](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md) § RULING 3 ·
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) § RULING 4. **Both are code-violates-codex
+findings, not new architecture** — `venue-eligibility.md` already listed "which venues can this strategy use" as
+strategy config before either ruling was written.
+
+- [ ] [AGENT] P1. **Remove the research-based venue exclusions from the catalogue; make them instance-config defaults.**
+      `_FUNDING_DISPERSION_VENUES` omits `HYPERLIQUID` for a kind-2 (research) reason — "momentum" — enforced as a
+      kind-1 (physical capability) exclusion, so **no instance config can opt Hyperliquid in even for a deliberate
+      experiment**. Hyperliquid IS present in `_CARRY_BASIS_PERP_VENUE_BUNDLES` and the staked-basis perp venues, so
+      this is an inconsistency inside one file rather than considered policy. Emit the slot; carry the reversion-inverts
+      view as a documented instance-config default. **Then sweep for the same category error elsewhere** — any venue
+      omitted for an edge reason rather than a capability reason.
+- [ ] [AGENT] P0. **Stop using `ShareClass` to encode venue margin currency.**
+      `("hyperliquid", "HYPERLIQUID",     ShareClass.USDC)` and `"KRAKEN takes USDC + USDT, USDC wins"` conflate a fund
+      property with a venue property, which makes an ETH share class structurally unable to trade a USDC-margined venue.
+      Split the two: venue margin currency comes from the collateral registry; share class stays a fund attribute.
+- [ ] [AGENT] P0. **Build the funding-route feasibility graph per `(client_id, strategy_id)`.** Routes: direct · convert
+      (depeg + residual short exposure, optionally perp-hedged) · borrow-against (**client-restriction-config gated**) ·
+      lend-to-offset. Inputs are what the client grants access to — trading venues, custodians, borrow/lend venues, bank
+      brokers. **Semantics: route EXISTENCE, not policy** — "Aave lets you borrow USDT against this" says the route is
+      possible, not that the strategy should take it, which is what keeps it opt-in. An infeasible route must **fail
+      loudly at resolution**, exactly as `_staked_basis_eligible()` already refuses infeasible (LST × perp_venue) pairs.
+- [ ] [AGENT] P2. **Keep `ShareClassFxMatrix` to NAV conversion only.** It is an accounting projection for allocator
+      weighting and must not be mistaken for capital movement — a real conversion is a trade with slippage, fees and a
+      residual exposure owner. Add that boundary to its docstring so the next reader does not wire it into the capital
+      path.
+- [ ] [AGENT] P2. **Expand set-valued roles where the archetype genuinely spans a set** (operator: "we should expand
+      this where we can"). Only `ARBITRAGE_PRICE_DISPERSION` and `ARBITRAGE_SPORTS_DUTCHING` hold set-valued roles
+      today. Candidates to assess: multi-venue basis (one instance comparing perp venues for one coin), the dispersion
+      basket as a single instance rather than N coordinated instances, and multi-underlying vol. **Gate each on the H.14
+      tick-contract ceiling** — a set-valued role is only implementable if the engine can receive the whole set per
+      tick, or the cross-sectional signal is pre-computed upstream as a scalar. Do not widen a role the feed cannot
+      fill.
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
