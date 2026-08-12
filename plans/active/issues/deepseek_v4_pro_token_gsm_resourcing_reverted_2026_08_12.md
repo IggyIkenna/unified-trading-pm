@@ -141,12 +141,19 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
       `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 (the edit was real but was reverted by
       `creds_env_poller` within one tick and is not live today) — append the reversion evidence so the finalize plan's
       todo 3 reconcile carries truthful data. (repo: unified-trading-pm)
-- [ ] [BACKEND] P1. Update `deepseek_balance.py` to resolve the account token GSM-first (same `api_key_secret_name` path
-      as the proxy) — once the [INFRA] P0 todo lands the `$(gcloud secrets ...)` indirection in
+- [x] ✅ [BACKEND] P1. Update `deepseek_balance.py` to resolve the account token GSM-first (same `api_key_secret_name`
+      path as the proxy) — once the [INFRA] P0 todo lands the `$(gcloud secrets ...)` indirection in
       `~/.claude-accounts/*.env`, `read_env_var_from_file`'s regex `(['"]?)(\S+)\1` can't span the quoted value's spaces
       → returns None → the balance poller reports "no token". (Issue finding #4's "command string as Bearer token"
       mechanism is likewise None-or-prefix, not the full string; either way the native path fails, which the GSM-first
-      proxy fix removes.) (repo: agent-orchestrator)
+      proxy fix removes.) (repo: agent-orchestrator) — agent-orchestrator@438b53c6d0 (slot 16, 2026-08-12): added
+      `deepseek_balance._resolve_balance_token` / `_resolve_token_from_secret_manager`, mirroring the proxy's
+      GSM-first + success-cache + env-file-literal-fallback pattern via `AccountDef.api_key_secret_name`;
+      `fetch_deepseek_balance` now takes `acc_def` instead of a raw `env_file` path (both callers —
+      `DeepSeekBalancePoller._tick_once` and `refresh_deepseek_balance_route` — updated to pass `acc_def=`, and their
+      skip/400 conditions now also accept an account declaring only `api_key_secret_name`). 11 balance tests green (4
+      new GSM-path tests), full QG green (3561 passed, 2 skipped; dashboard vitest 305 passed). This resolves the
+      per-tick 401 the [INFRA] P0 todo's evidence flagged as a known follow-on regression once the indirection landed.
 - [x] ✅ [INFRA] P2. Restart the running `deepseek-native-proxy` service so the GSM resolution code goes live —
       `ao-self-pull.sh` restarts only `orchestrator.service`, so the proxy keeps the old env-file-only resolution until
       explicitly restarted. (repo: agent-orchestrator — host-local systemd unit) — **DONE 2026-08-12 (slot 14, infra):
