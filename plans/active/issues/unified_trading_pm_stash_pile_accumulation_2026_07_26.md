@@ -142,13 +142,16 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       still has NOT been executed as of this write-up — live-checked `.tabs/1`'s own stash count is 102 (grown further
       since the 2026-08-08 audit's 96, from ongoing shared-checkout autostash accumulation), not 0 — the two
       `[OPERATOR] P3` todos below (superseded in text but not in checkbox) remain the open action.
-- [ ] [OPERATOR] P3. **[BLOCKED on the re-audit above — do not run as written]** Run the mechanical stash drop in
-      `.tabs/4/unified-trading-pm` (the `[DATA] P2` audit above already did the actual judgment-call review — this is
-      pure mechanics, not a decision): `for i in $(seq 1 25); do     git stash drop stash@{0}; done` (or
-      `git stash clear`), then confirm `git stash list` is empty. Blocked from the agent side only by the guardrail
-      hook, not by any remaining uncertainty about the content. This checkout's stash pile is a DIFFERENT clone from the
-      original slot-3 checkout this doc was filed against (that one has its own, never-separately-audited pile — out of
-      scope here, would need its own pass if still relevant).
+- [x] ✅ [OPERATOR] P3. Run the mechanical stash drop in `.tabs/4/unified-trading-pm` — **DONE 2026-08-11** (operator
+      ran it; agent-side still blocked by the guardrail hook, as this doc predicted). **DEVIATION, deliberate**: ran an
+      age-cutoff drop (everything older than 48h), NOT the `git stash clear` / drop-until-empty written here, so
+      `git stash list` is deliberately NOT empty. Reason: the recent entries are LIVE protective parks — measured across
+      the 77 slot-3 stashes, ~70 of 77 carried a UNIQUE file-set, overwhelmingly `plans/active/*.md` parked by different
+      concurrent sessions sharing one worktree. Clearing all would have destroyed peers' in-flight WIP, which is the
+      exact failure this mechanism exists to prevent. A 48h cutoff also self-protects a live session, whose autostash is
+      minutes old by definition. Slot 4 measured **85 entries, 35 older than 48h** — far past the ~25 this todo
+      anticipated, i.e. the pile had regrown substantially since the audit. Archived first
+      (`.tabs/4/.stash-archive-Mac-slot4-20260811`, bundle verified complete) so every drop is reversible.
 
 - [x] ✅ [DATA] P2. **AUDIT DONE 2026-07-30 — extended to every populated slot on this laptop** (`.tabs/1`, `.tabs/2`,
       `.tabs/3`; `.tabs/4` covered by the todo above; `.tabs/5`-`.tabs/11` have 0 stashes). Same read-only methodology,
@@ -322,5 +325,5 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   (`block_destructive_commands.py`) regardless of review outcome — the operator must run the `for` loops directly,
   outside any agent's tool-gated shell. This is the exact same class of hazard as the sibling doc
   `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (confirmed still live today per this
-  sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to
-  the operator with a fresh count check immediately before each loop.
+  sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to the
+  operator with a fresh count check immediately before each loop.
