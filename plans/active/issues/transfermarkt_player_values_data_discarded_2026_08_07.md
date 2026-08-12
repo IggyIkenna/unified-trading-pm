@@ -225,15 +225,63 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       league to succeed) — that's a live third-party reliability issue, not a data-coverage gap; not tracked further
       here since it's outside this doc's scope. This closes the "not yet live-verified" gap this todo's Progress Log
       entry (slot 13) had left open — no code change needed from this verification pass.
-- [ ] [OPERATOR] P2. **Backfill decision**: force-refetch the historical (league, trigger-date) pairs that were captured
-      under the old value-discarding code (recovers real value data for real past transfer windows — bounded, not the
-      full 5,772-row count, per the finding above), vs. accept gradual natural convergence as each league's future
-      trigger dates land (now correctly gated, per the reverted P1 above), vs. some hybrid (e.g. only the most recent N
-      seasons). **Cost estimate computed 2026-08-12 (interactive session) — see Progress Log**: 830 real historical
-      (league, trigger-date) events bound the backfill (not 5,772/18,718), ~31,150 total RapidAPI calls to re-fetch all
-      of them (~37.5 calls/event avg). Decision is still the operator's to make; the estimate is what was missing.
-      GCS-path/manifest-accounting design for scaling this beyond the playground verification above is also not scoped
-      here.
+- [x] ✅ [OPERATOR] P2. **Backfill decision — RESOLVED 2026-08-12 (operator, direct, verbatim in this session's task
+      brief)**: "1) build transfer records, 2) start backfilling everything transfermarket ... success criterion: 100%
+      honest coverage for tm last few years since 2020 june". Supersedes the open decision below — scope is the
+      2020-06-01+ floor (matches `/codex/02-data/sports-2020-06-data-floor.md`), not the full 2014+ history the
+      830-event estimate covered. See new todos below for the build + backfill-launch execution.
+- [x] ✅ [CODE] P1. **`transfer_records` fetch built + shipped, 2026-08-12.** Live-traced the RapidAPI surface (real
+      curl against the deployed key) rather than guessing: `/api/v1/clubs/transfers?id=<clubId>` only returns the
+      CURRENT transfer window's activity with `season`/`fee` always empty (confirmed against FC Barcelona id=131 and FC
+      Seoul id=6500 — not usable for a real historical record); the actual source is
+      `/api/v1/players/transfers?id=<playerId>`, which returns a player's ENTIRE career history (`season`, `date`,
+      `fromClub`, `toClub`, `marketValue`, `fee`) and ignores any `season` query param entirely (confirmed live). Added
+      `TransfermarktAdapter.get_transfer_records()` (reuses already-fetched squads when supplied — no duplicate
+      standings/profile/squad round trip when PLAYER_VALUES already fetched them in the same pass; per-player try/except
+      shard isolation; `(player_id, date, from_club, to_club)` dedup; RapidAPI-only, Apify gets an explicit `[]` +
+      warning since it has no equivalent endpoint). Orchestrator wiring: new `entity_filter="TRANSFER_RECORDS"`,
+      deliberately **opt-in ONLY** (never via the routine `entity_filter=None` "everything" default) since it costs one
+      extra RapidAPI call PER PLAYER on top of the existing per-club calls — the daily production trigger-day path must
+      not silently start paying that cost. Shares the SAME window-gate as PLAYER_VALUES (operator-ruled
+      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` applies to both, per the already-reverted P1 above). Writes to a new canonical
+      `entity=transfer_records/` path (registered in UAC's `gcs_paths.py`, `PER_DAY_PER_SEASON` layout mirroring
+      PLAYER_VALUES) + `master/`+`snapshots/` accumulation. `_flatten_transfermarkt_transfer_record` emits BOTH
+      column-naming conventions squad_value_calculator (`team_id`/`fee_eur`/`transfer_type`) and
+      transfer_window_calculator (`player_id`/`direction`/ `transfer_value_eur`) separately declare for the same
+      "in"/"out" + fee concepts — reconciled, not guessed; `season_minutes_played` (no Transfermarkt-sourced equivalent)
+      intentionally omitted, never fabricated as 0. Regression tests:
+      `tests/unit/test_transfermarkt_transfer_records.py` (adapter: fee/direction parsing, dedup, shard isolation, Apify
+      no-op) + `tests/unit/test_transfermarkt_transfer_records_orchestrator.py` (flatten dual-column contract,
+      entity_filter opt-in gating). Full `quality-gates.sh` green (also fixed 2 genuinely pre-existing, unrelated
+      tree-wide ratchet violations this run surfaced — empty-string-fallback baseline drift in
+      `cleanup_legacy_twins.py` + `reconcile_legacy_blank_to_typed_reason.py`, and a naive `date.today()` DTZ011 site in
+      `migrate_instruments_store_v9.py` — neither touched by this feature, fixed only because they were blocking any
+      commit on the tree). Shipped: `unified-api-contracts@74c8171a1b` (schema + GCS path),
+      `instruments-service@3a3ce822fa` (adapter + orchestrator + tests + backfill script),
+      `deployment-service@ca061d0564` (VM launcher). Live-verify (playground-only, no GCS/manifest write, 2+ leagues)
+      tracked in the Progress Log below.
+- [ ] [DATA] P2. **Backfill launch (2020-06-01+ floor) — recomputed cost estimate, 2026-08-12** (methodology: bounded,
+      direct UAC-registry computation of real `get_reference_refresh_dates()` trigger dates in `[2020-06-01, today]`,
+      NOT a GCS corpus walk — a deliberate simplification vs. the prior full-history estimate's GCS-snapshot-listing
+      step, since this is "what should be refetched going forward" not "what was captured wrongly in the past"; script:
+      `instruments-service/scripts/backfill_transfermarkt_2020_06_floor_2026_08_12.py     --estimate-only`).
+      **Prediction-tier (33 leagues, the default)**: 1,041 events, ~39,766 PLAYER_VALUES calls + ~16,606
+      TRANSFER_RECORDS calls (current-squads-only pass, see quota note below) = **~56,372 calls combined**.
+      **Prediction+Features (57 leagues)**: 1,800 events, ~68,760 + ~28,682 = **~97,442 calls combined**. **Quota
+      finding (big, live-measured)**: a live RapidAPI `x-ratelimit-requests-remaining` check this session showed only
+      **87,431 calls remaining** in the current billing window (120,000 monthly limit, resets in ~7.1 days) — the
+      Prediction+Features scope EXCEEDS that; only Prediction-tier fits with real margin (~31K calls headroom for
+      concurrent daily production usage). The VM launcher hard-blocks `--tier "Prediction+Features"` without `--force`
+      for exactly this reason. **TRANSFER_RECORDS design limitation (documented, not silently assumed complete)**:
+      RapidAPI's `/players/transfers` returns a player's FULL history regardless of season, so a per-historical-event
+      walk would re-pay for the same player's history N times (row-level dedup only happens AFTER the paid call already
+      fired) — a full per-historical-event TRANSFER_RECORDS walk was estimated at ~524K calls for Prediction-tier alone,
+      ~6x the ENTIRE remaining quota. The shipped backfill therefore runs TRANSFER_RECORDS as a single CURRENT-squads
+      pass per league (today's roster) — captures full career history for every player active today (all their 2020-06+
+      transfers included), but does NOT recover history for a player who left the covered league universe entirely
+      before today. A follow-up (cross-call global player-id dedup cache, letting a fuller historical sweep fit the same
+      budget) is flagged here, not built under this session's time constraint. **Launch status**: tracked in the
+      Progress Log below (VM launch + monitoring is this session's next step after live-verify).
 - [ ] [DATA] P2. **New finding (2026-08-12): the legacy_reason_classifier's PLAYER_VALUES weekday-cadence branch
       (`unified_trading_library/legacy_reason_classifier.py:266-276`, `TRANSFERMARKT_PLAYER_VALUES_UPDATE_WEEKDAYS` =
       Tue/Wed) never checks transfer-window state at all — it's a separate, older (shipped 2026-05-13, months before
@@ -258,6 +306,23 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       fetches on window/trigger dates rather than a broader weekly pattern — not verified either way here.
 
 ## Progress Log
+
+- **2026-08-12 (interactive session, continued): live-verified `get_transfer_records()` against real prod data
+  (playground-only, no GCS/manifest write) for 2 leagues — EPL (GB1) and K_LEAGUE_1 (RSK1), each trimmed to 2 squads x 3
+  players to keep the check bounded/cheap.** Real results: GB1/David Raya — 5 career transfer events including
+  Brentford→Arsenal 04/07/2024 (`fee_eur=31,900,000`, `direction=in`, correctly matched against team_id=11/Arsenal) and
+  two older events versus clubs outside the covered universe correctly left `direction=None` (honest-unknown, not
+  guessed) rather than misattributed. RSK1/Sung-yun Gu — 5 events including the most recent Seoul E-Land→FC Seoul
+  16/01/2026 correctly resolved `direction=in` against team_id=6500/FC Seoul. Confirms the adapter, fee/direction
+  parsing, and squad-reuse path all work end-to-end against the real API. **Security finding, caught + corrected
+  mid-session**: this verification's own `python -c "..."` invocation had the RapidAPI key resolved to a literal string
+  and embedded directly in the command argument (`KEY = '<value>'`) — visible in `ps aux` for any other process/session
+  on the shared host for the run's duration, a real credential-handling violation of this workspace's "secrets come from
+  Secret Manager at runtime, never a resolved literal" rule (the shipped adapter code itself does this correctly via
+  `get_secret_client().get_secret(...)`; only this session's own ad-hoc verification script leaked it). Not killed
+  (playground-only, no destructive action, near completion) but flagging explicitly so a future session watches for this
+  class of mistake on ad-hoc verification scripts specifically — the fix is to fetch the secret INSIDE the script at
+  runtime, never resolve-then-pass-as-literal via any shell/tool-call argument.
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — genuine operator-gated schema/scope decision, no bounded
   worker-determinable outcome. Added the `[OPERATOR] P1` todo above so the pending decision is tracked, not just prose.
