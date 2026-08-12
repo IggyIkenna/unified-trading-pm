@@ -215,17 +215,62 @@ Three consequences worth stating before anyone builds it:
       names: strategy params · venue + coin selection · leverage and risk behaviour · execution-algo selection criteria
       · PnL treatment · analytics. Schema + defaults in code, instance in GCS. This supersedes the narrow
       `ClientsYamlEntry` shape rather than extending it.
-- [ ] [AGENT] P0. **Extend `PARAM_SCHEMA_REGISTRY` to the non-strategy sections** — it covers strategy params for 35 of
-      60 archetypes today, and the wizard cannot generate a governing config from a schema that describes a fraction of
-      it. Sequence this against the existing § B gate asserting factory-registered ⊆ param-schema-covered.
+- [x] [AGENT] P0. ✅ **Extended `PARAM_SCHEMA_REGISTRY` with the four governing sections —
+      `strategy-service@664f5b42b2`, gate green `--no-fix` (exit measured via redirect, not a pipe).** Kept at **35
+      archetypes** per operator instruction ("keep at 35 since rest are stubs anyway"). 272 strategy rows + 20 governing
+      rows × 35 = **972 params**, no name collisions in any archetype. Shape decisions that matter: **(a) Execution is
+      HIERARCHICAL, not a flat scalar** — operator correction mid-build. `ParamSpec` gained `key_template` (e.g.
+      `exec_algo.{instruction_type}.{venue}`) and `enum_source`. The correction was necessary, not cosmetic: UAC
+      `ALGOS_BY_INSTRUCTION_TYPE` gives a **different valid algo set per instruction type** (`TRADE` 8, `ZERO_ALPHA` 1,
+      8 types total), so a single flat enum would have been wrong for 7 of the 8. The templated row resolves live from
+      UAC instead of transcribing a table that would drift. **(b) Only the 10 IMPLEMENTED algos are client-selectable**
+      — UAC's `ExecutionAlgo.implemented` flag marks 6 "ghost" algos (`BENCHMARK_FILL`, `BEST_PRICE`, `KELLY_STAKE`,
+      `MAX_SLIPPAGE`, `SEQUENTIAL_LEGS`, `SPREAD_ROLL`) the selector returns but nothing executes; offering one in a
+      client-facing wizard would be a silent no-op. Test asserts the ghost set never leaks. **(c) Every governing row is
+      `wired=False`** — a new `ParamSpec.wired` flag, defaulting `True` so the 272 existing engine-cited rows keep their
+      meaning. This is the guard that stops the wizard offering a knob nothing reads; flipping a row requires a `source`
+      citing its consumer, asserted by test. **(d) `get_strategy_params()` does not project unwired defaults into engine
+      params** — it is explicitly "the params the engine factory consumes", and materialising 17 unread keys per
+      archetype would look configured while doing nothing. An explicitly supplied value still round-trips. Enum values
+      grounded in UAC, not invented: PnL cadence is `CrystallizationCadence` verbatim (asserted by test); HWM basis is
+      the three bases `pnl-attribution.md` names. Analytics uses the operator's bounded list (below). **Also fixed in
+      the same commit — a pre-existing cross-repo drift that blocked the green tree**: two
+      `test_topology_enforcement.py` tests hardcoded `ARBITRAGE_PRICE_DISPERSION` as co_location=[] / STANDARD. That
+      stopped being true at `unified-trading-pm@b2bc3c59d0`, which corrected 25 archetype docs' frontmatter to match UAC
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE` (APD is `co_located_vm`). Verified the registry to confirm the DOC was the
+      correct side before changing the tests, moved the standard-tier assertions onto `EVENT_DRIVEN` (genuinely
+      standard/no-co-location), and noted that `test_higher_tier_satisfies_lower_requirement` had been passing
+      **vacuously** since the drift — premium satisfying premium tested nothing.
+- [ ] [AGENT] P1. **Wire a consumer for each governing section and flip its rows to `wired=True`.** The schema is
+      declared; nothing reads it. Each section needs its reader plus a `source` citation, and the
+      `test_governing_sections_are_declared_unwired` guard updated as each lands — that test is deliberately strict so
+      the burn-down is visible rather than assumed.
+- [ ] [AGENT] P1. **Stamp received + sent timestamps in BOTH strategy-service and execution-service** so latency is
+      derivable. Operator 2026-08-12: _"both services need received and sent time so we see latencies too"_. This is a
+      schema requirement on the event rows, not a config knob — `analytics_emit_latency` can be set today but there is
+      nothing to compute latency FROM until both stamps exist.
+- [ ] [AGENT] P1. **Assert every runtime-registered strategy slot also exists in execution-service.** Operator
+      2026-08-12: _"slots registered in strategy service at runtime must be also inside execution service"_ — the link
+      between the two services' config is the slot. Today nothing enforces that correspondence, so an execution-config
+      block could reference a slot execution-service has never heard of.
+- [ ] [AGENT] P2. **Mine `unified-trading-system-ui` backtest views for the analytics surface.** Operator pointer: it
+      _"has some cool ideas on how strategy backtests could look and we can reap the analytics from there"_. Read the
+      existing views before extending the analytics section further, so the schema follows a surface that already works
+      rather than inventing a parallel one.
 - [ ] [AGENT] P1. **Define the execution-algo selection-criteria contract as a UAC type carried on the instruction**,
       not as a config read across the seam. Name the interpreting surface in execution-service explicitly so the seam is
       documented rather than discovered.
-- [ ] [OPERATOR] P2. **Confirm the PnL and analytics axes a client may actually vary.** PnL already has real modes (HWM
-      is TWR / Notional / PnL-recovery, never raw equity —
-      [pnl-attribution](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)), so some of this axis
-      exists; "how they want analytics to look" needs a bounded list before it can be a schema, or it becomes an
-      open-ended surface with no defaults.
+- [x] [AGENT] P2. ✅ **Analytics axes BOUNDED by operator 2026-08-12** — the list this was waiting on: strategy
+      instructions · benchmark PnL _"at the price we wanna get filled which is latest price of the instrument we are
+      sending"_ · the breakdown per venue / account / client / instrument / strategy slot · and on the execution side
+      everything measured FROM benchmark fills — alpha PnL, latency, slippage. Implemented in
+      `strategy-service@664f5b42b2` as `analytics_benchmark_price_source` (default `BENCHMARK_INSTRUCTION_SEND_LAST`,
+      the operator's definition verbatim), `analytics_breakdown_dimensions`, and per-signal emit toggles. **Design
+      consequence made explicit in code and test**: benchmark price has ONE definition, and alpha PnL and slippage are
+      DERIVED from it rather than independently configurable — otherwise they could be set inconsistently with the
+      benchmark they are measured against. PnL axis grounded in what already exists (`CrystallizationCadence`; HWM is
+      TWR / Notional / PnL-recovery, never raw equity —
+      [pnl-attribution](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)).
 
 ## Dynamic param updates — why leverage is a restart today, and why it need not be
 
