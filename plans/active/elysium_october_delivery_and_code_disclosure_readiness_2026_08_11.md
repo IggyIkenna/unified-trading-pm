@@ -857,6 +857,53 @@ numbers while production runs a subset.**
       not. The `Delete-when:` markers are the cheap index — each one names the production home it is waiting on, so a
       script whose marker names a landed component is either migrated or a gap, and the marker tells you which to check.
 
+### H.17 RULING 5 — one schema-backed config surface, and the causal chain that explains the hardcodes (2026-08-12)
+
+**Operator ruling:** the HL veto — and every comparable choice — belongs in the client strategy-instance configuration,
+not in code. **All such configuration lives in ONE place, outside code, `config.py`-style with schema and defaults,
+because that is what hot-reloads.**
+
+**Most of the machinery already exists**, which makes the gaps specific rather than architectural:
+
+| Piece           | State                                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema registry | ✅ `PARAM_SCHEMA_REGISTRY` — 793 lines, `ParamSpec` per param, **35 archetypes covered**                                                                 |
+| Validation      | ✅ `get_strategy_params()` raises `WizardParamPayloadError` on unknown archetype, unknown param name, or a required param with neither value nor default |
+| Defaults        | ✅ carried on `ParamSpec`, plus `configs/defaults/` family files                                                                                         |
+| Hot reload      | ✅ `strategy_service/config_reloaders.py` (+ a `signal_broadcast/` one)                                                                                  |
+| External config | ✅ `load_strategy_config()` reads from GCS, per `strategy_id`                                                                                            |
+
+**The causal chain — this is the finding, not the list.** Asked the registry directly rather than grepping:
+**`CARRY_FUNDING_DISPERSION` is NOT IN `PARAM_SCHEMA_REGISTRY` at all.** Compare `ARBITRAGE_PRICE_DISPERSION`, which has
+**18** schematised params including `candidate_venues`, `venue_universe`, `pair_selection_mode` and a full vol-cap-clamp
+group. Dispersion's params (`long_rank_pct`, `short_rank_pct`, `stake_fraction`, `min_mid_price`, `squeeze_threshold`)
+exist only as inline `decimal_param(self.params, …, Decimal("…"))` calls with defaults buried in the engine.
+
+So: **no param schema → no config surface → the venue choice had nowhere to live → it was hardcoded into the catalogue
+tuple.** The Hyperliquid exclusion in `_FUNDING_DISPERSION_VENUES` is a _symptom_ of the missing schema entry, not an
+independent mistake. Fixing ruling 3 without fixing this would just move the hardcode.
+
+Coverage across three surfaces now measured, and no two agree: **60** enum members · **32** factory-registered (H.12) ·
+**35** with param schemas.
+
+- [ ] [AGENT] P0. **Add `CARRY_FUNDING_DISPERSION` to `PARAM_SCHEMA_REGISTRY`** with its five existing params plus the
+      venue-veto/instrument-selection fields ruling 3 requires, then delete the inline defaults in favour of the
+      schema's. This is the prerequisite for ruling 3 — the veto needs a schema slot before it can move out of the
+      catalogue.
+- [ ] [AGENT] P1. **Reconcile the three coverage surfaces (60 / 32 / 35) and state the intended relationship.** A
+      factory-registered archetype with no param schema cannot be configured through the validated path; an archetype
+      with a schema but no factory entry cannot be built. Neither is currently detectable — **add a gate asserting
+      factory-registered ⊆ param-schema-covered**, so the next divergence fails CI instead of being discovered by audit.
+- [ ] [AGENT] P1. **Audit for other config that lives in code rather than the schema surface.** Known instances beyond
+      the HL veto: per-venue `ShareClass` in the venue bundles (ruling 4), `_BANNED_LST_PERP_COMBOS`, the archetype
+      venue tuples themselves, and the dispersion overlay thresholds. The test for each: **would an operator want to
+      change this without a deploy?** If yes it belongs in the hot-reloadable surface.
+- [ ] [AGENT] P2. **Confirm `config_reloaders.py` actually covers strategy-instance params**, not only credentials and
+      signal-broadcast config. Hot reload existing in the repo is not the same as hot reload covering the params an
+      operator most wants to change — verify the reload path reaches `PARAM_SCHEMA_REGISTRY`-driven instance config, and
+      wire it if not. SSOT for the pattern:
+      [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
+
 ## Progress Log
 
 - **2026-08-12 — measurement lesson, recorded because it is the SECOND proxy-vs-property slip in one session.** I ran
