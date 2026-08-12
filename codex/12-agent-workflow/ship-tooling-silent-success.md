@@ -23,7 +23,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-10
-last_updated: "2026-08-10"
+last_updated: "2026-08-12"
 owner: infrastructure
 last_reviewed: "2026-08-10"
 code_refs:
@@ -155,3 +155,40 @@ restoring `quickmerge.sh` would have deleted a peer's autostash chain-breaker.
 fixed in one and left in the other the same day, and bit a real ship within the hour. **When you fix a defect in one
 ship script, grep the other for the same shape before you move on.** The same applies within a file: the argument-order
 bug had a correctly-called sibling function 65 lines below it, which is what pinned the intended contract.
+
+## The tree you check is not the tree that gets gated (measured 2026-08-12, cost 4 ship cycles)
+
+A pre-commit hook runs prettier BEFORE the plan-hygiene checkers, and `safe-doc-push` gates inside an isolated worktree.
+So the content the checkers see is the **reformatted staged** content, not what you just validated. Concretely, on one
+doc set: `check_reference_paths --only <files>` returned `0 violation(s)` against the working tree and `2 violation(s)`
+against the staged tree, repeatedly. Nothing was flaky — they are two different texts.
+
+**Run the checker the way the hook does, or expect the disagreement.** Two of the failures that only appear post-format:
+
+- **A long path reflowed across a line break** stops matching the leading-slash reference convention.
+- **Table-cell padding inserted inside a backtick span** (` `` `a_file_ name.md` `` `) trips `check_prosewrap_padding` —
+  and if the span is a filename, the padding is also just wrong.
+
+Corollary worth internalising: **a checker passing locally is not evidence your commit will pass.** Only a real commit
+attempt is.
+
+## Two failure-hiding habits, both mine, both cheap to avoid
+
+- **`… 2>&1 | tail -8` on a ship.** Twice this session the tail showed only the pre-commit hook summary — all `Passed` —
+  while the actual `❌` and the real reason sat 40 lines above. It reads like success. Redirect the whole log to a file
+  and `grep -nE '❌|BLOCKED|Pushed'`; never judge a ship from its tail.
+- **`safe-doc-push` exit 6 is a DETERMINISTIC content failure**, and it says so in the first line of its own output
+  (`this is a DETERMINISTIC content failure, NOT contention`). Do not retry it unchanged. By contrast
+  `Re-gate hit ONLY the duration budget` IS contention — content passed, the host was busy (a peer slot shipping
+  concurrently is enough). Re-run with `IGNORE_TIMEOUT=true` **only when the content already gated green standalone**,
+  and still verify against `origin` afterwards: the same message once accompanied a watchdog-SIGTERM'd gate where
+  nothing landed.
+
+## zsh does not word-split an unquoted variable
+
+`FILES="a.md b.md"; cmd $FILES` passes ONE argument in zsh, not two — unlike bash. It surfaces as
+`No such file or directory` naming the whole concatenated string, or worse, as a silent no-op when the consumer
+tolerates a junk argument. Use an explicit list, an array, or `${=FILES}`. The same shell difference produced an earlier
+silent no-op in this workspace when a trailing `#` comment was passed through an interactive zsh, so this is a class,
+not a one-off. Related: **the Bash tool's working directory does not reliably persist between calls** — `cd` explicitly
+in each invocation rather than relying on the previous one.

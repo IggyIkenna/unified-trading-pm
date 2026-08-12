@@ -95,27 +95,27 @@ Two remedies exist and both were declined deliberately:
 - [x] ✅ [BACKEND] P1. **Fix the drift at the source — reverted, not forward-ported.** — deployment-api@b928d173b5.
 
       The named owner (slot-5, this session) resolved it directly rather than waiting for an `[OPERATOR]` pickup.
-          Forward-porting into `cloudbuild-api-template.yaml` (the sanctioned fix per the check's own message) was
-          evaluated first and found structurally unsound, not just declined out of caution: `verify-auth-contract`
-          requires `waitFor: ["deploy"]` to check the FRESHLY deployed revision, but `deploy` itself is pure per-repo
-          content — it does not exist in `cloudbuild-api-template.yaml` at all (confirmed: `grep -n 'id: "deploy"'`
-          against the template returns nothing; the whole deploy block is already-baselined intentional drift, per this
-          same baseline file's own header comment). A template-native version of the step could only `waitFor:
-          ["scan-check"]` (the last template-native step), which would run it CONCURRENTLY with the per-repo `deploy`
-          step rather than after it — checking the auth contract against the stale pre-deploy revision, defeating the
-          check's entire purpose. There is no template-only way to express "runs after a per-repo-only step" short of a
-          polling/timeout loop inside the script itself, which is materially more fragile than the original design.
-          Given that, reverted the step entirely (`deployment-api@b928d173b5`) rather than accept either a broken
-          ordering or a permanently-raised baseline. **Verified**: `check_cloudbuild_template_drift.py --repo
-          deployment-api` → `[OK] deployment-api (cloudbuild-api-template.yaml): 16 (== baseline)`.
+              Forward-porting into `cloudbuild-api-template.yaml` (the sanctioned fix per the check's own message) was
+              evaluated first and found structurally unsound, not just declined out of caution: `verify-auth-contract`
+              requires `waitFor: ["deploy"]` to check the FRESHLY deployed revision, but `deploy` itself is pure per-repo
+              content — it does not exist in `cloudbuild-api-template.yaml` at all (confirmed: `grep -n 'id: "deploy"'`
+              against the template returns nothing; the whole deploy block is already-baselined intentional drift, per this
+              same baseline file's own header comment). A template-native version of the step could only `waitFor:
+              ["scan-check"]` (the last template-native step), which would run it CONCURRENTLY with the per-repo `deploy`
+              step rather than after it — checking the auth contract against the stale pre-deploy revision, defeating the
+              check's entire purpose. There is no template-only way to express "runs after a per-repo-only step" short of a
+              polling/timeout loop inside the script itself, which is materially more fragile than the original design.
+              Given that, reverted the step entirely (`deployment-api@b928d173b5`) rather than accept either a broken
+              ordering or a permanently-raised baseline. **Verified**: `check_cloudbuild_template_drift.py --repo
+              deployment-api` → `[OK] deployment-api (cloudbuild-api-template.yaml): 16 (== baseline)`.
 
-          The underlying hardening goal (same-day detection of an auth-contract regression, motivated by the 2026-08-06
-          `DISABLE_AUTH` incident sitting undetected for 4 days) is NOT abandoned — it needs a mechanism that doesn't
-          depend on Cloud Build step-ordering against per-repo-only content, e.g. a scheduled synthetic check (Cloud
-          Scheduler hitting the live endpoint + alerting through the existing `ci-failures`/`data-pipeline-alerts`
-          channels) rather than a build-time gate. Not built in this pass — flagged as a properly-scoped follow-up in
-          `/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` rather than rushed through the same
-          structural constraint that just caused this incident.
+              The underlying hardening goal (same-day detection of an auth-contract regression, motivated by the 2026-08-06
+              `DISABLE_AUTH` incident sitting undetected for 4 days) is NOT abandoned — it needs a mechanism that doesn't
+              depend on Cloud Build step-ordering against per-repo-only content, e.g. a scheduled synthetic check (Cloud
+              Scheduler hitting the live endpoint + alerting through the existing `ci-failures`/`data-pipeline-alerts`
+              channels) rather than a build-time gate. Not built in this pass — flagged as a properly-scoped follow-up in
+              `/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` rather than rushed through the same
+              structural constraint that just caused this incident.
 
 - [ ] [SCRIPT] P2. **Make consumer-vs-template drift fail at the point it is INTRODUCED, not fleet-wide afterwards.**
       Today a cloudbuild.yaml edit lands cleanly in its own repo and the bill is paid by the next agent to touch a
@@ -123,6 +123,18 @@ Two remedies exist and both were declined deliberately:
       broken" rather than "deployment-api needs a template edit". Done when: the drift check runs in the CONSUMER repo's
       own gate (so slot-5 would have seen it on their own commit), or this is rejected with the reason recorded. Repo:
       unified-trading-pm.
+
+## `--update-baseline` is shrink-only, and its refusal is silent
+
+Worth recording because it cost real cycles during this incident. `--update-baseline` was run against this never-raise
+ratchet. It **printed** the observed `deployment-api: 19`, but the file still read `count: 16` afterwards — the only
+change in `git diff` was the `note:` field being re-wrapped by the YAML dumper. The writer refuses to raise a count;
+that is the ratchet working exactly as its header comment promises.
+
+But the refusal is **silent**: nothing says "declined to raise 16 → 19". It presents as "the command printed the right
+number and then did nothing", which invites the reading that the write failed, or that the baseline file is stale, and
+sends you looking for a bug in the wrong place. **The command is not a bypass and never was** — if a count needs to go
+up, the answer is that the change should not land in that shape. Do not spend time rediscovering this.
 
 ## The pattern worth naming
 
