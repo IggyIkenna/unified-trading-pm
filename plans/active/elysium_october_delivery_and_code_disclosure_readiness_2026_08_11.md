@@ -439,6 +439,64 @@ gap it surfaced is carried to H.7.
       (verified). A correction banner is now in place, but the body still reads target-as-present. Either finish the
       rewrite to present-tense-plus-target, or split the target into its own design doc.
 
+### H.8 Dynamic carry universe is ON — the reproducibility debt it creates (2026-08-12)
+
+`enable_dynamic_carry_universe` default flipped `False → True` on operator instruction — **Evidence:
+strategy-service@d1092e9d32** (`ALL QUALITY GATES PASSED`, real exit 0). Two consequences, one of which is a hard-rule
+breach that must not be left implicit.
+
+- [ ] [AGENT] P0. **Stamp the resolved dynamic-universe as-of date into the run manifest, so a batch rerun reproduces a
+      paper run's coin set automatically.** Today `_resolve_as_of_date_cached(None)` resolves "yesterday UTC" at catalog
+      import and the resolved value is recorded **nowhere machine-readable** — so a rerun of paper window W resolves a
+      DIFFERENT universe and **`paper(W) == batch-rerun(W)` fails**. That equality is a HARD RULE
+      ([paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md)) **and an
+      assertion in the client-facing documents**, which is what makes this P0 rather than a nicety: with the flag ON,
+      the default configuration silently violates a published guarantee. Until this lands, the mitigation is manual —
+      pin `DYNAMIC_CARRY_UNIVERSE_AS_OF_DATE` on any run whose trades must reproduce. Interim provenance shipped with
+      the flag flip: the resolved date, coin set and pin-status are now logged at INFO on the success path (which
+      previously logged nothing at all) plus a warning when unpinned, so a run's universe is at least recoverable from
+      its logs. Note `RunManifest` is not defined in strategy-service, so scope the writer's location before starting.
+- [ ] [OPERATOR] P2. **The flag is service-level and cannot be scoped to one client.** It sits on the
+      `StrategyServiceConfig` singleton and `TARGET_UNIVERSE` is built once at module import, so turning it on moves the
+      carry universe for **every** client the service runs, not just Elysium. Flagged because the instruction was
+      phrased per-instance; if per-client universes are wanted, that is a separate design change (universe resolution
+      would have to move off the import-time singleton), not a config setting.
+
+### H.9 Jupiter perps — verified, and it does NOT restore SOL staked basis (2026-08-12)
+
+Operator asked whether any liquid, non-hacked Solana perp venue remains. **Answer: Jupiter, and only Jupiter** — but the
+collateral check that decides the staked-basis question came back negative.
+
+**Measured against the UAC collateral registry** (`COLLATERAL_REGISTRY`, richer than `VENUE_COLLATERAL_MATRIX`): of
+seven venues with collateral policies, **exactly one accepts a Solana LST — `kamino`, and its `venue_kind` is `lending`,
+not `perp_cex`.** No perp venue anywhere in the registry accepts JitoSOL, mSOL, bSOL or even plain SOL as margin.
+Hyperliquid's own policy note already states the consequence: _"No LST accepted as direct perp margin → staked-basis
+runs straight-basis here."_
+
+**Verified against Jupiter's own documentation** (`developers.jup.ag/docs/perps/`, fetched 2026-08-12): the JLP pool
+custodies exactly six tokens — **SOL, ETH, BTC, USDC, USDT, JupUSD** — and collateral is side-dependent: _"SOL / wETH /
+wBTC for long positions"_, _"USDC / USDT for short positions"_. **No LST appears anywhere.** A staked-basis trade needs
+to short SOL perp while posting the LST as margin; on Jupiter a short requires USDC/USDT, so the LST cannot be the
+margin token. Jupiter therefore yields `USDC_MARGIN_BUFFERED` for SOL, never `LST_AS_MARGIN`.
+
+- [ ] [OPERATOR] P2. **Decide whether to scope Jupiter PERPS integration** — the codex requires an explicit new operator
+      decision (`/codex/04-architecture/solana-defi-coverage.md`: _"Do not re-add without an explicit new operator
+      decision"_). What it buys: Solana perp hedge legs return for dispersion and straight basis, on the venue the
+      operator already named as the intended one ($716M TVL at cull time, never hacked). What it does NOT buy: SOL
+      staked basis — see the verification above. Cheaper than a cold start because Jupiter **spot** is already
+      integrated (reference-data adapter, execution swap connector, and a live connector shipped 2026-08-08); the
+      missing piece is perps, which our adapter does not emit (it emits `SPOT_PAIR` only) and the execution protocol
+      does not cover (swap-only).
+- [ ] [AGENT] P3. **If Jupiter perps is approved, add its `CollateralPolicy` to the UAC registry as a first step** —
+      `venue_kind=PERP_DEX`, accepted collateral SOL/wETH/wBTC (long) and USDC/USDT (short), sourced to
+      `developers.jup.ag/docs/perps/`. Doing this before any adapter work means `_staked_basis_eligible()` and
+      `_derive_structure()` correctly resolve SOL to `USDC_MARGIN_BUFFERED` and emit no infeasible `LST_AS_MARGIN` slots
+      — the gating logic then needs no change at all.
+- [ ] [AGENT] P3. **Kamino is the unexplored Solana LST route.** It accepts JitoSOL/mSOL at a 15% haircut and is already
+      in the collateral registry, so Solana LST carry may be expressible as a **lending/borrow** structure
+      (`CARRY_RECURSIVE_BORROW_*`) rather than a perp-hedged basis. Assess whether that is a real strategy or a dead end
+      before treating SOL LST carry as blocked on a perp venue.
+
 ### H.6 Gate findings — the two defects that hid a one-line violation for seven attempts (2026-08-12)
 
 Found by paying the cost, per the workspace rule that a tool which misled you is itself a finding. Both are in
