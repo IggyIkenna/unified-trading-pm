@@ -86,31 +86,28 @@ fault:
       2026-08-12 by `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), which failed
       PM `quality-gates.sh` and so denied `quickmerge` its sentinel for ALL PM code; cleared by
       `deployment-api@b928d173b5` reverting the offending step (drift back to `[OK] 16 == baseline`, verified before
-      shipping).
-
-      **Merged, not overwritten.** While this sat blocked, origin moved 168 commits and independently rewrote all three
-          target files: a *different* fix to the same problem landed — the retired-doc exemption
-          (`_is_retired_with_successor`), which refactored `_check_doc` into `_check_parsed`, exactly where this change
-          lives. The stashed copies were therefore NOT applied (doing so would have reverted that work); the agency split
-          was re-implemented against the new shape. The two compose rather than collide: the exemption removes docs nobody
-          should re-read, this stops the remainder blocking unrelated ships. Neither alone sufficed — the exemption still
-          left live docs tipping on the calendar. That relationship is recorded in the module docstring and the test header
-          so a later reader does not mistake one for a supersession of the other.
-
-          Implementation — `partition_by_agency()` splits violations by cause: `stale` (the clock moved) is advisory and
-          prints an owner-grouped digest; the three authoring reasons (`no-frontmatter`, `no-last_reviewed-field`,
-          `invalid-last_reviewed-format`) still block, because those are caused by the change in hand. Partition fails
-          CLOSED — any reason not explicitly listed in `CLOCK_DRIVEN_REASONS` blocks, so a future check can't ship as a
-          silent no-op. Measured end-to-end, all four exit codes captured directly (not inferred): aging cohort (30d window,
-          68 newly-stale) → exit 0; normal run (90d) → exit 0; authoring defect (missing `last_reviewed`) → exit 1;
-          `--strict` (30d) → exit 1. The 30d run is the real proof: 68 docs newly past the window produced a routed digest
-          and **did not block**, where before it was 68 hard failures. `--strict` still fails on everything — that is the
-          mode a scheduled digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the
-          digest above it listed 68; it now says "0 new BLOCKING violations … 68 new advisory". Evidence: **33/33 unit tests
-          green** on the merged base (27 pre-existing incl. the exemption's own, 6 new, one being a fail-closed guard that
-          an unclassified reason BLOCKS rather than silently downgrading to a warning). All four exit codes and the tests
-          were re-measured after the merge, not carried over from the pre-merge run — the re-application dropped one edit
-          (the summary line still read "0 new violations"), which only the re-measurement caught.
+      shipping). **Merged, not overwritten**: while this sat blocked, origin moved 168 commits and independently rewrote
+      all three target files — a _different_ fix to the same problem landed, the retired-doc exemption
+      (`_is_retired_with_successor`), which refactored `_check_doc` into `_check_parsed`, exactly where this change
+      lives. The stashed copies were therefore NOT applied (that would have reverted it); the agency split was
+      re-implemented against the new shape. The two compose rather than collide — the exemption removes docs nobody
+      should re-read, this stops the remainder blocking unrelated ships; neither alone sufficed, since the exemption
+      still left live docs tipping on the calendar. That relationship is recorded in the module docstring and the test
+      header so a later reader does not mistake one for a supersession of the other. Implementation:
+      `partition_by_agency()` splits violations by cause — `stale` (the clock moved) is advisory and prints an
+      owner-grouped digest, while the three authoring reasons (`no-frontmatter`, `no-last_reviewed-field`,
+      `invalid-last_reviewed-format`) still block, being caused by the change in hand. Partition fails CLOSED: any
+      reason not listed in `CLOCK_DRIVEN_REASONS` blocks, so a future check can't ship as a silent no-op. Measured
+      end-to-end with all four exit codes captured directly (not inferred): aging cohort (30d window, 68 newly-stale) →
+      exit 0; normal run (90d) → exit 0; authoring defect (missing `last_reviewed`) → exit 1; `--strict` (30d) → exit 1.
+      The 30d run is the real proof — 68 docs newly past the window produced a routed digest and **did not block**,
+      where before it was 68 hard failures. `--strict` still fails on everything, which is the mode a scheduled
+      digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the digest above it
+      listed 68; it now reads "0 new BLOCKING violations … 68 new advisory". Evidence: **33/33 unit tests green** on the
+      merged base (27 pre-existing incl. the exemption's own, 6 new, one a fail-closed guard that an unclassified reason
+      BLOCKS rather than silently downgrading to a warning). Exit codes and tests were re-measured AFTER the merge, not
+      carried over — the re-application dropped one edit (the summary line still read "0 new violations"), which only
+      the re-measurement caught.
 
 - [ ] [BACKEND] P3. **De-cohort the thresholds** so a batch of docs written the same day does not expire the same day —
       e.g. jitter the limit per doc (90d + hash(path) % 14) or stagger `last_reviewed` on bulk authoring. Without this,
