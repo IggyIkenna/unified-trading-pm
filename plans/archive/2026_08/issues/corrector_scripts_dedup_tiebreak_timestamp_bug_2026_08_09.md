@@ -1,0 +1,391 @@
+---
+doc_type: issue
+title:
+  "Manifest-correction scripts that mutate capture_status without bumping attempted_at/written_at silently lose the
+  consolidator's dedup tie-break — cefi confirmed, defi confirmed-ran-twice (merge outcome unverifiable, both scripts
+  still unpatched)"
+summary:
+  "reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py (cefi) mutated capture_status/error_reason in place but
+  preserved the original row's attempted_at/written_at, so its per-VM shard tied exactly with the row it was meant to
+  override. The consolidator's dedup tie-break (attempted_at -> written_at DESC NULLS LAST) resolves an exact tie by
+  scan order, not correction-wins — confirmed live 2026-08-09: N1b's apply uploaded a clean shard but the next
+  consolidator merge recorded rows_added=0 and the canonical kept the stale attempted_failed rows. Fixed for cefi
+  (instruments-service@159c0ebe0, amend of the original 8cf44c665 fix commit). A SECOND, independent bug surfaced on
+  re-apply: the fixed shard carried only the bulk-scan's column-pruned 10/42 columns, missing service_name (part of the
+  consolidator's dedup key base) -- would have landed as a duplicate row rather than an overwrite. Caught live before
+  the next consolidator cycle could merge it (broken shard deleted directly via the SDK at 2026-08-09T12:00:05Z) and
+  fixed by re-fetching full columns for corrected rows via DuckDB (instruments-service@159c0ebe0, same commit). The
+  sibling defi corrector (instruments-service/scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py:301-303) has
+  the SAME class of defect via a different mechanism — it sets attempted_at=None on correction, and NULLS LAST means a
+  null attempted_at always loses to a row carrying a real timestamp — so any defi corrections already applied via this
+  script may also have silently failed to merge into the canonical. NOT independently verified live for defi in this
+  session (out of N1b's cefi-only scope) — flagging for operator triage rather than assuming either outcome."
+status: resolved
+nature: issue
+asset_group: [cefi, defi]
+stage: [data]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: [manifest, consolidator, data-correctness, dedup, per-vm-shards, corrector-script]
+related:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md,
+    plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
+created: 2026-08-09
+last_updated: 2026-08-12
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: refactor
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.12
+assigned_role: data
+drift_direction: advance-code
+depends_on:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by: instruments-service@159c0ebe0, @7be93d5d, @c51e37ab, @f6caf7f5
+source: N1b (slot 6, cefi corrector re-verification, 2026-08-09)
+---
+
+# Corrector scripts' dedup-tiebreak timestamp bug — cefi confirmed, defi at risk
+
+> **🟢 ARCHIVED 2026-08-12 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 4 todos closed: cefi fix
+> (`instruments-service@159c0ebe0`), defi fix in both defi-relevant scripts (`instruments-service@7be93d5d`), the
+> workspace-wide audit (slot 2, 2026-08-11) that found 4 more defective scripts, and their fix
+> (`instruments-service@c51e37ab` + `@f6caf7f5`). Durable rule migrated to
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Dedup key" so future corrector-script authors don't
+> re-discover this defect. Closed out by the companion finalize plan
+> `/plans/archive/2026_08/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`.
+
+## What happened (cefi, confirmed live)
+
+`instruments-service/scripts/reconcile_correct_legacy_blank_misflips_cefi_2026_05_13.py`'s apply path (pre-fix) mutated
+only `capture_status`/`error_reason`/`reconciler_run_id` on a corrected row, leaving `attempted_at`/ `written_at` at the
+ORIGINAL row's values. The per-VM shard it uploaded therefore carried a row that, on every dedup-key field the
+consolidator sorts by, was an EXACT tie with the row it was meant to override.
+
+Per `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine" / "Dedup key": last-write-wins is resolved
+by `attempted_at -> written_at DESC NULLS LAST`. An exact tie on both fields is not resolved by "correctness" — it falls
+to DuckDB's window-function scan order, which is not something the writer controls.
+
+**Live evidence (2026-08-09, N1b)**: applied a 7-row correction (`HYPERLIQUID:PERPETUAL:IP-USD@LIN`/2026-06-29,
+`attempted_failed/UNCLASSIFIED_ADAPTER_ERROR` → `empty_confirmed/EXPECTED_INSTRUMENT_DELISTED`), shard uploaded cleanly
+(`gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/slot6-n1b-corrector-cefi-1786273499.parquet`). The
+consolidator ran ~3 min later (`_index/latest.json`: `shards_scanned=8, shards_changed=4, rows_added=0`) — the shard was
+scanned and counted as "changed" but contributed zero new rows. Direct comparison confirmed the shard's 7 rows carried
+`attempted_at`/`written_at` identical to the microsecond (`2026-07-28T14:28:57.682261+00:00` etc.) to the canonical's
+still-`attempted_failed` rows for the same key. The canonical never updated.
+
+**Fix**: `instruments-service@8cf44c665` — the apply loop now stamps a single fresh `datetime.now(UTC).isoformat()` onto
+both `attempted_at` and `written_at` for every corrected row, and `_NEEDED_COLUMNS` now includes both fields (they were
+previously excluded from the column-pruned read entirely, which would have produced a NULL-column shard on any future
+run of the pruned-read version — an even more certain tie-break loss). Regression test added:
+`test_apply_flips_bumps_timestamps_past_original_row`.
+
+## Second bug, caught on re-apply — column-pruned shard would have caused duplicate rows
+
+Re-applying with the timestamp fix above uploaded a new shard (`slot6-n1b-corrector-cefi-retry-1786276.parquet`) that
+turned out to carry only the bulk-scan's column-pruned 10/42 columns (`_download_manifest`'s `_NEEDED_COLUMNS` subset) —
+missing `service_name`, which per `manifest-consolidator-ssot.md` "Dedup key" is PART of the consolidator's dedup key
+base (`date, venue, data_type, service_name`). A shard row missing that column is NULL-padded on the UNION-ALL
+projection, so it would fail to match the canonical row's real `service_name` and land as a **duplicate row instead of
+an overwrite** — a different failure mode from the timestamp bug (corruption via doubling, not silent no-op).
+
+Caught before the 2026-08-09 12:00 UTC hourly consolidator cycle could merge it: the broken shard was deleted directly
+via the `google.cloud.storage` SDK (`blob.delete()`, GCS soft-delete retention applies) at 2026-08-09T12:00:05Z.
+**Fix**: `instruments-service@159c0ebe0` — the apply path now re-fetches full columns for exactly the corrected rows via
+DuckDB predicate-pushdown off the local downloaded manifest (the same memory-safety pattern the consolidator's own merge
+engine uses), so the shard carries every canonical column rather than just the candidate-scan subset. Regression tests
+added: `test_apply_flips_bumps_timestamps_past_original_row` (extended) and an `instrument_type` propagation assertion
+in `test_apply_flips_corrects_pre_listing_row_only`.
+
+**Broader implication for the "verify defi" todo below**: if defi's corrector also does a column-pruned bulk scan (check
+`_download_manifest` there), a defi fix needs BOTH the timestamp bump AND the full-column re-fetch — fixing only the
+timestamp tie-break would trade "silent no-op" for "silent duplicate row", not actually resolve anything.
+
+## Why defi is at risk (NOT independently verified — flagging, not asserting)
+
+`instruments-service/scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py:296-303` (the cefi script's docstring
+calls it the script this one "mirrors"):
+
+```python
+for c in corrections:
+    idx = c["row_index"]
+    df.at[idx, "capture_status"] = c["new_status"]
+    df.at[idx, "error_reason"] = c["new_reason"]
+    # Clear attempted_at on revert to empty_confirmed.
+    if "attempted_at" in df.columns:
+        df.at[idx, "attempted_at"] = None
+```
+
+This sets `attempted_at` to `None` rather than preserving it — a different mechanism from the cefi bug, but the same
+failure MODE under the documented tie-break rule: `NULLS LAST` means a null `attempted_at` sorts behind ANY row carrying
+a real timestamp, so the corrected (empty_confirmed) row would lose the tie-break against the original attempted_failed
+row it's meant to replace, regardless of `written_at`. `written_at` is never touched at all in this script's apply path.
+
+**This has not been checked against a live defi manifest in this session** — it is possible defi's dedup key/schema
+differs enough that this doesn't reproduce, or that no defi corrections have been applied via this script since it
+shipped. Someone with defi scope should: (1) grep `RECONCILER_COMPLETED corrected=` events / git history for whether
+this script has ever been run with `--apply-flips` against a live defi bucket, and if so (2) spot-check a handful of its
+claimed corrections against the live defi `_index` the same way this issue's live-evidence section did for cefi.
+
+## Defi verification (2026-08-09, slot 28) — confirmed run history, evidence of the original merge failing, a SECOND defi corrector also at risk, current state moot
+
+**(1) Defi's corrector HAS run `--apply-flips` live — twice, via two different scripts:**
+
+- **2026-05-13 ~16:21 BST**: the generic multi-asset-group script
+  `instruments-service/scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py` (`instruments-service@fafaa0c`)
+  ran `--asset-group defi --apply-flips`, scanned 605,070 candidates, corrected **599,486 rows**
+  (`attempted_failed/LegacyBlankErrorReasonError` → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`), shard uploaded to
+  `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot3-corrector.parquet`. Documented in the
+  now-archived `plans/archive/issues/defi_legacy_blank_reclassification_2026_05_13.md`. This is the script this issue's
+  "Why defi is at risk" section already quotes — its `attempted_at = None` apply-time bug is confirmed still present in
+  the current live code (unpatched, same lines as quoted above).
+- **2026-05-15**: a SEPARATE, defi-specific script `reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py`
+  (`instruments-service@2a398cd`/`3670534`, "Wave 3 DeFi corrector", NOT the script this issue originally quoted) ran
+  `--asset-group defi --apply-flips`. Per `plans/archive/2026_05/work_split_2026_05_14_ikenna.md` item 2 ("Phase B
+  re-attempt"): dry run found the **identical** 605,070 candidates / 599,486 proposed corrections, then apply-flips
+  reported `RECONCILER_COMPLETED` on **599,486 rows**, shard uploaded to
+  `gs://market-data-tick-defi-central-element-323112/_index/per_vm/ikenna-slot2-corrector-defi-20260515.parquet` in
+  528.5s.
+
+**(2) The May-15 dry-run finding the SAME 605,070/599,486 numbers as the May-13 apply-run is direct historical evidence
+that the May-13 correction did NOT merge into the canonical.** If the May-13 shard had landed, those 599,486 rows would
+already read `empty_confirmed` and the May-15 candidate mask (`capture_status=attempted_failed`) would not have
+re-selected them. A 2-day-later re-scan finding the exact same candidate population is the same symptom this issue's
+cefi "Live evidence" section describes (`shards_scanned` counted, `rows_added=0`) — consistent with, though not a byte-
+for-byte replay of, the cefi tie-break bug (the May-13 script's mechanism is the `attempted_at=None` variant, not cefi's
+original identical-timestamp variant, but both lose under `NULLS LAST`).
+
+**(3) The May-15 re-run itself is independently at risk via a THIRD mechanism, and is unverified.** Reading
+`reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py`'s apply loop (current live code, lines ~377-384) directly:
+
+```python
+corrected_idx = [entry["row_index"] for entry in corrections]
+for entry in corrections:
+    df.at[entry["row_index"], "capture_status"] = entry["new_capture_status"]
+    df.at[entry["row_index"], "error_reason"] = entry["new_reason"]
+if "reconciler_run_id" in df.columns:
+    for entry in corrections:
+        df.at[entry["row_index"], "reconciler_run_id"] = run_id
+```
+
+This script does not touch `attempted_at`/`written_at` AT ALL — neither preserves-and-ties (cefi's original bug) nor
+nulls (the May-13 defi script's bug) is quite right as a description; it simply leaves both fields at whatever the
+downloaded row already had, which for a not-yet-corrected row IS the original value — an EXACT tie on both dedup-key
+timestamp fields, the same failure class as cefi's ORIGINAL pre-`8cf44c665` bug. **No verification of the May-15 run's
+consolidator merge outcome exists anywhere in the plans corpus** (grepped `plans/` for the shard filename and
+`rows_added`/`corrector-defi` — only the single apply-flips log line above, no follow-up rows_added check or post-run
+candidate-count-zero re-verification, despite the script's own docstring header naming that check as its "verifier").
+Note: unlike cefi's second bug, neither defi script does a column-pruned bulk scan — both `_download_manifest`s do a
+full unfiltered `pd.read_parquet`/`pd.read_parquet(io.BytesIO(...))` of every column, so the service_name/duplicate-row
+failure mode does NOT apply to either defi script; only the timestamp tie-break is at risk.
+
+**(4) Current live state cannot confirm or deny either run's merge outcome — 3 months of unrelated churn have
+overwritten the affected population.** Live query (read-only, via
+`resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")` →
+`market-data-tick-defi-prd-central-element-323112` — note the archived docs' hardcoded
+`market-data-tick-defi-central-element-323112` bucket name is STALE post-`bucket_name_ssot_canonicalisation_2026_05_10`)
+against today's canonical `_index/availability_index.parquet`:
+
+- **Zero** rows currently at `capture_status=attempted_failed AND error_reason LIKE '%LegacyBlankErrorReasonError%'`.
+- **Zero** rows with `attempted_at IS NULL`.
+- The 5 specific rows the archived `defi_legacy_blank_reclassification_2026_05_13.md` cited as "sample-verified"
+  corrections (e.g. `CURVE-ETHEREUM 2019-07-25`, `AAVE_V3-POLYGON 2022-01-29`) now all read
+  `empty_confirmed/EXPECTED_INSTRUMENT_NOT_LISTED` with `attempted_at`/`written_at` timestamped **2026-08-05**, not the
+  May dates — a different, later correction already overwrote them.
+- The manifest schema itself has changed since May: the `reconciler_run_id` column referenced in both scripts no longer
+  exists in the live schema (queried, `Binder Error: column not found`) — the specific traceability marker that would
+  distinguish "landed via the May shard" from "landed via a later process" is gone.
+- The bulk of today's `attempted_failed` population (1,891,784 + 241,218 rows) carries
+  `superseded_by_content_verified_canonical_dex_pool_swaps_twin_2026_08_09` / `..._dex_pool_state_twin_2026_08_05`
+  reasons — large, unrelated 2026-08-05/08-09 canonicalization migrations that rewrote most of the defi manifest's
+  `attempted_failed` population wholesale, independent of this issue.
+
+**Conclusion**: whatever the May-13/May-15 runs' actual merge outcomes were, there is no LIVE correctness gap
+attributable to them TODAY (the affected rows have since been legitimately superseded either way) — but this is NOT the
+same as confirming either shard ever merged, and it is not evidence the underlying defect is safe to leave unpatched.
+The evidence in (2) leans toward "the May-13 shard did not merge"; (3) shows the May-15 re-run carries an independent,
+still-live, still-unverified risk of the identical failure class. **Both defi-relevant scripts remain unpatched today**
+and would reproduce the bug on any future re-run.
+
+## Recommended fix (defi, code not yet shipped)
+
+Mirror the cefi fix in BOTH defi-relevant scripts: stamp a fresh `datetime.now(UTC)` onto both `attempted_at` and
+`written_at` for every corrected row (never `None`, never left untouched), ensuring the correction unambiguously wins
+the tie-break:
+
+1. `reconcile_correct_legacy_blank_misflips_2026_05_13.py` (generic, lines ~301-303) — currently sets
+   `attempted_at = None`.
+2. `reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py` (Wave-3 defi-specific, lines ~377-384) — currently does
+   not touch `attempted_at`/`written_at` at all.
+
+Neither needs the column-pruning/full-column-refetch half of the cefi fix (both already read the full manifest,
+unfiltered) — only the timestamp-stamp half applies.
+
+## Broader pattern risk
+
+Any OTHER script in the workspace that writes a per-VM shard correcting an existing row's `capture_status` (not just
+these two correctors) is subject to the same rule and should be audited for the same defect. Not enumerated here — scope
+this as its own follow-up if the defi check above confirms live impact.
+
+## Workspace-wide audit (2026-08-11, slot 2) — 4 more scripts confirmed defective, unpatched
+
+Swept every live (non-`.stale-pre-history-rewrite-*`) repo's `scripts/` tree for per-VM-shard-writing correction scripts
+— `grep`'d for `_index/per_vm` write paths combined with a `capture_status`/`error_reason` mutation via `.at[]`/`.loc[]`
+assignment, then read each hit's apply-path in full against the same rule this issue's evidence sections already
+established: per `manifest-consolidator-ssot.md` § "Dedup key", the tie-break is
+`attempted_at -> written_at DESC NULLS LAST` — a corrected row that doesn't carry a FRESH `attempted_at` (or, failing
+that, a fresh `written_at`) strictly later than the row it's meant to override either ties (falls to undefined scan
+order) or, if `attempted_at` is cleared to `None`, loses outright (`NULLS LAST`).
+
+**Swept**: `instruments-service/scripts/*.py` (full — every script referencing `capture_status` + `.at[`), plus
+`market-data-processing-service`, `market-tick-data-service`, `features-service`, `unified-trading-library`,
+`unified-trading-pm`, `deployment-api` `scripts/` trees narrowed to (writes `_index/per_vm/*`) AND (mutates
+`capture_status` via assignment).
+
+**CONFIRMED — same defect, unpatched, in `instruments-service/scripts/`** (all four write a per-VM shard merged by the
+consolidator; none bump `attempted_at`/`written_at` on the corrected row):
+
+1. `reconcile_attempted_failed_to_captured_2026_05_13.py:284-292` — clears `attempted_at = None` on flip-to-`captured`
+   (never touches `written_at` at all). Same mechanism as the original May-13 defi bug this issue documents —
+   `NULLS LAST` guarantees the loss, not just a tie.
+2. `reconcile_blank_error_reason_rows.py:318-323` — mutates `capture_status` + `error_reason`, leaves
+   `attempted_at`/`written_at` completely untouched at whatever the downloaded row already had → exact tie against the
+   un-corrected canonical row (cefi's ORIGINAL pre-`8cf44c665` bug shape).
+3. `reconcile_legacy_blank_to_typed_reason.py:700-707` — mutates `error_reason` and (status-flip shape only)
+   `capture_status`, same untouched-timestamps exact-tie risk as #2.
+4. `reconcile_expected_absence_reasons.py:329-330` — mutates `error_reason` only (capture_status unchanged), same
+   untouched-timestamps risk; narrower blast radius (a capture_status flip isn't at stake) but the `error_reason`
+   correction itself would still silently fail to merge.
+
+None of these have been independently verified live against a canonical manifest in this session (unlike this issue's
+cefi/defi live-comparison work) — flagging as confirmed-by-code-read, not confirmed-by-live-merge-outcome. Given the
+mechanism is byte-for-byte the same class already proven live twice in this issue (cefi + the May-13 defi run), and the
+fix is the same 3-line mechanical stamp already shipped twice (`instruments-service@159c0ebe0`, `@7be93d5d`), no
+separate live-verification pass is required before fixing — the fix is safe/idempotent to apply regardless of whether
+any past run of these 4 scripts already lost the tie-break.
+
+**Checked and found SAFE / not applicable** (same repo, same grep hit, read and ruled out):
+
+- `reconcile_tradfi_non_trading_day_captured_2026_06_26.py` — stamps `attempted_at = now_iso` fresh (does not touch
+  `written_at`, but that's sufficient: the primary sort key differs from the canonical row's original `attempted_at`, so
+  it wins the tie-break outright without needing the secondary key).
+- `reconcile_lending_indices_phantom.py` — stamps `attempted_at` fresh AND writes directly to the canonical
+  `MANIFEST_BLOB` (not a per-VM shard merged by the consolidator) — not subject to this defect class at all.
+- `canonicalize_cefi_defi_instrument_type_2026_07_17.py`, `canonicalize_tradfi_instrument_type_2026_07_16.py`,
+  `reclassify_defi_postdelist_eu_2026_06_24.py`, `undelist_defi_false_postdelist_eu_2026_07_20.py` — reference
+  `capture_status` for read/filter only, never mutate it via assignment.
+- `market-tick-data-service/scripts/retire_tradfi_cf11_phantom_srz_2026_07_25.py`, `cleanup_may4_bait_sentinels.py`,
+  `reclass_sports_odds_horizon_malformed_tick_field_2026_07_15.py` — all three mutate `capture_status`/`error_reason`
+  but ALSO stamp a fresh `attempted_at` or `written_at` inline, AND/OR write via a direct in-place CAS replace of the
+  whole canonical index (not a per-VM-shard consolidator merge) — not subject to this defect class either way.
+
+**Not exhaustively checked**: `market-data-processing-service`, `features-service`, and the broader
+`unified-trading-pm`/`deployment-api` one-off migration scripts were narrowed by the same (per_vm-write AND
+capture_status-assignment) grep and produced zero further hits, but full-corpus scripts outside a `scripts/` directory
+(e.g. package-internal reconciliation modules) were not swept — if a future audit widens scope, start from the grep
+recipe above.
+
+## Todo
+
+- [x] ✅ [DATA] P1. **Verify whether defi's corrector has ever run `--apply-flips` live, and if so whether its claimed
+      corrections actually merged into the canonical `_index`** (same live-comparison method as this issue's evidence
+      section). — instruments-service. **DONE 2026-08-09 (slot 28)**: see "Defi verification" section above. Confirmed
+      TWO live `--apply-flips` runs (2026-05-13 generic script + 2026-05-15 defi-specific Wave-3 script, both 599,486
+      rows). The May-15 dry-run finding the identical candidate population the May-13 run had supposedly already fixed
+      is direct evidence the May-13 shard did not merge. The May-15 re-run carries an independent, unverified,
+      still-live risk (its script never bumps attempted_at/written_at at all). Live manifest today shows zero residual
+      affected rows, but only because unrelated 2026-08-05/08-09 canonicalization migrations have since overwritten the
+      whole population — not proof either shard merged. Both scripts remain unpatched.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 — `instruments-service@7be93d5d`.** Stamped fresh `attempted_at`/`written_at` in
+      BOTH defi-relevant scripts' apply paths, mirroring `instruments-service@159c0ebe0`'s timestamp logic (only the
+      timestamp-stamp half — neither script needed the column-pruning/full-column-refetch half, both already read the
+      full unfiltered manifest). `reconcile_correct_legacy_blank_misflips_2026_05_13.py` (generic): replaced the
+      `attempted_at = None` clear with a fresh `datetime.now(UTC).isoformat()` stamp on both `attempted_at` and
+      `written_at`; also extracted a `_download_manifest()` helper (mirrors both sibling correctors' own seam) since
+      this script had zero test coverage before this change and the inline `storage.Client()` chain wasn't
+      monkeypatchable. `reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py` (Wave-3 defi-specific): added the
+      same fresh-stamp on both fields (previously touched neither). Regression tests:
+      `test_apply_flips_bumps_timestamps_past_original_row` in a new
+      `tests/unit/test_reconcile_correct_legacy_blank_misflips_2026_05_13.py` (plus baseline apply-flow/idempotency/
+      env-guard coverage for a script that had none) and the same-named test added to the existing Wave-3 defi test
+      file. `quality-gates.sh` green (5330 passed, 88.96% coverage). — instruments-service
+- [x] ✅ [DATA] P3. **DONE 2026-08-11 (slot 2).** Audited other per-VM-shard-writing correction scripts workspace-wide
+      for the same tie-break defect (any script that mutates `capture_status` on an existing row without bumping
+      `attempted_at`/`written_at`). See "Workspace-wide audit (2026-08-11, slot 2)" section above: 4 more defective
+      scripts confirmed in `instruments-service/scripts/` (`reconcile_attempted_failed_to_captured_2026_05_13.py`,
+      `reconcile_blank_error_reason_rows.py`, `reconcile_legacy_blank_to_typed_reason.py`,
+      `reconcile_expected_absence_reasons.py`), several more checked and ruled safe. Fix tracked as a new todo below
+      (mirrors this issue's own todo1→todo2 precedent: audit and fix as separate tracked units). — cross-cutting
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-11 — `instruments-service@c51e37ab` + `@f6caf7f5`.** Stamped fresh
+      `attempted_at`/`written_at` in all 4 newly identified scripts
+      (`reconcile_attempted_failed_to_captured_2026_05_13.py`, `reconcile_blank_error_reason_rows.py`,
+      `reconcile_legacy_blank_to_typed_reason.py`, `reconcile_expected_absence_reasons.py`), mirroring the
+      `instruments-service@159c0ebe0`/`@7be93d5d` timestamp-stamp pattern.
+      `reconcile_attempted_failed_to_captured_2026_05_13.py` got the same
+      `_download_manifest()`-extraction-for-monkeypatchability step (it had zero test coverage before). `@f6caf7f5` also
+      fixed a pre-existing, unrelated bug found in the same file: `reconcile_blank_error_reason_rows.py` imported
+      `classify_blank_reason_row` from the `unified_trading_library` top-level package, which does not re-export it
+      (only `classify_legacy_empty_row` is re-exported) — the script would `ImportError` on any real invocation; fixed
+      to import from `unified_trading_library.legacy_reason_classifier` directly. Regression tests added for all 4
+      (`test_apply_flips_bumps_timestamps_past_original_row`), 3 of which had no test file before. — instruments-service
+
+## Progress Log
+
+- **2026-08-11 (slot 6, task `corrector_scripts_dedup_tiebreak_timestamp_bug-f95fb1296179`):** worked the final
+  `[SCRIPT] P2` todo (fix the 4 newly identified scripts). Implemented the same fix independently (timestamp stamp in
+  all 4 scripts + `_download_manifest()` extraction + regression tests), ran `quality-gates.sh` green, and hit a
+  duplicate-work collision on `git pull --rebase --autostash` before shipping: another slot had already landed the
+  identical fix moments earlier (`instruments-service@c51e37ab` "stamp fresh attempted_at/written_at in 4 more manifest
+  correctors" + `@f6caf7f5` "fix broken classify_blank_reason_row import in blank-reason corrector" — that second commit
+  independently found + fixed the SAME pre-existing import bug in `reconcile_blank_error_reason_rows.py` this session
+  also found). Resolved the stash-apply conflict by keeping the already-landed origin content (my own duplicate WIP is
+  stashed locally, not force-dropped — recoverable, discarded in favor of the landed version). No new code shipped this
+  session; flipped this doc's checkbox to reflect the already-landed fix (it had gone unflipped — the landing slot's
+  commit didn't touch this doc). All 4 todos in this doc are now done; the companion finalize plan
+  (`/plans/active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`) owns the
+  archive-once-closed step, not this session.
+- **round9-reclassify-satellite-sweep 2026-08-09** (cefi tranche): **RECLASSIFY, `assigned_vm: NA -> planning`**
+  (`execution_scope` `local-only -> orchestrator-agent`). All 3 open todos clear the bounded/worker-determinable bar:
+  todo 1 is a live-comparison verification whose exact method this doc's own "Live evidence" section already spells out
+  step-by-step; todo 2 is a mechanical mirror-fix of an already-shipped commit (`instruments-service@159c0ebe0`) — the
+  doc's own "Second bug" section explains precisely what that fix does and why it's needed regardless of todo 1's
+  outcome ("as a preventive fix regardless"); todo 3 is a grep-scoped cross-workspace audit for one named defect
+  pattern. No genuine judgment/design call remains. Conflict-check clear: the only other corpus reference to this doc is
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`'s citation, which is this doc's OWN origin (the N1b
+  session that filed it), not a duplicate extraction or competing dispatch surface. Companion gated finalize plan
+  authored: `/plans/active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`.
+- **2026-08-09 (slot 28)**: Worked todo 1 (defi verification). Findings in "Defi verification" section above; todo 1
+  flipped done. Discovered a SECOND defi-relevant corrector script
+  (`reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py`, Wave-3, not the one this issue originally quoted) with
+  an independent variant of the same defect, confirmed run live 2026-05-15. Expanded todo 2's scope to cover both
+  scripts. No code changes in this session (todo 1 was verification-only; todo 2's fix is separately tagged
+  `[SCRIPT] P2` and out of this task's scope).
+- **slot-15 worker 2026-08-09** (task `corrector_scripts_dedup_tiebreak_timestamp_bug-c823410f6918`): shipped todo 2
+  (`instruments-service@7be93d5d`). Both scripts now stamp a fresh `attempted_at`/`written_at` on every corrected row
+  instead of clearing/leaving them untouched. Regression tests added for both (the generic script had none before this —
+  its download step wasn't monkeypatchable, so a `_download_manifest()` helper was extracted first, mirroring the
+  pattern both sibling correctors already used). `quality-gates.sh` green. Todo 3 (cross-workspace audit for the same
+  defect pattern) is still open, out of this task's scope.
+- **slot 2, 2026-08-11** (task `corrector_scripts_dedup_tiebreak_timestamp_bug-1ceefc904ea2`): worked todo 3 (the
+  workspace-wide audit). Findings in "Workspace-wide audit (2026-08-11, slot 2)" section above. Swept every live repo's
+  `scripts/` tree (grep: writes `_index/per_vm/*` AND mutates `capture_status`/`error_reason` via `.at[]`/`.loc[]`
+  assignment); read every hit's apply-path in full. Confirmed 4 MORE defective scripts in `instruments-service/scripts/`
+  (same defect class, unpatched): `reconcile_attempted_failed_to_captured_2026_05_13.py`,
+  `reconcile_blank_error_reason_rows.py`, `reconcile_legacy_blank_to_typed_reason.py`,
+  `reconcile_expected_absence_reasons.py`. Checked and ruled SAFE:
+  `reconcile_tradfi_non_trading_day_captured_2026_06_26.py`, `reconcile_lending_indices_phantom.py`, 4
+  canonicalize/reclassify/undelist scripts (no capture_status mutation at all), and 3 mtds scripts that either stamp a
+  fresh timestamp inline or CAS-write the whole canonical index directly (not a per-VM-shard merge). Todo 3 flipped
+  done. No code changes in this session (audit-only, mirroring todo 1's own precedent) — the fix for the 4 newly found
+  scripts is tracked as a new `[SCRIPT] P2` todo above, out of this task's scope (3 of the 4 scripts have zero existing
+  test coverage, so the fix needs its own budget for the same `_download_manifest()`-extraction step
+  `instruments-service@7be93d5d` already did once).
