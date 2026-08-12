@@ -405,7 +405,7 @@ removal + casing normalization remain before backfill-resume.
       across ~506 dates × 11 roots × 2 data_types × up to 3 shapes) and must not run on this shared host per
       `/codex/05-infrastructure/vm-launcher-runbook.md` — split into the dedicated tracked todo immediately below so it
       is AO-dispatchable instead of sitting as Deferred-work-table prose only.
-- [ ] [DATA] P1. **(NEW 2026-08-11, slot 32) VM-dispatch: full per-cell five-part-proof across the CME combo corpus —
+- [x] ✅ [DATA] P1. **(NEW 2026-08-11, slot 32) VM-dispatch: full per-cell five-part-proof across the CME combo corpus —
       the corrected scope's actual remaining work.** Systematic per-`(date,underlying,data_type)` disposition check
       across all ~506 combo dates × 11 named roots (BTC, SP500, GOLD/GC, WTI/CL/CL-BZ, + others per the naming-
       convention-split todo) × 2 `data_type`s (`ohlcv_1m`, `ohlcv_1s`) × up to 3 coexisting path shapes (bare
@@ -420,7 +420,34 @@ removal + casing normalization remain before backfill-resume.
       originals needs a fresh `[OPERATOR]` gate per this doc's hard-stops (§ "Hard-stops (operator-only)"). Bundle with
       the sibling "Migrate historical short-code `underlying=` GCS objects to display-name form" todo above — same
       corpus walk, same VM dispatch, per the Deferred-work table's "Recommended next" line. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **DONE 2026-08-12 (slot 7, data_engineering).** The scan tool
+      (`audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py`, `market-tick-data-service@ff5642a2`, 22 unit tests) was
+      already shipped by a concurrent session but had not yet been RUN or doc-flipped when this slot picked up the todo;
+      this session verified Part 3/4 independently via grep+READ (`symbol_rules.py::_UNDERLYING_PARTITIONED_TYPES`
+      excludes bare `combo` → writer=`none`; MDPS `path_parsing.py::_tradfi_chain_bundle_match` iterates
+      `(chain_itype, "combo")` substring-matching `/underlying=<root>/` → reader=`remains`), generated the 506-date list
+      from a column-pruned manifest read (no new GCS walk), and ran the audit memory-bounded (`run-bounded-analysis.sh`,
+      `ANALYSIS_MEM_CAP=6G`) over the full corpus. **Result: 75,398 legacy combo objects / 41,106 distinct cells; 61,086
+      `no-migrate-first` (Part 1 twin absent — 0% canonical-twin coverage, the combo_chain COPY migration has not been
+      executed for any legacy cell yet) + 14,312 `no-still-authoritative` (the filename-only shape is a live
+      single-InstrumentType.COMBO write, never a delete/migrate candidate).** Because reader=`remains`, every
+      disposition is correctly capped below a delete-eligible value regardless of content — MDPS must be repointed off
+      the legacy substring match before any delete can ever be authorized (separate future todo, not this one's scope).
+      Full manifest + report:
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_audits/combo_five_part_proof_2026_08_12/`. The actual
+      non-destructive combo_chain COPY step (61,086 objects) is real follow-on work, split into its own tracked todo
+      directly below per the HARD RULE (every follow-up is a checkbox, not prose).
+- [ ] [DATA] P2. **(NEW 2026-08-12, slot 7) Execute the non-destructive combo_chain COPY migration for the 61,086
+      `no-migrate-first` legacy combo objects** the five-part-proof scan above found with an absent canonical twin (0%
+      twin coverage measured 2026-08-12). Content-based copy→verify (never delete — the legacy `instrument_type=combo/`
+      originals stay in place; MDPS's reader still substring-matches them, so deleting is a hard-stop regardless) to the
+      `combo_chain`/quote/margin target via the byte-identical `_canonical_chain_path` derivation
+      (`migrate_tradfi_canonical_classify_2026_07.py`, already reused by both the base migrator and the disposition
+      audit). VM-scale (61K objects, real parquet copies) — dispatch per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, not the shared host. After landing, MDPS's
+      `path_parsing.py::_tradfi_chain_bundle_match` should be repointed off the legacy `combo`/bare-underlying substring
+      match (a separate PR in the market-data-processing-service repo) — only then does Part 4 clear and a future delete
+      pass become eligible. Repos: market-tick-data-service, market-data-processing-service.
 - [x] ✅ [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
       update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
       manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
@@ -571,12 +598,12 @@ removal + casing normalization remain before backfill-resume.
 
 ## Deferred work after 2026-08-11
 
-| Item                                                                                                                                 | State / why deferred                                                                                                                           | Blocked on                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Re-blank ~59,461 CME chain-bundle manifest rows                                                                                      | **DONE 2026-08-11 (slot 31)** — applied before the operator answered; see the P1 todo + Progress Log below                                     | — resolved                                                                                                                                  |
-| Broader orphaned-duplicate combo scope (beyond the 4 known GOLD/SP500/WTI/BTC objects)                                               | Not done — manifest doesn't reliably surface these (see finding above); needs a scoped `instrument_type=combo/` GCS prefix walk or VM dispatch | Real work — pick it up (VM-scale, not a quick local task)                                                                                   |
-| Migrate historical short-code `underlying=` objects to display-name form                                                             | Not done — dry-run script exists, needs an enumeration input + prod-bucket delete gate                                                         | Real work — needs VM dispatch (per `/codex/05-infrastructure/vm-launcher-runbook.md`, heavy I/O never runs on the operator's local machine) |
-| `_CHAIN_ITYPES`/combo target-path remap, instrument_id-blank design, `lifecycle_phase` dtype, ArrowTypeError path-read investigation | Done — all shipped/verified with real SHAs and evidence above                                                                                  | —                                                                                                                                           |
+| Item                                                                                                                                 | State / why deferred                                                                                                                                                                                                             | Blocked on                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Re-blank ~59,461 CME chain-bundle manifest rows                                                                                      | **DONE 2026-08-11 (slot 31)** — applied before the operator answered; see the P1 todo + Progress Log below                                                                                                                       | — resolved                                                                                                                                  |
+| Broader orphaned-duplicate combo scope (beyond the 4 known GOLD/SP500/WTI/BTC objects)                                               | **SCANNED 2026-08-12 (slot 7)** — full per-cell five-part-proof run, 75,398 objects/41,106 cells; see the DONE P1 todo above. The actual combo_chain COPY (61,086 no-migrate-first objects) is the new P2 todo directly below it | Copy step still open — VM-scale, tracked as its own todo                                                                                    |
+| Migrate historical short-code `underlying=` objects to display-name form                                                             | Not done — dry-run script exists, needs an enumeration input + prod-bucket delete gate                                                                                                                                           | Real work — needs VM dispatch (per `/codex/05-infrastructure/vm-launcher-runbook.md`, heavy I/O never runs on the operator's local machine) |
+| `_CHAIN_ITYPES`/combo target-path remap, instrument_id-blank design, `lifecycle_phase` dtype, ArrowTypeError path-read investigation | Done — all shipped/verified with real SHAs and evidence above                                                                                                                                                                    | —                                                                                                                                           |
 
 Recommended next: the two VM-scale items (broader duplicate scope, short-code migration) should be scoped together as
 one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
@@ -783,3 +810,19 @@ one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
   checkbox, not prose-only (the Deferred-work table's "Broader orphaned-duplicate combo scope" row already flagged this
   as real work but wasn't itself an actionable, AO-dispatchable item). No GCS read/write/delete executed this session —
   doc-only reconciliation. Repo: unified-trading-pm only.
+- **2026-08-12 (slot 7, data_engineering) — the VM-dispatch five-part-proof todo RUN, not just designed.** A concurrent
+  session had already shipped the scan tool (`audit_tradfi_cme_combo_cell_dispositions_2026_08_11.py`,
+  `market-tick-data-service@ff5642a2`, 22 unit tests) but had not run it or flipped this todo — found and reused it
+  rather than duplicating (an initial from-scratch rewrite by this session was discarded on discovery). Independently
+  re-verified Part 3/4 via grep+READ (not trusted from the tool's own docstring, per the delete-safety protocol's own
+  "docstrings are never evidence" rule): writer=`none` (`symbol_rules.py::_UNDERLYING_PARTITIONED_TYPES` excludes bare
+  `combo`), reader=`remains` (MDPS `path_parsing.py::_tradfi_chain_bundle_match` substring-matches the legacy
+  `/underlying=<root>/` tail). Generated the 506-date combo list from a column-pruned manifest read (no new GCS walk),
+  ran the audit memory-bounded on this shared host (`run-bounded-analysis.sh`, 6G cap — read-only, prefix-scoped listing
+  across 2 data_types × 506 dates, never a corpus walk). **Result**: 75,398 objects / 41,106 cells; 61,086
+  `no-migrate-first` (0% canonical-twin coverage — the combo_chain COPY hasn't run for any legacy cell yet) + 14,312
+  `no-still-authoritative` (filename-only shape = live single-instrument writes, never delete candidates). Manifest +
+  report at `gs://market-data-tick-tradfi-prd-central-element-323112/_audits/combo_five_part_proof_2026_08_12/`. No
+  delete executed or suggested — reader=`remains` caps every disposition below delete-eligible by construction. Split
+  the actual COPY migration (61,086 objects, genuinely VM-scale) into its own new P2 todo rather than doing it inline
+  this turn.
