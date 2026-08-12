@@ -110,10 +110,14 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
    untestable), and confirm the proxy resolves correctly through the new path.
 3. Landing the finalize plan's todo 3 (reconcile) + todo 5 (archive batch14) afterwards stops the re-derivation thrash.
 
-- [ ] [BACKEND] P0. Make `deepseek_native_proxy_server._resolve_account_token` resolve the account token via GSM (UTL
+- [x] ✅ [BACKEND] P0. Make `deepseek_native_proxy_server._resolve_account_token` resolve the account token via GSM (UTL
       `get_secret("deepseek-v4-pro-api-key")`, or a shell `source` of the env file per option B) instead of a literal
       parse of `~/.claude-accounts/deepseek-v4-pro.env`, so the env file can carry the `$(gcloud secrets ...)`
-      indirection without sending the command string as the Bearer token. (repo: agent-orchestrator)
+      indirection without sending the command string as the Bearer token. (repo: agent-orchestrator) —
+      agent-orchestrator@4dbfea0250 (slot 18, 2026-08-12): added `AccountDef.api_key_secret_name`;
+      `_resolve_account_token` is now GSM-first via UTL `get_secret` (success-cache; env-file literal read kept as
+      fallback); 6 new GSM tests (30 proxy+balance tests green, QG green); live accounts.json set the field (backup
+      .bak-*, secret hash 715f0bb8… verified).
 - [ ] [INFRA] P0. Re-apply the deepseek-v4-pro GSM re-sourcing DURABLY: upload the indirection version of
       `deepseek-v4-pro.env` to the S3 creds bucket (`uts-orchestrator-creds-427895769566/accounts/`) AND rewrite the
       local `~/.claude-accounts/deepseek-v4-pro.env` to match (so `creds_env_poller` no longer reverts it), then verify
@@ -123,6 +127,15 @@ planning VM (`i-0c9b283b31d6b5ca7` / `13.113.200.22`, user `ubuntu`):
       `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 (the edit was real but was reverted by
       `creds_env_poller` within one tick and is not live today) — append the reversion evidence so the finalize plan's
       todo 3 reconcile carries truthful data. (repo: unified-trading-pm)
+- [ ] [BACKEND] P1. Update `deepseek_balance.py` to resolve the account token GSM-first (same `api_key_secret_name` path
+      as the proxy) — once the [INFRA] P0 todo lands the `$(gcloud secrets ...)` indirection in
+      `~/.claude-accounts/*.env`, `read_env_var_from_file`'s regex `(['"]?)(\S+)\1` can't span the quoted value's spaces
+      → returns None → the balance poller reports "no token". (Issue finding #4's "command string as Bearer token"
+      mechanism is likewise None-or-prefix, not the full string; either way the native path fails, which the GSM-first
+      proxy fix removes.) (repo: agent-orchestrator)
+- [ ] [INFRA] P2. Restart the running `deepseek-native-proxy` service so the GSM resolution code goes live —
+      `ao-self-pull.sh` restarts only `orchestrator.service`, so the proxy keeps the old env-file-only resolution until
+      explicitly restarted. (repo: agent-orchestrator — host-local systemd unit)
 
 ## Codex SSOTs
 
