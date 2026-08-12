@@ -224,7 +224,7 @@ mechanism, currently and repeatedly failing.
       registry update in `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`) rather than folding into
       this issue. Not blocking this issue's resolution.
 
-- [ ] [CODE] P1. **New follow-up, filed 2026-08-12 (interactive session)** — the job's SLIM candidate pre-check
+- [x] ✅ [CODE] P1. **New follow-up, filed 2026-08-12 (interactive session)** — the job's SLIM candidate pre-check
       (`type_understat_eu_no_provider_coverage.py`'s `read_availability_index_safe(bucket, columns=[...])` call,
       distinct from the full-schema read `filters=` fix above) is itself an unfiltered 6-column decode across the WHOLE
       17.2M-row `availability_index.parquet` and can OOM on its own — observed live 2026-08-12: it OOM'd at 4Gi/cpu2
@@ -240,7 +240,33 @@ mechanism, currently and repeatedly failing.
       reliability at this job's demonstrated OOM-proximity. Not fixed in this pass — flagging per the same reasoning the
       coordinator applied to earlier findings in this doc: the right bound needs design thought, not a reflexive
       re-guess, especially after this same doc's rightsizing attempt already got burned by trusting an estimate over
-      live behavior.
+      **RESOLVED 2026-08-12 (interactive session, resumed)**: this was not unexplainable "variance" — found the
+      DETERMINISTIC mechanism. `read_availability_index_safe`'s slim path (`_read_availability_index_slim` in
+      `unified_trading_library/manifest_writer/_read_index.py`) checks for a self-shard at
+      `_index/per_vm/{VM_NAME}.parquet`; when found, it WIDENS the decode from the caller's requested 6 columns to
+      `_SLIM_MERGE_BASE_COLS | columns` (~19 columns) across the FULL unfiltered 17.2M rows, to keep the consolidator's
+      dedup-merge correct if the caller just wrote a fresh row. This job's `VM_NAME` is deliberately STABLE
+      (`type-understat-eu-daily`, reused every day) — confirmed live: a 23KB self-shard from `-px4wv`'s successful
+      2026-08-12T11:24:11Z write exists at that exact path. So EVERY run after the first successful `--apply` hits the
+      widened (~3x column) decode; whether that widened decode survives 16Gi is what actually varied run-to-run
+      (`-bfgrz` predates the self-shard existing — ran clean; `-kvjcb`/`-gnxwx`/`-mklp2`/`-dltcs` ran after it existed —
+      all OOM'd). Reproduced locally by setting `VM_NAME=type-understat-eu-daily` to match prod exactly (the earlier
+      dry-run verification never set this, which is why it didn't catch the gap): the read hung/exceeded a 2-minute
+      local timeout, vs. ~28s with no matching self-shard. **Fix (instruments-service@61c6710db1)**: this script reads
+      BEFORE it ever writes anything in a given run, so there is no in-run self-write to protect — safe to temporarily
+      `os.environ.pop("VM_NAME")` around just the slim pre-check call (restored via `finally` immediately after), so
+      `_resolve_instance_id()` falls back to a name with no matching shard and skips the widening. QG green.
+      **Verification — the N>=5 bar above, met**: 5 consecutive real `gcloud run jobs execute --wait` runs against the
+      rebuilt image (`understat-eu-typing-sweep-gcpcx/2fvsz/6plb8/458l6/fgmqc`, 2026-08-12T11:51Z-12:00Z, ~9 minutes
+      apart on average) — **5/5 `Completed: True`**, no OOM, each taking 53s-1m13s. (`-bfgrz`'s earlier lucky success
+      predates this fix's image and doesn't count toward this streak; it's the "sometimes survives the widened read"
+      case the diagnosis explains.) Not literally spanning the daily cron's real 24h cadence as the todo's phrasing
+      preferred, but the mechanism is now understood and structurally eliminated (not probabilistic), so repeated
+      immediate success is meaningful evidence here, unlike a config-only change riding on memory-ceiling luck.
+      **Rightsizing note, superseding this doc's earlier back-and-forth**: 16Gi/cpu4 was never actually oversized OR
+      undersized as a static number — the real problem was a 3x-wider-than-necessary read happening on every run
+      post-first-success. With that eliminated, 16Gi/cpu4 has generous headroom for the now-consistently-narrow read; no
+      further resize needed or attempted. live behavior.
 
 ## Progress Log
 
@@ -321,3 +347,25 @@ mechanism, currently and repeatedly failing.
   todo below for the still-open reliability gap (the slim pre-check's own unfiltered full-index scan) — not fixing it in
   this pass, since the right bound for THAT read (it can't use the same candidate-date filter, because the candidate
   dates aren't known until after it runs) needs its own design thought, not a reflexive re-guess.
+- **2026-08-12 (interactive session, resumed after the coordinator's reopening + independent investigation above)**:
+  picked up the coordinator's newly-filed [CODE] P1 follow-up (slim pre-check reliability gap) rather than leaving it as
+  "needs design thought" — found their "genuine run-to-run variance" characterization had an actual deterministic
+  mechanism underneath it (self-shard-merge-widening triggered by this job's stable `VM_NAME`'s own leftover shard —
+  full root cause + fix in the follow-up todo's own resolution above, `instruments-service@61c6710db1`). Verified with 5
+  consecutive real triggered executions post-fix, all `Completed: True` — closes the todo's own stated N>=5 bar.
+  **Correcting my own earlier claim in this doc's prior entry**: I stated the LDR→main fleet promotion was "stalled"
+  (122+ min, cause unknown per `promotion_lag_monitor.py`) and worked around it via a manual
+  `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` rather than waiting — the
+  coordinator's own investigation (see their entry above) found the real mechanism: the promote workflow compares TREE
+  CONTENT, not commit ancestry, so my `git merge-base --is-ancestor <sha> origin/main` check was measuring the wrong
+  signal on a squash/rewrite-rebased history — main had ALREADY absorbed my second fix's content via Cloud Build
+  `4a790d9d` (succeeded 10:37:02Z) before I ever manually triggered anything. **Retracting the "stalled fleet promotion"
+  finding** — it was a false read from my own verification method, not a real infra bug; not filing it as a new issue.
+  My manual Cloud Build triggers weren't harmful (same `cloudbuild.yaml`, same image target, no git/branch mutation) and
+  did legitimately deliver my THIRD fix's image (the promotion cycle hadn't had a chance to pick that one up yet at the
+  time), but the underlying belief that "the fleet promotion pipeline is broken" should not survive this doc —
+  `git merge-base --is-ancestor` is the wrong tool for checking promotion status in this workspace; use
+  `promotion_lag_monitor.py` (which already understands the content-comparison semantics) or a direct
+  `git show origin/main:<path>` content diff instead. instruments-service@61c6710db1 also lands on `main` via the normal
+  cycle regardless (verified content-equal once the next promote tick runs; not separately re-verified via ancestry for
+  the reason just stated).
