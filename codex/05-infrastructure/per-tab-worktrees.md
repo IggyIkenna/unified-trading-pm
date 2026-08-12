@@ -27,9 +27,9 @@ referenced_by:
     /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-12
 code_refs:
-last_updated: 2026-07-09
+last_updated: 2026-08-12
 related_codex: [/codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
@@ -1400,6 +1400,33 @@ isolation would silently turn every quickmerge into a QG failure.
   safe.
 - **`safe-doc-push` exit 6** — deterministic content rejection. Fix the content; re-running cannot help. Note a hook
   merely AUTOFIXING files is no longer classified here — that is retried automatically.
+
+### The working commit order — reconcile → format → commit (codified 2026-08-12)
+
+The order **reconcile → format → commit** is what `safe-doc-push.sh` / `quickmerge.sh` already do internally, and it is
+the recipe an agent should reach for by hand if working around a contended doc push
+(`pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, F3). The three links compose into a closed loop if
+taken in any other order:
+
+1. Behind origin → prettier's own drift guard declines to format (residue protection for a bare `git commit`, since a
+   formatted-then-blocked commit would leave reflow debris in the tree).
+2. Unformatted content gets committed anyway → the hygiene hook autofixes it on the way in.
+3. That autofix trips prek's `files were modified by this hook` → without the F2 fix this used to report a false
+   DETERMINISTIC failure and refuse to re-run — over a tree that was one retry away from succeeding.
+
+Reconciling FIRST (so the drift guard is satisfied before formatting runs) breaks link 1; formatting BEFORE committing
+means the hygiene hook has nothing left to autofix, which breaks link 3 even without the F2 fix. Both
+`safe-doc-push.sh`/`quickmerge.sh` now also set `DRIFT_GATE_ADVISORY=1` around their own commit call
+(`check-branch-drift.sh` WARNs instead of hard-blocking on drift, since the wrapper's post-commit rebase enforces the
+same invariant a few seconds later) and `prettier-autostage.sh` honours the same flag, so the sanctioned scripts do not
+need this sequence spelled out by hand — a bare, unwrapped `git commit` on a contended checkout still does.
+
+**The exit-5 caveat this recipe exists to prevent an agent from ignoring**: `safe-doc-push`'s exit-5 wording ("Exhausted
+N attempts … this is transient, not a defect. Re-run.") is safe ONLY because the script fingerprints your named files at
+entry and checks that fingerprint before printing it — if it does NOT match, the script instead exits **10** and names
+the recovering `git stash` ref (see "Exit codes worth recognising" above). An agent who sees the word "transient" and
+reflexively re-runs without first checking which exit code it actually was can re-ship whatever is on disk NOW, which
+may not be what they intended. Read the exit code, not just the word "transient".
 
 ### Verifying a change to any of this
 

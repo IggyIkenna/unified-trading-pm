@@ -27,7 +27,7 @@ authoritative_for:
   [QG host-concurrency governance, safe-doc-push.sh concurrency, commit-time Quickmerge provenance enforcement]
 referenced_by: []
 owner:
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-12
 code_refs:
   [
     scripts/quality-gates-base/qg-host-governor.sh,
@@ -132,6 +132,39 @@ contention test (two processes on the same repo, cap=1) caught this immediately 
 instead of queueing. Fixed by inlining the `exec`+`flock` pair directly in the caller's own shell (no
 command-substitution wrapper around the actual lock acquisition) — see `_qg_try_repo_token` / `_qg_try_global_token` in
 `qg-host-governor.sh`. **Any future addition to this file must keep flock acquisition out of a `$()` capture.**
+
+## 1b. PM is the fleet's single write hotspot — why the same gate livelocks in PM and not AO
+
+Measured 2026-08-10 (`plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, F1):
+
+| Quantity                                                 | Measured value                  | How                                                   |
+| -------------------------------------------------------- | ------------------------------- | ----------------------------------------------------- |
+| `run_hygiene_sweep.sh --precommit` on ONE staged file    | **118s** (loaded main checkout) | `time bash …/run_hygiene_sweep.sh --precommit <file>` |
+| Same, IDLE isolated worktree (no concurrent hook chains) | **18.6s**                       | per-check timestamp profiling, same day               |
+| `origin/live-defi-rollout` commits, preceding hour       | **60** (mean interval 60s)      | `git log --since='1 hour ago' --oneline origin/…`     |
+| unified-trading-pm commits / 24h                         | **1318**                        | `git log --since='24 hours ago' --oneline origin/…`   |
+| agent-orchestrator commits / 24h                         | **59** (22x fewer than PM)      | same                                                  |
+| market-tick-data-service commits / 24h                   | **152**                         | same                                                  |
+
+**Why PM and not AO.** It is not that AO is better engineered — the same scripts, the same hooks, and the same drift
+gate run in both repos. PM is the fleet's single write hotspot BY DESIGN: every agent working in every repo commits its
+plan-checkbox flips here (the Commit+Push+Flip HARD RULE, `/codex/12-agent-workflow/commit-push-flip-rule.md`), while a
+code repo is normally written by one agent at a time. AO's own repo sees a commit roughly every 24 minutes — comfortably
+longer than a hook run — so the hook chain never has to race a moving `origin` there. A fixed ~2-minute critical section
+is safe at one commit per 24 minutes and structurally unsafe at one per 60 seconds: the 118s figure above is not an
+intrinsic cost of the sweep (the idle-worktree 18.6s figure is), it is a **~6x contention inflation** from multiple
+concurrent hook chains competing for the same host's CPU while PM's commit rate keeps origin moving under all of them at
+once.
+
+**Structural consequence**: the problem gets monotonically worse as fleet concurrency grows on PM specifically, and no
+amount of per-run retry tuning fixes it — retries lengthen the critical section, which is the thing that has to shrink
+or move out of PM's contended path. Two mitigations landed against this: `check-branch-drift.sh`'s
+`DRIFT_GATE_ADVISORY=1` mode (a reconciling wrapper's own commit call WARNs on drift instead of hard-blocking, since the
+wrapper's post-commit rebase enforces the same invariant afterwards for seconds instead of 118s) and
+isolated-worktree-by-default in `safe-doc-push.sh` (each commit stages in a private throwaway worktree at `origin/HEAD`,
+so the drift gate starts satisfied and prek's stash save/restore cycle never collides with a peer's foreign WIP). Both
+are detailed in `plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`; do not
+re-derive throughput limits assuming AO's commit-rate profile applies to PM.
 
 ## 2. `safe-doc-push.sh`'s own concurrency budget
 
