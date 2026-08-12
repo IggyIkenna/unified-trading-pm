@@ -145,20 +145,19 @@ immediate-backtest subset; the Phase 9 expansions are catalogued in the UAC enum
 > `carry-recursive-borrow-perp-hedged.md`, renamed to `CARRY_BASIS_PERP_INV` on 2026-05-18), so a doc can exist with no
 > live archetype behind it. Reconcile by mapping enum member → expected slug, not by comparing totals.
 
-### Archetypes with no doc — a live gap, not a claim of completeness
+### Archetypes with no doc — gap closed 2026-08-12
 
-This README previously asserted "all archetypes documented". **That was false.** As of 2026-08-12,
-`CARRY_FUNDING_DISPERSION` was implemented, factory-registered and given a target universe with **no doc at all** — now
-written up at [`carry-funding-dispersion.md`](archetypes/carry-funding-dispersion.md). Two remain undocumented and are
-tracked in
-[the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md):
+This README previously asserted "all archetypes documented"; that claim was false and is no longer made. The last three
+enum members without an `archetypes/*.md` doc were each written up from their engine source:
 
-| Archetype                   | Codex presence                                      |
-| --------------------------- | --------------------------------------------------- |
-| `TSMOM_BTC_CTA`             | mentioned only in `category-instrument-coverage.md` |
-| `ARBITRAGE_SPORTS_DUTCHING` | **zero** mentions anywhere in codex                 |
+| Archetype                   | Doc                                                                       |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `CARRY_FUNDING_DISPERSION`  | [`carry-funding-dispersion.md`](archetypes/carry-funding-dispersion.md)   |
+| `TSMOM_BTC_CTA`             | [`tsmom-btc-cta.md`](archetypes/tsmom-btc-cta.md)                         |
+| `ARBITRAGE_SPORTS_DUTCHING` | [`arbitrage-sports-dutching.md`](archetypes/arbitrage-sports-dutching.md) |
 
-Do not restore an "all archetypes documented" claim without re-running the enum→slug reconciliation above.
+Every `StrategyArchetype` enum value now has a doc. Do not restore an "all archetypes documented" claim without
+re-running the enum→slug reconciliation above.
 
 **Rule:** archetype IDs use structural descriptors (continuous vs event*settled, fixed vs cross_sectional, sub-variant
 qualifiers like `_PASSIVE_SPREAD` / `_RV_IV` / `\_MEV*\*`), never category prefixes.
