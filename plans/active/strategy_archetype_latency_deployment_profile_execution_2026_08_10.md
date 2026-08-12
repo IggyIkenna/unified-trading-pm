@@ -115,15 +115,31 @@ source: >-
       full `bash scripts/quality-gates.sh` on current HEAD (`52936f60`, fresh-pulled) to confirm genuinely green today:
       `✅ ALL QUALITY GATES PASSED (307s)`, sentinel `.qg_last_passed_sha=52936f608b68cbf114f62e2272e12289773c7c72`. No
       code shipped this todo — coverage already existed; this flip corrects the tracked-vs-actual gap.
-- [ ] [DOC] P1. **ADDED 2026-08-12 (/plan-reconcile) — genuine coverage gap, no tracked remediation existed until now.**
-      Fix `/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md` §6's row set (7 inconsistent rows + ~37
-      missing rows) and the stale `archetypes/*.md` runtime frontmatter (5 stale values + 5 invalid `min_sla_tier` enum
-      values — these raise on `SLATier()` cast at runtime, a live correctness risk, not just a doc gap). Per
-      `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`'s own binding decision artifact (todo 10),
-      which commits this execution plan to fixing exactly this scope but whose actual todo list never carried it. Done
-      when: §6 has 0 inconsistent/missing rows against the live archetype registry, and every `archetypes/*.md`
-      frontmatter's `min_sla_tier` is a valid enum value. Repo: unified-trading-pm (codex) + strategy-service (archetype
-      frontmatter).
+- [x] ✅ [DOC] P1. **DONE 2026-08-12 (slot 18, backend_engineer) — unified-trading-pm@<SHA>.** Rebuilt
+      `/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md` §6 from a 10-row family-label table to a
+      60-row table keyed by the actual `StrategyArchetype` enum values, each row derived from
+      `ARCHETYPE_TO_DEPLOYMENT_PROFILE` (34 `co_located_vm`→premium/co-located/strategy-isolated; 26
+      `distributed`→standard/shared-OK). Fixed the stale `archetypes/*.md` runtime frontmatter — the 5 enumerated stale
+      values (`CARRY_BASIS_PERP`, `RULES_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_CONTINUOUS`, `STAT_ARB_PAIRS_FIXED`,
+      `ARBITRAGE_PRICE_DISPERSION`) + 5 invalid `min_sla_tier` enum values (`high` ×4 MEV + `ultra-premium` ×1
+      queue-microstructure) → all `premium`/co-located. Also corrected a further 14 stale `Low`→`co_located_vm` docs the
+      decision artifact's "5 stale" count had under-enumerated (binding contract item 1 requires EVERY
+      `Low`→`co_located_vm` archetype to declare `premium` + `co_location: [execution, strategy]`), and added the
+      missing `topology_requirements` block to `carry-funding-dispersion.md`. 25 archetype docs edited total; 0
+      invalid/missing `min_sla_tier` values remain across the active registry.
+- [ ] [DOC] P2. **Residual gaps surfaced while fixing §6 + archetype frontmatter (not in the decision artifact's
+      enumerated scope).** (1) Two enum archetypes have NO `archetypes/*.md` doc at all — `TSMOM_BTC_CTA` and
+      `ARBITRAGE_SPORTS_DUTCHING` — so `topology_enforcement.load_topology_requirements()` raises `FileNotFoundError` if
+      either is ever activated (boot-gate risk). (2) `runtime-topology.yaml` `isolation_policies.strategy-service`
+      `default: shared` — but the (now-correct) `co_located_vm` archetype docs declare `strategy-service: isolated`, so
+      `_check_isolation()` would raise "topology declares default=shared" on boot; the decision artifact's item 6
+      commits the execution plan to wire a per-archetype strategy isolation section into runtime-topology.yaml but no
+      todo here carries it (affects MM too — pre-existing). (3) VOL edge-case docs (`vol-market-making`,
+      `vol-0dte-gamma-scalping`, `vol-0dte-pin-risk`) declare `premium` while the mapping says `distributed` — the
+      decision artifact defers the first two to "keep distributed unless evidence is decisive"; needs an operator
+      ruling. (4) `portfolio-*` + single-sided `yield-*` docs declare `basic` while the decision artifact's §6 says
+      `standard` (arguably `basic` is correct for non-executing allocation/staking). Repo: unified-trading-pm (codex +
+      configs/runtime-topology.yaml).
 - [ ] [DATA] P2. **Cross-check against the SLA-tier gap the audit plan may have flagged** (any archetype family whose
       real latency requirement exceeds even the `premium` tier's 40ms budget) — if the audit found such a gap, this
       plan's derivation logic must surface it as an explicit warning/exception rather than silently under- provisioning;
