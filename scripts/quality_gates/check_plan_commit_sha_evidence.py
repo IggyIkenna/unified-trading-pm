@@ -457,9 +457,23 @@ def main() -> int:
     # to self-citations: PM does not control when a sibling repo pushes.
     self_repo_name = _pm_root_or_legacy(workspace_root).name
 
+    # --only mode reports violations from ONLY the staged paths (below), so verifying every
+    # OTHER citation in the corpus is wasted work on the precommit-hot path — computed here,
+    # before the verification loop, so that loop can skip them outright. Measured 2026-08-12:
+    # the self-citation reachability check (`require_reachable`, todo 5 above) adds a
+    # `git branch -r --contains` + `git merge-base --is-ancestor` per DISTINCT self-citation
+    # sha, and this repo's own corpus has hundreds of them — 57s of the ~85s precommit sweep,
+    # up from single digits before that check existed. Baseline mode (`only is None`) is
+    # unaffected: it needs the full-corpus verification for its ratchet count, byte-identical
+    # to before this optimisation.
+    only = cast("list[str] | None", ns.only)
+    only_resolved = {Path(o).resolve() for o in only} if only is not None else None
+
     sha_cache: dict[tuple[str, str], bool] = {}
     violations: list[ShaViolation] = []
     for c in citations:
+        if only_resolved is not None and c.path.resolve() not in only_resolved:
+            continue
         repo_path = repos.get(c.repo)
         if repo_path is None:
             continue  # not a present sibling clone — can't verify from here, soft-skip
@@ -469,12 +483,9 @@ def main() -> int:
         if not sha_cache[key]:
             violations.append(ShaViolation(citation=c))
 
-    only = cast("list[str] | None", ns.only)
     if only is not None:
         # See check_plan_operator_ruling_evidence.py's --only comment: precommit scoping so a
         # fabricated/unresolvable SHA fails for its author, not for the next agent to ship.
-        only_resolved = {Path(o).resolve() for o in only}
-        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
         if not violations:
             print("✅ plan-commit-sha-evidence (--only): clean.")
             return 0

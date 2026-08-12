@@ -117,3 +117,101 @@ class TestResolvesToCommitRequireReachable:
         fake_sha = "0123456789abcdef0123456789abcdef01234567"
         assert checker._resolves_to_commit(repo, fake_sha, require_reachable=False) is False
         assert checker._resolves_to_commit(repo, fake_sha, require_reachable=True) is False
+
+
+class TestOnlyModeSkipsUnstagedVerification:
+    """Performance regression test (2026-08-12,
+    pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md todo B).
+
+    THE REGRESSION: adding `require_reachable` (this file's own earlier fix) made every
+    self-citation's verification pay two extra git subprocess calls. `main()` used to verify
+    every citation in the WHOLE CORPUS regardless of `--only` (only filtering which VIOLATIONS
+    get reported), so on this repo's own corpus (hundreds of self-citations) that took the
+    `--only` precommit path from single digits to 57s of a ~85s sweep -- self-inflicted, and
+    exactly the class of cost todo B asks to move out of the per-commit path. Fix: `--only`
+    mode now skips verification entirely for citations outside the staged paths, since their
+    violation status can never be reported anyway. Baseline mode (`only=None`) is unaffected.
+    """
+
+    @pytest.fixture
+    def workspace(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
+        ws = tmp_path / "workspace"
+        pm_repo = ws / "pm_repo"
+        (pm_repo / "plans" / "active" / "issues").mkdir(parents=True)
+        _git(pm_repo, "init", "-q")
+        _git(pm_repo, "config", "user.email", "t@t")
+        _git(pm_repo, "config", "user.name", "t")
+        sha = _commit(pm_repo, "README.md", "seed\n", "seed")
+
+        staged = pm_repo / "plans" / "active" / "staged.md"
+        staged.write_text(f"- [x] [DOCS] P2. done. — pm_repo@{sha}\n", encoding="utf-8")
+        other = pm_repo / "plans" / "active" / "issues" / "other.md"
+        other.write_text(f"- [x] [DOCS] P2. also done. — pm_repo@{sha}\n", encoding="utf-8")
+        _git(pm_repo, "add", "-A")
+        _git(pm_repo, "commit", "-q", "-m", "add plans")
+
+        monkeypatch.setattr(checker, "_pm_root_or_legacy", lambda _workspace_root: pm_repo)
+        return ws, pm_repo
+
+    def test_only_mode_never_calls_resolves_to_commit_for_unstaged_citations(
+        self, workspace: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        ws, pm_repo = workspace
+        staged_path = pm_repo / "plans" / "active" / "staged.md"
+        other_path = pm_repo / "plans" / "active" / "issues" / "other.md"
+
+        # Both files start out citing the SAME sha (from the fixture), which would make a
+        # call-count assertion ambiguous -- give other.md a DIFFERENT, distinguishable sha so
+        # its citation is separately identifiable in the recorded calls.
+        other_sha = _commit(pm_repo, "other_file.txt", "x\n", "second commit")
+        other_path.write_text(f"- [x] [DOCS] P2. also done. — pm_repo@{other_sha}\n", encoding="utf-8")
+        _git(pm_repo, "add", "-A")
+        _git(pm_repo, "commit", "-q", "-m", "update other.md")
+
+        calls: list[str] = []
+        orig = checker._resolves_to_commit
+
+        def _counting(repo_path: Path, sha: str, *, require_reachable: bool = False) -> bool:
+            calls.append(sha)
+            return orig(repo_path, sha, require_reachable=require_reachable)
+
+        monkeypatch.setattr(checker, "_resolves_to_commit", _counting)
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "check_plan_commit_sha_evidence.py",
+                "--workspace-root",
+                str(ws),
+                "--only",
+                str(staged_path),
+            ],
+        )
+        rc = checker.main()
+        out = capsys.readouterr().out
+        assert rc == 0
+        assert "clean" in out
+        # other.md's (unstaged) citation must never have been verified.
+        assert other_sha not in calls
+
+    def test_baseline_mode_still_verifies_every_citation(
+        self, workspace: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        ws, pm_repo = workspace
+        other_path = pm_repo / "plans" / "active" / "issues" / "other.md"
+        other_sha = _commit(pm_repo, "other_file2.txt", "y\n", "third commit")
+        other_path.write_text(f"- [x] [DOCS] P2. also done. — pm_repo@{other_sha}\n", encoding="utf-8")
+        _git(pm_repo, "add", "-A")
+        _git(pm_repo, "commit", "-q", "-m", "update other.md again")
+
+        calls: list[str] = []
+        orig = checker._resolves_to_commit
+
+        def _counting(repo_path: Path, sha: str, *, require_reachable: bool = False) -> bool:
+            calls.append(sha)
+            return orig(repo_path, sha, require_reachable=require_reachable)
+
+        monkeypatch.setattr(checker, "_resolves_to_commit", _counting)
+        monkeypatch.setattr(sys, "argv", ["check_plan_commit_sha_evidence.py", "--workspace-root", str(ws)])
+        checker.main()
+        assert other_sha in calls
