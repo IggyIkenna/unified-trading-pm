@@ -499,7 +499,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
   bucket (`IS_TEST_RUN=true` +
   `--operation collect-oracle-prices --mode batch --asset-group defi --start-date <D> --end-date <D> --force`, D after
   2023-08-17) and confirm `COMPOUND_V3-ETHEREUM/oracle_prices` `captured` rows; (3) flip todo line 522
-  `WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM` with `<repo>@<sha>` + evidence + `docs(plans):` commit.
+  `WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM` with `<repo>@<sha>` + evidence + `docs(plans):` commit. **Also
+  fixed**: the QG's TESTS phase then failed one PRE-EXISTING AAVE test (`test_batch_run_still_collects_aave`) because it
+  patched the OLD handler-namespace imports `oracle_prices_handler.collect_compound_branch` / `emit_compound_manifest` —
+  both removed when the wrapper moved into the module. Patched `oracle_prices_handler.collect_compound_oracle_rows`
+  (return `[]`) and dropped the emit patch (internal to the mocked fn). Lesson: tests that isolate one oracle branch by
+  mocking sibling branches patch whatever names the handler module actually imports — an import-consolidation refactor
+  breaks them; check every `patch(...)` target.
 
 ## Follow-ups
 
