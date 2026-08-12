@@ -337,8 +337,9 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       to "author a dedicated migration plan" (judgment call, not bounded AO work)
 - [ ] [DOC] P3. (codex-drift) plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md — codex SSOT
       lists `features-onchain` as a DAG producer, live Terraform service map lacks that key
-- [ ] [REVIEW] P3. (ao-readiness) plans/active/issues/lighter_tardis_writerless_route_hang_2026_07_28.md — AO-dispatched
-      but explicitly needs a human design decision among 3 options
+- [ ] [REVIEW] P3. (ao-readiness) plans/archive/issues/lighter_tardis_writerless_route_hang_2026_07_28.md —
+      AO-dispatched but explicitly needs a human design decision among 3 options (now RESOLVED 2026-08-12 — operator
+      ruling picked option 2, implemented @unified-trading-library@b3afeb8c4; doc archived)
 - [ ] [DOC] P3. (codex-drift) plans/active/issues/claude_settings_symlink_writeback_drops_hooks_2026_08_11.md — already
       self-tracked
 - [ ] [REVIEW] P3. (ao-readiness)

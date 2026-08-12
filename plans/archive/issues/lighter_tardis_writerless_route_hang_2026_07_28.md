@@ -8,7 +8,7 @@ summary:
   in-flight registry. Reproduced 3/3 times across trades/book_snapshot_5/derivative_ticker. Not a defect in the
   Tardis-slug/market_id fix itself (real rows download correctly in every case) — this is a separate robustness gap in
   the post-download validation/in-flight-registry path when no real ChunkWriter or setup_events() call is present."
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -45,19 +45,13 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.5
-last_updated: 2026-07-28
+last_updated: 2026-08-12
 supersedes:
 superseded_by:
 depends_on:
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
-# archive_exempt: true (temporary bridge, flip-then-mv pattern) — this doc's last open
-# todo is its own archival trigger; exemption set in the SAME commit as the flip so the
-# cross-repo /done M3 flip check passes at the active path, then dropped when git mv'd
-# to plans/archive/issues/ in the IMMEDIATELY FOLLOWING commit (check_archive_candidates.sh
-# --only flip-then-mv exemption, 2026-08-09). See Progress Log 2026-08-12.
-archive_exempt: true
 ---
 
 ## What I found
@@ -198,6 +192,9 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
   (default `_GCS_UPLOAD_TIMEOUT_SECONDS = 600.0`, matching the GCS SDK's per-attempt/retry deadline so healthy uploads
   are unaffected; `None` opts out). Shipped **unified-trading-library@b3afeb8c4** (QG green 158s incl. 2 new unit tests;
   quickmerge-verified on origin/live-defi-rollout).
+- **ARCHIVED 2026-08-12 (slot-7, flip-then-mv)**: all todos now resolved (DIAG root-caused 2026-08-05; P2 implemented +
+  P3 ruling implemented @unified-trading-library@b3afeb8c4) — git mv'd to `plans/archive/issues/` per the
+  check_archive_candidates hook. The `archive_exempt: true` bridge set in the flip commit was dropped in this mv commit.
 
 ## Follow-ups
 
