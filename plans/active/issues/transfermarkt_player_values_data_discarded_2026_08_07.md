@@ -307,6 +307,38 @@ possibly a rename that ripples into UAC/manifest data_type naming.
 
 ## Progress Log
 
+- **2026-08-12 (interactive session, continued): backfill VM launch — two integration bugs caught + fixed on real
+  smoke-test attempts (not just unit tests), then a real VM launched and confirmed making genuine progress.** After
+  shipping Task 1 (transfer_records fetch) and the Task 2 backfill script + VM launcher, a `--dry-run` launch looked
+  correct but the first REAL launch attempt (`--limit-events 3` smoke test) failed at `gcloud compute instances create`
+  with a metadata dict-arg parse error — the launcher's default `--entities PLAYER_VALUES,TRANSFER_RECORDS` embeds a
+  literal comma inside one `--metadata=key=val,key=val` value, which gcloud can't disambiguate from its own key-value
+  delimiter. Fixed by accepting `+` as an alternate separator in the backfill script's `--entities` parser and switching
+  the launcher's default to `+`-joined; shipped `instruments-service@f0f76e12f2` + `deployment-service@9ba048f45a` (both
+  full `quality-gates.sh` green), re-ran `create-code-tarballs.sh --asset-group SPORTS` to pick up the fix, retried the
+  smoke test — this time it launched for real (`instr-backfill-sports-transfermarkt-20260812-142238`, RUNNING).
+  **Genuinely verified progress (not just "VM alive")**: the GCS `run.log` (read via
+  `get_storage_client().download_bytes()`, never a `gsutil` subprocess per this workspace's hard rule) shows the
+  PLAYER_VALUES leg (limited to 3 events for the smoke test) completed cleanly —
+  `PLAYER_VALUES PASS COMPLETE: {'ok': 3, 'raised': 0}`, with real manifest/master-table writes
+  (`master/player_values: 5784 rows`, per-VM manifest shard updated) — and the TRANSFER_RECORDS leg then started its
+  current-squads pass across all 33 Prediction-tier leagues (note: `--limit-events` only bounds the PLAYER_VALUES
+  historical-event loop, not the TRANSFER_RECORDS current-squads sweep, so this "smoke test" VM is actually running the
+  FULL real TRANSFER_RECORDS backfill, not a bounded sample — upgraded in place from smoke-test to the real Task 2
+  TRANSFER_RECORDS deliverable rather than launching a second redundant VM). Hitting the documented RapidAPI 502
+  flakiness on the first few clubs (exponential backoff, expected, not a bug). A background watchdog (25-min stall
+  detection on the count of successful `RapidAPI: fetched N clubs for league` lines — a real per-league TARGET-artifact
+  progress metric, not process-liveness) is monitoring this VM to a genuine terminal state; the separate full
+  PLAYER_VALUES historical backfill (1,041 events, not yet launched — this VM only ran 3 as a smoke sample) is queued to
+  launch once this VM completes (the launcher's own singleton-lock intentionally blocks a concurrent second launch
+  against the same RapidAPI key while one is active).
+- **Security finding, caught + corrected mid-session**: the live-verify script (see the entry below) had the RapidAPI
+  key resolved to a literal string and embedded directly in a `python -c "..."` command argument — visible in `ps aux`
+  for any other process/session on the shared host for the run's duration. A real credential-handling violation of this
+  workspace's "secrets from Secret Manager at runtime, never a resolved literal" rule (the SHIPPED adapter code itself
+  does this correctly via `get_secret_client().get_secret(...)`; only this session's own ad-hoc verification script
+  leaked it — not killed since it was playground-only/near-complete, but noting explicitly so a future session watches
+  for this class of mistake on ad-hoc verification one-liners specifically, not just shipped code).
 - **2026-08-12 (interactive session, continued): live-verified `get_transfer_records()` against real prod data
   (playground-only, no GCS/manifest write) for 2 leagues — EPL (GB1) and K_LEAGUE_1 (RSK1), each trimmed to 2 squads x 3
   players to keep the check bounded/cheap.** Real results: GB1/David Raya — 5 career transfer events including
