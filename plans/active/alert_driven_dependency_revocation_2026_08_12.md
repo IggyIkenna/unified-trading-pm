@@ -199,7 +199,7 @@ bridges them; it does not extend one over the other.
 - [x] 5. ✅ [TEST] P0. Test: the drain registry chains a pre-existing SIGTERM handler instead of clobbering it,
       mirroring `_preemption_signal`'s existing contract. Repo: unified-trading-library. —
       unified-trading-library@d50ca9ff65 (`test_signal_handler_chains_instead_of_clobbering`,
-      `test_signal_handler_never_raises_even_when_a_buffer_explodes`)
+      `test_signal_handler_never_raises_even_when_a_buffer_explodes`) <<<<<<< Updated upstream
 - [x] 9. ✅ [CODE] P1. Wire the drain registry into the backfill entrypoints that currently install no SIGTERM handler
       at all — MTDS, MDPS, instruments-service and features-service backfill CLIs. Repos: market-tick-data-service,
       market-data-processing-service, instruments-service, features-service. — **THE PREMISE WAS BACKWARDS, the real
@@ -220,8 +220,18 @@ bridges them; it does not extend one over the other.
       `GracefulShutdownHandler._handle_signal` calls `drain_all()` before its cleanup callback, so a failing callback
       cannot pre-empt the drain. Four new tests, plus the autouse isolation fixture the file lacked (these tests install
       REAL signal handlers — without it a test could leave pytest itself exiting on SIGTERM).
-- [ ] [DOC] P1. Document the flush contract in `/codex/05-infrastructure/spot-vms-for-backfill.md` — what "exit
-      gracefully" obliges a script to do, and that registering a buffer is mandatory for any new writer.
+- [x] 10. ✅ [DOC] P1. Document the flush contract in `/codex/05-infrastructure/spot-vms-for-backfill.md` — what "exit
+      gracefully" obliges a script to do, and that registering a buffer is mandatory for any new writer. — new section
+      "The graceful-flush contract" placed directly before § Coverage, carrying: the mandatory registration snippet
+      (register at construction, deregister in EVERY terminal path); why drain ORDER is a correctness property
+      (`MANIFEST = 90` is deliberately last — draining it first fabricates `captured` for un-uploaded parquet,
+      DP-MANIFEST-003); why neither atexit NOR the signal handler alone suffices, with all three measured failure modes
+      (SIGKILL skips atexit · SIGTERM does not unwind a `with` · signal installation is last-writer-wins, the
+      `GracefulShutdownHandler` clobber found the same day); the drained-partial-shard-is-not-captured rule; and the
+      `loop.add_signal_handler` caveat for async services. Cites the fix at unified-trading-library@2aacde1359 and the
+      contract tests.
+
+> > > > > > > Stashed changes
 
 ## Phase 2 — The policy evaluator (one SSOT, no forked policy)
 
@@ -380,6 +390,70 @@ shows `_source_priority_data.py` and `registry/market_data_categories.py` clean 
 green tree.
 
 ## Progress Log
+
+### 2026-08-13 (later) — Phases 3, 4 and 5 written; one Phase-5 piece shipped
+
+Continued writing while the UAC/PM ship path was blocked, per the operator's instruction that a block on shipping is not
+a block on building. Everything below is complete and gate-verified to the limit each repo allows.
+
+**Phase 3 — retry budgets (UAC, blocked with Phase 2).** `canonical/crosscutting/retry_budgets.py`: `RetryBudget`,
+`RETRY_BUDGETS` keyed `(data_type, source)` mirroring `VENUE_HEARTBEAT_THRESHOLDS`,
+`DEFAULT_RETRY_BUDGET_BY_ERROR_ACTION` (total over `ErrorAction`, validated at import), and `resolve_retry_budget()`
+falling through four levels so an unknown pair inherits rather than raising. Seeded as a faithful transcription of the
+ladder that was previously PROSE only in `autonomous-recovery-matrix.md` — measured: `[300, 600, 1200, 2400, 3600]`, 3
+attempts. Two budgets are degenerate ON PURPOSE and are correctness, not tuning: `missing_credential` gets
+`max_attempts=0` (retrying a key that does not exist burns auth quota) and Tardis gets `1` (it is hard-capped at one
+concurrent VM per cloud because concurrency storms its API — a retry ladder is that storm serialised). 16 tests. UAC
+gate: same 6 peer failures, 12752 passed (+16 = exactly this file).
+
+**Phase 4 — the push actuator (deployment-service).** `data_pipeline_monitors/revocation_actuator.py` consults
+`evaluate_revocation()` and delivers; it carries NO policy branch, and
+`test_actuator_verdict_matches_the_evaluator_for_every_alert` iterates all 142 identities to prove it. Delivery is by
+GCS MARKER (`vm-logs/{target}/DRAIN_REQUESTED.json` / `vm-census/admission-hold/{target}.json`), never an API call
+against the fleet — which is what lets it ship without touching a launcher. Budget is `ShardedState`-backed and
+day-partitioned, with a test that a FRESH instance still sees prior actuations: the exact regression that made
+`_MAX_RELAUNCHES_PER_DAY` a documented cap which never engaged on Cloud Run.
+
+**Phase 5 — the observing side.** `revocation_gate.py`: `drain_requested()` for a VM's heartbeat poll,
+`admission_blocked()` for launcher preflight and Cloud Run entrypoints, and `drain_and_exit()` which calls `drain_all()`
+BEFORE exiting — observing a marker and merely stopping would discard the buffers this whole design protects. Failure
+direction is deliberately asymmetric (a GCS read failure resolves to "not blocked"), because failing the other way lets
+one unreachable bucket halt every backfill in the estate.
+
+**Shipped: unified-trading-library@36714bfe97** — the drain registry is now exported from the UTL top-level namespace.
+Forced by deployment-service's import-pattern gate rejecting a deep import, but correct on its own terms: Phase 1e's
+codex section makes drain registration MANDATORY fleet-wide, and a contract every consumer must honour should not
+require a deep import.
+
+**Three things worth not re-learning.**
+
+1. `deployment-service`'s UAC is an EDITABLE install pointing at the local checkout, so Phase 4/5 gate green locally
+   against uncommitted Phase-2 code. That is a trap, not a convenience: shipping Phase 4 before Phase 2 lands would put
+   an import of `evaluate_revocation` on LDR against a UAC that does not export it, breaking CI for everyone. Ship order
+   is Phase 2 → Phase 3 → Phase 4/5, always.
+2. `deployment-service`'s gate is RED on a clean tree, independently of this plan — STEP 5.101 counts 96
+   empty-string-fallback sites against a baseline of 91 (the named sites are in `escalation.py` / `escalation_dedup.py`)
+   and the prod-project-ID check flags `tests/unit/test_vm_launcher_scripts.py`. None of those files are touched here.
+   Earlier gate runs never reached these steps because typecheck failed first, which is why they only surfaced late.
+3. `test_vm_launcher_scripts.py::TestChunkLoopPartialPayloadLossGating[mtds]` failed once with `returncode=-13` (SIGPIPE
+   on a spawned bash heredoc, empty stdout AND stderr) and passed on the immediate re-run. Resource artifact under
+   concurrent gate load — diagnose the signal before assuming a real failure.
+
+**Preserved as git blobs** (recover with `git cat-file -p <sha> > <path>`):
+
+| Blob SHA                                   | Repo               | Path                                                                                          |
+| ------------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------- |
+| `f7fc6d21d7b6ecab0f6ca8f4103f43ba3e5e7b01` | UAC                | `unified_api_contracts/canonical/crosscutting/retry_budgets.py`                               |
+| `c5f0e3fe4a91b3502f9b6267149403002cf7c257` | UAC                | `tests/internal/unit/test_retry_budgets.py`                                                   |
+| `1255fc1dd52c8ff18473347e8267472192918607` | UAC                | `unified_api_contracts/canonical/crosscutting/__init__.py`                                    |
+| `4db14c85c35cc20971d6c69f434be14fee6b4ee9` | UAC                | `unified_api_contracts/__init__.py`                                                           |
+| `7e2ca510f34ae6bb2d1433503f2c80d39f5cbd3f` | deployment-service | `deployment_service/data_pipeline_monitors/revocation_actuator.py`                            |
+| `c4220860ead241fd43edd7196d95d924ae1a35a2` | deployment-service | `deployment_service/data_pipeline_monitors/revocation_gate.py`                                |
+| `4a3003af27a757fe9eba501296afd979eeb1141d` | deployment-service | `tests/unit/test_revocation_actuator.py`                                                      |
+| `e8723986118f710ff5d8338a1a323771cbc53281` | deployment-service | `tests/unit/test_revocation_gate.py`                                                          |
+| `b2708a9015103d1e3a556f0b69a21c1332d636fe` | deployment-service | `scripts/recovery/_durable_state.py` (adds a public `state_bucket` / renames `_ShardedState`) |
+| `69bbfca7ce241097d830cbce971064a8acf6408e` | deployment-service | `scripts/recovery/relaunch_backfill_vm.py` (rename follow-through)                            |
+| `54cff03365ba7bec08b31673e6c8e0e0a5e9d3df` | deployment-service | `tests/unit/test_dp_recovery_actuators.py` (rename follow-through)                            |
 
 ### 2026-08-13 — Phase 2 written and gate-proven; ship BLOCKED by a live peer's red tree
 
