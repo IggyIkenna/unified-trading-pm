@@ -82,8 +82,9 @@ fault:
 
 - [ ] [BACKEND] P2. **Convert codex_doc_freshness from a hard ship blocker to a warn-with-digest.** IMPLEMENTED +
       VERIFIED 2026-08-12, **NOT SHIPPED — BLOCKED** on
-      `/plans/active/issues/cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, which fails PM
-      `quality-gates.sh` and so denies `quickmerge` its sentinel for ALL PM code. The change is complete in slot 4's
+      `/plans/archive/issues/cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md` (SUPERSEDED
+      2026-08-12 by `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), which fails
+      PM `quality-gates.sh` and so denies `quickmerge` its sentinel for ALL PM code. The change is complete in slot 4's
       working tree (`scripts/quality_gates/check_codex_doc_freshness.py`, its test file, `scripts/quality-gates.sh`); it
       stays `- [ ]` deliberately because there is no SHA to cite and a ticked box with no SHA is false progress.
       Implementation — `partition_by_agency()` splits violations by cause: `stale` (the clock moved) is advisory and

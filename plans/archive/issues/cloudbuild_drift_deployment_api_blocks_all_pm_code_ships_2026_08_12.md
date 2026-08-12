@@ -10,7 +10,7 @@ summary: >-
   skip`, which is the tell that they were AUTHORED FOR THE SHARED TEMPLATE and landed in the consumer by mistake — a
   per-repo file that only ever runs for one service does not need a service-name guard. So the correct fix is
   forward-porting, NOT re-baselining.
-status: open
+status: superseded
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,11 +34,11 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: devops_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: deployment-api@b928d173b5
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12
 source: >-
   Hit 2026-08-12 while trying to ship the codex-doc-freshness warn-with-digest change. Blocked two separate ship
   attempts on two different days with no content overlap between them.
@@ -52,6 +52,24 @@ context_scope:
 ---
 
 # deployment-api cloudbuild drift blocks every PM code ship
+
+> **⚠️ SUPERSEDED 2026-08-12 — do not action the todos below.** This is one of THREE issue docs filed the same day for
+> the same incident (`deployment-api@4c31b72`, drift `19 > 16`). SSOT is
+> `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`; the incident was resolved by
+> `deployment-api@b928d173b5`.
+>
+> **Your central argument was half-right, and the SSOT records both halves.** You argued the `_SERVICE_NAME` guard
+> proves these steps were authored for the shared template, so the fix is forward-porting and NOT `--update-baseline`.
+> That is correct about INTENT. It is not achievable for `verify-auth-contract`, which needs `waitFor: ["deploy"]` and
+> `deploy` is per-repo-only content absent from the template — so a template-native version would race the deploy it
+> exists to verify. Authored for the template, not expressible in it; hence the revert. Your `[DEVOPS] P1` is closed by
+> that revert, and your `[SCRIPT] P2` (stale SSOT pointer) shipped in `unified-trading-pm@2b4bee96d3`.
+>
+> **Two corrections.** (1) `vendor-deps` was never new — it is pre-existing intentional drift named in the baseline
+> file's own header, and it showed up in the failure output only because that output is a positional slice, not a real
+> diff. The two-step table below overstates the incident by one step. (2) Still-live and carried forward to the SSOT:
+> the `_RUN_INIMAGE_QG` template/consumer divergence, and "make a foreign post-gate failure legible at the point of
+> blocking".
 
 ## Impact — this is not a deployment-api problem, it is a fleet ship-blocker
 

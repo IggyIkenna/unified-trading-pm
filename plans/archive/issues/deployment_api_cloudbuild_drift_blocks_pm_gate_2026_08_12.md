@@ -9,7 +9,7 @@ summary: >-
   a clean tree, not anyone's WIP. Worked around once on 2026-08-12 via the documented GATE-INFRA carve-out
   (unified-trading-pm@f9dbc8a31f); the carve-out only covers scripts/quality_gates and scripts/quality-gates-base, so
   ordinary PM changes remain blocked until this is drained.
-status: open
+status: superseded
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -25,7 +25,7 @@ related:
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -39,11 +39,23 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
-resolved_by:
+superseded_by: cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12
+resolved_by: deployment-api@b928d173b5
 depends_on:
 source: found 2026-08-11 while shipping the DeepSeek wallet sampler — the repo's own test suite could not run
 ---
+
+> **⚠️ SUPERSEDED 2026-08-12 — do not action the todos below.** This is one of THREE issue docs filed the same day for
+> the same incident (`deployment-api@4c31b72`, drift `19 > 16`). SSOT is
+> `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`; the incident was resolved by
+> `deployment-api@b928d173b5` (reverted, not forward-ported). This doc's still-live content was carried across, not
+> dropped: the `tail`-hides-the-failure measurement trap, and the `[INFRA] P2` "make the failure name its blast radius"
+> todo. Its `[OPERATOR] P1` is resolved by the revert.
+>
+> **One correction before you read on**: this doc treats the failure as spanning `vendor-deps` as well as
+> `verify-auth-contract`. It does not — `vendor-deps` is pre-existing intentional drift named in the baseline file's own
+> header, and it appeared in the failure output only because that output is a positional slice rather than a real diff.
+> Discount the `vendor-deps` attribution.
 
 ## What is broken
 

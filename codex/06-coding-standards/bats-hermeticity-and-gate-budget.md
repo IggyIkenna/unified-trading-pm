@@ -8,7 +8,7 @@ summary: >-
   host-wide production lock taken by tests, cwd-relative script paths, and one over-specified assertion. None were
   caused by parallelism; it revealed they were never isolated. Includes the rule that a suite must pass N consecutive
   parallel runs before its gate may be hard-failed.
-authoritative_for: [bats-hermeticity, bats-parallelism, qg-duration-budget]
+authoritative_for: [bats-hermeticity, bats-parallelism, qg-duration-budget, inter-run-shared-state]
 status: current
 nature: guideline
 asset_group: [cross-cutting]
@@ -19,9 +19,9 @@ tags: [bats, quality-gates, parallelism, flaky-tests, cpu-budget]
 related:
   [/codex/06-coding-standards/quality-gates.md, /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md]
 created: 2026-08-10
-last_updated: "2026-08-10"
+last_updated: "2026-08-12"
 owner: infrastructure
-last_reviewed: "2026-08-10"
+last_reviewed: "2026-08-12"
 code_refs: [unified-trading-pm/tests, unified-trading-pm/scripts/quality-gates-base/base-service.sh]
 referenced_by: []
 ---
@@ -75,6 +75,43 @@ Serial execution hides shared state, because there is never a second claimant.
 **Do NOT** fix these by sharing one fixture across tests in a file. It is cheaper and reintroduces exactly this class.
 Build the fixture per test; if that is expensive, build a template once in `setup_file()` and `cp -R` it per test — one
 process instead of ten, isolation intact.
+
+## An eighth defect, structurally invisible to that sweep: shared state across RUNS, not across tests
+
+The seven above were exposed by `bats -j` — parallelism **within** one run. A defect whose second claimant is a
+_different invocation of the whole suite_ cannot be found that way, no matter how many times you run `bats -j`. On a
+multi-slot host that second claimant is routine: two slots gating at the same time run the same suite concurrently.
+
+Measured 2026-08-12, and it had survived the 2026-08-10 sweep untouched:
+
+```bash
+tmp_ping="$(mktemp /tmp/slot_test_XXXX.md)"   # ← creates the LITERAL path /tmp/slot_test_XXXX.md
+```
+
+**`mktemp` substitutes only TRAILING X's.** With any suffix after them (`.md`, `.log`), BSD `mktemp` treats the template
+literally, so every caller on the host gets the _same_ filename. Two overlapping runs then collide 100% of the time
+(`mkstemp failed on /tmp/slot_test_XXXX.md: File exists`), and a run that dies before its cleanup leaves the file
+behind, wedging **every** later run host-wide until someone deletes it by hand. Verify with
+`mktemp /tmp/probe-XXXXXX.log` — it prints `/tmp/probe-XXXXXX.log`, unsubstituted.
+
+It cost two consecutive PM gate failures while a peer slot gated concurrently, and four call sites carried it
+(`tests/test_tab_worktrees.bats` ×2, `scripts/workspace/workspace-bootstrap.sh`,
+`scripts/validation/pre-push-watcher.sh`). Fix: trailing X's with no suffix (`mktemp /tmp/name-XXXXXX`), or a unique
+DIRECTORY when the extension matters (`mktemp -d /tmp/name-XXXXXX` then build the file inside it).
+
+**Why this class survives, and the diagnostic rule that catches it.** It presents as a flake, and re-running genuinely
+works — whenever the other run has finished. So the standing advice ("transient, re-run it") is locally correct and
+globally wrong, and the defect persists indefinitely. Two rules:
+
+- **Two IDENTICAL consecutive failures mean the condition is stable.** Stop re-running and diagnose. A _different_
+  failure each time is contention; the _same_ failure twice is a defect.
+- **An empty `/tmp` is not evidence of "random collision".** The first diagnosis here checked for leftovers, found zero,
+  and concluded a rare random clash — but zero leftovers is _equally_ consistent with a fixed filename that exists only
+  while a run is in flight. The distinguishing test is one line: run `mktemp` with the template and read the output.
+
+Generalise past `mktemp`: any test-adjacent artifact keyed on a **constant** name in a host-shared location (`/tmp`, a
+host lock, a fixed port, `~/.cache/<tool>`) is inter-run shared state. `$BATS_TEST_TMPDIR` solves the intra-run case and
+does nothing for this one.
 
 ## Before hard-failing a warn-only suite: N consecutive green runs
 

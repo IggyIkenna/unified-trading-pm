@@ -36,7 +36,12 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+supersedes:
+  [
+    deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12,
+    cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12,
+  ]
+resolved_by: deployment-api@b928d173b5
 locked_by:
 locked_since:
 context_scope:
@@ -95,70 +100,133 @@ Two remedies exist and both were declined deliberately:
 - [x] ✅ [BACKEND] P1. **Fix the drift at the source — reverted, not forward-ported.** — deployment-api@b928d173b5.
 
       The named owner (slot-5, this session) resolved it directly rather than waiting for an `[OPERATOR]` pickup.
-                  Forward-porting into `cloudbuild-api-template.yaml` (the sanctioned fix per the check's own message) was
-                  evaluated first and found structurally unsound, not just declined out of caution: `verify-auth-contract`
-                  requires `waitFor: ["deploy"]` to check the FRESHLY deployed revision, but `deploy` itself is pure per-repo
-                  content — it does not exist in `cloudbuild-api-template.yaml` at all (confirmed: `grep -n 'id: "deploy"'`
-                  against the template returns nothing; the whole deploy block is already-baselined intentional drift, per this
-                  same baseline file's own header comment). A template-native version of the step could only `waitFor:
-                  ["scan-check"]` (the last template-native step), which would run it CONCURRENTLY with the per-repo `deploy`
-                  step rather than after it — checking the auth contract against the stale pre-deploy revision, defeating the
-                  check's entire purpose. There is no template-only way to express "runs after a per-repo-only step" short of a
-                  polling/timeout loop inside the script itself, which is materially more fragile than the original design.
-                  Given that, reverted the step entirely (`deployment-api@b928d173b5`) rather than accept either a broken
-                  ordering or a permanently-raised baseline. **Verified**: `check_cloudbuild_template_drift.py --repo
-                  deployment-api` → `[OK] deployment-api (cloudbuild-api-template.yaml): 16 (== baseline)`.
+                      Forward-porting into `cloudbuild-api-template.yaml` (the sanctioned fix per the check's own message) was
+                      evaluated first and found structurally unsound, not just declined out of caution: `verify-auth-contract`
+                      requires `waitFor: ["deploy"]` to check the FRESHLY deployed revision, but `deploy` itself is pure per-repo
+                      content — it does not exist in `cloudbuild-api-template.yaml` at all (confirmed: `grep -n 'id: "deploy"'`
+                      against the template returns nothing; the whole deploy block is already-baselined intentional drift, per this
+                      same baseline file's own header comment). A template-native version of the step could only `waitFor:
+                      ["scan-check"]` (the last template-native step), which would run it CONCURRENTLY with the per-repo `deploy`
+                      step rather than after it — checking the auth contract against the stale pre-deploy revision, defeating the
+                      check's entire purpose. There is no template-only way to express "runs after a per-repo-only step" short of a
+                      polling/timeout loop inside the script itself, which is materially more fragile than the original design.
+                      Given that, reverted the step entirely (`deployment-api@b928d173b5`) rather than accept either a broken
+                      ordering or a permanently-raised baseline. **Verified**: `check_cloudbuild_template_drift.py --repo
+                      deployment-api` → `[OK] deployment-api (cloudbuild-api-template.yaml): 16 (== baseline)`.
 
-                  The underlying hardening goal (same-day detection of an auth-contract regression, motivated by the 2026-08-06
-                  `DISABLE_AUTH` incident sitting undetected for 4 days) is NOT abandoned — it needs a mechanism that doesn't
-                  depend on Cloud Build step-ordering against per-repo-only content, e.g. a scheduled synthetic check (Cloud
-                  Scheduler hitting the live endpoint + alerting through the existing `ci-failures`/`data-pipeline-alerts`
-                  channels) rather than a build-time gate. Not built in this pass — flagged as a properly-scoped follow-up in
-                  `/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` rather than rushed through the same
-                  structural constraint that just caused this incident.
+                      The underlying hardening goal (same-day detection of an auth-contract regression, motivated by the 2026-08-06
+                      `DISABLE_AUTH` incident sitting undetected for 4 days) is NOT abandoned — it needs a mechanism that doesn't
+                      depend on Cloud Build step-ordering against per-repo-only content, e.g. a scheduled synthetic check (Cloud
+                      Scheduler hitting the live endpoint + alerting through the existing `ci-failures`/`data-pipeline-alerts`
+                      channels) rather than a build-time gate. Not built in this pass — flagged as a properly-scoped follow-up in
+                      `/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` rather than rushed through the same
+                      structural constraint that just caused this incident.
 
 - [x] ✅ [SCRIPT] P2. **Consumer-vs-template drift now fails at the point it is INTRODUCED.** —
       unified-trading-pm@2b4bee96d3.
 
       The same `check_cloudbuild_template_drift.py` PM already ran fleet-wide is now also run scoped to the repo being
-          gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
-          `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
-          baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
-          introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
+              gated (`--repo`), as `base-service.sh` STEP 5.108 (17 consumer repos) and `base-ui.sh` `[5.108]` (the 2 UI repos —
+              `deployment-ui` has no `.venv`, so it uses the graceful python-probe of the adjacent DeFi step). No new rule: same
+              baseline file, same never-raise semantics, only the detection POINT moves. Both directions are now caught at
+              introduction — a CONSUMER edit by the consumer's own gate, a TEMPLATE edit by PM's fleet-wide run.
 
-          **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
-          replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
-          the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
-          real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
-          not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
+              **Verified, not assumed** — (1) all 19 consumers measured at-or-below baseline BEFORE wiring, so this could not
+              replace one fleet-wide block with another; (2) the real incident reproduced in a scratch workspace by re-injecting
+              the reverted `verify-auth-contract` step — same `19 > 16`, same three markers; (3) the shell block exercised with
+              real variables: `V=0` at baseline, `V=1` on the injected drift, `V=0` for a non-template-mapped repo (safe no-op,
+              not a skip); (4) observed passing inside an actual PM gate run (`✅ STEP 5.108`), not only in a harness.
 
-          **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
-          this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
-          `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
-          drift far from its cause is measured in duplicated diagnosis, not argued.
+              **Evidence that this was worth doing**: three separate agents independently filed three separate issue docs for
+              this one incident (`deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12.md`,
+              `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, and this doc). The cost of detecting
+              drift far from its cause is measured in duplicated diagnosis, not argued.
 
-- [ ] [DOCS] P2. **Three issue docs describe this ONE incident — pick the SSOT and supersede the other two.** All three
-      were filed 2026-08-12 against `deployment-api@4c31b72` for the same `19 > 16`, and all three still read
-      `status: open` for an incident resolved by `deployment-api@b928d173b5`. They also DISAGREE on the fix:
-      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md` argues the `_SERVICE_NAME` guard proves
-      the steps were authored for the shared template so forward-porting is correct and re-baselining is not, while the
-      resolving session concluded forward-porting was structurally unsound (`verify-auth-contract` needs
-      `waitFor: ["deploy"]`, and `deploy` does not exist in the template) and reverted instead. Moot for the incident,
-      but the contradiction is exactly what a future reader would trip on. NOT done in-session deliberately: a peer was
-      running a full-corpus `/plan-reconcile` sweep in the same checkout, whose own job is de-duplication — editing
-      three docs underneath it would collide. Done when: one doc is SSOT, the others carry `superseded_by`, and all
-      three carry a non-empty `resolved_by`. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P2. **THIS doc is the SSOT; the other two are superseded.** — see "Consolidation" below.
+      `deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12` and
+      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12` now carry `status: superseded` +
+      `superseded_by:` pointing here, and all three carry `resolved_by: deployment-api@b928d173b5`. Their still-live
+      content was carried across as todos below, not dropped.
 
-- [ ] [DOCS] P3. **Record the `mktemp` trailing-X trap in codex — it presents as a flake, which is why it survived.**
-      `mktemp /tmp/name-XXXX.md` does NOT substitute: BSD `mktemp` expands only TRAILING X's, so the template is taken
-      LITERALLY and every run on the host shares one filename. Two concurrent runs collide 100% of the time, and a run
-      that dies before cleanup wedges every later run host-wide with `mkstemp failed: File exists`. Measured 2026-08-12:
-      it failed two PM gates in a row while a peer slot gated concurrently, and the natural response (re-run) succeeds
-      often enough to keep it alive indefinitely. Fixed at four call sites in unified-trading-pm@2b4bee96d3
-      (`tests/test_tab_worktrees.bats` ×2, `scripts/workspace/workspace-bootstrap.sh`,
-      `scripts/validation/pre-push-watcher.sh`), but the RULE belongs in codex so it is not re-learned — the first
-      diagnosis in this very session was wrong ("0 leftovers in /tmp, therefore a random collision"), because zero
-      leftovers is equally consistent with the real cause. Repo: unified-trading-pm.
+      **Chosen on referrer count, not authorship** — this doc has 7 referrers of which FOUR are shipped code/config
+          (`check_cloudbuild_template_drift.py`, `cloudbuild_template_drift_baseline.yaml`, `base-service.sh`,
+          `base-ui.sh`); the other two docs have 1 and 2, all of them docs. Repointing shipped code would mean re-shipping
+          it through the gate to fix a docs problem.
+
+- [x] ✅ [DOCS] P3. **`mktemp` trailing-X trap recorded in codex.** —
+      `/codex/06-coding-standards/bats-hermeticity-and-gate-budget.md`, new section "An eighth defect, structurally
+      invisible to that sweep". Filed there rather than in a new doc because that doc already owns the seven hermeticity
+      defects found in the 2026-08-10 parallelism sweep, and the point worth recording is **why this one survived it**:
+      those were exposed by `bats -j` (parallelism WITHIN a run), while this is shared state ACROSS runs — two slots
+      gating simultaneously — which no amount of `bats -j` can surface.
+
+- [ ] [SCRIPT] P2. **The "New/over-baseline marker(s)" list is POSITIONAL, not identity-based — and it misled a
+      diagnosis.** The baseline stores only an integer per repo (`Baseline.counts: dict[str, int]`), so the checker
+      cannot know WHICH markers are new. `check_cloudbuild_template_drift.py:332` does `over = rd.dropped[allowed:]` —
+      the last `count - baseline` markers by position — and labels them "New". In this incident that surfaced
+      `vendor-deps::set -e` as new when `vendor-deps` is **pre-existing intentional drift named in the baseline file's
+      own header** (lines 13 and 37). A reader then built a table attributing the failure to two steps when only one had
+      changed, making the incident look twice its real size. Done when: either the baseline records marker identities so
+      the diff is real, or the label stops claiming novelty it cannot establish (e.g. "markers above the baseline count
+      (positional — not necessarily the new ones)"). The cheap half is the relabel. Repo: unified-trading-pm.
+
+- [ ] [SCRIPT] P2. **Make a foreign post-gate failure name its blast radius at the point of blocking.** (Carried forward
+      from both superseded docs, which raised it independently — `[INFRA] P2` and `[SCRIPT] P3`.) PM's fleet-wide run
+      still fails a PM ship while naming only a consumer repo, so the reader's first hypothesis is "my change broke
+      this". One line stating that a consumer's drift blocks every unified-trading-pm quickmerge would have saved the
+      diagnosis three separate times. Partially addressed by STEP 5.108 (the consumer now fails on its own commit), but
+      the PM-side message is unchanged and is what a PM shipper actually reads. Repo: unified-trading-pm.
+
+- [ ] [DEVOPS] P2. **Reconcile `_RUN_INIMAGE_QG` between template and consumer.** (Carried forward from
+      `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12`.) The template says `"false"` and
+      deployment-api's consumer says `"true"`, each with a contradictory justification comment. This is latent drift the
+      ratchet has already absorbed into the baseline, so nothing will ever fail on it — decide which is right and make
+      the other follow. NOT resolved by the revert: the revert only removed `verify-auth-contract`. Repo:
+      deployment-api.
+
+## Consolidation — three docs, one incident (2026-08-12)
+
+Three agents independently filed three issue docs for the same `deployment-api@4c31b72` / `19 > 16` failure. That is not
+sloppiness; it is the predicted consequence of a gate that fails far from its cause, and it is the strongest single
+piece of evidence for the STEP 5.108 fix above. Superseded here:
+
+| doc                                                                   | unique content, and where it went                                                                                          |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `deployment_api_cloudbuild_drift_blocks_pm_gate_2026_08_12`           | the `tail`-hides-the-failure measurement trap (below); the GATE-INFRA carve-out workaround `unified-trading-pm@f9dbc8a31f` |
+| `cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12` | the `_RUN_INIMAGE_QG` latent drift and the missing `_DEPLOY` substitution (carried forward as todos)                       |
+
+### The disagreement, resolved — both docs were right about different questions
+
+The superseded doc argued that the `if [ "${_SERVICE_NAME}" != "deployment-api" ]` guard proves the steps were authored
+for the shared template, so forward-porting was correct and re-baselining was not. The resolving session concluded
+forward-porting was structurally unsound and reverted instead. These read as contradictory and are not:
+
+- **"Where were these steps INTENDED to live?"** → the template. The guard is a genuine tell: a file that only ever runs
+  for `deployment-api` has no reason to test whether it is `deployment-api`.
+- **"Can they be EXPRESSED in the template?"** → `verify-auth-contract` cannot. It needs `waitFor: ["deploy"]` to check
+  the freshly-deployed revision, and `deploy` is per-repo-only content absent from the template, so a template-native
+  version could only wait on `scan-check` and would race the deploy it is meant to verify.
+
+Both hold at once: **authored for the template, not expressible in it.** That is a real constraint of the
+template/consumer split, not a mistake by either author — and it is why the revert was right while the "forward-port,
+don't re-baseline" instinct was also right. Moot for this incident (both steps are reverted), but load-bearing if anyone
+retries the auth-contract hardening: the follow-up in
+`/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` deliberately proposes a scheduled synthetic check
+instead of a build-time gate, precisely to sidestep this.
+
+### Correction inherited from the superseded docs: `vendor-deps` was never new
+
+Both superseded docs treat the failure as spanning two steps, one of them `vendor-deps`. It did not. `vendor-deps` is
+pre-existing intentional drift, named as such in the baseline file's own header. It appeared in the failure output only
+because that output is a positional slice, not a real diff — see the `[SCRIPT] P2` todo above. Anyone re-reading those
+docs from the archive should discount their `vendor-deps` rows.
+
+### Measurement trap worth keeping (from the superseded doc)
+
+A first pass called this transient after running the checker standalone and seeing only `[OK]` lines — because the read
+was `tail -12`, and `deployment-api` sorts alphabetically ABOVE the `[OK]` lines that filled the tail. **`head`/`tail`
+on a checker's output is not evidence of absence; grep for the failing token instead.** The same habit cost this session
+two separate diagnoses on ship logs, and is recorded in `/codex/12-agent-workflow/ship-tooling-silent-success.md`.
 
 ## `--update-baseline` is shrink-only, and its refusal is silent
 
