@@ -705,14 +705,23 @@ codex/
     │   ├── archetypes/                   (per-archetype; NOT complete — see "Archetypes with no doc")
     │   ├── axes/                         (one per composition axis)
     │   └── cross-cutting/                (concerns spanning families)
-    ├── cefi/                             (legacy, migrated via MIGRATION.md)
-    ├── defi/                             (legacy)
-    ├── sports/                           (legacy)
-    ├── tradfi/                           (legacy)
-    ├── prediction/                       (legacy)
-    ├── cross-cutting/                    (some still canonical; see MIGRATION.md)
-    └── templates/                        (preserved)
+    ├── operational/                      (runbook-shaped strategy ops docs)
+    ├── strategy-summary.md
+    ├── mvp-universe-per-asset-group.md
+    ├── TIER_ZERO_UI_DEMO_AND_PARITY.md
+    └── _archived_pre_v2/                 ← the pre-v2 corpus was MOVED HERE, not left at the root
+        ├── cefi/  defi/  sports/  tradfi/  prediction/   (legacy, migrated via MIGRATION.md)
+        ├── cross-cutting/                (some still canonical; see MIGRATION.md)
+        ├── templates/                    (strategy-description-template.md only)
+        ├── STRATEGY_CATALOG_pre_v2.md · STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md
+        └── strategy-registry.md · execution-modes.md
 ```
+
+> **Tree corrected 2026-08-12.** It previously showed `cefi/`, `defi/`, `sports/`, `tradfi/`, `prediction/`,
+> `cross-cutting/` and `templates/` as siblings of `architecture-v2/` at the `09-strategy/` root, and did not mention
+> `_archived_pre_v2/` at all — but **all seven were moved inside `_archived_pre_v2/`**, so every one of those paths was
+> wrong and the directory actually holding them was invisible. `operational/` and three root-level docs were missing
+> too. A tree diagram is a path claim like any other: verify with `ls` before trusting it.
 
 ## Strategy Universe (v1 target post-migration)
 
@@ -750,9 +759,17 @@ See [../../plans/active/](../../../plans/active/) for the active week-to-live im
 
 ## Authoring Conventions
 
-Every archetype doc follows the standard structure below. **There is no `templates/` directory** — this line pointed at
-`templates/archetype-doc.md` for an unknown period and that file has never existed (verified 2026-08-12); the structure
-is specified here, and [`archetypes/carry-basis-perp.md`](archetypes/carry-basis-perp.md) is the exemplar to copy.
+Every archetype doc follows the standard structure below. **There is no archetype-doc template anywhere in codex** —
+this line pointed at `architecture-v2/templates/archetype-doc.md`, which has never existed, and no file matching
+`*archetype*template*` exists under `codex/` at all (verified 2026-08-12). The only template in the strategy corpus is
+`_archived_pre_v2/templates/strategy-description-template.md`, which is a different artefact for a different purpose.
+The structure is specified here, and [`archetypes/carry-basis-perp.md`](archetypes/carry-basis-perp.md) is the exemplar
+to copy.
+
+> Precision note, because the first version of this correction was itself wrong: it said "there is no `templates/`
+> directory", and one **does** exist — under `_archived_pre_v2/`. The dead thing is the _archetype-doc template_, not
+> the directory. Overstating an error's scope is its own defect; a future reader acting on the broader claim would have
+> gone looking for a directory to create rather than a template that was never written.
 
 1. **What & why** — alpha source, edge thesis, position structure
 2. **Token / position flow** — step-by-step bankroll + instruction sequence
