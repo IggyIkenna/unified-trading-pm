@@ -63,6 +63,36 @@ SLOW-MOVING (strategy config)          FAST-MOVING (execution)
 Strategy emits intent with `eligible_venues: [...]`. Execution-service's SOR picks the one that will actually receive
 the order right now.
 
+### RULING 3 (operator, 2026-08-12) — eligibility splits THREE ways, and only the first excludes globally
+
+The two-column split above is right but under-specified: it does not say where a **research or edge preference** belongs,
+and the code has been putting those in the catalogue. Three distinct kinds of "this venue is not for this strategy":
+
+| Kind                          | Example                                                                 | Where it belongs                          | Excludes globally? |
+| ----------------------------- | ----------------------------------------------------------------------- | ----------------------------------------- | ------------------ |
+| **1. Physical capability**    | You cannot trade options on Hyperliquid, so it is not an options venue    | Venue / capability registry (UAC)         | **YES**            |
+| **2. Research / edge view**   | Hyperliquid is a momentum venue, so a reversion edge inverts there        | **Strategy INSTANCE config**              | **NO**             |
+| **3. Execution-time pick**    | OKX has the better quote right now                                       | SOR at execution                          | n/a                |
+
+**The operator's ruling, verbatim in effect:** _"we're not optimising to venues based on previous research. We're giving
+the list of allowable venues and their constraints, which make them less allowable for some things or some configs, but
+it's the config that ultimately decides."_ If we have options on both Deribit and OKX, **both are eligible candidates** and
+the config decides which is subscribed to — the catalogue does not pre-pick a winner on our research view.
+
+**Code currently violates this.** `_FUNDING_DISPERSION_VENUES` in `catalog_carry.py` omits `HYPERLIQUID` with the comment
+"HL excluded — momentum", which is a kind-2 reason enforced as a kind-1 exclusion. The effect is that **no instance config
+can ever opt Hyperliquid into funding dispersion**, even for a deliberate experiment, and the reason is invisible to the
+operator configuring the instance. Hyperliquid IS present in `_CARRY_BASIS_PERP_VENUE_BUNDLES` and in the staked-basis perp
+venues, so this is an inconsistency within one file, not a considered policy.
+
+The correction is to emit the slot and let config exclude it, carrying the research view as a **default** in instance config
+plus a documented rationale — never as an absent catalogue row. Tracked in
+[the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) § H.15.
+
+> **Why this matters beyond one venue:** a catalogue that bakes in research produces a universe nobody can audit against
+> the venue's real capabilities, and every future edge revision needs a code change instead of a config change. The
+> constraint registry answers "could this work"; the instance config answers "do we want it".
+
 ## Eligibility constraints
 
 When declaring eligibility in config, strategies specify:

@@ -75,6 +75,40 @@ Pick one, explicitly:
 What is NOT acceptable is silently narrating the proxy as the property. The failure is not in using a cheap check —
 cheap checks are correct as pre-filters. It is in the sentence afterwards.
 
+## The absence-from-one-probe failure (2026-08-12, five instances in one session)
+
+**The single most expensive error class measured to date: asserting a thing is ABSENT after one probe.** Five instances in one
+session, costing more than every other error kind combined. The generalisation is stronger than "0 hits ≠ missing" — it is
+**a negative result is a statement about your probe until you have established the probe could have found the thing.**
+
+| What was wrongly declared absent                        | Why the probe missed it                                                          |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| SOL LST staking data ("possibly `BLOCKED-DATA`")        | Data lives under data-type **`lst_rates`**; grepped `staking_yields`. **Three** successive wrong verdicts on one question |
+| `staking_yields` "has no schema contract"               | It is in `_defi_v2_contracts.py`; `lst_rates` is in `contracts.py`. **Neither file is "the" registry** |
+| Hot reload "absent from strategy-service"               | Searched `engine/core/` + `config.py`; `config_reloaders.py` sits at package root |
+| Dispersion params "not in `PARAM_SCHEMA_REGISTRY`"      | Grep formatting artifact. **Loading the registry in Python** gave the real answer |
+| Three separate plan phrases "missing"                   | **Prettier wraps prose mid-sentence**, so the phrase spans a newline             |
+
+**The four discharges, in order of cheapness:**
+
+1. **For anything with a registry, ASK THE REGISTRY.** `python3 -c "from … import REGISTRY; print(len(REGISTRY))"` beats any
+   grep and cannot be defeated by formatting. This alone would have caught two of the five.
+2. **Enumerate the vocabulary the WRITER emits, then search for that** — never for the name you expect. A data type, enum
+   member or path segment you invented is not evidence of anything.
+3. **Normalise before grepping prose**: `tr -s ' \n' ' '`. In a prettier-formatted corpus, 0 hits for a multi-word phrase is
+   uninformative.
+4. **One file is not a registry.** Schemas, capabilities and enums are split across modules here by design; a single-file
+   grep establishes only what that file contains.
+
+**A corollary that cost its own time: over-stating an error's scope is itself a defect.** Twice in that session a correction
+was broader than the fault — "there is no `templates/` directory" (one exists, elsewhere) and "the liquidity-provision family
+is invented" (`DEFI_LP_CONCENTRATED`/`_POOL`/`_VAULT` are real; it was misfiled, not fabricated). **A reader acts on the
+record, so an over-broad correction sends them to delete something true.** Diagnose the exact shape before writing it down.
+
+**And the most dangerous variant: a doc and the code agreeing does not make either right.** "8 allocator archetypes" appeared
+in the codex SSOT *and* in the code docstring against a registry of 17 — so cross-checking doc against code CONFIRMED the
+error. Corroboration between two derived artefacts is not verification; only the registry is.
+
 ## Where it bit (2026-08-10, the incident this doc was written from)
 
 Propagating a one-line workflow fix to the repos carrying `plan-alignment-agent.yml`, the agent ran `wc -l`, saw five

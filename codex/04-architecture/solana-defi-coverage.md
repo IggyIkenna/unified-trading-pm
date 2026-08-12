@@ -72,6 +72,31 @@ All adapters live in `instruments-service/instruments_service/reference_data/ada
 
 ## Venue Registry — Plan B: Perp DEX (InstrumentType=PERPETUAL)
 
+> **JUPITER COLLATERAL — VERIFIED 2026-08-12. Integrating Jupiter perps would NOT restore SOL staked basis.** Checked
+> because the surviving-venue question keeps resolving to Jupiter, and the answer turns entirely on its margin tokens.
+>
+> - **Jupiter's own docs** (`developers.jup.ag/docs/perps/`, custody-account + position-account): the JLP pool custodies
+>   exactly six tokens — **SOL, ETH, BTC, USDC, USDT, JupUSD** — and collateral is side-dependent: _"SOL / wETH / wBTC for
+>   long positions"_, _"USDC / USDT for short positions"_. **No liquid staking token appears anywhere.**
+> - **Consequence:** a staked-basis trade shorts the perp while posting the LST as margin. On Jupiter a short requires
+>   USDC/USDT, so the LST cannot be the margin token — Jupiter yields `USDC_MARGIN_BUFFERED` for SOL, never
+>   `LST_AS_MARGIN`. Same outcome Hyperliquid's policy note already records: _"No LST accepted as direct perp margin →
+>   staked-basis runs straight-basis here."_
+> - **Registry-wide check** (UAC `COLLATERAL_REGISTRY`, which is richer than `VENUE_COLLATERAL_MATRIX` — check both): of
+>   seven venues with collateral policies, **exactly one accepts a Solana LST — `kamino`, whose `venue_kind` is `lending`,
+>   not `perp_cex`** (JitoSOL/mSOL at 15% haircut). **No perp venue accepts JitoSOL, mSOL, bSOL or even plain SOL as
+>   margin.** So the empty SOL staked-basis bundle is not merely a consequence of the DRIFT cull — DRIFT was the only perp
+>   venue that ever took a SOL LST, and nothing has replaced it.
+> - **Therefore the two decisions are separable and should not be bundled:** (1) Jupiter perps for Solana hedge legs
+>   (dispersion, straight basis) is a real gain on a never-hacked $716M-TVL venue; (2) SOL staked basis is NOT recoverable
+>   through it. The unexplored route for (2) is **Kamino as a lending/borrow structure**, not a perp hedge.
+> - **Cheaper than a cold start:** Jupiter **spot** is already integrated — reference-data adapter (emits `SPOT_PAIR`
+>   only), execution swap connector (swap-only), and a live connector shipped 2026-08-08. Perps are the missing surface.
+>
+> Tracked in
+> [the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) § H.9.
+> **This does not constitute the operator decision to re-add a Solana perp DEX** — that is still required.
+
 **EMPTY as of 2026-07-16** (operator ruling: all Solana perp DEXes dropped except Jupiter, not integrated). DRIFT-SOLANA
 was the sole entry; historical record:
 

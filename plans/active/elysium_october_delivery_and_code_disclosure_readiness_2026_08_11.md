@@ -28,6 +28,8 @@ related:
     /plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md,
     /plans/archive/issues/venue_chain_custody_routing_matrix_2026_05_12.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
+    /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
   ]
 created: 2026-08-11
 parent_epic: client_isolation_and_governance_master
@@ -428,16 +430,81 @@ gap it surfaced is carried to H.7.
       an `archetypes/*.md` written from source, modelled on `carry-basis-perp.md`. Deliberately scoped rather than done
       blind: writing an archetype spec requires reading its engine, and a guessed spec is worse than an acknowledged
       gap. Both are named in the README's own gap table so they cannot be silently forgotten.
-- [ ] [OPERATOR] P2. **Decide whether the Elysium instance runs with `enable_dynamic_carry_universe` ON.** Default is
-      OFF (static coin list, zero GCS I/O). ON gives real ADV-ranked candidate discovery — which is what the operator
-      asked for on 2026-07-23, and what makes "dynamic coin rotation" true of the _running system_ rather than only of
-      the code. Not an engineering task: the flag exists and works, with a loud-logging fallback to the static list.
-      This is a risk-appetite call on letting the traded universe move by itself.
+- [x] [AGENT] P2. ✅ **Operator ruled ON (2026-08-12): "Turn it ON."** Default flipped `False → True` so ADV-ranked
+      dynamic candidate discovery is the running behaviour, not just an available capability — which is what the operator
+      asked for on 2026-07-23 and what makes "dynamic coin rotation" true of the _running system_. **Evidence:
+      strategy-service@d1092e9d32** (`ALL QUALITY GATES PASSED`, real exit 0). Retagged from `[OPERATOR]` the moment the
+      decision landed. The reproducibility debt this creates is H.8's P0, NOT this todo.
 - [ ] [SCRIPT] P3. **`/codex/03-services/portfolio-allocator.md` describes a service that does not exist as a repo.** It
       is titled `portfolio-allocator-service` and said "Not inside strategy-service — separate service with its own
       lifecycle"; the code is at `strategy_service/portfolio_allocator/` and **no such repo is in the 26-repo estate**
       (verified). A correction banner is now in place, but the body still reads target-as-present. Either finish the
       rewrite to present-tense-plus-target, or split the target into its own design doc.
+
+### H.8 Dynamic carry universe is ON — the reproducibility debt it creates (2026-08-12)
+
+`enable_dynamic_carry_universe` default flipped `False → True` on operator instruction — **Evidence:
+strategy-service@d1092e9d32** (`ALL QUALITY GATES PASSED`, real exit 0). Two consequences, one of which is a hard-rule
+breach that must not be left implicit.
+
+- [ ] [AGENT] P0. **Stamp the resolved dynamic-universe as-of date into the run manifest, so a batch rerun reproduces a
+      paper run's coin set automatically.** Today `_resolve_as_of_date_cached(None)` resolves "yesterday UTC" at catalog
+      import and the resolved value is recorded **nowhere machine-readable** — so a rerun of paper window W resolves a
+      DIFFERENT universe and **`paper(W) == batch-rerun(W)` fails**. That equality is a HARD RULE
+      ([paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md)) **and an
+      assertion in the client-facing documents**, which is what makes this P0 rather than a nicety: with the flag ON,
+      the default configuration silently violates a published guarantee. Until this lands, the mitigation is manual —
+      pin `DYNAMIC_CARRY_UNIVERSE_AS_OF_DATE` on any run whose trades must reproduce. Interim provenance shipped with
+      the flag flip: the resolved date, coin set and pin-status are now logged at INFO on the success path (which
+      previously logged nothing at all) plus a warning when unpinned, so a run's universe is at least recoverable from
+      its logs. Note `RunManifest` is not defined in strategy-service, so scope the writer's location before starting.
+- [x] [AGENT] P2. ✅ **Service-level scope RAISED and ACCEPTED by the operator (2026-08-12): "that's fine they can have
+      it."** The flag sits on the `StrategyServiceConfig` singleton and `TARGET_UNIVERSE` is built once at module import,
+      so turning it on moves the carry universe for **every** client the service runs, not just Elysium. Raised because
+      the instruction was phrased per-instance; the operator ruled that all clients getting the dynamic universe is the
+      intended outcome. **No further work** — per-client universes would require moving universe resolution off the
+      import-time singleton, and that is explicitly NOT wanted. Retagged from `[OPERATOR]` since the decision is made.
+
+### H.9 Jupiter perps — verified, and it does NOT restore SOL staked basis (2026-08-12)
+
+Operator asked whether any liquid, non-hacked Solana perp venue remains. **Answer: Jupiter, and only Jupiter** — but the
+collateral check that decides the staked-basis question came back negative.
+
+**Measured against the UAC collateral registry** (`COLLATERAL_REGISTRY`, richer than `VENUE_COLLATERAL_MATRIX`): of
+seven venues with collateral policies, **exactly one accepts a Solana LST — `kamino`, and its `venue_kind` is `lending`,
+not `perp_cex`.** No perp venue anywhere in the registry accepts JitoSOL, mSOL, bSOL or even plain SOL as margin.
+Hyperliquid's own policy note already states the consequence: _"No LST accepted as direct perp margin → staked-basis
+runs straight-basis here."_
+
+**Verified against Jupiter's own documentation** (`developers.jup.ag/docs/perps/`, fetched 2026-08-12): the JLP pool
+custodies exactly six tokens — **SOL, ETH, BTC, USDC, USDT, JupUSD** — and collateral is side-dependent: _"SOL / wETH /
+wBTC for long positions"_, _"USDC / USDT for short positions"_. **No LST appears anywhere.** A staked-basis trade needs
+to short SOL perp while posting the LST as margin; on Jupiter a short requires USDC/USDT, so the LST cannot be the
+margin token. Jupiter therefore yields `USDC_MARGIN_BUFFERED` for SOL, never `LST_AS_MARGIN`.
+
+> **Integration work now lives in its own plan (2026-08-12):**
+> [solana_lst_carry_jupiter_perps_and_kamino_borrow](/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md)
+> — authored on operator instruction for full cross-repo integration, held at `status: draft` because it is gated on both
+> an explicit operator decision to re-add a Solana perp venue AND an economics answer (is the stable borrow rate reliably
+> below the staking yield). The todos below stay here as the Elysium-side decision record; the build steps are there.
+
+- [ ] [OPERATOR] P2. **Decide whether to scope Jupiter PERPS integration** — the codex requires an explicit new operator
+      decision (`/codex/04-architecture/solana-defi-coverage.md`: _"Do not re-add without an explicit new operator
+      decision"_). What it buys: Solana perp hedge legs return for dispersion and straight basis, on the venue the
+      operator already named as the intended one ($716M TVL at cull time, never hacked). What it does NOT buy: SOL
+      staked basis — see the verification above. Cheaper than a cold start because Jupiter **spot** is already
+      integrated (reference-data adapter, execution swap connector, and a live connector shipped 2026-08-08); the
+      missing piece is perps, which our adapter does not emit (it emits `SPOT_PAIR` only) and the execution protocol
+      does not cover (swap-only).
+- [ ] [AGENT] P3. **If Jupiter perps is approved, add its `CollateralPolicy` to the UAC registry as a first step** —
+      `venue_kind=PERP_DEX`, accepted collateral SOL/wETH/wBTC (long) and USDC/USDT (short), sourced to
+      `developers.jup.ag/docs/perps/`. Doing this before any adapter work means `_staked_basis_eligible()` and
+      `_derive_structure()` correctly resolve SOL to `USDC_MARGIN_BUFFERED` and emit no infeasible `LST_AS_MARGIN` slots
+      — the gating logic then needs no change at all.
+- [ ] [AGENT] P3. **Kamino is the unexplored Solana LST route.** It accepts JitoSOL/mSOL at a 15% haircut and is already
+      in the collateral registry, so Solana LST carry may be expressible as a **lending/borrow** structure
+      (`CARRY_RECURSIVE_BORROW_*`) rather than a perp-hedged basis. Assess whether that is a real strategy or a dead end
+      before treating SOL LST carry as blocked on a perp venue.
 
 ### H.6 Gate findings — the two defects that hid a one-line violation for seven attempts (2026-08-12)
 
@@ -454,6 +521,379 @@ The two defects in one line each, so this section still explains the seven faile
 checker's `--only` mode **silently skips any path it cannot stat and then returns exit 0** (so "0 violations locally"
 was a false negative from the wrong working directory, and it anchored six wrong diagnoses), and the hygiene sweep runs
 it with `--quiet`, which **prints the violation count without the filename**.
+
+### H.10 `safe-doc-push` exit 13 has a false-positive mode — and it is the most dangerous kind (2026-08-12)
+
+- [ ] [SCRIPT] P2. **Exit 13 fires when a named file's content was ALREADY at origin from a previous push.** Hit live:
+      `/codex/04-architecture/solana-defi-coverage.md` had landed in `eee9186884`; my local copy then differed only by
+      prettier's re-wrap, so the next run saw "a real diff at start" and "HEAD content byte-identical after" — which is
+      exactly the signature of a lost write, and also exactly what an already-landed file looks like. The script cannot
+      distinguish the two, so it raised `🛑 THE PUSH LANDED BUT YOUR CHANGE DID NOT` while the push had in fact shipped
+      everything (verified at `d2bf5a07e4`). **Why this matters more than a normal false alarm:** exit 13's documented
+      remedy is stash surgery (`git show 'stash@{0}:<path>' > <path>`) and an explicit "never plain re-run", so a false
+      positive actively invites hand-editing files out of an autostash that may hold a **peer session's** WIP — turning a
+      non-event into real risk. Fix: before declaring 13, check whether the file's content already matches
+      `origin/<branch>` (already-landed → exit 0 with a note), and compare content **normalised for prose re-wrap**, since
+      prek re-wraps in the isolated worktree and that alone changes the hash. Recommend recording as an F-finding in
+      `/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`, which is the SSOT the
+      script's own messages cite (F4/F6/F8).
+- [ ] [SCRIPT] P3. **A plan-hygiene grep for a phrase can fail purely because prettier wrapped it mid-sentence.** Cost
+      time three times today: `"they can have it"`, `"portfolio-allocator.md describes a service"` and
+      `"no templates directory"` all returned 0 hits while present, because a newline sat inside the phrase. Any
+      verification that greps a plan for prose MUST normalise first (`tr -s ' \n' ' '`) or match on a single unwrapped
+      token. **0 hits is not evidence of absence in a prettier-formatted corpus** — the same rule the workspace already
+      applies to runtime-resolved symbols.
+
+### H.11 Two-custodian model (Copper + Ceffu) — and a CORRECTION to H.2's rail-enum claim (2026-08-12)
+
+Operator raised: Elysium need **Ceffu for Binance**, so Copper↔Ceffu transfers are required and would go **on-chain**;
+exchange-to-exchange movement inside a custodian's network uses that custodian's mirroring protocol (ClearLoop for
+Copper); and the governing principle is _"we track our wallets as separate from a trading perspective to monitor balances
+and keep things agnostic, but the adaptor we are using to handle the money determines how we actually execute the
+instructions."_ **That principle is already the design — but it is only half-implemented, and the unimplemented half is
+the Copper side the client cares most about.**
+
+#### CORRECTION — H.2's rail-enum claim was an UNDERCOUNT, and my first correction of it was ALSO wrong
+
+Two errors, recorded in order because the second is the instructive one.
+
+**Error 1 (original H.2):** "the rail enum has three members, all API-executed". The enum I was describing is
+`unified_api_contracts/internal/domain/execution_service/transfer_types.py` — the one
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) names as the routing SSOT — and it has **five**
+members: `ON_CHAIN`, `CEX_WITHDRAWAL`, `CEX_INTERNAL`, **`CUSTODY_TRANSFER`**, **`BRIDGE`**. I named three of five.
+**The two I dropped are the two that matter most here** — `CUSTODY_TRANSFER` is documented as "Treasury→trading wallet,
+custodied moves", i.e. precisely the custody leg I later described as unrepresentable.
+
+**Error 2 (my correction, earlier today):** I "corrected" it by declaring _"There is no enum anywhere with those three
+members"_ and tabling `architecture_v2/enums.py`'s seven-member `TransferType` instead. **That compared against a
+different enum than the one the original claim was about.** The three names I originally listed ARE members of
+`transfer_types.py`; the fault was omission, not misidentification. Over-stating an error's scope is its own defect — the
+same lesson the liquidity-provision over-correction taught, repeated within a day, which is why it is written down twice.
+
+**What is actually true:** four overlapping transfer-type enums exist, and the codex SSOT correctly documents the
+five-member one:
+
+**The four transfer-type enums** (detail in
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md)): `transfer_types.TransferType` **5** — the
+routing SSOT codex documents, `ON_CHAIN`/`CEX_WITHDRAWAL`/`CEX_INTERNAL`/`CUSTODY_TRANSFER`/`BRIDGE` ·
+`architecture_v2.enums.TransferType` **7** (incl. the unconsumed `UNITY_WALLET_OP`, `IBKR_FUND_MOVE`) ·
+`BusTransferType` **5** · `domain.defi.transfers.TransferType` **6**.
+
+I also previously described the defi one as having two members (`SAME_CHAIN`/`CROSS_CHAIN`) — it has six. **H.2's
+conclusion still survives, but the reasoning is now different again**: a custody leg IS representable
+(`CUSTODY_TRANSFER` exists and is documented), so the gap is not "no custody rail". The gaps are (a) no **custodian-to-
+custodian** route and no multi-hop representation, and (b) no manual/acknowledged path — `UNITY_WALLET_OP` is plausibly
+the bookmaker rail (sports slots are `…@unity-betfair-matchbook-…`) and is **declared with zero consumers fleet-wide**, as
+is `IBKR_FUND_MOVE`. Contributing cause: **`architecture_v2.enums.TransferType` carries no member docstrings at all**, so
+nothing explains what `UNITY_WALLET_OP` is for — which is how I mistook which enum was which twice.
+
+#### H.11 build set — operator rulings 2026-08-12, deferred to the code phase ("so that we can do that all later")
+
+Design is settled by the two rulings below; SSOT for both is
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) § "Mirrored custody, multi-hop routes, and
+per-client binding". **These are the code todos for the strategy-service completion phase — do not start them ahead of it.**
+
+- [ ] [AGENT] P0. **RULING 1 — make `WalletMappingConfig` the per-client custody binding layer.**
+      `VENUE_WALLET_CAPABILITIES` stays pure venue PHYSICS (deposits_to, requires_internal_transfer, whitelist, CCXT
+      params — immutable, global); `WalletMappingConfig` carries the per-client CHOICE (custodian, which venues are
+      mirrored, treasury/trading wallet identities); the router intersects them. **Today `custody_provider` is a single
+      global string per venue** (`BYBIT` = `''`/direct), so "Bybit on Copper for client A, direct for client B" is
+      inexpressible. Constraint set is `(client_id, strategy_id)`. Rejected and not to be re-proposed: keying the
+      capabilities registry by `(venue, client_id)`; a third routing-config surface.
+- [ ] [AGENT] P0. **RULING 2 — implement the persisted multi-hop `TransferRoute` with per-hop status.** One strategy
+      instruction expands to an ordered, persisted route (`UNMIRROR` → `ON_CHAIN` custodian-to-custodian → `MIRROR`), each
+      hop independently retryable. **Non-idempotency is the whole point: an unmirror is not idempotent with a re-mirror**,
+      so a mid-route failure must resume at the failed hop, never replay from hop 1 — otherwise real collateral strands
+      between custodians. Emits the ledger's existing `CUSTODY_MOVE`. Explicitly NOT `AtomicInstruction`/`CompensationPolicy`
+      (built for trade legs; compensation for a half-moved custody balance is a different problem).
+- [ ] [AGENT] P0. **Lift mirroring into the `CustodyProvider` Protocol** so Copper-ClearLoop and Ceffu-OES are
+      interchangeable behind one contract — carried from H.11's gap list; this is the change that makes "the adapter
+      determines execution" true at the seam.
+- [ ] [AGENT] P1. **Register CEFFU across the routing surfaces.** `custody_provider` accepts `copper`/`fireblocks`/`''`
+      and **zero venues bind to ceffu**; `WalletMappingConfig.custodian` is `copper`/`fireblocks`/`mock`. So Binance cannot
+      be routed via CEFFU at all, despite `custody/ceffu.py` being fully implemented with OES. Note **Fireblocks IS real**
+      (referenced in `custody/factory.py`, `base.py`, `transfer_handler.py`) — do not strip it while adding Ceffu.
+- [ ] [AGENT] P1. **Distinguish mirrored from held balance in the wallet/position model.** A balance mirrored onto Binance
+      is custodied at CEFFU. `WalletType` has no mirrored notion, so double-counting would misstate available margin AND
+      client assets. `oes_get_mirror_balance` exists to read it — check the aggregation layer before adding an enum member.
+- [ ] [AGENT] P1. **Build the manual/acknowledged transfer path** — record an externally-executed transfer in canonical
+      form so the strategy layer sees the balance move. **Keep it off the rail axis**: the rail says *how money moved*,
+      "a human did it" says *who executed*, so they are separate fields. This is what makes SMA client-executed moves and
+      bookmaker deposits the same shape, cross-AG.
+- [ ] [AGENT] P2. **Reconcile the four transfer-type enums to one**, docstring every member, and make
+      `transfer_types.TransferType` the single rail axis the others defer to — same de-duplication that fixed the allocator
+      roster. `architecture_v2.enums.TransferType` currently has zero member docstrings.
+- [ ] [AGENT] P1. **Re-scope H.2's manual-route work against the real enums** before building anything. Specifically:
+      decide whether the manual/bookmaker path is `UNITY_WALLET_OP` finally being implemented, or a new member, and
+      reconcile the three overlapping enums while you are there (the same de-duplication logic that applied to the
+      allocator roster applies here). **Docstring every member** as part of it.
+
+#### What already exists — more than expected on Ceffu, nothing on Copper
+
+- [x] [AGENT] P1. ✅ **The ledger ALREADY models Copper↔Ceffu as a first-class event.**
+      `canonical/crosscutting/ledger/_enums.py` has `CUSTODY_MOVE` — _"Movement of assets between custody providers /
+      sub-custodians for the same client (**Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet**). HARD RULE:
+      counterparty_client_id == client_id"_. So the accounting layer already encodes the operator's exact route **and**
+      binds it to client-funds isolation. The agnostic-monitoring half of the principle is done.
+- [x] [AGENT] P1. ✅ **Ceffu's off-exchange settlement is implemented; Copper's is not.** `custody/ceffu.py` carries
+      `oes_move_collateral`, `oes_query_settlement`, **`oes_get_mirror_balance`** and `direct_custody_sign` alongside the
+      standard methods — so the mirrored-vs-real balance distinction the operator described exists for Binance/Ceffu.
+      `custody/copper.py` has **only** `sign_transaction` / `get_balance` / `create_transfer` / `list_wallets` /
+      `health_check`. Fleet-wide, `oes_` appears 12 times and **`clearloop` still returns ZERO source hits**.
+
+#### The architectural gap: mirroring is not in the abstraction
+
+- [ ] [AGENT] P0. **Lift mirroring into the `CustodyProvider` Protocol.** The Protocol declares only
+      `sign_transaction` / `get_balance` / `create_transfer` / `list_wallets` (+ `health_check`) — **no mirroring**. Ceffu's
+      `oes_*` methods are therefore provider-specific extras *outside* the contract, so any caller that uses them is
+      concretely coupled to Ceffu. **That directly defeats the operator's stated principle**: the strategy layer cannot
+      stay custodian-agnostic if the mirroring capability is only reachable through a Ceffu-shaped method name. Add
+      protocol-level members (e.g. `move_collateral_to_venue()` / `get_mirrored_balance()` / `query_settlement()`), have
+      Ceffu implement them via OES/MirrorX and Copper via ClearLoop, and let the factory keep the caller ignorant of which.
+      This is the change that makes "the adapter determines execution" true at the seam rather than in commentary.
+- [ ] [AGENT] P1. **Implement the Copper ClearLoop path** behind those protocol members. Today there is no code path for
+      the mechanism the client documents describe most prominently. **Client-document implication, and it is the reason
+      this is P1 rather than P2:** the deferral message and deep dive both state that we post collateral into Copper
+      custody and Copper's ClearLoop mirrors it onto the exchange. That is accurate about *Copper's product* and our code
+      does instruct Copper — but there is no mirroring call, while the Ceffu equivalent exists. If Ceffu is now required
+      for Binance, the two-custodian reality should be reflected before the documents are re-sent. **Do NOT add a
+      "what's missing" note to a client artefact** — this is an operator escalation about wording, per this plan's own
+      hard rule.
+- [ ] [AGENT] P1. **Add the custody↔custody rail.** No rail enum has a custody-move member, and no code path routes
+      Copper→Ceffu, even though the ledger event exists. Per the operator this leg is **on-chain**, so it may be
+      expressible as `ON_CHAIN_TRANSFER` with custodian endpoints rather than a new member — **decide deliberately and
+      write down which**, because "on-chain between two custodians" and "on-chain to an external address" have different
+      approval, whitelisting and reconciliation semantics.
+- [ ] [AGENT] P2. **Model mirrored balance distinctly from held balance in the wallet/position view.** A balance mirrored
+      onto Binance via Ceffu is *custodied at Ceffu*, not held at Binance. Double-counting it, or treating it as
+      withdrawable from the venue, would misstate both available margin and client assets. `oes_get_mirror_balance` exists
+      but `WalletType` (`FUNDING`/`TRADING`/`SPOT`/`UNIFIED`/`ON_CHAIN`) has no mirrored notion — check whether the
+      balance aggregation layer already distinguishes them before adding a member.
+- [ ] [OPERATOR] P2. **Confirm the ClearLoop venue set and whether Binance is reachable through Copper at all.** The
+      operator's framing implies Binance needs Ceffu specifically, which suggests Binance is not on Copper's ClearLoop —
+      that determines whether Binance↔Bybit is one mirrored hop or a Ceffu→on-chain→Copper round trip, and the two have
+      very different cost and settlement-time profiles. This is a custodian-contract fact we should confirm with Copper
+      and Ceffu rather than infer from documentation.
+
+### H.12 Archetype reachability — the enum advertises 60, only 32 are instantiable (measured 2026-08-12)
+
+**This is the largest single deviation between what our documents imply and what strategy-service can actually run**, and
+it is the answer to "keep finding deviations between what we said we can deliver and the service as it is".
+
+Enumerated all 60 `StrategyArchetype` members against three surfaces:
+
+| Surface                                        | Count | Note                                                                  |
+| ---------------------------------------------- | ----- | --------------------------------------------------------------------- |
+| `StrategyArchetype` enum members                | **60** | What the enum advertises                                              |
+| Engine files declaring `ARCHETYPE = …`          | **50** | 10 declare none                                                        |
+| **Registered in `ARCHETYPE_ENGINE_REGISTRY`**   | **32** | `get_v2_engine()` raises `KeyError` for the other 28                   |
+
+**28 archetypes are enum-declared but not factory-registered.** Breakdown, because the causes differ:
+
+- **16 of 17 `VOL_*`** — `vol_trading/` holds ~30 modules and the engines DO declare their `ARCHETYPE`
+  (`VOL_DISPERSION`, `VOL_STRADDLE`, `VOL_CARRY`, `VOL_TERM_STRUCTURE_ARB`, `VOL_VARIANCE_SWAP`, …), but `factory.py`
+  imports `vol_trading` **once** and only `VOL_TRADING_OPTIONS` is registered and slot-emitted. The rest are written,
+  documented, and unreachable.
+- **5 of 7 `MARKET_MAKING_*`** — `INVENTORY_SKEW`, `ML_LEAN`, `PASSIVE_SPREAD`, `PREDICTION`, `QUEUE_MICROSTRUCTURE`.
+- **4 `PORTFOLIO_*`** — **correct by design, not a gap.** The Portfolio family produces `AllocationDirective` events
+  rather than per-trade signals, which `strategy-summary.md` already states. Do not "fix" these.
+- **`ARBITRAGE_MEV_SANDWICH`, `VOL_0DTE_PIN_RISK`** — neither engine nor registration.
+
+**Mitigating fact, established rather than assumed:** the factory **fails loudly** —
+`raise KeyError(f"no v2 engine registered for archetype {archetype.value}")`. So this is dead-but-safe code, NOT the
+silent-mis-routing bug that hit `SportsArbDutchingEngine` (which shared an archetype VALUE, so slots got the *wrong*
+engine). Nothing is silently trading the wrong strategy. The risk is disclosure, not correctness: a client engineer who
+enumerates the enum and tries to instantiate will hit `KeyError` on 28 of 60.
+
+- [ ] [AGENT] P0. **Decide per unreachable archetype: register, or mark not-implemented in the enum's own docstrings.**
+      A written-and-unreachable engine is worse than an absent one because the code implies capability the factory denies.
+      For the vol family specifically, establish whether the 16 are genuinely complete-but-unwired (a one-line registration
+      each) or scaffolds — `VOL_DISPERSION`'s own docstring admits a degraded single-surface fallback, which suggests
+      partial. **Do not register anything that cannot pass a paper run.**
+- [ ] [AGENT] P1. **Reconcile the archetype docs against reachability.** `archetypes/` has ~59 docs; if a doc describes an
+      archetype the factory cannot build, the doc must say so via `implementation_status` (the frontmatter field already
+      exists and `carry-funding-dispersion.md` uses `code-shipped`). An archetype doc reading as live when the factory
+      raises `KeyError` is the doc-vs-code false consensus that already cost this session a day.
+- [ ] [AGENT] P1. **Client-document check before the repo is sent.** No client artefact should imply the full 60 are
+      runnable. The deep dive currently says "55 `on_tick` implementations", which is true of the tree and **not** the same
+      as instantiable — that number should be re-derived from the factory registry, or dropped per the no-totals rule.
+
+### H.13 Instance cardinality — the role-slot model, measured across all 60 (2026-08-12)
+
+Corrects my own over-generalisation that "an instance is one coin on one venue". **An instance is one cell of a grid whose
+axes are the archetype's role-slots**; what varies is how many roles there are and whether a role holds one value or a set.
+
+**Only TWO archetypes hold set-valued roles inside a single instance:**
+
+| Archetype                    | Set-valued roles                        | Why it must be                                     |
+| ---------------------------- | --------------------------------------- | -------------------------------------------------- |
+| `ARBITRAGE_PRICE_DISPERSION` | `candidate_coins` **and** `candidate_venues` | Cross-venue dispersion needs ≥2 venues to compare |
+| `ARBITRAGE_SPORTS_DUTCHING`  | `candidate_venues`, `outcome_set`       | A dutched book needs the complete outcome set      |
+
+The other 48 engine-bearing archetypes are single-valued per role — but role COUNT varies:
+`CARRY_FUNDING_DISPERSION` = coin × venue (2); `CARRY_STAKED_BASIS` = LST × spot_venue × perp_venue (3);
+`YIELD_STAKING_SIMPLE` = protocol × share × asset (3).
+
+**Why this determines the weighting layer:** the allocator's axis is whatever the archetype did NOT internalise. Funding
+dispersion compares coins across instances, so its rank allocator weights all coin-venue cells; price-dispersion arb
+compares venues *inside* one instance, so the allocator can only weight across coins. That is why there is one rank
+allocator per archetype rather than a generic weighter.
+
+- [ ] [AGENT] P2. **Record the role-slot model in `/codex/09-strategy/architecture-v2/README.md`** as the canonical way to
+      reason about instance cardinality and combinatorics, with the two set-valued exceptions named.
+
+### H.14 The tick-contract ceiling — `dict[str, float]` limits an instance to one surface (2026-08-12)
+
+`VOL_DISPERSION`'s docstring states it plainly: _"a faithful dispersion trade spans the index surface AND each component
+surface. The flat `dict[str, float]` feed exposes ONE surface per engine tick"_ — so it implements a two-surface view from
+two named feature keys and otherwise **falls back to a degraded single-surface mode and attests it**
+(`degraded_single_surface`).
+
+**This is the real constraint on combinatorics, and it is architectural rather than per-archetype.** Anything needing a
+*vector* of underlyings per tick either degrades or must receive its cross-sectional signal pre-computed upstream — which
+is exactly why `CARRY_FUNDING_DISPERSION` takes a scalar `funding_rank_pct` computed over the whole cohort elsewhere. That
+pattern is the workaround for this ceiling, not a coincidence.
+
+- [ ] [AGENT] P2. **Document the ceiling in the architecture-v2 README** alongside the role-slot model, including the
+      upstream-scalar workaround and the honest-degradation pattern. The engines already attest degraded modes, which is a
+      strength to show rather than hide.
+- [ ] [AGENT] P3. **Decide whether the tick contract should carry a vector.** Widening `features` beyond
+      `dict[str, float]` would remove the ceiling but touches every engine and the batch=live determinism spine. Not a
+      casual change — scope it before anyone assumes multi-underlying archetypes can simply be finished.
+
+### H.15 Rulings 3 and 4 — venue eligibility is config; share class is not a margin currency (2026-08-12)
+
+SSOTs: [venue-eligibility](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md) § RULING 3 ·
+[transfer-architecture](/codex/04-architecture/transfer-architecture.md) § RULING 4. **Both are code-violates-codex
+findings, not new architecture** — `venue-eligibility.md` already listed "which venues can this strategy use" as strategy
+config before either ruling was written.
+
+- [ ] [AGENT] P1. **Remove the research-based venue exclusions from the catalogue; make them instance-config defaults.**
+      `_FUNDING_DISPERSION_VENUES` omits `HYPERLIQUID` for a kind-2 (research) reason — "momentum" — enforced as a kind-1
+      (physical capability) exclusion, so **no instance config can opt Hyperliquid in even for a deliberate experiment**.
+      Hyperliquid IS present in `_CARRY_BASIS_PERP_VENUE_BUNDLES` and the staked-basis perp venues, so this is an
+      inconsistency inside one file rather than considered policy. Emit the slot; carry the reversion-inverts view as a
+      documented instance-config default. **Then sweep for the same category error elsewhere** — any venue omitted for an
+      edge reason rather than a capability reason.
+- [ ] [AGENT] P0. **Stop using `ShareClass` to encode venue margin currency.** `("hyperliquid", "HYPERLIQUID",
+      ShareClass.USDC)` and `"KRAKEN takes USDC + USDT, USDC wins"` conflate a fund property with a venue property, which
+      makes an ETH share class structurally unable to trade a USDC-margined venue. Split the two: venue margin currency
+      comes from the collateral registry; share class stays a fund attribute.
+- [ ] [AGENT] P0. **Build the funding-route feasibility graph per `(client_id, strategy_id)`.** Routes: direct · convert
+      (depeg + residual short exposure, optionally perp-hedged) · borrow-against (**client-restriction-config gated**) ·
+      lend-to-offset. Inputs are what the client grants access to — trading venues, custodians, borrow/lend venues, bank
+      brokers. **Semantics: route EXISTENCE, not policy** — "Aave lets you borrow USDT against this" says the route is
+      possible, not that the strategy should take it, which is what keeps it opt-in. An infeasible route must **fail loudly
+      at resolution**, exactly as `_staked_basis_eligible()` already refuses infeasible (LST × perp_venue) pairs.
+- [ ] [AGENT] P2. **Keep `ShareClassFxMatrix` to NAV conversion only.** It is an accounting projection for allocator
+      weighting and must not be mistaken for capital movement — a real conversion is a trade with slippage, fees and a
+      residual exposure owner. Add that boundary to its docstring so the next reader does not wire it into the capital path.
+- [ ] [AGENT] P2. **Expand set-valued roles where the archetype genuinely spans a set** (operator: "we should expand this
+      where we can"). Only `ARBITRAGE_PRICE_DISPERSION` and `ARBITRAGE_SPORTS_DUTCHING` hold set-valued roles today.
+      Candidates to assess: multi-venue basis (one instance comparing perp venues for one coin), the dispersion basket as a
+      single instance rather than N coordinated instances, and multi-underlying vol. **Gate each on the H.14 tick-contract
+      ceiling** — a set-valued role is only implementable if the engine can receive the whole set per tick, or the
+      cross-sectional signal is pre-computed upstream as a scalar. Do not widen a role the feed cannot fill.
+
+### H.16 e2e→production diff — the research book has 8 overlays, production has 2 (audited 2026-08-12)
+
+**The single most material deviation found: the measured research Sharpe belongs to a book production does not implement.**
+`funding_reversion_crossvenue_book.py` (738 lines, e2e-testing) ships a stacked 8-overlay book and its
+`Delete-when:` marker says the reversion signal folds into strategy-service. `CarryFundingDispersionEngine`'s docstring
+asserts the overlays are "signal/portfolio-layer concerns folded into the rank + the inverse-vol weight feature". **Measured
+against the tree, that claim does not hold.**
+
+**IN production (2 of 8):** inverse-vol sizing (arrives as `funding_inverse_vol_weight`, applied in `_leg_weight`) and the
+squeeze-veto (`squeeze_threshold` / `funding_squeeze_sigma`, in-engine).
+**ABSENT (6):** EWMA(21)-lagged signal (upstream is `_cross_sectional_rank`, a plain same-day rank — likely absent, not
+fully verified) · rank-buffer hysteresis (no `rank_buffer`) · HL-veto · no-trade band (no `no_trade_band`) · **beta-hedge and
+vol-target are DOCSTRING ONLY** — prose in `funding_dispersion.py` and `catalog_carry.py`, no implementation. (TSMOM has its
+own real vol-target; different archetype.) Placement for all four is settled in the expansion plan § A.
+
+**Production implements 2 of 8.** Overlays 6 and 7 in particular **cannot** be "folded into the rank" — a beta-hedge
+requires an actual BTC hedge position and vol-target scales book-level exposure; neither is a property of a per-coin rank
+scalar. The upstream rank IS real (`paper_run_handler` computes it from the full day cohort), so overlay 1's smoothing is
+the only one that could plausibly hide there, and the code reads as a plain rank.
+
+**Why this is P0 and not a research nicety:** the research script documents its Sharpe and drawdown *with the full stack*,
+and overlay 7 is explicitly described there as "the drawdown DIAL". Running 2 of 8 is a materially different risk profile
+from the one that justified the strategy. **No client-facing performance claim may cite the research book's numbers while
+production runs a subset.**
+
+- [ ] [AGENT] P0. **Decide per overlay: implement, or delete the docstring claim.** The current state is the worst of both —
+      the docstring tells a reader beta-hedge and vol-target are handled elsewhere, so nobody goes looking. Either build them
+      at the book layer (they are portfolio-level, so likely the allocator or a risk overlay, not the per-instrument engine),
+      or state plainly in the docstring that production runs the un-overlaid book.
+- [ ] [AGENT] P0. **Confirm whether the upstream rank applies EWMA smoothing and lag.** Read `_cross_sectional_rank` and
+      the `perp_funding` feature path. If it is a plain same-day rank, production turnover will materially exceed the
+      research book's, which was explicitly tuned for lower churn ("slower = lower turnover, holds Sharpe").
+- [ ] [AGENT] P1. **`funding_reversion_multivenue_capital.py` is entirely unmigrated.** Its `Delete-when:` says the
+      multi-venue capital/transfer layer folds into `TransferCoordinator`. **Zero hits** for `FIXED_LEVERAGE`,
+      `full_funding`, `pnl_sweep` or equivalents anywhere in strategy-service or execution-service. What it provides and
+      production lacks: gross/net/dollar leverage tracking, **margin posted per venue**, FREE capital, a **treasury of swept
+      PnL**, and cross-venue transfer instructions — plus the two capital regimes (FULL-FUNDING vs the default
+      FIXED-LEVERAGE with weekly sweep). That last is not an accounting nicety: the regime determines transfer volume
+      (~$75k/yr vs ~$300k/yr on $1M by its own figures), so it drives cost. Folds into the H.11 transfer work.
+- [ ] [AGENT] P2. **Then re-check the other e2e research scripts the same way.** Two were audited; `funding_reversion_paper_trade.py`,
+      `test_funding_reversion_crypto_filter.py` and the `scripts/audit/` set were not. The `Delete-when:` markers are the
+      cheap index — each one names the production home it is waiting on, so a script whose marker names a landed component is
+      either migrated or a gap, and the marker tells you which to check.
+
+### H.17 RULING 5 — one schema-backed config surface, and the causal chain that explains the hardcodes (2026-08-12)
+
+**Operator ruling:** the HL veto — and every comparable choice — belongs in the client strategy-instance configuration, not
+in code. **All such configuration lives in ONE place, outside code, `config.py`-style with schema and defaults, because that
+is what hot-reloads.**
+
+**Most of the machinery already exists**, which makes the gaps specific rather than architectural:
+
+| Piece                       | State                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------ |
+| Schema registry             | ✅ `PARAM_SCHEMA_REGISTRY` — 793 lines, `ParamSpec` per param, **35 archetypes covered**    |
+| Validation                  | ✅ `get_strategy_params()` raises `WizardParamPayloadError` on unknown archetype, unknown param name, or a required param with neither value nor default |
+| Defaults                    | ✅ carried on `ParamSpec`, plus `configs/defaults/` family files                             |
+| Hot reload                  | ✅ `strategy_service/config_reloaders.py` (+ a `signal_broadcast/` one)                      |
+| External config             | ✅ `load_strategy_config()` reads from GCS, per `strategy_id`                                |
+
+**The causal chain — this is the finding, not the list.** Asked the registry directly rather than grepping:
+**`CARRY_FUNDING_DISPERSION` is NOT IN `PARAM_SCHEMA_REGISTRY` at all.** Compare `ARBITRAGE_PRICE_DISPERSION`, which has
+**18** schematised params including `candidate_venues`, `venue_universe`, `pair_selection_mode` and a full vol-cap-clamp
+group. Dispersion's params (`long_rank_pct`, `short_rank_pct`, `stake_fraction`, `min_mid_price`, `squeeze_threshold`) exist
+only as inline `decimal_param(self.params, …, Decimal("…"))` calls with defaults buried in the engine.
+
+So: **no param schema → no config surface → the venue choice had nowhere to live → it was hardcoded into the catalogue
+tuple.** The Hyperliquid exclusion in `_FUNDING_DISPERSION_VENUES` is a *symptom* of the missing schema entry, not an
+independent mistake. Fixing ruling 3 without fixing this would just move the hardcode.
+
+Coverage across three surfaces now measured, and no two agree: **60** enum members · **32** factory-registered (H.12) ·
+**35** with param schemas.
+
+- [ ] [AGENT] P0. **Add `CARRY_FUNDING_DISPERSION` to `PARAM_SCHEMA_REGISTRY`** with its five existing params plus the
+      venue-veto/instrument-selection fields ruling 3 requires, then delete the inline defaults in favour of the schema's.
+      This is the prerequisite for ruling 3 — the veto needs a schema slot before it can move out of the catalogue.
+- [ ] [AGENT] P1. **Reconcile the three coverage surfaces (60 / 32 / 35) and state the intended relationship.** A
+      factory-registered archetype with no param schema cannot be configured through the validated path; an archetype with a
+      schema but no factory entry cannot be built. Neither is currently detectable — **add a gate asserting
+      factory-registered ⊆ param-schema-covered**, so the next divergence fails CI instead of being discovered by audit.
+- [ ] [AGENT] P1. **Audit for other config that lives in code rather than the schema surface.** Known instances beyond the
+      HL veto: per-venue `ShareClass` in the venue bundles (ruling 4), `_BANNED_LST_PERP_COMBOS`, the archetype venue tuples
+      themselves, and the dispersion overlay thresholds. The test for each: **would an operator want to change this without a
+      deploy?** If yes it belongs in the hot-reloadable surface.
+- [ ] [AGENT] P2. **Confirm `config_reloaders.py` actually covers strategy-instance params**, not only credentials and
+      signal-broadcast config. Hot reload existing in the repo is not the same as hot reload covering the params an operator
+      most wants to change — verify the reload path reaches `PARAM_SCHEMA_REGISTRY`-driven instance config, and wire it if
+      not. SSOT for the pattern: [config-reloader-pattern](/codex/06-coding-standards/config-reloader-pattern.md).
+
+## Deferred work after 2026-08-12
+
+**Session handoff — deferred table, lessons, corrections, invariants and rejected approaches — MOVED to**
+[strategy_service_expansion_overlays_config_and_wizard](/plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md)
+§ "Session handoff 2026-08-12". It lives with the plan that will EXECUTE the remaining audits rather than with this
+delivery plan, and this plan is at its 1000-line hard cap. Measurement lessons are in codex:
+[measurement-claims-discipline](/codex/12-agent-workflow/measurement-claims-discipline.md).
+
+**Recommended next: the 54-archetype sweep, instrument-axis selection, then instance-to-wallet binding** — the only work
+between here and an artifact pass writable once instead of twice.
 
 ## Progress Log
 
@@ -522,7 +962,9 @@ it with `--quiet`, which **prints the violation count without the filename**.
   tier rule and must not simply be deleted. Confirmed the operator's recollection that treasury/client prior art exists:
   `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` and
   `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` are both written and must be read before
-  any keying change. Measured the manual gap precisely: the rail enum has three members, all API-executed, so a
+  any keying change. ⚠️ **The rail-enum sentence that follows is WRONG — corrected in H.11, kept here so the error is
+  traceable rather than silently rewritten.** Measured the manual gap precisely: the rail enum has three members, all
+  API-executed, so a
   bookmaker deposit is unrepresentable; and `ApprovalBus` provides approval of a system-executed transfer, which is the
   inverse of the manual case. Added manual **trade** capture alongside manual transfers, since betting venues will be
   hand-operated at first and the fills must still book canonically.

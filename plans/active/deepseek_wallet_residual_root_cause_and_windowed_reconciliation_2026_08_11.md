@@ -30,7 +30,7 @@ related:
     /codex/12-agent-workflow/measurement-claims-discipline.md,
   ]
 created: 2026-08-11
-last_updated: 2026-08-11
+last_updated: 2026-08-12
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -160,12 +160,12 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       free), transcripts are 77G, and the fleet burns ~1,225 files/day at ~3.4 MB each (~4.2 GB/day) — a 30-day
       extension would consume essentially all remaining free space. **Done when**: the setting is pinned and the
       disk-headroom figures are re-checked at the time of the change. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P3. **Decide whether to fund request-level accounting at a proxy.** The only class the transcript
-      design can NEVER see is tokens billed with no transcript line — a pane killed mid-stream, a request that errors
-      after generation, a retry. Routing DeepSeek traffic through a local pass-through proxy would log every response's
-      usage block when it returns, independent of whether the client survived to write the transcript. Measured cost of
-      NOT doing it is currently ~$0.07-$0.16 per crash-loop episode, so this is a judgment call about observability, not
-      a cost-recovery case. Revisit if the first true 24h residual is materially above the ~$0.13 skew floor.
+- [x] ✅ [OPERATOR] P3. **SUPERSEDED 2026-08-12 by the P1 proxy-scoping todo above — do not re-decide this as a
+      standalone item.** Originally framed as a judgment call because the only known benefit was catching
+      crash-loop/pane-death edge cases (~$0.07-$0.16/episode). 2026-08-12 findings raised the stakes: the SAME proxy is
+      now the only way to capture correct per-task token splits at all (DeepSeek's `/anthropic` endpoint discards the
+      native cache-hit/miss breakdown server-side before it ever reaches us — see above). This is no longer a small
+      edge-case tradeoff; it is the blocking dependency for accurate per-task DeepSeek cost attribution in the AO view.
 
 - [x] ✅ [BACKEND] P0. **ROOT-CAUSED — 82% of the "42.7% unattributed" was a PHANTOM TOP-UP, not lost spend.** Row id 6
       ($10.00, 2026-08-11 11:13Z, note "erro is previous top up sum") recorded a top-up that never happened.
@@ -215,24 +215,102 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       which estimator is used. Root cause of the shortage: all usable spend sits in ONE burst (2026-08-11 07:46-09:30Z)
       with one token mix; the fleet has been idle since. **Identification needs days whose token MIX differs**, which is
       exactly what the daily cron now accumulates — it is a data-availability limit, not an analysis one.
-- [ ] [OPERATOR] P1. **Verify the DeepSeek rate card against DeepSeek's own usage page — the residual is now a rate
-      question.** With capture at 99.93% and the rate-card arithmetic exact, the remaining ~14% must be a per-token rate
-      that does not match what DeepSeek actually bills. A SINGLE window cannot say which rate is wrong: closing the
-      $2.09 gap needs input x1.25, OR output x2.26, OR cache_read x2.43 — all three fit equally well. What
-      separates them is a token mix that VARIES, so this pairs with the daily-series todo below. Compare our 24h
-      totals (flash 22,892,972 in / 3,046,702 out / 307,019,392 cache-read = $4.9177;
-      pro 11,480,931 / 929,470 / 166,986,240 = $6.4082) against platform.deepseek.com's usage page for the same window.
-      **Done when**: each published rate is confirmed or corrected in `model_pricing.py` with the source cited. (repo:
-      agent-orchestrator)
-- [ ] [DATA] P1. **Re-measure the 24h residual daily for a week — and regress it to identify WHICH rate is wrong.** One
-      window is one datapoint, and this one ran at low volume ($14.50 real vs ~$122/24h on 2026-08-11), where a fixed
-      unattributable component looks proportionally huge and a proportional one does not. Beyond that
-      fixed-vs-proportional split, the series answers a sharper question: with 7 readings whose token MIX differs,
-      regressing real_spend on (input, output, cache_read) tokens yields coefficients that ARE the true per-token rates
-      — which is the only way to distinguish the three equally-good single-window fits above without vendor ground
-      truth. Run `deepseek_spend_probe.py` (its `reconciliation` block emits every window at once). **Done when**: 7
-      daily readings are recorded with volume and token mix alongside residual, and the regression either names the
-      mispriced rate or shows the residual is not rate-shaped. (repo: agent-orchestrator, read-only)
+- [x] ✅ [OPERATOR] P1. **VERIFIED 2026-08-12 — the rate card is CORRECT. The residual is NOT a rate question; it is a
+      DeepSeek-server-side schema-translation defect that makes our per-turn token CATEGORIES wrong.** Compared
+      `platform.deepseek.com`'s usage page against our totals for four model-days (flash/pro x 08-10/08-11). Vendor's
+      own reported token counts, run through our UNCHANGED `model_pricing.py` rates, reproduce vendor's own stated
+      dollar cost to the cent on all four: flash 08-10 predicted $34.97 vs actual $34.97; pro 08-10 $45.07 vs $45.06;
+      flash 08-11 $32.3037 vs $32.30; pro 08-11 $47.1807 vs $47.18 (inferred from the $79.48 daily total). Also
+      cross-checked against `api-docs.deepseek.com/quick_start/pricing` directly: the published per-model rates are
+      byte-identical to what's already coded. **So `model_pricing.py` needs no correction.**
+      What IS real: our own captured per-turn token counts (`deepseek_message_usage.input_tokens` /
+      `cache_read_input_tokens` / `output_tokens`) disagree with vendor's own category breakdown by a large, consistent,
+      day-repeating margin — vendor's cache-hit count is 2.5-3.2x OUR `cache_read_tok`, vendor's cache-miss is 0.5-0.7x
+      our `input_tok`, vendor's output is 1.3-1.65x our `output_tok` — same direction, every day, both models. Root
+      cause (Explore-agent trace, 2026-08-12): DeepSeek is reached via DeepSeek's own Anthropic-Messages-API-compatible
+      endpoint (`https://api.deepseek.com/anthropic`), not their native `/chat/completions` endpoint. The translation
+      from DeepSeek's native usage fields (`prompt_tokens`/`completion_tokens`/`prompt_cache_hit_tokens`/
+      `prompt_cache_miss_tokens`/`completion_tokens_details.reasoning_tokens`, confirmed live against
+      `api-docs.deepseek.com/api/create-chat-completion`) into the Anthropic-shaped fields that land in our transcripts
+      happens **inside DeepSeek's own server**, before the response ever reaches the `claude` CLI or this repo. Grepped
+      the whole repo for the native field names: zero hits — there is no in-repo translation step to fix, and the sweep
+      (`deepseek_usage.py` / `deepseek_usage_poller.py`) does a confirmed clean 1:1 pass-through of whatever the
+      transcript already contains. **This also explains why turn-capture (99.93%) and arithmetic-exactness (previous
+      todo) both looked clean while a real gap persisted**: those checks validate turn PRESENCE and formula CORRECTNESS
+      given the stored token counts — neither checks whether the stored token counts themselves are the right numbers,
+      and they are not. See the new proxy-scoping todo below for the forward-looking fix; historical data cannot be
+      recovered (see the reprocessing-feasibility todo below).
+- [x] ✅ [BACKEND] P1. **CLOSED, superseded by the finding above — do not re-run.** The regression-for-which-rate
+      approach (this todo, originally) and the single-window candidate-multiplier framing in the todo above both
+      implicitly assumed a mispriced RATE was the failure mode. It is not. A single-rate solve (hold two categories
+      fixed, solve the third) on the 08-10 data gives DIFFERENT implied multipliers per category and per model (flash
+      input 1.25x, output 1.28x, cache_read 1.12x; pro input 1.14x, output 1.44x, cache_read 1.35x) — inconsistent
+      with one mispriced number, and exactly what you'd see when forcing a category-mapping defect into a
+      single-parameter rate fit. Regressing `real_spend` on our own (miscategorized) `(input, output, cache_read)`
+      token counts would only ever recover coefficients that compensate for the mapping defect, not "true rates" —
+      the daily-cron log this todo was built on is still useful for OTHER purposes but not for rate identification.
+- [x] ✅ [BACKEND] P1. **Reprocessing feasibility checked — NO, existing transcripts cannot be reprocessed to recover
+      correct historical totals.** Confirmed retention is not the blocker: 14,642 transcript JSONLs on the AO VM
+      (`/home/ubuntu/.claude-configs`), oldest dated 2026-05-25 (older than this table's earliest row, 2026-06-30), 79GB,
+      no rotation/retention policy found. The blocker is that DeepSeek's native usage fields (`prompt_cache_hit_tokens`
+      etc.) are **never transmitted to us at all** — the `/anthropic` endpoint's server-side translation discards them
+      before the HTTP response reaches the client, so they were never written to any transcript in the first place. No
+      amount of re-parsing recovers information that was never on disk. (repo: agent-orchestrator, read-only)
+- [ ] [BACKEND] P1. **Scope a local Anthropic<->DeepSeek-native translating proxy — the only way to capture accurate
+      per-task token splits going forward.** Confirmed 2026-08-12 there is no after-the-fact fix: DeepSeek's API
+      reference (`api-docs.deepseek.com/api/create-chat-completion`) documents no endpoint to query a past request's
+      usage by request ID, so the real numbers can only ever be seen by intercepting them live, in the request path.
+      Design: a local HTTP shim that DeepSeek-account CLI processes point `ANTHROPIC_BASE_URL` at (instead of
+      `https://api.deepseek.com/anthropic` directly); it terminates the CLI's Anthropic-Messages request, translates it
+      to DeepSeek's native `/chat/completions` request shape, calls DeepSeek's NATIVE endpoint (not `/anthropic`),
+      persists the raw native `usage` block (tagged with the same slot/session/request correlation the sweep already
+      uses, so per-task attribution in the AO view keeps working) into a new table or new columns alongside
+      `deepseek_message_usage`, then translates the native response BACK to Anthropic Messages shape so the CLI is none
+      the wiser. Known hard parts to scope, not skip: (1) `tool_calls` are OpenAI-shaped on the native endpoint vs
+      Anthropic's `tool_use` content blocks — full bidirectional translation, not just the usage numbers; (2) streaming
+      SSE — native puts `usage` only in the final chunk (or earlier chunks via `stream_options.include_usage`), needs
+      correct chunk-by-chunk re-translation to Anthropic's SSE event shape; (3) availability risk — this proxy sits in
+      the live path for every DeepSeek-account agent, so a translation bug breaks conversations fleet-wide, not just
+      accounting; needs a canary/staged rollout and a fail-safe (fall back to direct `/anthropic` passthrough on proxy
+      error) rather than fail-closed. This upgrades and supersedes the P3 "decide whether to fund" todo below — the
+      case is no longer "$0.07-$0.16 per crash-loop episode," it is "this is the only path to correct per-task cost
+      attribution at all." **Done when**: a design doc names the translation approach (hand-rolled vs an existing
+      OpenAI<->Anthropic shim library), the availability-risk mitigation, and a storage schema for the native usage
+      block; scope as AO-dispatchable only once the design questions above are resolved (they are judgment calls, not
+      yet a bounded deterministic-outcome task). (repo: agent-orchestrator)
+      **2026-08-12 UPDATE — design pass done, implementation started (background agent).**
+      Library research: checked UniClaudeProxy, claudex, deepclaude, deepseek-claude-proxy (all Anthropic<->OpenAI
+      translating proxies with DeepSeek named as a backend) and LiteLLM. **None reused** — confirmed (fetched
+      UniClaudeProxy's own docs directly) it does NOT capture/expose DeepSeek's native `prompt_cache_hit_tokens`/
+      `prompt_cache_miss_tokens` fields, same loss as DeepSeek's own `/anthropic` endpoint just relocated; LiteLLM and
+      OpenRouter share the same problem by design (both are multi-provider abstraction layers whose whole point is
+      normalizing usage into a common shape — confirmed for OpenRouter specifically via a live GitHub issue reporting
+      DeepSeek cache-hit-rate mismatches through OpenRouter vs direct). **Decision: hand-roll a narrow, single-purpose
+      service inside `agent-orchestrator`**, using the OSS examples only as a reference for the SSE/tool-call
+      translation shape, not as a dependency.
+      Grounded against actual repo conventions (Explore-agent investigation, 2026-08-12): AO is explicitly EXEMPT from
+      UTL's `ServiceBootstrap`/`ApiKeyReloader` pattern (`scripts/quality-gates.sh:4-10` states this outright — AO is
+      a standalone FastAPI app, not a T4 service) — the new proxy follows AO's own house style, not UTL's. DB: new
+      `DeepSeekNativeUsageRow` in `server/orm.py` alongside the existing `DeepSeekMessageUsageRow`/`DeepSeekTopupRow`/
+      `DeepSeekBalanceHistoryRow` siblings — no Alembic in this repo, `Base.metadata.create_all()` in
+      `server/bootstrap.py:create_all_tables()` auto-creates it, zero extra migration step needed for a brand-new
+      table. **Correction to the earlier assumption**: credentials are NOT GSM-sourced — DeepSeek accounts' API keys
+      live in a plain per-account `.env` file (`~/.claude-accounts/<id>.env`, holds `ANTHROPIC_AUTH_TOKEN`), the SAME
+      file the `claude` CLI itself sources (`server/tmux_spawn.py:_start_session`) and the SAME pattern
+      `server/deepseek_balance.py` already uses to read it — the new proxy copies that exact pattern, no new secret
+      plumbing needed. **Architecture decision, made explicitly because of the concurrent tmux-server-death P0
+      investigation in the sibling issue doc**: run as a SEPARATE standalone systemd service/process (own port, own
+      unit, cloned from `orchestrator.service`/`install-orchestrator-service.sh`'s `Type=simple`/`Restart=on-failure`
+      pattern — NOT mounted as a router inside the main orchestrator FastAPI app), specifically to avoid adding new
+      per-turn HTTP/streaming load onto the same process the OTHER open P0 is actively investigating for
+      resource-contention-driven crashes. Tradeoff accepted: this needs a one-time manual systemd install (`sudo cp`
+      + `systemctl enable --now`) since `ao-self-pull.sh` only restarts the `orchestrator` unit specifically, not
+      generic new services — an install script will be authored so it's a single confirmed command, not manual
+      config-writing. **Operator action still needed** once code is ready: (1) confirm/run the one-time systemd
+      install on the VM, (2) confirm the canary account's `.env` `ANTHROPIC_BASE_URL` edit to point at the local
+      proxy — both deliberately left as confirm-before-execute checkpoints rather than run unilaterally, since they
+      touch live shared production infra. Implementation (code + tests, NOT deployment) delegated to a background
+      agent same session; see this doc's Progress Log for the result once it lands.
 
 ## Deferred work after 2026-08-12
 
@@ -251,8 +329,30 @@ item here is secondary to it.
 | Fix the `uv.lock` churn cycle                            | **Not done** — touches `setup.sh` sibling pinning + cron `[auto-clean]`, both fleet-load-bearing         | operator scoping (my recommendation) |
 | Flip `QG_ENFORCE_FRESH_VENV` to default on               | **Cannot be done yet** — strictly downstream of the churn fix                                            | the churn fix                        |
 | Anthropic Wallet Reconciliation (5 todos)                | **Not done** — filed in the anthropic calibration plan; AO-dispatched                                    | nobody                               |
-| Request-level proxy accounting for DeepSeek              | **Operator-owned** — a cost/observability judgement, not a defect                                        | operator decision                    |
+| Scope + build the Anthropic<->DeepSeek-native translating proxy | **Not done** — now the blocking dependency for correct per-task cost attribution, not optional     | design decisions (see P1 todo above) |
 | Peer conflicts left in two shared clones (see issue doc) | **Operator-owned** — another session's WIP; not mine to resolve                                          | the sessions that own them           |
+
+- **2026-08-12** — Compared `platform.deepseek.com`'s usage page against our stored totals for 4 model-days (flash/pro
+  x 08-10/08-11) to test the "which rate is wrong" hypothesis this plan's rate-verification todo was built on. Hit and
+  fixed a real query bug along the way: `recorded_at` is stored with a SPACE separator
+  (`2026-08-10 05:23:11.123`), not `T`; a `>=` bound written as `'2026-08-10T00:00:00'` sorts LEXICALLY AFTER
+  same-day space-formatted rows (space 0x20 < 'T' 0x54), so it silently admitted the WRONG calendar day. Re-ran with
+  explicit `BETWEEN` space-format bounds. Verified capture completeness separately via `deepseek_spend_probe.py
+  --capture` over the most recent 40h: transcripts-vs-DB match at 99.98%+, ruling out a sweep/loss explanation for the
+  gap. Found: vendor's own token counts, priced at our UNCHANGED rate card, reproduce vendor's own stated dollar cost
+  to the cent on all 4 model-days — the rate card is correct, full stop. Dispatched an Explore agent to trace the
+  DeepSeek call path end-to-end; it found DeepSeek is reached via their own Anthropic-compat endpoint
+  (`https://api.deepseek.com/anthropic`), confirmed (grep, zero hits for DeepSeek's native field names anywhere in the
+  repo) that the lossy translation from native usage fields to the Anthropic-shaped fields we store happens
+  server-side at DeepSeek, before any of our code sees the response. Cross-checked against
+  `api-docs.deepseek.com/quick_start/pricing` (rates match exactly) and `api-docs.deepseek.com/api/create-chat-completion`
+  (confirmed the native usage field names, and confirmed there is no endpoint to query a past request's usage after
+  the fact — ruling out a cheap async-correlation fix). Checked transcript retention on the AO VM before concluding
+  reprocessing was infeasible: 14,642 files back to 2026-05-25, 79GB, no rotation policy — retention was never the
+  blocker, the native fields simply were never transmitted to us. Reframed the plan's remaining rate-identification
+  todos as closed/superseded and added a new P1 todo to scope a local translating proxy as the only forward-looking
+  fix, superseding the old P3 "decide whether to fund" todo (the case for it is now much stronger than the original
+  crash-loop-only framing).
 
 ## Session lessons 2026-08-12 (carry these — each cost real time)
 

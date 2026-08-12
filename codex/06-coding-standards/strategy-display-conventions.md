@@ -43,8 +43,9 @@ code_refs:
 > `unified-trading-system-ui/lib/strategy-display.ts`. **Plan:**
 > [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`strategy-identity-versioning.md`](./strategy-identity-versioning.md) (naming of the underlying
-> IDs), [`/codex/09-strategy/architecture-v2/README.md`](/codex/09-strategy/architecture-v2/README.md) (the 8 families +
-> 18 archetypes this formats).
+> IDs), [`/codex/09-strategy/architecture-v2/README.md`](/codex/09-strategy/architecture-v2/README.md) (the families and
+> archetypes this formats — counts deliberately omitted, they were "8 families + 18 archetypes" against a live enum of 9
+> and 60; read `StrategyFamily` / `StrategyArchetype`).
 
 ---
 
@@ -112,7 +113,15 @@ Names reviewed + locked with Ikenna 2026-04-24. Updating requires a new review +
 
 ---
 
-## §4 — Bespoke family display names (8 families)
+## §4 — Bespoke family display names
+
+> **`PORTFOLIO` was missing from this table until 2026-08-12.** The heading said "(8 families)" and the table had eight
+> rows, so the stale count concealed a genuinely absent row — the family added 2026-04-25 in Phase 9 had **no display-name
+> convention at all**, meaning any UI or report formatting a `PORTFOLIO` strategy had nothing defined to render. The name
+> `Portfolio` was not invented here: it is already the de-facto rendering in
+> [`strategy-summary.md`](/codex/09-strategy/strategy-summary.md) and
+> [`architecture-v2/README.md`](/codex/09-strategy/architecture-v2/README.md). **Count removed rather than corrected** —
+> one row per `StrategyFamily` member is the rule; read the enum.
 
 | Family ID              | Display name          |
 | ---------------------- | --------------------- |
@@ -124,6 +133,7 @@ Names reviewed + locked with Ikenna 2026-04-24. Updating requires a new review +
 | `EVENT_DRIVEN`         | Event Driven          |
 | `VOL_TRADING`          | Volatility Trading    |
 | `STAT_ARB_PAIRS`       | Statistical Arbitrage |
+| `PORTFOLIO`            | Portfolio             |
 
 ---
 
