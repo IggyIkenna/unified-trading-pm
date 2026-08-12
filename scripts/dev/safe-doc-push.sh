@@ -427,6 +427,26 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
         git -C "$_sdp_iso_wt" config --worktree user.email "$SLOT_ID_CANON_EMAIL" 2>/dev/null \
           || git -C "$_sdp_iso_wt" config user.email "$SLOT_ID_CANON_EMAIL"
       fi
+      # ---- private PREK_HOME -- shared cache, PRIVATE patches dir (mirrors quickmerge.sh) ----
+      # prek's default cache (~/.cache/prek) is HOST-GLOBAL; its `patches/` subdir is where a
+      # hook batch's unstaged-change stash/restore cycle lives, and two CONCURRENT isolated
+      # worktrees (this script's own, or a peer's quickmerge.sh isolation) funnel through that
+      # SAME directory even though their checkouts are fully separate -- a slower run's restore
+      # can silently revert a faster run's already-landed content. Measured live 2026-08-12,
+      # reproducible. SSOT:
+      # /plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md.
+      # `repos`/`hooks`/`tools`/`cache`/config-tracking.json are expensive hook-environment
+      # installs, not part of the race -- symlinked in from a shared per-repo cache so this
+      # doesn't reinstall every hook repo on every commit; `patches`/`scratch` are left for prek
+      # to create fresh, private to this run.
+      _sdp_iso_prek_shared="${SDP_ISO_PREK_CACHE:-$HOME/.cache/qm-iso-prek}/unified-trading-pm"
+      mkdir -p "$_sdp_iso_prek_shared" 2>/dev/null
+      _sdp_iso_prek_home="$_sdp_iso_parent/prek-home"
+      mkdir -p "$_sdp_iso_prek_home" 2>/dev/null
+      for _sdp_prek_shared_item in repos hooks tools cache config-tracking.json; do
+        [[ -e "$_sdp_iso_prek_shared/$_sdp_prek_shared_item" ]] || continue
+        ln -sfn "$_sdp_iso_prek_shared/$_sdp_prek_shared_item" "$_sdp_iso_prek_home/$_sdp_prek_shared_item" 2>/dev/null
+      done
       cd "$_sdp_iso_wt" || exit 2
       # Re-exec THIS script (the one the caller actually invoked), NOT the worktree's copy.
       # The worktree is checked out at origin/<branch>, so running its copy would silently
@@ -441,8 +461,17 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
       # to an empty command, `bash` then runs WITHOUT them, the child does not see
       # SDP_IN_ISOLATION, and it re-enters isolation forever. Measured 2026-08-10: 116 nested
       # invocations and 721 stray worktrees from one 6-worker run.
-      SDP_IN_ISOLATION=1 SDP_ISO_DEPTH=$((_SDP_ISO_DEPTH + 1)) SDP_CALLER_REPO="$_sdp_origin_repo" bash "$_SDP_SELF" "$MSG" --files "${FILES[*]}" "$BRANCH"
+      PREK_HOME="$_sdp_iso_prek_home" SDP_IN_ISOLATION=1 SDP_ISO_DEPTH=$((_SDP_ISO_DEPTH + 1)) SDP_CALLER_REPO="$_sdp_origin_repo" bash "$_SDP_SELF" "$MSG" --files "${FILES[*]}" "$BRANCH"
       _sdp_rc=$?
+      # Seed the shared cache from whatever prek created on first use, so the NEXT isolated run
+      # (this repo only ever has one, unified-trading-pm) reuses it instead of reinstalling.
+      for _sdp_prek_seed_item in repos hooks tools cache config-tracking.json; do
+        [[ -e "$_sdp_iso_prek_home/$_sdp_prek_seed_item" ]] || continue
+        [[ -L "$_sdp_iso_prek_home/$_sdp_prek_seed_item" ]] && continue
+        [[ -e "$_sdp_iso_prek_shared/$_sdp_prek_seed_item" ]] && continue
+        mkdir -p "$(dirname "$_sdp_iso_prek_shared/$_sdp_prek_seed_item")" 2>/dev/null
+        cp -R "$_sdp_iso_prek_home/$_sdp_prek_seed_item" "$_sdp_iso_prek_shared/$_sdp_prek_seed_item" 2>/dev/null || true
+      done
       cd "$_sdp_origin_repo" || true
       [ "$_sdp_rc" = "0" ] && _sdp_reconcile_caller_duplicates
       exit "$_sdp_rc"

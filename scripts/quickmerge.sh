@@ -906,6 +906,44 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
         ( cd "$_qm_iso_wt" && UV_PROJECT_ENVIRONMENT="$_qm_iso_venv" uv sync ) >/dev/null 2>&1 ||
         echo "  isolation: uv sync failed — the re-gate will abort on it (by design, not silently)" >&2
     fi
+    # ---- private PREK_HOME -- shared cache, PRIVATE patches dir --------------------------
+    # prek's own default cache (~/.cache/prek, or $XDG_CACHE_HOME/prek) is HOST-GLOBAL, not
+    # per-checkout. Its `patches/` subdir is where prek stashes+restores unstaged changes
+    # around each hook batch; two CONCURRENT isolated worktrees on the same host both funnel
+    # through that same directory, and prek's own internal locking does not fully close the
+    # window -- a slower run's restore can silently revert a faster run's already-landed
+    # content (patch-cache collision, distinct from the F6 shared-INDEX race isolation already
+    # solves: this fires even though both checkouts are fully separate). Measured live
+    # 2026-08-12, reproducible: same 2 files shipped twice, both times landing a stable,
+    # identical REVERTED hash (caught by the entry-hash fingerprint check below, not silent --
+    # but the underlying revert still happened). SSOT:
+    # /plans/archive/2026_08/issues/alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12.md.
+    # Fix: give this run its OWN PREK_HOME so `patches/` can never collide with any other run's.
+    # `repos/`/`hooks/`/`tools`/`cache`/`config-tracking.json` are expensive-to-rebuild hook
+    # ENVIRONMENT installs (~20MB+), not part of the race -- symlink those in from a per-repo
+    # shared cache (mirrors the venv cache above) so isolation doesn't reinstall every hook repo
+    # on every single commit. `patches`/`scratch`/`.lock`/`prek.log`/README are intentionally
+    # left unlinked so prek creates them fresh, private to this run.
+    _qm_iso_prek_shared="${QM_ISO_PREK_CACHE:-$HOME/.cache/qm-iso-prek}/$_qm_repo_name"
+    mkdir -p "$_qm_iso_prek_shared" 2>/dev/null
+    _qm_iso_prek_home="$_qm_iso_parent/prek-home"
+    mkdir -p "$_qm_iso_prek_home" 2>/dev/null
+    for _qm_prek_shared_item in repos hooks tools cache config-tracking.json; do
+      [ -e "$_qm_iso_prek_shared/$_qm_prek_shared_item" ] || continue
+      ln -sfn "$_qm_iso_prek_shared/$_qm_prek_shared_item" "$_qm_iso_prek_home/$_qm_prek_shared_item" 2>/dev/null
+    done
+    # Reverse-link ANY subdir prek creates on first use back into the shared cache too, so a
+    # brand-new repo's very first isolated run still seeds the cache for every run after it —
+    # done post-hoc since prek decides what to create, not this script.
+    _qm_iso_prek_seed_shared() {
+      for _qm_prek_seed_item in repos hooks tools cache config-tracking.json; do
+        [ -e "$_qm_iso_prek_home/$_qm_prek_seed_item" ] || continue
+        [ -L "$_qm_iso_prek_home/$_qm_prek_seed_item" ] && continue
+        [ -e "$_qm_iso_prek_shared/$_qm_prek_seed_item" ] && continue
+        mkdir -p "$(dirname "$_qm_iso_prek_shared/$_qm_prek_seed_item")" 2>/dev/null
+        cp -R "$_qm_iso_prek_home/$_qm_prek_seed_item" "$_qm_iso_prek_shared/$_qm_prek_seed_item" 2>/dev/null || true
+      done
+    }
     # Node deps: same problem, same shape, and the reason a UI change could pass an isolated
     # quickmerge without tsc/vitest/Playwright ever running. Cached per repo and symlinked in —
     # NEVER a link to the caller's node_modules, for exactly the reason the venv above is private:
@@ -994,8 +1032,9 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
       # for — the explicit exemption (not the silent skip the commit closed). CI runs the real
       # UI checks: the shared QG template installs dashboard deps when dashboard/package.json is
       # present, so a UI regression is still caught at push/promote, just not at the local fast path.
-      QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
+      PREK_HOME="$_qm_iso_prek_home" QM_IN_ISOLATION=1 QM_ISO_DEPTH=$((_QM_ISO_DEPTH + 1)) QM_CALLER_REPO="$_qm_caller_repo" QG_ALLOW_SKIP_DASHBOARD=1 bash "$_QM_SELF" "${_QM_ORIG_ARGS[@]}"
       _qm_rc=$?
+      _qm_iso_prek_seed_shared
       cd "$_qm_caller_repo" || true
       if [ -n "$_QM_ISO_EVAC_MARKER" ]; then
         _qm_iso_restore_caller_dirty "$_QM_ISO_EVAC_MARKER"
