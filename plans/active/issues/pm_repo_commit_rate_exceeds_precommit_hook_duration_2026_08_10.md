@@ -560,12 +560,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-                          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-                          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-                          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-                          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-                          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-                          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+                              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+                              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+                              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+                              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+                              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+                              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in
@@ -743,6 +743,18 @@ Directions, cheapest first — each is a todo below:
       gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
       its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
       gated or its failures are ratcheted.
+
+## Deferred work after 2026-08-12
+
+| Item                                                                                            | State / why deferred                                                                                                                                                                                                                       | Blocked on                                             |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| F9 — fix `_sdp_reconcile_caller_duplicates`'s stale-local-copy clobber                          | **Not done** — mechanism found and reproduced (repro script permanent), fix direction sketched (2 options in the todo), neither built. Real work, not waiting on anyone.                                                                   | nobody; pick it up                                     |
+| Confirm F9 is (or isn't) the ORIGINAL reported mechanism                                        | **Cannot be done yet** — the original report's raw `safe-doc-push.sh` logs no longer exist; only a hash-only summary survived. The new forensic-dump tooling makes the NEXT occurrence self-diagnosing, but there is nothing to check now. | a recurrence, captured live via the new forensics dump |
+| Root-cause the isolated-worktree basedpyright false-positive (separate, already-closed finding) | **Closed as accepted-with-workaround**, not reopened — listed here only so a reader doesn't conflate it with F9; different investigation, different doc (archived).                                                                        | n/a — intentionally not being pursued                  |
+
+**Recommended next item**: F9's fix (option (a) or (b) in the todo, operator's call on the tradeoff) — it's the only
+undone item with no external blocker, and it's a genuine, measured data-loss path on the highest-contention file
+category in this repo.
 
 ## Deferred work after 2026-08-10
 
