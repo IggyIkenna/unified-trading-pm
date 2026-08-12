@@ -154,9 +154,18 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
 
 ## Todos
 
-- [ ] [DATA] P1. Content-verify the 7 BALANCER `dex_pool_fees` rows are redundant with the canonical `dex_pool_state`
+- [x] ✅ [DATA] P1. Content-verify the 7 BALANCER `dex_pool_fees` rows are redundant with the canonical `dex_pool_state`
       twin (same pool `0x06df3b2b...42`, day=2026-05-16..22, `swap_fees` vs `fees_usd`), then retire them as superseded
-      via the reversible `captured→attempted_failed` flip. (repo: market-tick-data-service) — gated on operator Option A
+      via the reversible `captured→attempted_failed` flip. (repo: market-tick-data-service) — gated on operator Option
+      A. **DONE 2026-08-12 (slot 20, data_engineering): `market-tick-data-service@ad0db52396`.** Content-verified all 7
+      BALANCER cells against their canonical `dex_pool_state` twin (poolId `0x06df3b2b...63`) — legacy `fees_usd` vs
+      canonical `swap_fees` logged per day (05-16..22); BALANCER `swap_fees` is cumulative, so comparison is
+      presence-of-fee-data. Applied via `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py --apply`
+      (reversible `captured→attempted_failed`, no row/object deleted): RETIRED 7 / EXCLUDED 14 (CURVE, retired
+      separately by todo 2's script). Round-trip verify: 7 BALANCER rows `attempted_failed`, live index confirm 21 total
+      `attempted_failed` (7 BALANCER + 14 CURVE). Script renamed `*_balancer_*` to coexist with the CURVE-scoped sibling
+      (same original filename collided add/add with slot 32's todo-2 script). Consolidator paused pre-write / resumed
+      after. See Progress Log 2026-08-12 (slot 20, todo-1) entry.
 - [x] ✅ [DATA] P1. Decide the disposition of the 14 CURVE `dex_pool_fees` rows (2 pools, no `dex_pool_state` twin):
       migrate fee data into canonical `dex_pool_state` (Option B) or keep `captured` as the only record (Option C).
       Operator decision; then execute. (repo: market-tick-data-service) — **DONE 2026-08-12 (slot 32, data_engineering):
@@ -195,3 +204,13 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
   `{VENUE}_{CHAIN}_{short8}_{date}` id → full `pool_address` read from the legacy object → twin-verify against captured
   `dex_pool_state` ids on the same (venue, chain, date). `/blocked` BLK-9aed224f → operator confirmed **A** (retire all
   14 CURVE rows, reversible flip). Disposition for the full 21-row corpus is now retire-as-superseded.
+- **2026-08-12 (slot 20, data_engineering) — todo 1 DONE: 7 BALANCER rows content-verified + retired.** Extended the
+  original slot-20 script with twin-verify (BALANCER poolId `0x06df3b2b...63` vs legacy `short8`) and applied
+  `retire_dex_pool_fees_balancer_legacy_captured_rows_2026_08_12.py --apply`: RETIRED 7 / EXCLUDED 14, round-trip verify
+  = 7 BALANCER `attempted_failed`. **Coordination finding (same-turn): the BALANCER script and slot 32's CURVE script
+  were authored under the SAME filename `retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py`, causing an add/add
+  conflict on quickmerge.** Resolved by renaming mine to `*_balancer_*` (peer's CURVE script kept the original name) —
+  both ship as distinct files. Also observed a transient stale-read: an in-flight consolidated-index read momentarily
+  showed 14 CURVE still `captured` after my upload (the two scripts rewrite the same blob non-atomically), but a fresh
+  DuckDB verify confirms the terminal state is **21 `attempted_failed`** (7 BALANCER + 14 CURVE) — the full
+  operator-confirmed disposition. Consolidator resumed (ENABLED). Ship: `market-tick-data-service@ad0db52396`.
