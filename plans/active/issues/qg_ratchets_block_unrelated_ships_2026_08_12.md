@@ -90,20 +90,13 @@ fault:
       prints an owner-grouped digest; the three authoring reasons (`no-frontmatter`, `no-last_reviewed-field`,
       `invalid-last_reviewed-format`) still block, because those are caused by the change in hand. Partition fails
       CLOSED — any reason not explicitly listed in `CLOCK_DRIVEN_REASONS` blocks, so a future check can't ship as a
-      silent no-op. Measured end-to-end, all four exit codes captured directly (not inferred):
-
-      | scenario                                  | exit | expected |
-              | ----------------------------------------- | ---- | -------- |
-              | aging cohort (30d window, 68 newly-stale) | 0    | 0        |
-              | normal run (90d window)                   | 0    | 0        |
-              | authoring defect (missing last_reviewed)  | 1    | 1        |
-              | `--strict` (30d)                          | 1    | 1        |
-
-              The 30d run is the real proof: 68 docs newly past the window produced a routed digest and **did not block**,
-              where before it was 68 hard failures. `--strict` still fails on everything — that is the mode the scheduled
-              digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the digest above it
-              listed 68; it now says "0 new BLOCKING violations … 68 new advisory". Evidence: 22/22 unit tests green
-              (6 new, incl. a fail-closed guard on unclassified reasons).
+      silent no-op. Measured end-to-end, all four exit codes captured directly (not inferred): aging cohort (30d window,
+      68 newly-stale) → exit 0; normal run (90d) → exit 0; authoring defect (missing `last_reviewed`) → exit 1;
+      `--strict` (30d) → exit 1. The 30d run is the real proof: 68 docs newly past the window produced a routed digest
+      and **did not block**, where before it was 68 hard failures. `--strict` still fails on everything — that is the
+      mode a scheduled digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the
+      digest above it listed 68; it now says "0 new BLOCKING violations … 68 new advisory". Evidence: 22/22 unit tests
+      green (6 new, incl. a fail-closed guard on unclassified reasons).
 
 - [ ] [BACKEND] P3. **De-cohort the thresholds** so a batch of docs written the same day does not expire the same day —
       e.g. jitter the limit per doc (90d + hash(path) % 14) or stagger `last_reviewed` on bulk authoring. Without this,
@@ -118,9 +111,11 @@ fault:
 - 2026-08-12 — Filed. Two consecutive days of clock-triggered blocking, plus a generated-baseline race between two
   agents who both did the correct thing independently. The immediate instances were absorbed into the baseline with the
   debt named in each commit, which is the sanctioned remedy but not a fix.
-- 2026-08-12 — Warn-with-digest landed. The useful reframe was that "freshness" is not one thing: three of its four
-  violation reasons are authoring defects the author can fix in seconds, and only `stale` is the calendar. Splitting on
-  CAUSE keeps the gate meaningful for what a change controls while removing the part that punished people for the
-  passage of time. That split also removes the incentive that was corroding the ratchet — with staleness non-blocking,
-  nobody needs `--baseline-write` mid-ship, so the baseline-regeneration race between concurrent agents has no reason to
-  occur. Remaining todos (de-cohorting, the ratchet taxonomy doc) are unblocked but not done.
+- 2026-08-12 — Warn-with-digest implemented + verified, **not shipped** (see the todo above — blocked on the
+  deployment-api cloudbuild drift, which denies every PM code ship its gate sentinel). The useful reframe was that
+  "freshness" is not one thing: three of its four violation reasons are authoring defects the author can fix in seconds,
+  and only `stale` is the calendar. Splitting on CAUSE keeps the gate meaningful for what a change controls while
+  removing the part that punished people for the passage of time. That split also removes the incentive that was
+  corroding the ratchet — with staleness non-blocking, nobody needs `--baseline-write` mid-ship, so the
+  baseline-regeneration race between concurrent agents has no reason to occur. Remaining todos (de-cohorting, the
+  ratchet taxonomy doc) are unblocked but not done.
