@@ -251,3 +251,20 @@ archival — no live Databento dependency).
   this session's scope was the one IBIT/ETHA launch, not a corpus-wide re-gate. Cost note: the failed smoke test itself
   is cheap (1 VM, 1 day, e2-highmem-8 SPOT, ~20s of actual runtime before self-delete) — the smoke-test-first discipline
   paid for itself immediately here.
+- **2026-08-12 (independent corroboration — `/backfill-monitor` smoke test for the equities-2026 NASDAQ/NYSE catch-up
+  gap, `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s in-scope "delta-one single-stock equities, year 2026
+  only" cell, full ticker universes not just IBIT/ETHA)**: independently hit the identical failure, on two SEPARATE VMs
+  (different launcher invocations, different ticker sets from the IBIT/ETHA VM above). Smoke-tested a single real day
+  (2026-08-11, "yesterday" at launch time) for both NASDAQ (622 tickers) and NYSE (581 tickers) — both VMs reached
+  `DEPLOYMENT_COMPLETED exit_code=0` with **0 captured rows**. Read each VM's full `run.log` directly (not just the
+  tail): `tradfi-bf-nasdaq-ohlcv-1m-2026-d01-20260812-181352` shows
+  `DatabentoAdapter: DBEQ.BASIC/ohlcv_1m failed [402]: 402 account_delinquent_invoice` at 2026-08-12T17:16:40Z (and the
+  same for `ohlcv_1s` at 17:16:42Z); `tradfi-bf-nyse-ohlcv-1m-2026-d01-20260812-181504` shows the same
+  `[402] account_delinquent_invoice` for both `ohlcv_1m` (17:18:00Z) and `ohlcv_1s` (17:18:01Z). This confirms the
+  recurrence is account-wide across at least two distinct venues and two distinct ticker universes (1,203 combined
+  symbols), not scoped to the single IBIT/ETHA VM above — consistent with "every Databento call fails account-level" per
+  this doc's original framing. Per the same `/backfill-monitor` discipline, did NOT proceed to a real-scope catch-up
+  launch on top of a failing smoke test (the planned real launch was 2026-07-21→today for both venues, ~2 VMs). This
+  specific cell — TradFi equities 2026 catch-up gap backfill — is **BLOCKED-OPERATOR-DECISION** pending the same
+  outstanding invoice as the `[OPERATOR] P0]` todo above; no separate todo filed here since it is the same root cause
+  already tracked.
