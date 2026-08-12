@@ -191,14 +191,14 @@ context_scope:
       transfer initiated, balance poll confirms arrival, timeout returns clean failure, invalid private key returns
       honest error); `quality-gates.sh` green.
 
-- [ ] [BACKEND] P2. Build `build_bybit_deposit()` in `execution_service/defi_execution/wiring/bybit_wiring.py` (mirrors
-      `build_hyperliquid_bridge_deposit()`'s pattern). Resolves the TREASURY_HOT funding-wallet credentials from GSM
-      (secret name `bybit_funding_wallet_key` — a JSON blob with `wallet_private_key`, `wallet_address`), resolves the
-      chain RPC URL for the funding wallet's chain (Arbitrum for USDC), binds them together with the already-wired
-      `BybitPerpHedgeConnector` into a pre-bound `BybitDepositCallable`. Returns `None` when credentials are unavailable
-      — the consumer then stays honest NOT-WIRED. Repo: execution-service. Done-when: wiring tests (deposit callable
-      built with real GSM credential resolution, missing credentials returns None, testnet mode gates transfer
-      confirmation parameters); `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. Build `build_bybit_deposit()` in `execution_service/defi_execution/wiring/bybit_wiring.py`
+      (mirrors `build_hyperliquid_bridge_deposit()`'s pattern). Resolves the TREASURY_HOT funding-wallet credentials
+      from GSM (secret name `bybit_funding_wallet_key` — a JSON blob with `wallet_private_key`, `wallet_address`),
+      resolves the chain RPC URL for the funding wallet's chain (Arbitrum for USDC), binds them together with the
+      already-wired `BybitPerpHedgeConnector` into a pre-bound `BybitDepositCallable`. Returns `None` when credentials
+      are unavailable — the consumer then stays honest NOT-WIRED. Repo: execution-service. Done-when: wiring tests
+      (deposit callable built with real GSM credential resolution, missing credentials returns None, testnet mode gates
+      transfer confirmation parameters); `quality-gates.sh` green. — execution-service@50f28d691f.
 
 - [ ] [BACKEND] P2. Wire Bybit deposit at `app.py` startup/shutdown. Add `_wire_bybit_deposit` startup handler —
       resolves funding-wallet credentials, calls `build_bybit_deposit()`, stores the callable on
@@ -291,3 +291,14 @@ context_scope:
   citation to `_ARBITRUM_USDC` address to pass STEP 5.97. Three prior commits from an earlier slot session
   (`7474e24b`/`82223fdc`/`81a14f0e`) were also pushed — they authored the implementation; this commit only added the
   citation fix.
+- **2026-08-12 (slot 32, backend_engineer)**: Todo 8 (`build_bybit_deposit()`) — implemented in
+  `execution-service@50f28d691f`. Mirrors `build_hyperliquid_bridge_deposit()`: resolves the TREASURY_HOT funding-wallet
+  credential blob (secret `bybit_funding_wallet_key` — kept as a module constant `_BYBIT_FUNDING_WALLET_KEY_SECRET_NAME`
+  because `service_config.py` sits at its 900-line QG cap), the Arbitrum RPC URL (reuses
+  `hyperliquid_wiring._resolve_arbitrum_rpc_url`, the shared `rpc_url__arbitrum__<provider>` secret convention), and
+  binds them with the already-wired `BybitPerpHedgeConnector` into a pre-bound `BybitDepositCallable`; returns `None`
+  when the connector, credential blob, or RPC is unavailable (consumer stays honest NOT-WIRED). `config.testnet_mode`
+  gates the transfer-confirmation poll/timeout params (5s/120s testnet vs 10s/300s mainnet). 10 wiring tests added to
+  `tests/unit/defi_execution/test_bybit_wiring.py` (build-with-creds, missing creds/blob/rpc/connector all return None,
+  secret-not-JSON, resolution-raises, callable forwards amount + bound params, testnet gating). `quality-gates.sh` green
+  (8016 passed, 21 skipped, 1 pre-existing xpass; sentinel `50f28d691f`).
