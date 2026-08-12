@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-                                                                                  **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-                                                                                  1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-                                                                                  2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-                                                                                  3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-                                                                                  4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-                                                                                  5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-                                                                                  6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-                                                                                  7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-                                                                                  8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-                                                                                  9. `UTL service_runtime.py:207` — runtime env value
+                                                                                      **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                                                                                      1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                                                                                      2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                                                                                      3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                                                                                      4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                                                                                      5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                                                                                      6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                                                                                      7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                                                                                      8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                                                                                      9. `UTL service_runtime.py:207` — runtime env value
 
-                                                                                  **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                                                                                      **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-                                                                                  **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                                                                                      **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -153,50 +153,50 @@ cause an outage).
       authenticated request succeeds, and one real end-to-end deploy has completed through the listener post-flip.
 
       **Done-when verified LIVE 2026-08-10 (slot 10, rev `00514-9tq` serving 100%, enforcement ON since slot 22's
-                                                      `DISABLE_AUTH=false` flip)**: (1) credential-less `GET /api/services` → **401**; (2) `X-API-Key` from GSM
-                                                      `deployment-api-api-key` (`210a43c9…`) → **200**, bad key → **401**, `/health` → 200; (3) two real end-to-end
-                                                      listener deploys post-flip returned **200**: `POST /api/deployments/alerting-service/deploy` @18:41Z + @19:07Z
-                                                      (Cloud Run logs; with enforcement ON a 200 on the `_authenticated_router` deploy route = the listener's
-                                                      `X-API-Key` was accepted — done-when condition 3 met). Step-1 guard/env change is LIVE in the running image
-                                                      `deployment-api:3feb77f`: `auth.py` module-level `_deployment_env` executes at boot (main.py:34 imports `auth`)
-                                                      and the service boots — so the running UTL base HAS `deployment_env` (republished 18:03-18:17Z, digest refreshed),
-                                                      and `DISABLE_AUTH=true` is genuinely rejected in prod. Post-flip 401 scan clean — only deliberate no-key probes
-                                                      (orchestrator VM), the known root-gated resource-watchdog kill-events (fire-and-forget; [INFRA] P1 follow-up), and
-                                                      the accepted deployment-ui console 401 (operator Option B, awaiting Google OAuth follow-up). No 5xx since 17:00Z.
+                                                          `DISABLE_AUTH=false` flip)**: (1) credential-less `GET /api/services` → **401**; (2) `X-API-Key` from GSM
+                                                          `deployment-api-api-key` (`210a43c9…`) → **200**, bad key → **401**, `/health` → 200; (3) two real end-to-end
+                                                          listener deploys post-flip returned **200**: `POST /api/deployments/alerting-service/deploy` @18:41Z + @19:07Z
+                                                          (Cloud Run logs; with enforcement ON a 200 on the `_authenticated_router` deploy route = the listener's
+                                                          `X-API-Key` was accepted — done-when condition 3 met). Step-1 guard/env change is LIVE in the running image
+                                                          `deployment-api:3feb77f`: `auth.py` module-level `_deployment_env` executes at boot (main.py:34 imports `auth`)
+                                                          and the service boots — so the running UTL base HAS `deployment_env` (republished 18:03-18:17Z, digest refreshed),
+                                                          and `DISABLE_AUTH=true` is genuinely rejected in prod. Post-flip 401 scan clean — only deliberate no-key probes
+                                                          (orchestrator VM), the known root-gated resource-watchdog kill-events (fire-and-forget; [INFRA] P1 follow-up), and
+                                                          the accepted deployment-ui console 401 (operator Option B, awaiting Google OAuth follow-up). No 5xx since 17:00Z.
 
 - [x] ✅ [BACKEND] P1. **Re-evaluate `ingress: all` + the `allUsers` invoker binding once app-layer auth is enforced.**
       — unified-trading-pm@2ce532ce9d
 
       **Verdict: KEEP both `ingress: all` and `allUsers` invoker binding (status quo).**
 
-                                                  Live state re-verified 2026-08-10: `run.googleapis.com/ingress: all`, IAM `allUsers` → `roles/run.invoker`,
-                                                  app-layer auth enforced (`DISABLE_AUTH=false`, credential-less → 401).
+                                                      Live state re-verified 2026-08-10: `run.googleapis.com/ingress: all`, IAM `allUsers` → `roles/run.invoker`,
+                                                      app-layer auth enforced (`DISABLE_AUTH=false`, credential-less → 401).
 
-                                                  Rationale (5-part):
-                                                  1. **GitHub Actions listener is the blocker.** The deployment-service `service-deployed-listener.yml` runs on
-                                                     GitHub Actions runners with public IPs. These runners cannot authenticate at the GCP IAM layer — no GCP
-                                                     service account, no Workload Identity Federation configured. Removing `allUsers` or restricting `ingress`
-                                                     would block `POST /api/deployments/{service}/deploy`, the critical post-merge deploy path. This alone is
-                                                     dispositive: the app-layer key is the only credential GHA can present.
-                                                  2. **App-layer auth provides the actual security boundary.** Every `_authenticated_router` route requires a
-                                                     valid `X-API-Key` (verified live: credential-less → 401, correct key → 200, bad key → 401). The
-                                                     IAM/ingress layer is convenience, not the primary defense. Removing it would add no meaningful security
-                                                     while risking an outage.
-                                                  3. **`/api/internal/*` routes are already independent.** `verify_reap_scheduler_oidc` uses its own OIDC scheme
-                                                     with `REAP_SCHEDULER_INVOKER_SA` — removing `allUsers` would not affect reap-tick / idle-spend schedulers.
-                                                  4. **Cloud Scheduler cost-snapshot survives either way.** The job sends both OIDC and `X-API-Key` — it works
-                                                     with or without `allUsers`.
-                                                  5. **GHA→GCP WIF is a prerequisite for change.** Setting up GCP Workload Identity Federation for GitHub
-                                                     Actions is a non-trivial, separately-scoped infrastructure project (new GCP WIF pool + provider + SA
-                                                     impersonation + CI workflow OIDC token exchange). This should be planned and tracked independently.
+                                                      Rationale (5-part):
+                                                      1. **GitHub Actions listener is the blocker.** The deployment-service `service-deployed-listener.yml` runs on
+                                                         GitHub Actions runners with public IPs. These runners cannot authenticate at the GCP IAM layer — no GCP
+                                                         service account, no Workload Identity Federation configured. Removing `allUsers` or restricting `ingress`
+                                                         would block `POST /api/deployments/{service}/deploy`, the critical post-merge deploy path. This alone is
+                                                         dispositive: the app-layer key is the only credential GHA can present.
+                                                      2. **App-layer auth provides the actual security boundary.** Every `_authenticated_router` route requires a
+                                                         valid `X-API-Key` (verified live: credential-less → 401, correct key → 200, bad key → 401). The
+                                                         IAM/ingress layer is convenience, not the primary defense. Removing it would add no meaningful security
+                                                         while risking an outage.
+                                                      3. **`/api/internal/*` routes are already independent.** `verify_reap_scheduler_oidc` uses its own OIDC scheme
+                                                         with `REAP_SCHEDULER_INVOKER_SA` — removing `allUsers` would not affect reap-tick / idle-spend schedulers.
+                                                      4. **Cloud Scheduler cost-snapshot survives either way.** The job sends both OIDC and `X-API-Key` — it works
+                                                         with or without `allUsers`.
+                                                      5. **GHA→GCP WIF is a prerequisite for change.** Setting up GCP Workload Identity Federation for GitHub
+                                                         Actions is a non-trivial, separately-scoped infrastructure project (new GCP WIF pool + provider + SA
+                                                         impersonation + CI workflow OIDC token exchange). This should be planned and tracked independently.
 
-                                                  **Revisit when**: GHA→GCP WIF is configured and the listener deploys with a GCP identity. At that point,
-                                                  `allUsers` can be removed and callers can be required to present GCP IAM credentials (OIDC token or SA key)
-                                                  in addition to the app-layer `X-API-Key`.
+                                                      **Revisit when**: GHA→GCP WIF is configured and the listener deploys with a GCP identity. At that point,
+                                                      `allUsers` can be removed and callers can be required to present GCP IAM credentials (OIDC token or SA key)
+                                                      in addition to the app-layer `X-API-Key`.
 
 ## Follow-ups (post-flip durable close-out)
 
-- [ ] [OPERATOR] P0. **SUPERSEDED plan — confirm two Firebase Console prerequisites, then flip `VITE_SKIP_AUTH`.** The
+- [x] [OPERATOR] P0. **SUPERSEDED plan — confirm two Firebase Console prerequisites, then flip `VITE_SKIP_AUTH`.** The
       original plan here (provision a standalone Google OAuth client) turned out unfixable as scoped: `verify_any_auth`
       only ever accepted Firebase-minted tokens, not raw Google OAuth tokens, and the console's old login code requested
       the wrong OAuth `response_type` besides — no OAuth client, however correctly provisioned, would have produced a
@@ -214,8 +214,14 @@ cause an outage).
       if ever browsed to directly; not required (it's a backend-only OIDC-called service, not a console) but
       harmless/complete to have authorized. `VITE_SKIP_AUTH=true` removal from deployment-api's Dockerfile shipped this
       session — see Progress Log for the landing SHA. **Done when**: a browser console load authenticates via Firebase
-      Google sign-in and `/api/*` succeeds — NOT YET independently verified live post-deploy; do that before flipping
-      this checkbox. (repo: deployment-api, deployment-ui)
+      Google sign-in and `/api/*` succeeds — **confirmed 2026-08-12**: operator (`ikennaigboaka@gmail.com`) signed in
+      successfully via the popup flow (deployment-ui@979b2f6552) after two follow-on fixes also landed this session —
+      the popup-vs-redirect rewrite, and a caching root-cause found by direct `curl` testing (Playwright MCP was blocked
+      by a locked shared browser profile, see Progress Log): the `no-store` Cache-Control fix had been landing on
+      `main.py`'s `spa_root`/`spa_catchall`, which were silently shadowed by an older duplicate implementation in
+      `health_routes.py` (its router is included before main.py's SPA-fallback block, so it always won the route match)
+      — `deployment-api@09c5305876` moved the header onto the handlers actually serving traffic, and
+      `deployment-api@24ad3b51a9` removed the shadowing duplicates outright. (repo: deployment-api, deployment-ui)
 - [ ] [BACKEND] P2. **Build the same-day auth-contract detection this P0's history shows is missing, without depending
       on Cloud Build step-ordering.** The `verify-auth-contract` Cloud Build step (deployment-api@4c31b72894) was
       reverted (deployment-api@b928d173b5) after it broke `unified-trading-pm`'s cloudbuild-template-drift ratchet
