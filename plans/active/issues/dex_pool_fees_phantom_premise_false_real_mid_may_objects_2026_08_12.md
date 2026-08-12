@@ -102,10 +102,14 @@ a parquet content read found:
      7 days** (`0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063.parquet`), carrying `swap_fees`,
      `swap_volume`, `total_shares`, `instrument_id=BALANCER-ETHEREUM:POOL:0x06df3b2b...63`. The `dex_pool_fees` BALANCER
      rows are therefore content-redundant candidates (twin-verify then retire-as-superseded).
-   - **CURVE** pools `0x4dece678...` and `0xbebc4478...`: **NO `dex_pool_state` object exists on any of the 7 days** for
-     either pool (the CURVE `dex_pool_state` cell listings for those days contain no object whose address starts with
-     either pool's address). Their `fees_usd`/`volume_usd`/`tvl_usd` may be the **only** record of that pool-day fee
-     data. They must NOT be flipped to `attempted_failed` without a canonical home for the data.
+   - **CURVE** pools `0x4dece678...` (USDC-CRVUSD) and `0xbebc4478...` (DAI-USDC-USDT): the ORIGINAL twin analysis was a
+     **wrong-vocabulary false negative** — it prefix-matched `dex_pool_state` FILENAMES by pool address, but CURVE state
+     files are SYMBOL-named. Content-verified 2026-08-12 (slot 32): both pools HAVE canonical `dex_pool_state` objects
+     on **all 7 days** (`CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet`, `CURVE-ETHEREUM:POOL:DAI-USDC-USDT.parquet`),
+     carrying the SAME `volume_usd`/`tvl_usd` and `daily_supply_revenue_usd == dex_pool_fees.fees_usd` (e.g.
+     `0x4dece678` 2026-05-16: volume=7,426,451.36 / tvl=23,787,340.92 / fees_usd=371.32). The 14 CURVE rows are
+     content-redundant with canonical `dex_pool_state` — retiring them (reversible `captured→attempted_failed` flip, no
+     object deleted) loses nothing.
 
 ## Why it matters
 
@@ -113,12 +117,13 @@ a parquet content read found:
   recommendation's sampling of `day=2026-06..2026-08` paths — it never probed `day=2026-05-16..22`, where the 21 real
   objects actually live. A measurement gap, now closed by the census. This is the same "CLAIM ≤ MEASUREMENT" class that
   bit the POOL/rate_indices retirements.
-- **The reversible `captured → attempted_failed` flip is UNSAFE for these rows.** It would mark 21 cells that genuinely
-  hold captured data as "attempted and failed" — an honest-coverage accounting corruption (real coverage under-reported
-  as a gap) and, for the 14 CURVE rows, a silent orphaning of possibly-unique financial data from coverage accounting.
-  The delete-safety protocol's Part 1/2/5 (twin must resolve + content-verify + legacy-COPIED-not-MOVED invariant)
-  exists precisely to prevent this class of mistake; the retirement script's probe gate is what caught it before any
-  write.
+- **The reversible `captured → attempted_failed` flip is UNSAFE only where no canonical twin exists.** The original
+  finding flagged a silent-orphaning risk for the 14 CURVE rows under the (now-disproven) "no twin / only record"
+  premise — that premise was a wrong-vocabulary false negative (see the corrected twin analysis above). Content-verified
+  canonical `dex_pool_state` twins cover all 14 CURVE rows, so the flip loses no data. The delete-safety protocol's Part
+  1/2/5 (twin must resolve + content-verify + legacy-COPIED-not-MOVED invariant) is exactly why the retirement script's
+  probe gate caught the missing-twin case before any write — and why the corrected script content-verifies the twin
+  before flipping.
 - **Flipping would also be non-durable**: the next full manifest rebuild re-registers real objects it finds on disk (as
   this rebuild did), silently resurrecting the rows — the same "fixed, then silently reverted" cycle the POOL recurrence
   issue doc warns about.
@@ -142,16 +147,26 @@ is now partially false). Options:
 - **D (NOT recommended)**: flip all 21 to `attempted_failed` anyway (retire the concept regardless of real data). This
   is the data-correctness violation the finding exists to prevent.
 
-Worker recommendation: **A**, then a follow-up migration decision for the 14 CURVE rows (B or C).
+Worker recommendation: **A for all 21** — the corrected twin analysis (slot 32, content-verified) shows BOTH CURVE pools
+have canonical `dex_pool_state` twins on all 7 days, so the 14 CURVE rows are content-redundant exactly like the 7
+BALANCER rows. Options B (migrate — data already canonical) and C (keep as only record — premise false) are both moot.
+Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows via the reversible flip.
 
 ## Todos
 
 - [ ] [DATA] P1. Content-verify the 7 BALANCER `dex_pool_fees` rows are redundant with the canonical `dex_pool_state`
       twin (same pool `0x06df3b2b...42`, day=2026-05-16..22, `swap_fees` vs `fees_usd`), then retire them as superseded
       via the reversible `captured→attempted_failed` flip. (repo: market-tick-data-service) — gated on operator Option A
-- [ ] [DATA] P1. Decide the disposition of the 14 CURVE `dex_pool_fees` rows (2 pools, no `dex_pool_state` twin):
+- [x] ✅ [DATA] P1. Decide the disposition of the 14 CURVE `dex_pool_fees` rows (2 pools, no `dex_pool_state` twin):
       migrate fee data into canonical `dex_pool_state` (Option B) or keep `captured` as the only record (Option C).
-      Operator decision; then execute. (repo: market-tick-data-service)
+      Operator decision; then execute. (repo: market-tick-data-service) — **DONE 2026-08-12 (slot 32, data_engineering):
+      `market-tick-data-service@0e9de0cb`.** Disposition = **A (retire-as-superseded)**, operator confirmed
+      BLK-9aed224f. The "no `dex_pool_state` twin" premise was a wrong-vocabulary false negative (CURVE state files are
+      SYMBOL-named: `CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet` / `DAI-USDC-USDT.parquet`, not address-named).
+      Content-verified both pools' canonical `dex_pool_state` twins on all 7 days (volume/tvl identical;
+      `fees_usd ==     `daily_supply_revenue_usd`). Applied via `retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py
+      --apply`    (reversible`captured→attempted_failed`, no row/object deleted): RETIRED 14, EXCLUDED 0. Round-trip verify: 0     remaining captured `dex_pool_fees`CURVE rows. Consolidator was already PAUSED (precondition met), left as-is (the     later "Resume the consolidator" todo owns it). Snapshot`_index/snapshots/pre_dex_pool_fees_retire_*.parquet`+    `.dex_pool_fees_retire.bak`
+      written pre-write.
 - [ ] [DATA] P2. Correct the now-disproven "0 objects for its entire lifetime / phantom rows only" claim in the current
       plan's todo-7 premise + the archived `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` (the 2026-08-04
       sample covered day=2026-06..08 only; the mid-May objects were never probed). (repo: unified-trading-pm)
@@ -164,3 +179,19 @@ Worker recommendation: **A**, then a follow-up migration decision for the 14 CUR
   RETIRE 0 / EXCLUDE 21, no write made. The script is the template for whatever disposition lands; it must be extended
   with the twin-verify logic (Option A) or a migration path (Option B) before `--apply`. `/blocked` filed to the
   operator with options A/B/C/D.
+- **2026-08-12 (slot 32, data_engineering) — CURVE-twin premise CORRECTED: both CURVE pools have content-verified
+  `dex_pool_state` twins on all 7 days.** The original twin analysis prefix-matched `dex_pool_state` FILENAMES by pool
+  address and concluded "no CURVE twin" — a wrong-vocabulary false negative, because CURVE state files are SYMBOL-named
+  (`CURVE-ETHEREUM:POOL:USDC-CRVUSD.parquet`, `CURVE-ETHEREUM:POOL:DAI-USDC-USDT.parquet`), not address-named. A content
+  scan of the `pool_address`/`instrument_id` columns of CURVE `dex_pool_state` objects across day=2026-05-16..22 (plus
+  adjacent days 05-15/05-23/05-30/06-01/06-10/06-21/07-01/07-13/08-01/08-05) found BOTH pools present on all 7 window
+  days, with values that EXACTLY cross-match the `dex_pool_fees` objects: pool `0x4dece678` 2026-05-16
+  volume=7,426,451.36 / tvl=23,787,340.92 (identical in both corpora) and `fees_usd=371.32` == the state object's
+  `daily_supply_revenue_usd`. The manifest independently confirms 14 captured `dex_pool_state` rows (bare-address
+  instrument_ids) for both pools on all 7 days. **Options B (migrate) and C (keep as only record) are both MOOT — the 14
+  CURVE rows are content-redundant superseded duplicates, exactly like the 7 BALANCER rows.** Wrote
+  `market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py` (the slot-20
+  script never landed — it was dry-run only) extending the rate_indices pattern: legacy short8
+  `{VENUE}_{CHAIN}_{short8}_{date}` id → full `pool_address` read from the legacy object → twin-verify against captured
+  `dex_pool_state` ids on the same (venue, chain, date). `/blocked` BLK-9aed224f → operator confirmed **A** (retire all
+  14 CURVE rows, reversible flip). Disposition for the full 21-row corpus is now retire-as-superseded.
