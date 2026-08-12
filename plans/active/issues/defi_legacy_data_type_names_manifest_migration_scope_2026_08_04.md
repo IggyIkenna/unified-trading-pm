@@ -214,12 +214,27 @@ context_scope:
   self-service, D16 all-repos, S5.1 tiering, plan-destination-defaults-AO-dispatched, escalation-N=3-days,
   reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks now existing) — none apply: the
   remaining scope is still gated on root-causing a live, unexplained multi-venue gap cluster (is a legacy writer still
-  active today?) before any migration design is even possible, plus a full five-part delete-safety proof once
-  designed — genuinely judgment-heavy, not a bare mechanical copy. Not eligible for satellite-extraction as a bounded
-  todo (the root-cause step itself has no predetermined outcome). Doc stays `assigned_vm: NA` (KEEP-NA valid, round11).
+  active today?) before any migration design is even possible, plus a full five-part delete-safety proof once designed —
+  genuinely judgment-heavy, not a bare mechanical copy. Not eligible for satellite-extraction as a bounded todo (the
+  root-cause step itself has no predetermined outcome). Doc stays `assigned_vm: NA` (KEEP-NA valid, round11).
 - **context-scout 2026-08-07**: refreshed context_scope (6 entries) — dropped `dex_pools_handler.py` (that half is DONE,
   retired 2026-08-05, see todo above); added `fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py` (the built tool
   covering BOTH remaining open items — the `dex_swaps` real-content migration and, per its own docstring, an ALREADY-
   ANSWERED `rate_indices` canonical-target finding — `lending_indices` — that the open `[DIAG] P2` checkbox above does
   not yet reflect; flagging as a stale-candidate for `/plan-reconcile`, not resolving the checkbox here) and its VM
   launcher `launch-backfill-defi-legacy-datatype-fold-vm.sh`.
+- **2026-08-12 (slot 14, data_engineering, task `defi_pool_rate_indices_dex_pool_fees_retirement` todo 9) — FINDING: the
+  2026-08-10/11 defi manifest rebuild RE-REGISTERED the 2026-08-05-retired `dex_pools` legacy rows back to `captured` —
+  the exact pre-retirement population is back (454,014 rows).** Post-rollup Distinct-Values census on the fresh
+  `2026-08-12` `coverage.json` shows `dex_pools` as a non-canonical data_type AGAIN: `ORCA` 450,976 + `RAYDIUM` 3,038 =
+  **454,014 captured, 0 attempted_failed** (vs the 2026-08-05 terminal state of 29 captured / 453,985 attempted_failed).
+  The `canonical-migration-defi-rebuild-20260810-204358` disk scan re-added every legacy `dex_pools` physical object as
+  `captured` — the SAME recurrence mechanism as the POOL uppercase recurrence
+  (`defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`): **a capture_status-flip retirement whose underlying GCS
+  objects still exist at a legacy path is undone by the next `rebuild_defi_manifest.py` scan.** Implication for the
+  still-open `dex_swaps → dex_pool_swaps` migration below: a manifest-only flip will NOT be durable while the legacy
+  objects exist and the rebuild re-scans them — the migration's five-part delete-safety proof (or a rebuild-scan
+  skip-legacy-path fix) is REQUIRED for a durable outcome, not optional. Immediate reversible re-retirement of the
+  re-registered `dex_pools` rows is the short-term fix; the durable fix belongs with the POOL-recurrence root-cause
+  tracking. Not executing either here (bounded task scope: pool/rate_indices/dex_pool_fees retirement + rollup + panel
+  check).

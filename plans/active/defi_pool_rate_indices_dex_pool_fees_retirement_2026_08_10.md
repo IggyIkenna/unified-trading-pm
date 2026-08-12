@@ -85,11 +85,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       clause not triggered.
 
       Note for todo 2's worker: the direct pandas `read_availability_index(columns=..., filters=[("capture_status",
-                                                                  "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
-                                                                  fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
-                                                                  DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
-                                                                  `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
-                                                                  streaming footprint regardless of corpus size.
+                                                                      "==", "captured")])` path OOM'd repeatedly (killed at 8G/16G/24G RSS caps, then again unwrapped) even against the
+                                                                      fresh consolidated blob — decoding 39M captured rows into a DataFrame is itself too heavy. Query via a streaming
+                                                                      DuckDB aggregate over a locally-streamed copy instead (`client.download_file()` + `duckdb.read_parquet()` +
+                                                                      `COUNT(*) FILTER (...)`), not a pandas `read_availability_index()` call — bounds memory to DuckDB's own
+                                                                      streaming footprint regardless of corpus size.
 
 - [x] ✅ [DATA] P1. **Root-cause the 0→7,930,863 `instrument_type=POOL` recurrence before any retirement resumes**
       (blocks the retirement todo below — main-agent-added 2026-08-11 per
@@ -185,14 +185,24 @@ picking this plan up cold should never trust the flip-time state without a fresh
       (`instruments-service-code @ 4bb2164e9491`, contains it). Post-rollup key check: defi `POOL` uppercase,
       `rate_indices`, `dex_pool_fees` all ABSENT from enumerated keys; `lending_indices` present. 5/5 AGs measured,
       `asset_groups_failed: []`.
-- [ ] [DATA] P1. **Re-check the Distinct Values panel post-rollup.** Confirm: `dex_pools`/`dex_swaps`/`rate_indices`/
+- [x] ✅ [DATA] P1. **Re-check the Distinct Values panel post-rollup.** Confirm: `dex_pools`/`dex_swaps`/`rate_indices`/
       `dex_pool_fees` no longer appear as non-canonical `data_type`s; `POOL` (uppercase) no longer appears as a
       non-canonical `instrument_type`; venues drop to the genuinely-unresolved set (ASTER/GMX/HYPERLIQUID/EXTENDED/
       LIGHTER + the 24 composite `VENUE-CHAIN` venues, which are CORRECTLY flagged-but-accepted per this epic's prior
       false-alarm investigation, not a bug); `instrument_types` clean modulo the small genuine `<blank>` gap (~58
       `captured` rows, not the ~5.3M raw count — that count is a KNOWN, separately-tracked panel over-report, see
       `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s Todos). Record the live counts in this plan's
-      Progress Log. (repo: unified-trading-pm)
+      Progress Log. (repo: unified-trading-pm) — **DONE 2026-08-12 (slot 14, data_engineering): panel re-checked against
+      the fresh `2026-08-12` rollup (replicating `deployment-api` `enumerate_distinct_values` + `_comparison_set` +
+      `_ACCEPTED_EXCEPTIONS` exactly). This plan's OWN retirements CONFIRMED clean: `rate_indices` 0 captured,
+      `dex_pool_fees` 0 captured, uppercase `POOL` absent from instrument_types, instrument_types clean modulo the
+      single `<blank>` row, chains clean modulo `HYPERLIQUID`. TWO residual non-canonical data_types REMAIN, both
+      tracked on their proper issue docs (NOT this plan's scope): `dex_pools` 454,014 captured — the 2026-08-10/11 defi
+      rebuild RE-REGISTERED the 2026-08-05-retired rows (new finding on
+      `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`, same recurrence class as POOL-uppercase);
+      `dex_swaps` 3.46M captured — the genuinely-open separate `[DATA] P2` migration (never retired). Venue axis has the
+      expected unresolved set + composites, PLUS legacy `AAVEV3`/`BLAZESTAKE`/`KAMINO_LENDING` (known operator-gated
+      purge candidates on the prior epic). Full census in Progress Log.**
 
 ## Progress Log
 
@@ -451,3 +461,35 @@ picking this plan up cold should never trust the flip-time state without a fresh
     regression is the cross-cutting fix this slot shipped; the machine-type bump for the daily cron remains the
     operator-gated decision in that doc (this run used an explicit `--machine-type e2-highmem-8` override, not a
     launcher-default change).
+- **2026-08-12 (slot 14, data_engineering) — todo 9 DONE: Distinct Values panel re-checked against the fresh
+  `2026-08-12` rollup; live census recorded.**
+  - **Method**: replicated `deployment-api` `_distinct_values.enumerate_distinct_values` + `_comparison_set` +
+    `_ACCEPTED_EXCEPTIONS` exactly (imported UAC canonical sets `InstrumentType` / `DATA_TYPES_BY_ASSET_GROUP['defi']` /
+    `ALL_DEFI_VENUES` bare-bases / `MAINNET_CHAIN_IDS`; `_BLANK_SENTINELS` collapse; the defi instrument_type casefold
+    - defi venue bare-base comparison rules) against the fresh `coverage.json` (`generated_at=2026-08-12T22:00:38Z`).
+      This IS the endpoint's computation — the panel reads only this rollup's by_venue*/by_chain keys.
+  - **Census (defi)**:
+    - **instrument_types**: 16 distinct, 1 non-canonical = `<blank>` only. No uppercase `POOL`. **CLEAN** ✓
+    - **data_types**: 31 distinct, 2 non-canonical = `dex_pools`, `dex_swaps`. `rate_indices` + `dex_pool_fees` ABSENT
+      (0 captured). `lending_indices` present.
+    - **chains**: 23 distinct, 1 non-canonical = `HYPERLIQUID`.
+    - **venues**: 105 distinct, 34 non-canonical — the expected unresolved set (ASTER/GMX/HYPERLIQUID/EXTENDED/LIGHTER)
+      - the VENUE-CHAIN composites (CORRECTLY flagged-but-accepted per this epic's prior false-alarm investigation) + 3
+        legacy operator-gated purge candidates (`AAVEV3`, `BLAZESTAKE`, `KAMINO_LENDING` — tracked on
+        `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`'s row-11 `[OPERATOR]` purge item, NOT this
+        plan).
+  - **FINDING — `dex_pools` legacy data_type is BACK at full pre-retirement population (454,014 captured), re-registered
+    by the 2026-08-10/11 defi rebuild**: ORCA 450,976 + RAYDIUM 3,038, all `captured`, 0 `attempted_failed`. The
+    2026-08-05 retirement's terminal state was 29 captured / 453,985 attempted_failed — the rebuild's disk scan re-added
+    every legacy `dex_pools` physical object as captured. Same recurrence mechanism as the POOL-uppercase recurrence:
+    **a capture_status-flip retirement whose legacy GCS objects still exist is undone by the next
+    `rebuild_defi_manifest.py` scan.** This is why the 08-12 POOL retirement achieved 0 POOL (no physical uppercase
+    objects existed — manifest-column-only) while `dex_pools` re-appeared (real physical objects exist at the legacy
+    path). **Filed on `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`** (the proper tracker) with
+    the implication that the still-open `dex_swaps` migration requires the object-level/rebuild-skip fix for durability,
+    not just a manifest flip. Not executed here (bounded task scope).
+  - **`dex_swaps` residual**: 3.46M captured — this is the genuinely-open separate `[DATA] P2` migration
+    (`defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`), NOT this plan's scope, correctly untouched.
+  - **Panel verdict**: this plan's three retirements (POOL uppercase, rate_indices, dex_pool_fees) all landed and the
+    panel reflects them; the two remaining non-canonical data_types are pre-existing/tracked elsewhere, not regressions
+    from this plan's work.
