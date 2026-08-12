@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "6d36a7b2d4702d7209578fc25513acaef1bf4c33"
+      "ldr_ci_status_sha": "a4895d7da35653b455952ae058e677187727bb4f"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "5b4f000c4fedb5ae56d3087335ab26f1814a77a0"
+      "ldr_ci_status_sha": "ce2cff73396d71f9be9473be398f735d05cf4cba"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "14469009b44f3e9fab2b21972ea811371b1236a2"
+      "ldr_ci_status_sha": "7cd6438e25279b0f2ac421dffa02e1ef939274a6"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
