@@ -506,6 +506,25 @@ just belongs on a different layer than instrument_type does, and conflating the 
   (return `[]`) and dropped the emit patch (internal to the mocked fn). Lesson: tests that isolate one oracle branch by
   mocking sibling branches patch whatever names the handler module actually imports — an import-consolidation refactor
   breaks them; check every `patch(...)` target.
+- **2026-08-12 (slot 16, continued): SHIPPED + DONE-WHEN PROVEN.** Compound V3 oracle capture landed on origin:
+  `market-tick-data-service@f21da6c3` (`feat(defi): wire COMPOUND_V3-ETHEREUM oracle_prices capture (Comet getPrice)`)
+  - the previously-unpushed Task-2 commit (rebased as `6105f0b0`) — both on `origin/live-defi-rollout`, ahead=0, tree
+    clean. **Done-when PROVEN**: single-day force-compute for **2026-08-12** via the console script
+    (`.venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --start-date 2026-08-12 --end-date 2026-08-12 --force`,
+    `IS_TEST_RUN=true`) collected **12 real captured rows** for `COMPOUND_V3-ETHEREUM/oracle_prices` — written to the
+    `-test-` bucket
+    (`market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2026-08-12/pipeline_mode=batch_compound_v3/ asset_group=defi/venue=COMPOUND_V3/chain=ETHEREUM/instrument_type=spot_asset/data_type=oracle_prices/ COMPOUND_V3-ETHEREUM:SPOT_ASSET:{wbtc,cbbtc,rseth,usde,reth,oseth,rsweth,tbtc,ethx,woeth,usdc,usdt}.parquet`,
+    1 row each) + manifest `record_captured` per feed (per-VM shard: 81 total/64 new entries). source=compound_v3,
+    pipeline_mode=batch_compound_v3. deUSD/sdeUSD excluded by the USD sanity floor; removed/inactive Comet asset slots
+    skipped per-slot (shard isolation) — both expected. **Ship incident**: quickmerge STAGE 0 cascade realigned
+    `unified-trading-library`'s local `live-defi-rollout` (was `383d8fb5815d`, divergent) to origin `5507aff3` and a
+    stash-pop of pre-existing dirty WIP conflicted on `pipeline_mode_resolver.py` + its test (files this session does
+    not own). Restored those 2 files to origin's version (HEAD); the WIP remains preserved in `unified-trading-library`
+    stash@{0} (`cascade-1319235-live-defi-rollout`) for its owner — do NOT `git stash drop` it. Ship then succeeded.
+    **Lesson (measurement trap)**: `python -m market_tick_data_service.cli.main` is a NO-OP — main.py has no
+    `if __name__ == "__main__":` guard, so it imports (printing 2 config lines from UTL DomainValidationService) and
+    exits 0 running nothing; the real entries are the console script `.venv/bin/market-tick-data-service` or
+    `python -m market_tick_data_service` (`__main__.py`). Use the console script for all done-when/force-compute runs.
 
 ## Follow-ups
 
@@ -543,12 +562,22 @@ just belongs on a different layer than instrument_type does, and conflating the 
       single-day force-compute for 2026-08-11 against the `-test-` defi bucket (`IS_TEST_RUN=true`) produced 10 real
       `captured` SPARK-ETHEREUM/oracle_prices rows (source=spark, pipeline_mode=batch_spark) — verified in the
       `_index/per_vm/` manifest shards + canonical `batch_spark` parquet paths.
-- [ ] [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
-      CAPTURE). Over-claims a `2022-08-14` genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`.
-      Add a Compound-V3 price-oracle branch to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing
-      under `venue=COMPOUND_V3, chain=ETHEREUM` (Compound V3 markets read a per-market Chainlink-based price feed).
-      Done-when: single-day force-compute produces real `captured` rows for `COMPOUND_V3-ETHEREUM/oracle_prices` against
-      the `-test-` bucket. (repo: market-tick-data-service)
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
+      CAPTURE, not roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2022-08-14`
+      genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`. Add a Compound-V3 price-oracle branch
+      to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing under `venue=COMPOUND_V3, chain=ETHEREUM`
+      (Compound V3 markets read a per-market Chainlink-based price feed). Done-when: single-day force-compute produces
+      real `captured` rows for `COMPOUND_V3-ETHEREUM/oracle_prices` against the `-test-` bucket. (repo:
+      market-tick-data-service) — **DONE 2026-08-12**: shipped `market-tick-data-service@f21da6c3` (Comet getPrice
+      branch in `_compound_oracle_collection.py`; constants + preflight sentinel; module split for the 900-line cap).
+      Done-when proven: 2026-08-12 force-compute via the console script
+      (`.venv/bin/market-tick-data-service --operation collect-oracle-prices --mode batch --asset-group defi --start-date 2026-08-12 --end-date 2026-08-12 --force`,
+      `IS_TEST_RUN=true`) produced **12 real `captured` rows** for `COMPOUND_V3-ETHEREUM/oracle_prices` on the `-test-`
+      bucket (`market-data-tick-defi-test-central-element-323112`, `pipeline_mode=batch_compound_v3`,
+      source=compound_v3) — verified in the run log (12 writes to
+      `COMPOUND_V3-ETHEREUM:SPOT_ASSET:{wbtc,cbbtc,rseth,usde,reth,oseth,rsweth, tbtc,ethx,woeth,usdc,usdt}.parquet`) +
+      per-VM manifest shard (81 total/64 new entries).
 - [ ] [CODE] P2. **WIRE oracle_prices capture for MORPHO-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE).
       Over-claims a `2024-01-08` genesis (`defi_venue_capabilities.py:99`), zero captured rows, phase `live`. Add a
       Morpho-Blue price-oracle branch to `oracle_prices_handler.py` (+ constants) writing under
