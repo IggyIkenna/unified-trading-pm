@@ -280,6 +280,16 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-12** — **SPARK-ETHEREUM oracle_prices capture wired (the decomposed per-pair todo), done + shipped.**
+  Shipped `market-tick-data-service@845bd085` (`_spark_oracle_collection.py` + wiring) +
+  `unified-api-contracts@e34b0f44` (BATCH_SPARK / SOURCE_MODE_CAPABILITY["spark"]={BATCH} / SOURCE_PRIORITY +
+  EMISSION_LATENCY_MS_BY_SOURCE entries) + `unified-trading-library@4580f481` (SPARK venue override in
+  `_VENUE_OVERRIDES` — without it the write path mislabeled every SPARK row as `batch_pyth_hermes`). SparkLend
+  AaveOracle `0x8105f69D9C41644c6A0803fDA7D03Aa70996cFD9` (canonical spark-address-registry `AAVE_ORACLE`); 10 reserves
+  live-verified 2026-08-12 at block 25740221 (eth_call getAssetPrice != 0; sUSDS reverts → excluded). Done-when proven:
+  single-day force-compute 2026-08-11 against the `-test-` defi bucket (`IS_TEST_RUN=true`) produced 10 real `captured`
+  SPARK-ETHEREUM/oracle_prices rows (source=spark, pipeline_mode=batch_spark), verified in the `_index/per_vm/` manifest
+  shards + canonical `batch_spark` parquet paths. QG green on all 3 repos.
 - **2026-08-05** — **Second pass on the Layer-1↔Layer-2 reconciliation (the open DESIGN todo).** Re-ran
   `defi_actual_data_types_not_declared_valid()` against current UAC — 40 undeclared pairs across 38 venues (up from the
   doc's original 31, due to additional venues registered since 2026-07-10). Added 10 data_type declarations to 8
@@ -461,15 +471,24 @@ just belongs on a different layer than instrument_type does, and conflating the 
 > CONTRADICTS this doc's "roll back — genesis on the wrong venue key" claim; the roll-back todo now gates on a live-
 > manifest check before removing anything.
 
-- [ ] [CODE] P2. **WIRE oracle_prices capture for SPARK-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE, not
-      roll-back). Over-claims a `2024-01-01` genesis in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
+- [x] ✅ [CODE] P2. **WIRE oracle_prices capture for SPARK-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL CAPTURE,
+      not roll-back — recorded in this doc's Progress Log 2026-08-09,
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`). Over-claims a `2024-01-01`
+      genesis in `DEFI_VENUE_DATA_TYPE_CAPABILITIES`
       (`unified-api-contracts/.../registry/defi_venue_capabilities.py:109`) with zero captured rows; venue phase is
       `live`. Add a Spark price-oracle collection branch to
       `market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py` (+ per-protocol oracle
       contract addresses/ABI in `_oracle_prices_constants.py`) that writes `oracle_prices` under
       `venue=SPARK, chain=ETHEREUM` (Spark uses an Aave-V3-fork oracle — `getAssetPrice`). Done-when: a single-day
       force-compute produces real `captured` rows for `SPARK-ETHEREUM/oracle_prices` (prove against the `-test-` defi
-      bucket via the `/data-pipeline-check-mtds` smoke path). (repo: market-tick-data-service)
+      bucket via the `/data-pipeline-check-mtds` smoke path). (repo: market-tick-data-service) — **DONE 2026-08-12**:
+      shipped `market-tick-data-service@845bd085` + `unified-api-contracts@e34b0f44` +
+      `unified-trading-library@4580f481` (all on `origin/live-defi-rollout`; QG green each). SparkLend AaveOracle
+      (0x8105f6…cFD9, spark-address-registry) branch in `_spark_oracle_collection.py`; 10 reserves live-verified
+      2026-08-12 at block 25740221 (eth_call getAssetPrice != 0; sUSDS reverts → excluded). **Done-when proven**:
+      single-day force-compute for 2026-08-11 against the `-test-` defi bucket (`IS_TEST_RUN=true`) produced 10 real
+      `captured` SPARK-ETHEREUM/oracle_prices rows (source=spark, pipeline_mode=batch_spark) — verified in the
+      `_index/per_vm/` manifest shards + canonical `batch_spark` parquet paths.
 - [ ] [CODE] P2. **WIRE oracle_prices capture for COMPOUND_V3-ETHEREUM** (operator ruling 2026-08-09: WIRE REAL
       CAPTURE). Over-claims a `2022-08-14` genesis (`defi_venue_capabilities.py:93`), zero captured rows, phase `live`.
       Add a Compound-V3 price-oracle branch to `oracle_prices_handler.py` (+ `_oracle_prices_constants.py`) writing
