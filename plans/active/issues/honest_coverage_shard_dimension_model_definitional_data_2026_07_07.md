@@ -46,7 +46,7 @@ context_scope:
     deployment-api/deployment_api/services/data_status/mtds.py,
   ]
 execution_scope: local-only
-model_tier: opus-required
+model_tier:
 thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
