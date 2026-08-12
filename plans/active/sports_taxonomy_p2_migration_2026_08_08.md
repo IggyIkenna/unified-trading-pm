@@ -23,6 +23,7 @@ related:
     /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
     /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
   ]
@@ -95,13 +96,26 @@ than proceeding.
 
 ### Consumer enumeration (must complete before any re-stamp)
 
-- [ ] [REVIEW] P0. **Enumerate every consumer of each token being renamed, per the P1-authored codex rename rule.**
+- [x] ✅ [REVIEW] P0. **Enumerate every consumer of each token being renamed, per the P1-authored codex rename rule.**
       Minimum surfaces to enumerate — do NOT stop at a grep, READ each candidate consumer (features-service reads
       bucketed odds by PATH PREFIX, not by data_type column, so a data_type grep will miss it): MTDS writers + rebuild
       scripts, MDPS `canonical_writer`/`canonical_writer_shaping`, IS producers + `enumerate_expected_universe.py`,
       features-service `sports_feature_loader._ODDS_BUCKETED_PREFIXES`, ml-service sports loaders, deployment-api
       distinct-values + data-status, and the honest-coverage measurer. Output a checked-in consumer inventory; the
-      re-stamp todos below cite it. **This todo gates every todo in the next section.**
+      re-stamp todos below cite it. **This todo gates every todo in the next section.** — Consumer inventory checked in
+      at `/plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md`, produced via 7 parallel per-repo passes
+      (MTDS, MDPS, instruments-service, UAC, features-service, ml-service, deployment-api), each checking all 5 binding
+      types the codex rule names (path-prefix, filename, registry-membership, config-dict-key, literal value) — not a
+      grep. Key findings: `enumerate_expected_universe.py`'s override-dict pattern is a proven prior-incident precedent
+      (a partial `odds_horizon_bucket` lowercase already caused a 209,526-row zero-overlap manifest mismatch) and is the
+      mechanism the re-stamp todos should route the vocabulary lowercasing through, not a new translation layer; the
+      plan's own "`league_id=` is canonical" assumption is CONTRADICTED by UAC's actual path builder (it writes
+      `league=`) — re-verify before the sweep todo runs; `odds_horizon_bucket` and `ODDS_API` are coupled in MTDS's
+      freshness-preflight logic and must be re-verified together; features-service has 3 independent copies + ml-service
+      1 more independent copy of the same raw-odds path logic; ml-service has a pre-existing FOOTYSTATS-venue
+      classification bug worth fixing in passing. `strategy-service` was not searched — stated explicitly as an
+      uncovered repo, not silently omitted. P3's ML-loader-migration todo remains parked pending the actual re-stamp
+      landing (this todo is enumeration only, not the re-stamp).
 
 ### The re-stamps (each is a four-surface change — path, parquet content, manifest row, catalogue render)
 
