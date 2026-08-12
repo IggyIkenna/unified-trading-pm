@@ -576,12 +576,11 @@ twice.
 **What is actually true:** four overlapping transfer-type enums exist, and the codex SSOT correctly documents the
 five-member one:
 
-| Enum                                                                      | Members                                                                                                                            |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **`transfer_types.TransferType` — 5 — THE ROUTING SSOT** (cited by codex) | `ON_CHAIN`, `CEX_WITHDRAWAL`, `CEX_INTERNAL`, `CUSTODY_TRANSFER`, `BRIDGE`                                                         |
-| `architecture_v2.enums.TransferType` — **7**                              | `INTERNAL_SUBACCOUNT`, `CEX_WITHDRAWAL_DEPOSIT`, `ON_CHAIN_TRANSFER`, `BRIDGE`, `WRAP_UNWRAP`, `UNITY_WALLET_OP`, `IBKR_FUND_MOVE` |
-| `BusTransferType` (`transfer_events.py`) — **5**                          | `CEX_WITHDRAW`, `DEFI_DEPOSIT`, `DEFI_WITHDRAW`, `BRIDGE`, `SUBACCOUNT_MOVE`                                                       |
-| `domain.defi.transfers.TransferType` — **6**                              | `SAME_CHAIN`, `CROSS_CHAIN`, `CEX_WITHDRAWAL`, `CEX_DEPOSIT`, `SWEEP`, `REBALANCE`                                                 |
+**The four transfer-type enums** (detail in [transfer-architecture](/codex/04-architecture/transfer-architecture.md)):
+`transfer_types.TransferType` **5** — the routing SSOT codex documents,
+`ON_CHAIN`/`CEX_WITHDRAWAL`/`CEX_INTERNAL`/`CUSTODY_TRANSFER`/`BRIDGE` · `architecture_v2.enums.TransferType` **7**
+(incl. the unconsumed `UNITY_WALLET_OP`, `IBKR_FUND_MOVE`) · `BusTransferType` **5** ·
+`domain.defi.transfers.TransferType` **6**.
 
 I also previously described the defi one as having two members (`SAME_CHAIN`/`CROSS_CHAIN`) — it has six. **H.2's
 conclusion still survives, but the reasoning is now different again**: a custody leg IS representable
@@ -817,16 +816,12 @@ implement.** `funding_reversion_crossvenue_book.py` (738 lines, e2e-testing) shi
 asserts the overlays are "signal/portfolio-layer concerns folded into the rank + the inverse-vol weight feature".
 **Measured against the tree, that claim does not hold.**
 
-| #   | Overlay (research book)                                    | In production?                                                                                               |
-| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 1   | EWMA(halflife=21) of daily funding, lagged 1d              | **Unverified — likely absent.** Upstream is `_cross_sectional_rank(coin_obs, cohort)`, a plain same-day rank |
-| 2   | Rank-buffer hysteresis (hold until it leaves the k+6 band) | **Absent** — no `rank_buffer` anywhere                                                                       |
-| 3   | HL-veto (drop a long in HL's bottom decile / short in top) | **Absent**                                                                                                   |
-| 4   | Inverse-vol sizing within each leg                         | ✅ arrives as `funding_inverse_vol_weight`, applied in `_leg_weight`                                         |
-| 5   | No-trade band (skip weight changes < 0.03)                 | **Absent** — no `no_trade_band`                                                                              |
-| 6   | Beta-hedge (subtract trailing BTC-beta × BTC return)       | **DOCSTRING ONLY** — prose in `funding_dispersion.py` and `catalog_carry.py`, no implementation              |
-| 7   | Vol-target (scale exposure to a trailing-vol budget)       | **DOCSTRING ONLY** — same. (TSMOM has its own real vol-target; that is a different archetype)                |
-| 8   | Squeeze-veto (cut a leg on >2σ adverse 2-day move)         | ✅ implemented in the engine (`squeeze_threshold`, `funding_squeeze_sigma`)                                  |
+**IN production (2 of 8):** inverse-vol sizing (arrives as `funding_inverse_vol_weight`, applied in `_leg_weight`) and
+the squeeze-veto (`squeeze_threshold` / `funding_squeeze_sigma`, in-engine). **ABSENT (6):** EWMA(21)-lagged signal
+(upstream is `_cross_sectional_rank`, a plain same-day rank — likely absent, not fully verified) · rank-buffer
+hysteresis (no `rank_buffer`) · HL-veto · no-trade band (no `no_trade_band`) · **beta-hedge and vol-target are DOCSTRING
+ONLY** — prose in `funding_dispersion.py` and `catalog_carry.py`, no implementation. (TSMOM has its own real vol-target;
+different archetype.) Placement for all four is settled in the expansion plan § A.
 
 **Production implements 2 of 8.** Overlays 6 and 7 in particular **cannot** be "folded into the rank" — a beta-hedge
 requires an actual BTC hedge position and vol-target scales book-level exposure; neither is a property of a per-coin
