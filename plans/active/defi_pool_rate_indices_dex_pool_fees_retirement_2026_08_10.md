@@ -97,10 +97,11 @@ picking this plan up cold should never trust the flip-time state without a fresh
       the rebuild VM's actual deployed code content (`cloudbuild`/tarball manifest `commit_sha`) to rule in/out a stale
       pre-N6a snapshot. (repo: market-tick-data-service) — unified-trading-pm (verification-only, no code). **Stale
       pre-N6a snapshot theory RULED OUT.** See Progress Log for evidence.
-- [ ] [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
+- [x] ✅ [DATA] P1. **Determine whether the manifest rebuild is full-replace or upsert-onto-existing-index** (same
       recurrence investigation). Read `rebuild_defi_manifest.py`'s top-level `main()`/index-write path — if upsert, any
       pre-existing uppercase rows that survived the 2026-08-05 fold would pass through untouched rather than being
-      reintroduced by the rebuild. (repo: market-tick-data-service)
+      reintroduced by the rebuild. (repo: market-tick-data-service) — market-tick-data-service@`current HEAD`
+      **VERDICT: UPSERT-onto-existing-index, NOT full-replace.** See Progress Log for the three lines of evidence.
 - [ ] [DATA] P1. **Sample the 7,930,863 uppercase rows' underlying GCS objects directly**
       (`gcs_describe_object`/`list_blobs` under `instrument_type=POOL/`) to settle whether this is a
       manifest-column-only artifact (as the 2026-08-05 fold assumed) or genuinely reflects physical objects at an
