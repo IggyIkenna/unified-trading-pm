@@ -675,7 +675,7 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       re-pinned rather than widened blind — but whether a combo chain should carry `expiration` is a real domain
       question nobody has answered. Surfaced 2026-08-11 by the pin failing the whole MDPS suite, which is exactly its
       job.
-- [ ] [SCRIPT] P1. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
+- [x] ✅ [SCRIPT] P1. **Liquidations sub-daily (15m/1h/4h) candles fail schema validation on sparse-event days —
       pre-existing, unrelated to the inverse-notional fix, and TOTAL not partial.** UPGRADED P2->P1 and corrected
       2026-08-12: originally described (from a mid-run sample) as affecting "some KRAKEN-FUTURES shards" while 1d was
       unaffected. Full-log analysis after the P0 re-derive VM completed shows this is not a minority edge case: EVERY
@@ -684,10 +684,39 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       (see the P0 todo's corrected finding — a different, not-yet-diagnosed silent no-op, not this bug). Root cause of
       the sub-daily failures per the log:
       `aggregate_from_15s_efficient: N NaN values in 'open' input column — adapter density bug, expected LOCF-dense base candles`.
-      Liquidation events are sparse (unlike continuous trades), so many 15s base-candle buckets have no price data and
-      the aggregator's LOCF-density assumption doesn't hold. Does NOT corrupt anything (a failed write leaves the prior
-      row untouched, per the captured-outranks tie-break documented above) but currently blocks 100% of sub-daily
-      liquidations writes fleet-wide, not just the wrong-inverse re-derive. Evidence:
+      **ROOT CAUSE CORRECTED 2026-08-12 (this continuation) — the `aggregate_from_15s_efficient` WARNING is a real
+      symptom but a red herring for causality, not the actual failure mechanism.** Traced via an Explore sub-agent, then
+      every load-bearing claim independently re-verified against the live code before shipping (contract build, schema
+      fallback chain, adapter behavior — 5 separate greps/reads). The actual chain: (1) `CefiLiquidationsAdapter`
+      (`app/adapters/cefi/liquidations_adapter.py`) never calls `_finalize_session_grid` — by design, confirmed correct:
+      liquidations have no "prior close" concept, so LOCF-forward-filling a stale liquidation price would fabricate
+      data, exactly what the UAC `liq_agg` contract avoids by declaring NO `open`/`high`/`low`/`close` columns at all
+      (`liq_shape=True` branch, `unified-api-contracts/.../_candle_contracts.py`), only
+      `liquidation_count`/`liquidation_notional_usd`. (2) The bug is in the SEPARATE legacy pre-flight validator:
+      `mdps_ohlc_is_nullable()` (`canonical_writer_shaping.py`) loops the contract's columns looking for `open`; when
+      the contract has no such column (liq_agg's case) the loop falls through to the SAME `None` sentinel used for
+      "contract lookup failed entirely" — conflating two different things. (3) `get_schema_for_data_type()`
+      (`schemas/output_schemas.py`) treats `ohlc_nullable is None` as "fall back to the non-nullable
+      `PROCESSED_CANDLE_SCHEMA` default." (4) That schema declares `open`/`high`/`low`/`close` `nullable=False`
+      unconditionally — so a liquidation-free window's structurally-NaN OHLC (the adapter always emits the
+      `open`/`high`/`low`/`close` fields, NaN-filled when there's no event, since `CandleOutput` is a shared dataclass)
+      fails validation and the WHOLE SHARD's write is aborted, not just the offending bar — explaining "100% of
+      15m/1h/4h" (small windows → near-certain to contain an all-empty sub-window) vs "1d/24h less likely but not
+      immune" (whole-day all-empty is rarer but not impossible for a thin instrument). **This is NOT scoped to 15m/1h/4h
+      — 1m/5m are structurally identical (same `aggregate_from_15s_efficient` input frame, same validator chain, and
+      smaller windows make an all-empty window MORE likely, not less) and 24h/1d hits the identical mechanism once
+      actually scheduled (see the P0 todo's separate 1d-scheduling fix above — that fix makes 24h reachable again, and
+      this fix is what keeps it from then failing the same way).** **Fixed, not worked around**:
+      `market-data-processing-service@c3ec4d52a5` — `mdps_ohlc_is_nullable()` now returns `True` (nullable) when the
+      contract resolves but declares no `open` column at all, distinct from the lookup-failure branch which correctly
+      keeps returning `None`. This is a general fix (any future no-OHLC contract shape gets the same correct treatment),
+      not a liquidations-specific special case. Added 5 regression tests (`test_schema_robustness.py`) —
+      `mdps_ohlc_is_nullable` for liquidations across 15m/1h/4h/1d, plus an end-to-end NaN-OHLC-candle validation test
+      mirroring the existing derivative_ticker/book_snapshot_5 regression pattern (book_snapshot_5's non-nullable
+      behavior is unaffected — it still has an explicit `open` column with `nullable=False`, untouched by this branch).
+      34/34 tests pass, gate green (60s), shipped. Does NOT corrupt anything (a failed write leaves the prior row
+      untouched, per the captured-outranks tie-break documented above) — it blocked 100% of sub-daily liquidations
+      writes fleet-wide (not just the wrong-inverse re-derive) until this fix. Evidence:
       `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260812-015953/run.log`.
 
 ## Deferred work after 2026-08-11
@@ -710,22 +739,23 @@ already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing e
 
 ## Deferred work after 2026-08-12
 
-| item                                                                                     | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | blocked-on                                        |
-| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| **Wrong inverse notional already on GCS** (~5,232 shards, population moves — re-measure) | **First attempt FAILED — 0% fixed** (2223-date VM, 0/33,686 writes succeeded). Root cause split in two: (1) ✅ **FIXED 2026-08-12** — `"1d"` vs `"24h"` spelling mismatch silently dropped the 1d timeframe (majority of the population) from scheduling entirely, `market-data-processing-service@c9d14458fa`, gate green, verified against live code before shipping; (2) sub-daily (15m/1h/4h) `aggregate_from_15s_efficient` NaN-density bug still fails 100%, not yet fixed (P1 below). Re-derive re-launch still blocked on (2). Full evidence in the P0 todo above. | nobody — fix the P1 sub-daily bug, then re-launch |
-| ~~**VM fleet billing waste (411 duplicate year-shard VMs)**~~                            | ✅ **RESOLVED 2026-08-12.** Reaped via the sanctioned tombstone-then-delete tool after confirming the exit-code monitor was still paused (no relaunch-storm risk). 485/467 running → 69/51 running. Full write-up in `mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`'s second remediation section.                                                                                                                                                                                                                                            | done                                              |
-| ~~**`launch-mdps-backfill-vm.sh --date-concurrency` broken**~~                           | ✅ **FIXED 2026-08-12** — `deployment-service@decdf98fb2`. The flag appended a nonexistent CLI flag onto the wrong entrypoint; fixed to prepend `MDPS_DATE_CONCURRENCY` as an env var instead, matching every other narrow-scope filter in the same launcher. Every prior use of this lever was silently a no-op.                                                                                                                                                                                                                                                          | done                                              |
-| ~~**Stale/superseded uncommitted docs from a predecessor session**~~                     | ✅ **RESOLVED 2026-08-12.** 6 dirty files surveyed; 4 were already-archived duplicates on origin (dropped, not shipped — shipping would have recreated dead copies contradicting the real archived versions), 2 were genuine (1 recovered a retag lost to a concurrent stale-base commit, 1 a new stash-audit report) and shipped `9c3cfc9b21`. A large raw JSON data dump in the repo root was deleted (never belonged in git).                                                                                                                                           | done                                              |
-| **VM fleet wedge root cause (why ~398 VMs hung mid-shutdown in one hour)**               | **Not done.** Carried forward unchanged from 2026-08-11 — the reap above treats a symptom (duplicates), not this cause.                                                                                                                                                                                                                                                                                                                                                                                                                                                    | nobody                                            |
-| **Cross-cloud WIF for the AO VM · #9/#13/#15/#11/#18 · other 2026-08-10/11 findings**    | **Not done.** Carried forward unchanged from the 2026-08-11 table above — not touched this continuation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | operator (WIF) / nobody (rest)                    |
+| item                                                                                     | state / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | blocked-on                                               |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Wrong inverse notional already on GCS** (~5,232 shards, population moves — re-measure) | **First attempt FAILED — 0% fixed** (2223-date VM, 0/33,686 writes succeeded). Both root causes now ✅ **FIXED 2026-08-12**: (1) `"1d"` vs `"24h"` spelling mismatch silently dropped the 1d timeframe from scheduling entirely (`market-data-processing-service@c9d14458fa`); (2) a legacy schema-validator fallback wrongly enforced non-null OHLC on liq_agg (which has no OHLC concept at all), failing 100% of 1m/5m/15m/1h/4h/24h writes on any liquidation-free sub-window (`market-data-processing-service@c3ec4d52a5`). Both gate-green, both verified against live code before shipping, 34/34 unit tests pass. Nothing blocks a re-launch now — see the P0 todo for full evidence. | nobody — re-launch the re-derive with 3-way verification |
+| ~~**VM fleet billing waste (411 duplicate year-shard VMs)**~~                            | ✅ **RESOLVED 2026-08-12.** Reaped via the sanctioned tombstone-then-delete tool after confirming the exit-code monitor was still paused (no relaunch-storm risk). 485/467 running → 69/51 running. Full write-up in `mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md`'s second remediation section.                                                                                                                                                                                                                                                                                                                                                               | done                                                     |
+| ~~**`launch-mdps-backfill-vm.sh --date-concurrency` broken**~~                           | ✅ **FIXED 2026-08-12** — `deployment-service@decdf98fb2`. The flag appended a nonexistent CLI flag onto the wrong entrypoint; fixed to prepend `MDPS_DATE_CONCURRENCY` as an env var instead, matching every other narrow-scope filter in the same launcher. Every prior use of this lever was silently a no-op.                                                                                                                                                                                                                                                                                                                                                                             | done                                                     |
+| ~~**Stale/superseded uncommitted docs from a predecessor session**~~                     | ✅ **RESOLVED 2026-08-12.** 6 dirty files surveyed; 4 were already-archived duplicates on origin (dropped, not shipped — shipping would have recreated dead copies contradicting the real archived versions), 2 were genuine (1 recovered a retag lost to a concurrent stale-base commit, 1 a new stash-audit report) and shipped `9c3cfc9b21`. A large raw JSON data dump in the repo root was deleted (never belonged in git).                                                                                                                                                                                                                                                              | done                                                     |
+| **VM fleet wedge root cause (why ~398 VMs hung mid-shutdown in one hour)**               | **Not done.** Carried forward unchanged from 2026-08-11 — the reap above treats a symptom (duplicates), not this cause.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | nobody                                                   |
+| **Cross-cloud WIF for the AO VM · #9/#13/#15/#11/#18 · other 2026-08-10/11 findings**    | **Not done.** Carried forward unchanged from the 2026-08-11 table above — not touched this continuation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | operator (WIF) / nobody (rest)                           |
 
-**Recommended NEXT item (updated 2026-08-12, post-fix): fix the sub-daily `aggregate_from_15s_efficient` NaN-density bug
-(P1 below), then re-launch the P0 re-derive.** The 1d silent-skip is SOLVED and shipped
-(`market-data-processing-service@c9d14458fa` — a `"1d"`/`"24h"` spelling mismatch in the timeframe-scheduling filter,
-see the P0 todo for the full trace). That was the harder of the two blockers; the sub-daily bug is a narrower, better-
-understood NaN-on-sparse-days issue in one aggregation function. Once both are closed, re-launch with the SAME three-way
-verification rigor as the correction above (run.log counters + manifest `written_at` + direct GCS `last_modified` — a
-"VM completed" signal alone was proven misleading here) before declaring the re-derive done.
+**Recommended NEXT item (updated 2026-08-12, both fixes shipped): re-launch the P0 re-derive.** Both blockers are
+SOLVED: (1) the 1d silent-skip (`"1d"`/`"24h"` spelling mismatch, `market-data-processing-service@c9d14458fa`) and (2)
+the sub-daily/24h schema-validation false-reject (a legacy fallback wrongly enforcing non-null OHLC on liq_agg's no-OHLC
+shape, `market-data-processing-service@c3ec4d52a5` — confirmed to affect 1m/5m too, not just 15m/1h/4h, though neither
+was requested by the failed run). Re-launch with `--force --data-types liquidations --timeframes "1d 4h 1h 15m"` (the
+same scope as before — 1m/5m were never part of the wrong-inverse population) and verify with the SAME three-way rigor
+as the correction above (run.log counters + manifest `written_at` + direct GCS `last_modified` — a "VM completed" signal
+alone was proven misleading here) before declaring the re-derive done.
 
 ## Lessons from the 2026-08-10/11 continuation — each cost real time
 
@@ -825,3 +855,15 @@ verification rigor as the correction above (run.log counters + manifest `written
     from the CLI env-var bridge down to the exact `.get(tf, 0) >= base_secs` comparison in one pass; every claimed
     file:line was independently re-verified against the live code before the fix shipped — cheap insurance (4 grep/read
     calls) against shipping a fix for a bug that wasn't actually there.
+25. **A logged WARNING at the point of suspicion is not proof of causality — trace to the actual hard failure, don't
+    stop at the loudest symptom.** The sub-daily bug's own log line
+    (`aggregate_from_15s_efficient: N NaN values in 'open' input column`) looked like an obvious smoking gun and the
+    plan's original theory built directly on it ("LOCF-density assumption doesn't hold for sparse liquidations"). The
+    real defect was two validator layers downstream — a schema lookup silently conflating "no OHLC column in this
+    contract" with "contract lookup failed" — and the aggregator's own null-skipping roll-up rules were already correct.
+    The WARNING and the failure were correlated (same root sparsity) but not causally linked; asking "does the code that
+    logs the warning actually RAISE, or does something else downstream?" (it only `logger.warning`s, never raises —
+    visible right in the same function) was the thread that unraveled the wrong theory. Same discipline as lesson 24:
+    every claim from the tracing sub-agent was re-verified against the live contract-builder, schema-fallback, and
+    schema-definition code before the fix shipped — a plausible, detailed, wrong theory reads identically to a correct
+    one until checked.
