@@ -998,3 +998,12 @@ against the reproduction script.
   needed — slot-2 entry above did the fresh bounded live read (last-24h = 4 transient network rows, zero
   schema-contract), nothing new since; 1-line audit-trail close-out only (doc at its 1000-line cap), no GCS read, no VM
   launch, no code change.**
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-f601e4, slot 14) — 27th+ dispatch, NEW escalation_id
+  (orchestrator re-escalation of root agt-e488d1): same static-backlog close-out, no code fix needed.** Reading
+  7,806/215,756 = 3.6% (abs>=500) continues the documented decay (18,999 → 8,670 → 8,060 → 7,806); alert already labels
+  it STATIC BACKLOG, no new activity in 1d. Re-verified all 11 fix commits still ancestors of origin/live-defi-rollout
+  (MTDS 339ca767/6bf568ee/2ddc6d4a/6a067cf1/6c6fab03, UAC 8db188fe/1c4d8864, deployment-service
+  a564cca/6f464325/9102eb9b/1b035c52) — all OK. Slot-2 entry above (today) already did the fresh bounded live read (zero
+  schema-contract since the 2026-07-31 checkpoint); numerator moved only in the healthy direction, so no repeat GCS
+  read. This is the documented residual orchestrator re-escalation path, not a dedup regression — no code change, no
+  GCS/manifest write, no VM launch (PM plan-doc append only).**
