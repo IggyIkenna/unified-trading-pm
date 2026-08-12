@@ -29,7 +29,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-07-31
+last_updated: 2026-08-12
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -86,10 +86,14 @@ The IAM model keys off the **actual** bucket env suffix produced by the mandated
 
 - **4 effective name tiers (`dev`/`stg`/`prd` + ephemeral `test`); staging is DISTINCT (`-stg-`), not folded into dev.**
 - **`mock` is NOT a name suffix** — it is `CLOUD_MOCK_MODE` + scenario prefixes _inside_ buckets.
-- **Two drift facts blocking clean sync:**
-  - **Codex stale**: [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §4 claims "staging
-    shares the dev tier" (3-tier via `get_bucket_environment`) — **contradicts** `resolve_bucket_name`. Resolver is the
-    mandated SSOT → doc must be corrected (P3 below).
+- **One drift fact blocking clean sync** (the other — codex §4 vs `resolve_bucket_name` — is RESOLVED, corrected below):
+  - ~~**Codex stale**: bucket-isolation-model.md §4 claims "staging shares the dev tier" — contradicts
+    `resolve_bucket_name`.~~ **FIXED (verified current 2026-08-12)**:
+    [bucket-isolation-model.md §4](/codex/05-infrastructure/bucket-isolation-model.md) now correctly documents staging
+    as its own `-stg-` tier (not folded into dev), carries an explicit "Breaking change vs prior doc" banner, and rules
+    `get_bucket_environment()` **Retired** ("Never call this — it returns wrong tiers for staging"). No further doc
+    correction needed here; see the § "Open design decisions" STALE banner below for the separate, still-open
+    tier-SET question (dev/stg retired per the 2026-07-13 operator ruling).
   - **Group A vs B differ TODAY**: Group A (raw — `market-data-tick`, `instruments-store`) is **env-tiered live**
     (canonicalisation migrations already run on `…-prd-central-element-323112`); Group B (derived — `features-*`,
     `strategy-store`, `execution-store`, `ml-*`) is **env-split ROLLED BACK** (non-env-split today), and its named

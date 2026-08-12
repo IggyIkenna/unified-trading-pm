@@ -57,7 +57,7 @@ related:
   ]
 created: 2026-07-16
 author: unknown
-parent_epic: deployment_and_user_management_master
+parent_epic: infrastructure_master
 priority: P1
 source:
   github_actions_ci_cost_reduction_2026_07_15 batch-2 validation, slot 1, 2026-07-16 — found while proving the flipped
@@ -67,7 +67,7 @@ assigned_vm: NA
 execution_scope: local-only
 assigned_role: cicd
 drift_direction: advance-code
-last_updated: 2026-07-16
+last_updated: 2026-08-12
 locked_by:
 context_scope:
   [

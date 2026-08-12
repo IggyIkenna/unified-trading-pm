@@ -40,7 +40,11 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest", "--output-dir", ".playwright-mcp"],
+      "args": [
+        "@playwright/mcp@latest",
+        "--output-dir",
+        ".playwright-mcp"
+      ],
       "env": {
         "PLAYWRIGHT_HEADLESS": "false"
       }

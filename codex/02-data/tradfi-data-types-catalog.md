@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: TradFi Data Types Catalog
 summary:
-  Catalog of the 9 MTDS TradFi data types (ohlcv_1s/1m/15m/24h; tbbo/trades/mbp_10 DEFERRED; corporate_action_confirmed,
+  Catalog of the 10 MTDS TradFi data types (ohlcv_1s/1m/15m/24h; tbbo/trades/mbp_10 DEFERRED; corporate_action_confirmed,
   earnings_result, macro_result) — sources, per-venue genesis floors, shard keys, and coverage axes.
 status: current
 nature: ssot
@@ -22,7 +22,7 @@ created: 2026-05-24
 authoritative_for: [MTDS TradFi data_type catalog, TradFi deferred tick-data suppression (tbbo/trades/mbp_10)]
 referenced_by: [/codex/02-data/README.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 owner:
-last_reviewed: 2026-05-24
+last_reviewed: 2026-08-12
 code_refs:
 ---
 
@@ -33,7 +33,9 @@ code_refs:
 
 ## Overview
 
-MTDS collects TradFi market data in 9 distinct data types across market data, reference data, and macro domains. Each
+MTDS collects TradFi market data in 10 distinct data types across market data, reference data, and macro domains
+(`ohlcv_1s` was added 2026-06-18 as data type 1b, alongside `ohlcv_1m`, without renumbering the rest — see § "1b.
+ohlcv_1s" below). Each
 data type maps to one MTDS CLI operation (`--operation collect-<type>`), one or more venues, and a canonical GCS path
 under the TradFi tick-data bucket.
 

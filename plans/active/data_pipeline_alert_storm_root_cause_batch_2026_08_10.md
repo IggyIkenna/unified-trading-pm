@@ -528,6 +528,7 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       — correct values, no delete, no manifest surgery. **RE-DECIDED 2026-08-11: take the re-derive route.** The earlier
       delete+flip choice is withdrawn (it predated the captured-outranks discovery); no GCS delete and no manifest
       surgery will be performed. Retagged `[OPERATOR]` → `[DATA]` because nothing here is operator-gated any more — the
+<<<<<<< Updated upstream
       work is now entirely "land `contract_size`, then re-derive". `contract_size` landed 2026-08-11 (todo above,
       instruments-service@2e59354a10 + unified-trading-library@d89467c24f + market-data-processing-service@3ff54776e0) —
       this re-derive is now the highest-value next item; nothing else blocks it. **RE-MEASURED 2026-08-11 (continuation
@@ -620,6 +621,14 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
       SAME rigor as this correction (parse `run.log`'s aggregate succeeded/attempted counts and spot-check GCS object
       `last_modified` directly — a "VM completed" or "some dates showed success in a sample" signal is NOT sufficient,
       both were tried and both were misleading here).
+||||||| Stash base
+      work is now entirely "land `contract_size`, then re-derive". Accepted cost: the wrong inverse values stay readable
+      until that lands, which is why the `contract_size` todo above is the highest-value next item.
+=======
+      work is now entirely "land `contract_size`, then re-derive". `contract_size` landed 2026-08-11 (todo above,
+      instruments-service@2e59354a10 + unified-trading-library@d89467c24f + market-data-processing-service@3ff54776e0) —
+      this re-derive is now the highest-value next item; nothing else blocks it.
+>>>>>>> Stashed changes
 - [ ] [OPERATOR] P1. Full re-drive of the remaining cells once `contract_size` lands. The failure population has GROWN
       since the plan's original 150,182: measured 355,818 MDPS liquidation failures at 14:19Z (352,409
       `SCHEMA_VALIDATION_FAILED` + 3,409 `MalformedTickFieldError`), split LIN 335,931 / INV 12,822 / neither 7,065 —
@@ -673,6 +682,7 @@ dispatches measurably starved it for 2+ hours on 2026-08-07.
 | **#9 chain relabel migration · #13 date sharding · #15 rightsizing · #11 empty instrument_id · #18 shellcheck flake**                                                               | **Not done.** All scoped, none started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | nobody                                                |
 | **New findings from this session** (Tardis-403 classification · adapter-error fix · pytest-timeout-vs-admission · content-sentinel skip · stale governor token · safe-doc-push P0s) | **Not done.** All filed as `- [ ]` todos in this plan / the safe-doc-push issue.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | nobody                                                |
 
+<<<<<<< Updated upstream
 **Recommended NEXT item (updated 2026-08-11): re-derive the ~4,113 wrong-inverse shards in place.** deployment-service
 already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing else blocks this. It is a scoped overwrite
 (`--force`/`--skip-existing`, no GCS delete, no manifest surgery) per the P0 todo's per-venue breakdown.
@@ -694,6 +704,15 @@ all done and verified. Data-availability is ruled out (see the P0 todo's evidenc
 `market_data_processing_service`'s per-date/per-timeframe scheduling logic (likely upstream of `candle_write_mixin.py`,
 which correctly honors `force`), not the sub-daily `aggregate_from_15s_efficient` density bug (a real, separate, P1
 issue that blocks 15m/1h/4h but is not the reason 1d is silent).
+||||||| Stash base
+**Recommended NEXT item: finish the deployment-service gate and ship it.** It is the only remaining code from this
+batch, the code is already proven green on a pre-pull tree, and every failure so far was environmental. Gate it ALONE —
+running it beside another gate is what killed it once already.
+=======
+**Recommended NEXT item (updated 2026-08-11): re-derive the ~4,113 wrong-inverse shards in place.** deployment-service
+already shipped (`0c38c00d`, row above) and `contract_size` landed — nothing else blocks this. It is a scoped overwrite
+(`--force`/`--skip-existing`, no GCS delete, no manifest surgery) per the P0 todo's per-venue breakdown.
+>>>>>>> Stashed changes
 
 ## Lessons from the 2026-08-10/11 continuation — each cost real time
 

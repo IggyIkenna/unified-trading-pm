@@ -432,6 +432,30 @@ Directions, cheapest first — each is a todo below:
       way `prek stash/restore race detected` is already treated (`exit 7` with a diagnosis) instead of silently
       retrying. **Done when**: a commit succeeds with unrelated foreign dirty files present in the checkout, and a
       regression test creates foreign unstaged WIP and proves the caller's commit still lands. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **F6 is fixed for the shared-INDEX race, but a DIFFERENT, still-live race remains: prek's own patch
+      cache (`~/.cache/prek/patches/`) is HOST-GLOBAL, not per-worktree.** DONE 2026-08-12 —
+      unified-trading-pm@62d1a42613. Measured today (reproducible, twice, back to back, identical): shipping the same 2
+      files via `safe-doc-push.sh` — isolation correctly copies only the caller's own named files into a throwaway
+      worktree (F6's fix), so a PEER's dirty files can no longer interfere. But prek's `patches/` directory (where it
+      stashes+restores unstaged changes around each hook batch) is shared by EVERY isolated worktree on the host, since
+      it defaults to `~/.cache/prek` regardless of which worktree invoked it. Two fully-separate, individually-clean
+      isolated checkouts can still collide through that one shared directory: a slower run's restore silently reverts a
+      faster run's already-landed content. Caught both times by the entry-hash fingerprint check (today's earlier fix,
+      not silent) but the revert itself still happened — landing a stable, reproducible wrong hash both times, not
+      random corruption. Root cause confirmed via `~/.cache/prek/patches/` entry count (4265 at time of investigation)
+      and the measured PM-vs-agent-orchestrator contention asymmetry (stash pile 38 vs 0) that explains why this only
+      manifests on PM: every agent fleet-wide returns to PM to flip plan checkboxes, so PM is the only repo with enough
+      concurrent isolated writers for the shared-cache window to matter. **Fix**: scope `PREK_HOME` per isolated
+      worktree in both `quickmerge.sh` and `safe-doc-push.sh` — a `PREK_HOME` env var confirmed live-tested (fresh dir →
+      prek populates it independently). The expensive, reusable subdirs (`repos`/`hooks`/`tools`/`cache`, ~20MB+ of
+      installed hook environments — NOT part of the race) are symlinked in from a shared per-repo cache
+      (`~/.cache/qm-iso-prek/<repo>`, mirroring the existing venv-cache pattern) so isolation doesn't reinstall every
+      hook repo on every commit; `patches`/`scratch` are left unlinked so prek creates them fresh, private to this run,
+      then seeded back into the shared cache post-run for repos that had nothing cached yet. Exported on the SAME
+      logical line as the recursive re-exec (both scripts already warn: a `\` continuing onto a comment before `bash`
+      silently breaks the env-var handoff — this fix followed that constraint exactly). **Done when**: the same
+      back-to-back reproduction that hit this today lands both ships correctly (not just detects the revert). Repo:
+      unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
       `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
       13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
@@ -483,12 +507,12 @@ Directions, cheapest first — each is a todo below:
       unified-trading-pm@d85ad41fac.
 
       **Done when, confirmed**: the precommit sweep on one staged file is now **20.8s** total wall (measured 2026-08-12,
-          isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
-          down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
-          concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
-          single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
-          `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
-          nothing left to move out of the per-commit path. Repo: unified-trading-pm.
+              isolated worktree, host otherwise idle) — materially below the 60-80s measured commit inter-arrival rate, and
+              down from the original 118s (loaded) / 85s (this session's own first re-measurement, itself inflated by a
+              concurrent quickmerge run — see Progress Log). A follow-up per-check timing pass after both fixes shows no
+              single check over 4s (`plan-commit-sha-evidence` 4.0s, `check_archive_candidates` 3.0s,
+              `check_ag_closeout_linkage` 2.0s, `finalize-plan-coverage` 1.0s, everything else sub-second) — well-distributed,
+              nothing left to move out of the per-commit path. Repo: unified-trading-pm.
 
 - [x] ✅ [INFRA] P2. **Record the AO-vs-PM volume asymmetry in the codex** so the next person does not re-derive it —
       unified-trading-pm@baae1922bb. New § "1b. PM is the fleet's single write hotspot" in

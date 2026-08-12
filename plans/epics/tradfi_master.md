@@ -15,16 +15,16 @@ scope: [engineer, admin]
 tags: [tradfi, databento, backfill, manifest, ml, audit, data-correctness]
 related:
   [
-    ../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
-    ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md,
-    ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    ../active/tradfi_massive_dual_source_2026_05_28.md,
-    ../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
-    ../archive/2026_05/cme_polymarket_arb_2026_05_08.md,
-    ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md,
-    ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
+    /plans/archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
+    /plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md,
+    /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
+    /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
+    /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+    /plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md,
+    /plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md,
+    /plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
   ]
 created: 2026-05-07
 name: tradfi_master
@@ -34,21 +34,25 @@ assigned_vm: vm-tradfi
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
+  - /codex/02-data/availability-manifest-and-data-status.md
+  - /codex/02-data/honest-absence-downstream-handling.md
+  - /codex/02-data/per-asset-group-bucket-layouts.md
+  - /codex/09-strategy/architecture-v2/category-instrument-coverage.md
 related_plans:
-  - ../active/tradfi_backfill_throughput_followups_2026_07_24.md
-  - ../active/tradfi_consolidated_closeout_2026_07_18.md
-  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24.md
-  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
-  - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
-  - ../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md
-  - ../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md
-  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
-  - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
-  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
-  - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
-  - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
-  - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
-last_updated: 2026-06-20
+  - /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md
+  - /plans/active/tradfi_consolidated_closeout_2026_07_18.md
+  - /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md
+  - /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md
+  - /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md
+  - /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md
+  - /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
+  - /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
+last_updated: 2026-08-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -91,14 +95,14 @@ former inline todo block below maps to one of these homes — nothing dropped, n
 
 | Former inline block                                                                                                                                                                                                            | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                            | **EXTRACTED (net-new) → archived 2026-06-30, consolidation**                                    | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                           |
-| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                                | **EXTRACTED (net-new residual) → archived 2026-06-30, consolidation**                           | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                        |
-| ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness       | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                                    |
-| TradFi data-source adapter work (Massive/Databento, source column) — **SUPERSEDED 2026-07-21**: Massive removed 2026-07-19 + purged 2026-07-21; no co-mingled source column, only the general consolidator dedup-key hardening | **OWNED ELSEWHERE — do not duplicate**                                                          | [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) (databento-only sourcing SSOT; residual dedup-key hardening tracked in [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)) |
-| Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md) (ARCHIVED/superseded — canonical migration COMPLETE; superseded_by `data_completion_to_100_all_ag_2026_06_21`, the live owner)                                |
-| Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                        | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                                 |
+| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                            | **EXTRACTED (net-new) → archived 2026-06-30, consolidation**                                    | [`tradfi_cme_event_contract_backfill_2026_06_20`](/plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                           |
+| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                                | **EXTRACTED (net-new residual) → archived 2026-06-30, consolidation**                           | [`tradfi_cme_event_contract_backfill_2026_06_20`](/plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                        |
+| ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness       | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                                    |
+| TradFi data-source adapter work (Massive/Databento, source column) — **SUPERSEDED 2026-07-21**: Massive removed 2026-07-19 + purged 2026-07-21; no co-mingled source column, only the general consolidator dedup-key hardening | **OWNED ELSEWHERE — do not duplicate**                                                          | [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) (databento-only sourcing SSOT; residual dedup-key hardening tracked in [`tradfi_consolidated_closeout_2026_07_18`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md)) |
+| Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](/plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md) (ARCHIVED/superseded — canonical migration COMPLETE; superseded_by `data_completion_to_100_all_ag_2026_06_21`, the live owner)                                |
+| Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                        | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                                 |
 | `InstrumentRecord.expiry` nullable→required type-flip (L452, DEFERRED P3, MIGRATED FROM hard_schema_enforcement)                                                                                                               | **OWNED ELSEWHERE — do not duplicate**                                                          | hard-schema-enforcement workstream; runtime enforcement already shipped (uac@80aef10) — only the residual Pydantic type-flip remains, blocked on the live GCS migration. Point only; do NOT re-dispatch.                                                                         |
-| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.  |
+| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.  |
 | Already-shipped market-hours / session-type / futures-expiry-schema / S&P ML readiness items (mostly `- [x]` with evidence)                                                                                                    | **DONE (in-place)** — flipped with repo@sha evidence in the inline blocks below; no re-dispatch | —                                                                                                                                                                                                                                                                                |
 
 The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
@@ -120,7 +124,7 @@ and these docs is a review-blocking failure per `doc → plan → code`):
 - [`/codex/09-strategy/architecture-v2/category-instrument-coverage.md`](/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
   — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
 
-If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
+If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](/codex/) tree).
 
 ## Audit 2026-05-07
 
@@ -148,7 +152,7 @@ If any of the docs above is missing, this plan creates a stub for it (see [`code
 ## Tab 4 finding 2026-05-08 — MDPS-tradfi 4-VM silent partial drain (pre-cluster-validation)
 
 **Big finding** filed as full issue doc:
-[`plans/archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](../archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
+[`plans/archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md`](/plans/archive/issues/mdps_tradfi_silent_partial_drain_2026_05_08.md).
 
 Summary: probed 2026-05-08 11:25 UTC for Tab 4 ES.OPT 11-cluster validation work-split task. The 5 mdps-tradfi VMs split
 across two launch batches:
@@ -203,11 +207,10 @@ Covers:
   Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via Databento `XCBF.PITCH`**
   (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero remaining sanctioned use**
   in TradFi sourcing. SSOT:
-  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**: as
-  of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
-  Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged
-  here as CODEX-GATED (not corrected in this pass — codex edits are out of scope for a plans-reconciliation fix;
-  recommend an operator-approved follow-up to update that codex SSOT).
+  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **RESOLVED
+  2026-07-25**: the codex doc's own §"VIX — futures vs the cash index" was corrected (marked "⚠️→✅ CORRECTED
+  2026-07-25") to drop the retired Barchart+Yahoo VIX-15m cash-index layering description following the 2026-06-23
+  deletion. The CODEX-GATED flag this note carried as of 2026-07-14 no longer applies.
 - **Market-hours + holiday calendar SSOT** integration end-to-end (instruments → MTDS → MDPS → features → ML +
   strategy + execution).
 - **S&P 500 ML readiness**: ES futures continuous-series, VIX FUTURE (VX via Databento `XCBF.PITCH`) + features, full
@@ -216,7 +219,8 @@ Covers:
 
 **MVP backtest scope** (per
 [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md), **stale on 2
-tokens as of 2026-07-21 — CODEX-GATED follow-up needed, same spirit as the line-183 codex-gated note above**): S&P 500
+tokens as of 2026-07-21 — CODEX-GATED follow-up needed, same spirit as the resolved
+`tradfi-databento-sourcing-ssot.md` VIX note above**): S&P 500
 (CME ES + ES.OPT; **no SPY** — operator clarification 2026-05-13, "ES futures has more trading hours") + BTC/ETH ETFs
 (NASDAQ IBIT, NASDAQ ETHA) + crypto futures (CME MBT, CME MET) + VIX FUTURE (VX via Databento `XCBF.PITCH`; cash index
 deleted 2026-06-23 — **no CBOE BTC options on IBIT**: `option_underliers={ES}` ONLY, operator ruling "no CME option for
@@ -251,7 +255,7 @@ respective umbrellas.
 | --------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Market-hours + holiday SSOT integration             | 72% done                                                              | `instrument_schema_cohesion_and_market_hours`                                                                  |
 | S&P 500 ML readiness backtest run                   | 87% done; backtest pending                                            | `sp500_ml_readiness_master`                                                                                    |
-| **OHLCV-only TradFi MVP backfill (NEW 2026-05-15)** | ✅ **ARCHIVED 2026-05-21** — 216,876 captured; 96.72% capture rate    | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) |
+| **OHLCV-only TradFi MVP backfill (NEW 2026-05-15)** | ✅ **ARCHIVED 2026-05-21** — 216,876 captured; 96.72% capture rate    | [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md) |
 | ES + MES + VIX backfill to ≥99%                     | partial — now OHLCV-only per 2026-05-15 operator scope narrow         | `cefi_tradfi_tick_data_backfill` (TradFi half)                                                                 |
 | MTDS TradFi shards to ≥99%                          | partial — OHLCV-only scope per 2026-05-15                             | `market_tick_data_to_100pct` (TradFi slice)                                                                    |
 | ETF cleanup (NYSE / NASDAQ stale rows)              | post-MVP scope reduction                                              | `cefi_tradfi_tick_data_backfill`                                                                               |
@@ -495,7 +499,7 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` + 113 rows
       `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Use `launch-manifest-recon-all-vm.sh` with
       `--apply-flips` variant or a separate VM. **MIGRATED FROM:
-      `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md`** (§ "TradFi Side-Finding").
+      `/plans/archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md`** (§ "TradFi Side-Finding").
 
 ### MTDS TradFi slice (`market_tick_data_to_100pct` — TradFi)
 
@@ -634,7 +638,7 @@ volume.
 ### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`) — EXTRACTED 2026-06-20
 
 > **EXTRACTED**: the 2 open `- [ ]` items below (Phase 0 backfill VM + post-backfill catalog verify) were dispatched via
-> [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)
+> [`tradfi_cme_event_contract_backfill_2026_06_20`](/plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)
 > (archived 2026-06-30, consolidation). Do NOT dispatch from here. Retained for context only.
 
 Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
@@ -657,12 +661,12 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 ## `available_at` adapter stamping (coordinated) — SUPERSEDED 2026-06-20 (owned by the coordinator plan; history only)
 
 > **OWNED ELSEWHERE**: this block is tracked in
-> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> [`available_at_lookahead_bias_completion_2026_05_08`](/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 > (single-owner stamping plan — now archived; runtime stamping shipped). Do NOT dispatch from here. Retained below for
 > context only.
 
 > **Coordinator:**
-> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> [`available_at_lookahead_bias_completion_2026_05_08`](/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 > (archived — runtime stamping shipped) Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME
 > options chain + ES.OPT 11-cluster bundles need per-cluster `available_at = cluster_bar_close_time` (depends on
 > coordinator Phase 0 MDPS bar boundary contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling +
@@ -672,7 +676,7 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 - [ ] 🟡 **TRACKED-ELSEWHERE** [SCRIPT] P0. **Per-adapter `available_at` stamping for TradFi**. Databento (futures +
       ETFs + options), Polygon, Yahoo Finance VIX 15m fallback, Barchart historical preload. [REFRESH 2026-05-16 slot 5:
       single-owner-umbrella ownership transferred to
-      [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+      [`available_at_lookahead_bias_completion_2026_05_08`](/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
       (archived — runtime stamping shipped) per workspace 2026-05-08 codification. Tradfi-specific phases live in that
       plan. This entry is a pointer; flip closes when the umbrella's TradFi-adapter phases land.]
 - [x] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
@@ -686,13 +690,13 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 ## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
 
 > **ROUTED**: the "End-state at May 23" success criteria are routed to
-> [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F (cutover gating +
+> [`master_to_live_defi_2026_05_23`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) Group F (cutover gating +
 > backtest harness item 18); the TradFi-data + ES-feature execution slice is extracted to
-> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
+> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
 > Open questions below are all RESOLVED. Do NOT dispatch from here. Retained for context only.
 
 > **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/sp_prediction_may_23_2026.epic.md`.
-> Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](../archive/sp_prediction_may_23_2026.epic.md).
+> Archived: [`plans/archive/sp_prediction_may_23_2026.epic.md`](/plans/archive/sp_prediction_may_23_2026.epic.md).
 
 **Why:** TradFi ML deliverable for May 23 — S&P swing high/low ML model (re-using C5 model shape) trained end-to-end in
 batch from SP futures + Bitcoin + calendar features. Batch-only; no live trading, no live tick collection. Every layer
@@ -743,13 +747,13 @@ of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes 
 ## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
 
 > **ROUTED**: the "End-state at May 23" success criteria + the open questions (cross-venue ETF universe, backtest
-> window) are routed to [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F
+> window) are routed to [`master_to_live_defi_2026_05_23`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md) Group F
 > (item 17 backtest fidelity + cutover gating); the TradFi-data + ES-feature execution slice is extracted to
-> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
+> [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
 > Do NOT dispatch from here. Retained for context only.
 
 > **Folded epic** (operator direction 2026-05-08): consolidated from `plans/epics/price_arbitrage_may_23_2026.epic.md`.
-> Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](../archive/price_arbitrage_may_23_2026.epic.md).
+> Archived: [`plans/archive/price_arbitrage_may_23_2026.epic.md`](/plans/archive/price_arbitrage_may_23_2026.epic.md).
 
 **Why:** Price-arbitrage archetype family ships **backtest-only** for May 23 — CME same-day-expiry arb (ES/MES/micros,
 BTC futures variants) + ETF↔future arb (SPY/IVV/VOO vs ES) + cross-venue ETF arb. Carry-family was lifted out per
@@ -804,7 +808,7 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
   layering) — 1,621 GCS objects deleted (instruments-service@814b14a), enumerator floor-clipped to drop VIX cash-index
   instruments. There is no more Barchart-vs-Yahoo layering rule to enforce; VIX exposure is VX-futures-only via
   Databento XCBF.PITCH. Corrected per plan-reconciliation finding 303,
-  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
+  `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
 - **TradFi futures shard-key matrix**: bundled by root; non-trading days pre-skipped via `venue_trading_calendar` +
   recorded as `empty_confirmed`.
 - **TradFi options 11-cluster taxonomy**: ES + E1A–E5A weeklies + EW1–EW4 + EOM. Cluster validation at `record_captured`
@@ -817,64 +821,64 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`tradfi_backfill_throughput_followups_2026_07_24`](../active/tradfi_backfill_throughput_followups_2026_07_24.md)
+### [`tradfi_backfill_throughput_followups_2026_07_24`](/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi backfill-throughput follow-ups —
 download/VM throughput residuals + T+1 job hardening
 
-### [`tradfi_manifest_content_recovery_completion_2026_07_24`](../active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
+### [`tradfi_manifest_content_recovery_completion_2026_07_24`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`tradfi_phase_d_terminal_gate_2026_07_24`](../active/tradfi_phase_d_terminal_gate_2026_07_24.md)
+### [`tradfi_phase_d_terminal_gate_2026_07_24`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi Phase-D terminal gate —
 post-migration all-shards re-smoke-test
 
 ## P1 — important; post-current-gate
 
-### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
+### [`tradfi_consolidated_closeout_2026_07_18`](/plans/active/tradfi_consolidated_closeout_2026_07_18.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
 code→migrations→coverage→smoke-test to MVP-backfill-ready
 
 ## P2 — useful; opportunistic
 
-### [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](../active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md)
+### [`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md)
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
 
-### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md)
+### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md)
 
 **status**: active · **estimate**: 0.5 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — fresh
 /ag-closeout-audit extraction (4 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize`](../active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize`](/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 6 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06`](/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md)
 
 **status**: active · **estimate**: 0.6 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — fresh
 /ag-closeout-audit extraction (4 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize`](/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 7 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08`](/plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md)
 
 **status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — fresh
 /ag-closeout-audit extraction (3 clean orphans)
 
-### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+### [`tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize`](/plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi satellite AO batch 8 — finalize
 (reconcile source docs + resolve deferrals + archive)
 
-### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
+### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: brand-new) **title**: TradFi S&P ML + price-arb backtest
 readiness (ES feature runs + data-clean slice)
@@ -885,7 +889,7 @@ _(no plans currently assigned at this priority)_
 
 ## Archived plans
 
-### [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
+### [`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01`](/plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — All 20 items DEFERRED-SERVICE-REPOS 2026-05-23 slot 6 (post-cutover; gated on
 DeFi-first cutover + operator Databento PAYG spend sign-off). · **estimate**: 1.6 cal AI-days (class: infra)
@@ -900,7 +904,7 @@ DeFi-first cutover + operator Databento PAYG spend sign-off). · **estimate**: 1
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `sports_master`, `predictions_master`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.
 - Venue trading calendar: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.
