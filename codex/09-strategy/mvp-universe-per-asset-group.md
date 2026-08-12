@@ -145,7 +145,7 @@ is the canonical S&P 500 surface):
 
 - **S&P 500**: CME ES futures (front-month + back-months) + ES.OPT options (**weeklies + dailies + standard expiries**
   all in scope per operator direction)
-- **BTC-related**: NASDAQ IBIT (BlackRock spot BTC ETF) + CME MBT (micro BTC futures) + CBOE BTC options on IBIT
+- **BTC-related**: NASDAQ IBIT (BlackRock spot BTC ETF) + CME MBT (micro BTC futures)
 - **ETH-related**: NASDAQ ETHA (BlackRock spot ETH ETF) + CME MET (micro ETH futures)
 - **VIX**: CFE/VX futures (Databento `XCBF.PITCH`) for the futures curve; VIX 15m **cash index** gap-filled via
   Yahoo-rolling-60d + honest gap (Barchart preload retired 2026-06-23, no longer a source — see banner above)
