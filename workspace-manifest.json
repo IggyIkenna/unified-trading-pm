@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.3",
-    "deployment-api": "0.79.5",
+    "deployment-api": "0.79.6",
     "deployment-service": "0.129.2",
     "deployment-ui": "0.1.0",
     "execution-service": "0.64.3",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "2820fbde56369f89f43cd35f31753d6b78490d08"
+      "ldr_ci_status_sha": "b471e7b6e244c03eea16700628b59a1d4de2837e"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "2d558e6917e71ff7d21d743d1d763dbea60da6cb"
+      "ldr_ci_status_sha": "7df8294e5d4224e7881085f8996845a687c3b16f"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
