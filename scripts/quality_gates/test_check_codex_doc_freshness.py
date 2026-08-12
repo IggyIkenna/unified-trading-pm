@@ -28,6 +28,7 @@ from check_codex_doc_freshness import (
     _new_violations,
     _relative_path,
     _write_baseline,
+    partition_by_agency,
 )
 
 
@@ -259,3 +260,71 @@ def test_is_retired_with_successor_predicate_directly() -> None:
     # A non-string status (e.g. an accidental YAML bool/int) must not crash or exempt.
     assert not _is_retired_with_successor({"status": True, "superseded_by": "x.md"})
     assert not _is_retired_with_successor({"status": "superseded", "superseded_by": [None, 3]})
+
+
+# ---------------------------------------------------------------------------
+# partition_by_agency — the warn-with-digest split
+# (/plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md).
+# Staleness is the CLOCK moving and must never block a ship; the three
+# authoring reasons are caused by the change in hand and must. This composes
+# with the retired-doc exemption above: that removes docs nobody should re-read,
+# this stops the remainder from blocking unrelated ships.
+# ---------------------------------------------------------------------------
+
+
+def test_partition_stale_is_advisory_never_blocking(tmp_path: Path) -> None:
+    stale = _violation("codex/02-data/aged.md", tmp_path, reason="stale")
+    blocking, advisory = partition_by_agency([stale])
+    assert blocking == []
+    assert advisory == [stale]
+
+
+def test_partition_authoring_reasons_block(tmp_path: Path) -> None:
+    for reason in ("no-frontmatter", "no-last_reviewed-field", "invalid-last_reviewed-format"):
+        v = _violation(f"codex/02-data/{reason}.md", tmp_path, reason=reason)
+        blocking, advisory = partition_by_agency([v])
+        assert blocking == [v], f"{reason} must block — it is an authoring defect"
+        assert advisory == []
+
+
+def test_partition_unknown_reason_fails_closed(tmp_path: Path) -> None:
+    """A reason nobody classified must BLOCK, not silently become a warning.
+
+    This is the regression that matters: if a future check adds a reason and
+    the partition defaulted to advisory, the new check would ship as a no-op
+    that nothing ever fails on. Guarding the default direction, not the
+    specific string.
+    """
+    v = _violation("codex/02-data/mystery.md", tmp_path, reason="some-future-reason")
+    blocking, advisory = partition_by_agency([v])
+    assert blocking == [v]
+    assert advisory == []
+
+
+def test_partition_mixed_set_splits_both_ways(tmp_path: Path) -> None:
+    stale = _violation("codex/02-data/aged.md", tmp_path, reason="stale")
+    missing = _violation("codex/02-data/new.md", tmp_path, reason="no-last_reviewed-field")
+    blocking, advisory = partition_by_agency([stale, missing])
+    assert blocking == [missing]
+    assert advisory == [stale]
+
+
+def test_partition_empty_is_clean_both_ways() -> None:
+    assert partition_by_agency([]) == ([], [])
+
+
+def test_check_doc_stale_captures_owner_for_digest_routing(tmp_path: Path) -> None:
+    """The digest groups by owner, so _check_doc must carry it through."""
+    p = tmp_path / "owned.md"
+    p.write_text("---\nlast_reviewed: 2026-01-01\nowner: ikenna@odum-research.com\n---\nbody\n", encoding="utf-8")
+    v = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    assert v is not None
+    assert v.owner == "ikenna@odum-research.com"
+
+
+def test_check_doc_stale_without_owner_has_empty_owner(tmp_path: Path) -> None:
+    p = tmp_path / "unowned.md"
+    p.write_text("---\nlast_reviewed: 2026-01-01\n---\nbody\n", encoding="utf-8")
+    v = _check_doc(p, 90, datetime.date(2026, 8, 9))
+    assert v is not None
+    assert v.owner == ""

@@ -40,9 +40,40 @@ convention exists to avoid. This is documented ONLY here and in scattered commit
 a codex doc, as of 2026-08-02 — grep `git log --grep="staggered re-review"` for the full history
 if the pattern needs extending to a new cohort.
 
+AGENCY SPLIT (2026-08-12) — this gate blocks only on what the author controls.
+The four violation reasons are not the same kind of thing:
+
+  no-frontmatter / no-last_reviewed-field / invalid-last_reviewed-format
+      AUTHORING defects. Deterministic, caused by the change in hand, fixable in
+      seconds by the person who tripped them. These BLOCK.
+  stale
+      The CLOCK moved. Nothing was edited; the doc simply aged past the window.
+      This is ADVISORY — printed as an owner-grouped digest, never blocking.
+
+Why: `stale` fired on the calendar and in COHORTS (docs authored in one batch
+share a `last_reviewed`, so they tip together — the 2026-05-12 cohort blocked
+ships on 08-11, the 05-13 cohort on 08-12), so unrelated changes were blocked by
+a clock nobody touched. Worse, the documented remedy was `--baseline-write`,
+which made "absorb somebody else's review debt into the baseline" the rational
+move under time pressure, and had two agents racing to regenerate the same
+baseline. A review-cadence reminder is not a correctness assertion: nobody
+claims a 91-day-old doc is WRONG, only unread. See
+`/plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`.
+
+This composes with the retired-doc exemption above rather than duplicating it:
+that exemption removes docs which SHOULD NOT be re-read at all, while this makes
+the remaining genuine review debt visible without blocking. Neither alone was
+enough — the exemption still left live docs tipping on the calendar.
+
+`--strict` still fails on ANY violation including staleness — that is the mode a
+scheduled digest/audit job uses. Partitioning fails CLOSED: only reasons listed
+in `CLOCK_DRIVEN_REASONS` are advisory, so a reason added later blocks by
+default rather than silently downgrading itself to a warning.
+
 Exit-code semantics:
-  0 — no NEW violation vs. the baseline's known-violation path set (clean)
-  1 — a violating doc's path is not in that set (regression) / --strict any violation
+  0 — no NEW blocking violation vs. the baseline's known-violation path set
+      (advisory staleness may still have been printed as a digest)
+  1 — a NEW authoring violation not in that set / --strict any violation
   2 — argument / IO / yaml-parse error
 
 SSOT: CLAUDE.md § "Post-Plan-Phase Codex Audit (HARD RULE)" — codex docs
@@ -92,14 +123,22 @@ DEFAULT_BASELINE_PATH = Path(__file__).parent / "codex_doc_freshness_baseline.ya
 # anything, and it is not supposed to still match the running system.
 RETIRED_STATUSES = frozenset({"superseded", "deprecated", "archived"})
 
+# Reasons produced by the passage of TIME rather than by the change in hand.
+# Advisory only (digest, non-blocking). Everything not listed here blocks —
+# see the module docstring's AGENCY SPLIT section. Keep this set MINIMAL:
+# adding a reason here converts a hard gate into a warning, which is a
+# governance decision, not a refactor.
+CLOCK_DRIVEN_REASONS = frozenset({"stale"})
+
 
 class FreshnessViolation:
     """A codex doc failing the freshness SSOT."""
 
-    def __init__(self, path: Path, reason: str, detail: str = "") -> None:
+    def __init__(self, path: Path, reason: str, detail: str = "", owner: str = "") -> None:
         self.path = path
         self.reason = reason
         self.detail = detail
+        self.owner = owner
 
     def __str__(self) -> str:
         if self.detail:
@@ -199,7 +238,12 @@ def _check_parsed(
         return FreshnessViolation(path, "invalid-last_reviewed-format", str(last_reviewed_raw)[:40])
     age = (today - last_reviewed).days
     if age > staleness_days:
-        return FreshnessViolation(path, "stale", f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})")
+        return FreshnessViolation(
+            path,
+            "stale",
+            f"{age}d old (limit {staleness_days}d; last_reviewed={last_reviewed})",
+            owner=str(fm.get("owner") or ""),
+        )
     return None
 
 
@@ -287,6 +331,38 @@ def _new_violations(
     stale does NOT reappear here; only a genuinely new path does.
     """
     return [v for v in violations if _relative_path(v.path, workspace_root) not in baseline.known_paths]
+
+
+def partition_by_agency(
+    violations: list[FreshnessViolation],
+) -> tuple[list[FreshnessViolation], list[FreshnessViolation]]:
+    """Split violations into (blocking, advisory) by who/what caused them.
+
+    Advisory == reasons in ``CLOCK_DRIVEN_REASONS`` (the calendar moved).
+    Blocking == everything else, INCLUDING any reason introduced later that
+    nobody classified — failing closed, so a new check cannot accidentally
+    ship as a warning. Pure decision function, matching ``_new_violations``.
+    """
+    advisory = [v for v in violations if v.reason in CLOCK_DRIVEN_REASONS]
+    blocking = [v for v in violations if v.reason not in CLOCK_DRIVEN_REASONS]
+    return blocking, advisory
+
+
+def _print_stale_digest(violations: list[FreshnessViolation], root: Path) -> None:
+    """Print the aging docs grouped by their frontmatter ``owner:``.
+
+    Grouped by owner because the point of the digest is routing it to whoever
+    can actually re-read the doc; an ungrouped list of 180 paths is noise.
+    """
+    by_owner: dict[str, list[FreshnessViolation]] = {}
+    for v in violations:
+        by_owner.setdefault(v.owner or "(unowned)", []).append(v)
+    print(f"\n⚠️  Codex review digest — {len(violations)} doc(s) past the freshness window (NOT blocking this ship):")
+    for owner in sorted(by_owner):
+        entries = by_owner[owner]
+        print(f"  {owner} — {len(entries)} doc(s)")
+        for v in sorted(entries, key=lambda e: _relative_path(e.path, root)):
+            print(f"    - {_relative_path(v.path, root)}: {v.detail}")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -390,27 +466,46 @@ def main() -> int:
 
     baseline = _load_baseline(baseline_path)
     new_violations = _new_violations(violations, baseline, pm_root)
-    if new_violations:
+    blocking_new, advisory_new = partition_by_agency(new_violations)
+
+    if advisory_new:
+        _print_stale_digest(advisory_new, pm_root)
         print(
-            f"\n❌ Regression: {len(new_violations)} NEW violation(s) not in the baseline snapshot "
+            "   ^ review-cadence reminder, NOT a correctness failure — these aged past the window on the\n"
+            "     calendar, not because of your change, so they do not block this ship. Re-stamp\n"
+            "     last_reviewed: when you next genuinely re-read the doc. Do NOT run --baseline-write to\n"
+            "     silence this; that absorbs somebody else's review debt and is what made the ratchet\n"
+            "     stop meaning anything."
+        )
+
+    if blocking_new:
+        print(
+            f"\n❌ Regression: {len(blocking_new)} NEW violation(s) not in the baseline snapshot "
             f"({len(violations)} total, {baseline.count} known-at-baseline):"
         )
-        for v in new_violations[:20]:
+        for v in blocking_new[:20]:
             rel = _relative_path(v.path, pm_root)
             print(f"  - NEW: {rel}: {v.reason}{(' (' + v.detail + ')') if v.detail else ''}")
         print(
-            "Either fix the new violation(s) OR re-run with --baseline-write after intentional debt. "
-            "A doc already known-violating at baseline drifting further stale is NOT a new regression "
-            "(per-file diffing — see module docstring)."
+            "These are AUTHORING defects (missing/invalid last_reviewed: or frontmatter), not staleness — "
+            "fix them by adding the field to the doc you touched. A doc already known-violating at baseline "
+            "drifting further stale is NOT a new regression (per-file diffing — see module docstring)."
         )
         return 1
+    # Word this in terms of BLOCKING violations. Saying "0 new violations" while the
+    # digest immediately above lists dozens of newly-aged docs is exactly the kind of
+    # summary that trains readers to stop believing gate output.
+    advisory_note = f"; {len(advisory_new)} new advisory (stale, non-blocking)" if advisory_new else ""
     if len(violations) < baseline.count:
         print(
             f"\n⚠️  Improvement: {len(violations)} < baseline {baseline.count}. "
-            f"Run --baseline-write to ratchet down (codifies the win)."
+            f"Run --baseline-write to ratchet down (codifies the win){advisory_note}."
         )
         return 0
-    print(f"\n✅ At-or-below baseline (0 new violations; {len(violations)} known, {baseline.count} at baseline).")
+    print(
+        f"\n✅ At-or-below baseline (0 new BLOCKING violations; "
+        f"{len(violations)} total known, {baseline.count} at baseline{advisory_note})."
+    )
     return 0
 
 
