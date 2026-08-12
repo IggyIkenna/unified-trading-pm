@@ -80,25 +80,30 @@ fault:
 
 ## Todos
 
-- [x] [BACKEND] P2. **Convert codex_doc_freshness from a hard ship blocker to a warn-with-digest.** DONE 2026-08-12 —
-      `partition_by_agency()` splits violations by cause: `stale` (the clock moved) is advisory and prints an
-      owner-grouped digest; the three authoring reasons (`no-frontmatter`, `no-last_reviewed-field`,
+- [ ] [BACKEND] P2. **Convert codex_doc_freshness from a hard ship blocker to a warn-with-digest.** IMPLEMENTED +
+      VERIFIED 2026-08-12, **NOT SHIPPED — BLOCKED** on
+      `/plans/active/issues/cloudbuild_drift_deployment_api_blocks_all_pm_code_ships_2026_08_12.md`, which fails PM
+      `quality-gates.sh` and so denies `quickmerge` its sentinel for ALL PM code. The change is complete in slot 4's
+      working tree (`scripts/quality_gates/check_codex_doc_freshness.py`, its test file, `scripts/quality-gates.sh`); it
+      stays `- [ ]` deliberately because there is no SHA to cite and a ticked box with no SHA is false progress.
+      Implementation — `partition_by_agency()` splits violations by cause: `stale` (the clock moved) is advisory and
+      prints an owner-grouped digest; the three authoring reasons (`no-frontmatter`, `no-last_reviewed-field`,
       `invalid-last_reviewed-format`) still block, because those are caused by the change in hand. Partition fails
       CLOSED — any reason not explicitly listed in `CLOCK_DRIVEN_REASONS` blocks, so a future check can't ship as a
       silent no-op. Measured end-to-end, all four exit codes captured directly (not inferred):
 
       | scenario                                  | exit | expected |
-          | ----------------------------------------- | ---- | -------- |
-          | aging cohort (30d window, 68 newly-stale) | 0    | 0        |
-          | normal run (90d window)                   | 0    | 0        |
-          | authoring defect (missing last_reviewed)  | 1    | 1        |
-          | `--strict` (30d)                          | 1    | 1        |
+              | ----------------------------------------- | ---- | -------- |
+              | aging cohort (30d window, 68 newly-stale) | 0    | 0        |
+              | normal run (90d window)                   | 0    | 0        |
+              | authoring defect (missing last_reviewed)  | 1    | 1        |
+              | `--strict` (30d)                          | 1    | 1        |
 
-          The 30d run is the real proof: 68 docs newly past the window produced a routed digest and **did not block**,
-          where before it was 68 hard failures. `--strict` still fails on everything — that is the mode the scheduled
-          digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the digest above it
-          listed 68; it now says "0 new BLOCKING violations … 68 new advisory". Evidence: 22/22 unit tests green
-          (6 new, incl. a fail-closed guard on unclassified reasons).
+              The 30d run is the real proof: 68 docs newly past the window produced a routed digest and **did not block**,
+              where before it was 68 hard failures. `--strict` still fails on everything — that is the mode the scheduled
+              digest/audit job uses. Also fixed the summary line, which printed "0 new violations" while the digest above it
+              listed 68; it now says "0 new BLOCKING violations … 68 new advisory". Evidence: 22/22 unit tests green
+              (6 new, incl. a fail-closed guard on unclassified reasons).
 
 - [ ] [BACKEND] P3. **De-cohort the thresholds** so a batch of docs written the same day does not expire the same day —
       e.g. jitter the limit per doc (90d + hash(path) % 14) or stagger `last_reviewed` on bulk authoring. Without this,
