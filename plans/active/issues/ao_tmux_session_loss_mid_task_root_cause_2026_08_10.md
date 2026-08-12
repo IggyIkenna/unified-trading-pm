@@ -541,35 +541,13 @@ memory and that's what kills sessions" as-is.
                         starting point, not a proven ceiling... no data exists between '8 concurrent' and the 18-27-slot bursts
                         that crashed the server twice." **Not yet confirmed** (still correlation: 7 selections in 50ms is
                         suggestive, not proof the AutoSpawn path — rather than escalation/plan_health — is the actual source,
-                        since `deepseek_spawn_selected`'s caller isn't logged). ~~**Done when**: (a) attribute the 7
-                        `deepseek_spawn_selected` calls to their actual caller~~ — **DONE 2026-08-12,
-          `agent-orchestrator@64a559fe8e`.** Added a `caller` parameter to
-          `autospawn.select_account_for_spawn()`, threaded through all 12 call sites across 7 files
-          (autospawn's own 3 — `autospawn_ensure_review_agents`/`autospawn_refill`/`autospawn_resume` —
-          plus escalation, plan_health, 4 in main_agent_keeper, server.py's account-rotation path, and
-          worker_liveness_watchdog), logged into `deepseek_spawn_selected` and both
-          `free_provider_*`/`health_gate_skipped` sibling events. A future burst is now directly
-          attributable, not inferred by elimination. **Also shipped the stagger** (part b): a new
-          `tuning.autospawn_concurrent_spawn_stagger_seconds` (default 0.3s) between successive
-          `pool.submit()` calls in `_do_spawns_concurrently` — deliberately NOT in the account-selection
-          loop that precedes it (that loop intentionally holds a DB session and must stay fast, per its
-          own docstring on the SQLite write-contention bug that split it from the spawn work in the first
-          place); the stagger sits after that session closes, spreading the actual `tmux new-session`
-          calls over more wall-clock time without extending any lock hold or reducing eventual
-          concurrency (same N spawns, same peak-in-flight, just staggered start times — proven by a
-          dedicated test). Chose the stagger over lowering the cap: a lower cap is a blunt instrument that
-          would reopen the ORIGINAL documented problem this whole mechanism exists to solve (a 5-slot
-          burst being too slow under a plain sequential loop), where staggering preserves full eventual
-          throughput. Tests: `test_deepseek_spawn_selected_logs_the_caller`,
-          `test_deepseek_spawn_selected_caller_defaults_to_unknown`,
-          `test_do_spawns_concurrently_staggers_submission_start_times`,
-          `test_do_spawns_concurrently_stagger_zero_disables_it`,
-          `test_do_spawns_concurrently_stagger_does_not_reduce_throughput` — plus 3 pre-existing tests
-          fixed where they asserted exact `details` dict equality and needed the new `caller` key added.
-          523 tests green, quality gates PASSED. **Still open**: whether this specific mechanism (routine
-          refill burst, not a race) is confirmed as the cause of the 2026-08-12 16:28 death remains
-          unproven — the attribution field is what will confirm or refute it on the NEXT death, not this
-          one retroactively (it wasn't live yet when that death happened). Repo: agent-orchestrator.
+                        since `deepseek_spawn_selected`'s caller isn't logged). **Done when**: (a) attribute the 7
+                        `deepseek_spawn_selected` calls to their actual caller — add a `source` field to that log line
+          (autospawn/escalation/plan_health) so this doesn't need inference next time; (b) if AutoSpawn's routine
+          refill is confirmed as the source, consider lowering `autospawn_max_concurrent_spawns` below 8 and
+          re-testing, or applying the SAME backoff-between-spawns pattern just shipped for escalation/plan_health
+          to AutoSpawn's own `_do_spawns_concurrently` (which currently fires all N spawns via a ThreadPoolExecutor
+          with no inter-spawn delay, even though N is capped). Repo: agent-orchestrator.
 
 - [x] [INFRA] P1. ~~Reduce fleet capacity while root cause remains open~~ — **DONE 2026-08-11, operator-directed.**
       Given the throttle fix alone hasn't stopped the crash class, and to slow credit burn during the ongoing
@@ -827,6 +805,26 @@ memory and that's what kills sessions" as-is.
       `orchestrator.service` CGROUP's own counters, but the tmux SERVER may sit OUTSIDE that cgroup per this doc's
       earlier finding — check `cat /proc/<tmux-server-pid>/cgroup` and that slice's OWN `memory.events` next), a
       systemd/cgroup TasksMax or similar limit, or a still-unidentified external actor. Repo: agent-orchestrator.
+- [ ] [INVESTIGATE] P0. **Two more bursts, 2026-08-12 19:45:24Z (7 slots, `affected_slot_ids` incl. 1/2/7/14/16/18/32)
+      and 19:57:15Z (6 slots) — the "tmux SERVER sits outside the cgroup" hedge from the entry above is REFUTED, not
+      just re-checked**: `/proc/<pid>/cgroup` for the live server (PID 1272011, born 19:57:22Z, right at the second
+      recovery) reads `0::/system.slice/orchestrator.service` — it IS inside the service's own cgroup, same as every
+      worker pane. `memory.events` for that cgroup AND its `system.slice` parent both read `oom_kill=0`; `dmesg -T` has
+      zero OOM/segfault/kill lines anywhere near either timestamp; `host_snapshot` at both deaths shows ample headroom
+      (ram~~10-16%, swap~~0.8%); `/proc/<pid>/limits` on the live server confirms `Max core file size: unlimited` — the
+      `LimitCORE=infinity` fix is genuinely live on a tmux server process born AFTER it landed; fd usage is 14/1024 (no
+      exhaustion) against 9 hosted panes. A broad post-death sweep (`/tmp`, `/var/crash`, `/var/lib/systemd/coredump`,
+      -30min) found **zero core files anywhere on the host** — not just `/tmp`. This is the first AUTOMATICALLY-captured
+      clean test (no live watcher needed — `tmux_server_died`/`_recovered` + `tmux_session_lost`'s `core_dumps_found`
+      already caught it) and it's n=3 alongside the two manual catches, same result: self-crash, kernel OOM-killer,
+      cgroup-OOM, low-memory, and fd-exhaustion are now ALL ruled out for this instance. Not a spot instance either
+      (`instance-life-cycle`/`spot/instance-action` metadata both empty). **What's left**: an external SIGKILL from an
+      actor that isn't the OOM-killer or a cgroup limit (unidentified), OR the tmux server exiting via its OWN internal
+      fault path with no signal at all (a tmux-side bug/assertion under 6-9 concurrent heavy panes — plausible and NOT
+      yet checked; would also produce no core and no dmesg trace). Passive log/state inspection is now exhausted — next
+      step has to be a LIVE attach (`strace -p <tmux-server-pid> -e     trace=signal,exit_group` or similar, per
+      `/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`'s own methodology) running continuously across a
+      death to see the actual exit path in real time. Repo: agent-orchestrator.
 
 ## Progress Log
 
