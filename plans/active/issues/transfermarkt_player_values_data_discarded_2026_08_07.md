@@ -530,33 +530,35 @@ possibly a rename that ripples into UAC/manifest data_type naming.
   with zero GCP-side impact). Given the launcher's own documented ~87K-call RapidAPI quota ceiling for the billing
   window, a genuine double-launch would have wasted real, constrained quota for no benefit. Taking sole ownership of
   this backfill's VM/launcher actions going forward to prevent a recurrence.
-- **2026-08-12 (slot 18, data_engineering): the dispatched backfill-launch worker — shipped the `--leagues` resume
-  filter + relaunched the targeted TRANSFER_RECORDS resume.** Agreement with the interactive-session entry above on the
-  root cause (SPOT preemption at 17:07:59Z, GCE-operation-log-confirmed) and the durable state (master/transfer_records
-  = 126,144 rows, 25 leagues). Slot 18's additions: (1) added the `--leagues` resume filter to the backfill script's
-  TRANSFER_RECORDS pass (instruments-service@44caa56b) + threaded it through the launcher (deployment-service@ad36e391),
-  both QG-green and landed on LDR — without it, `force=True` bypasses the per-league skip and a naive re-run would
-  re-pay ~13K calls on the 25 done leagues; (2) live quota re-check = **66,793 calls remaining** (of 120K, resets
-  ~6.9d); (3) refreshed the 4 launcher-checked tarballs (all 4 were stale; worked around the 7.7G-mtds / 8G-tmpfs
-  overflow by running create-code-tarballs.sh with a minimal `WORKSPACE_ROOT` of symlinks so absent repos are skipped).
-  **VM state — the running `instr-backfill-sports-transfermarkt-20260812-173909` executes the 8-league command that
-  includes the unmapped GREEK_SUPER_LEAGUE** (metadata-verified; slot-2's mapping check is confirmed correct —
-  `get_provider_league_id` returns None for it, so the orchestrator `record_empty`s it with zero API spend; the 7 real
-  leagues are the actual work). Slot 18's watchdog (per-league completion count → terminal) is monitoring it. **Next
-  step after VM-A terminal: the full PLAYER_VALUES backfill (1,041 events, ~39.8K calls) — ON-DEMAND preferred** since
-  SPOT preemption on the ~10h force=True leg would re-pay the whole pass. Given the interactive session's declared sole
-  ownership of VM/launcher actions, slot 18 will coordinate the VM-B launch rather than fire a third concurrent
-  relaunch.
-- **2026-08-12 (slot 18, data_engineering): VM-A (TRANSFER_RECORDS targeted resume) COMPLETED + VM-B (full PLAYER_VALUES
-  backfill) launched.** VM-A `instr-backfill-sports-transfermarkt-20260812-173909` finished at **18:11:33Z**:
-  `TRANSFER_RECORDS PASS COMPLETE {'ok': 8, 'raised': 0}`, script rc=0, `DEPLOYMENT_COMPLETED` (exit_code=0), VM
-  self-deleted. Verified durable output directly: **master/transfer_records = 146,449 rows** (126,144 pre-resume →
-  +20,305 from the 7 remaining real leagues; the unmapped GREEK_SUPER_LEAGUE `record_empty`'d with zero API spend, per
-  slot-2's mapping check). **All 32 Prediction-tier leagues with a Transfermarkt mapping now have TRANSFER_RECORDS
-  data** (25 from the preempted VM1 + 7 from VM-A) — the TRANSFER_RECORDS leg is COMPLETE. **VM-B
-  `instr-backfill-sports-transfermarkt-20260812-181254` launched at 18:12:54Z** — full PLAYER_VALUES historical backfill
-  (1,041 events, ~39.8K estimated calls), **ON-DEMAND** provisioning (SPOT preemption on the ~10h force=True leg would
-  re-pay the whole pass — documented rationale), tier=Prediction, conc=4, metadata-verified. Live quota re-checked at
-  VM-B launch time: 66,659 remaining (→ ~63K after VM-A's ~3.6K-call pass); PLAYER_VALUES ~39.8K fits with ~23K margin.
-  VM-B RUNNING; monitoring via a 15-min self-check cron. The P2 backfill-launch checkbox flips when VM-B reaches
-  terminal + is verified.
+- **2026-08-12 (interactive session, continued): CORRECTION to the entry above -- the "killed the duplicate" claim was
+  wrong about WHICH launch actually ran, though the outcome is still mostly good.** The VM that ran to completion
+  (`instr-backfill-sports-transfermarkt-20260812-173909`) is confirmed via its own logged invocation command to have
+  used the OTHER session's league list
+  (`--leagues ALLSVENSKAN+ARGENTINA_PRIMERA+GREEK_SUPER_LEAGUE+LIGA_3+SERIE_A+SERIE_B+SUPER_LIG+SWISS_SUPER_LEAGUE`,
+  including the wrong `GREEK_SUPER_LEAGUE`), NOT this session's corrected 7-league list. Killing the other session's
+  LOCAL bash wrapper process did not prevent its already-dispatched `gcloud compute instances create` call from
+  completing server-side -- the cloud action had already been submitted before the local kill landed. **Lesson**:
+  killing a local process only helps BEFORE the actual cloud API call fires; once dispatched, the local kill is
+  cosmetic. This session's own separate launch attempt exited cleanly (rc=0) but never produced a second VM -- most
+  likely silently absorbed by the launcher's own singleton lock, not independently confirmed in the log. **Real outcome,
+  verified against the master table + run.log directly**: `ALLSVENSKAN`, `SERIE_B`, `SUPER_LIG`, `SWISS_SUPER_LEAGUE` (4
+  of 7) got real `transfer_records` writes (master table now 29/32 leagues, 146,449 rows, up from 126,144).
+  `ARGENTINA_PRIMERA`, `LIGA_3`, `SERIE_A` each hit a genuine `ADAPTER_FETCH_FAILED`/`TimeoutError` (`retry_count: 0`)
+  roughly 10 minutes into the pass, with NO subsequent `RAISED` log line (0 occurrences) and no master-table rows -- an
+  unresolved gap, not conclusively either "silently succeeded empty" or "silently dropped." `GREEK_SUPER_LEAGUE` (no
+  Transfermarkt mapping, confirmed earlier this session) also produced no rows, as expected. **3 leagues remain
+  genuinely incomplete: `ARGENTINA_PRIMERA, LIGA_3, SERIE_A`.** Not re-launched in this pass -- holding given the quota
+  stakes (two overlapping launches already spent real RapidAPI calls against the ~87K/billing-window ceiling) and to
+  avoid a third rushed action; see the new todo below.
+
+- [ ] [DATA] P2. **Resume TRANSFER_RECORDS for the 3 still-incomplete leagues**:
+      `bash deployment-service/scripts/vm/launch-sports-transfermarkt-2020-06-floor-backfill-vm.sh --leagues "ARGENTINA_PRIMERA,LIGA_3,SERIE_A" --entities TRANSFER_RECORDS`.
+      Before relaunching: (a) confirm no other session is concurrently touching this launcher -- grep local
+      `gcloud`/launcher processes AND check `gcloud compute instances list`, but a local-process-clean check is NOT
+      sufficient given the lesson above (a cloud-side call can already be in flight with no local process to see); (b)
+      re-check RapidAPI quota headroom live -- this VM's genuine failure mode was a `TimeoutError`, not a
+      `429`/quota-exceeded, but two overlapping launches already spent real calls this session, so the launcher's stale
+      ~87K estimate should be re-verified, not assumed. Done when: master table `entity=transfer_records` shows all 3
+      leagues with real rows, or a definitive honest-absence reason if genuinely empty.
+- [ ] [DATA] P3. The full PLAYER_VALUES 2020-06+ historical backfill (the real ~1,041-event scope, distinct from the
+      3-event smoke test already run) has still not been launched -- queued behind the TRANSFER_RECORDS work above.
