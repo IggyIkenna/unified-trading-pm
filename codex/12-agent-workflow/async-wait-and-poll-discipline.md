@@ -394,10 +394,9 @@ opportunity for the "resumed sub-agent ends its turn, reads as finished to the p
 the chain — exactly what a multi-hour job maximizes the odds of hitting repeatedly. **For a job with a known/ documented
 expected duration, use § "Don't over-watch + no-sawtooth"'s "ONE long event-driven monitor" pattern instead**, sized to
 that duration (poll interval ≈ 10-20% of expected duration, floor ~5 min, no fixed 30-min re-arm-forever ceiling) — a
-single tracked `run_in_background` loop that reads GROUND TRUTH directly (VM RUNNING state
-
-- `run.log` progress/mtime + exit_code, not the sub-agent's self-report) and exits only on a real terminal state. This
-  converts N required round-trips (one per ≤30-min tick, compounding failure risk each time) into ONE.
+single tracked `run_in_background` loop that reads GROUND TRUTH directly (VM RUNNING state, `run.log` progress/mtime +
+exit_code — not the sub-agent's self-report) and exits only on a real terminal state. This converts N required
+round-trips (one per ≤30-min tick, compounding failure risk each time) into ONE.
 
 **Incident, 2026-08-12 (this exact conflict, live):** a sub-agent dispatched to launch + monitor a
 `canonical-migration-tradfi-*` VM (documented 1-6h duration class) followed the ≤30-min-heartbeat rule literally — armed

@@ -86,22 +86,22 @@ R_lend = S x (1 - ltv^(d+1)) / (1 - ltv) - B x ltv x (1 - ltv^d) / (1 - ltv)
 ```
 
 Worked example -- wstETH/WETH E-Mode at `ltv=0.93, d=8, S=3.2%, B=2.4%`:
-`R_lend ~ 5.27 x 3.2% - 4.56 x 2.4% ~ 6.0% net APR` (HIGH confidence on lending math; MED on S+B which vary by regime).
+`R_lend ~ 6.85 x 3.2% - 5.85 x 2.4% ~ 7.88% net APR` (HIGH confidence on lending math; MED on S+B which vary by regime).
 Gas drag ~0.6% on Ethereum mainnet, ~0.1% on Arbitrum/Base.
 
 ## Per-chain x per-lender cells (Top-7 May-23 shortlist)
 
 Cell ID convention: `<lender>_<chain>_<collateral>_<debt>_<mode>`. Ranked by `expected_apr x confidence`.
 
-| Cell                                      | LTV (mode)              | Expected APR                    | Confidence                      | Notes                                                           |
-| ----------------------------------------- | ----------------------- | ------------------------------- | ------------------------------- | --------------------------------------------------------------- |
-| `aave_v3_ethereum_wsteth_weth_emode`      | 0.93 ETH_CORRELATED     | 6-10% net                       | HIGH                            | Flagship; deepest liquidity; ~14x leverage at d=8               |
-| `morpho_ethereum_wsteth_weth_market_0945` | 0.945 (per-market LLTV) | 8-12% net                       | MED-HIGH                        | Highest-LTV Family 1 cell; tighter HF buffer                    |
-| `aave_v3_arbitrum_wsteth_weth_emode`      | 0.93                    | 6-18% net                       | HIGH (cell), LOW (exact params) | Cheap L2 gas -> `recursion_depth_max=10`                        |
-| `aave_v3_base_cbeth_weth_emode`           | 0.93 (low-conf)         | ~3-3.5% leveraged spread        | MED                             | Base-native LST; no bridge risk; Coinbase counterparty          |
-| `morpho_ethereum_susde_usdc_market_086`   | 0.86 (per-market)       | 15-25% net                      | MED                             | Stable-stable loop; sUSDe yield-decay + cooldown unwind latency |
-| `aave_v3_ethereum_weeth_weth_emode`       | 0.93                    | 5-15% cash + EIGEN/ETHFI points | MED                             | Points discounted in APR; PendleOracle dep                      |
-| `aave_v3_base_wsteth_weth_emode`          | 0.93 (low-conf)         | ~3.2-3.8% leveraged spread      | MED-HIGH                        | Cheapest gas; Lido canonical bridge risk                        |
+| Cell                                      | LTV (mode)              | Expected APR                    | Confidence                      | Notes                                                                                                  |
+| ----------------------------------------- | ----------------------- | ------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `aave_v3_ethereum_wsteth_weth_emode`      | 0.93 ETH_CORRELATED     | 6-10% net                       | HIGH                            | Flagship; deepest liquidity; ~6.85x collateral multiplier at d=8 (asymptotic ceiling ~14.3x as d->inf) |
+| `morpho_ethereum_wsteth_weth_market_0945` | 0.945 (per-market LLTV) | 8-12% net                       | MED-HIGH                        | Highest-LTV Family 1 cell; tighter HF buffer                                                           |
+| `aave_v3_arbitrum_wsteth_weth_emode`      | 0.93                    | 6-18% net                       | HIGH (cell), LOW (exact params) | Cheap L2 gas -> `recursion_depth_max=10`                                                               |
+| `aave_v3_base_cbeth_weth_emode`           | 0.93 (low-conf)         | ~3-3.5% leveraged spread        | MED                             | Base-native LST; no bridge risk; Coinbase counterparty                                                 |
+| `morpho_ethereum_susde_usdc_market_086`   | 0.86 (per-market)       | 15-25% net                      | MED                             | Stable-stable loop; sUSDe yield-decay + cooldown unwind latency                                        |
+| `aave_v3_ethereum_weeth_weth_emode`       | 0.93                    | 5-15% cash + EIGEN/ETHFI points | MED                             | Points discounted in APR; PendleOracle dep                                                             |
+| `aave_v3_base_wsteth_weth_emode`          | 0.93 (low-conf)         | ~3.2-3.8% leveraged spread      | MED-HIGH                        | Cheapest gas; Lido canonical bridge risk                                                               |
 
 Per-chain ReserveParams + E-Mode definitions live in
 `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py` (Ethereum shipped; Arbitrum + Base P0

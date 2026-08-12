@@ -220,10 +220,12 @@ outcomes). The downstream consumer is instruments-service's prediction_market ag
 
 ## Coverage Axes
 
-| data_type         | Coverage axis                       | Expected shards (per day) | record_empty expected                                               |
-| ----------------- | ----------------------------------- | ------------------------- | ------------------------------------------------------------------- |
-| `trades`          | per-venue × per-conditionId × daily | venue × active conditions | Yes — zero-trade day on inactive condition = `SOURCE_RETURNED_ZERO` |
-| `book_snapshot_5` | per-venue × per-conditionId × daily | venue × active conditions | Yes — same instrument-day grain as `trades`                         |
+| data_type                             | Coverage axis                                    | Expected shards (per day)                               | record_empty expected                                                          |
+| ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `trades`                              | per-venue × per-conditionId × daily              | venue × active conditions                               | Yes — zero-trade day on inactive condition = `SOURCE_RETURNED_ZERO`            |
+| `book_snapshot_5`                     | per-venue × per-conditionId × daily              | venue × active conditions                               | Yes — same instrument-day grain as `trades`                                    |
+| `prediction_canonical_question_group` | per-venue × per-canonical_question_group × daily | venue × canonical groups (instruments-service registry) | Yes — no markets in group = `empty_confirmed`                                  |
+| `market_lifecycle`                    | per-venue × daily                                | venue × 1 shard/day                                     | Yes — no lifecycle events = `empty_confirmed` (markets stable, no transitions) |
 
 Retired types removed from `_PER_INSTRUMENT_SHARD_DATA_TYPES` at UAC@7511207a. Any manifest rows with old data_type
 strings are re-classified by phantom-reconcile script
