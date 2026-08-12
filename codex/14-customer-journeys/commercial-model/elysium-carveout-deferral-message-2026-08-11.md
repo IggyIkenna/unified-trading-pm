@@ -63,13 +63,22 @@ strategy-service repository in full.
    hits. The message therefore describes the Copper integration and names ClearLoop as Copper's mirroring mechanism —
    never as something we built. An engineer who greps the repository they are about to receive will find `copper.py`,
    and the wording has to survive that.
+5. **TWO custodians, both named explicitly (operator ruling 2026-08-12).** Elysium need **Ceffu for Binance**, so the
+   single-custodian framing above is no longer the whole picture and the message now names both. The operator chose
+   explicit naming over a generic "qualified custodian" phrasing for the same reason decision 4 exists: **an engineer
+   reading the repository will find `ceffu.py` next to `copper.py`**, so the wording has to survive that too. Ceffu's
+   off-exchange settlement plays the role for Binance that ClearLoop plays for Copper's venues. What the message must
+   NOT imply is that we built either mirroring mechanism, or that a cross-custodian move is free — it unmirrors, settles
+   on-chain between the custodians, and re-mirrors. Routing detail belongs in
+   [transfer-architecture](/codex/04-architecture/transfer-architecture.md), not in a client message.
 
 ---
 
 ## Message
 
-> Send as written. Two things are load-bearing and should not be softened in a re-edit: it says the **code** completes
-> this week (not the data or the deployment), and it credits **Copper** with ClearLoop rather than implying we built it.
+> Send as written. Three things are load-bearing and should not be softened in a re-edit: it says the **code** completes
+> this week (not the data or the deployment); it credits **Copper** with ClearLoop rather than implying we built it; and
+> it names **both** custodians, since Ceffu carries the Binance leg and `ceffu.py` is in the repository being sent.
 
 So, I've spent a few hours today actually starting to work through what the carve-out would involve rather than just
 talking about it conceptually.
