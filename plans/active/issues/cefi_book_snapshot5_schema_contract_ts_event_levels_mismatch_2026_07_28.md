@@ -96,12 +96,14 @@ source:
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
 last_updated:
-  2026-08-03 (21st+ dispatch, agt-52c156, slot 13 -- numerator 300,674/1,123,966 (26.8%), STATIC BACKLOG (210 rows/24h,
-  below the 500-row floor); numerator DECREASED vs the 19th-dispatch reading (300,744->300,674) while attempted grew --
-  strongest evidence yet of no regression. Confirmed all 5 fix commits still hold; relied on the 19th dispatch's
-  minutes-earlier live read (zero new schema-contract-violation rows past the 2026-07-31T04:18:05Z checkpoint, trickle
-  is 100% the OTHER already-tracked Tardis rate-limit mechanism, 98.2% capture success) rather than repeating it -- see
-  Progress Log for detail.)
+  2026-08-12 (22nd dispatch, agt-5c3186, slot 7 -- alert body 8,060/227,194 = 3.5% (abs>=500), "STATIC BACKLOG -- 11
+  rows/1d". Independent live bounded read (read_availability_index_safe, data_type=book_snapshot_5, capture_status in
+  [captured, attempted_failed], 14-day window both sides): trailing-14d attempted_failed = 7,806 / captured = 211,675
+  (3.6%, HIGH on abs), max attempted_at = 2026-08-11T14:47Z, recent-1d = 5 rows 100% batch_tardis transport errors
+  (timeout/broken-pipe/403) on OKX-SPOT/FUTURES/SWAP + BITFINEX-FUTURES -- the already-tracked Tardis transport/lockout
+  class. ZERO fresh UpstreamTimestampBiasError (ASTER class did NOT recur -> no P0) and ZERO fresh "schema contract
+  violated" (3 fixed write-gate bugs did NOT regress) in the last 1d. All 5 fix commits re-verified ancestors of
+  origin/live-defi-rollout. No code fix needed -- see Progress Log.)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -962,3 +964,25 @@ against the reproduction script.
   still-open Option A/B/C territory at the orchestrator dispatch layer (the per-doc dedup-gap fix, `9102eb9b`, only
   suppresses re-dispatch on a stale checkpoint across ticks — it has no mechanism for one tick fanning the same
   escalation_id out to multiple slots simultaneously, a different bug class).
+- **2026-08-12 (data_pipeline_failure escalation worker, agt-5c3186, slot 7) — 22nd+ dispatch for this
+  `(cefi, book_snapshot_5)` condition, a NEW escalation_id (distinct from the 08-11 `agt-a45914` duplicate fan-out).**
+  Alert body: 8,060/227,194 = 3.5% (abs>=500), "STATIC BACKLOG — only 11 attempted_failed row(s) in the last 1d". Read
+  this doc first per the pre-task plan/issue conflict-check rule; this is the same condition all three schema-contract
+  fixes + both alerting fixes closed. Did an INDEPENDENT live bounded read (`read_availability_index_safe`, bucket
+  `market-data-tick-cefi-prd-central-element-323112`, filters `data_type=book_snapshot_5` + `capture_status in
+  [captured, attempted_failed]`, mirroring `_attempted_failed_index.read_attempted_failed_cells`'s 14-day window on BOTH
+  sides + `superseded_by_*` exclusion) rather than trusting the label alone: trailing-14d `attempted_failed` = 7,806 /
+  `captured` = 211,675 (3.6%, HIGH on abs>=500), cell-wide max `attempted_at` = 2026-08-11T14:47:01Z (~21h old),
+  recent-1d `attempted_failed` = 5 rows. The 5 recent rows are 100% `batch_tardis` transport errors (Connection
+  timeout / Broken pipe / 403 POST) on OKX-SPOT/OKX-FUTURES/OKX-SWAP + BITFINEX-FUTURES — the same already-tracked
+  Tardis transport / concurrent-IP-lockout class (`cefi_high_attempted_failed_batch_cluster_2026_07_23.md`), not a new
+  mechanism. Explicit action-signature checks on the recent slice: **0** `UpstreamTimestampBiasError` (the archived
+  08-08/09 ASTER stale-tarball burst did NOT recur -> no P0 per
+  `cefi_aster_book_snapshot5_batch_stale_code_attempted_failed_burst_2026_08_09.md`'s recommendation) and **0**
+  `"schema contract violated"` (the 3 fixed write-time-gate bugs did NOT regress). The 2,000 `UpstreamTimestampBiasError`
+  rows still in the trailing-14d count are the OLD archived ASTER burst (all `attempted_at` <= 2026-08-09T01:24Z), window
+  decay, not fresh. Re-verified all five fix commits are still ancestors of `origin/live-defi-rollout` (MTDS
+  `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864`, deployment-service `a564cca`). **Conclusion: no code fix needed** —
+  static/decaying backlog on already-tracked classes, capture healthy (96.4% over trailing 14d), no fresh regression.
+  Session cost: bounded live GCS read + git-ancestor check + this Progress Log append; no code change, no VM launch.
+  (Authoring slot `dp-fleet-monitor` is non-numeric, so the completion ping is skipped per the role's rule.)
