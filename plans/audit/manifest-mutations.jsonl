@@ -1668,3 +1668,5 @@
 {"timestamp": "2026-08-12T14:22:10Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-service=0.129.8 (branch=main, bump=patch)", "commit_sha": "1062d799288426d4a7aa7a52489f38c8a394c4ab"}
 {"timestamp": "2026-08-12T14:47:21Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.80.0 (branch=main, run=31608690798)", "commit_sha": "d520b0caaeba627f6f2f40000e54113bcdb52df0"}
 {"timestamp": "2026-08-12T14:47:24Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.80.0 (branch=main, bump=minor)", "commit_sha": "d520b0caaeba627f6f2f40000e54113bcdb52df0"}
+{"timestamp": "2026-08-12T14:49:55Z", "workflow": "update-repo-version/received", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.101.17 (branch=main, run=31608921561)", "commit_sha": "f771b80c63d4a10e287a3e444b1bd08570c9114d"}
+{"timestamp": "2026-08-12T14:49:58Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.101.17 (branch=main, bump=patch)", "commit_sha": "f771b80c63d4a10e287a3e444b1bd08570c9114d"}
