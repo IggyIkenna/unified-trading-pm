@@ -14,8 +14,9 @@
 # that host)". That is FALSE for this layout and actively misleading: it reads as "run the tool
 # once and the host is clean". Measured 2026-08-11 the host carried 284 stashes across FOUR
 # separate piles (slot 1: 47, slot 2: 34, slot 3: 118, slot 4: 85); cleaning slot 3 alone left
-# 166 untouched in the other three. RUN THIS PER SLOT, and pass --host so each slot's archive
-# and report are distinguishable (the default label is `hostname -s`, identical for all slots).
+# 166 untouched in the other three. RUN THIS PER SLOT. The --host label is derived per slot
+# automatically since 2026-08-12 (`Mac-slot3`), so archives and reports no longer collide;
+# --host remains available to override it.
 # SSOT for the per-slot-clone model: /codex/05-infrastructure/per-tab-worktrees.md.
 # This script archives EVERYTHING first (gc-proof refs + portable bundle + manifest), then
 # classifies each stash, and ONLY with --apply drops the provably-safe classes. Genuine WIP
@@ -33,7 +34,9 @@
 #   --apply           Drop the auto-drop classes (empty / redundant / foreign-park). Still archives first.
 #   --repo <name>     Restrict to a single repo (smoke-test the classifier).
 #   --base <ref>      Override the content-diff base ref for ALL repos.
-#   --host <id>       Label used in archive/report filenames. Defaults to `hostname -s`.
+#   --host <id>       Label used in archive/report filenames. Defaults to `<hostname -s>-slot<N>`
+#                     when run inside a `.tabs/<N>/` slot clone (derivation SSOT:
+#                     scripts/hooks/slot-identity-lib.sh), else bare `hostname -s`.
 #   --report <path>   Report output path. Defaults under unified-trading-pm/plans/active/issues/.
 #
 # Classification (strict / conservative):
@@ -68,7 +71,14 @@ APPLY=0
 PRUNE_AGE_DAYS="${STASH_PRUNE_AGE_DAYS:-2}"
 ONLY_REPO=""
 BASE_OVERRIDE=""
-HOST="$(hostname -s 2>/dev/null || hostname)"
+# Empty = derive below, once WORKSPACE_ROOT is known. It used to default to a bare
+# `hostname -s`, which is IDENTICAL for every slot on one machine — so slot 3's report
+# and slot 4's report both wanted the name `stash-audit-Mac-<date>.md` and silently
+# clobbered each other, while the committed reports (Mac-slot2, Mac-slot4) had been
+# hand-renamed by whoever committed them. The header below used to warn "pass --host so
+# each slot's report is distinguishable"; a flag you must remember or lose data is a
+# defaulting bug wearing a documentation warning, so the default now derives the slot.
+HOST=""
 REPORT_PATH=""
 
 while [[ $# -gt 0 ]]; do
@@ -88,6 +98,24 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # scripts/dev -> scripts -> unified-trading-pm -> workspace root
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+# Slot-aware host label. The machine part stays `hostname -s` (matches the committed
+# `Mac-slot2` / `Mac-slot4` / `ip-172-31-5-118` reports); the slot suffix comes from the
+# SSOT path derivation in scripts/hooks/slot-identity-lib.sh — the same `…/.tabs/<N>/<repo>`
+# rule that stamps commit identity — rather than a second copy of that regex here.
+# A checkout that is not a slot clone resolves to `main` and gets no suffix, which is the
+# pre-existing behaviour for the AO VM (`ip-172-31-5-118-<date>`).
+if [[ -z "$HOST" ]]; then
+  HOST="$(hostname -s 2>/dev/null || hostname)"
+  _SLOT_LIB="$SCRIPT_DIR/../hooks/slot-identity-lib.sh"
+  if [[ -f "$_SLOT_LIB" ]]; then
+    # shellcheck source=/dev/null
+    . "$_SLOT_LIB"
+    slot_identity_resolve "$WORKSPACE_ROOT/unified-trading-pm" 2>/dev/null || true
+    [[ "${SLOT_ID_LABEL:-main}" != "main" ]] && HOST="${HOST}-${SLOT_ID_LABEL//-/}"
+  else
+    echo "WARNING: slot-identity-lib.sh not found at $_SLOT_LIB — report/archive will use the bare host label '$HOST', which COLLIDES across slots on one machine. Pass --host explicitly." >&2
+  fi
+fi
 # A stable, sortable date label. Date.now() is fine in shell; the plan/report carry the human date.
 DATE="$(date -u +%Y%m%d)"
 ARCHIVE_ROOT="$WORKSPACE_ROOT/.stash-archive-${HOST}-${DATE}"
@@ -98,6 +126,7 @@ fi
 mkdir -p "$(dirname "$REPORT_PATH")"
 
 MODE_LABEL="DRY-RUN (no drops)"; [[ "$APPLY" -eq 1 ]] && MODE_LABEL="APPLY (auto-drop enabled)"
+SUMMARY_MARKER="<!-- workspace-summary -->"
 case "$PRUNE_AGE_DAYS" in ''|*[!0-9]*) echo "ERROR: --prune-age-days must be a non-negative integer (got '$PRUNE_AGE_DAYS')" >&2; exit 2 ;; esac
 PRUNE_CUTOFF=$(( $(date +%s) - PRUNE_AGE_DAYS * 86400 ))
 if [[ "$PRUNE_AGE_DAYS" -gt 0 ]]; then
@@ -125,6 +154,11 @@ git_in() { git -C "$REPO_PATH" "$@"; }
   echo "- Archive root: \`${ARCHIVE_ROOT}\` (+ \`refs/stash-archive/*\` inside each repo's .git)"
   echo "- Classifier: strict / conservative (see plan stash_pile_workspace_cleanup_2026_06_03.md)"
   echo
+  # Marker replaced by the workspace summary table at the end of the run, once the
+  # per-repo counts exist. Anchored on this line rather than a fixed line offset:
+  # the previous `head -n 7` / `tail -n +8` splice silently broke the moment the
+  # header changed length, which is exactly what adding frontmatter above does.
+  echo "$SUMMARY_MARKER"
 } > "$REPORT_PATH"
 
 GRAND_TOTAL=0; GRAND_DROP=0; GRAND_WIP=0
@@ -301,23 +335,79 @@ Do NOT purge this directory or the refs/stash-archive/* refs until the confirmat
 in plans/active/stash_pile_workspace_cleanup_2026_06_03.md (Phase 4) has closed.
 EOF
 
-# prepend a workspace-wide summary table just after the report header
+# substitute the workspace-wide summary table in place of its marker
 SUMMARY_TMP="$(mktemp)"
 {
   echo "## Workspace summary"
   echo
   echo "| repo | stashes | auto-droppable | genuine-WIP | base-verified |"
   echo "| ---- | ------- | -------------- | ----------- | ------------- |"
-  printf '%s\n' "${SUMMARY_ROWS[@]}"
+  [[ ${#SUMMARY_ROWS[@]} -gt 0 ]] && printf '%s\n' "${SUMMARY_ROWS[@]}"
   echo "| **TOTAL** | **$GRAND_TOTAL** | **$GRAND_DROP** | **$GRAND_WIP** | |"
   echo
 } > "$SUMMARY_TMP"
-# insert summary after the 7-line header block
-head -n 7 "$REPORT_PATH" > "$REPORT_PATH.new"
-cat "$SUMMARY_TMP" >> "$REPORT_PATH.new"
-tail -n +8 "$REPORT_PATH" >> "$REPORT_PATH.new"
+
+# Frontmatter. The report lands in plans/active/issues/stash_audit_reports/, and every
+# report anyone actually committed there carries frontmatter that was added BY HAND —
+# the script never emitted any.
+#
+# Measured 2026-08-12, because the obvious assumption is wrong: a frontmatter-less doc
+# on that surface does NOT fail plan hygiene. check_frontmatter_schema.py skips it
+# entirely — stripping the frontmatter from a report moved the corpus from 1995 docs to
+# 1994 and still printed "zero violations". So the cost is not a red gate, it is
+# INVISIBILITY: the L0→L4 doc-retrieval model finds docs by grepping L1 frontmatter
+# facets (`rg -l '^doc_type: issue'`), so a report without frontmatter is unfindable by
+# every documented retrieval path. In that directory 3 of 6 reports were invisible.
+# That is also why the two unfrontmattered ones were simply never committed.
+#
+# Emitted HERE, at the end, rather than in the header block, because `summary:` quotes
+# the real counts and those do not exist until the walk is done.
+FRONTMATTER_TMP="$(mktemp)"
+_HUMAN_DATE="$(date -u +%Y-%m-%d)"
+_APPLY_WORD="dry-run"; [[ "$APPLY" -eq 1 ]] && _APPLY_WORD="apply-mode"
+{
+  echo "---"
+  echo "doc_type: issue"
+  echo "title: \"Stash audit — host ${HOST} — ${_HUMAN_DATE}\""
+  echo "summary: >-"
+  echo "  Auto-generated ${_APPLY_WORD} stash-audit output (${GRAND_TOTAL} stashes across ${#SUMMARY_ROWS[@]} repos,"
+  echo "  ${GRAND_WIP} genuine-WIP, ${GRAND_DROP} auto-droppable). Machine-written by scripts/dev/audit-stash-pile.sh;"
+  echo "  diagnostic input for the standing stash_pile_workspace_cleanup_2026_06_03.md effort."
+  echo "status: open"
+  echo "nature: notes"
+  echo "asset_group: [cross-cutting]"
+  echo "stage: [meta]"
+  echo "repos: []"
+  echo "scope: [admin]"
+  echo "tags: [stash-audit, workspace-hygiene, generated-report]"
+  echo "related: [stash_pile_workspace_cleanup_2026_06_03]"
+  echo "created: ${_HUMAN_DATE}"
+  echo "author: claude-agent"
+  echo "source: \"Auto-generated ${_APPLY_WORD} stash audit, ${_HUMAN_DATE}, host ${HOST}\""
+  echo "priority: P3"
+  echo "parent_epic: infrastructure_master"
+  echo "assigned_vm: NA"
+  echo "execution_scope: local-only"
+  echo "drift_direction: advance-code"
+  echo "depends_on: []"
+  echo "locked_by:"
+  echo "resolved_by:"
+  echo "---"
+  echo
+} > "$FRONTMATTER_TMP"
+
+if ! grep -qF "$SUMMARY_MARKER" "$REPORT_PATH"; then
+  echo "ERROR: summary marker '$SUMMARY_MARKER' not found in $REPORT_PATH — the report would ship with no workspace summary." >&2
+  rm -f "$SUMMARY_TMP" "$FRONTMATTER_TMP"
+  exit 1
+fi
+cat "$FRONTMATTER_TMP" > "$REPORT_PATH.new"
+awk -v marker="$SUMMARY_MARKER" -v sf="$SUMMARY_TMP" '
+  $0 == marker { while ((getline line < sf) > 0) print line; close(sf); next }
+  { print }
+' "$REPORT_PATH" >> "$REPORT_PATH.new"
 mv "$REPORT_PATH.new" "$REPORT_PATH"
-rm -f "$SUMMARY_TMP"
+rm -f "$SUMMARY_TMP" "$FRONTMATTER_TMP"
 
 echo
 echo "==== ${MODE_LABEL} ===="

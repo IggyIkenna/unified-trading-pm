@@ -4079,6 +4079,50 @@ else
     log_success "STEP 5.107: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.108: THIS repo's cloudbuild.yaml vs its shared template ────────────
+#
+# The SAME checker unified-trading-pm's own gate runs fleet-wide, re-run here
+# scoped to THIS repo (`--repo`) so drift fails in the repo that INTRODUCED it.
+#
+# Until 2026-08-12 it ran ONLY in PM. A consumer could land a cloudbuild.yaml
+# edit with a fully green gate, and the failure then surfaced on the next
+# unrelated commit in PM, on someone else's machine — the agent who paid was
+# chosen by who committed next, not by who caused it. Measured twice in two
+# days; both times it read as "PM is broken" rather than "this repo needs a
+# template edit", and both times the diagnosis cost more than the fix.
+# SSOT: /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md
+#
+# Same baseline file and the same never-raise semantics as PM's fleet-wide run —
+# only the detection POINT moves; this adds no new rule. Drift = content this
+# repo's cloudbuild.yaml carries that its mapped configs/cloudbuild-*-template.yaml
+# render does NOT, so the next `rollout-cloudbuild.py --apply` here would be
+# refused by the would-drop-content guard (or, if that guard were bypassed,
+# silently regress it). A repo the rollout tool does not touch (not template-
+# mapped) measures 0 markers and passes — the step is a no-op there, not a skip.
+_CBD_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_cloudbuild_template_drift.py"
+if [ -f "$_CBD_CHECKER" ]; then
+    _CBD_REPO=$(basename "$PROJECT_ROOT")
+    _CBD_WS="$REPO_ROOT"
+    _CBD_LOG="${TMPDIR:-/tmp}/cloudbuild_template_drift_qg.log.$$"
+    if $PYTHON_CMD "$_CBD_CHECKER" \
+            --workspace-root "$_CBD_WS" --repo "$_CBD_REPO" >"$_CBD_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_CBD_LOG" 2>/dev/null; then
+            log_warn "STEP 5.108: cloudbuild drift is BELOW baseline — ratchet cloudbuild_template_drift_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.108: cloudbuild.yaml carries no undrained content vs its shared template (at baseline)"
+        fi
+    else
+        log_fail "STEP 5.108: this repo's cloudbuild.yaml carries content its shared template does NOT. Forward-port the step into unified-trading-pm/configs/cloudbuild-*-template.yaml. The baseline is SHRINK-ONLY, so --update-baseline will refuse to raise it (silently — it prints the observed count and leaves the file unchanged):"
+        cat "$_CBD_LOG"
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/cloudbuild_template_drift_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_cloudbuild_template_drift.py --workspace-root $_CBD_WS --repo $_CBD_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_CBD_LOG" 2>/dev/null
+else
+    log_success "STEP 5.108: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

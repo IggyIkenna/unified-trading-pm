@@ -660,6 +660,44 @@ else
     log_success "DeFi .py address-citation gate: skipped (checker or python+yaml unavailable on this host)"
 fi
 
+# ── [5.108] CLOUDBUILD TEMPLATE DRIFT (this repo vs its shared template) ─────
+# UI parity for base-service.sh STEP 5.108. The same checker unified-trading-pm's
+# own gate runs fleet-wide, re-run here scoped to THIS repo so drift fails in the
+# repo that INTRODUCED it rather than on the next unrelated PM commit on someone
+# else's machine (measured twice in two days — see the step comment in
+# base-service.sh and
+# /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md).
+# Same baseline, same never-raise semantics — only the detection POINT moves.
+# UI repos have no guaranteed .venv (deployment-ui has none), so this probes for
+# a python with yaml exactly like the .py address-citation step above and skips
+# gracefully rather than failing a gate for a missing interpreter.
+log_section "[5.108] CLOUDBUILD TEMPLATE DRIFT"
+_CBD_WS="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null && cd .. && pwd)}"
+_CBD_CHECKER="${_CBD_WS}/unified-trading-pm/scripts/quality_gates/check_cloudbuild_template_drift.py"
+_CBD_PY=""
+for _c in "${_CBD_WS}/.venv-workspace/bin/python" "$(command -v python3 2>/dev/null)"; do
+    [ -n "$_c" ] && [ -x "$_c" ] && "$_c" -c 'import yaml' >/dev/null 2>&1 && { _CBD_PY="$_c"; break; }
+done
+if [ -f "$_CBD_CHECKER" ] && [ -n "$_CBD_PY" ]; then
+    _CBD_REPO="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || echo "$PROJECT_ROOT")")"
+    _CBD_LOG="${TMPDIR:-/tmp}/cloudbuild_template_drift_ui.log.$$"
+    if "$_CBD_PY" "$_CBD_CHECKER" --workspace-root "$_CBD_WS" --repo "$_CBD_REPO" >"$_CBD_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_CBD_LOG" 2>/dev/null; then
+            log_warn "cloudbuild drift is BELOW baseline — ratchet cloudbuild_template_drift_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "cloudbuild.yaml carries no undrained content vs its shared template (at baseline)"
+        fi
+    else
+        log_fail "cloudbuild drift: this repo's cloudbuild.yaml carries content its shared template does NOT. Forward-port it into unified-trading-pm/configs/cloudbuild-*-template.yaml — the baseline is SHRINK-ONLY, so --update-baseline will refuse to raise it:"
+        cat "$_CBD_LOG"
+        rm -f "$_CBD_LOG" 2>/dev/null
+        exit 1
+    fi
+    rm -f "$_CBD_LOG" 2>/dev/null
+else
+    log_success "cloudbuild drift gate: skipped (checker or python+yaml unavailable on this host)"
+fi
+
 # ── DURATION ───────────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-180}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))

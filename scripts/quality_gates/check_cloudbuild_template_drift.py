@@ -52,9 +52,23 @@ unconditional FAIL, never baseline-able — the comparison itself is
 unavailable, and treating that as "clean" would be the "None means it's
 fine" mistake the rollout tool's own guard was written to avoid.
 
-**NOT wired into ``scripts/quality-gates.sh``** (deliberate — see the gated
-finalize plan ``ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md``). Run
-standalone until that wiring is decided.
+Wired into quality gates at TWO points, deliberately:
+
+  * ``unified-trading-pm/scripts/quality-gates.sh`` runs it FLEET-WIDE (no
+    ``--repo``), which catches the other direction — a TEMPLATE edit in PM that
+    leaves consumers behind.
+  * ``quality-gates-base/base-service.sh`` STEP 5.108 and ``base-ui.sh``
+    ``[5.108]`` run it scoped to the CONSUMER (``--repo <this repo>``), so a
+    cloudbuild.yaml edit fails in the repo that introduced it.
+
+The consumer-scoped half was added 2026-08-12 after the PM-only wiring let a
+consumer land drift with a green gate and surface it as a fleet-wide PM commit
+block on an unrelated agent's machine, twice in two days. SSOT:
+``/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md``.
+(This docstring previously said "NOT wired into quality-gates.sh ... run
+standalone until that wiring is decided" — stale since the PM wiring landed, and
+it is why the consumer-side gap read as an open design question rather than a
+gap.)
 
 Usage::
 
@@ -260,7 +274,10 @@ def scan_drift(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Cloud Build template-vs-consumer drift ratchet (standalone, NOT wired into quality-gates.sh)."
+        description=(
+            "Cloud Build template-vs-consumer drift ratchet. Runs fleet-wide in unified-trading-pm's "
+            "quality-gates.sh, and scoped to a single consumer (--repo) in base-service.sh STEP 5.108 / base-ui.sh."
+        )
     )
     parser.add_argument(
         "--workspace-root",

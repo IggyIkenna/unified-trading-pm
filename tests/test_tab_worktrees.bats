@@ -144,23 +144,33 @@ setup() {
 
 @test "rollup_resolved_pings.py dry-run on file with no stale entries returns 0" {
     # Create a temp ping file with only a recent active entry.
-    local tmp_ping
-    tmp_ping="$(mktemp /tmp/slot_test_XXXX.md)"
+    # NOTE: `mktemp /tmp/slot_test_XXXX.md` does NOT work — BSD mktemp only substitutes
+    # TRAILING X's, so that template yields the LITERAL path /tmp/slot_test_XXXX.md. Two
+    # bats runs overlapping on one host then collide 100% of the time ("mkstemp failed:
+    # File exists"), and a run that dies before its cleanup wedges every later run
+    # host-wide. Measured 2026-08-12: it failed two PM gates in a row while a peer slot
+    # was gating concurrently. Use a unique DIRECTORY (trailing X's) and keep the .md
+    # name inside it.
+    local tmp_ping tmp_dir
+    tmp_dir="$(mktemp -d /tmp/slot_test_XXXXXX)"
+    tmp_ping="${tmp_dir}/ping.md"
     printf '[%s UTC] slot-N — STARTED\n' "$(date -u +'%Y-%m-%d %H:%M')" > "${tmp_ping}"
     run python3 "$ROLLUP" --dry-run "${tmp_ping}"
     [ "$status" -eq 0 ]
     [[ "$output" == *"would roll up 0"* ]]
-    rm -f "${tmp_ping}"
+    rm -f "${tmp_ping}"; rmdir "${tmp_dir}" 2>/dev/null || true
 }
 
 @test "rollup_resolved_pings.py dry-run rolls up old resolved entries" {
     # Create a temp ping file with a stale ✅ DONE entry (timestamp 2 days ago).
-    local tmp_ping stale_ts
-    tmp_ping="$(mktemp /tmp/slot_test_XXXX.md)"
+    # Unique temp DIR, not a fixed-name temp file — see the note in the sibling test above.
+    local tmp_ping stale_ts tmp_dir
+    tmp_dir="$(mktemp -d /tmp/slot_test_XXXXXX)"
+    tmp_ping="${tmp_dir}/ping.md"
     stale_ts="$(date -u -d '2 days ago' +'%Y-%m-%d %H:%M' 2>/dev/null || date -u -v -2d +'%Y-%m-%d %H:%M')"
     printf '[%s UTC] slot-N — ✅ DONE everything\n' "${stale_ts}" > "${tmp_ping}"
     run python3 "$ROLLUP" --dry-run "${tmp_ping}"
     [ "$status" -eq 0 ]
     [[ "$output" == *"would roll up 1"* ]]
-    rm -f "${tmp_ping}"
+    rm -f "${tmp_ping}"; rmdir "${tmp_dir}" 2>/dev/null || true
 }

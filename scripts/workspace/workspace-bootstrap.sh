@@ -748,7 +748,12 @@ if [ "$CHECK_ONLY" = true ]; then
   fi
 elif [ -f "$VERSION_ALIGN_SCRIPT" ]; then
   echo "  Running version alignment (including validate-uv-sources.py --fix)..."
-  VA_LOG=$(mktemp /tmp/version-align-XXXXXX.log)
+  # Trailing X's, no suffix: BSD mktemp only substitutes X's at the END of the template,
+  # so `/tmp/version-align-XXXXXX.log` would be taken LITERALLY — every host would share
+  # one filename, and a run that died before cleanup would wedge all later runs with
+  # "mkstemp failed: File exists". Measured 2026-08-12 (it wedged two PM gates via the
+  # same pattern in tests/test_tab_worktrees.bats).
+  VA_LOG=$(mktemp /tmp/version-align-XXXXXX)
   if (cd "$WORKSPACE_ROOT" && bash "$VERSION_ALIGN_SCRIPT" --fix 2>&1 | tee "$VA_LOG" | tail -30); then
     log_ok "Version alignment complete (full log: $VA_LOG)"
   else
