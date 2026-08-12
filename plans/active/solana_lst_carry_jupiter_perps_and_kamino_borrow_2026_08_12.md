@@ -142,12 +142,35 @@ from 2020-12-18).
       / `solend` / `marginfi` to `InstrumentType.SOLANA_LENDING`, and `_solana_defi_fetch.py` emits `lending_indices`. -
       **Funding** — features-service has `perp_funding_rates.py` (CeFi) and `perp_funding_rates_defi.py` (on-chain). So
       § A's spread IS computable and the go/no-go analysis can proceed on real history.
-- [ ] [SCRIPT] P2. **Registry-vs-handler drift: `VENUE_DATA_TYPE_CAPABILITIES` under-declares what MTDS actually
-      collects.** It advertises `staking_yields` only for `JITORESTAKING-SOLANA` while `staking_yields_handler.py`
-      collects JITO and `lst_rates_handler.py` collects MARINADE/mSOL. **This is what produced the false BLOCKED-DATA
-      verdict above** — the registry is the cheap thing to grep, so an under-declared registry actively misleads.
-      Reconcile declared capabilities against the handlers' real coverage, and treat the handler as ground truth. Check
-      the same drift for the ETH LSTs before relying on any advertised start date.
+- [x] [AGENT] P2. ✅ **WITHDRAWN — there is no registry drift. I probed the wrong vocabulary, twice.** I claimed
+      `VENUE_DATA_TYPE_CAPABILITIES` "under-declares its own handlers" and the operator instructed me to update it. **No
+      update was made, because the registry is correct.** SOL LST yield is declared under the data type **`lst_rates`**,
+      not `staking_yields`:
+
+      | Venue                  | Declared                                        |
+          | ---------------------- | ----------------------------------------------- |
+          | `MARINADE-SOLANA`      | `lst_rates` from **2021-08-01**                 |
+          | `JITO-SOLANA`          | `lst_rates` from **2021-11-01**                 |
+          | `SOLBLAZE-SOLANA`      | `lst_rates` from 2022-10-15                     |
+          | `JITORESTAKING-SOLANA` | `staking_yields` — restaking, correctly distinct |
+
+          `lst_rates_handler.py` writes **both** `lst_rates` and `staking_yields`, so the vocabulary split is deliberate and the
+          registry matches the handler exactly. The split is also semantically right: `lst_rates` is the LST exchange-rate/APY
+          series, `staking_yields` is protocol staking APY.
+
+          **Third correction on the same question, so the lesson is the point, not the fact:** my first verdict was
+          "possibly BLOCKED-DATA" (from reading the registry for the wrong key), my second was "the registry is wrong"
+          (from finding the handlers and still not re-checking the registry with the right key), and the truth is that both the
+          registry and the handlers were right all along. This is exactly the failure
+          `/codex/02-data/four-surface-reconciliation-procedure.md` warns about — **an absence result is evidence ONLY once you
+          have confirmed you probed the vocabulary the WRITER actually emits.** Before declaring any data absent, enumerate the
+          data types the writer emits and grep for those, never for the name you expect.
+
+          **Consequence for § A, in the good direction:** SOL LST history starts **2021-08**, roughly 22 months EARLIER than
+          Kamino's `lending_indices` (2023-06). So the binding constraint on the Solana spread is the **borrow** series, not the
+          staking series, and the full Kamino window is computable. ETH remains deeper (Lido `staking_yields` 2020-12-18) but
+          Solana is in no way blocked.
+
 - [ ] [AGENT] P1. **Compare LTV and borrow cost across the three Solana lending venues** (Kamino / Solend / MarginFi)
       and against Aave on the ETH side. Operator asked which has better LTV and lower stable borrow rates. **Note for
       the record: Aave has NO Solana deployment** — all 11 `AAVE_V3-*` keys are EVM chains — so Aave is not a candidate
