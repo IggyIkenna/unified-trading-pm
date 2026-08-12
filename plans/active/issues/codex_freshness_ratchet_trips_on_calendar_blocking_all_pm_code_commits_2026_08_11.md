@@ -106,3 +106,68 @@ Three exits were available and two are closed:
 
 Both docs are `status: current` and may well be entirely accurate — 91 days is not evidence of wrongness. The work is
 the reading, not a rewrite. Expect the honest outcome to be "read it, still correct, dated today" for at least one.
+
+---
+
+## Update 2026-08-12 — the second RED was a checker bug, not 6 more stale docs
+
+The morning after the fix above, the gate went RED again naming **6** docs from the `last_reviewed: 2026-05-13` cohort,
+and it was recorded (in the 2026-08-12 deferred-work table) as "needs 6 honest re-reviews, blocking every PM code
+commit". **That premise was wrong, and the correction is the point of this update.**
+
+A stale local checkout was the whole story. Measured in one slot, before and after `git pull` (32 commits behind):
+
+|                       | gate verdict                                                         | how it printed each violating path               |
+| --------------------- | -------------------------------------------------------------------- | ------------------------------------------------ |
+| local HEAD, 32 behind | `❌ Regression: 6 NEW violation(s) not in the baseline`              | repo-relative path, prefixed by the PM repo name |
+| after sync to origin  | `✅ At-or-below baseline (0 new violations; 6 known, 6 at baseline)` | repo-relative path, unprefixed                   |
+
+Same 6 docs, same dates, same 91d age — only the **path prefix** changed. The baseline stores repo-relative paths
+(`codex/…`), the old checker emitted workspace-relative ones (`unified-trading-pm/codex/…`), so _every_ baselined
+violation failed the set-membership test and re-reported as NEW. Fixed on origin by a peer as
+`unified-trading-pm@9343990a17` — _"fix(qg): anchor codex-doc-freshness baseline paths to resolved PM root, not raw
+`--workspace-root`"_.
+
+**The transferable lesson**: a ratchet comparing a computed key against a stored key can fail OPEN into a false
+regression, and it looks exactly like real debt — it names real files with real stale dates. The tell is the count
+matching the _baseline_ count exactly (`6 total, 6 known-at-baseline` — every known violation "new"), which is a
+set-mismatch signature, not an ageing signature. **Re-run a ratchet from a synced tree before believing it**, and treat
+"all N known violations are simultaneously new" as a checker bug until proven otherwise. Cost of not doing so here: a
+full day of planned work queued against a blocker that a `git pull` cleared.
+
+## Update 2026-08-12 — the gate holds formally-retired docs to the live re-review cadence
+
+Found while triaging those 6. **Three of them are not live docs at all:**
+
+| doc                                                         | `status`     | `superseded_by`                     |
+| ----------------------------------------------------------- | ------------ | ----------------------------------- |
+| `/codex/02-data/data-catalogue-schema.md`                   | `superseded` | `service-shard-status-catalogue.md` |
+| `/codex/05-infrastructure/ui-dependency-matrix.md`          | `superseded` | `ui-architecture.md`                |
+| `/codex/05-infrastructure/ui-functionality-requirements.md` | `superseded` | `ui-architecture.md`                |
+
+`_check_doc()` reads only `last_reviewed` and compares its age — the string `status` does not occur anywhere in
+`check_codex_doc_freshness.py` (0 matches, whole file). So a doc explicitly marked retired, and pointing at its
+replacement, is required to be re-reviewed every 90 days forever, on the same cadence as a live SSOT.
+
+That is a standing generator of the exact dishonest-stamp pressure the P2 todo above is about, and worse here: an
+"honest re-review" of a superseded doc has no honest outcome. You cannot verify it against current code — it is
+_supposed_ to be wrong — so the only available actions are to stamp it unread or to re-review a doc nobody should be
+reading. All three name their replacement, so the machine already has everything it needs to tell retired from stale.
+
+## Todos (added 2026-08-12)
+
+- [ ] [SCRIPT] P2. **Exempt formally-retired docs from the staleness window in `check_codex_doc_freshness.py`.**
+      Proposal: skip `status: superseded|deprecated|archived`, but ONLY when the doc names its replacement
+      (`superseded_by` non-empty) — so the exemption rewards pointing at the successor instead of becoming a way to mute
+      the gate by editing one field. Docs affected today: the 3 tabled above. Keep them counted in the report as
+      `exempt-retired` rather than dropping them silently, so the surface stays visible. This is a governance-semantics
+      change to a gate, so it needs an explicit operator OK before shipping, not just a green run — raise it, don't
+      merge it unilaterally. Repo: unified-trading-pm. Done when: the checker distinguishes retired from stale, and
+      `codex_doc_freshness_baseline.yaml` shrinks by exactly the retired docs (baseline is shrink-only — no
+      `--baseline-write`).
+- [ ] [DEVOPS] P3. **Decide the endgame for the 3 retired docs above, independent of the gate change.** A `superseded`
+      doc that still sits on a cutover-critical surface is discoverable by grep and can mislead an agent into
+      implementing against it. Options: SUPERSEDED banner at the top pointing at the replacement (the workspace's stated
+      convention), or archival off the scanned surface. All three name a replacement, so the successor is always
+      recoverable and no doc here is orphaned — this is a tidiness and grep-noise decision, not a data-loss one. Repo:
+      unified-trading-pm.
