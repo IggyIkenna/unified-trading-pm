@@ -274,8 +274,12 @@ check).
 
 - **RECLASSIFY, conflict-cleared (whole-doc — verdict 4)**: flip `assigned_vm: NA → planning` in place (no rename),
   correct `execution_scope` to `orchestrator-agent` if stale, fill `assigned_role` if missing (validate against the live
-  `agents/*.md` registry, never hand-type a near-miss), author the companion `{stem}_finalize_{today}.md` per
-  `task_template.md`'s finalize-plan-coverage rule (`plan` doc type only — an issue doc is structurally exempt,
+  `agents/*.md` registry, never hand-type a near-miss). **Before authoring** the companion `{stem}_finalize_{today}.md`,
+  run the MANDATORY idempotency guard —
+  `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --check-parent {stem}` — and refuse if it
+  already reports `{stem}` gated by an existing finalize plan of any filename shape
+  (`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`); otherwise author it per `task_template.md`'s
+  finalize-plan-coverage rule (`plan` doc type only — an issue doc is structurally exempt,
   `check_finalize_plan_coverage.py` only globs `plans/active/*.md`).
 - **RECLASSIFY, conflict-cleared (per-todo split path — verdict 5) — extraction mechanics**: the bounded items are
   extracted into a NEW `{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize` pair under `plans/active/`. This
@@ -290,7 +294,10 @@ check).
      operator decision that flips the draft gate; `/ag-closeout-audit`'s own batches are `draft` because that skill is
      read-only by design, but THIS skill IS authorized to apply). Each extracted item becomes one `- [ ]` todo in the
      batch plan, citing the source doc + the specific item's text verbatim. The batch's `Source:` cites this skill run.
-     The `_finalize` doc is `depends_on` + `gate_on_depends: true`, `status: active` (not `draft` — same reasoning).
+     Before writing the `_finalize` doc, run the MANDATORY idempotency guard
+     `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --check-parent <batch-slug>` and refuse if
+     the batch slug is already gated (`duplicate_finalize_plans_created_for_one_parent_2026_08_06.md`). The `_finalize`
+     doc is `depends_on` + `gate_on_depends: true`, `status: active` (not `draft` — same reasoning).
   3. **Conflict-check the batch BEFORE writing.** Run the shared conflict-check protocol (Phase 2) against every item in
      the batch — same bar as verdict 4. An item that conflicts stays in the source doc; only conflict-cleared items go
      into the batch.

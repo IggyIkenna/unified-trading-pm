@@ -210,6 +210,25 @@ def _write_baseline(
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
+def _run_check_parent(active_dir: Path, slug: str) -> int:
+    """Idempotency guard entry point for `--check-parent` — see its help text for the contract."""
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    gated = _gated_slugs(all_plans)
+    if slug not in gated:
+        print(f"✅ '{slug}' has no existing gated finalize plan — clear to author one.")
+        return 0
+    gating_plans = [
+        cov.path
+        for cov in all_plans
+        if _is_finalize_plan(cov.frontmatter)
+        and slug in cast("list[object]", cov.frontmatter.get("depends_on") or [])
+    ]
+    print(f"❌ REFUSE: '{slug}' is already gated by an existing finalize plan — do NOT author a new one:")
+    for p in gating_plans:
+        print(f"  - {p}")
+    return 1
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Finalize-plan-coverage check (every AO plan needs a gated finalize plan)."
@@ -230,7 +249,53 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "comparison in this mode; any violation among --only paths fails immediately."
         ),
     )
+    parser.add_argument(
+        "--check-parent",
+        default=None,
+        help=(
+            "Idempotency guard for finalize-plan AUTHORING (not a corpus-health check): given the slug that "
+            "would go in a NEW finalize plan's depends_on, scan the current corpus and refuse (exit 1) if that "
+            "slug is ALREADY gated by an existing finalize plan, regardless of that plan's filename shape — the "
+            "parent already has coverage, so authoring a second finalize plan races the first "
+            "(duplicate_finalize_plans_created_for_one_parent_2026_08_06.md). Run this BEFORE writing a new "
+            "<parent>_finalize*.md; exit 0 means clear to author."
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def _resolve_active_dir(workspace_root: Path) -> Path | None:
+    """Locate `plans/active/`, tolerating the isolated-worktree layout.
+
+    The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
+    (all existing tests construct exactly this shape) — preserved as the first candidate below. An
+    isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
+    per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
+    checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
+    `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
+    `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
+    `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
+    location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
+    running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
+    while committing a plan-only change from exactly this worktree shape). Self-locate as the last
+    resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
+    so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
+    checkout root regardless of what `--workspace-root` was given or what the checkout directory
+    happens to be named."""
+    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
+    if active_dir.is_dir():
+        return active_dir
+    fallback_dir = workspace_root / "plans" / "active"
+    if fallback_dir.is_dir():
+        return fallback_dir
+    self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+    if self_located_dir.is_dir():
+        return self_located_dir
+    print(
+        f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+        file=sys.stderr,
+    )
+    return None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -241,36 +306,13 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
-    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
-    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
-    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
-    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
-    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
-    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
-    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
-    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
-    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
-    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
-    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
-    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
-    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
-    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
-    # happens to be named.
-    active_dir = (_pm_root_or_legacy(workspace_root)) / "plans" / "active"
-    if not active_dir.is_dir():
-        fallback_dir = workspace_root / "plans" / "active"
-        if fallback_dir.is_dir():
-            active_dir = fallback_dir
-        else:
-            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
-            if self_located_dir.is_dir():
-                active_dir = self_located_dir
-            else:
-                print(
-                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
-                    file=sys.stderr,
-                )
-                return 2
+    active_dir = _resolve_active_dir(workspace_root)
+    if active_dir is None:
+        return 2
+
+    check_parent: str | None = cast("str | None", ns.check_parent)
+    if check_parent is not None:
+        return _run_check_parent(active_dir, check_parent.strip())
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)

@@ -128,3 +128,40 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── --check-parent idempotency guard (duplicate_finalize_plans_created_for_one_parent_2026_08_06) ──
+
+
+def test_check_parent_passes_when_no_finalize_plan_gates_it(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 0
+
+
+def test_check_parent_refuses_when_already_gated(tmp_path: Path) -> None:
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "source_plan_2026_08_05_finalize.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 1
+
+
+def test_check_parent_refuses_regardless_of_gating_plan_filename_shape(tmp_path: Path) -> None:
+    """The live incident's two colliding finalize plans differed only by a redundant date
+    suffix — the guard must key on the depends_on relationship, not any filename pattern."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "source_plan_2026_08_05.md")
+    _write_plan(
+        active / "some_totally_unrelated_filename_shape.md",
+        extra_frontmatter="depends_on: [source_plan_2026_08_05]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--check-parent", "source_plan_2026_08_05"])
+    assert rc == 1
