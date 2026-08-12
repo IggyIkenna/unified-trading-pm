@@ -331,34 +331,71 @@ hits fleet-wide.**
 - [ ] [AGENT] P2. **Check `/plans/active/cross_venue_funding_reversion_research_2026_07_24.md` for conflicts** before
       migrating — an active plan already covers cross-venue funding reversion and may own some of these modules.
 
-### H.5 Strategy composition and rotation breadth — NOT YET AUDITED (operator asks, 2026-08-12)
+### H.5 Strategy composition and rotation breadth — AUDITED 2026-08-12, all four already built
 
-Four items the operator raised that I have **not** investigated. Recorded verbatim in intent so a fresh session starts
-from the question, not from my paraphrase.
+**Headline: the operator's recollection was right on all four counts, and the honest finding is that this section
+required almost no building.** What it required was reading. Each item below is ticked against source, and the one real
+gap it surfaced is carried to H.7.
 
-- [ ] [AGENT] P0. **Determine how a COMPOSITE strategy is modelled — this gates the keying and allocation work in H.3.**
-      The operator states the running Elysium strategy is a composite of strategies, and believes `portfolio_allocator`
-      plus weights on archetypes, venues and coins already provides it. Three candidate architectures, and the right one
-      must be established before more schema work: (a) **many instances, one archetype each**, composed by the allocator
-      with weights per axis; (b) **one composite archetype** that internally holds a basket and implicitly weights; (c)
-      a **new composition concept** above the instance. Audit `portfolio_allocator/`, `allocation_sizer.py` and
-      `AllocationDirective`/`StrategyEquityDirective` in `architecture_v2/schemas.py`, then recommend — noting that
-      today `StrategyInstanceDefinition` carries ONE `archetype_id` and ONE `capital_budget_amount`, which points at
-      (a).
-- [ ] [AGENT] P0. **Audit collateral-driven archetype selection.** The logic choosing between cash basis and staked
-      basis by what collateral a venue actually accepts — stETH vs wstETH on ETH, the equivalent on SOL — and switching
-      structure per venue accordingly. The operator flags this as important; it is also what the client documents
-      describe as dynamic structure selection. Verify it exists, where it lives, and whether it reads the collateral
-      matrix or a hardcoded map.
-- [ ] [AGENT] P1. **Audit rotation filters for volume/ADV coverage and confirm they are expansively tracked.** The
-      operator believes ADV/volume filters are already part of rotation. Verify: which filters exist, whether they are
-      per-venue or global, whether the thresholds are configurable per instance, and whether coverage is tracked
-      anywhere. Feeds the H.4 per-module audit.
-- [ ] [AGENT] P1. **Audit the dispersion basket capability**: long low-funding / short high-funding across coins as a
-      basket, mapped to an appropriate archetype. Parts exist in `e2e-testing` (`funding_reversion_crossvenue_book`,
-      `funding_reversion_multivenue_capital`, `funding_dispersion` in the carry package) and, per the operator, some in
-      production. Establish what exists, what is missing, and which archetype it maps to — then complete it. **Depends
-      on the composite ruling above**, since a basket is either one archetype or many weighted instances.
+- [x] [AGENT] P0. ✅ **Composite = architecture (a): many instances, one archetype each, composed by the allocator with
+      weights.** The allocator IS the composition layer, and it composes on TWO levels: - **Across instances** —
+      `ClientAllocatorInstance.run()` (`strategy_service/portfolio_allocator/service.py`) takes `list[StrategySlot]`
+      keyed by `strategy_instance_id`, produces `target_weights` per instance, and emits ONE `AllocationDirective` per
+      client per tick. `apply_guard_rails` then constrains those weights by per-weight cap, turnover, correlation and
+      **family + category diversification** — so "weights on archetypes" is expressed as weights on instances plus
+      family-level guard rails. - **Within an axis** — the **rank allocator engines** do the coin/venue/protocol
+      weighting the operator described. `_hierarchical_rank_weight` (`archetypes_rank.py`) is a 2-stage shape: group by
+      an axis token, score the group by `avg(metric)`, filter by threshold, truncate to `top_n_groups`, then per
+      surviving group filter and truncate to `top_n_per_group` and weight by metric. Axis tokens in use: coin, venue,
+      protocol, expiry, LST. This confirms the H.3 reading — `StrategyInstanceDefinition` carrying ONE `archetype_id`
+      and ONE `capital_budget_amount` is correct by design, not a limitation. **No composite-archetype or new
+      composition concept should be built.** Keying work in H.3 can proceed on that basis.
+- [x] [AGENT] P0. ✅ **Collateral-driven selection exists, and it gates SLOT EMISSION rather than switching at runtime —
+      a stronger design than the one the operator asked for.** `accepted_perp_collateral(perp_venue)` reads the UAC
+      `VENUE_COLLATERAL_MATRIX`; `_staked_basis_eligible()`
+      (`engine/strategies/v2/target_universe/catalog_staked_basis.py`) means an (LST × perp_venue) pair that the venue
+      cannot margin **is never emitted as a slot**, so the allocator can only ever weight feasible instances. Structure
+      selection itself is `_derive_structure` (`carry_and_yield/staked_basis.py`): LST accepted → `LST_AS_MARGIN` with
+      the venue's haircut; otherwise fall back to `USDC_MARGIN_BUFFERED` on USDC/USDT preference; neither → reject. The
+      stETH-vs-wstETH nuance the operator raised is handled **and goes beyond the matrix**: `_BANNED_LST_PERP_COMBOS` is
+      a defence-in-depth denylist for combinations the matrix technically permits but which are semantically wrong —
+      `(wstETH, BYBIT)` and `(wstETH, DERIBIT)` because those margin engines credit the rebasing stETH balance rather
+      than the wstETH price, and `(stETH, OKX)` because OKX does no daily rebase reconciliation and marks undersized
+      each epoch. Each entry carries its reason inline.
+- [x] [AGENT] P1. ✅ **ADV/volume filters exist and are wired.** `engine/core/canonical_adv_ranked_universe_provider.py`
+      is Layer 1 dynamic candidate discovery, built from the operator's own 2026-07-23 ask, and is consumed by
+      `target_universe/catalog_carry.py`; `engine/core/rolling_adv_reader.py` provides the rolling window. Two things
+      worth knowing: it is a **T4-local reader of the same GCS corpus** features-service's `adv.py` computes over,
+      deliberately not an import (the no-service-imports tier rule), because `adv.py` computes on the fly and persists
+      nothing there is to read. And its docstring records **path-convention corrections verified against real prod
+      objects** where `adv.py`'s documented shape is wrong — an extra `instrument_type=` segment, and `timeframe=1d` not
+      `24h`.
+- [x] [AGENT] P1. ✅ **The dispersion basket is already built, and it is genuinely two-sided.**
+      `CarryFundingDispersionEngine` (`carry_and_yield/funding_dispersion.py`, archetype `CARRY_FUNDING_DISPERSION`,
+      registered `factory.py:73`) goes **LONG when `funding_rank_pct <= long_rank_pct` and SHORT when
+      `>= 1 - short_rank_pct`** (both default 0.3333), sizing `target_units = target_equity * signed / mid_price`. It is
+      explicit that this is **dollar-neutral, NOT delta-neutral** — the legs are different coins so they do not
+      price-cancel, and residual beta is hedged at BOOK level, not leg-vs-leg. It carries a per-leg squeeze veto (cut a
+      long that is crashing / a short that is squeezing on a >2σ 2-day adverse move) and honest-absence handling (rank
+      absent → emit nothing, explicitly not flat). The cross-sectional rank is computed upstream and arrives
+      per-instrument as a feature — which is precisely the two-level composition model established above. **Two
+      allocator-level dispersion archetypes also exist**: `CARRY_FUNDING_DISPERSION_RANK` and
+      `ARBITRAGE_PRICE_DISPERSION_RANK`.
+
+### H.7 Findings from the H.5 audit
+
+- [ ] [OPERATOR] P1. **The SOL-side staked-basis bundle currently has ZERO eligible (LST, perp_venue) pairs.** DRIFT was
+      removed from the UAC `VENUE_COLLATERAL_MATRIX` on 2026-07-16 in the Solana-perp-DEX cull, and
+      `catalog_staked_basis.py` records that no other live venue accepts JitoSOL or mSOL as `LST_AS_MARGIN`. The gating
+      logic is behaving correctly — it emits nothing rather than emitting an infeasible slot — but the effect is that
+      SOL staked basis is structurally unavailable, not merely unfunded. **Operator decision: re-admit a venue, accept
+      USDC-margin-buffered structure for SOL, or retire the SOL bundle.** Not an engineering fix.
+- [ ] [SCRIPT] P2. **`portfolio_allocator/__init__.py` docstring undercounts its own registry by more than half** — it
+      says "the 8 `AllocatorArchetype` engines" and enumerates eight, where `ALLOCATOR_ARCHETYPE_REGISTRY` has **17**
+      entries (the nine missing ones are the Phase-8 per-archetype rank allocators, including both dispersion engines).
+      This docstring is the first thing anyone reads about the allocator and it hid the existence of the dispersion
+      capability. Fix by describing the two groups (generic weighting engines + per-archetype rank allocators) **without
+      a total**, since a total re-rots on the next archetype added.
 
 ### H.6 Gate findings — the two defects that hid a one-line violation for seven attempts (2026-08-12)
 
@@ -380,6 +417,22 @@ Found by paying the cost, per the workspace rule that a tool which misled you is
       failure.
 
 ## Progress Log
+
+- **2026-08-12 (third pass)** — **H.5 audited; all four operator asks were already built.** Composite composition is
+  architecture (a) and the allocator composes on two levels (across instances via `target_weights` + family/category
+  guard rails, within an axis via the 2-stage hierarchical rank engines) — so H.3 keying can proceed and **no
+  composite-archetype concept should be built**. Collateral-driven selection gates slot EMISSION, which is stronger than
+  runtime switching, and already encodes the stETH/wstETH per-venue nuance in a reasoned denylist. ADV filters exist and
+  are wired. The dispersion basket is complete and two-sided. Two findings raised to H.7 (SOL staked-basis has zero
+  eligible pairs; the allocator docstring undercounts its registry). **Three published-document corrections, all of the
+  same class — an asserted total that rotted:** the carry-archetype count was 6 and is 7 (the missed one is
+  `CARRY_FUNDING_DISPERSION`, i.e. the number was wrong _because_ the dispersion capability was unknown); "liquidity
+  provision" was listed as a `StrategyFamily` in `carveout-engineering.html` and in the deferral record, having been
+  fixed in the deep dive a day earlier and missed in the other two. **And a correction to my own correction**: I had
+  recorded that family as "invented", which is wrong — `DEFI_LP_CONCENTRATED`/`_POOL`/`_VAULT` are real archetypes, so
+  liquidity provision is a genuine capability that was merely misfiled as a family. Recording an error's shape
+  imprecisely is as costly as the error, because the record is what the next reader acts on. Counts have been removed
+  rather than corrected wherever the argument did not need them.
 
 - **2026-08-12 (second pass)** — Recorded four un-audited operator asks in H.5: composite-strategy modelling (which
   gates H.3), collateral-driven archetype selection, rotation volume/ADV filter coverage, and the dispersion basket.

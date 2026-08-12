@@ -43,11 +43,17 @@ strategy-service repository in full.
    practice spread over 2–3 weeks, and it delays the project by at least that week of human time. A production-grade
    standalone carve-out is longer again. That time goes into the October delivery instead.
 2. **Send the strategy-service repository in full**, once its code lands. Ruled after the disclosure trade-off was put
-   to the operator: the repository contains **every** archetype across every family (carry, arbitrage, statistical
-   arbitrage, volatility, market making, directional, liquidity provision) plus the risk engine, position monitor and
-   P&L attribution — broader than the package
+   to the operator: the repository contains **every** archetype across every family — carry and yield, structural
+   arbitrage, statistical arbitrage, volatility, market making, ML- and rules-directional, event-driven and portfolio —
+   plus the risk engine, position monitor and P&L attribution, which is broader than the package
    [`carveout-engineering.html`](/codex/14-customer-journeys/commercial-model/carveout-engineering.html) specifies for a
-   carve-out (2 of 6 carry archetypes). **Reconciled by distinguishing inspection from transfer** — see decision 4.
+   carve-out (that package names two carry archetypes). **Reconciled by distinguishing inspection from transfer** — see
+   decision 4.
+   <!-- Family list corrected 2026-08-12: previously named a "liquidity provision" family that StrategyFamily does not
+   have. The same invention was fixed in strategy-service-deep-dive.html on 2026-08-11 but this record was missed, so the
+   fix was half-applied for a day. The archetype TOTAL was also removed rather than corrected from 6 to 7 (the carry
+   package declares seven ARCHETYPE values, the seventh being CARRY_FUNDING_DISPERSION) — a raw total re-rots on the next
+   archetype added, whereas "names two" is a property of the carve-out spec and is stable. -->
 3. **Timing: the strategy-service _code_ completes this week; the data, and the live/batch deployment, do not.** The
    message must be precise about which thing is finished, or "next week" reads as a claim that the whole mandate is
    done. The completion bar in the plan is therefore scoped to **code** completeness, not mandate readiness.

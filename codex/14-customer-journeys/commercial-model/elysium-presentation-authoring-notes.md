@@ -136,11 +136,33 @@ Keep the favicon stable across redeploys — the operator finds the tab by its i
    overflow and confirm the detector fires** before trusting a clean result. A null result from an unvalidated detector
    is not evidence.
 
-9. **Re-derive every asserted count; two were wrong within a day.** Rev 1.0 claimed 8 carry archetypes (actual **6**)
-   and 13 venue adapters (actual **20** distinct adapters in `trade_execution/adapters/` alone — the claim _understated_
-   the estate). Note also that `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be
-   located in non-test UAC sources; the 20 is a **measured floor from the adapter directory**, not a registry read.
-   Quote the floor and say so, or find the registry.
+9. **Re-derive every asserted count — and prefer not asserting a total at all.** Rev 1.0 claimed 8 carry archetypes and
+   13 venue adapters. Both were wrong, and the _corrections_ then rotted too: the "6 carry archetypes" replacement was
+   itself wrong (the package declares **seven** `ARCHETYPE` values; the missed one was `CARRY_FUNDING_DISPERSION`), and
+   the venue claim _understated_ the estate at 13 against 20 distinct adapters in `trade_execution/adapters/`. Two
+   lessons, in order of value:
+
+   - **A total is the most rot-prone thing you can write.** Every one of these numbers was correct when measured and
+     wrong within days, because the estate grows. Prefer a property that does not move — "the package names two carry
+     archetypes" is stable because it describes the spec, not the tree. Where a client argument genuinely needs the
+     contrast, give the shape ("every archetype across every family") rather than an integer.
+   - **Derive counts from the enum or registry, never from the directory.** The 6 came from counting files and missing
+     one; the definitive oracle was `grep 'ARCHETYPE = StrategyArchetype\.'` over the package. Likewise
+     `VENUE_TO_ADAPTER_KEY`, which CLAUDE.md names as the venue-registry SSOT, could not be located in non-test UAC
+     sources — so the 20 is a **measured floor from the adapter directory**, not a registry read. Quote the floor and
+     say so, or find the registry.
+
+   Corollary trap: **a correction applied to one artefact is not applied to the set.** The "liquidity provision" family
+   was fixed in `strategy-service-deep-dive.html` on 2026-08-11 and missed in
+   `elysium-carveout-deferral-message-2026-08-11.md`, so a wrong claim stayed live for a day. Grep the whole directory
+   for the wrong string, not just the file you found it in.
+
+   And a trap inside that trap — **over-correction.** I recorded the liquidity-provision family as "invented". It is
+   not: `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL` and `DEFI_LP_VAULT` are all real `StrategyArchetype` members. The error
+   was narrower than I described — liquidity provision is a genuine platform capability **misfiled as a family** when
+   `StrategyFamily` has nine members and none of them is LP. Saying "invented" would have led a future reader to delete
+   a true capability claim from `platform-architecture.html`, which names DeFi liquidity provision correctly. **Diagnose
+   the exact shape of an error before recording it, because the record is what the next person acts on.**
 
 10. **`safe-doc-push` does not carry deletions, so a `git mv` half-lands.** The script copies **named files** into an
     isolated worktree and commits from there; a deleted path is not a file to copy, so the new path lands and the old
