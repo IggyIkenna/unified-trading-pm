@@ -128,3 +128,74 @@ def test_default_mode_regresses_on_a_new_uncovered_plan(tmp_path: Path) -> None:
 
     rc = main(["--workspace-root", str(tmp_path)])
     assert rc == 1
+
+
+# ── duplicate-gate detection (create-time idempotency guard) ──────────────────
+
+
+def test_only_flags_a_staged_finalize_plan_duplicating_an_existing_gate(tmp_path: Path) -> None:
+    """The idempotency guard: the STAGED finalize plan gates a parent that ALREADY has a
+    (different) finalize plan gating it — the create-time collision the issue doc tracks."""
+    active = _active_dir(tmp_path)
+    _ = _write_plan(active / "parent_2026_08_12.md")
+    _ = _write_plan(
+        active / "parent_2026_08_12_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+    # A SECOND finalize plan for the same parent, differing only by a date suffix (the exact
+    # collision shape from the issue — a filename-keyed guard would miss it).
+    staged_dup = _write_plan(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(staged_dup)])
+    assert rc == 1
+
+
+def test_only_ignores_a_pre_existing_duplicate_pair_when_neither_is_staged(tmp_path: Path) -> None:
+    """At-rest duplicate pairs are the corpus-wide detector's (todo 2) concern, NOT the create-time
+    prek gate's: --only naming an unrelated clean plan must pass even when a duplicate pair exists
+    elsewhere in the corpus (RULE-11 blast-radius safety)."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    _write_plan(
+        active / "parent_2026_08_12_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+    _write_plan(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+    clean = _write_plan(
+        active / "clean_plan_2026_08_12.md",
+        extra_frontmatter="depends_on: [unrelated_parent_2026_08_12]\ngate_on_depends: true",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(clean)])
+    assert rc == 0
+
+
+def test_duplicate_gate_ignores_a_dep_without_gate_on_depends(tmp_path: Path) -> None:
+    """A parent named in a non-gated plan's depends_on (gate_on_depends != true) is NOT a
+    finalize companion, so it must not count toward the duplicate-gate detector."""
+    active = _active_dir(tmp_path)
+    _write_plan(active / "parent_2026_08_12.md")
+    _write_plan(
+        active / "parent_2026_08_12_finalize.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+    # A second finalize plan for the same parent (the duplicate) — but ONLY the staged,
+    # non-gated dependant is in scope, so --only must pass (it's not a finalize plan).
+    _write_plan(
+        active / "parent_2026_08_12_finalize_2026_08_12.md",
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: true",
+    )
+    non_gated = _write_plan(
+        active / "unrelated_2026_08_12.md",
+        todos=1,
+        extra_frontmatter="depends_on: [parent_2026_08_12]\ngate_on_depends: false",
+    )
+
+    rc = main(["--workspace-root", str(tmp_path), "--only", str(non_gated)])
+    assert rc == 0
